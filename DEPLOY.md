@@ -151,6 +151,9 @@ cache is cleared.
    ]
    ```
 
+   With the staging server (Part 5) the first line lists both addresses:
+   `"AllowedOrigins": ["https://socialemperors.me", "https://game-server-staging-production.up.railway.app"],`
+
 2. Click **Save**.
 
 ### 2.7 Check it
@@ -274,6 +277,13 @@ on the Railway address the game files would be blocked.
 
 * **Updating the game:** merge a pull request into `main`. Railway rebuilds
   and restarts by itself.
+* **Trying changes first:** the `game-server-staging` service is a second,
+  separate copy of the server with its own empty database. It deploys the
+  branch being worked on, at
+  <https://game-server-staging-production.up.railway.app>, and sleeps when
+  nobody uses it (the first visit after a while takes a few seconds). Its
+  address must be in the R2 bucket's CORS list (Part 2.6) for the game to load.
+  See [ROADMAP.md](ROADMAP.md) for how changes go from staging to live.
 * **Changed files in `assets/`:** run the **Upload assets to R2** workflow
   again (Part 2.4). It only uploads what changed.
 * **Backups:** Railway → click the volume → **Backups** → turn on a
