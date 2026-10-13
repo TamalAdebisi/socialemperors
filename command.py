@@ -5,6 +5,7 @@ from get_game_config import get_game_config, get_level_from_xp, get_name_from_it
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import temple
+import game_collections
 
 def get_strategy_type(id):
     if id == 8:
@@ -536,9 +537,16 @@ def do_command(USERID, cmd, args):
         print(f"Ended quest {quest_id}.")
 
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
-        collection_id = args[0]
-        collectible_id = args[1]
-        # TODO 
+        collection_id = int(args[0])
+        collectible_id = int(args[1])
+        print(game_collections.add_piece(save, collection_id, collectible_id))
+
+    elif cmd == Constant.CMD_FINISH_COLLECTION:
+        collection_id = int(args[0])
+        if len(args) > 1: # [collection, 1, price]: bought with cash; game_collections.py has its own prices
+            print(game_collections.buy(save, collection_id))
+        else:
+            print(game_collections.exchange(save, collection_id))
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
         offering = args[0] # JSON of what the client paid; temple.py has its own table
