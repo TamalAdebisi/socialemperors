@@ -15,6 +15,11 @@ import shop
 import magic
 import market
 import missions
+import warehouse
+import time_machine
+import darts
+import survival
+import monday_bonus
 
 def get_strategy_type(id):
     if id == 8:
@@ -565,6 +570,58 @@ def do_command(USERID, cmd, args, previous=None):
         if args[0] not in pState["helpMap"]:
             pState["helpMap"].append(args[0])
         print("Help", args[0], "shown.")
+
+    elif cmd == Constant.CMD_ADD_UNIT_WAREHOUSE:
+        x, y, town_id, unit_id = args
+        print(warehouse.add_unit(save, x, y, int(town_id), unit_id))
+
+    elif cmd == Constant.CMD_PLACE_WAREHOUSED_ITEM:
+        unit_id, x, y, orientation, town_id = args
+        print(warehouse.place_unit(save, unit_id, x, y, orientation, int(town_id)))
+
+    elif cmd == Constant.CMD_BUY_WAREHOUSE_CAPACITY_NEW:
+        print(warehouse.buy_capacity(save, int(args[0])))
+
+    elif cmd == Constant.CMD_RESET_WAREHOUSE:
+        print(warehouse.empty(save, int(args[0])))
+
+    elif cmd == Constant.CMD_TIME_MACHINE_BUY:
+        print(time_machine.buy(save, int(args[0])))
+
+    elif cmd == Constant.CMD_TIME_MACHINE_USE:
+        print(time_machine.jump(save, int(args[0])))
+
+    elif cmd == Constant.CMD_DARTS_RESET:
+        print(darts.reset(save, args[0]))
+
+    elif cmd == Constant.CMD_DARTS_NEW_FREE:
+        print(darts.new_free(save))
+
+    elif cmd == Constant.CMD_DARTS_SHOOT_BALLOON:
+        print(darts.shoot(save, args[0], args[1], args[2]))
+
+    elif cmd == Constant.CMD_UNLOCK_SKIN:
+        print(shop.unlock_skin(save, args[0]))
+
+    elif cmd == Constant.CMD_SET_SKIN:
+        town_id, skin_id = int(args[0]), int(args[1])
+        save["maps"][town_id]["skin"] = skin_id
+        print("Island skin set to", skin_id)
+
+    elif cmd == Constant.CMD_SURVIVAL_START:
+        print(survival.start(save))
+
+    elif cmd == Constant.CMD_SURVIVAL_END:
+        print(survival.end(save, args[0], args[1], args[2]))
+
+    elif cmd == Constant.CMD_SURVIVAL_BUY_LIFE:
+        print(survival.buy_life(save))
+
+    elif cmd == Constant.CMD_SURVIVAL_BUY_MAP:
+        print(survival.buy_map(save, args[0]))
+
+    elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
+        print(monday_bonus.collect(save, args[0], args[1]))
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
         offering = args[0] # JSON of what the client paid; temple.py has its own table

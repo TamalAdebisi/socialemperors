@@ -25,6 +25,9 @@ Commands from the client:
     "gold_statue_conversion" [gold]   the Golden Dynasty Dragon turned an enemy to gold
     "unlock_building"        ["item"]   a building opened before its level, for
                                         a third of that level in cash, rounded up
+    "unlock_skin"            ["skin"]   a look for the island (desert, jungle...), for
+                                        COST_UNLOCK_SKIN cash. The client checks
+                                        unlockedSkins for the text "true", not true.
 
 Offer packs are found by their place in the config list: pack 1 is the
 first. What is bought goes to the town's storage, as the client puts it
@@ -219,3 +222,16 @@ def unlock_early(save: dict, item_id) -> str:
     take(save, None, "c", cash)
     unlocked[str(item_id)] = True
     return f"Item {item_id} unlocked early for {cash} cash."
+
+
+def unlock_skin(save: dict, skin_id) -> str:
+    pState = save["privateState"]
+    if not isinstance(pState.get("unlockedSkins"), dict):
+        pState["unlockedSkins"] = {}
+    unlocked = pState["unlockedSkins"]
+    if unlocked.get(str(skin_id)) == "true":
+        return f"Skin {skin_id} was already unlocked."
+    cash = int(get_game_config()["globals"]["COST_UNLOCK_SKIN"])
+    take(save, None, "c", cash)
+    unlocked[str(skin_id)] = "true"
+    return f"Skin {skin_id} unlocked for {cash} cash."
