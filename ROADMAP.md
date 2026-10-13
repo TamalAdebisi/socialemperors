@@ -66,6 +66,8 @@ undone by the next reload. It now handles 100. Of the other 54, 24 are never
 sent by this client and most of the rest are unreachable (admin panel,
 Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 
+- [x] Arthur's tutorial is remembered once finished, instead of starting
+      over on every reload
 - [x] Supreme Dragon Temple (`temple.py`): the 12 offerings, the 48 hour wait,
       skipping it with cash, and summoning the Supreme Bahamut Dragon
 - [x] Collections (`game_collections.py`): pieces found are saved, finished
@@ -87,7 +89,7 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [ ] The world map: continent rankings (still a stub with one island) and
       moving between worlds (`modify_position_univers` and friends)
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (142 tests so far)
+- [ ] An automated test for every command (144 tests so far)
 
 ### Phase 3: Stronger foundations
 
