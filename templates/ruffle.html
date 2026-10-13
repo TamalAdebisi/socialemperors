@@ -19,7 +19,8 @@
         <script>
             // Test switches in the address bar, e.g. /ruffle.html?quality=low&fps=1
             //   quality=low|medium|high|best             how smoothly shapes are drawn
-            //   renderer=webgpu|wgpu-webgl|webgl|canvas  how Ruffle draws
+            //   renderer=wgpu-webgl|webgl|canvas         how Ruffle draws (not webgpu: it crashed
+            //                                            the game in Chrome on a Mac)
             //   size=native                              original 760 x 600, not fitted to the window
             //   fps=1                                    show how many frames the page draws per second
             var opts = new URLSearchParams(location.search);
@@ -40,7 +41,7 @@
                 allowFullscreen: true, // lets the game's own full screen button work
                 autoplay: "on",
                 quality: pick("quality", ["low", "medium", "high", "best"]),
-                preferredRenderer: pick("renderer", ["webgpu", "wgpu-webgl", "webgl", "canvas"]),
+                preferredRenderer: pick("renderer", ["wgpu-webgl", "webgl", "canvas"]),
                 parameters: '\
                     spdebug=notnull&brk=0\
                     &staticUrl={{ASSETS_URL}}/&brk=0\
