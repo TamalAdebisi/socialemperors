@@ -24,7 +24,7 @@ import social
 import assists
 import pvp
 
-TUTORIAL_END = 15  # the step Arthur's tutorial reports when it ends or is skipped
+TUTORIAL_END = 15  # the step Arthur's tutorial reports when its last lesson is closed
 
 def get_strategy_type(id):
     if id == 8:
@@ -110,9 +110,10 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
         tutorial_step = int(args[0])
         print("Tutorial step", tutorial_step, "reached.")
-        # Arthur's last lesson (and the skip button) report step 15 in both
-        # working clients. The client starts the tutorial over from the first
-        # step whenever this is still 0, so a reload partway through repeats it.
+        # Closing Arthur's last lesson reports step 15 in both working clients
+        # (the lessons before it report their own number). The client starts
+        # the tutorial over from the first lesson whenever this is still 0, so
+        # a reload partway through repeats it.
         if tutorial_step >= TUTORIAL_END:
             print("Tutorial COMPLETED!")
             save["playerInfo"]["completed_tutorial"] = tutorial_step  # what the client keeps too

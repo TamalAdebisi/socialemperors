@@ -74,9 +74,12 @@ class TutorialTest(unittest.TestCase):
         self.assertEqual(self.done(), 15)
         self.assertTrue(sessions.save_info(self.pid)["tutorial_done"])
 
-    def test_skipping_the_tutorial(self):
-        do_command(self.pid, "complete_tutorial", [0])
-        do_command(self.pid, "complete_tutorial", [15])  # the skip button ends it the same way
+    def test_a_reload_partway_through(self):
+        for step in range(6):
+            do_command(self.pid, "complete_tutorial", [step])
+        self.assertEqual(self.done(), 0)  # the client starts again from the first lesson
+        for step in range(16):
+            do_command(self.pid, "complete_tutorial", [step])
         self.assertEqual(self.done(), 15)
 
 
