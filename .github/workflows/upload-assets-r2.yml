@@ -1,0 +1,45 @@
+# Copies the game's art, sounds and SWFs (assets/) to the Cloudflare R2
+# bucket the game downloads them from (SE_ASSETS_URL). See DEPLOY.md.
+#
+# Run it by hand: GitHub -> Actions -> "Upload assets to R2" -> Run workflow.
+# Only new or changed files are uploaded, so running it again is quick and free.
+name: Upload assets to R2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      BUCKET: socialempires-assets
+      ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # Newer AWS CLI versions add checksums R2 may reject; send them only when required.
+      AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
+      AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
+      CACHE: public, max-age=604800
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Upload assets/
+        # --size-only: a fresh checkout makes every file look "new" by date.
+        run: aws s3 sync assets/ "s3://$BUCKET/" --endpoint-url "$ENDPOINT" --size-only --cache-control "$CACHE" --no-progress
+
+      - name: Upload renamed copies the game asks for (same as the routes in server.py)
+        run: |
+          cp_as() { aws s3 cp "assets/swf/$1" "s3://$BUCKET/swf/$2" --endpoint-url "$ENDPOINT" --cache-control "$CACHE" --no-progress; }
+          cp_as 20130417_projectiles.swf    05122012_projectiles.swf
+          cp_as 20131010_magicParticles.swf 05122012_magicParticles.swf
+          cp_as 120608_dynamic.swf          05122012_dynamic.swf
+
+      - name: Upload crossdomain.xml (lets the classic Flash Player load from this domain)
+        run: aws s3 cp stub/crossdomain.xml "s3://$BUCKET/crossdomain.xml" --endpoint-url "$ENDPOINT" --content-type text/xml --no-progress
+
+      - name: Check what's in the bucket
+        run: aws s3 ls "s3://$BUCKET/" --endpoint-url "$ENDPOINT" --recursive --summarize | tail -2

@@ -97,13 +97,13 @@
                     style: 'width: 760px; height: 600px; background-color: #669C2C;',
                 });
                 player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
-                    url: "{{PUBLIC_URL}}/default01.static.socialpointgames.com/static/socialempires/flash/SELoader.swf?swftoload={{PUBLIC_URL}}/default01.static.socialpointgames.com/static/socialempires/flash/{{GAMEVERSION}}",
+                    url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAMEVERSION}}",
                     backgroundColor: "#669C2C",
                     allowScriptAccess: false,
                     autoplay: true,
                     parameters: '\
                         spdebug=notnull&brk=0\
-                        &staticUrl={{PUBLIC_URL}}/default01.static.socialpointgames.com/static/socialempires/&brk=0\
+                        &staticUrl={{ASSETS_URL}}/&brk=0\
                         &dynamicUrl={{PUBLIC_URL}}/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/&brk=0\
                         &skiphash12341=notnull&brk=0\
                         &fb_sig_user={{save_info.userid}}&brk=0\

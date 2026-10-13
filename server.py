@@ -210,6 +210,7 @@ def _game_page(template):
     return render_template(template, save_info=save_info(USERID), serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(USERID), version=version_name,
                            GAMEVERSION=GAMEVERSION, PUBLIC_URL=config_env.PUBLIC_URL,
+                           ASSETS_URL=config_env.ASSETS_URL,
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
 
@@ -274,6 +275,10 @@ def static_assets_loader(path):
     downloaded = safe_join(DOWNLOAD_DIR, path)
     if downloaded and os.path.isfile(downloaded):
         return send_from_directory(DOWNLOAD_DIR, path)
+
+    if config_env.EXTERNAL_ASSETS and local:
+        # Hosted servers don't ship assets/; they live at SE_ASSETS_URL (R2).
+        return redirect(f"{config_env.ASSETS_URL}/{path}")
 
     if not config_env.CDN_FALLBACK or downloaded is None:
         return ("", 404)

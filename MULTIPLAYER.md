@@ -26,11 +26,15 @@ the full list. The important ones:
 
 ```
 SE_PUBLIC_URL=https://your-domain.example   # what players' browsers use
+SE_ASSETS_URL=https://assets.your-domain.example  # optional; assets/ on R2
 SE_DATA_DIR=/data                            # must be on a persistent disk
 SE_SECRET_KEY=<long random string>           # optional; generated if unset
 SE_TRUSTED_PROXIES=1                         # behind a proxy/CDN: how many
 SE_INVITE_CODE=letmein                       # optional closed beta
 ```
+
+**Hosting it:** see [DEPLOY.md](DEPLOY.md) for a step-by-step guide (Railway
+for the server, Cloudflare R2 for the 1.3 GB `assets/` folder).
 
 ## Run it
 

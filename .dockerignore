@@ -1,0 +1,11 @@
+# Not needed inside the server container (keeps it small and fast to deploy).
+assets/
+download_assets/
+distr/
+build/
+saves/
+data/
+.git/
+.github/
+**/__pycache__/
+.venv/

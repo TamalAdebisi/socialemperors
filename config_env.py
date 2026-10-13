@@ -10,6 +10,10 @@ Environment variables
 ---------------------
 SE_PUBLIC_URL        Base URL players' browsers use to reach the server,
                      e.g. https://empires.example.com  (default http://127.0.0.1:5050)
+SE_ASSETS_URL        Base URL the game downloads its art, sounds and SWFs from,
+                     e.g. https://empires-assets.example.com - a Cloudflare R2
+                     bucket holding the contents of assets/ (see DEPLOY.md).
+                     Default: this server, from its local assets/ folder.
 SE_BIND_HOST         Interface the server listens on (default 127.0.0.1;
                      use 0.0.0.0 inside a container)
 SE_PORT              Port to listen on (default 5050)
@@ -50,6 +54,10 @@ BIND_HOST = os.environ.get("SE_BIND_HOST", "127.0.0.1")
 PORT = _int("SE_PORT", 5050)
 PUBLIC_URL = os.environ.get("SE_PUBLIC_URL", f"http://127.0.0.1:{PORT}").rstrip("/")
 SECURE_COOKIES = PUBLIC_URL.startswith("https://")
+# Set when assets live elsewhere (R2); then this server doesn't ship assets/.
+EXTERNAL_ASSETS = bool(os.environ.get("SE_ASSETS_URL"))
+ASSETS_URL = (os.environ.get("SE_ASSETS_URL")
+              or f"{PUBLIC_URL}/default01.static.socialpointgames.com/static/socialempires").rstrip("/")
 
 DATA_DIR = os.environ.get("SE_DATA_DIR", os.path.join(".", "data"))
 STORAGE = os.environ.get("SE_STORAGE", "sqlite").strip().lower()
@@ -60,8 +68,9 @@ MAX_VILLAGES_PER_USER = _int("SE_MAX_VILLAGES", 3)
 MAX_NEIGHBORS = _int("SE_MAX_NEIGHBORS", 30)
 CDN_FALLBACK = _flag("SE_CDN_FALLBACK", False)
 TOKEN_MAX_AGE = _int("SE_TOKEN_MAX_AGE", 7 * 24 * 3600)
-# Number of proxies in front of the app (e.g. Cloudflare + Railway = 2).
-# Used to read the visitor's real IP for login rate-limiting. 0 = none.
+# Number of proxies that each add an X-Forwarded-For entry in front of the
+# app. Railway = 1 (its edge rewrites the header, also when Cloudflare is in
+# front). Used to read the visitor's real IP for login rate-limiting. 0 = none.
 TRUSTED_PROXIES = _int("SE_TRUSTED_PROXIES", 0)
 
 # Game client versions players may pick. Anything else is rejected, so a
