@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title id="pageTitle">Social Empires</title>
+		<link rel="shortcut icon" href="img/icon.gif"/>
+		<link rel="icon" type="image/png" href="img/icon.gif"/>
+		<link rel="stylesheet" href="css/facebook.css"/>
+		<style>
+			.auth-wrap { display: flex; gap: 32px; flex-wrap: wrap; padding: 8px 20px 20px; font-size: 13px; }
+			.auth-box { flex: 1 1 260px; }
+			.auth-box h3 { font-size: 14px; margin: 0 0 10px; }
+			.auth-box label { display: block; font-weight: bold; margin: 10px 0 4px; }
+			.auth-box input { width: 100%; max-width: 300px; height: 26px; box-sizing: border-box; padding: 0 6px; }
+			.auth-box button { margin-top: 14px; font-size: 14px; height: 27px; padding: 0 14px; }
+			.auth-box .hint { color: #666; font-size: 11px; margin-top: 3px; }
+			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin: 10px 20px 0; font-size: 13px; }
+			.muted { color: #666; }
+		</style>
+	</head>
+	<body class="ego_wide canvas center_fixed_width_app fbx UIPage_LoggedOut liquid hideBanner Locale_en_US" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: auto;">
+		<center><img src="img/logo.png" style="width: 200px;"/></center>
+		<div class="mvl ptm uiInterstitial canvas_error_page uiInterstitialLarge uiBoxWhite">
+			<div class="uiHeader uiHeaderBottomBorder mhl mts uiHeaderPage interstitialHeader">
+				<div class="clearfix uiHeaderTop">
+					<div>
+						<img src="img/sword.png" height="18px" style="margin-left: 5px;">
+						<h2 class="uiHeaderTitle" style="margin-left: 2px; display: inline-block;">
+							<a href="/" style="text-decoration: none;">Social Empires</a>
+						</h2>
+						<p style="display: inline-block; margin: 0 0 4px 6px;">By the Social Emperors team ~ {{ version | default("?") }}</p>
+					</div>
+				</div>
+			</div>
+
+			{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+			<div class="auth-wrap">
+				<form class="auth-box" method="post" action="/login">
+					<h3><img src="img/villager.png" style="height: 18px; vertical-align: middle;"> Log in</h3>
+					<label for="login-username">Username</label>
+					<input id="login-username" name="username" autocomplete="username" required {% if tab == 'login' %}autofocus{% endif %}>
+					<label for="login-password">Password</label>
+					<input id="login-password" name="password" type="password" autocomplete="current-password" required>
+					<br><button type="submit">Log in</button>
+				</form>
+
+				<form class="auth-box" method="post" action="/register">
+					<h3><img src="img/knight.png" style="height: 18px; vertical-align: middle;"> New player</h3>
+					{% if allow_registration %}
+					<label for="reg-username">Choose a username</label>
+					<input id="reg-username" name="username" autocomplete="username" pattern="[A-Za-z0-9_]{3,20}" required {% if tab == 'register' %}autofocus{% endif %}>
+					<div class="hint">3-20 letters, numbers or _</div>
+					<label for="reg-password">Choose a password</label>
+					<input id="reg-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+					<div class="hint">At least 8 characters</div>
+					{% if invite_required %}
+					<label for="reg-invite">Invite code</label>
+					<input id="reg-invite" name="invite" required>
+					{% endif %}
+					<br><button type="submit">Create account</button>
+					{% else %}
+					<p class="muted">Sign-ups are closed right now.</p>
+					{% endif %}
+				</form>
+			</div>
+		</div>
+	</body>
+</html>

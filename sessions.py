@@ -1,128 +1,198 @@
+"""
+In-memory game state plus persistence.
+
+All villages are held in memory while the server runs (the game reads and
+changes them constantly), and changes are written to storage in the
+background - see storage.py for why.
+
+IMPORTANT: because the live state is in this process's memory, run exactly ONE
+server process (you can still use several threads). Two processes would each
+have their own copy of every village and overwrite each other's saves.
+"""
+
+import atexit
+import copy
 import json
 import os
-import copy
-import uuid
 import random
-from flask import session
-# from flask_session import SqlAlchemySessionInterface, current_app
+import signal
+import threading
+import uuid
 
-from version import version_code
-from engine import timestamp_now
-from version import migrate_loaded_save
-from constants import Constant
-
+import config_env
 from bundle import VILLAGES_DIR, SAVES_DIR
+from constants import Constant
+from engine import timestamp_now
+from storage import open_storage
+from version import version_code, migrate_loaded_save
 
-__villages = {}  # ALL static neighbors
-'''__villages = {
-    "USERID_1": {
-        "playerInfo": {...},
-        "maps": [{...},{...}]
-        "privateState": {...}
-    },
-    "USERID_2": {...}
-}'''
+# Every request that reads or changes game state holds this lock, so two
+# requests can never change the same village at the same moment.
+LOCK = threading.RLock()
 
-__saves = {}  # ALL saved villages
-'''__saves = {
-    "USERID_1": {
-        "playerInfo": {...},
-        "maps": [{...},{...}]
-        "privateState": {...}
-    },
-    "USERID_2": {...}
-}'''
+__villages = {}  # static neighbours shipped with the game (Arthur, quests...)
+__saves = {}     # player villages: pid -> village dict
+__owners = {}    # pid -> account id (None for old imported saves)
+__dirty = set()  # pids changed since the last flush
+__storage = None
 
 __initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json")))
 
-# Load saved villages
+ARTHUR_PIDS = {
+    Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1,
+    Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2,
+    Constant.NEIGHBOUR_ARTHUR_GUINEVERE_3,
+}
+
+
+def storage():
+    return __storage
+
+
+# Loading
 
 def load_saved_villages():
-    global __villages
-    global __saves
-    # Empty in memory
-    __villages = {}
-    __saves = {}
-    # Saves dir check
-    if not os.path.exists(SAVES_DIR):
-        try:
-            print(f"Creating '{SAVES_DIR}' folder...")
-            os.mkdir(SAVES_DIR)
-        except:
-            print(f"Could not create '{SAVES_DIR}' folder.")
-            exit(1)
+    """Load everything once at startup."""
+    global __storage
+    with LOCK:
+        __villages.clear()
+        __saves.clear()
+        __owners.clear()
+
+        for file in sorted(os.listdir(VILLAGES_DIR)):
+            if file == "initial.json" or not file.endswith(".json"):
+                continue
+            village = json.load(open(os.path.join(VILLAGES_DIR, file)))
+            if not is_valid_village(village):
+                print(f" * Static neighbour {file}: invalid, skipped")
+                continue
+            pid = str(village["playerInfo"]["pid"])
+            __villages.setdefault(pid, village)
+
+        __storage = open_storage()
+        for pid, owner_id, village in __storage.load_all_villages():
+            __saves[pid] = village
+            __owners[pid] = owner_id
+            if migrate_loaded_save(village):
+                __dirty.add(pid)
+        print(f" * Loaded {len(__saves)} player villages and {len(__villages)} static neighbours")
+
+        _import_legacy_saves()
+    flush()
+
+
+def _import_legacy_saves():
+    """Bring in old saves/*.save.json files from the original single-player
+    version. They have no owner until an admin assigns one (tools/assign_village.py)."""
     if not os.path.isdir(SAVES_DIR):
-        print(f"'{SAVES_DIR}' is not a folder... Move the file somewhere else.")
-        exit(1)
-    # Static neighbors in /villages
-    for file in os.listdir(VILLAGES_DIR):
-        if file == "initial.json" or not file.endswith(".json"):
-            continue
-        print(f" * Loading static neighbour {file}... ", end='')
-        village = json.load(open(os.path.join(VILLAGES_DIR, file)))
-        if not is_valid_village(village):
-            print("Invalid neighbour")
-            continue
-        USERID = village["playerInfo"]["pid"]
-        if str(USERID) in __villages:
-            print(f"Ignored: duplicated PID '{USERID}'.")
-        else:
-            __villages[str(USERID)] = village
-            print("Ok.")
-    # Saves in /saves
+        return
     for file in os.listdir(SAVES_DIR):
         if not file.endswith(".save.json"):
             continue
-        print(f" * Loading save at {file}... ", end='')
         try:
             save = json.load(open(os.path.join(SAVES_DIR, file)))
-        except json.decoder.JSONDecodeError as e:
-            print("Corrupted JSON.")
+        except json.decoder.JSONDecodeError:
+            print(f" * Legacy save {file}: corrupted JSON, skipped")
             continue
         if not is_valid_village(save):
-            print("Invalid Save.")
             continue
-        USERID = save["playerInfo"]["pid"]
-        try:
-            map_name = save["playerInfo"]["map_names"][ save["playerInfo"]["default_map"] ]
-        except:
-            map_name = '?'
-        print(f"({map_name}) Ok.")
-        __saves[str(USERID)] = save
-        modified = migrate_loaded_save(save) # check save version for migration
-        if modified:
-            save_session(USERID)
-    
+        pid = str(save["playerInfo"]["pid"])
+        if pid in __saves:
+            continue
+        migrate_loaded_save(save)
+        __saves[pid] = save
+        __owners[pid] = None
+        __dirty.add(pid)
+        print(f" * Imported legacy save {file} (no owner yet)")
 
-# New village
 
-def new_village() -> str:
-    # Generate USERID
-    USERID: str = str(uuid.uuid4())
-    assert USERID not in all_userid()
-    # Copy init
+# Persistence (write-behind)
+
+def save_session(USERID: str):
+    """Mark a village as changed. The background flusher writes it soon."""
+    with LOCK:
+        __dirty.add(str(USERID))
+
+
+def flush():
+    """Write every changed village to storage now."""
+    with LOCK:
+        if not __dirty or __storage is None:
+            return
+        # Snapshot under the lock so we never write a half-applied command.
+        items = [(pid, __owners.get(pid), copy.deepcopy(__saves[pid])) for pid in __dirty if pid in __saves]
+        __dirty.clear()
+    try:
+        __storage.save_villages(items)
+    except Exception as e:
+        print(f" [!] Saving failed, will retry: {e}")
+        with LOCK:
+            __dirty.update(pid for pid, _, _ in items)
+
+
+def start_background_saver(interval_seconds: int = 5, handle_sigterm: bool = False):
+    def loop():
+        stop = threading.Event()
+        while not stop.wait(interval_seconds):
+            flush()
+    threading.Thread(target=loop, name="village-saver", daemon=True).start()
+
+    # Save once more on a normal exit.
+    atexit.register(flush)
+
+    # Hosts send SIGTERM before shutting a server down. Python's default is to
+    # die on the spot (skipping atexit), so when we run as `python server.py`
+    # we catch it and save first. Under gunicorn we leave signals alone -
+    # gunicorn handles them and gunicorn.conf.py saves on exit instead.
+    if handle_sigterm:
+        def on_sigterm(signum, frame):
+            flush()
+            raise SystemExit(0)
+        signal.signal(signal.SIGTERM, on_sigterm)
+
+
+# Creating villages
+
+def new_village(owner_id) -> str:
+    USERID = str(uuid.uuid4())
     village = copy.deepcopy(__initial_village)
-    # Custom values
     village["version"] = version_code
     village["playerInfo"]["pid"] = USERID
     village["maps"][0]["timestamp"] = timestamp_now()
     village["privateState"]["dartsRandomSeed"] = abs(int((2**16 - 1) * random.random()))
-    # Memory saves
-    __saves[USERID] = village
-    # Generate save file
-    save_session(USERID)
-    print("Done.")
+    with LOCK:
+        assert USERID not in __saves and USERID not in __villages
+        __saves[USERID] = village
+        __owners[USERID] = owner_id
+        __dirty.add(USERID)
+    flush()  # don't make a brand-new empire wait for the next batch
     return USERID
 
-# Access functions
+
+def assign_owner(USERID: str, owner_id: int):
+    with LOCK:
+        __owners[USERID] = owner_id
+        __dirty.add(USERID)
+
+
+# Lookups
+
+def owner_of(USERID: str):
+    return __owners.get(str(USERID))
+
+
+def villages_of(owner_id) -> list:
+    with LOCK:
+        return [save_info(pid) for pid, owner in __owners.items() if owner == owner_id]
+
 
 def all_saves_userid() -> list:
-    "Returns a list of the USERID of every saved village."
     return list(__saves.keys())
 
+
 def all_userid() -> list:
-    "Returns a list of the USERID of every village."
     return list(__villages.keys()) + list(__saves.keys())
+
 
 def save_info(USERID: str) -> dict:
     save = __saves[USERID]
@@ -130,119 +200,67 @@ def save_info(USERID: str) -> dict:
     empire_name = str(save["playerInfo"]["map_names"][default_map])
     xp = save["maps"][default_map]["xp"]
     level = save["maps"][default_map]["level"]
-    return{"userid": USERID, "name": empire_name, "xp": xp, "level": level}
+    return {"userid": USERID, "name": empire_name, "xp": xp, "level": level}
 
-def all_saves_info() -> list:
-    saves_info = []
-    for userid in __saves:
-        saves_info.append(save_info(userid))
-    return list(saves_info)
 
 def session(USERID: str) -> dict:
-    assert(isinstance(USERID, str))
-    return __saves[USERID] if USERID in __saves else None
+    assert isinstance(USERID, str)
+    return __saves.get(USERID)
+
 
 def neighbor_session(USERID: str) -> dict:
-    assert(isinstance(USERID, str))
-    if USERID in __saves:
-        return __saves[USERID]
-    if USERID in __villages:
-        return __villages[USERID]
+    assert isinstance(USERID, str)
+    return __saves.get(USERID) or __villages.get(USERID)
+
+
+# Neighbours / friends
+#
+# The original showed every save on the computer as a neighbour. On a public
+# server that would mean sending every player's village summary to everyone,
+# so we show the static neighbours plus the most recently active players.
+
+def _neighbor_villages(USERID: str) -> list:
+    statics = [v for pid, v in __villages.items() if pid not in ARTHUR_PIDS]
+    players = [v for pid, v in __saves.items() if pid != USERID]
+    players.sort(key=lambda v: v["playerInfo"].get("last_logged_in", 0) or 0, reverse=True)
+    return statics + players[:config_env.MAX_NEIGHBORS]
+
 
 def fb_friends_str(USERID: str) -> list:
-    DELETE_ME = [{"uid": "1111", "pic_square":"http://127.0.0.1:5050/img/profile/Paladin_Justiciero.jpg"},
-        {"uid": "aa_002", "pic_square":"/1025.png"}]
     friends = []
-    # static villages
-    for key in __villages:
-        vill = __villages[key]
-        # Avoid Arthur being loaded as friend.
-        if vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1 \
-        or vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2 \
-        or vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_3:
-            continue
-        frie = {}
-        frie["uid"] = vill["playerInfo"]["pid"]
-        frie["pic_square"] = vill["playerInfo"]["pic"]
-        if not frie["pic_square"]: frie["pic_square"] = "/img/profile/1025.png"
-        friends += [frie]
-    # other players
-    for key in __saves:
-        vill = __saves[key]
-        if vill["playerInfo"]["pid"] == USERID:
-            continue
-        frie = {}
-        frie["uid"] = vill["playerInfo"]["pid"]
-        frie["pic_square"] = vill["playerInfo"]["pic"]
-        if not frie["pic_square"]: frie["pic_square"] = "/img/profile/1025.png"
-        friends += [frie]
+    with LOCK:
+        for vill in _neighbor_villages(USERID):
+            friends.append({
+                "uid": vill["playerInfo"]["pid"],
+                "pic_square": vill["playerInfo"].get("pic") or "/img/profile/1025.png",
+            })
     return friends
 
-def neighbors(USERID: str) -> list:
-    neighbors = []
-    # static villages
-    for key in __villages:
-        vill = __villages[key]
-        # Avoid Arthur being loaded as multiple neigtbors.
-        if vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1 \
-        or vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2 \
-        or vill["playerInfo"]["pid"] == Constant.NEIGHBOUR_ARTHUR_GUINEVERE_3:
-            continue
-        neigh = vill["playerInfo"]
-        neigh["coins"] = vill["maps"][0]["coins"]
-        neigh["xp"] = vill["maps"][0]["xp"]
-        neigh["level"] = vill["maps"][0]["level"]
-        neigh["stone"] = vill["maps"][0]["stone"]
-        neigh["wood"] = vill["maps"][0]["wood"]
-        neigh["food"] = vill["maps"][0]["food"]
-        neigh["stone"] = vill["maps"][0]["stone"]
-        neighbors += [neigh]
-    # other players
-    for key in __saves:
-        vill = __saves[key]
-        if vill["playerInfo"]["pid"] == USERID:
-            continue
-        neigh = vill["playerInfo"]
-        neigh["coins"] = vill["maps"][0]["coins"]
-        neigh["xp"] = vill["maps"][0]["xp"]
-        neigh["level"] = vill["maps"][0]["level"]
-        neigh["stone"] = vill["maps"][0]["stone"]
-        neigh["wood"] = vill["maps"][0]["wood"]
-        neigh["food"] = vill["maps"][0]["food"]
-        neigh["stone"] = vill["maps"][0]["stone"]
-        neighbors += [neigh]
-    return neighbors
 
-# Check for valid village
-# The reason why this was implemented is to warn the user if a save game from Social Wars was used by accident
+def neighbors(USERID: str) -> list:
+    result = []
+    with LOCK:
+        for vill in _neighbor_villages(USERID):
+            # Copy: the original code edited the neighbour's own save here,
+            # which then got written back to disk with junk fields in it.
+            neigh = dict(vill["playerInfo"])
+            home = vill["maps"][0]
+            for key in ("coins", "xp", "level", "stone", "wood", "food"):
+                neigh[key] = home[key]
+            result.append(neigh)
+    return result
+
+
+# Validation (catches Social Wars saves loaded by mistake)
 
 def is_valid_village(save: dict):
     if "playerInfo" not in save or "maps" not in save or "privateState" not in save:
-        # These are obvious
         return False
     for map in save["maps"]:
         if "oil" in map or "steel" in map:
             return False
         if "stone" not in map or "food" not in map:
             return False
-        if "items" not in map:
+        if "items" not in map or type(map["items"]) != list:
             return False
-        if type(map["items"]) != list:
-            return False
-
     return True
-
-# Persistency
-
-def backup_session(USERID: str):
-    # TODO 
-    return
-
-def save_session(USERID: str):
-    # TODO 
-    file = f"{USERID}.save.json"
-    print(f" * Saving village at {file}... ", end='')
-    village = session(USERID)
-    with open(os.path.join(SAVES_DIR, file), 'w') as f:
-        json.dump(village, f, indent=4)
-    print("Done.")
