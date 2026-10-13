@@ -7,6 +7,7 @@ from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import temple
 import game_collections
 import graveyard
+import quests
 
 def get_strategy_type(id):
     if id == 8:
@@ -502,34 +503,12 @@ def do_command(USERID, cmd, args):
 
     elif cmd == Constant.CMD_START_QUEST:
         quest_id = args[0]
-        town_id = args[1]
-        print(f"Start quest {quest_id}")
+        town_id = int(args[1])
+        print(quests.start(save, quest_id, town_id))
 
     elif cmd == Constant.CMD_END_QUEST:
-        data = json.loads(args[0])
-        town_id = data["map"]
-        gold_gained = data["resources"]["g"]
-        xp_gained = data["resources"]["x"]
-        units = data["units"]
-        win = data["win"] == 1
-        duration_sec = data["duration"]
-        voluntary_end = data["voluntary_end"] == 1
-        quest_id = int(data["quest_id"])
-        item_rewards = data["item_rewards"] if "item_rewards" in data else None
-        activators_left = data["activators_left"] if "activators_left" in data else None
-        difficulty = data["difficulty"]
-
-        # Resources
-        save["maps"][town_id]["coins"] += int(gold_gained)
-        save["maps"][town_id]["xp"] += int(xp_gained)
-
-        # Update quests data
-        save["privateState"]["unlockedQuestIndex"] = max(quest_id + 1, save["privateState"]["unlockedQuestIndex"], 0)
-        # save["privateState"]["questsRank"] = TODO 
-        # save["maps"]["questTimes"] [quest_id] = TODO min (... , duration_sec)
-        # save["maps"]["lastQuestTimes"] [quest_id] = TODO min (... , duration_sec)
-
-        print(f"Ended quest {quest_id}.")
+        result = json.loads(args[0]) # gold, xp, units sent/killed/recovered, win, difficulty, boss rewards
+        print(quests.end(save, result))
 
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
         collection_id = int(args[0])
