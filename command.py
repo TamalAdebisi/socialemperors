@@ -12,6 +12,9 @@ import inventory
 import production
 import quests
 import shop
+import magic
+import market
+import missions
 
 def get_strategy_type(id):
     if id == 8:
@@ -175,20 +178,15 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_COMPLETE_MISSION:
         mission_id = args[0]
         skipped_with_cash = bool(args[1])
-        print("Complete mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        if skipped_with_cash:
-            cash_to_substract = 0 # TODO 
-            save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
-        save["privateState"]["completedMissions"] += [mission_id]
-    
+        print(str(get_attribute_from_mission_id(mission_id, "title")), end=": ")
+        print(missions.complete(save, mission_id, skipped_with_cash))
+
     elif cmd == Constant.CMD_REWARD_MISSION:
-        town_id = args[0]
+        town_id = int(args[0])
         mission_id = args[1]
-        print("Reward mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        reward = int(get_attribute_from_mission_id(mission_id, "reward")) # gold
-        save["maps"][town_id]["coins"] += reward   
-        save["privateState"]["rewardedMissions"] += [mission_id]
-    
+        print(str(get_attribute_from_mission_id(mission_id, "title")), end=": ")
+        print(missions.reward(save, town_id, mission_id))
+
     elif cmd == Constant.CMD_PUSH_UNIT:
         unit_x = args[0]
         unit_y = args[1]
@@ -241,12 +239,15 @@ def do_command(USERID, cmd, args, previous=None):
     
     elif cmd == Constant.CMD_RT_LEVEL_UP:
         new_level = args[0]
-        print("Level Up!:", new_level)
+        print("Level Up!:", new_level, end="")
         map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
+        old_level = int(map.get("level") or 1)
         map["level"] = args[0]
         current_xp = map["xp"]
         min_expected_xp = get_xp_from_level(max(0, new_level - 1))
         map["xp"] = max(min_expected_xp, current_xp) # try to fix problems with not counting XP... by keeping up with client-side level counting
+        mana = magic.level_up(save, old_level, new_level)
+        print(f" (+{mana} mana)" if mana else "")
 
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
         new_xp = args[0]
@@ -519,6 +520,51 @@ def do_command(USERID, cmd, args, previous=None):
             print(game_collections.buy(save, collection_id))
         else:
             print(game_collections.exchange(save, collection_id))
+
+    elif cmd == Constant.CMD_UNLOCK_BUILDING:
+        print(shop.unlock_early(save, int(args[0])))
+
+    elif cmd == Constant.CMD_SET_QUEST_VAR:
+        print(missions.set_quest_var(save, int(args[0]), args[1], args[2]))
+
+    elif cmd == Constant.CMD_COLLECT_TREASURE:
+        gold, xp, next_raid, food, stone, town_id = args
+        print(missions.collect_treasure(save, gold, xp, next_raid, food, stone, int(town_id)))
+
+    elif cmd == Constant.CMD_BUY_MAGIC:
+        print(magic.learn(save, args[0], int(args[1]), args[2]))
+
+    elif cmd == Constant.CMD_USE_MAGIC:
+        print(magic.cast(save, args[0]))
+
+    elif cmd == Constant.CMD_BUY_MANA:
+        print(magic.buy_mana(save, int(args[0]), args[1]))
+
+    elif cmd == Constant.CMD_TRADE_RESOURCE:
+        print(market.trade(save, int(args[0]), args[1], args[2], args[3]))
+
+    elif cmd == Constant.CMD_SET_ATTACK_TEAM:
+        mode = args[0] # "quest" or "tournament"
+        pState = save["privateState"]
+        if not isinstance(pState.get("teams"), dict):
+            pState["teams"] = {}
+        pState["teams"][mode] = json.loads(args[1])
+        print("Team for", mode, "saved.")
+
+    elif cmd == Constant.CMD_SET_INFO_SHOWED:
+        pState = save["privateState"]
+        if not isinstance(pState.get("infoShowed"), dict):
+            pState["infoShowed"] = {}
+        pState["infoShowed"][args[0]] = args[1]
+        print("Info", args[0], "shown.")
+
+    elif cmd == Constant.CMD_SET_HELP_MAP:
+        pState = save["privateState"]
+        if not isinstance(pState.get("helpMap"), list):
+            pState["helpMap"] = []
+        if args[0] not in pState["helpMap"]:
+            pState["helpMap"].append(args[0])
+        print("Help", args[0], "shown.")
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
         offering = args[0] # JSON of what the client paid; temple.py has its own table

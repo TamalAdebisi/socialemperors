@@ -23,6 +23,8 @@ Commands from the client:
     "unit_collections_completed" [category]       a finished unit collection
     "pop_sell"               [x, y, town, altar, unit]   a unit given to the Sacrifice Altar
     "gold_statue_conversion" [gold]   the Golden Dynasty Dragon turned an enemy to gold
+    "unlock_building"        ["item"]   a building opened before its level, for
+                                        a third of that level in cash, rounded up
 
 Offer packs are found by their place in the config list: pack 1 is the
 first. What is bought goes to the town's storage, as the client puts it
@@ -44,6 +46,7 @@ SUPER_PACK_PRICES_BY_PACK = {19: [30, 60, 100]}
 UNIT_COLLECTION_BONUS_CASH = 1
 GOLD_PER_STATUE = 10
 SELL_DIVISOR = 20
+UNLOCK_CASH_PER_LEVEL = 1 / 3
 
 
 def _place(map: dict, item_id, x, y, orientation) -> None:
@@ -203,3 +206,16 @@ def sacrifice(save: dict, x, y, town_id: int, altar_id, unit_id) -> str:
 def gold_statue(save: dict) -> str:
     give(save, save["maps"][0], "g", GOLD_PER_STATUE)
     return f"{GOLD_PER_STATUE} gold from a golden statue."
+
+
+def unlock_early(save: dict, item_id) -> str:
+    pState = save["privateState"]
+    if not isinstance(pState.get("unlockedEarlyBuildings"), dict):
+        pState["unlockedEarlyBuildings"] = {}
+    unlocked = pState["unlockedEarlyBuildings"]
+    if unlocked.get(str(item_id)):
+        return f"Item {item_id} was already unlocked."
+    cash = math.ceil(number(item_id, "min_level") * UNLOCK_CASH_PER_LEVEL)
+    take(save, None, "c", cash)
+    unlocked[str(item_id)] = True
+    return f"Item {item_id} unlocked early for {cash} cash."
