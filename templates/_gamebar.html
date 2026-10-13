@@ -1,0 +1,16 @@
+        <header id="gamebar">
+            <a class="logo" href="/" title="Your empires"><img src="img/logo.png" alt="Social Empires"></a>
+            <span class="empire"><b>{{ save_info.name }}</b> · level {{ save_info.level }}</span>
+            <span class="fps" id="fps" hidden></span>
+            <nav>
+                {% if fullscreen_button %}
+                {# Like the game's own button, not during the tutorial: it is laid out for the small screen. #}
+                <button id="fullscreen" type="button" {% if save_info.tutorial_done %}title="Full screen (Esc to leave)"{% else %}title="Available after the tutorial" disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
+                {% endif %}
+                <a href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="img/discord.png" alt=""><span class="label">Discord</span></a>
+                <a href="https://github.com/AcidCaos/socialemperors#readme" target="_blank" rel="noopener"><img src="img/github.png" alt=""><span class="label">GitHub</span></a>
+                <a href="/" title="Pick another empire">Empires</a>
+                <a href="/logout" title="Log out {{ user.username }}">Log out</a>
+            </nav>
+            <span class="version">{{ version }}</span>
+        </header>

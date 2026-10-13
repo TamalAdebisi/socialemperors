@@ -200,7 +200,9 @@ def save_info(USERID: str) -> dict:
     empire_name = str(save["playerInfo"]["map_names"][default_map])
     xp = save["maps"][default_map]["xp"]
     level = save["maps"][default_map]["level"]
-    return {"userid": USERID, "name": empire_name, "xp": xp, "level": level}
+    tutorial_done = bool(save["playerInfo"].get("completed_tutorial"))
+    return {"userid": USERID, "name": empire_name, "xp": xp, "level": level,
+            "tutorial_done": tutorial_done}
 
 
 def session(USERID: str) -> dict:

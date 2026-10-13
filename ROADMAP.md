@@ -43,11 +43,16 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 ### Phase 1: Polish what exists
 
-- [ ] Staging server
-- [ ] Game page: remove leftovers from Facebook days (*Get Cash*, *Free Gifts*)
-      and move towards a full-window game screen
-- [ ] Ruffle (the Flash emulator): pin a known-good version, host it ourselves,
-      and test renderer and quality settings for better frame rate
+- [x] Staging server
+- [x] Game page: remove leftovers from Facebook days (*Get Cash*, *Free Gifts*),
+      fit the game to the window, and a working full screen button
+- [x] Ruffle (the Flash emulator): pin a known-good version (0.7.1)
+- [ ] Ruffle: host it ourselves, and pick the renderer and quality that give
+      the best frame rate (test with `?fps=1`, `?quality=low`, `?renderer=webgpu`,
+      `?size=native` on the game page)
+- [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
+      repurpose it once we can change the client
+- [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
 - [ ] Admin tools: reset a password, delete an account, inspect a village
 - [ ] Bug radar: count which unhandled commands players trigger, so we fix the
       most-used missing features first
