@@ -1,82 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<!-- Meta -->
 		<meta charset="utf-8"/>
-		<!-- Title and Icon -->
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<title id="pageTitle">Social Empires</title>
 		<link rel="shortcut icon" href="img/icon.gif"/>
 		<link rel="icon" type="image/png" href="img/icon.gif"/>
-		<!-- CSS -->
 		<link rel="stylesheet" href="css/facebook.css"/>
+		<style>
+			.pick { padding: 8px 20px 20px; font-size: 13px; }
+			.pick label.title { display: block; font-weight: bold; margin: 12px 0 6px; }
+			.pick select { height: 27px; min-width: 330px; max-width: 100%; }
+			.pick button { font-size: 14px; height: 27px; padding: 0 14px; }
+			.row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+			.radio { display: block; margin: 4px 0; }
+			.hint { color: #666; font-size: 11px; margin-left: 22px; }
+			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin: 10px 20px 0; font-size: 13px; }
+			.who { float: right; margin: 6px 12px 0 0; font-size: 12px; }
+			hr { border: 0; border-top: 1px solid #ddd; margin: 16px 0; }
+		</style>
 	</head>
 	<body class="ego_wide canvas center_fixed_width_app fbx UIPage_LoggedOut liquid hideBanner Locale_en_US" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: auto;">
 		<center><img src="img/logo.png" style="width: 200px;"/></center>
 		<div class="mvl ptm uiInterstitial canvas_error_page uiInterstitialLarge uiBoxWhite">
-			<!-- HEAD TITLE -->
 			<div class="uiHeader uiHeaderBottomBorder mhl mts uiHeaderPage interstitialHeader">
 				<div class="clearfix uiHeaderTop">
 					<div>
+						<span class="who">Hi <b>{{ user.username }}</b> · <a href="/logout">log out</a></span>
 						<img src="img/sword.png" height="18px" style="margin-left: 5px;">
-						<h2 class="uiHeaderTitle" aria-hidden="true" style="margin-left: 2px; display: inline-block;">
-							<a href="/" style="text-decoration: none;">Social Empires </a>
+						<h2 class="uiHeaderTitle" style="margin-left: 2px; display: inline-block;">
+							<a href="/" style="text-decoration: none;">Social Empires</a>
 						</h2>
-						<p style="display: inline-block; margin: 0 0 4px 6px;">By the Social Emperors team ~ {{ version | default("?")}}</p>
+						<p style="display: inline-block; margin: 0 0 4px 6px;">By the Social Emperors team ~ {{ version | default("?") }}</p>
 					</div>
 				</div>
 			</div>
-			<!-- LOGIN CONTENT -->
-			<div class="phl ptm uiInterstitialContent" style="overflow: auto; display: inblock;">
-				<br>
-				<div style="margin-left:20px; font-size:13px; float: left;">
-					{% if saves_info %}
-					<form method="post">
-						<!-- VILLAGE SELECTION -->
-						<b>Select a village</b>
-						<br><br>
-						<div style="float: left; margin-right: 4px;">
-							<img src="img/villager.png" style="height: 27px; margin-top: 0px;">
-						</div>
-						<div style="float: left">
-							<select id="USERID" name="USERID" style="height: 27px; min-width: 330px;" required>
-								{% for save in saves_info %}
-								<option value="{{save.userid}}" title="{{save.userid}}">{{save.name}} ~ level {{save.level}} ({{save.xp}} xp)</option>
-								{% endfor %}
-							</select>
-						</div>
-						<br><br>
-						<br>
-						<!-- RELEASE SELECTION -->
-						<b>Game version</b>
-						<br><br>
-						<div style="overflow: auto; display: inblock;">
-							<div style="float: left">
-								<div style="float: left; margin-right: 4px;">
-									<img src="img/knight.png" style="height: 27px; margin-top: 0px;">
-								</div>
-								<div style="float: left">
-									<select id="GAMEVERSION" name="GAMEVERSION" style="height: 24px;" required>
-										<option value="SocialEmpires0926bsec.swf">0.9.26b (Working)</option>
-										<option value="SocialEmpires1.1.5sec.swf">1.1.5 (Experimental)</option>
-										<option value="SocialEmpires1.4.07sec.swf">1.4.07 (Broken)</option>
-									</select>
-								</div>
-								<br><br> <i>Tip: 0.9.26b Contains legacy Troll Missions!</i>
-								<br><br>
-							</div>
-							<div style="float: right;">
-								<button type="submit" style="font-size:14px; height: 25px">Log in</button>
-							</div>
-						</div>
-					</form>
+
+			{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+			<div class="pick">
+				{% macro player_choice() %}
+				<label class="title">Play with</label>
+				<label class="radio"><input type="radio" name="PLAYER" value="ruffle" checked> Any modern browser (Ruffle)</label>
+				<div class="hint">No install needed. Some things may not work yet.</div>
+				<label class="radio"><input type="radio" name="PLAYER" value="flash"> A Flash browser</label>
+				<div class="hint">Most compatible. Needs a Flash browser such as FlashBrowser.</div>
+				{% endmacro %}
+
+				{% if saves_info %}
+				<form method="post" action="/play">
+					<label class="title" for="USERID"><img src="img/villager.png" style="height: 18px; vertical-align: middle;"> Your empires</label>
+					<select id="USERID" name="USERID" required>
+						{% for save in saves_info %}
+						<option value="{{ save.userid }}">{{ save.name }} ~ level {{ save.level }} ({{ save.xp }} xp)</option>
+						{% endfor %}
+					</select>
+
+					<label class="title" for="GAMEVERSION"><img src="img/knight.png" style="height: 18px; vertical-align: middle;"> Game version</label>
+					<select id="GAMEVERSION" name="GAMEVERSION" required>
+						{% for file, label in game_versions.items() %}
+						<option value="{{ file }}">{{ label }}</option>
+						{% endfor %}
+					</select>
+					<div style="margin-top: 6px;"><i>Tip: 0.9.26b contains legacy Troll Missions!</i></div>
+
+					{{ player_choice() }}
+					<br><button type="submit">Play</button>
+				</form>
+				<hr>
+				{% endif %}
+
+				{% if can_create %}
+				<form method="post" action="/new">
+					{% if not saves_info %}
+					<p>Welcome! You don't have an empire yet.</p>
+					{{ player_choice() }}
 					<br>
-					<!-- NEW VILLAGE -->
-					<p style="font-size:13px; display: inline;">Or </p>
+					{% else %}
+					<input type="hidden" name="PLAYER" value="ruffle">
 					{% endif %}
-					<p style="font-size:13px; display: inline;">
-						<b><a href="/new.html">Create a new empire</a></b>
-					</p>
-				</div>
+					<button type="submit">Create a new empire</button>
+				</form>
+				{% else %}
+				<p style="color:#666;">You have the maximum of {{ max_villages }} empires.</p>
+				{% endif %}
 			</div>
 		</div>
 	</body>

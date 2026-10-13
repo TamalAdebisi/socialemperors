@@ -12,3 +12,5 @@ Include/
 Lib/
 Scripts/
 pyvenv.cfg
+# Local server data (database, secret key)
+data/

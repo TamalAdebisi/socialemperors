@@ -15,7 +15,7 @@
         <!-- SESSION HEADER -->
         <div id="header" style="width: 760px; margin-top: 50px;">
             <div id="session" style="float: right;">
-                <p style="display:inline">Logged in as <b>{{save_info.name}}</b> lvl {{save_info.level}} (<a href="/">logout</a>)</p>
+                <p style="display:inline">Logged in as <b>{{save_info.name}}</b> lvl {{save_info.level}} (<a href="/">switch empire</a> · <a href="/logout">log out {{user.username}}</a>)</p>
             </div>
         </div>
         <br>
@@ -97,23 +97,23 @@
                     style: 'width: 760px; height: 600px; background-color: #669C2C;',
                 });
                 player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
-                    url: "http://{{SERVERIP}}:5050/default01.static.socialpointgames.com/static/socialempires/flash/SELoader.swf?swftoload=http://{{SERVERIP}}:5050/default01.static.socialpointgames.com/static/socialempires/flash/{{GAMEVERSION}}",
+                    url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAMEVERSION}}",
                     backgroundColor: "#669C2C",
                     allowScriptAccess: false,
                     autoplay: true,
                     parameters: '\
                         spdebug=notnull&brk=0\
-                        &staticUrl=http://{{SERVERIP}}:5050/default01.static.socialpointgames.com/static/socialempires/&brk=0\
-                        &dynamicUrl=http://{{SERVERIP}}:5050/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/&brk=0\
+                        &staticUrl={{ASSETS_URL}}/&brk=0\
+                        &dynamicUrl={{PUBLIC_URL}}/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/&brk=0\
                         &skiphash12341=notnull&brk=0\
                         &fb_sig_user={{save_info.userid}}&brk=0\
-                        &user_key=123456789&brk=0\
+                        &user_key={{USER_KEY}}&brk=0\
                         &language=en&brk=0\
                         &accessToken=AAABbZAm0wdMUBALsOrR0Ho68CLjaOT8SV3vftKg9mbo1zZColaW5FljRVaLxPGxXXnm1M98mTZCAttcQ4GHwvSyXfsyxYmvKMH8Hmn5iliSPnjvIsZA6&brk=0\
                         &sex=m&brk=0\
                         &lastLoggedIn=1349266517&brk=0\
                         &dailyBonus=0&brk=0\
-                        &friendsInfo[{"first_name":"AcidCaos","uid":"100000","pic_square":"http://{{SERVERIP}}:5050/img/profile/x.jpg"}}]&brk=0\
+                        &friendsInfo={{friendsInfo | tojson}}&brk=0\
                         &serverTime={{serverTime}}&brk=0\
                         &forceSyncError=1&brk=0\
                         &forceAttackReload=0&brk=0\
