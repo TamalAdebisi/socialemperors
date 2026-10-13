@@ -1,0 +1,112 @@
+"""
+Graveyard: replays the commands the game client sends.
+
+Run from the repository folder:  python -m unittest discover tests
+"""
+
+import os
+import tempfile
+import unittest
+
+os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
+
+import sessions
+from command import command, do_command
+
+SWORDSMAN, PEASANT, FURIOUS_DRAGON, ARTHUR, PHOENIX = 511, 500, 649, 534, 744
+TOWN = 0
+KILL, TO_GRAVEYARD, NOT_TO_GRAVEYARD = "KILL", 1, 0
+
+
+class GraveyardTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        sessions.load_saved_villages()
+
+    def setUp(self):
+        self.pid = sessions.new_village(owner_id=None)
+        self.save = sessions.session(self.pid)
+        self.map = self.save["maps"][TOWN]
+        self.pState = self.save["privateState"]
+        self.map.update(coins=10000, food=10000)
+        self.save["playerInfo"]["cash"] = 100
+        self.pState["potion"] = 10
+
+    def send(self, cmd, *args):
+        do_command(self.pid, cmd, list(args))
+
+    def dies(self, unit, x, y, to_graveyard):
+        self.map["items"].append([unit, x, y, 0, 0, 0])
+        self.send("sell", x, y, unit, TOWN, 1, KILL, to_graveyard)
+
+    def on_map(self, unit):
+        return [item for item in self.map["items"] if item[0] == unit]
+
+    def test_fallen_units_are_remembered(self):
+        self.dies(SWORDSMAN, 10, 10, TO_GRAVEYARD)
+        self.dies(SWORDSMAN, 11, 10, TO_GRAVEYARD)
+        self.assertEqual(self.pState["deadHeroes"], {str(SWORDSMAN): 2})
+        self.assertEqual(self.on_map(SWORDSMAN), [])
+
+    def test_heroes_are_remembered_although_the_client_sends_0(self):
+        self.dies(ARTHUR, 10, 10, NOT_TO_GRAVEYARD)
+        self.assertEqual(self.pState["deadHeroes"], {str(ARTHUR): 1})
+
+    def test_peasants_and_buildings_are_not_kept(self):
+        self.dies(PEASANT, 10, 10, NOT_TO_GRAVEYARD)
+        self.send("sell", 20, 20, 1, TOWN, 1, KILL)  # a building, no 7th argument
+        self.assertEqual(self.pState.get("deadHeroes", {}), {})
+
+    def test_resurrect_with_food_and_gold(self):
+        self.dies(SWORDSMAN, 10, 10, TO_GRAVEYARD)
+        self.send("resurrect_hero", SWORDSMAN, 30, 31, TOWN, "0")
+        # cost 90 gold: the graveyard asks 90 food and half of it in gold
+        self.assertEqual((self.map["food"], self.map["coins"]), (10000 - 90, 10000 - 45))
+        self.assertEqual(self.pState["deadHeroes"], {})
+        self.assertEqual(self.on_map(SWORDSMAN)[0][:3], [SWORDSMAN, 30, 31])
+
+    def test_resurrect_a_cash_unit(self):
+        self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
+        self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "0")
+        self.assertEqual(self.save["playerInfo"]["cash"], 100 - 5)
+
+    def test_resurrect_with_potions(self):
+        self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
+        self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "1")
+        self.assertEqual(self.pState["potion"], 10 - 4)  # each unit has its own potion price
+        self.assertEqual((self.map["food"], self.map["coins"], self.save["playerInfo"]["cash"]), (10000, 10000, 100))
+
+    def test_resurrect_a_hero(self):
+        self.dies(ARTHUR, 10, 10, NOT_TO_GRAVEYARD)
+        xp = self.map["xp"]
+        self.send("resurrect_hero", ARTHUR, 30, 31, TOWN)  # the hero popup sends no potion flag
+        self.assertEqual(self.map["coins"], 10000 - 5 * 500)
+        self.assertEqual(self.map["xp"], xp + 30)
+        self.assertEqual(len(self.on_map(ARTHUR)), 1)
+
+    def test_only_the_dead_come_back(self):
+        self.send("resurrect_hero", SWORDSMAN, 30, 31, TOWN, "0")
+        self.assertEqual(self.on_map(SWORDSMAN), [])
+        self.assertEqual(self.map["coins"], 10000)
+
+    def test_phoenix_egg(self):
+        self.send("put_graveyard", PHOENIX)
+        self.assertEqual(self.pState["deadHeroes"], {str(PHOENIX): 1})
+
+    def test_older_saves(self):
+        self.pState["deadHeroes"] = []  # what the client treats as "nobody"
+        self.dies(SWORDSMAN, 10, 10, TO_GRAVEYARD)
+        self.assertEqual(self.pState["deadHeroes"], {str(SWORDSMAN): 1})
+
+    def test_resurrecting_no_longer_breaks_the_batch(self):
+        # Before, resurrect_hero crashed and the commands after it were lost.
+        self.dies(SWORDSMAN, 10, 10, TO_GRAVEYARD)
+        command(self.pid, {"ts": 0, "first_number": 0, "accessToken": "", "tries": 0, "publishActions": 0,
+                           "commands": [{"cmd": "resurrect_hero", "args": [SWORDSMAN, 30, 31, TOWN, "0"]},
+                                        {"cmd": "name_map", "args": [TOWN, "After"]}]})
+        self.assertEqual(self.save["playerInfo"]["map_names"][TOWN], "After")
+
+
+if __name__ == "__main__":
+    unittest.main()
