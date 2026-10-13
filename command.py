@@ -11,6 +11,7 @@ import graveyard
 import inventory
 import production
 import quests
+import shop
 
 def get_strategy_type(id):
     if id == 8:
@@ -31,18 +32,20 @@ def command(USERID, data):
     publishActions = data["publishActions"]
     commands = data["commands"]
     
+    previous = None
     for i, comm in enumerate(commands):
         cmd = comm["cmd"]
         args = comm["args"]
         try:
-            do_command(USERID, cmd, args)
+            do_command(USERID, cmd, args, previous)
         except Exception:
             # One command the server gets wrong must not cost the player the rest of the batch.
             print(f"\n [!] Command failed: {cmd} {args}")
             traceback.print_exc()
+        previous = comm
     save_session(USERID) # Save session
 
-def do_command(USERID, cmd, args):
+def do_command(USERID, cmd, args, previous=None):
     save = session(USERID)
     print (" [+] COMMAND: ", cmd, "(", args, ") -> ", sep='', end='')
 
@@ -53,22 +56,44 @@ def do_command(USERID, cmd, args):
         id = args[0]
         x = args[1]
         y = args[2]
-        frame = args[3] # TODO ??
-        town_id = args[4]
-        bool_dont_modify_resources = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
+        orientation = args[3]
+        town_id = int(args[4])
+        free = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
         price_multiplier = args[6]
-        type = args[7]
-        print("Add", str(get_name_from_item_id(id)), "at", f"({x},{y})")
-        collected_at_timestamp = timestamp_now()
-        level = 0 # TODO 
-        orientation = 0
-        map = save["maps"][town_id]
-        if not bool_dont_modify_resources:
-            apply_cost(save["playerInfo"], map, id, price_multiplier)
-            xp = int(get_attribute_from_item_id(id, "xp"))
-            map["xp"] = map["xp"] + xp
-        map["items"] += [[id, x, y, orientation, collected_at_timestamp, level]]
-    
+        print("Add", str(get_name_from_item_id(id)), end=": ")
+        print(shop.buy(save, id, x, y, orientation, town_id, free, price_multiplier))
+
+    elif cmd == Constant.CMD_BUY_UNIT_WITH_CASH:
+        id = args[0]
+        x = args[1]
+        y = args[2]
+        orientation = args[3]
+        town_id = int(args[4])
+        # A hero with no Altar of Heroes to stand by goes to storage: the client stores it just before.
+        already_stored = previous is not None and previous.get("cmd") == Constant.CMD_STORE_ADD_ITEMS \
+            and [int(i) for i in json.loads(previous["args"][0])] == [int(id)]
+        print("Buy", str(get_name_from_item_id(id)), "with cash", end=": ")
+        print(shop.buy_with_cash(save, id, x, y, orientation, town_id, already_stored))
+
+    elif cmd == Constant.CMD_BUY_OFFER_PACK:
+        item_won = args[2] if len(args) > 2 else None
+        print(shop.offer_pack(save, int(args[0]), int(args[1]), item_won))
+
+    elif cmd == Constant.CMD_ADD_ITEMS_TO_STORE:
+        print(shop.deal(save, args[0], args[1]))
+
+    elif cmd == Constant.CMD_BUY_STORED_ITEM_CASH:
+        print(shop.collection_unit(save, int(args[0]), int(args[1]), args[2]))
+
+    elif cmd == Constant.CMD_UNIT_COLLECTION_COMPLETED:
+        print(shop.unit_collection_completed(save, int(args[0])))
+
+    elif cmd == Constant.CMD_POP_SELL:
+        print(shop.sacrifice(save, args[0], args[1], int(args[2]), args[3], args[4]))
+
+    elif cmd == Constant.CMD_GOLD_STATUE_CONVERSION:
+        print(shop.gold_statue(save))
+
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
         tutorial_step = args[0]
         print("Tutorial step", tutorial_step, "reached.")
@@ -465,19 +490,8 @@ def do_command(USERID, cmd, args):
         print(graveyard.bury(save, unit_id))
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
-        town_id = args[0]
-        unknown2 = args[1] # this is probably the super offer pack ID?
-        items = args[2]
-        cash_used = args[3]
-        
-        map = save["maps"][town_id]
-
-        item_array = items.split(',')
-        for item in item_array:
-            inventory.add_gift(save, int(item))
-
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_used, 0)#maybe make function for editing resources
-        print(f"Used {cash_used} cash to buy super offer pack!")
+        items = args[2] # "item,item,..."; the price comes from shop.py, not args[3]
+        print(shop.super_offer_pack(save, int(args[0]), int(args[1]), items))
 
     elif cmd == Constant.CMD_SET_STRATEGY:
         strategy_type = args[0]

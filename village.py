@@ -5,7 +5,7 @@ numbers from the game config, and changing the player's resources.
 Resources are named by the letters the game uses everywhere:
 
     "g" gold    "w" wood    "s" stone    "f" food     kept per town, on the map
-    "c" cash                                          kept per player
+    "c" cash    "m" mana                              kept per player
     "x" experience                                    kept on the map
 
 A map item is a list: [item id, x, y, orientation, production started at,
@@ -54,6 +54,8 @@ def full(item: list) -> list:
 def _owner(save: dict, map: dict, resource: str):
     if resource == "c":
         return save["playerInfo"], "cash"
+    if resource == "m":
+        return save["privateState"], "mana"
     return map, ON_MAP[resource]
 
 
