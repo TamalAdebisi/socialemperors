@@ -62,7 +62,12 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 The game client knows 154 server commands. The server handles 42 of them and
 silently ignores the rest, which is why some buttons do nothing.
 
-- [ ] Supreme Dragon Temple: summon the Supreme Bahamut Dragon (first)
+- [x] Supreme Dragon Temple (`temple.py`): the 12 offerings, the 48 hour wait,
+      skipping it with cash, and summoning the Supreme Bahamut Dragon.
+      Steps 1 to 9 (resources and the three nest dragons) work today
+- [ ] Collections: save collected items and hand out the rewards. This
+      unlocks the Red and Golden Bahamut and the Bahamut Heart, the last three
+      temple steps
 - [ ] Next features in bug-radar order
 - [ ] Continent rankings (currently an empty stub)
 - [ ] An automated test for every command
@@ -87,7 +92,9 @@ once Phase 2 shows how much of the game we have.
 2. **Read the client.** Run `tools/decompile_client.sh`, then look up the
    command name in `core/Constants.as` and read what the client sends and what
    it does with the answer.
-3. **Write the server side** in our own words in `command.py`, with a test.
+3. **Write the server side** in our own words in `command.py` (or its own
+   module, like `temple.py`), with a test in `tests/` that replays the
+   commands the client sends. Run them with `python -m unittest discover tests`.
 4. **Try it on staging**, then merge.
 
 ## Decisions so far

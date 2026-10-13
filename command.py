@@ -4,6 +4,7 @@ from sessions import session, save_session
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
+import temple
 
 def get_strategy_type(id):
     if id == 8:
@@ -276,11 +277,14 @@ def do_command(USERID, cmd, args):
             while(save["privateState"]["gifts"][-1] == 0):
                 save["privateState"]["gifts"].pop()  
 
-    elif cmd == Constant.CMD_SELL_GIFT:
+    elif cmd == Constant.CMD_SELL_GIFT or cmd == Constant.CMD_SELL_STORED:
         item_id = args[0]
         town_id = args[1]
         print("Gift", str(get_name_from_item_id(item_id)), "sold on town:",town_id)
-        gifts = save["privateState"]["gifts"]
+        gifts = save["privateState"]["gifts"] # store_item keeps stored items here too
+        if item_id >= len(gifts) or gifts[item_id] <= 0:
+            print("Not in inventory, nothing sold.")
+            return
         gifts[item_id] -= 1
         if gifts[item_id] == 0: #removes excess zeros at end if necessary
             while(len(gifts) != 0 and gifts[-1] == 0):
@@ -535,6 +539,16 @@ def do_command(USERID, cmd, args):
         collection_id = args[0]
         collectible_id = args[1]
         # TODO 
+
+    elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
+        offering = args[0] # JSON of what the client paid; temple.py has its own table
+        print(temple.next_step(save, int(args[1])))
+
+    elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_BUY_TIME:
+        print(temple.skip_wait(save))
+
+    elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_RESET:
+        print(temple.reset(save))
 
     else:
         print(f"Unhandled command '{cmd}' -> args", args)
