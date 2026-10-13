@@ -69,8 +69,8 @@ def _ranks(save: dict) -> dict:
     return pState["questsRank"]
 
 
-def _lose_units(save: dict, map: dict, rows) -> list:
-    """Takes the units lost in a quest out of the empire. Returns their ids."""
+def lose_units(save: dict, map: dict, rows) -> list:
+    """Takes the units lost in a quest or an attack out of the empire. Returns their ids."""
     lost = []
     for row in rows or []:
         unit_id = int(row[UNIT_ID])
@@ -115,7 +115,7 @@ def end(save: dict, result: dict) -> str:
         if quest_id in order:
             pState["unlockedQuestIndex"] = max(int(pState.get("unlockedQuestIndex", 0)), order.index(quest_id) + 1)
 
-    lost = _lose_units(save, map, result.get("units"))
+    lost = lose_units(save, map, result.get("units"))
 
     for item_id, count in (result.get("item_rewards") or {}).items():
         inventory.add_gift(save, int(item_id), int(count))

@@ -20,6 +20,9 @@ import time_machine
 import darts
 import survival
 import monday_bonus
+import social
+import assists
+import pvp
 
 def get_strategy_type(id):
     if id == 8:
@@ -622,6 +625,60 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
         print(monday_bonus.collect(save, args[0], args[1]))
+
+    elif cmd == Constant.CMD_BUY_SI_HELP:
+        x, y, town_id, building_id = args[:4]
+        free = len(args) > 4 and str(args[4]) == "1"
+        print(social.buy_helper(save, x, y, int(town_id), building_id, free))
+
+    elif cmd == Constant.CMD_FINISH_SI:
+        x, y, town_id, building_id = args[:4]
+        hero = args[6] if len(args) > 6 else 0 # the Round Table also sends [gold, xp, hero]; social.py has its own table
+        print(social.finish(save, x, y, int(town_id), building_id, hero))
+
+    elif cmd == Constant.CMD_SET_RESOURCE_ALLIES:
+        resource, x, y, town_id, building_id = args
+        print(social.set_market_resource(save, resource, x, y, int(town_id), building_id))
+
+    elif cmd == Constant.CMD_INCREASE_POPULATION:
+        print(social.increase_population(save, int(args[0])))
+
+    elif cmd == Constant.CMD_ASSIST_NEIGHBOUR_NEW:
+        print(assists.help_buildings(save, args[0], args[2]))
+
+    elif cmd == Constant.CMD_ASSIST_NEIGHBOUR:
+        neighbour, request, town_id = args
+        print(assists.help_request(save, neighbour, int(town_id)))
+
+    elif cmd == Constant.CMD_ASSIST_RECEIVE:
+        print(assists.receive(save, int(args[0]), args[1]))
+
+    elif cmd == Constant.CMD_CLEAN_RECEIVED_ASSISTS:
+        print(assists.clean(save, args[0], int(args[1])))
+
+    elif cmd == Constant.CMD_ATTACK_PLAYER:
+        print(pvp.attack(save, args[0]))
+
+    elif cmd == Constant.CMD_END_ATTACK:
+        no_town_hall = len(args) > 1 and bool(args[1])
+        print(pvp.end(save, json.loads(args[0]), no_town_hall))
+
+    elif cmd == Constant.CMD_SPY:
+        print(pvp.spy(save, args[0]))
+
+    elif cmd == Constant.CMD_CLEAN_ATTACKS:
+        print(pvp.seen_attacks(save))
+
+    elif cmd == Constant.CMD_RESET_ISLAND_CHANGE:
+        save["privateState"]["worldChange"] = 0
+        print("On to the new world.")
+
+    elif cmd == Constant.CMD_CLEAR_MSG:
+        save["privateState"]["message"] = ""
+        print("Message read.")
+
+    elif cmd == Constant.CMD_PING:
+        print("Still here, in game mode", args[0] if args else "?")
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
         offering = args[0] # JSON of what the client paid; temple.py has its own table
