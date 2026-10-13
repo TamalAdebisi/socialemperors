@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from sessions import session, save_session
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
@@ -7,6 +8,8 @@ from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import temple
 import game_collections
 import graveyard
+import inventory
+import production
 import quests
 
 def get_strategy_type(id):
@@ -31,7 +34,12 @@ def command(USERID, data):
     for i, comm in enumerate(commands):
         cmd = comm["cmd"]
         args = comm["args"]
-        do_command(USERID, cmd, args)
+        try:
+            do_command(USERID, cmd, args)
+        except Exception:
+            # One command the server gets wrong must not cost the player the rest of the batch.
+            print(f"\n [!] Command failed: {cmd} {args}")
+            traceback.print_exc()
     save_session(USERID) # Save session
 
 def do_command(USERID, cmd, args):
@@ -89,15 +97,21 @@ def do_command(USERID, cmd, args):
     elif cmd == Constant.CMD_COLLECT:
         x = args[0]
         y = args[1]
-        town_id = args[2]
+        town_id = int(args[2])
         id = args[3]
-        num_units_contained_when_harvested = args[4]#TODO does this affect multiplier?
-        resource_multiplier = args[5]
-        cash_to_substract = args[6]
-        print("Collect", str(get_name_from_item_id(id)))
-        map = save["maps"][town_id]
-        apply_collect(save["playerInfo"], map, id, resource_multiplier)
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
+        print("Collect", str(get_name_from_item_id(id)), end=": ")
+        if len(args) > 4: # a building: [..., workers inside, multiplier, cash to hurry]
+            print(production.collect(save, x, y, town_id, id, workers=int(args[4]), multiplier=args[5], cash=args[6]))
+        else: # not a building, or the Round Table
+            print(production.collect(save, x, y, town_id, id))
+
+    elif cmd == Constant.CMD_ACTIVATE:
+        x = args[0]
+        y = args[1]
+        town_id = int(args[2])
+        id = args[3]
+        choice = args[4] # how long a farm or mill works, 1-4; 0 after collecting
+        print(production.choose_working_time(save, x, y, town_id, id, choice))
     
     elif cmd == Constant.CMD_SELL:
         x = args[0]
@@ -164,7 +178,9 @@ def do_command(USERID, cmd, args):
             if item[1] == b_x and item[2] == b_y:
                 if len(item) < 7:
                     item += [[]]
+                workers_before = len(item[6])
                 item[6] += [unit_id]
+                production.worker_entered(item, workers_before)
                 break
         # Remove unit
         for item in map["items"]:
@@ -246,55 +262,32 @@ def do_command(USERID, cmd, args):
         save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - 5, 0)#maybe make function for editing resources
         save["maps"][town_id]["coins"] += 2500
 
-    elif cmd == Constant.CMD_STORE_ITEM:
+    elif cmd == Constant.CMD_STORE_ITEM or cmd == Constant.CMD_STORE_ITEM_FROMBUG:
         x = args[0]
         y = args[1]
         town_id = int(args[2])
         item_id = args[3]
-        print("Store", str(get_name_from_item_id(item_id)), "from", f"({x},{y})")
-        map = save["maps"][town_id]
-        for item in map["items"]:
-            if item[0] == item_id and item[1] == x and item[2] == y:
-                map["items"].remove(item)
-                break
-        length = len(save["privateState"]["gifts"])
-        if length <= item_id:
-            for i in range(item_id - length + 1):
-                save["privateState"]["gifts"].append(0)
-        save["privateState"]["gifts"][item_id] += 1
+        print("Store", str(get_name_from_item_id(item_id)), "from", f"({x},{y})", end=": ")
+        print(inventory.put_away(save, x, y, town_id, item_id))
 
-    elif cmd == Constant.CMD_PLACE_GIFT:
+    elif cmd == Constant.CMD_STORE_ADD_ITEMS:
+        ids = args[0] # JSON list of item ids: prizes, and heroes bought without an altar
+        print(inventory.add_items(save, ids))
+
+    elif cmd == Constant.CMD_PLACE_GIFT or cmd == Constant.CMD_PLACE_STORED_ITEM:
         item_id = args[0]
         x = args[1]
         y = args[2]
-        town_id = args[3]#unsure, both 3 and 4 seem to stay 0
-        args[4]#unknown yet
-        print("Add", str(get_name_from_item_id(item_id)), "at", f"({x},{y})")
-        items = save["maps"][town_id]["items"]
-        orientation = 0#TODO
-        collected_at_timestamp = timestamp_now()
-        level = 0
-        items += [[item_id, x, y, orientation, collected_at_timestamp, level]]#maybe make function for adding items
-        save["privateState"]["gifts"][item_id] -= 1
-        if save["privateState"]["gifts"][item_id] == 0: #removes excess zeros at end if necessary
-            while(save["privateState"]["gifts"][-1] == 0):
-                save["privateState"]["gifts"].pop()  
+        orientation = args[3]
+        town_id = int(args[4])
+        print("Add", str(get_name_from_item_id(item_id)), "at", f"({x},{y})", end=": ")
+        print(inventory.place(save, item_id, x, y, orientation, town_id, is_gift=(cmd == Constant.CMD_PLACE_GIFT)))
 
     elif cmd == Constant.CMD_SELL_GIFT or cmd == Constant.CMD_SELL_STORED:
         item_id = args[0]
-        town_id = args[1]
-        print("Gift", str(get_name_from_item_id(item_id)), "sold on town:",town_id)
-        gifts = save["privateState"]["gifts"] # store_item keeps stored items here too
-        if item_id >= len(gifts) or gifts[item_id] <= 0:
-            print("Not in inventory, nothing sold.")
-            return
-        gifts[item_id] -= 1
-        if gifts[item_id] == 0: #removes excess zeros at end if necessary
-            while(len(gifts) != 0 and gifts[-1] == 0):
-                gifts.pop()
-        price_multiplier = -0.05
-        if get_attribute_from_item_id(item_id, "cost_type") != "c":
-            apply_cost(save["playerInfo"], save["maps"][town_id], item_id, price_multiplier)
+        town_id = int(args[1])
+        print("Sell", str(get_name_from_item_id(item_id)), "from storage", end=": ")
+        print(inventory.sell(save, item_id, town_id, is_gift=(cmd == Constant.CMD_SELL_GIFT)))
     
     elif cmd == Constant.CMD_ACTIVATE_DRAGON:
         currency = args[0]
@@ -430,11 +423,7 @@ def do_command(USERID, cmd, args):
             print("Added " + str(coins) + " Gold to players balance")
 
         if hero != 0:
-            length = len(save["privateState"]["gifts"])
-            if length <= hero:
-                for i in range(hero - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][hero] += 1
+            inventory.add_gift(save, hero)
             print("Added Hero ID=" + str(hero))
 
         pState = save["privateState"]
@@ -485,12 +474,7 @@ def do_command(USERID, cmd, args):
 
         item_array = items.split(',')
         for item in item_array:
-            item_id = int(item)
-            length = len(save["privateState"]["gifts"])
-            if length <= item_id:
-                for i in range(item_id - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][item_id] += 1
+            inventory.add_gift(save, int(item))
 
         save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_used, 0)#maybe make function for editing resources
         print(f"Used {cash_used} cash to buy super offer pack!")

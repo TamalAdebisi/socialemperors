@@ -37,6 +37,7 @@ from bundle import QUESTS_DIR
 from engine import timestamp_now
 from get_game_config import get_game_config, get_level_from_xp
 import graveyard
+import inventory
 
 UNIT_ID, SENT, KILLED, RECOVERED = 0, 1, 2, 3
 
@@ -65,13 +66,6 @@ def _ranks(save: dict) -> dict:
     if not isinstance(pState.get("questsRank"), dict):
         pState["questsRank"] = {}
     return pState["questsRank"]
-
-
-def _give(save: dict, item_id: int, count: int) -> None:
-    gifts = save["privateState"]["gifts"]
-    if len(gifts) <= item_id:
-        gifts.extend([0] * (item_id - len(gifts) + 1))
-    gifts[item_id] += count
 
 
 def _lose_units(save: dict, map: dict, rows) -> list:
@@ -121,7 +115,7 @@ def end(save: dict, result: dict) -> str:
     lost = _lose_units(save, map, result.get("units"))
 
     for item_id, count in (result.get("item_rewards") or {}).items():
-        _give(save, int(item_id), int(count))
+        inventory.add_gift(save, int(item_id), int(count))
 
     outcome = "won" if won else "lost"
     return f"Quest {quest_id} {outcome}: +{resources.get('g', 0)} gold, +{resources.get('x', 0)} xp, {len(lost)} units lost."

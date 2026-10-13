@@ -24,6 +24,8 @@ The server checks that the pieces or the cash are really there and takes
 prices from its own table, not from the client.
 """
 
+import inventory
+
 PIECES = 5
 
 # Reward for each collection, from 1 to 23.
@@ -73,16 +75,9 @@ def _rows(save: dict) -> list:
     return rows
 
 
-def _give(save: dict, item_id: int) -> None:
-    gifts = save["privateState"]["gifts"]
-    while len(gifts) <= item_id:
-        gifts.append(0)
-    gifts[item_id] += 1
-
-
 def _finish(save: dict, rows: list, collection: int) -> None:
     """Hand out the reward and use up one of each piece."""
-    _give(save, REWARDS[collection])
+    inventory.add_gift(save, REWARDS[collection])
     row = rows[collection]
     row[0] = 1
     for piece in range(1, PIECES + 1):
