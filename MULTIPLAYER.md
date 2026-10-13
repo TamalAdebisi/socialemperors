@@ -36,6 +36,9 @@ SE_INVITE_CODE=letmein                       # optional closed beta
 **Hosting it:** see [DEPLOY.md](DEPLOY.md) for a step-by-step guide (Railway
 for the server, Cloudflare R2 for the 1.3 GB `assets/` folder).
 
+**What's next:** see [ROADMAP.md](ROADMAP.md) for the plan and how changes
+reach the live game.
+
 ## Run it
 
 ```

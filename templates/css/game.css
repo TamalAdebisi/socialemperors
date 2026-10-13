@@ -1,0 +1,125 @@
+/* The game screen: a slim bar on top, the game filling the rest. */
+
+:root {
+    --bar-height: 46px;
+    --grass: #669C2C;
+    --wood: #6e5335;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+body.game-page {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #2f4220;
+    font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+    font-size: 13px;
+}
+
+/* Top bar */
+
+#gamebar {
+    flex: none;
+    height: var(--bar-height);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 12px;
+    background: linear-gradient(#a3cf3c, #7fae1c);
+    border-bottom: 3px solid var(--wood);
+    white-space: nowrap;
+}
+
+#gamebar .logo img {
+    display: block;
+    height: 36px;
+}
+
+#gamebar .empire {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#gamebar nav {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+#gamebar nav a,
+#gamebar nav button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 9px;
+    box-sizing: border-box;
+    border: 1.5px solid #9e7747;
+    border-radius: 6px;
+    background: rgb(255, 245, 131);
+    color: black;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#gamebar nav a:hover,
+#gamebar nav button:hover {
+    background: rgb(250, 237, 90);
+}
+
+#gamebar nav button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgb(255, 245, 131);
+}
+
+#gamebar nav img {
+    height: 16px;
+}
+
+#gamebar .version,
+#gamebar .fps {
+    color: #2f4220;
+    font-size: 11px;
+}
+
+/* Small screens: keep the buttons, drop the extras. */
+@media (max-width: 720px) {
+    #gamebar .version,
+    #gamebar .fps,
+    #gamebar nav .label {
+        display: none;
+    }
+}
+
+/* Game area */
+
+#stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The game is drawn for 760 x 600. Scale it to the biggest box of that
+   shape that fits the window, so nothing is stretched out of shape. */
+#stage ruffle-player {
+    width: min(100vw, calc((100vh - var(--bar-height)) * 760 / 600));
+    height: auto;
+    aspect-ratio: 760 / 600;
+    background: var(--grass);
+}
+
+/* ?size=native, and the Flash Player page: the original fixed size. */
+body.native #stage ruffle-player,
+#stage embed {
+    width: 760px;
+    height: 600px;
+}

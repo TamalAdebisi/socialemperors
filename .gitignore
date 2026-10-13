@@ -14,3 +14,7 @@ Scripts/
 pyvenv.cfg
 # Local server data (database, secret key)
 data/
+
+# Decompiled game client (copyrighted - never commit) and the tools that make it
+decompiled/
+.tools/

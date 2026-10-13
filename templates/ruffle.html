@@ -1,126 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <!-- Meta -->
         <meta charset="utf-8"/>
-        <!-- Title and Icon -->
-        <title id="pageTitle">Social Empires</title>
-        <link rel="shortcut icon" href="img/icon.gif"/>
-        <link rel="icon" type="image/png" href="img/icon.gif"/>
-        <script src="https://unpkg.com/@ruffle-rs/ruffle/ruffle.js"></script>
-        <!--<script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle/ruffle.js"></script>-->
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Social Empires</title>
+        <link rel="icon" type="image/gif" href="img/icon.gif"/>
+        <link rel="stylesheet" href="css/game.css"/>
+        <!-- Ruffle, the Flash emulator. Pinned to a tested version; the
+             integrity hash makes the browser refuse any other file. -->
+        <script src="https://unpkg.com/@ruffle-rs/ruffle@0.7.1/ruffle.js"
+                integrity="sha384-6NrmfJx+zTZZPW41eipMGvyVrfvsDKenrh0v/YJ+nJq0WzzLvOHX6GCcQQ1GbIic"
+                crossorigin="anonymous"></script>
     </head>
-    <body style="font-family: 'lucida grande',tahoma,verdana,arial,sans-serif">
-    <center>
-        <!-- SESSION HEADER -->
-        <div id="header" style="width: 760px; margin-top: 50px;">
-            <div id="session" style="float: right;">
-                <p style="display:inline">Logged in as <b>{{save_info.name}}</b> lvl {{save_info.level}} (<a href="/">switch empire</a> · <a href="/logout">log out {{user.username}}</a>)</p>
-            </div>
-        </div>
-        <br>
-        <!-- GAME BAR -->
-        <div id="gameBar" style="margin-top: 15px;">
-            <!-- GAME BAR TOP -->
-            <div id="gamebar_top" style="width: 760px; height: 90px;">
-                <div style="float: left; margin-left:155px; padding: 4px; font-size: 10pt">
-                    <!-- VERSION -->
-                    <br><br><br>
-                    <p style="display: inline">{{ version }}</p>
-                </div>
-            </div>
-            <!-- GAME BAR BUTTONS -->
-            <div id="gamebar_buttons" style="width: 760px;">
-                &nbsp;
-                <a class="gameBarButton" href="#"><div><img src="img/gift.png">Free Gifts</div></a>
-                <a class="gameBarButton gameBarButtonSelected" href="#"><div><img>Play</div></a>
-                <a class="gameBarButton" href="#"><div><img src="img/cash.png">Get Cash</div></a>
-                <a class="gameBarButton" href="https://discord.gg/zW5gSbQJBw" target="_blank"><div><img src="img/discord.png">Discord</div></a>
-                <a class="gameBarButton" href="https://github.com/AcidCaos/socialemperors#readme" target="_blank"><div><img src="img/github.png">GitHub</div></a>
-            </div>
-            <style>
-                #gameBar {
-                    text-align: left;
-                    width: 760px;
-                    margin-bottom: 0px;
-                    padding: 0px;
-                    background-color:rgb(137, 187, 15);
-                    background-image: url('img/Gamebar_byTrevo.png');
-                    background-repeat: no-repeat;
-                    background-size: contain;
-                    border-bottom: solid #6e5335 3px;
-                }
-                .gameBarButton {
-                    display: inline-block;
-                    height: 19px;
-                    color: black;
-                    border: solid 1.5px;
-                    border-color: #9e7747;
-                    background-color:rgb(255, 245, 131);
-                    border-top-left-radius: 5px;
-                    border-top-right-radius: 5px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    font-size: 11pt;
-                    padding: 2px 3px 1px 3px; 
-                }
+    <body class="game-page">
+        {% set fullscreen_button = true %}
+        {% include "_gamebar.html" %}
+        <main id="stage"></main>
+        <script>
+            // Test switches in the address bar, e.g. /ruffle.html?quality=low&fps=1
+            //   quality=low|medium|high|best             how smoothly shapes are drawn
+            //   renderer=webgpu|wgpu-webgl|webgl|canvas  how Ruffle draws
+            //   size=native                              original 760 x 600, not fitted to the window
+            //   fps=1                                    show how many frames the page draws per second
+            var opts = new URLSearchParams(location.search);
+            function pick(name, allowed) {
+                var value = opts.get(name);
+                return allowed.indexOf(value) >= 0 ? value : null;
+            }
+            if (opts.get("size") === "native") {
+                document.body.classList.add("native");
+            }
 
-                .gameBarButtonSelected {
-                    background-color:rgb(233, 221, 81);
-                }
+            var player = window.RufflePlayer.newest().createPlayer();
+            document.getElementById("stage").appendChild(player);
+            player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
+                url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAMEVERSION}}",
+                backgroundColor: "#669C2C",
+                allowScriptAccess: false,
+                allowFullscreen: true, // lets the game's own full screen button work
+                autoplay: "on",
+                quality: pick("quality", ["low", "medium", "high", "best"]),
+                preferredRenderer: pick("renderer", ["webgpu", "wgpu-webgl", "webgl", "canvas"]),
+                parameters: '\
+                    spdebug=notnull&brk=0\
+                    &staticUrl={{ASSETS_URL}}/&brk=0\
+                    &dynamicUrl={{PUBLIC_URL}}/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/&brk=0\
+                    &skiphash12341=notnull&brk=0\
+                    &fb_sig_user={{save_info.userid}}&brk=0\
+                    &user_key={{USER_KEY}}&brk=0\
+                    &language=en&brk=0\
+                    &accessToken=AAABbZAm0wdMUBALsOrR0Ho68CLjaOT8SV3vftKg9mbo1zZColaW5FljRVaLxPGxXXnm1M98mTZCAttcQ4GHwvSyXfsyxYmvKMH8Hmn5iliSPnjvIsZA6&brk=0\
+                    &sex=m&brk=0\
+                    &lastLoggedIn=1349266517&brk=0\
+                    &dailyBonus=0&brk=0\
+                    &friendsInfo={{friendsInfo | tojson}}&brk=0\
+                    &serverTime={{serverTime}}&brk=0\
+                    &forceSyncError=1&brk=0\
+                    &forceAttackReload=0&brk=0\
+                    &forceQuestReload=0&brk=0'
+            });
 
-                .gameBarButton img {
-                    height: 17px;
-                    padding-right: 3px;
-                    vertical-align: middle;
-                }
-
-                .gameBarButton:hover {
-                    background-color:rgb(250, 237, 90);
-                    text-decoration: none;
-                }
-
-                .gameBarButtonSelected:hover {
-                    background-color:rgb(223, 212, 82);
-                }
-
-            </style>
-        </div>
-        <!-- EMBED GAME -->
-        <object>
-            <div id='ruffle'></div>
-            <script>
-                var ruffle = window.RufflePlayer.newest(),
-                player = Object.assign(document.getElementById("ruffle").appendChild(ruffle.createPlayer()), {
-                    width: 760,
-                    height: 600,
-                    style: 'width: 760px; height: 600px; background-color: #669C2C;',
+            // In full screen the game shows more of the map and moves its
+            // toolbar to the screen edges, as it did on Facebook. The game
+            // arranges its toolbar once, for whatever size it has when told
+            // about full screen, and Ruffle tells it before catching up with
+            // the new size. So grow the player to the screen's size first,
+            // give Ruffle two frames to notice, then go full screen.
+            var fullscreen = document.getElementById("fullscreen");
+            fullscreen.hidden = !player.fullscreenEnabled;
+            fullscreen.addEventListener("click", function () {
+                player.style.width = screen.width + "px";
+                player.style.height = screen.height + "px";
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        player.enterFullscreen();
+                    });
                 });
-                player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
-                    url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAMEVERSION}}",
-                    backgroundColor: "#669C2C",
-                    allowScriptAccess: false,
-                    autoplay: true,
-                    parameters: '\
-                        spdebug=notnull&brk=0\
-                        &staticUrl={{ASSETS_URL}}/&brk=0\
-                        &dynamicUrl={{PUBLIC_URL}}/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/&brk=0\
-                        &skiphash12341=notnull&brk=0\
-                        &fb_sig_user={{save_info.userid}}&brk=0\
-                        &user_key={{USER_KEY}}&brk=0\
-                        &language=en&brk=0\
-                        &accessToken=AAABbZAm0wdMUBALsOrR0Ho68CLjaOT8SV3vftKg9mbo1zZColaW5FljRVaLxPGxXXnm1M98mTZCAttcQ4GHwvSyXfsyxYmvKMH8Hmn5iliSPnjvIsZA6&brk=0\
-                        &sex=m&brk=0\
-                        &lastLoggedIn=1349266517&brk=0\
-                        &dailyBonus=0&brk=0\
-                        &friendsInfo={{friendsInfo | tojson}}&brk=0\
-                        &serverTime={{serverTime}}&brk=0\
-                        &forceSyncError=1&brk=0\
-                        &forceAttackReload=0&brk=0\
-                        &forceQuestReload=0&brk=0'
+            });
+            function fitAgain() {
+                if (!document.fullscreenElement) {
+                    player.style.width = player.style.height = "";
+                }
+            }
+            document.addEventListener("fullscreenchange", fitAgain);
+            document.addEventListener("fullscreenerror", fitAgain);
+
+            // Frames per second the page manages to draw. Ruffle draws on these
+            // frames, so a low number or many slow frames means the game stutters.
+            if (opts.get("fps")) {
+                var fps = document.getElementById("fps"), frames = 0, slow = 0, last = performance.now(), start = last;
+                fps.hidden = false;
+                requestAnimationFrame(function tick(now) {
+                    frames++;
+                    if (now - last > 50) slow++;
+                    last = now;
+                    if (now - start >= 1000) {
+                        fps.textContent = Math.round(frames * 1000 / (now - start)) + " fps · " + slow + " slow";
+                        frames = slow = 0;
+                        start = now;
+                    }
+                    requestAnimationFrame(tick);
                 });
-            </script>
-        </object>
-    </center>
+            }
+        </script>
     </body>
 </html>
