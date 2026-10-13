@@ -1,5 +1,6 @@
 """
-Saves: new villages and older saves have every field the game client reads.
+Saves: new villages and older saves have every field the game client reads,
+and a finished tutorial stays finished.
 
 Run from the repository folder:  python -m unittest discover tests
 """
@@ -14,6 +15,7 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import sessions
 from bundle import VILLAGES_DIR
+from command import do_command
 from version import migrate_loaded_save, version_code
 
 
@@ -49,6 +51,33 @@ class SavesTest(unittest.TestCase):
         save["privateState"]["countTimePacket"] = [0] * 6
         self.check_fields(save)
         self.assertEqual(save["maps"][0]["items"], keep)
+
+
+class TutorialTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        sessions.load_saved_villages()
+
+    def setUp(self):
+        self.pid = sessions.new_village(owner_id=None)
+        self.save = sessions.session(self.pid)
+
+    def done(self):
+        return int(self.save["playerInfo"]["completed_tutorial"])
+
+    def test_arthurs_lessons_then_the_end(self):
+        for step in range(15):  # each lesson Arthur gives
+            do_command(self.pid, "complete_tutorial", [step])
+            self.assertEqual(self.done(), 0, step)  # a reload now starts it again
+        do_command(self.pid, "complete_tutorial", [15])  # "Congratulations" closed
+        self.assertEqual(self.done(), 15)
+        self.assertTrue(sessions.save_info(self.pid)["tutorial_done"])
+
+    def test_skipping_the_tutorial(self):
+        do_command(self.pid, "complete_tutorial", [0])
+        do_command(self.pid, "complete_tutorial", [15])  # the skip button ends it the same way
+        self.assertEqual(self.done(), 15)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,8 @@ import social
 import assists
 import pvp
 
+TUTORIAL_END = 15  # the step Arthur's tutorial reports when it ends or is skipped
+
 def get_strategy_type(id):
     if id == 8:
         return "Defensive"
@@ -106,12 +108,15 @@ def do_command(USERID, cmd, args, previous=None):
         print(shop.gold_statue(save))
 
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
-        tutorial_step = args[0]
+        tutorial_step = int(args[0])
         print("Tutorial step", tutorial_step, "reached.")
-        if tutorial_step >= 31: # 31 is Dragon choosing. After that, you have some freedom. There's at least until step 45.
+        # Arthur's last lesson (and the skip button) report step 15 in both
+        # working clients. The client starts the tutorial over from the first
+        # step whenever this is still 0, so a reload partway through repeats it.
+        if tutorial_step >= TUTORIAL_END:
             print("Tutorial COMPLETED!")
-            save["playerInfo"]["completed_tutorial"] = 1
-            save["privateState"]["dragonNestActive"] = 1 
+            save["playerInfo"]["completed_tutorial"] = tutorial_step  # what the client keeps too
+            save["privateState"]["dragonNestActive"] = 1
     
     elif cmd == Constant.CMD_MOVE:
         ix = args[0]
