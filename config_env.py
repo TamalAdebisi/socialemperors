@@ -30,6 +30,10 @@ SE_CDN_FALLBACK      "1" to fetch missing assets from Social Point's old CDN
                      strangers make your server download files)
 SE_TOKEN_MAX_AGE     Seconds a game token stays valid (default 7 days)
 SE_TRUSTED_PROXIES   How many proxies sit in front of the server (default 0)
+SE_CLIENT_IP_HEADER  Header the host's proxy puts the visitor's IP in, e.g.
+                     X-Real-IP on Railway. When set, it is used instead of
+                     SE_TRUSTED_PROXIES to tell visitors apart. Only use a header
+                     the proxy always overwrites, or visitors can fake it.
 """
 
 import os
@@ -69,9 +73,10 @@ MAX_NEIGHBORS = _int("SE_MAX_NEIGHBORS", 30)
 CDN_FALLBACK = _flag("SE_CDN_FALLBACK", False)
 TOKEN_MAX_AGE = _int("SE_TOKEN_MAX_AGE", 7 * 24 * 3600)
 # Number of proxies that each add an X-Forwarded-For entry in front of the
-# app. Railway = 1 (its edge rewrites the header, also when Cloudflare is in
-# front). Used to read the visitor's real IP for login rate-limiting. 0 = none.
+# app. Used to read the visitor's real IP for login rate-limiting. 0 = none.
+# Railway adds an internal hop of its own, so use SE_CLIENT_IP_HEADER there.
 TRUSTED_PROXIES = _int("SE_TRUSTED_PROXIES", 0)
+CLIENT_IP_HEADER = os.environ.get("SE_CLIENT_IP_HEADER", "").strip() or None
 
 # Game client versions players may pick. Anything else is rejected, so a
 # crafted form can't inject text into the game page.

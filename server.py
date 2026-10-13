@@ -95,6 +95,15 @@ _failed_lock = threading.Lock()
 LOGIN_WINDOW, LOGIN_MAX_FAILS = 600, 10
 
 
+def client_ip():
+    """The visitor's IP address, as reported by the host's proxy if configured."""
+    if config_env.CLIENT_IP_HEADER:
+        ip = request.headers.get(config_env.CLIENT_IP_HEADER)
+        if ip:
+            return ip.strip()
+    return request.remote_addr or "?"
+
+
 def _too_many_failures(ip):
     now = time.time()
     with _failed_lock:
@@ -149,12 +158,13 @@ def register():
 
 @app.route("/login", methods=["POST"])
 def login():
-    ip = request.remote_addr or "?"
+    ip = client_ip()
     if _too_many_failures(ip):
         return render_home(error="Too many failed attempts. Try again in a few minutes."), 429
     user = accounts.authenticate(request.form.get("username", ""), request.form.get("password", ""))
     if user is None:
         _record_failure(ip)
+        print(f"[ACCOUNT] Failed login for {request.form.get('username', '')!r} from {ip}")
         return render_home(error="Wrong username or password."), 401
     web_session.clear()
     web_session.permanent = True

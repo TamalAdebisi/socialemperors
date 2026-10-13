@@ -196,7 +196,7 @@ These tell the server where it lives. Click the service → **Variables** →
 ```
 SE_PUBLIC_URL=https://socialemperors.me
 SE_ASSETS_URL=https://assets.socialemperors.me
-SE_TRUSTED_PROXIES=1
+SE_CLIENT_IP_HEADER=X-Real-IP
 PORT=8080
 RAILWAY_DEPLOYMENT_DRAINING_SECONDS=30
 ```
@@ -205,7 +205,7 @@ RAILWAY_DEPLOYMENT_DRAINING_SECONDS=30
 | --- | --- |
 | `SE_PUBLIC_URL` | The address players use. The game page tells Flash to send game actions here. |
 | `SE_ASSETS_URL` | Where Flash downloads art, sounds and the game itself (your R2 bucket). |
-| `SE_TRUSTED_PROXIES` | Railway sits in front of the server and tells it each visitor's real address. `1` means "trust that one layer". The login lockout (10 wrong passwords → wait 10 minutes) uses this; a wrong value would lock out everyone at once instead of just the guesser. |
+| `SE_CLIENT_IP_HEADER` | Railway sits in front of the server and puts each visitor's real address in the `X-Real-IP` header, replacing any value the visitor sent. The login lockout (10 wrong passwords → wait 10 minutes) uses this to tell visitors apart. Without it, everyone would look like Railway's own machines, and one person's wrong guesses could lock out other players. |
 | `PORT` | The internal port the server listens on. |
 | `RAILWAY_DEPLOYMENT_DRAINING_SECONDS` | **Important.** When Railway updates or restarts the server, it normally kills the old one instantly. The server keeps the last few seconds of everyone's progress in memory and saves it on shutdown, so it needs a moment. This gives it 30 seconds. |
 
@@ -296,7 +296,8 @@ on the Railway address the game files would be blocked.
 | Login page loads, game area stays empty / green | Asset domain or CORS | Check 2.5 is *Active*, 2.6 is saved, and 2.7 works |
 | Console shows `blocked by CORS policy` | CORS added after files were cached | Cloudflare → socialemperors.me → **Caching** → **Purge Everything** |
 | Everyone's accounts vanished after an update | Volume not mounted at `/data` | Check 3.2 (the data from before is lost, sorry) |
-| `Too many failed attempts` for everyone | `SE_TRUSTED_PROXIES` wrong | Check it's `1` |
+| `Too many failed attempts` for everyone | `SE_CLIENT_IP_HEADER` missing | Check it's `X-Real-IP` |
+| Startup lines like `Listening at:` shown in red as *error* | Normal: gunicorn writes its status messages to the error stream | Nothing to fix |
 
 ---
 
