@@ -9,18 +9,21 @@ Plan on about an hour, most of it waiting for things to finish.
 ## The big picture
 
 ```
-                      ┌──────────────────────────────────────────────┐
-  Player's browser ──►│ socialemperors.me          (Railway)         │  accounts, saves,
-   (Ruffle plays      │   the game server: this repository's code    │  game logic
-    the Flash game)   └──────────────────────────────────────────────┘
-          │           ┌──────────────────────────────────────────────┐
+                      ┌──────────────────────────────────────────────┐   ┌──────────────────┐
+  Player's browser ──►│ socialemperors.me          (Railway)         │──►│ Supabase         │
+   (Ruffle plays      │   the game server: this repository's code    │   │  the database:   │
+    the Flash game)   └──────────────────────────────────────────────┘   │  accounts, saves │
+          │           ┌──────────────────────────────────────────────┐   └──────────────────┘
           └──────────►│ assets.socialemperors.me   (Cloudflare R2)   │  1.3 GB of art,
                       │   the assets/ folder, served by Cloudflare   │  sounds and SWFs
                       └──────────────────────────────────────────────┘
 ```
 
-* **Railway** runs the server program 24/7 and keeps its database on a
-  *volume* (a disk that survives restarts and updates).
+* **Railway** runs the server program 24/7, in Singapore, near most players.
+  It keeps a *volume* (a disk that survives restarts and updates) for its
+  login secret, and for the database until Part 6.
+* **Supabase** keeps the database (Postgres): every account and empire. It's
+  in Singapore too, next to the server, which asks it things all the time.
 * **Cloudflare R2** stores the game's 4,479 art/sound files. Keeping them out
   of the server makes every update upload ~200 MB instead of ~1.5 GB, and
   Cloudflare delivers them from a data centre near each player for free.
@@ -33,6 +36,7 @@ Plan on about an hour, most of it waiting for things to finish.
 | --- | --- |
 | Railway Hobby plan | **$5**, which includes $5 of usage. This server uses roughly $2–4 at a few hundred players, so you should pay just the $5. |
 | Cloudflare R2 | **$0**. 1.3 GB is under the 10 GB free storage; downloads from R2 are always free. |
+| Supabase | **$0** (Free plan): a 500 MB database, room for thousands of empires. |
 | Cloudflare DNS | **$0** (Free plan) |
 | Domain | Already paid at Namecheap (yearly) |
 
@@ -188,8 +192,8 @@ separate disk that is kept.
 
 1. In the project canvas, right-click empty space (or press `Ctrl/⌘ + K`) →
    **Volume** (*New Volume*), and connect it to the `socialemperors` service.
-2. Set the **mount path** to `/data`. The server stores its database and
-   login secret there.
+2. Set the **mount path** to `/data`. The server stores its login secret
+   there, and its database until it moves to Supabase (Part 6).
 
 ### 3.3 Settings (environment variables)
 
@@ -302,9 +306,10 @@ on the Railway address the game files would be blocked.
   **Upload assets to R2** workflow, and try it on staging before merging.
   Keep the old folder until the new version is live: pages already open
   still use it.
-* **Backups:** Railway → click the volume → **Backups** → turn on a
-  **daily** schedule. If something goes wrong you can roll the database back
-  to an earlier day.
+* **Backups:** see [6.6](#66-backups). Keep Railway's volume backups on
+  too (Railway → click the volume → **Backups** → a **daily** schedule): the
+  volume holds the login secret, and the SQLite database as it was on the day
+  of the move.
 * **Spending cap:** <https://railway.com/workspace/usage> → **Set Usage
   Limits** → set a **Custom email alert** at $8. A **hard limit** (minimum
   $10) turns the server *off* when reached, so if you set one, make it
@@ -312,6 +317,147 @@ on the Railway address the game files would be blocked.
 * **Logs show `Rejected game request ... bad or expired token`:** a player's
   game page is older than 7 days, or the server's secret changed. Reloading
   the page fixes it.
+
+## Part 6: Supabase, the database
+
+Until now the server kept everything in one file (SQLite) on its Railway
+volume. Supabase keeps it in a proper database server (Postgres) instead.
+Players won't notice anything, but it is the base for what comes next:
+signing in with Discord or Google (Supabase does that part), friends and
+gifts. It also means the data no longer lives on the same disk as the server.
+
+Two things to know first:
+
+* **The server still runs as one copy.** Empires are kept in the server's
+  memory while it runs and saved every 5 seconds (`MULTIPLAYER.md`). A
+  database server is needed before several copies can share the work, but
+  it isn't enough on its own; that's a later step.
+* **Region matters.** The server asks the database something on every page
+  and saves to it every 5 seconds, so the two must be in the same city. Both
+  are in **Singapore**. Railway has no region in Korea or Japan; Singapore is
+  its nearest to most players (Europe is about 160 ms away).
+
+### 6.1 The project (done)
+
+The Supabase project **socialemperors** is set up in Singapore
+(`ap-southeast-1`), in the *Social Empires Reborn* organization. In it:
+
+| | Live server (`game-server`) | Staging (`game-server-staging`) |
+| --- | --- | --- |
+| Login | `se_game` | `se_staging` |
+| Schema (a folder of tables) | `game` | `staging` |
+
+Each login can only open its own schema, so a branch being tried on staging
+can never touch real players. Neither schema is on Supabase's *Data API*
+(the web address Supabase gives every project, which anyone who knows the
+project's public key can call), so nothing in them can be read from outside.
+The server makes its own tables there the first time it starts.
+
+If the project ever has to be made again, this is the SQL that set it up
+(Supabase → **SQL Editor**):
+
+```sql
+create role se_game nologin;
+create role se_staging nologin;
+grant se_game to postgres with inherit true, set true;
+grant se_staging to postgres with inherit true, set true;
+create schema game authorization se_game;
+create schema staging authorization se_staging;
+```
+
+### 6.2 Give the two logins passwords
+
+The logins start switched off, with no password. You set the passwords
+yourself, so they never pass through anyone else.
+
+1. Make two passwords with a password manager: **letters and numbers only**,
+   at least 24 characters. (Symbols like `@`, `:` or `/` would need special
+   encoding in the address below; letters and numbers don't.)
+2. Supabase → project **socialemperors** → **SQL Editor** → **New query**,
+   paste this with your two passwords in place, and click **Run**:
+
+   ```sql
+   alter role se_game with login password 'FIRST-PASSWORD';
+   alter role se_staging with login password 'SECOND-PASSWORD';
+   ```
+
+3. Clear the editor afterwards (Supabase keeps a history of queries).
+
+### 6.3 Move the game servers to Singapore
+
+Do staging first, as a rehearsal.
+
+1. Railway → **game-server-staging** → **Settings** → **Deploy** →
+   **Regions** → choose **Southeast Asia (Singapore)** → deploy the change.
+2. Railway moves the volume with it. That takes a few minutes, and the
+   server is down meanwhile.
+3. Once staging works, do the same for **game-server**, at a quiet time:
+   players are disconnected for those few minutes, and their progress is
+   saved first.
+
+### 6.4 Connect the servers to Supabase
+
+1. Supabase → **Connect** (top of the page) → **Session pooler**. Copy the
+   address. It looks like:
+
+   ```
+   postgresql://postgres.mosoygwxatxkhndasqfp:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   ```
+
+   *Why the session pooler?* Railway can only reach addresses of the older
+   kind (IPv4), and Supabase's direct address is the newer kind (IPv6). The
+   pooler bridges the two. Don't take the *Transaction pooler* (port 6543):
+   the server refuses it, because it can't keep the server's settings
+   between two questions.
+
+2. **Staging:** Railway → **game-server-staging** → **Variables** → **Raw
+   Editor**, add these two lines and click **Update Variables**. Start from
+   the address you copied and change only two things: `postgres.` becomes
+   `se_staging.`, and `[YOUR-PASSWORD]` becomes staging's password (no
+   brackets). Keep the part after `@` exactly as Supabase gave it:
+
+   ```
+   SE_DATABASE_URL=postgresql://se_staging.mosoygwxatxkhndasqfp:SECOND-PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_DATABASE_SCHEMA=staging
+   ```
+
+3. Railway redeploys. In its logs you should see
+   `Storage: Postgres, schema staging`, then
+   `Copied from SQLite into Postgres: {'users': …, 'villages': …}`. That's
+   staging's players, moved over once. The SQLite file stays on the volume as
+   it was.
+4. Play-test staging: log in, open an empire, build something, reload.
+5. **Live:** the same on **game-server**, with `se_game.` and the first
+   password, and **no** `SE_DATABASE_SCHEMA` line (the live schema, `game`,
+   is the default):
+
+   ```
+   SE_DATABASE_URL=postgresql://se_game.mosoygwxatxkhndasqfp:FIRST-PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   ```
+
+6. Check the logs for the same two lines, then log in on
+   <https://socialemperors.me>: your empires should all be there. In
+   Supabase → **Table Editor** → schema **game**, you can now see them.
+
+### 6.5 Going back to SQLite
+
+Delete `SE_DATABASE_URL` from the service's variables. The server goes back
+to the SQLite file on its volume, **as it was at the move**: anything played
+since then is only in Supabase. To keep it, copy it into a new SQLite file
+first ([6.6](#66-backups)), and put that file on the volume in place of
+`/data/socialempires.db`.
+
+### 6.6 Backups
+
+Supabase's free plan has no backups you can download, so make your own:
+`tools/copy_database.py` copies the whole database into a SQLite file on
+your computer (Python and `pip install -r requirements.txt` first):
+
+```
+python tools/copy_database.py "<the live SE_DATABASE_URL>" backup-2026-10-14.db
+```
+
+It works the other way too, into an empty schema: see the top of the script.
 
 ## Troubleshooting
 
@@ -324,6 +470,10 @@ on the Railway address the game files would be blocked.
 | Everyone's accounts vanished after an update | Volume not mounted at `/data` | Check 3.2 (the data from before is lost, sorry) |
 | `Too many failed attempts` for everyone | `SE_CLIENT_IP_HEADER` missing | Check it's `X-Real-IP` |
 | Startup lines like `Listening at:` shown in red as *error* | Normal: gunicorn writes its status messages to the error stream | Nothing to fix |
+| Logs: `password authentication failed` | The password in `SE_DATABASE_URL` isn't the one set in 6.2 | Set it again in the SQL editor, and paste it into the variable again |
+| Logs: `Tenant or user not found` | The name before the `:` in `SE_DATABASE_URL` is wrong | It's `se_game.` (or `se_staging.`) then the project ID: `se_game.mosoygwxatxkhndasqfp` |
+| Logs: `transaction pooler (port 6543)` | The *Transaction pooler* string was copied | Use the *Session pooler* one, port 5432 (6.4) |
+| Logs: `permission denied for schema` | The two servers' settings are swapped | Staging is `se_staging` with `SE_DATABASE_SCHEMA=staging`; live is `se_game` and no schema setting |
 
 ---
 
@@ -370,3 +520,4 @@ Sources: [Railway pricing](https://railway.com/pricing),
 | `.github/workflows/upload-assets-r2.yml` | The "Upload assets to R2" button |
 | `.github/workflows/export-art-r2.yml` | The "Export art to R2" button: sprite sheets for the new client |
 | `config_env.py` | Every setting the server reads, with explanations |
+| `tools/copy_database.py` | Copies the whole database between Supabase and a SQLite file: backups (Part 6) |

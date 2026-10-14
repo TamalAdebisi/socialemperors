@@ -20,7 +20,12 @@ SE_PORT              Port to listen on (default 5050)
 SE_SECRET_KEY        Key used to sign login cookies and game tokens. If unset,
                      one is generated and stored in SE_DATA_DIR/secret_key.
 SE_DATA_DIR          Where local data lives (SQLite DB, secret key). Default ./data
-SE_STORAGE           "sqlite" (default) or "d1" (Cloudflare D1, see storage.py)
+SE_DATABASE_URL      A Postgres connection string, e.g. Supabase's session pooler
+                     one (DEPLOY.md). When set, accounts and empires are kept
+                     there instead of in SQLite, and the first start copies the
+                     players from SQLite over (storage.py). Default: unset, SQLite
+SE_DATABASE_SCHEMA   The schema in that database the tables live in (default
+                     "game"; staging uses "staging")
 SE_ALLOW_REGISTRATION  "1" (default) to let anyone sign up, "0" to close sign-ups
 SE_INVITE_CODE       If set, new accounts must enter this code (closed beta)
 SE_MAX_VILLAGES      Max empires per account (default 3)
@@ -65,7 +70,8 @@ ASSETS_URL = (os.environ.get("SE_ASSETS_URL")
               or f"{PUBLIC_URL}/default01.static.socialpointgames.com/static/socialempires").rstrip("/")
 
 DATA_DIR = os.environ.get("SE_DATA_DIR", os.path.join(".", "data"))
-STORAGE = os.environ.get("SE_STORAGE", "sqlite").strip().lower()
+DATABASE_URL = os.environ.get("SE_DATABASE_URL", "").strip() or None
+DATABASE_SCHEMA = os.environ.get("SE_DATABASE_SCHEMA", "").strip() or "game"
 
 ALLOW_REGISTRATION = _flag("SE_ALLOW_REGISTRATION", True)
 INVITE_CODE = os.environ.get("SE_INVITE_CODE") or None
