@@ -32,7 +32,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <li title="Cash"><span class="dot cash"></span><span data-n="cash"></span></li>
     </ul>
     <div class="hud-buttons">
-      <span class="hud-badge" title="The new game: so far you can move, turn, store and sell; for the rest, use the classic game">Preview</span>
+      <span class="hud-badge" title="The new game: so far you can move, turn, store, sell and collect; for the rest, use the classic game">Preview</span>
       <a class="hud-button" href="">Classic game</a>
       <button class="hud-button" type="button" data-fullscreen>Full screen</button>
     </div>`;

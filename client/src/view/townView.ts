@@ -24,6 +24,7 @@ import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { isOpaqueAt } from "./hit.ts";
+import { Markers, type Sign } from "./markers.ts";
 
 /** How often the screen draws, which Pixi counts animation speed in. */
 const TICKER_FPS = 60;
@@ -41,13 +42,40 @@ export class TownView {
   private readonly slots = new Map<PlacedItem, Container>();
   private readonly glow = new ColorMatrixFilter();
   private highlighted: PlacedItem | null = null;
+  /** Signs over buildings: ready to collect, asleep... */
+  private readonly markers = new Markers();
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
     this.items = items;
     this.town = town;
     this.glow.brightness(1.25, false);
-    this.root.addChild(this.ground, this.marks, this.things);
+    this.root.addChild(this.ground, this.marks, this.things, this.markers.layer);
+  }
+
+  /** Move animations along: `ms` since the last frame, at the camera's zoom. */
+  tick(ms: number, zoom: number): void {
+    this.markers.tick(ms, zoom);
+  }
+
+  /** Show a sign over a thing (ready, asleep), or none. */
+  sign(placed: PlacedItem, sign: Sign | null): void {
+    this.markers.set(placed, sign, this.topOf(placed));
+  }
+
+  /** Numbers rising from a thing: what collecting it gave. */
+  rise(placed: PlacedItem, lines: { text: string; colour: number }[]): void {
+    this.markers.rise(this.topOf(placed) ?? buildingPoint(placed.tx, placed.ty), lines);
+  }
+
+  /** The top middle of a thing's picture, on the map; null before it's drawn. */
+  private topOf(placed: PlacedItem): Point | null {
+    const slot = this.slots.get(placed);
+    const bounds = slot?.getLocalBounds();
+    if (!bounds || bounds.width === 0) {
+      return null;
+    }
+    return { x: bounds.x + bounds.width / 2, y: bounds.y };
   }
 
   /** Draw everything; `progress` hears how many of the town's pictures are ready. */
@@ -102,6 +130,7 @@ export class TownView {
     }
     await this.draw(placed, slot);
     this.sort();
+    this.markers.moveTo(placed, this.topOf(placed));
     if (this.highlighted === placed) {
       this.highlight(placed);
     }
@@ -115,6 +144,7 @@ export class TownView {
       slot.destroy({ children: true });
       this.slots.delete(placed);
     }
+    this.markers.remove(placed);
     if (this.highlighted === placed) {
       this.highlighted = null;
     }
@@ -138,6 +168,7 @@ export class TownView {
     if (slot) {
       slot.alpha = ghost ? 0.7 : 1;
     }
+    this.markers.show(placed, !ghost);
   }
 
   /** Draw a thing as if it stood on another tile (while it's being moved). */

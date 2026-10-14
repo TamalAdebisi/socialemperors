@@ -7,11 +7,11 @@ import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
-    flying: false, cost: 30, costType: "w", facings: 2, ...fields };
+    flying: false, cost: 30, costType: "w", facings: 2, production: null, ...fields };
 }
 
 function placed(fields: Partial<ItemInfo>, tx: number, ty: number, more: Partial<PlacedItem> = {}): PlacedItem {
-  return { item: item(fields), tx, ty, orientation: 0, unitsInside: 0, ...more };
+  return { item: item(fields), tx, ty, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0, ...more };
 }
 
 function town(items: PlacedItem[] = [], expansions = [13]): Town {

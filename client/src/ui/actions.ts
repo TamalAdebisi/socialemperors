@@ -15,6 +15,8 @@ export interface ActionChoices {
 
 export class ActionBar {
   private readonly bar: HTMLElement;
+  /** The name shown by show(), to change in place (a countdown); null while a prompt shows. */
+  private name: HTMLElement | null = null;
 
   constructor() {
     this.bar = document.createElement("nav");
@@ -29,6 +31,7 @@ export class ActionBar {
     name.className = "actions-name";
     name.textContent = choices.name;
     this.bar.append(name);
+    this.name = name;
     this.button("Move", choices.move);
     this.button("Turn", choices.turn);
     this.button("Store", choices.store);
@@ -38,9 +41,17 @@ export class ActionBar {
     this.bar.hidden = false;
   }
 
-  /** A message with one way out, like "Tap where it goes" with Cancel. */
+  /** Change the name show() put up, leaving its buttons be (they'd lose a click being replaced). */
+  rename(text: string): void {
+    if (this.name && this.name.textContent !== text) {
+      this.name.textContent = text;
+    }
+  }
+
+  /** A message with ways out, like "Tap where it goes" with Cancel. */
   prompt(text: string, actions: { label: string; run: () => void }[]): void {
     this.bar.replaceChildren();
+    this.name = null;
     const message = document.createElement("span");
     message.className = "actions-name";
     message.textContent = text;
@@ -54,6 +65,7 @@ export class ActionBar {
   hide(): void {
     this.bar.hidden = true;
     this.bar.replaceChildren();
+    this.name = null;
   }
 
   private confirm(question: string, yes: () => void): void {
