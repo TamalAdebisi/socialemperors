@@ -25,7 +25,7 @@ GitHub Secrets or Railway variables.
 
 | What | Where |
 | --- | --- |
-| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`, in Singapore |
+| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`. Still in Virginia (US East), keeping its data in SQLite on its volume: the moves to Singapore and to Supabase ([DEPLOY.md](DEPLOY.md) 6.3 and 6.4) are still to do |
 | Live game data | Supabase project `socialemperors` (Singapore), schema `game`, login `se_game` ([DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)). Railway volume `game-data` at `/data`: the secret key, and the SQLite database from before the move |
 | Staging server | Same Railway project, service `game-server-staging`, deploys the working branch, volume `staging-data`, sleeps when idle; its data in the same Supabase project, schema `staging`, login `se_staging` |
 | Art, sounds, SWFs | Cloudflare R2 bucket `socialempires-assets` at `assets.socialemperors.me`, uploaded by the *Upload assets to R2* GitHub Action |
@@ -185,6 +185,8 @@ numbers, because the server writes them into the game config.
 
 - [x] The database on Supabase (Postgres), in Singapore next to the game
       server (`storage.py`, [DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)).
+      Built and ready; the live server switches over when its address is
+      set (DEPLOY.md 6.4), which hadn't happened by 14 October 2026.
       The first start copies the players over from SQLite; each server has
       its own login and schema, so staging can't reach real players; nothing
       is on Supabase's public Data API; `tools/copy_database.py` makes
@@ -260,16 +262,16 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 - [ ] 3. Run your town (started): the shop and building; storage; move,
       turn, store and sell buildings; collect from them, with levels; all
       with the Flash client's commands ([CLIENT.md](CLIENT.md#step-3-run-your-town)).
-      The Flash client's own icons are in; next, the menus' layout
+      The Flash client's own icons are in; next, the menus: the rail and
+      dock ([CLIENT.md](CLIENT.md#the-menus-rail-and-dock))
 - [ ] 4. Battles, 5. everything else, 6. switch over
 
 **From here, in three stops** (agreed October 2026). Each is built in
 slices, about one task each; every slice ends tested, documented and merged.
 The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
-- [ ] **Beta 1, the town builder** (the rest of step 3): the menus in the
-      layout the owner picks (option 1, classic corners, is the favourite);
-      units walking; villagers at work (trees, rocks, workers into
+- [ ] **Beta 1, the town builder** (the rest of step 3): the menus as a
+      rail and dock (the owner's pick); units walking; villagers at work (trees, rocks, workers into
       buildings); training and population; land and cash; missions and
       bonuses; neighbours; sound and speed; then a full run-through against
       the Flash game. Players can use the new client for everything but

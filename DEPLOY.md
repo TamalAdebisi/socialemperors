@@ -387,7 +387,11 @@ yourself, so they never pass through anyone else.
 
 ### 6.3 Move the game servers to Singapore
 
-Do staging first, as a rehearsal.
+Do staging first, as a rehearsal. Before each one, back up its volume:
+until 6.4 is done, the live server's volume holds every account and
+empire. Railway → the service → its **Backups** tab → make a manual
+backup, and while you're there, switch on the **Daily** schedule (each
+backup is kept for 6 days).
 
 1. Railway → **game-server-staging** → **Settings** → **Deploy** →
    **Regions** → choose **Southeast Asia (Singapore)** → deploy the change.
