@@ -167,7 +167,7 @@ actually use; the bug radar on the admin page shows what that is.
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
-| 3. Run your town | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
+| 3. Run your town (started: shop, move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
 | 6. Switch over | The new client becomes the default; the Flash one stays as "classic" for a while | Small |
@@ -243,9 +243,9 @@ construction (in `assets/swf/120608_dynamic.swf`).
 `/client.html` is the new client's page, offered on the home page as "The
 new game (preview)" next to Ruffle and Flash. It opens the same empire with
 the same signed game token, asks for the game config and the town exactly as
-the Flash client does (`get_game_config.php`, `get_player_info.php`), draws
-the town and changes nothing. `/client.html?visit=<player id>` shows another
-player's town, as visiting a neighbour does.
+the Flash client does (`get_game_config.php`, `get_player_info.php`) and
+draws the town (step 3 adds changing it). `/client.html?visit=<player id>`
+shows another player's town, as visiting a neighbour does, to look at only.
 
 - The ground and every building and unit, in the game's drawing order, each
   where the Flash client puts it: side by side with the Flash client, a new
@@ -292,6 +292,132 @@ what the Flash client adds by itself (lost objects, wandering trolls...),
 effects and sound. A big town (400 items) took 16 seconds to load on our
 test machine, a busy server with no graphics card; staging will show what
 players get.
+
+### Step 3: run your town
+
+Built so far: **the shop and building**, **move, turn, store and sell**,
+and **collecting from buildings**, with levels. Tap (or click) a building
+to select it; a bar at the bottom shows its name and what can be done with it.
+Selling asks first and says what it gives back. While moving, the footprint
+under the pointer shows green where it fits and red where it doesn't; tap
+the new place, or Cancel (Escape). Tapping picks the picture actually under
+the finger, not its box, so a tree in front of a house doesn't steal the tap.
+
+**How the changes reach the save:** exactly as the Flash client sends them,
+so both clients can be used on the same empire. Actions wait in a queue and
+go to `command.php` in a batch every 3 seconds, one batch at a time; a batch
+that fails is tried again, up to 3 times, then the player is told to reload.
+What's left when the page closes is sent on the way out. Our copy of the
+town changes at once, as in the Flash client, so the game doesn't wait for
+the server.
+
+**The rules**, read from the Flash client (our notes, our words):
+
+- A building covers width x height tiles back from the tile the save names,
+  whichever way it faces (turning doesn't swap them). A unit takes its own
+  tile.
+- Something fits where all its tiles are on bought land (the save's
+  expansions) and none is taken by a building or a standing unit.
+- Turning goes round the item's ways of facing (its art's frames).
+- Selling gives back a twentieth of the price, in what it was bought with,
+  rounded down; nothing for things bought with cash.
+- What the info panel offers: most buildings can be moved, turned, stored
+  and sold. The town hall can only be moved and turned. Trees, rocks, mines,
+  treasures, scenery and boss statues can only be sold (the bulldozer).
+  Units have no buttons. What stands on the wild ring around the island
+  isn't the player's.
+- The commands: `move` (old place, item, new place, facing, town),
+  `orient` (place, new facing, town), `sell` (place, item, town) and
+  `store_item` (place, town, item).
+
+**Collecting.** A building that's ready has a bubble over it in the colour
+of what it gives; tap it to collect, and the harvest and experience rise
+from it. Mills and mines whose workers wait for orders show "zz": tapping
+asks how long they should work, with what each choice gives. Selecting a
+producing building shows when it will be ready.
+
+**How production works**, read from the Flash client (our notes, our words):
+
+- Each round of work starts at the time the save keeps for the building
+  (`item[4]`, the server's clock); it's ready once its working time has
+  passed since then. The Flash client counts it up second by second; we
+  work it out from the clock, which comes to the same.
+- Three kinds of producing building:
+  - with workers (farms, ranches, troll mills and mines): they work while
+    units are inside, for the config's `activation` seconds, then again;
+  - with a working time (human mills, and gold, stone and lumber mines:
+    the config's `COLLECT_VARIABLE_IDS`): units inside, and the player picks
+    5 minutes, 1, 4 or 8 hours for half, once, twice or three times the
+    harvest (`activate` with 1 to 4). After each collect they go back to
+    sleep (`activate` with 0) until the player picks again;
+  - on their own (wonders, the bakery, the restaurant, the temple): no
+    workers, round after round.
+- The harvest is the config's `collect`; each worker after the first adds a
+  fifth, then the working time's share; all rounded down. Farms use up a
+  third of their harvest in wood (rounded). The config's `collect_xp` comes
+  with it.
+- Collecting sends `collect_new` (place, town, item, workers inside, 1, 0),
+  and its work starts over then. The 1 is a bonus the Flash client only
+  gives gold rocks on the map; the 0 is cash paid to hurry it.
+- Levels: when experience reaches the next level's in the config's `levels`
+  table, the town goes up one level at a time, each paying its prize, and
+  sends `rt_level_up` with the new level (the server pays the same prize
+  into the save).
+- Not the same as the Flash client: a farm collected without enough wood is
+  left as it is, with a message; the Flash client lets it go to waste.
+
+**The shop.** The Shop button opens a window with the game's categories
+(Village, Defense, Army, Decorations, Wonders, New) and their tabs, and a
+card for each building: its picture (cut from the same sprite sheet the map
+uses, loaded as the card scrolls into view), price, experience, and what
+stops buying it ("From level 11", "You have one", "Not enough wood").
+Choosing one closes the window and the building follows the pointer,
+see-through, with its footprint green or red; each tap buys one, until Done.
+
+**How the shop works**, read from the Flash client (our notes, our words):
+
+- Humans are sold items whose `in_store` is 1 or 3, trolls 2 or 4. An item
+  shows from its `store_level`, and can be bought from its `min_level`, or
+  sooner once unlocked with cash (the save's
+  `privateState.unlockedEarlyBuildings`).
+- Each category lists its items by `display_order`, the locked ones last;
+  its tabs are the config's `categories` table, by `subcategory_id`. The
+  New category has its own items, and the other categories' new ones
+  (`new_item`) and cash ones in tabs of their own. Two castles are for gold
+  members only, which nobody is here.
+- How many a town may have: one of each level of mill and of gold, stone and
+  lumber mine; one of about fifty special buildings (the university, temple,
+  bakery, markets...); one market and one eagle building; three nurseries;
+  and 400 towers bought with resources per block of land.
+- Buying pays the price (`cost`, in `cost_type`) and gives the item's `xp`,
+  then sends `buy` (item, place, facing, town, 0, 1, "b"); the server does
+  the same to the save. A building that produces starts its first round
+  then. The Flash client also stays ready to place another, until the
+  player stops.
+
+**Tested:** the rules and the command queue have unit tests (`npm test`).
+A browser test edits a new town (turns a tower, moves a house, sells a tree
+and a house, stores a tower) and checks the server's save afterwards: every
+change is there, with the refund, and reloading shows the town as it was
+left. Another sets a new town up as the Flash client would (a farm, a ranch
+and a gold mine, with a villager in each), then in the new client chooses
+the mine's working time and collects the farm and the ranch: the save has
+the harvests, the farm's wood, the experience, level 2 with its prize, and
+the timers started again. A third buys three farms and a mill in a new
+town through the shop: placing on the town hall is refused, placing goes on
+after each farm and stops after the mill (one per town, and level 2 with
+its prize), the mill's card then says "You have one", and the save has all
+four, the wood paid and the experience. The client is now 303 KB (92 KB
+compressed).
+
+**Not yet in step 3:** turning a building while placing it, unlocking a
+building early with cash, buying resources with cash when short (the Flash
+client offers it), training units, placing what's in storage,
+units walking (so trees, rocks and gold on the map, which a villager works,
+and putting workers into buildings), hurrying with cash, and moving or
+selling buildings with units inside (the Flash client lets them out first;
+for now the bar says to use the classic game). Moving on a phone places on
+the first tap, without the green/red preview a mouse gets.
 
 ### Making the art look better
 

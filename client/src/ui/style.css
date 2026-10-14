@@ -154,3 +154,217 @@ body {
     font-size: 12px;
   }
 }
+
+/* The bar for the thing selected on the map (ui/actions.ts): a parchment
+   note in a wooden frame, as the game's windows. */
+.actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border: 3px solid var(--wood);
+  border-radius: 14px;
+  background: var(--parchment);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: var(--round);
+}
+
+.actions[hidden] {
+  display: none;
+}
+
+.actions-name {
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+/* The shop (ui/shop.ts): a window over the map, as the game's own, cards in a grid. */
+.shop {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100% - 120px);
+  box-sizing: border-box;
+  padding: 14px 16px 16px;
+  border: 4px solid var(--wood);
+  border-radius: 14px;
+  background: var(--parchment);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 14px 40px rgba(0, 0, 0, 0.5);
+}
+
+.shop[hidden] {
+  display: none;
+}
+
+.shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shop-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.shop-head .button {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 15px;
+}
+
+.shop-categories,
+.shop-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shop-tabs[hidden] {
+  display: none;
+}
+
+/* Categories and kinds: pills, gold when picked (as the gifts window's tabs). */
+.shop-toggle {
+  padding: 5px 12px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 999px;
+  background: var(--parchment-deep);
+  color: var(--ink-soft);
+  font: 800 14px var(--round);
+  cursor: pointer;
+}
+
+.shop-tabs .shop-toggle {
+  font-size: 13px;
+  padding: 3px 10px;
+}
+
+.shop-toggle[aria-pressed="true"] {
+  border-color: var(--gold-edge);
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+  color: var(--ink);
+}
+
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+  padding: 8px 6px 10px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.shop-card:hover:not(:disabled) {
+  border-color: var(--gold-bottom);
+  box-shadow: 0 2px 0 var(--gold-edge);
+}
+
+.shop-card:disabled {
+  cursor: default;
+}
+
+.shop-card:disabled .shop-picture {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.shop-picture {
+  width: 96px;
+  height: 96px;
+}
+
+.shop-picture.missing {
+  border-radius: 8px;
+  background: var(--parchment-line);
+}
+
+.shop-name {
+  font-family: var(--round);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.shop-price,
+.shop-xp,
+.shop-note {
+  font-size: 13px;
+}
+
+.shop-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.shop-xp {
+  color: #2f6db3;
+}
+
+.shop-note {
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--parchment-deep);
+  color: var(--ink-soft);
+}
+
+.shop-note.price {
+  color: var(--red);
+}
+
+.shop-empty {
+  grid-column: 1 / -1;
+  color: var(--ink-soft);
+  font-style: italic;
+  text-align: center;
+  padding: 24px;
+}
+
+@media (max-width: 640px) {
+  .shop {
+    top: auto;
+    bottom: 16px;
+    transform: translateX(-50%);
+    max-height: calc(100% - 140px);
+  }
+  .shop-items {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+  .shop-picture {
+    width: 80px;
+    height: 80px;
+  }
+}

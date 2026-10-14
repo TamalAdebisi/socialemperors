@@ -20,6 +20,9 @@ const STAGE = { width: 760, height: 600 };
 const ZOOM_START = 0.7;
 const ZOOM_MIN = 0.15;
 const ZOOM_MAX = 1.4;
+/** A press that moves less than this and is let go within TAP_MS is a tap, not a drag. */
+const TAP_MOVE = 8;
+const TAP_MS = 500;
 /** How quickly a zoom or a glide settles, in milliseconds (smaller is snappier). */
 const ZOOM_EASE_MS = 90;
 const GLIDE_EASE_MS = 325;
@@ -41,6 +44,10 @@ export class Camera {
   private recentMoves: { t: number; x: number; y: number }[] = [];
   private pinchDistance = 0;
   private readonly keys = new Set<string>();
+  private press: { x: number; y: number; t: number; moved: number; pinched: boolean } | null = null;
+  /** A tap on the map (a click, or a short touch), and the mouse moving over it. Screen points. */
+  onTap: ((at: Point) => void) | null = null;
+  onHover: ((at: Point) => void) | null = null;
 
   constructor(world: Container, area: Area, centre: Point) {
     this.world = world;
@@ -66,16 +73,34 @@ export class Camera {
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture(e.pointerId);
       this.pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+      if (this.pointers.size === 1) {
+        this.press = { x: e.offsetX, y: e.offsetY, t: performance.now(), moved: 0, pinched: false };
+      } else if (this.press) {
+        this.press.pinched = true;
+      }
       this.velocity = { x: 0, y: 0 };
       this.recentMoves = [];
       this.pinchDistance = this.pinchSpread();
     });
-    canvas.addEventListener("pointermove", (e) => this.pointerMoved(e));
+    canvas.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "mouse" && e.buttons === 0) {
+        this.onHover?.({ x: e.offsetX, y: e.offsetY });
+      }
+      this.pointerMoved(e);
+    });
     const release = (e: PointerEvent) => {
       if (!this.pointers.delete(e.pointerId)) {
         return;
       }
       if (this.pointers.size === 0) {
+        const press = this.press;
+        this.press = null;
+        if (e.type === "pointerup" && press && !press.pinched && press.moved < TAP_MOVE
+            && performance.now() - press.t < TAP_MS) {
+          this.velocity = { x: 0, y: 0 };
+          this.onTap?.({ x: e.offsetX, y: e.offsetY });
+          return;
+        }
         this.startGlide();
       }
       this.pinchDistance = this.pinchSpread();
@@ -139,6 +164,11 @@ export class Camera {
     this.apply();
   }
 
+  /** How big the map is drawn: 1 is the art's own size. */
+  get scale(): number {
+    return this.zoom;
+  }
+
   /** The point of the map under a point of the screen. */
   toMap(screen: Point): Point {
     return {
@@ -154,6 +184,9 @@ export class Camera {
     }
     const now = { x: e.offsetX, y: e.offsetY };
     this.pointers.set(e.pointerId, now);
+    if (this.press) {
+      this.press.moved = Math.max(this.press.moved, Math.hypot(now.x - this.press.x, now.y - this.press.y));
+    }
     if (this.pointers.size === 1) {
       // Drag: the map follows the pointer.
       this.panScreen(last.x - now.x, last.y - now.y);

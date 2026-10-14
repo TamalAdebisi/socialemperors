@@ -11,7 +11,14 @@ export interface HudActions {
   visiting?: boolean;
 }
 
-export function showHud(town: Town, actions: HudActions): HTMLElement {
+export interface Hud {
+  /** Show the town's numbers again (after a sale...). */
+  update(town: Town): void;
+  /** Show the Shop button, which calls `open` (not when visiting). */
+  offerShop(open: () => void): void;
+}
+
+export function showHud(town: Town, actions: HudActions): Hud {
   const bar = document.createElement("header");
   bar.className = "hud";
   bar.innerHTML = `
@@ -27,16 +34,20 @@ export function showHud(town: Town, actions: HudActions): HTMLElement {
       <li data-tip="Cash" tabindex="0"><span class="dot cash"></span><span data-n="cash"></span></li>
     </ul>
     <div class="hud-buttons">
-      <span class="hud-badge tip-left" data-tip="This new client shows your town; to play, use the classic game" tabindex="0">Preview: look only</span>
+      <button class="button tiny gold hud-shop" type="button" hidden>Shop</button>
+      <span class="hud-badge tip-left" data-tip="The new game: so far you can build, move, turn, store, sell and collect; for the rest, use the classic game" tabindex="0">Preview</span>
       <a class="button tiny gold" href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
   const who = town.townName ? `${town.name} · ${town.townName}` : town.name;
   bar.querySelector(".hud-name")!.textContent = actions.visiting ? `Visiting ${who}` : who;
-  bar.querySelector(".hud-level")!.textContent = `Level ${town.level}`;
-  for (const key of ["gold", "wood", "food", "stone", "cash"] as const) {
-    bar.querySelector(`[data-n="${key}"]`)!.textContent = numbers.format(town[key]);
-  }
+  const update = (t: Town) => {
+    bar.querySelector(".hud-level")!.textContent = `Level ${t.level}`;
+    for (const key of ["gold", "wood", "food", "stone", "cash"] as const) {
+      bar.querySelector(`[data-n="${key}"]`)!.textContent = numbers.format(t[key]);
+    }
+  };
+  update(town);
   bar.querySelector<HTMLAnchorElement>("a.button")!.href = actions.classicUrl;
 
   const fullscreen = bar.querySelector<HTMLButtonElement>("[data-fullscreen]")!;
@@ -55,7 +66,14 @@ export function showHud(town: Town, actions: HudActions): HTMLElement {
   });
 
   document.body.appendChild(bar);
-  return bar;
+  const shop = bar.querySelector<HTMLButtonElement>(".hud-shop")!;
+  return {
+    update,
+    offerShop(open) {
+      shop.hidden = false;
+      shop.addEventListener("click", open);
+    },
+  };
 }
 
 /** The message in the middle of the screen while loading, or when something fails. */

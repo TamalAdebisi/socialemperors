@@ -2,6 +2,8 @@
 // server sends numbers as strings, as the Flash client expects; ItemInfo
 // gives the fields the town needs as proper numbers.
 
+import { productionOf, type Production } from "./production.ts";
+
 /** One item as the config has it. Only the fields the client reads are listed. */
 export interface ConfigItem {
   id: string;
@@ -17,10 +19,60 @@ export interface ConfigItem {
   subcat_functional: string;
   /** Units: 1 when it flies. */
   flying?: string;
+  /** What it costs, and in what: g gold, w wood, f food, s stone, c cash. */
+  cost?: string;
+  cost_type?: string;
+  /** How many ways it can face (its art's frames). */
+  max_frame?: string;
+  /** Producing: how long one round of work takes (seconds), what it gives
+   * (collect_type: g, w, f, s or c) and the experience that comes with it. */
+  activation?: string;
+  collect?: string;
+  collect_type?: string;
+  collect_xp?: string;
+  /** How many units fit inside (a mill's workers, a barracks' soldiers). */
+  unit_capacity?: string;
+  /** The shop: 1 or 3 sold to humans, 2 or 4 to trolls, 0 not sold. */
+  in_store?: string;
+  /** The shop's tab (the categories table's "sub" ids: 11 Houses...). */
+  subcategory_id?: string;
+  /** The level it can be bought from, and the level it shows in the shop from (0: always). */
+  min_level?: string;
+  store_level?: string;
+  /** The experience buying it gives. */
+  xp?: string;
+  /** Its place in the shop: smaller first. */
+  display_order?: string;
+  /** "1" for the shop's New tab. */
+  new_item?: string;
+}
+
+/** A tab of the shop and its smaller tabs: the config's categories table. */
+export interface ConfigCategory {
+  id?: number;
+  name?: string;
+  sub: { id: number; name: string; parent: number }[];
+}
+
+/** One row of the levels table: level n is row n - 1. */
+export interface ConfigLevel {
+  name: string;
+  /** The experience it takes to reach this level. */
+  exp_required: number | string;
+  /** The prize for reaching it. */
+  reward_type: string;
+  reward_amount: number | string;
 }
 
 export interface GameConfig {
   items: ConfigItem[];
+  levels?: ConfigLevel[];
+  categories?: Record<string, ConfigCategory>;
+  globals?: {
+    /** Producing buildings that work for a time the player chooses. */
+    COLLECT_VARIABLE_IDS?: (number | string)[];
+    [name: string]: unknown;
+  };
   [section: string]: unknown;
 }
 
@@ -34,9 +86,24 @@ export interface ItemInfo {
   category: number;
   subcategory: number;
   flying: boolean;
+  cost: number;
+  costType: string;
+  /** How many ways it can face: turning it goes round these. */
+  facings: number;
+  /** What it produces and how, or null when it doesn't (rules/production.ts). */
+  production: Production | null;
+  /** The shop (rules/shop.ts): who it's sold to (in_store), its tab, from which levels, in what order. */
+  inStore: number;
+  shopTab: number;
+  minLevel: number;
+  storeLevel: number;
+  displayOrder: number;
+  isNew: boolean;
+  /** The experience buying it gives. */
+  xp: number;
 }
 
-export function itemInfo(item: ConfigItem): ItemInfo {
+export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
   return {
     id: Number(item.id),
     name: item.name,
@@ -47,14 +114,26 @@ export function itemInfo(item: ConfigItem): ItemInfo {
     category: Number(item.category_id),
     subcategory: Number(item.subcat_functional),
     flying: item.flying === "1",
+    cost: Number(item.cost) || 0,
+    costType: item.cost_type ?? "g",
+    facings: Math.max(Number(item.max_frame) || 1, 1),
+    production: productionOf(item, chosenTime),
+    inStore: Number(item.in_store) || 0,
+    shopTab: Number(item.subcategory_id) || 0,
+    minLevel: Number(item.min_level) || 0,
+    storeLevel: Number(item.store_level) || 0,
+    displayOrder: Number(item.display_order) || 0,
+    isNew: item.new_item === "1",
+    xp: Number(item.xp) || 0,
   };
 }
 
 /** The config's items by id. */
 export function itemsById(config: GameConfig): Map<number, ItemInfo> {
+  const chosenTime = new Set((config.globals?.COLLECT_VARIABLE_IDS ?? []).map(Number));
   const items = new Map<number, ItemInfo>();
   for (const item of config.items) {
-    items.set(Number(item.id), itemInfo(item));
+    items.set(Number(item.id), itemInfo(item, chosenTime));
   }
   return items;
 }

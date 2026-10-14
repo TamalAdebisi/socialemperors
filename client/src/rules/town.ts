@@ -29,6 +29,8 @@ export interface PlayerInfo {
   timestamp: number;
   playerInfo: { name: string; cash: number; map_names?: string[] };
   map: SaveMap;
+  /** Buildings opened before their level, for cash: { "<item id>": true }. */
+  privateState?: { unlockedEarlyBuildings?: Record<string, unknown> };
 }
 
 export interface PlacedItem {
@@ -38,9 +40,17 @@ export interface PlacedItem {
   ty: number;
   /** Buildings: which way it faces (the sprite's frame). Units: their direction. */
   orientation: number;
+  /** How many units are inside (a barracks' soldiers, a mill's workers). */
+  unitsInside: number;
+  /** When its current round of work started (the server's clock, seconds), or null. */
+  startedAt: number | null;
+  /** The working time chosen for a mill or mine (1 to 4), or 0 for none (rules/production.ts). */
+  workTime: number;
 }
 
 export interface Town {
+  /** Which of the player's towns this is (the server's town number, 0 or 1). */
+  id: number;
   name: string;
   townName: string;
   level: number;
@@ -53,6 +63,8 @@ export interface Town {
   race: string;
   skin: number;
   expansions: Set<number>;
+  /** Buildings opened before their level, for cash: the shop sells them already. */
+  unlocked: Set<number>;
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
@@ -62,15 +74,22 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
   const map = info.map;
   const placed: PlacedItem[] = [];
   const unknown: number[] = [];
-  for (const [id, tx, ty, orientation] of map.items) {
+  for (const [id, tx, ty, orientation, started, , units, attributes] of map.items) {
     const item = items.get(id);
     if (item === undefined) {
       unknown.push(id);
       continue;
     }
-    placed.push({ item, tx, ty, orientation: orientation ?? 0 });
+    placed.push({
+      item, tx, ty,
+      orientation: orientation ?? 0,
+      unitsInside: Array.isArray(units) ? units.length : 0,
+      startedAt: Number.isFinite(started) ? Number(started) : null,
+      workTime: Number(attributes?.cp) || 0,
+    });
   }
   return {
+    id: map.id ?? 0,
     name: info.playerInfo.name,
     townName: info.playerInfo.map_names?.[map.id] ?? "",
     level: map.level,
@@ -83,6 +102,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     race: map.race,
     skin: map.skin ?? 0,
     expansions: new Set(map.expansions),
+    unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
     items: placed,
     unknown,
   };

@@ -53,11 +53,34 @@ WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but take
 
 
 def load(render_dir):
+    """The manifest, and the path of each picture: img_0.png, img_1.png...
+    Pictures are opened one at a time when needed, never all at once: a big
+    boss has hundreds, each the size of its whole canvas, and holding them
+    together took more memory than the export machines have."""
     with open(os.path.join(render_dir, "manifest.json"), encoding="utf-8") as f:
         manifest = json.load(f)
     count = 1 + max(n for frame in manifest["frames"] for n in frame["images"])
-    images = [Image.open(os.path.join(render_dir, f"img_{n}.png")).convert("RGBA") for n in range(count)]
-    return manifest, images
+    return manifest, [os.path.join(render_dir, f"img_{n}.png") for n in range(count)]
+
+
+def open_rgba(path):
+    with Image.open(path) as image:
+        return image.convert("RGBA")
+
+
+class Sheet:
+    """One page of a sprite sheet, drawn only when it is written (image()),
+    so a many-page item never has more than one page in memory."""
+
+    def __init__(self, size):
+        self.size = size
+        self.pictures = []  # (path, trimmed box on its canvas, place on the page)
+
+    def image(self):
+        sheet = Image.new("RGBA", self.size, (0, 0, 0, 0))
+        for path, (bx, by, w, h), place in self.pictures:
+            sheet.paste(open_rgba(path).crop((bx, by, bx + w, by + h)), place)
+        return sheet
 
 
 def trim(image):
@@ -126,9 +149,9 @@ def page_name(item, page):
 
 
 def build(render_dir, max_size=MAX_SIZE):
-    """The sheets (Pillow images) and their JSON data, one per page, from
-    RenderSwf's output, and any warnings."""
-    manifest, images = load(render_dir)
+    """The sheets (Sheet: call image() for the picture) and their JSON data,
+    one per page, from RenderSwf's output, and any warnings."""
+    manifest, paths = load(render_dir)
     item = manifest["swf"][:-len(".swf")]
     canvas_w, canvas_h = manifest["canvas"]["w"], manifest["canvas"]["h"]
     origin = manifest["origin"]
@@ -137,8 +160,8 @@ def build(render_dir, max_size=MAX_SIZE):
     warnings = []
     if manifest.get("capped"):
         warnings.append("an animation is longer than RenderSwf's limit and was cut short")
-    for n, image in enumerate(images):
-        box = trim(image)
+    for n, path in enumerate(paths):
+        box = trim(open_rgba(path))
         if box is None:
             box = (0, 0, 1, 1)  # an empty picture: one transparent pixel from the canvas's padding
         elif box[0] == 0 or box[1] == 0 or box[0] + box[2] == canvas_w or box[1] + box[3] == canvas_h:
@@ -146,10 +169,10 @@ def build(render_dir, max_size=MAX_SIZE):
         boxes.append(box)
 
     positions, sizes = pack([(w, h) for _, _, w, h in boxes], max_size)
-    sheets = [Image.new("RGBA", size, (0, 0, 0, 0)) for size in sizes]
+    sheets = [Sheet(size) for size in sizes]
     pages = [{"frames": {}, "meta": {}} for _ in sizes]
-    for n, (image, (bx, by, w, h), (page, x, y)) in enumerate(zip(images, boxes, positions)):
-        sheets[page].paste(image.crop((bx, by, bx + w, by + h)), (x, y))
+    for n, (path, (bx, by, w, h), (page, x, y)) in enumerate(zip(paths, boxes, positions)):
+        sheets[page].pictures.append((path, (bx, by, w, h), (x, y)))
         pages[page]["frames"][f"{item}/{n}"] = {
             "frame": {"x": x, "y": y, "w": w, "h": h},
             "rotated": False,
@@ -191,7 +214,9 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY):
     names = [data["meta"]["image"][:-len(".webp")] for data in pages]
     for sheet, name in zip(sheets, names):
         path = os.path.join(out_dir, f"{name}.webp")
-        sheet.save(path + ".tmp", "WEBP", quality=quality, alpha_quality=100, method=WEBP_METHOD)
+        image = sheet.image()
+        image.save(path + ".tmp", "WEBP", quality=quality, alpha_quality=100, method=WEBP_METHOD)
+        del image  # one page in memory at a time
         os.replace(path + ".tmp", path)
     for data, name in reversed(list(zip(pages, names))):
         path = os.path.join(out_dir, f"{name}.json")

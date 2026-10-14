@@ -1,18 +1,25 @@
-// The new game client, step 2 of CLIENT.md: load the game config and the
-// player's town from our server, as the Flash client does, and draw it with
-// PixiJS. Look only for now.
+// The new game client (CLIENT.md, steps 2 and 3): load the game config and
+// the player's town from our server, as the Flash client does, draw it with
+// PixiJS, and let the player run it (so far: build, move, turn, store, sell, collect).
 
 import "./ui/style.css";
 
 import { Application, Container } from "pixi.js";
 
+import { TownEditor } from "./editor.ts";
+import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
+import { readLevels } from "./rules/levels.ts";
+import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readTown } from "./rules/town.ts";
+import { ActionBar } from "./ui/actions.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
+import { ShopWindow } from "./ui/shop.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
+import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 
 async function start(): Promise<void> {
@@ -23,6 +30,9 @@ async function start(): Promise<void> {
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
   showStatus(visit ? "Loading their town…" : "Loading your town…");
   const [config, info] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit })]);
+  // The game's clock: the server's time when the town arrived, plus the time since.
+  const arrived = performance.now();
+  const clock = () => info.timestamp + (performance.now() - arrived) / 1000;
   const items = itemsById(config);
   const town = readTown(info, items);
   if (town.unknown.length) {
@@ -53,10 +63,28 @@ async function start(): Promise<void> {
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
   app.ticker.add((ticker) => camera.update(ticker.deltaMS));
 
-  showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined });
+  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined });
 
-  const view = new TownView(new ArtLibrary(settings.artUrl), items, town);
+  const art = new ArtLibrary(settings.artUrl);
+  const view = new TownView(art, items, town);
   world.addChild(view.root);
+  app.ticker.add((ticker) => view.tick(ticker.deltaMS, camera.scale));
+
+  // The player's own town can be changed; a visited one only looked at.
+  if (visit === undefined) {
+    const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
+    commands.start();
+    const levels = readLevels(config.levels);
+    const shop = new ShopWindow({
+      categories: readShop(config.categories),
+      items: (category, tab) => shopItems(items.values(), town, category, tab),
+      obstacle: (item) => obstacle(town, item),
+      picture: (item, canvas) => drawThumbnail(art, item, canvas),
+      choose: (item) => editor.startBuilding(item),
+    });
+    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop });
+    hud.offerShop(() => editor.openShop());
+  }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {
     console.warn("No art yet for:", missing);

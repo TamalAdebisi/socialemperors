@@ -45,6 +45,11 @@ export class ItemArt {
     return this.animations.has(name);
   }
 
+  /** The picture that stands for the item (a building facing its first way), for windows like the shop. */
+  cover(): Texture | undefined {
+    return this.animations.get("frame/0")?.[0] ?? this.animations.values().next().value?.[0];
+  }
+
   /** How many frames follow a label: a unit's directions, a building's ways of facing. */
   framesOf(label: string): number {
     let count = 0;
