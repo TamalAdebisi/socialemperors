@@ -4,13 +4,13 @@
    (showInitialGift), it calls gotoInitialGifts(). Both open this window:
    gifts waiting, today's free gifts, and giving from storage. Styled like
    the bank. #}
-<dialog id="gifts" aria-labelledby="gifts-title">
-    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
+<dialog id="gifts" class="frame" tabindex="-1" aria-labelledby="gifts-title">
+    <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
     <h2 id="gifts-title"><img src="img/gift.png" alt=""> Gifts</h2>
     <div class="gifts-tabs" role="tablist">
-        <button type="button" role="tab" data-tab="waiting">For you <span data-count></span></button>
-        <button type="button" role="tab" data-tab="free">Free gift</button>
-        <button type="button" role="tab" data-tab="give">From storage</button>
+        <button class="button tiny gold" type="button" role="tab" data-tab="waiting">For you <span data-count></span></button>
+        <button class="button tiny gold" type="button" role="tab" data-tab="free">Free gift</button>
+        <button class="button tiny gold" type="button" role="tab" data-tab="give">From storage</button>
     </div>
 
     <div class="bank-body" data-state="loading">
@@ -22,7 +22,7 @@
             <section class="gifts-tab" data-for="waiting">
                 <ul class="gifts-list" data-waiting></ul>
                 <p class="gifts-empty" data-none-waiting>No gifts waiting. Your friends' gifts arrive here.</p>
-                <button type="button" data-take-all>Take them all</button>
+                <button class="button small" type="button" data-take-all>Take them all</button>
             </section>
 
             <section class="gifts-tab gifts-form" data-for="free">
@@ -32,7 +32,7 @@
                     <select id="gifts-free-friend" data-free-friend></select>
                     <label for="gifts-free-item">Gift</label>
                     <select id="gifts-free-item" data-free-item></select>
-                    <button type="button" class="gifts-send" data-send-free>Send</button>
+                    <button class="button small gold" type="button" data-send-free><img src="img/gift.png" alt="" class="icon"> Send</button>
                     <p class="bank-more" data-free-note></p>
                 </div>
             </section>
@@ -46,7 +46,7 @@
                     <select id="gifts-give-item" data-give-item></select>
                     <label for="gifts-give-count">How many</label>
                     <input id="gifts-give-count" type="number" min="1" value="1" data-give-count>
-                    <button type="button" class="gifts-send" data-give>Give</button>
+                    <button class="button small gold" type="button" data-give><img src="img/gift.png" alt="" class="icon"> Give</button>
                     <p class="bank-more">It leaves your storage and goes to your friend's gifts.</p>
                 </div>
             </section>
@@ -126,6 +126,7 @@
                 from.textContent = " from " + gift.sender;
                 what.append(name, from);
                 var take = document.createElement("button");
+                take.className = "button tiny";
                 take.type = "button";
                 take.textContent = "Take";
                 take.dataset.take = gift.id;
@@ -206,7 +207,10 @@
             state = null;
             show("loading");
             if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
-            if (!dialog.open) dialog.showModal();
+            if (!dialog.open) {
+                dialog.showModal();
+                dialog.focus();  // the window, not its close button: no ring until the keyboard moves
+            }
             ask("GET").then(function (reply) {
                 if (mine !== opening) return;
                 if (reply.error) return show("down", reply.error);

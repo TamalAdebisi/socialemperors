@@ -6,9 +6,9 @@
    Facebook's invite window; here friends are added on our Friends page
    (friends.py), and find a tournament in their own Tourney window
    (tournaments.py), so this says so. Styled like the bank. #}
-<dialog id="invite" aria-labelledby="invite-title">
-    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
-    <h2 id="invite-title">Invite friends</h2>
+<dialog id="invite" class="frame" tabindex="-1" aria-labelledby="invite-title">
+    <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
+    <h2 id="invite-title"><img src="img/villager.png" alt=""> Invite friends</h2>
     <p data-for="tournament">Your tournament is waiting for players. Everyone you see as a neighbour
         finds it in their <b>Tourney</b> window, as your tournament: tell them to join!
         Seats still empty after a day get computer players.</p>
@@ -16,7 +16,7 @@
         empires come first among your neighbours. New to the game? Send them <b>{{ PUBLIC_URL }}</b>.</p>
     <p data-for="neighbours">Your neighbours are your friends first, then other players. Add friends by
         their username on the Friends page, and answer their requests there.</p>
-    <p><a class="invite-friends" href="/friends" target="_blank" rel="noopener">Open the Friends page</a></p>
+    <p><a class="button small gold" href="/friends" target="_blank" rel="noopener">Open the Friends page</a></p>
 </dialog>
 
 <script>
@@ -27,7 +27,7 @@
             dialog.querySelectorAll("[data-for]").forEach(function (text) {
                 text.hidden = text.getAttribute("data-for") !== which;
             });
-            setTimeout(function () { dialog.showModal(); }, 0);  // not inside the game's own call
+            setTimeout(function () { dialog.showModal(); dialog.focus(); }, 0);  // not inside the game's own call
         }
 
         window.showPopupInviteTournament = function () { open("tournament"); };

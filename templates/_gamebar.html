@@ -1,13 +1,16 @@
         <header id="gamebar">
-            <a class="logo" href="/" title="Your empires"><img src="img/logo.png" alt="Social Empires"></a>
+            <a class="logo" href="/" data-tip="Your empires" aria-label="Your empires"><img src="img/logo.png" alt="Social Empires"></a>
             <span class="empire"><b>{{ save_info.name }}</b> · level {{ save_info.level }}</span>
             <span class="fps" id="fps" hidden></span>
             <nav>
                 {% if fullscreen_button %}
-                {# Like the game's own button, not during the tutorial: it is laid out for the small screen. #}
-                <button id="fullscreen" type="button" {% if save_info.tutorial_done %}title="Full screen (Esc to leave)"{% else %}title="Available after the tutorial" disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
+                {# Like the game's own button, not during the tutorial: it is laid out for the small screen.
+                   The tip is on a box around it: a disabled button notices no mouse. #}
+                <span data-tip="{{ 'Full screen (Esc to leave)' if save_info.tutorial_done else 'Available after the tutorial' }}">
+                    <button id="fullscreen" class="button tiny gold" type="button" {% if not save_info.tutorial_done %}disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
+                </span>
                 {% endif %}
-                <a href="/" title="Pick another empire">Empires</a>
-                <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button title="Log out {{ user.username }}">Log out</button></form>
+                <a class="button tiny gold" href="/" data-tip="Pick another empire">Empires</a>
+                <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button tiny plain tip-left" data-tip="Log out {{ user.username }}">Log out</button></form>
             </nav>
         </header>

@@ -25,7 +25,7 @@
 				<td><span class="badge {{ p.kind }}">{{ p.kind }}</span></td>
 				<td><code>{{ p.name }}</code>{% if p.detail %}<br><span class="muted">{{ p.detail }}</span>{% endif %}</td>
 				<td class="n">{{ p.count }}</td>
-				<td title="first seen {{ p.first_seen | ago }}">{{ p.last_seen | ago }}</td>
+				<td data-tip="first seen {{ p.first_seen | ago }}" tabindex="0">{{ p.last_seen | ago }}</td>
 				<td>{% if p.last_player %}<a href="{{ url_for('admin.empire', pid=p.last_player) }}"><code>{{ p.last_player }}</code></a>{% endif %}</td>
 				<td><code>{{ p.example }}</code></td>
 				<td>
@@ -34,7 +34,7 @@
 						<input type="hidden" name="kind" value="{{ p.kind }}">
 						<input type="hidden" name="name" value="{{ p.name }}">
 						<input type="hidden" name="detail" value="{{ p.detail }}">
-						<button title="Clear it once it's fixed: if it comes back, it isn't">Clear</button>
+						<button class="button tiny plain tip-left" data-tip="Clear it once it's fixed: if it comes back, it isn't">Clear</button>
 					</form>
 				</td>
 			</tr>
@@ -44,7 +44,7 @@
 		      onsubmit="return confirm('Clear the whole bug radar?')">
 			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
 			<input type="hidden" name="all" value="1">
-			<button>Clear all</button>
+			<button class="button small danger">Clear all</button>
 		</form>
 		{% else %}
 		<p>Nothing on the radar.</p>
@@ -55,7 +55,7 @@
 		<h2>Find an account</h2>
 		<form method="get" action="{{ url_for('admin.home') }}">
 			<input type="search" name="q" value="{{ query }}" placeholder="Part of a username" autofocus>
-			<button>Search</button>
+			<button class="button small">Search</button>
 		</form>
 		{% if query %}
 		{% if found %}

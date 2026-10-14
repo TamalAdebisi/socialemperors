@@ -6,36 +6,36 @@
 		<meta name="robots" content="noindex"/>
 		<title>{% block title %}Admin{% endblock %} ~ Social Empires</title>
 		<link rel="icon" type="image/png" href="/img/icon.gif"/>
+		<link rel="stylesheet" href="/css/brand.css"/>
 		<style>
-			body { margin: 0; background: #e9ebee; color: #1d2129; font: 13px 'lucida grande', tahoma, verdana, arial, sans-serif; }
-			header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: linear-gradient(#a3cf3c, #7fae1c); border-bottom: 3px solid #6e5335; }
+			/* The admin pages: brand.css's buttons, boxes and tooltips; plain tables. */
+			body { margin: 0; background: var(--parchment-deep); color: var(--ink); font: 14px/1.45 var(--text); }
+			header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: linear-gradient(#a3cf3c, #7fae1c); border-bottom: 3px solid var(--wood); font-family: var(--round); font-weight: 700; }
 			header img { height: 32px; }
-			header h1 { font-size: 16px; margin: 0; }
-			header h1 a { color: #1d2129; text-decoration: none; }
+			header h1 { font-size: 18px; margin: 0; }
+			header h1 a { color: var(--ink); text-decoration: none; }
 			header .who { margin-left: auto; }
 			main { max-width: 1100px; margin: 0 auto; padding: 16px; }
-			section { background: #fff; border: 1px solid #dddfe2; border-radius: 3px; padding: 12px 16px; margin-bottom: 16px; overflow-x: auto; }
-			h2 { font-size: 14px; margin: 0 0 10px; }
-			a { color: #365899; }
+			section { background: var(--parchment); border: 2px solid var(--parchment-edge); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; overflow-x: auto; }
+			h2 { font-size: 17px; margin: 0 0 10px; }
+			a { color: #1f6fb2; }
 			table { border-collapse: collapse; width: 100%; }
-			th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
-			th { color: #606770; font-weight: normal; white-space: nowrap; }
+			th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--parchment-line); vertical-align: middle; }
+			th { color: var(--ink-soft); font-weight: normal; white-space: nowrap; }
 			.n { text-align: right; font-variant-numeric: tabular-nums; }
 			code, pre { font: 12px Menlo, Consolas, monospace; }
-			pre { background: #f5f6f7; padding: 10px; max-height: 600px; overflow: auto; }
-			.muted { color: #606770; }
+			pre { background: #fff; border: 2px solid var(--parchment-edge); border-radius: 10px; padding: 10px; max-height: 600px; overflow: auto; }
+			.muted { color: var(--ink-soft); }
 			.stats { display: flex; gap: 32px; flex-wrap: wrap; }
-			.stats b { display: block; font-size: 22px; }
-			.done { background: #e7f3d7; border: 1px solid #7fae1c; padding: 8px 12px; margin-bottom: 16px; }
-			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin-bottom: 16px; }
+			.stats b { display: block; font: 900 24px var(--round); }
+			.done { background: #eaf6d6; border: 2px solid #9fcb5a; border-radius: 10px; color: #2f5a0c; padding: 8px 12px; margin-bottom: 16px; }
+			.error { background: #ffe7e3; border: 2px solid #e58a7c; border-radius: 10px; color: #8a1d0e; padding: 8px 12px; margin-bottom: 16px; }
 			.secret { font: bold 16px Menlo, Consolas, monospace; background: #fff8c4; padding: 2px 6px; }
-			.danger { border-color: #dd3c10; }
-			.danger h2 { color: #b22a00; }
-			form.inline { display: inline; margin: 0; }
-			button { font-size: 12px; padding: 3px 10px; cursor: pointer; }
-			button.red { color: #fff; background: #d33; border: 1px solid #a11; border-radius: 2px; }
-			input[type=search], input[type=text] { height: 24px; padding: 0 6px; width: 220px; max-width: 100%; }
-			.badge { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 11px; background: #ddd; }
+			section.danger { border-color: #e58a7c; }
+			.danger h2 { color: #a1281c; }
+			form.inline { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+			input[type=search], input[type=text] { height: 36px; width: 240px; }
+			.badge { padding: 0 8px; border-radius: 8px; color: var(--ink); font: 700 11px/18px var(--text); background: var(--parchment-line); }
 			.badge.unhandled { background: #fff1c4; }
 			.badge.failed { background: #ffd4cc; }
 			.badge.client { background: #d6e4ff; }

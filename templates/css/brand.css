@@ -1,0 +1,329 @@
+/* Social Empires' look, shared by every page: the pages around the game
+   (site.css), the game page and its windows (game.css), the admin pages.
+   The game's own: its parchment pop-ups in a wooden frame, its round bold
+   lettering, its chunky green and gold buttons. Colours, the font, buttons,
+   boxes and dropdowns, tooltips and the windows' frame live here, once. */
+
+/* Nunito: a round font like the game's own (Arial Rounded), kept here rather
+   than loaded from Google, so visiting the site tells Google nothing.
+   SIL Open Font License, fonts/OFL.txt. */
+@font-face {
+    font-family: "Nunito";
+    font-style: normal;
+    font-weight: 600 900;
+    font-display: swap;
+    src: url("fonts/nunito-latin.woff2") format("woff2");
+}
+
+:root {
+    --sky-top: #6ccdf3;
+    --sky-low: #c8eefb;
+    --grass: #8cc63f;
+    --grass-dark: #6aa82a;
+    --grass-deep: #4f8a1c;
+    --wood: #6e5335;
+    --wood-light: #9e7747;
+    --parchment: #fbf6dc;
+    --parchment-deep: #f1e2b4;
+    --parchment-edge: #d9cf98;
+    --parchment-line: #e9e1b8;
+    --flourish: #cbbd74;
+    --ink: #4a2c12;
+    --ink-soft: #7a5a36;
+    --gold: #ffd200;
+    --red: #b8141c;
+    --green-top: #9fd83f;
+    --green-bottom: #5ca51b;
+    --green-edge: #3c7811;
+    --gold-top: #ffe066;
+    --gold-bottom: #f5a623;
+    --gold-edge: #a8650b;
+    --focus: #5aa9e6;
+    --round: "Nunito", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+    --text: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }  /* even where a rule below gives the element a display */
+
+h1, h2, h3 {
+    font-family: var(--round);
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+/* Buttons: green to go, gold to make or buy, white for the quieter choice,
+   red to delete. Every one the same chunky shape, pressed down when clicked. */
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 20px;
+    border: 2px solid var(--green-edge);
+    border-radius: 12px;
+    background: linear-gradient(var(--green-top), var(--green-bottom));
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 3px 0 var(--green-edge);
+    color: #fff;
+    font: 800 16px var(--round);
+    text-shadow: 0 1px 0 #2c5a0b, 0 0 3px #2c5a0b;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    margin-top: 16px;
+}
+
+.button:hover { filter: brightness(1.06); }
+.button:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 1px 0 var(--green-edge); }
+
+.button.gold {
+    border-color: var(--gold-edge);
+    background: linear-gradient(var(--gold-top), var(--gold-bottom));
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 3px 0 var(--gold-edge);
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.button.plain {
+    border-color: var(--parchment-edge);
+    background: #fff;
+    box-shadow: 0 2px 0 var(--parchment-edge);
+    color: var(--ink);
+    text-shadow: none;
+}
+
+.button.danger {
+    border-color: #7e1010;
+    background: linear-gradient(#f0675c, #c2271c);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 #7e1010;
+    text-shadow: 0 1px 0 #5a0909;
+}
+
+.button.small { min-height: 36px; padding: 0 14px; font-size: 14px; margin-top: 0; }
+.button.tiny { min-height: 30px; padding: 0 10px; border-radius: 9px; font-size: 13px; margin-top: 0; }
+
+.button:disabled,
+.button[aria-disabled="true"] {
+    filter: grayscale(0.7);
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button img.icon { width: 20px; height: 20px; }
+
+/* A button that reads as a link (Log out, in the lines of links). */
+.link-button {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: #1f6fb2;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Boxes to type in and to pick from: white on parchment, the parchment's own edge. */
+
+input[type="text"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input:not([type]),
+select {
+    height: 40px;
+    max-width: 100%;
+    padding: 0 12px;
+    border: 2px solid var(--parchment-edge);
+    border-radius: 10px;
+    background-color: #fff;
+    color: var(--ink);
+    font: 15px var(--text);
+}
+
+input::placeholder { color: #a8936f; }
+
+input:hover,
+select:hover { border-color: #c9bb7a; }
+
+input:focus-visible,
+select:focus-visible {
+    border-color: var(--focus);
+    outline: 3px solid rgba(90, 169, 230, 0.35);
+    outline-offset: 0;
+}
+
+/* The dropdown's arrow: the browser's own is grey and square; this one is ink. */
+select {
+    appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%234a2c12' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+    cursor: pointer;
+}
+
+select option { color: var(--ink); }
+
+input[type="number"] { width: 110px; font-variant-numeric: tabular-nums; }
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0 6px 0 0;
+    vertical-align: -3px;
+    accent-color: var(--green-bottom);
+    cursor: pointer;
+}
+
+.small-fields input,
+.small-fields select { height: 34px; font-size: 14px; }
+
+/* Things that open (Delete this empire…, Remove…): the game's arrow, turning. */
+
+details > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+details > summary::-webkit-details-marker { display: none; }
+
+details > summary::before {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-right: 6px;
+    border-left: 6px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform 0.15s;
+    vertical-align: 1px;
+}
+
+details[open] > summary::before { transform: rotate(90deg); }
+
+/* Tooltips: a parchment bubble, for the mouse and the keyboard alike.
+   data-tip="..." on the thing; on a disabled button, on a box around it
+   (a disabled button notices no mouse). */
+
+[data-tip] { position: relative; }
+
+[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 8px);
+    left: 50%;
+    width: max-content;
+    max-width: 240px;
+    padding: 6px 10px;
+    border: 2px solid var(--wood);
+    border-radius: 8px;
+    background: var(--parchment);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    color: var(--ink);
+    font: 600 12px/1.35 var(--round);
+    text-align: center;
+    text-shadow: none;
+    white-space: normal;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -4px);
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after,
+[data-tip]:focus-within::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    transition-delay: 0.25s;
+}
+
+[data-tip].tip-left::after { left: auto; right: 0; transform: translate(0, -4px); }
+[data-tip].tip-left:hover::after,
+[data-tip].tip-left:focus-visible::after,
+[data-tip].tip-left:focus-within::after { transform: translate(0, 0); }
+
+/* A red count (requests and gifts waiting). */
+.badge {
+    display: inline-block;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--red);
+    color: #fff;
+    font: 800 12px/20px var(--round);
+    text-align: center;
+    text-decoration: none;
+}
+
+/* The windows over the game (the bank, gifts, invite): a parchment notice in
+   a wooden frame, the gold flourishes in its corners, as the game's own. */
+.frame {
+    position: relative;
+    width: min(400px, calc(100vw - 32px));
+    padding: 20px 22px 16px;
+    border: 4px solid var(--wood);
+    border-radius: 14px;
+    background: var(--parchment);
+    color: var(--ink);
+    font: 14px/1.45 var(--text);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 14px 40px rgba(0, 0, 0, 0.5);
+}
+
+.frame::backdrop { background: rgba(20, 30, 10, 0.6); }
+
+/* Opened, a window takes the focus itself (autofocus on the dialog), not its
+   close button, so no ring shows until the keyboard moves. */
+.frame:focus { outline: none; }
+
+.frame::before,
+.frame::after {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border: 3px solid var(--flourish);
+    pointer-events: none;
+}
+
+.frame::before { top: 6px; left: 6px; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.frame::after { bottom: 6px; right: 6px; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+
+.frame h2 {
+    margin: 0 34px 10px 0;
+    font-size: 20px;
+}
+
+.frame h2 img { height: 24px; vertical-align: -5px; }
+
+.frame p { margin: 0 0 10px; }
+
+.frame .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+}
+
+.frame .close button {
+    width: 32px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 15px;
+}
+
+.frame a { color: #6b3e12; }
