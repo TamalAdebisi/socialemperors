@@ -118,11 +118,12 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
       everyone else that week. Matches are fought against the other
       player's army, run by the game, so nobody has to be online together,
       and no units are lost. The battlefield (map 100000040) was missing
-      too. Friends tournaments (create a room and invite people) are not
-      there yet: the game says there aren't enough friends, and the fee
-      comes back
-- [ ] Friends tournaments: an invite flow to replace Facebook's, perhaps
-      with neighbours as friends
+      too
+- [x] Friends tournaments: *Create Tournament* makes a private room your
+      friends (the real players among your neighbours) see in their list
+      and can join; you can call it off and every fee comes back, and empty
+      seats get bots after a day. The game's Invite buttons, which opened
+      Facebook, open a short notice on the page instead
 - [ ] An automated test for every command (271 tests so far)
 
 ### Cash
@@ -164,9 +165,11 @@ numbers, because the server writes them into the game config.
       the game client we use has it switched off inside the game file, and
       nothing the server or the page sends can switch it on. It needs a small
       change to the client (one setting), so it waits for that
-- [ ] Known gap: the server still believes the experience and battle gold
-      the game reports, so a determined cheater could fake levels, and with
-      them their cash. Checking battles on the server is a bigger project
+- [ ] Known gap, for after Phases 3 and 4: the server still believes the
+      experience and battle gold the game reports, so a determined cheater
+      could fake levels, and with them their cash. Checking battles on the
+      server is a bigger project, and much easier once the new client's
+      battles are repeatable ([CLIENT.md](CLIENT.md#who-decides-what-happened))
 
 ### Phase 3: Stronger foundations
 
