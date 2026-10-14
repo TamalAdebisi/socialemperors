@@ -4,15 +4,14 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
-## Waiting on the owner
-
-- **The built-in neighbours at the fresh start.** AcidCaos's village (the
-  first project's creator) and three called Arthur30 to Arthur32 ship in
-  `villages/` and are shown to players with fewer than seven neighbours.
-  A fresh database doesn't remove them. Ask before Beta 1's launch whether
-  they go.
-
 ## 14 October 2026: a fresh start at Beta 1
+
+- **The built-in neighbours** (`villages/`, shown to players with fewer
+  than seven neighbours): the owner keeps **Arthur's** villages, and would
+  like Arthur's town to keep changing over time as it did in the original
+  game; find out from the original how it did, and do the same (Beta 1's
+  neighbours slice). **AcidCaos's** village (the first project's creator)
+  goes at the launch, along with the tests that use it.
 
 - **The owner's call:** when the live server moves to Supabase, at Beta
   1's launch, it starts empty. Today's accounts and empires (the first
