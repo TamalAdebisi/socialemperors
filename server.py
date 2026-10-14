@@ -38,6 +38,8 @@ import admin
 import bank
 import comeback_bonus
 import csrf
+import friends
+import gifts
 import radar
 import sign_in
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -143,9 +145,14 @@ def render_home(error=None, tab="login"):
                                allow_registration=config_env.ALLOW_REGISTRATION,
                                invite_required=bool(config_env.INVITE_CODE))
     empires = villages_of(user["id"])
-    return render_template("home.html", user=user, saves_info=empires, error=error,
+    return render_template("home.html", user=user, saves_info=empires, error=error, news=friends_news(user),
                            can_create=len(empires) < config_env.MAX_VILLAGES_PER_USER,
                            max_villages=config_env.MAX_VILLAGES_PER_USER)
+
+
+def friends_news(user) -> int:
+    """What waits on the Friends page: requests to answer and gifts to take."""
+    return len(storage().friend_requests(user["id"])["to_me"]) + len(storage().waiting_gifts(user["id"]))
 
 
 def sign_in_buttons() -> list:
@@ -422,6 +429,183 @@ def delete_empire(USERID):
     return redirect("/settings?done=deleted")
 
 
+## FRIENDS (friends.py): requests by username, accepted or declined
+
+FRIENDS_DONE = {"accepted": "You're friends now: their empires come first among your neighbours.",
+                "declined": "Request declined.", "cancelled": "Request taken back.",
+                "removed": "You're not friends any more."}
+
+
+def render_friends(user, error=None, done=None, status=200):
+    store = storage()
+    mine = store.friends_of(user["id"])
+    sent = gifts.sent_today(user["id"])
+    for friend in mine:
+        friend["empires"] = villages_of(friend["id"])
+        friend["sent_today"] = friend["id"] in sent
+    level = account_level(user)
+    return render_template("friends.html", user=user, friends=mine, requests=store.friend_requests(user["id"]),
+                           max_friends=friends.MAX_FRIENDS, waiting=gifts.waiting(user["id"]),
+                           empires=villages_of(user["id"]), free=gifts.free_list(level),
+                           next_free=gifts.next_free(level), error=error,
+                           done=done or FRIENDS_DONE.get(request.args.get("done", ""))), status
+
+
+def friends_user():
+    """The signed-in account, for the Friends forms (which carry a CSRF token)."""
+    user = current_user()
+    if user is None:
+        abort(redirect("/"))
+    csrf.check()
+    return user
+
+
+def _account_id(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        abort(404)
+
+
+@app.route("/friends")
+def friends_page():
+    user = current_user()
+    if user is None:
+        return redirect("/")
+    return render_friends(user)
+
+
+@app.route("/friends/ask", methods=["POST"])
+def ask_friend():
+    user = friends_user()
+    try:
+        done = friends.ask(user, request.form.get("username", ""))
+    except friends.FriendError as e:
+        return render_friends(user, error=str(e), status=400)
+    print(f"[FRIENDS] {user['username']} -> {request.form.get('username', '')!r}: {done}")
+    return render_friends(user, done=done)
+
+
+@app.route("/friends/<action>/<other>", methods=["POST"])
+def answer_friend(action, other):
+    user = friends_user()
+    other = _account_id(other)
+    try:
+        if action == "accept":
+            friends.accept(user, other)
+        elif action == "decline":
+            friends.decline(user, other)
+        elif action == "cancel":
+            friends.cancel(user, other)
+        elif action == "remove":
+            friends.unfriend(user, other)
+        else:
+            abort(404)
+    except friends.FriendError as e:
+        return render_friends(user, error=str(e), status=400)
+    done = {"accept": "accepted", "decline": "declined", "cancel": "cancelled", "remove": "removed"}[action]
+    print(f"[FRIENDS] {user['username']} {done} account {other}")
+    return redirect(f"/friends?done={done}")
+
+
+## GIFTS (gifts.py): a free gift a day for each friend, things from storage, an inbox
+
+def account_level(user) -> int:
+    """The level that opens free gifts: the account's highest empire's."""
+    return max([e["level"] for e in villages_of(user["id"])] or [1])
+
+
+def _form_int(name):
+    try:
+        return int(request.form.get(name, ""))
+    except ValueError:
+        abort(400, "Please try again.")
+
+
+@app.route("/gifts/send", methods=["POST"])
+def send_free_gift():
+    """The Friends page: today's free gift for a friend."""
+    user = friends_user()
+    try:
+        done = gifts.send_free(user, _form_int("friend"), _form_int("item"), account_level(user))
+    except gifts.GiftError as e:
+        return render_friends(user, error=str(e), status=400)
+    print(f"[GIFTS] {user['username']}: {done}")
+    return render_friends(user, done=done)
+
+
+@app.route("/gifts/take", methods=["POST"])
+def take_gifts():
+    """The Friends page: a gift (or all of them) into one of the player's
+    empires. The game shows who sent what when that empire next starts."""
+    user = friends_user()
+    USERID = request.form.get("empire", "")
+    if owner_of(USERID) != user["id"]:
+        return render_friends(user, error="Pick one of your empires for it.", status=400)
+    wanted = request.form.get("gift", "")
+    ids = [g["id"] for g in gifts.waiting(user["id"])] if wanted == "all" else [_form_int("gift")]
+    taken = []
+    with LOCK:
+        try:
+            for gift_id in ids:
+                taken.append(gifts.take(user, gift_id, village_of(USERID), tell_game=True))
+        except gifts.GiftError as e:
+            if not taken:
+                return render_friends(user, error=str(e), status=400)
+        finally:
+            save_session(USERID)  # whatever went in before a gift already taken elsewhere
+    empire = save_info(USERID)["name"]
+    print(f"[GIFTS] {user['username']} took into {empire}: {taken}")
+    return render_friends(user, done=f"In {empire}'s Gifts and Storage: " + "; ".join(taken) + ".")
+
+
+@app.route("/gifts/game", methods=["GET", "POST"])
+def gifts_window():
+    """The game's own Gifts window (templates/_gifts.html), for the empire on
+    that page: what waits for it, today's free gifts, its storage to give from."""
+    user = current_user()
+    USERID = request.args.get("empire", "")  # not the cookie's: another tab may have opened another empire
+    if user is None or not USERID or owner_of(USERID) != user["id"]:
+        return json_response({"error": "Please sign in again."}, 403)
+    reply, status = {}, 200
+    with LOCK:
+        save = village_of(USERID)
+        if save is None:
+            return json_response({"error": "This empire is gone."}, 404)
+        if request.method == "POST":
+            if not csrf.valid():
+                return json_response({"error": "This page was open too long. Please reload it."}, 400)
+            action = request.form.get("action")
+            try:
+                if action == "take":
+                    wanted = request.form.get("gift", "")
+                    ids = [g["id"] for g in gifts.waiting(user["id"])] if wanted == "all" else [_form_int("gift")]
+                    done = "; ".join(gifts.take(user, gift_id, save, tell_game=False) for gift_id in ids)
+                    reply["ok"] = f"In your Gifts and Storage: {done}." if done else "No gifts waiting."
+                elif action == "free":
+                    reply["ok"] = gifts.send_free(user, _form_int("friend"), _form_int("item"), account_level(user))
+                elif action == "give":
+                    town_id = int(save["playerInfo"].get("default_map") or 0)
+                    reply["ok"] = gifts.give(user, save, town_id, _form_int("friend"), _form_int("item"),
+                                             _form_int("count"))
+                else:
+                    abort(400, "Please try again.")
+                print(f"[GIFTS] {user['username']} -> {USERID}: {reply['ok']}")
+            except gifts.GiftError as e:
+                reply["error"], status = str(e), 400
+            finally:
+                save_session(USERID)  # what changed before an error too
+        level = account_level(user)
+        sent = gifts.sent_today(user["id"])
+        reply.update(
+            waiting=gifts.waiting(user["id"]),
+            friends=[dict(f, sent_today=f["id"] in sent) for f in storage().friends_of(user["id"])],
+            free=gifts.free_list(level), next_free=gifts.next_free(level), level=level,
+            storage=gifts.storage_list(save, int(save["playerInfo"].get("default_map") or 0)),
+            loaded_at=bank.loaded_at.get(USERID, 0), now=time.time())
+    return json_response(reply, status)
+
+
 @app.route("/play", methods=["POST"])
 def choose_village():
     csrf.check()
@@ -464,7 +648,7 @@ def _game_page(template):
                            friendsInfo=fb_friends_str(USERID), version=version_name,
                            GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
                            ASSETS_URL=config_env.ASSETS_URL, DAYS=comeback_bonus.page_days(village_of(USERID)),
-                           DYNAMIC=DYNAMIC, ART_URL=art_url(),
+                           DYNAMIC=DYNAMIC, ART_URL=art_url(), GIFTS_WAITING=bool(gifts.waiting(user["id"])),
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
 

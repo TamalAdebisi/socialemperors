@@ -58,6 +58,7 @@
                     &dailyBonus=0&brk=0\
                     &daysSinceRegistration={{DAYS}}&brk=0\
                     &friendsInfo={{friendsInfo | tojson}}&brk=0\
+                    &showInitialGift={{ 1 if GIFTS_WAITING else 0 }}&brk=0\
                     &serverTime={{serverTime}}&brk=0\
                     &forceSyncError=1&brk=0\
                     &forceAttackReload=0&brk=0\
@@ -109,5 +110,6 @@
         </script>
         {% include "_bank.html" %}
         {% include "_invite.html" %}
+        {% include "_gifts.html" %}
     </body>
 </html>

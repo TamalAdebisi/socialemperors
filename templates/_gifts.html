@@ -1,0 +1,270 @@
+{# The gifts window (gifts.py). The game's "Send gift" button (over a
+   neighbour's portrait) and its empty gift box call the page's gotoGifts(),
+   which opened Facebook's gift page; on load, when gifts are waiting
+   (showInitialGift), it calls gotoInitialGifts(). Both open this window:
+   gifts waiting, today's free gifts, and giving from storage. Styled like
+   the bank. #}
+<dialog id="gifts" aria-labelledby="gifts-title">
+    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
+    <h2 id="gifts-title"><img src="img/gift.png" alt=""> Gifts</h2>
+    <div class="gifts-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="waiting">For you <span data-count></span></button>
+        <button type="button" role="tab" data-tab="free">Free gift</button>
+        <button type="button" role="tab" data-tab="give">From storage</button>
+    </div>
+
+    <div class="bank-body" data-state="loading">
+        <p class="bank-wait">Opening your gifts…</p>
+        <p class="bank-away">Gifts open in your own town. Finish the battle or the visit, then try again.</p>
+        <p class="bank-down">Gifts can't be reached right now. Please try again in a moment.</p>
+
+        <div class="bank-open">
+            <section class="gifts-tab" data-for="waiting">
+                <ul class="gifts-list" data-waiting></ul>
+                <p class="gifts-empty" data-none-waiting>No gifts waiting. Your friends' gifts arrive here.</p>
+                <button type="button" data-take-all>Take them all</button>
+            </section>
+
+            <section class="gifts-tab gifts-form" data-for="free">
+                <p class="gifts-empty" data-no-friends>Gifts go to friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.</p>
+                <div data-free-form>
+                    <label for="gifts-free-friend">For</label>
+                    <select id="gifts-free-friend" data-free-friend></select>
+                    <label for="gifts-free-item">Gift</label>
+                    <select id="gifts-free-item" data-free-item></select>
+                    <button type="button" class="gifts-send" data-send-free>Send</button>
+                    <p class="bank-more" data-free-note></p>
+                </div>
+            </section>
+
+            <section class="gifts-tab gifts-form" data-for="give">
+                <p class="gifts-empty" data-no-give>Your friends and your storage show here.</p>
+                <div data-give-form>
+                    <label for="gifts-give-friend">For</label>
+                    <select id="gifts-give-friend" data-give-friend></select>
+                    <label for="gifts-give-item">From your storage</label>
+                    <select id="gifts-give-item" data-give-item></select>
+                    <label for="gifts-give-count">How many</label>
+                    <input id="gifts-give-count" type="number" min="1" value="1" data-give-count>
+                    <button type="button" class="gifts-send" data-give>Give</button>
+                    <p class="bank-more">It leaves your storage and goes to your friend's gifts.</p>
+                </div>
+            </section>
+        </div>
+        <p class="bank-message" role="status" aria-live="polite"></p>
+    </div>
+
+    <p class="bank-more"><a href="/friends" target="_blank" rel="noopener">Friends page</a>: add friends, answer requests.</p>
+</dialog>
+
+<script>
+    // The gifts window: opened by the game, through gotoGifts() and gotoInitialGifts().
+    (function () {
+        var dialog = document.getElementById("gifts");
+        var body = dialog.querySelector(".bank-body");
+        var message = dialog.querySelector(".bank-message");
+        var down = dialog.querySelector(".bank-down"), downText = down.textContent;
+        var csrf = "{{ csrf_token() }}";
+        var empire = "{{ save_info.userid }}";
+        var state = null;     // what the server says
+        var tab = "waiting";
+        var synced = false;   // the game has sent back everything it holds since this window opened
+        var changed = false;  // the game's gift box or storage is old until the town loads again
+        var opening = 0;      // which opening is current, so a late answer can't spoil a newer one
+
+        function $(selector) { return dialog.querySelector(selector); }
+
+        function show(which, text) {
+            body.dataset.state = which;
+            if (which === "down") {
+                down.textContent = text || downText;
+                text = "";
+            }
+            message.textContent = text || "";
+        }
+
+        function ask(method, data) {
+            return fetch("gifts/game?empire=" + encodeURIComponent(empire), {
+                method: method,
+                cache: "no-store",
+                body: data ? new URLSearchParams(data) : undefined
+            }).then(function (response) {
+                return response.json().catch(function () { throw new Error("not json"); });
+            });
+        }
+
+        function reloadTown() {
+            try {
+                player.forceReloadInfo();  // the game sends what it holds back, then loads the town again
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function options(select, items, label) {
+            var keep = select.value;
+            select.textContent = "";
+            items.forEach(function (item) {
+                var option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = label(item);
+                select.appendChild(option);
+            });
+            if (keep && select.querySelector('option[value="' + keep + '"]')) select.value = keep;
+        }
+
+        function draw() {
+            var waiting = state.waiting, list = $("[data-waiting]");
+            $("[data-count]").textContent = waiting.length ? "(" + waiting.length + ")" : "";
+            list.textContent = "";
+            waiting.forEach(function (gift) {
+                var li = document.createElement("li"), what = document.createElement("span");
+                var name = document.createElement("b"), from = document.createElement("span");
+                name.textContent = gift.name + (gift.count > 1 ? " × " + gift.count : "");
+                from.className = "from";
+                from.textContent = " from " + gift.sender;
+                what.append(name, from);
+                var take = document.createElement("button");
+                take.type = "button";
+                take.textContent = "Take";
+                take.dataset.take = gift.id;
+                li.append(what, take);
+                list.appendChild(li);
+            });
+            $("[data-none-waiting]").hidden = waiting.length > 0;
+            $("[data-take-all]").hidden = waiting.length < 2;
+
+            var friends = state.friends, open = friends.filter(function (f) { return !f.sent_today; });
+            $("[data-no-friends]").hidden = friends.length > 0;
+            $("[data-free-form]").hidden = friends.length === 0;
+            options($("[data-free-friend]"), open, function (f) { return f.username; });
+            options($("[data-free-item]"), state.free, function (g) { return g.name; });
+            $("[data-send-free]").disabled = open.length === 0 || state.free.length === 0;
+            var note = open.length === 0 && friends.length
+                ? "You've sent every friend today's gift. More tomorrow!"
+                : "One free gift a day for each friend.";
+            if (state.next_free) note += " Next to open: a " + state.next_free.name + " at level " + state.next_free.level + ".";
+            $("[data-free-note]").textContent = note;
+
+            var canGive = friends.length > 0 && state.storage.length > 0;
+            $("[data-no-give]").hidden = canGive;
+            $("[data-no-give]").textContent = friends.length ? "Your storage is empty." : "Gifts go to friends: add friends first.";
+            $("[data-give-form]").hidden = !canGive;
+            options($("[data-give-friend]"), friends, function (f) { return f.username; });
+            options($("[data-give-item]"), state.storage, function (g) { return g.name + " (" + g.count + ")"; });
+            limitCount();
+        }
+
+        function limitCount() {
+            var item = state && state.storage.filter(function (g) { return String(g.id) === $("[data-give-item]").value; })[0];
+            var count = $("[data-give-count]");
+            count.max = item ? item.count : 1;
+            if (+count.value > +count.max) count.value = count.max;
+            if (+count.value < 1) count.value = 1;
+        }
+
+        function pick(which) {
+            tab = which;
+            dialog.querySelectorAll("[data-tab]").forEach(function (b) {
+                b.setAttribute("aria-selected", b.dataset.tab === which ? "true" : "false");
+            });
+            dialog.querySelectorAll("[data-for]").forEach(function (s) { s.hidden = s.dataset.for !== which; });
+            if (which === "give" && !synced) sync();
+        }
+
+        // What leaves storage must not still be on the game's screen: the
+        // game sends back everything it holds and loads the town first,
+        // and only once the server has seen that load does the list show.
+        function sync() {
+            var mine = opening, since = null, tries = 0;
+            show("loading");
+            (function poll() {
+                ask("GET").then(function (reply) {
+                    if (mine !== opening) return;
+                    if (reply.error) return show("down", reply.error);
+                    if (since === null) {
+                        since = reply.now;
+                        if (!reloadTown()) return show("away");
+                    } else if (reply.loaded_at >= since) {
+                        synced = true;
+                        state = reply;
+                        draw();
+                        return show("open");
+                    }
+                    if (++tries > 25) return show("away");  // about 15 seconds: the game didn't load the town
+                    setTimeout(poll, 600);
+                }).catch(function () {
+                    if (mine === opening) show("down");
+                });
+            })();
+        }
+
+        function open(which) {
+            var mine = ++opening;
+            synced = false;
+            state = null;
+            show("loading");
+            if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+            if (!dialog.open) dialog.showModal();
+            ask("GET").then(function (reply) {
+                if (mine !== opening) return;
+                if (reply.error) return show("down", reply.error);
+                state = reply;
+                draw();
+                show("open");
+                pick(which === "waiting" && !reply.waiting.length ? "free" : which);
+            }).catch(function () {
+                if (mine === opening) show("down");
+            });
+        }
+
+        function act(data, changes) {
+            dialog.querySelectorAll(".bank-open button").forEach(function (b) { b.disabled = true; });
+            data.csrf = csrf;
+            ask("POST", data).then(function (reply) {
+                if (!reply.waiting) return show("down", reply.error);
+                state = reply;
+                draw();
+                if (reply.ok && changes) changed = true;
+                show("open", reply.ok ? reply.ok + (changes ? " Your town updates when this window closes." : "") : reply.error);
+            }).catch(function () {
+                show("down");
+            }).finally(function () {
+                dialog.querySelectorAll(".bank-open button").forEach(function (b) { b.disabled = false; });
+                if (state) draw();
+            });
+        }
+
+        dialog.addEventListener("click", function (event) {
+            var target = event.target;
+            if (target === dialog) return dialog.close();  // a click on the dark backdrop
+            if (!state) return;
+            if (target.closest("[data-tab]")) {
+                pick(target.closest("[data-tab]").dataset.tab);
+                message.textContent = "";
+            } else if (target.closest("[data-take]")) {
+                act({action: "take", gift: target.closest("[data-take]").dataset.take}, true);
+            } else if (target.closest("[data-take-all]")) {
+                act({action: "take", gift: "all"}, true);
+            } else if (target.closest("[data-send-free]")) {
+                act({action: "free", friend: $("[data-free-friend]").value, item: $("[data-free-item]").value}, false);
+            } else if (target.closest("[data-give]")) {
+                act({action: "give", friend: $("[data-give-friend]").value, item: $("[data-give-item]").value,
+                     count: $("[data-give-count]").value}, true);
+            }
+        });
+        $("[data-give-item]").addEventListener("change", limitCount);
+
+        dialog.addEventListener("close", function () {
+            opening++;
+            if (changed) {
+                changed = false;
+                reloadTown();
+            }
+        });
+
+        window.gotoGifts = function () { setTimeout(function () { open("waiting"); }, 0); };   // not inside the game's own call
+        window.gotoInitialGifts = function () { setTimeout(function () { open("waiting"); }, 0); };
+    })();
+</script>
