@@ -201,8 +201,36 @@ numbers, because the server writes them into the game config.
       delete your empires, link Discord and Google, and set or change your
       password. Off the game's bar: the Discord and GitHub links, and the
       version
-- [ ] Friends, as Facebook had: add players by name, friends are your
-      neighbours in the game, and you can send them gifts
+- [x] Friends, as Facebook had (`friends.py`): ask by username, the other
+      accepts or declines (the Friends page, `/friends`). Friends' empires
+      come first among your neighbours in the game, then the most recently
+      active players, and each player's username shows under their
+      portrait instead of "Emperor". The game's ways to ask for more
+      neighbours (an empty place in the bar, "Need allies?") point to the
+      Friends page
+- [x] Gifts between friends (`gifts.py`): a free gift a day for each friend,
+      from the 34 items the game config marks giftable, opening with the
+      sender's level (a Yellow Tree from the start, a Scorpion at 30); and
+      anything from your own storage. A gift waits, with who sent it, until
+      it is taken into one of your empires' Gifts and Storage. The game's
+      own Send gift button and empty gift box open our Gifts window
+      (`templates/_gifts.html`), which opens by itself when gifts are
+      waiting; like the bank, it has the game send back what it holds
+      before anything leaves storage, and reload the town after
+- [x] Asking friends for help, which also went through Facebook
+      (`helps.py`): the game's own Ask friends buttons open our window
+      (`templates/_help.html`) to pick friends, and friends answer on the
+      Friends page. An hour off a building's work (`accept_collect_help`),
+      two steps for the dragon nest's dragon (`finish_dragon_help`), a place
+      at the Summit, the Allied Markets, the Recruitment camp and the Wonder,
+      and a seat at the Round Table, whose own window picks friends one by one
+      (`assist_send_feed`). Each friend helps a thing once a day; the game
+      says who helped when it next starts. The Recruitment camp, the Round
+      Table and the Wonder take no paid helpers, so before this they could
+      never be staffed
+- [ ] Found lost animals (`register_found_item.php`): the game shared them on
+      Facebook's wall, for friends to adopt; what friends got is unknown.
+      (Asking friends for potions has no button in this client.)
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))

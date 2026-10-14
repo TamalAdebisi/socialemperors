@@ -42,7 +42,7 @@ export class ShopWindow {
     this.panel.innerHTML = `
       <header class="shop-head">
         <h2>Shop</h2>
-        <button class="hud-button" type="button" aria-label="Close" title="Close">✕</button>
+        <button class="button tiny plain" type="button" aria-label="Close">✕</button>
       </header>
       <nav class="shop-categories" aria-label="Categories"></nav>
       <nav class="shop-tabs" aria-label="Kinds"></nav>
@@ -141,7 +141,7 @@ export class ShopWindow {
     cost.className = "shop-price";
     cost.innerHTML = `<span class="dot ${price.resource}"></span>`;
     cost.append(numbers.format(price.amount));
-    cost.title = `${numbers.format(price.amount)} ${price.resource}`;
+    cost.setAttribute("aria-label", `${numbers.format(price.amount)} ${price.resource}`);
     button.append(canvas, name, cost);
     if (item.xp > 0) {
       const xp = document.createElement("span");

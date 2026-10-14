@@ -1,0 +1,151 @@
+{% extends "_site.html" %}
+{% import "_macros.html" as ui %}
+{# Friends (server.py, "FRIENDS"; friends.py): add players by username, answer
+   requests, see your friends and their empires. #}
+
+{% block title %}Friends ~ Social Empires{% endblock %}
+
+{% block card %}
+	<div class="topbar">
+		<a href="/">← Your empires</a>
+		<nav>
+			<a href="/settings">Settings</a>
+			<form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="link-button">Log out</button></form>
+		</nav>
+	</div>
+
+	{{ ui.messages(error, done) }}
+
+	{% macro empire_picker() %}
+	{% if empires | length > 1 %}
+	<select name="empire" aria-label="Into which empire">
+		{% for empire in empires %}<option value="{{ empire.userid }}">{{ empire.name }}</option>{% endfor %}
+	</select>
+	{% elif empires %}
+	<input type="hidden" name="empire" value="{{ empires[0].userid }}">
+	{% endif %}
+	{% endmacro %}
+
+	{% if helps %}
+	<section class="section">
+		<h2><img src="img/villager.png" alt=""> Friends asking for help</h2>
+		{% for help in helps %}
+		<div class="row">
+			<span class="what"><span><b>{{ help.asker }}</b> asks for {{ help.what }}{% if help.empire_name %} <span class="muted">in {{ help.empire_name }}</span>{% endif %}</span></span>
+			<span class="inline">
+				<form method="post" action="/help/answer"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="help" value="{{ help.id }}"><button class="button small" type="submit">Help</button></form>
+				<form method="post" action="/help/dismiss"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="help" value="{{ help.id }}"><button class="button small plain" type="submit" data-tip="Turn it down; they can ask again">Not now</button></form>
+			</span>
+		</div>
+		{% endfor %}
+		{% if helps | length > 1 %}
+		<form method="post" action="/help/answer" style="margin-top: 10px;">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input type="hidden" name="help" value="all">
+			<button class="button small gold" type="submit">Help them all</button>
+		</form>
+		{% endif %}
+		<p class="hint">Helping costs you nothing. Your help shows in their empire when their town next loads.</p>
+	</section>
+	{% endif %}
+
+	{% if waiting %}
+	<section class="section">
+		<h2><img src="img/gift.png" alt=""> Gifts for you</h2>
+		{% if not empires %}<p class="muted">Make an empire first: gifts go into one.</p>{% endif %}
+		{% for gift in waiting %}
+		<div class="row">
+			<span class="what"><span><b>{{ gift.name }}</b>{% if gift.count > 1 %} × {{ gift.count }}{% endif %} <span class="muted">from {{ gift.sender }}</span></span></span>
+			{% if empires %}
+			<form class="inline" method="post" action="/gifts/take">
+				<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+				<input type="hidden" name="gift" value="{{ gift.id }}">
+				{{ empire_picker() }}
+				<button class="button small" type="submit">Take</button>
+			</form>
+			{% endif %}
+		</div>
+		{% endfor %}
+		{% if empires and waiting | length > 1 %}
+		<form class="inline" method="post" action="/gifts/take" style="margin-top: 10px;">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input type="hidden" name="gift" value="all">
+			{{ empire_picker() }}
+			<button class="button small gold" type="submit">Take them all</button>
+		</form>
+		{% endif %}
+		<p class="hint">They go into that empire's Gifts and Storage, ready to place.</p>
+	</section>
+	{% endif %}
+
+	<section class="section">
+		<h2><img src="img/villager.png" alt=""> Friends</h2>
+		<form class="inline" method="post" action="/friends/ask">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input name="username" placeholder="Their username" autocomplete="off" pattern="[A-Za-z0-9_]{3,20}" required aria-label="Username of the player to add">
+			<button class="button small" type="submit">Add friend</button>
+		</form>
+		<p class="hint">They'll see your request here and can accept it. Friends' empires come first among your neighbours in the game.</p>
+
+		{% if requests.to_me %}
+		<h3 style="margin-top: 18px;">Asking to be your friend</h3>
+		{% for other in requests.to_me %}
+		<div class="row">
+			<span class="what"><b>{{ other.username }}</b></span>
+			<span class="inline">
+				<form method="post" action="/friends/accept/{{ other.id }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button small" type="submit">Accept</button></form>
+				<form method="post" action="/friends/decline/{{ other.id }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button small plain" type="submit">Decline</button></form>
+			</span>
+		</div>
+		{% endfor %}
+		{% endif %}
+
+		{% if requests.from_me %}
+		<h3 style="margin-top: 18px;">Waiting for an answer</h3>
+		{% for other in requests.from_me %}
+		<div class="row">
+			<span class="what">{{ other.username }}</span>
+			<form method="post" action="/friends/cancel/{{ other.id }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button small plain" type="submit">Take back</button></form>
+		</div>
+		{% endfor %}
+		{% endif %}
+	</section>
+
+	<section class="section">
+		<h2><img src="img/knight.png" alt=""> Your friends <span class="muted">({{ friends | length }} of {{ max_friends }})</span></h2>
+		{% for friend in friends %}
+		<div class="row">
+			<div>
+				<b>{{ friend.username }}</b>
+				<div class="hint">
+					{% for empire in friend.empires %}{{ empire.name }} · level {{ empire.level }}{% if not loop.last %}, {% endif %}{% else %}No empire yet{% endfor %}
+				</div>
+			</div>
+			<span class="inline">
+				{% if friend.sent_today %}
+				<span class="muted">Today's gift sent ✓</span>
+				{% elif free %}
+				<form class="inline" method="post" action="/gifts/send">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+					<input type="hidden" name="friend" value="{{ friend.id }}">
+					<select name="item" aria-label="Free gift for {{ friend.username }}">
+						{% for item in free %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
+					</select>
+					<button class="button small gold" type="submit"><img src="img/gift.png" alt="" class="icon"> Send</button>
+				</form>
+				{% endif %}
+				<details class="delete">
+					<summary>Remove…</summary>
+					<form method="post" action="/friends/remove/{{ friend.id }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button small danger" type="submit">Remove {{ friend.username }}</button></form>
+				</details>
+			</span>
+		</div>
+		{% else %}
+		<p class="muted">No friends yet. Add someone by their username above.</p>
+		{% endfor %}
+		{% if friends %}
+		<p class="hint">Each day, one free gift for each friend.{% if next_free %} More gifts open as you level up: next, a {{ next_free.name }} at level {{ next_free.level }}.{% endif %}
+			To give things from your own storage, use the gift button in the game.</p>
+		{% endif %}
+	</section>
+{% endblock %}

@@ -1,16 +1,22 @@
 {# What the game's Invite buttons open: the one in a friends tournament's
-   waiting room (showPopupInviteTournament) and the one shown to a player
-   with too few friends to create one (showPopupInvite). They opened
-   Facebook's invite window; here friends find a tournament in their own
-   Tourney window (tournaments.py), so this says so. Styled like the bank. #}
-<dialog id="invite" aria-labelledby="invite-title">
-    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
-    <h2 id="invite-title">Invite friends</h2>
+   waiting room (showPopupInviteTournament), the one shown to a player with
+   too few friends to create one (showPopupInvite), and the game's ways to
+   ask for more neighbours: an empty place in the neighbour bar and its
+   "Need allies?" popup (gotoNeighbors, gotoInitialInvite). They opened
+   Facebook's invite window; here friends are added on our Friends page
+   (friends.py), and find a tournament in their own Tourney window
+   (tournaments.py), so this says so. Styled like the bank. #}
+<dialog id="invite" class="frame" tabindex="-1" aria-labelledby="invite-title">
+    <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
+    <h2 id="invite-title"><img src="img/villager.png" alt=""> Invite friends</h2>
     <p data-for="tournament">Your tournament is waiting for players. Everyone you see as a neighbour
         finds it in their <b>Tourney</b> window, as your tournament: tell them to join!
         Seats still empty after a day get computer players.</p>
-    <p data-for="game">Your friends are the players you see as neighbours. Social Empires is more fun
-        with more of them: send your friends <b>{{ PUBLIC_URL }}</b> to start an empire.</p>
+    <p data-for="game">Social Empires is more fun with friends. Add them on the Friends page: their
+        empires come first among your neighbours. New to the game? Send them <b>{{ PUBLIC_URL }}</b>.</p>
+    <p data-for="neighbours">Your neighbours are your friends first, then other players. Add friends by
+        their username on the Friends page, and answer their requests there.</p>
+    <p><a class="button small gold" href="/friends" target="_blank" rel="noopener">Open the Friends page</a></p>
 </dialog>
 
 <script>
@@ -21,10 +27,12 @@
             dialog.querySelectorAll("[data-for]").forEach(function (text) {
                 text.hidden = text.getAttribute("data-for") !== which;
             });
-            setTimeout(function () { dialog.showModal(); }, 0);  // not inside the game's own call
+            setTimeout(function () { dialog.showModal(); dialog.focus(); }, 0);  // not inside the game's own call
         }
 
         window.showPopupInviteTournament = function () { open("tournament"); };
         window.showPopupInvite = function () { open("game"); };
+        window.gotoNeighbors = function () { open("neighbours"); };
+        window.gotoInitialInvite = function () { open("neighbours"); };
     })();
 </script>

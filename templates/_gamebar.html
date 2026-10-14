@@ -1,13 +1,49 @@
         <header id="gamebar">
-            <a class="logo" href="/" title="Your empires"><img src="img/logo.png" alt="Social Empires"></a>
+            <a class="logo" href="/" data-tip="Your empires" aria-label="Your empires"><img src="img/logo.png" alt="Social Empires"></a>
             <span class="empire"><b>{{ save_info.name }}</b> · level {{ save_info.level }}</span>
             <span class="fps" id="fps" hidden></span>
             <nav>
                 {% if fullscreen_button %}
-                {# Like the game's own button, not during the tutorial: it is laid out for the small screen. #}
-                <button id="fullscreen" type="button" {% if save_info.tutorial_done %}title="Full screen (Esc to leave)"{% else %}title="Available after the tutorial" disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
+                {# Like the game's own button, not during the tutorial: it is laid out for the small screen.
+                   The tip is on a box around it: a disabled button notices no mouse. #}
+                <span data-tip="{{ 'Full screen (Esc to leave)' if save_info.tutorial_done else 'Available after the tutorial' }}">
+                    <button id="fullscreen" class="button tiny gold" type="button" {% if not save_info.tutorial_done %}disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
+                </span>
                 {% endif %}
-                <a href="/" title="Pick another empire">Empires</a>
-                <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button title="Log out {{ user.username }}">Log out</button></form>
+                {# What waits on the Friends page (requests, gifts, help), kept up to date below. A new tab: the game plays on. #}
+                <a class="button tiny gold" id="friends-button" href="/friends" target="_blank" rel="noopener"
+                   data-tip="Friends, gifts and help (opens in a new tab)" aria-label="Friends{{ ', %d waiting' % news if news }}">
+                    <img src="img/villager.png" alt="" class="icon"><span class="label">Friends</span>
+                    <span class="badge" data-friends-news {% if not news %}hidden{% endif %}>{{ news }}</span>
+                </a>
+                <a class="button tiny gold" href="/" data-tip="Pick another empire">Empires</a>
+                <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button tiny plain tip-left" data-tip="Log out {{ user.username }}">Log out</button></form>
             </nav>
         </header>
+
+<script>
+    // The Friends badge: asked again every two minutes while the game is in
+    // view, and when its tab is back in view (after answering on the Friends page).
+    (function () {
+        var link = document.getElementById("friends-button");
+        var badge = link.querySelector("[data-friends-news]");
+
+        function show(count) {
+            badge.textContent = count;
+            badge.hidden = !count;
+            link.setAttribute("aria-label", count ? "Friends, " + count + " waiting" : "Friends");
+        }
+
+        function check() {
+            if (document.hidden) return;
+            fetch("friends/news", {cache: "no-store"}).then(function (response) {
+                return response.ok ? response.json() : null;
+            }).then(function (reply) {
+                if (reply) show(reply.news);
+            }).catch(function () {});
+        }
+
+        setInterval(check, 120000);
+        document.addEventListener("visibilitychange", check);
+    })();
+</script>

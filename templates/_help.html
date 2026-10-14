@@ -1,0 +1,206 @@
+{# Asking friends for help (helps.py). The game's own buttons call the page:
+   a building's Hurry up window (showPopupSEHelpCollect), the dragon nest's
+   Hire friends (showPopupSEHelpNest) and a social building's empty places
+   (showPopupSEHelpSocialItem) open this window, to pick friends to ask; the
+   Round Table's own window picks neighbours one by one (showFeedSEHire),
+   and a note says how that went. Friends answer on their Friends page. #}
+<dialog id="help" class="frame" tabindex="-1" aria-labelledby="help-title">
+    <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
+    <h2 id="help-title"><img src="img/villager.png" alt=""> Ask friends</h2>
+    <p data-what></p>
+
+    <div class="bank-body" data-state="loading">
+        <p class="bank-wait">Finding your friends…</p>
+        <p class="bank-down">Friends can't be reached right now. Please try again in a moment.</p>
+
+        <div class="bank-open">
+            <p class="gifts-empty" data-gone></p>
+            <div data-opens>
+                <p class="gifts-empty" data-opens-text></p>
+                <button class="button small" type="button" data-reload>Load my town again</button>
+            </div>
+            <p class="gifts-empty" data-full></p>
+            <p class="gifts-empty" data-no-friends>Help comes from friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.</p>
+            <div data-pick>
+                <ul class="help-friends" data-friends></ul>
+                <button class="button small gold" type="button" data-ask>Ask</button>
+                <p class="bank-more">Friends answer on their Friends page. Their help shows when your town loads again.</p>
+            </div>
+        </div>
+        <p class="bank-message" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="help-answered" data-answered hidden>
+        <p><b>Since your town loaded:</b> <span data-answered-list></span></p>
+        <button class="button small" type="button" data-reload>Load my town again</button>
+    </div>
+</dialog>
+
+<div id="help-note" class="help-note" role="status" aria-live="polite" hidden></div>
+
+<script>
+    // The Ask friends window: opened by the game, through the calls at the end.
+    (function () {
+        var dialog = document.getElementById("help");
+        var body = dialog.querySelector(".bank-body");
+        var message = dialog.querySelector(".bank-message");
+        var note = document.getElementById("help-note"), noteTimer = null;
+        var csrf = "{{ csrf_token() }}";
+        var empire = "{{ save_info.userid }}";
+        var target = null;    // what is asked about: {kind, town, x, y, item}
+        var opening = 0;      // which opening is current, so a late answer can't spoil a newer one
+
+        function $(selector) { return dialog.querySelector(selector); }
+
+        function show(which, text) {
+            body.dataset.state = which;
+            message.textContent = text || "";
+        }
+
+        function ask(method, about, data) {
+            var query = "help/game?empire=" + encodeURIComponent(empire);
+            var params = new URLSearchParams();
+            Object.keys(about).forEach(function (key) { params.append(key, about[key]); });
+            Object.keys(data || {}).forEach(function (key) {
+                [].concat(data[key]).forEach(function (value) { params.append(key, value); });
+            });
+            return fetch(method === "GET" ? query + "&" + params : query, {
+                method: method,
+                cache: "no-store",
+                body: method === "GET" ? undefined : params
+            }).then(function (response) {
+                return response.json().catch(function () { throw new Error("not json"); });
+            });
+        }
+
+        function reloadTown() {
+            try {
+                player.forceReloadInfo();  // the game sends what it holds back, then loads the town again
+            } catch (e) {}
+        }
+
+        var STATES = {asked: "asked", no_empire: "no empire yet"};
+
+        function draw(state) {
+            var problem = state.gone || state.opens || state.full;
+            $("[data-what]").textContent = "Each friend who answers gives you " + state.what + ".";
+            $("[data-what]").hidden = !!(state.gone || state.opens);
+            $("[data-gone]").hidden = !state.gone;
+            $("[data-gone]").textContent = state.gone || "";
+            $("[data-opens]").hidden = !state.opens;
+            $("[data-opens-text]").textContent = state.opens || "";
+            $("[data-full]").hidden = !state.full;
+            $("[data-full]").textContent = state.full || "";
+            $("[data-no-friends]").hidden = !!problem || state.friends.length > 0;
+            $("[data-pick]").hidden = !!problem || state.friends.length === 0;
+
+            var list = $("[data-friends]");
+            list.textContent = "";
+            state.friends.forEach(function (friend) {
+                var li = document.createElement("li"), label = document.createElement("label");
+                var box = document.createElement("input"), name = document.createElement("b");
+                box.type = "checkbox";
+                box.value = friend.id;
+                box.checked = friend.state === "can";
+                box.disabled = friend.state !== "can";
+                name.textContent = friend.username;
+                label.append(box, name);
+                if (friend.state !== "can") {
+                    var why = document.createElement("span");
+                    why.className = "from";
+                    why.textContent = " · " + (friend.state === "helped"
+                        ? (target.kind === "staff" ? "on the staff" : "helped today") : STATES[friend.state]);
+                    label.appendChild(why);
+                }
+                li.appendChild(label);
+                list.appendChild(li);
+            });
+            count();
+
+            $("[data-answered]").hidden = !state.answered.length;
+            $("[data-answered-list]").textContent = state.answered.join(". ") + (state.answered.length ? "." : "");
+        }
+
+        function picked() {
+            return [].map.call(dialog.querySelectorAll("[data-friends] input:checked"), function (box) { return box.value; });
+        }
+
+        function count() {
+            var n = picked().length;
+            $("[data-ask]").textContent = n > 1 ? "Ask " + n + " friends" : "Ask";
+            $("[data-ask]").disabled = n === 0;
+        }
+
+        function open(what) {
+            var mine = ++opening;
+            target = what;
+            show("loading");
+            $("[data-answered]").hidden = true;
+            if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+            if (!dialog.open) {
+                dialog.showModal();
+                dialog.focus();  // the window, not its close button: no ring until the keyboard moves
+            }
+            ask("GET", target).then(function (reply) {
+                if (mine !== opening) return;
+                if (reply.error) return show("down", reply.error);
+                draw(reply);
+                show("open");
+            }).catch(function () {
+                if (mine === opening) show("down");
+            });
+        }
+
+        dialog.addEventListener("change", count);
+        dialog.addEventListener("click", function (event) {
+            var clicked = event.target;
+            if (clicked === dialog) return dialog.close();  // a click on the dark backdrop
+            if (clicked.closest("[data-reload]")) {
+                dialog.close();
+                reloadTown();
+            } else if (clicked.closest("[data-ask]")) {
+                var mine = opening;
+                $("[data-ask]").disabled = true;
+                ask("POST", target, {csrf: csrf, friend: picked()}).then(function (reply) {
+                    if (mine !== opening) return;
+                    if (!reply.friends) return show("down", reply.error);
+                    draw(reply);
+                    show("open", reply.ok || reply.error);
+                }).catch(function () {
+                    if (mine === opening) show("down");
+                });
+            }
+        });
+        dialog.addEventListener("close", function () { opening++; });
+
+        function tell(text) {
+            note.textContent = text;
+            note.hidden = false;
+            clearTimeout(noteTimer);
+            noteTimer = setTimeout(function () { note.hidden = true; }, 6000);
+        }
+
+        function number(value) { return parseInt(value, 10) || 0; }
+
+        // The game's calls (not answered inside the game's own call: setTimeout)
+        window.showPopupSEHelpCollect = function (x, y, town, item) {
+            setTimeout(function () { open({kind: "collect", town: number(town), x: number(x), y: number(y), item: number(item)}); }, 0);
+        };
+        window.showPopupSEHelpNest = function () {
+            setTimeout(function () { open({kind: "nest", town: 0, x: 0, y: 0, item: 0}); }, 0);
+        };
+        window.showPopupSEHelpSocialItem = function (x, y, town, item) {
+            setTimeout(function () { open({kind: "staff", town: number(town), x: number(x), y: number(y), item: number(item)}); }, 0);
+        };
+        window.showFeedSEHire = function (x, y, town, item, name, neighbour) {
+            setTimeout(function () {
+                var seat = {kind: "staff", town: number(town), x: number(x), y: number(y), item: number(item)};
+                ask("POST", seat, {csrf: csrf, seat: String(neighbour)}).then(function (reply) {
+                    tell(reply.ok || reply.error || "Please try again.");
+                }).catch(function () {
+                    tell("Friends can't be reached right now. Please try again in a moment.");
+                });
+            }, 0);
+        };
+    })();
+</script>

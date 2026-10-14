@@ -24,20 +24,20 @@ export function showHud(town: Town, actions: HudActions): Hud {
   bar.innerHTML = `
     <div class="hud-player">
       <span class="hud-name"></span>
-      <span class="hud-level" title="Level"></span>
+      <span class="hud-level"></span>
     </div>
     <ul class="hud-resources">
-      <li title="Gold"><span class="dot gold"></span><span data-n="gold"></span></li>
-      <li title="Wood"><span class="dot wood"></span><span data-n="wood"></span></li>
-      <li title="Food"><span class="dot food"></span><span data-n="food"></span></li>
-      <li title="Stone"><span class="dot stone"></span><span data-n="stone"></span></li>
-      <li title="Cash"><span class="dot cash"></span><span data-n="cash"></span></li>
+      <li data-tip="Gold" tabindex="0"><span class="dot gold"></span><span data-n="gold"></span></li>
+      <li data-tip="Wood" tabindex="0"><span class="dot wood"></span><span data-n="wood"></span></li>
+      <li data-tip="Food" tabindex="0"><span class="dot food"></span><span data-n="food"></span></li>
+      <li data-tip="Stone" tabindex="0"><span class="dot stone"></span><span data-n="stone"></span></li>
+      <li data-tip="Cash" tabindex="0"><span class="dot cash"></span><span data-n="cash"></span></li>
     </ul>
     <div class="hud-buttons">
-      <button class="hud-button hud-shop" type="button" hidden>Shop</button>
-      <span class="hud-badge" title="The new game: so far you can build, move, turn, store, sell and collect; for the rest, use the classic game">Preview</span>
-      <a class="hud-button" href="">Classic game</a>
-      <button class="hud-button" type="button" data-fullscreen>Full screen</button>
+      <button class="button tiny gold hud-shop" type="button" hidden>Shop</button>
+      <span class="hud-badge tip-left" data-tip="The new game: so far you can build, move, turn, store, sell and collect; for the rest, use the classic game" tabindex="0">Preview</span>
+      <a class="button tiny gold" href="">Classic game</a>
+      <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
   const who = town.townName ? `${town.name} · ${town.townName}` : town.name;
   bar.querySelector(".hud-name")!.textContent = actions.visiting ? `Visiting ${who}` : who;
@@ -48,7 +48,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
     }
   };
   update(town);
-  bar.querySelector<HTMLAnchorElement>("a.hud-button")!.href = actions.classicUrl;
+  bar.querySelector<HTMLAnchorElement>("a.button")!.href = actions.classicUrl;
 
   const fullscreen = bar.querySelector<HTMLButtonElement>("[data-fullscreen]")!;
   if (!document.fullscreenEnabled) {

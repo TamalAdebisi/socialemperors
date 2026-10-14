@@ -1,40 +1,6 @@
-/* The pages around the game: signing in, your empires, settings (templates/_site.html).
-   The look is the game's own: its sky and green hills, its parchment pop-ups,
-   its round bold lettering and chunky buttons. */
-
-/* Nunito: a round font like the game's own (Arial Rounded), kept here rather
-   than loaded from Google, so visiting the site tells Google nothing.
-   SIL Open Font License, fonts/OFL.txt. */
-@font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 600 900;
-    font-display: swap;
-    src: url("fonts/nunito-latin.woff2") format("woff2");
-}
-
-:root {
-    --sky-top: #6ccdf3;
-    --sky-low: #c8eefb;
-    --grass: #8cc63f;
-    --grass-dark: #6aa82a;
-    --grass-deep: #4f8a1c;
-    --parchment: #fbf6dc;
-    --parchment-edge: #d9cf98;
-    --parchment-line: #e9e1b8;
-    --ink: #4a2c12;
-    --ink-soft: #7a5a36;
-    --gold: #ffd200;
-    --red: #b8141c;
-    --green-top: #9fd83f;
-    --green-bottom: #5ca51b;
-    --green-edge: #3c7811;
-    --round: "Nunito", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
-}
-
-* { box-sizing: border-box; }
-
-[hidden] { display: none !important; }  /* even where a rule below gives the element a display */
+/* The pages around the game: signing in, your empires, friends, settings
+   (templates/_site.html): the game's sky and green hills behind a parchment
+   card. The colours, font, buttons, boxes and tooltips are brand.css's. */
 
 html { background: var(--grass-deep); }
 
@@ -43,7 +9,7 @@ body {
     min-height: 100vh;
     color: var(--ink);
     background: var(--sky-low);
-    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font: 15px/1.45 var(--text);
 }
 
 /* The scene behind everything: sky, clouds, hills, two of the game's people. */
@@ -129,20 +95,14 @@ body {
     position: absolute;
     width: 34px;
     height: 34px;
-    border: 3px solid #cbbd74;
+    border: 3px solid var(--flourish);
     pointer-events: none;
 }
 
 .card::before { top: 7px; left: 7px; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
 .card::after { bottom: 7px; right: 7px; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
 
-h1, h2, h3 {
-    font-family: var(--round);
-    font-weight: 800;
-    color: var(--ink);
-    margin: 0 0 12px;
-    line-height: 1.2;
-}
+h1, h2, h3 { margin: 0 0 12px; }
 
 h1 { font-size: 24px; }
 h2 { font-size: 19px; }
@@ -181,16 +141,6 @@ a { color: #1f6fb2; }
 
 .topbar form { margin: 0; }
 
-.link-button {
-    border: 0;
-    padding: 0;
-    background: none;
-    color: #1f6fb2;
-    font: inherit;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
 /* Messages */
 
 .message {
@@ -212,79 +162,21 @@ label {
     margin: 12px 0 5px;
 }
 
+/* A form's boxes, one under the other (brand.css draws them). */
 input[type="text"],
 input[type="password"],
 input:not([type]) {
     display: block;
     width: 100%;
     max-width: 340px;
-    height: 40px;
-    padding: 0 12px;
-    border: 2px solid var(--parchment-edge);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--ink);
-    font: inherit;
 }
 
-input:focus-visible,
-button:focus-visible,
 .choice input:focus-visible + span {
-    outline: 3px solid #5aa9e6;
+    outline: 3px solid var(--focus);
     outline-offset: 2px;
 }
 
 .hint { color: var(--ink-soft); font-size: 12px; margin-top: 4px; }
-
-/* The game's chunky buttons */
-
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    padding: 0 20px;
-    border: 2px solid var(--green-edge);
-    border-radius: 12px;
-    background: linear-gradient(var(--green-top), var(--green-bottom));
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 3px 0 var(--green-edge);
-    color: #fff;
-    font: 800 16px var(--round);
-    text-shadow: 0 1px 0 #2c5a0b, 0 0 3px #2c5a0b;
-    text-decoration: none;
-    cursor: pointer;
-    margin-top: 16px;
-}
-
-.button:hover { filter: brightness(1.06); }
-.button:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 1px 0 var(--green-edge); }
-
-.button.gold {
-    border-color: #a8650b;
-    background: linear-gradient(#ffe066, #f5a623);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 3px 0 #a8650b;
-    color: var(--ink);
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.button.small { min-height: 36px; padding: 0 14px; font-size: 14px; margin-top: 0; }
-.inline input { display: inline-block; }
-
-.button.danger {
-    border-color: #7e1010;
-    background: linear-gradient(#f0675c, #c2271c);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 #7e1010;
-    text-shadow: 0 1px 0 #5a0909;
-}
-
-.button.plain {
-    border-color: var(--parchment-edge);
-    background: #fff;
-    box-shadow: 0 2px 0 var(--parchment-edge);
-    color: var(--ink);
-    text-shadow: none;
-}
 
 /* Discord and Google: their own colours, as they ask */
 
@@ -298,7 +190,7 @@ button:focus-visible,
     flex: 1 1 220px;
     min-height: 46px;
     margin-top: 0;
-    font: 600 16px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font: 600 16px var(--text);
     text-shadow: none;
 }
 
@@ -450,7 +342,9 @@ button:focus-visible,
     flex-wrap: wrap;
 }
 
-.inline input { width: 220px; }
+.inline input { display: inline-block; width: 220px; }
+.inline select { height: 36px; }
+.row .inline .button.small { min-height: 36px; }
 
 details.delete summary {
     cursor: pointer;

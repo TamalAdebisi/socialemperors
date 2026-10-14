@@ -37,7 +37,7 @@
 		<form method="post" action="{{ url_for('admin.reset_password', user_id=user.id) }}"
 		      onsubmit="return confirm('Make a new password? The old one stops working.')">
 			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
-			<button>Make a new password</button>
+			<button class="button small gold">Make a new password</button>
 		</form>
 		{% endif %}
 	</section>
@@ -50,7 +50,7 @@
 			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
 			<label>Type <b>{{ user.username }}</b> to confirm:
 				<input type="text" name="confirm" autocomplete="off" required></label>
-			<button class="red">Delete for good</button>
+			<button class="button small danger">Delete for good</button>
 		</form>
 	</section>
 	{% endif %}

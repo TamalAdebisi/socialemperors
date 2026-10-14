@@ -2,9 +2,9 @@
    game (the bank's ADD CASH NOW!, "not enough cash", the store) calls the
    page's gotoBuy(), which used to open Facebook's payment page; it opens
    this window instead. Needs allowScriptAccess in the Ruffle settings. #}
-<dialog id="bank" aria-labelledby="bank-title">
-    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
-    <h2 id="bank-title">Trade for cash</h2>
+<dialog id="bank" class="frame" tabindex="-1" aria-labelledby="bank-title">
+    <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
+    <h2 id="bank-title"><img src="img/cash.png" alt=""> Trade for cash</h2>
     <p class="bank-intro">The bank trades <b><span data-per-cash>2,000</span> of one resource for 1 cash</b>,
         up to <span data-per-day>5</span> cash a day.</p>
 
@@ -20,16 +20,16 @@
             </div>
             <div class="bank-amount">
                 <span id="bank-amount-label">Cash to get</span>
-                <button type="button" data-step="-1" aria-label="One less">−</button>
+                <button class="button tiny gold" type="button" data-step="-1" aria-label="One less">−</button>
                 <output data-amount aria-labelledby="bank-amount-label">1</output>
-                <button type="button" data-step="1" aria-label="One more">+</button>
+                <button class="button tiny gold" type="button" data-step="1" aria-label="One more">+</button>
             </div>
             <ul class="bank-resources">
                 {% for letter, name in (("g", "Gold"), ("w", "Wood"), ("f", "Food"), ("s", "Stone")) %}
                 <li class="bank-{{ letter }}">
                     <span class="bank-name"><i></i>{{ name }}</span>
                     <span class="bank-have" data-have="{{ letter }}"></span>
-                    <button type="button" data-trade="{{ letter }}"></button>
+                    <button class="button tiny" type="button" data-trade="{{ letter }}"></button>
                 </li>
                 {% endfor %}
             </ul>
@@ -116,7 +116,10 @@
             if (document.fullscreenElement) {
                 document.exitFullscreen().catch(function () {});  // the window is outside the game
             }
-            if (!dialog.open) dialog.showModal();
+            if (!dialog.open) {
+                dialog.showModal();
+                dialog.focus();  // the window, not its close button: no ring until the keyboard moves
+            }
             function poll() {
                 ask("GET").then(function (reply) {
                     if (mine !== opening) return;
@@ -182,10 +185,11 @@
     // Other calls the game makes to the page, for Facebook features that
     // don't exist here: they do nothing, as they did before the game could
     // reach the page.
+    // (Asking friends for help has its own window: _help.html.)
     ["getCrossData", "updateCrossData", "flashInitialized", "leveledUp", "showFeed", "showFeedItemFound",
-     "showFeedSEHire", "share_newtown", "gotoGifts", "gotoInitialGifts", "gotoNeighbors", "gotoInitialInvite",
-     "askForAchievementPermission", "gotoAdVideo", "openGame", "sendFbMessage", "showPopupSEHelpSocialItem",
-     "showPopupSEHelpPotion", "showPopupSEHelpNest", "showPopupSEHelpCollect", "openSpecialGiftFromFlash",
+     "share_newtown",
+     "askForAchievementPermission", "gotoAdVideo", "openGame", "sendFbMessage",
+     "showPopupSEHelpPotion", "openSpecialGiftFromFlash",
      "askInstallApplication", "gotoBuyWithOfferBuilding",
      "likeDialog", "bookmarDialog"].forEach(function (name) {
         window[name] = function () {};

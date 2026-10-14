@@ -26,6 +26,7 @@ import monday_bonus
 import daily_bonus
 import social
 import assists
+import helps
 import pvp
 import radar
 import tournaments
@@ -356,10 +357,10 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_NEXT_DRAGON_STEP:
         unknown = args[0]
-        print("Dragon step increased.")
-        pState = save["privateState"]
-        pState["stepNumber"] += 1
-        pState["timeStampTakeCare"] = timestamp_now()
+        print(helps.dragon_step(save))  # its own step, or a friend's (helps.py)
+
+    elif cmd == Constant.CMD_CLEAR_DRAGON_HIRES:
+        print(helps.finish_dragon_help(save, args[0] if args else "[]"))
 
     elif cmd == Constant.CMD_NEXT_DRAGON:
         print("Dragon step reset and dragonNumber increased.")
@@ -645,6 +646,14 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_INCREASE_POPULATION:
         print(social.increase_population(save, int(args[0])))
+
+    elif cmd == Constant.CMD_ACCEPT_COLLECT_HELP:
+        x, y, town_id, building_id, helper = args[:5]
+        print(helps.accept_collect_help(save, x, y, int(town_id), building_id, helper))
+
+    elif cmd == Constant.CMD_ASSIST_SEND_FEED:
+        x, y, town_id, building_id, neighbour = args[:5]
+        print(helps.seat_asked(save, x, y, int(town_id), building_id, neighbour))
 
     elif cmd == Constant.CMD_ASSIST_NEIGHBOUR_NEW:
         print(assists.help_buildings(save, args[0], args[2]))

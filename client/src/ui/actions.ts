@@ -81,9 +81,8 @@ export class ActionBar {
     }
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "hud-button";
+    button.className = label === "✕" ? "button tiny plain" : "button tiny gold";
     button.textContent = label;
-    button.title = title;
     if (title !== label) {
       button.setAttribute("aria-label", title);  // what a screen reader says for "✕"
     }

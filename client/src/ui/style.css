@@ -1,11 +1,9 @@
-/* The new client's page: the map fills the window, the HTML sits on top. */
+/* The new client's page: the map fills the window, the HTML sits on top.
+   Buttons, tooltips, the colours and the round font are the site's own
+   (templates/css/brand.css, loaded first by templates/client.html). */
 
 :root {
-  --bar: rgba(24, 28, 20, 0.78);
-  --text: #f6f3e8;
-  --muted: #c9c3ad;
-  --accent: #f2c14e;
-  color-scheme: dark;
+  --status: rgba(24, 28, 20, 0.78);
 }
 
 html,
@@ -14,8 +12,8 @@ body {
   height: 100%;
   overflow: hidden;
   background: #669c2c;
-  font: 15px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color: var(--text);
+  font: 15px/1.3 var(--text);
+  color: var(--ink);
   -webkit-user-select: none;
   user-select: none;
 }
@@ -29,6 +27,7 @@ body {
   height: 100%;
 }
 
+/* The bar on top: the classic game page's, the grass with a wooden edge. */
 .hud {
   position: fixed;
   top: 0;
@@ -40,9 +39,10 @@ body {
   gap: 8px 16px;
   padding: 8px 16px;
   padding-top: max(8px, env(safe-area-inset-top));
-  background: var(--bar);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: linear-gradient(#a3cf3c, #7fae1c);
+  border-bottom: 3px solid var(--wood);
+  font-family: var(--round);
+  font-weight: 700;
 }
 
 .hud-player {
@@ -53,15 +53,14 @@ body {
 }
 
 .hud-name {
-  font-weight: 600;
+  font-weight: 900;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .hud-level {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--ink-soft);
   white-space: nowrap;
 }
 
@@ -102,26 +101,12 @@ body {
 }
 
 .hud-badge {
-  color: var(--muted);
+  padding: 2px 10px;
+  border-radius: 9px;
+  background: var(--parchment);
+  color: var(--ink-soft);
   font-size: 13px;
   white-space: nowrap;
-}
-
-.hud-button {
-  padding: 6px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.hud-button:hover {
-  background: rgba(255, 255, 255, 0.18);
 }
 
 .status {
@@ -132,8 +117,11 @@ body {
   max-width: min(480px, calc(100% - 32px));
   margin: 0;
   padding: 14px 20px;
+  border: 3px solid var(--wood);
   border-radius: 12px;
-  background: var(--bar);
+  background: var(--parchment);
+  font-family: var(--round);
+  font-weight: 700;
   text-align: center;
 }
 
@@ -161,13 +149,14 @@ body {
   .hud-badge {
     display: none;
   }
-  .hud-button {
-    padding: 4px 8px;
-    font-size: 13px;
+  .hud .button {
+    padding: 0 8px;
+    font-size: 12px;
   }
 }
 
-/* The bar for the thing selected on the map (ui/actions.ts). */
+/* The bar for the thing selected on the map (ui/actions.ts): a parchment
+   note in a wooden frame, as the game's windows. */
 .actions {
   position: fixed;
   left: 50%;
@@ -180,10 +169,11 @@ body {
   gap: 8px;
   max-width: calc(100% - 32px);
   padding: 10px 14px;
+  border: 3px solid var(--wood);
   border-radius: 14px;
-  background: var(--bar);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--parchment);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: var(--round);
 }
 
 .actions[hidden] {
@@ -191,17 +181,11 @@ body {
 }
 
 .actions-name {
-  font-weight: 600;
+  font-weight: 800;
   margin-right: 4px;
 }
 
-/* The shop (ui/shop.ts): a window over the map, cards in a grid. */
-.hud-shop {
-  border-color: rgba(242, 193, 78, 0.6);
-  background: rgba(242, 193, 78, 0.18);
-  font-weight: 600;
-}
-
+/* The shop (ui/shop.ts): a window over the map, as the game's own, cards in a grid. */
 .shop {
   position: fixed;
   left: 50%;
@@ -214,11 +198,10 @@ body {
   max-height: calc(100% - 120px);
   box-sizing: border-box;
   padding: 14px 16px 16px;
-  border-radius: 16px;
-  background: rgba(24, 28, 20, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  border: 4px solid var(--wood);
+  border-radius: 14px;
+  background: var(--parchment);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35), 0 14px 40px rgba(0, 0, 0, 0.5);
 }
 
 .shop[hidden] {
@@ -236,6 +219,13 @@ body {
   font-size: 20px;
 }
 
+.shop-head .button {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 15px;
+}
+
 .shop-categories,
 .shop-tabs {
   display: flex;
@@ -247,14 +237,14 @@ body {
   display: none;
 }
 
+/* Categories and kinds: pills, gold when picked (as the gifts window's tabs). */
 .shop-toggle {
   padding: 5px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--parchment-edge);
   border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 14px;
+  background: var(--parchment-deep);
+  color: var(--ink-soft);
+  font: 800 14px var(--round);
   cursor: pointer;
 }
 
@@ -264,9 +254,9 @@ body {
 }
 
 .shop-toggle[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: rgba(242, 193, 78, 0.2);
-  color: var(--text);
+  border-color: var(--gold-edge);
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+  color: var(--ink);
 }
 
 .shop-items {
@@ -288,17 +278,17 @@ body {
   width: 100%;
   height: 100%;
   padding: 8px 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 2px solid var(--parchment-edge);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
+  background: #fff;
+  color: var(--ink);
   font: inherit;
   cursor: pointer;
 }
 
 .shop-card:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--gold-bottom);
+  box-shadow: 0 2px 0 var(--gold-edge);
 }
 
 .shop-card:disabled {
@@ -317,12 +307,13 @@ body {
 
 .shop-picture.missing {
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--parchment-line);
 }
 
 .shop-name {
+  font-family: var(--round);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   text-align: center;
 }
 
@@ -339,24 +330,25 @@ body {
 }
 
 .shop-xp {
-  color: #9cc4ff;
+  color: #2f6db3;
 }
 
 .shop-note {
   margin-top: 2px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  color: var(--muted);
+  background: var(--parchment-deep);
+  color: var(--ink-soft);
 }
 
 .shop-note.price {
-  color: #ff9a85;
+  color: var(--red);
 }
 
 .shop-empty {
   grid-column: 1 / -1;
-  color: var(--muted);
+  color: var(--ink-soft);
+  font-style: italic;
   text-align: center;
   padding: 24px;
 }
