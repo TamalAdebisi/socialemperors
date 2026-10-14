@@ -276,7 +276,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       (done: tap a unit, then the ground); villagers at work (done: trees, rocks,
       workers into buildings and out again); training and population (done); land and cash (done: land, opening
       early, hurrying, the bank); missions and
-      bonuses (done: goals, the daily bonus, Monday's and welcome-back chests); neighbours; sound and speed; then a full run-through against
+      bonuses (done: goals, the daily bonus, Monday's and welcome-back chests); neighbours (done: visiting
+      and helping, Arthur, the donkey carts); sound and speed; then a full run-through against
       the Flash game. Players can use the new client for everything but
       battles, which open in the classic game.
       **Launch: a fresh start.** The live server moves to Supabase with an

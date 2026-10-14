@@ -9,6 +9,8 @@ export interface Neighbour {
   pid: string | number;
   name?: string;
   level?: number | string;
+  /** A picture for the portrait (Arthur's, the game's own); the others get their initial. */
+  picture?: string;
 }
 
 /** The colours of the letter portraits: picked by the name, so a neighbour keeps theirs. */
@@ -28,8 +30,13 @@ export class NeighboursWindow {
       const portrait = document.createElement("span");
       portrait.className = "portrait";
       portrait.setAttribute("aria-hidden", "true");
-      portrait.textContent = name[0].toUpperCase();
-      portrait.style.background = PORTRAITS[[...name].reduce((sum, c) => sum + c.charCodeAt(0), 0) % PORTRAITS.length];
+      if (neighbour.picture) {
+        portrait.style.backgroundImage = `url("${neighbour.picture}")`;
+        portrait.classList.add("picture");
+      } else {
+        portrait.textContent = name[0].toUpperCase();
+        portrait.style.background = PORTRAITS[[...name].reduce((sum, c) => sum + c.charCodeAt(0), 0) % PORTRAITS.length];
+      }
       const text = document.createElement("span");
       text.className = "row-text";
       const title = document.createElement("strong");

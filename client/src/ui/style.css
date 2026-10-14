@@ -380,6 +380,10 @@ body {
   font: 900 17px var(--round);
 }
 
+.portrait.picture {
+  background: center / cover no-repeat;
+}
+
 .rows-note {
   margin: 4px 2px;
   color: var(--ink-soft);

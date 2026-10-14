@@ -26,6 +26,8 @@ export interface SaveMap {
   store?: Box;
   /** The Great Church's steps done: each adds room for people. */
   increasedPopulation?: number;
+  /** Help from neighbours waiting for their donkey carts: { "u<pid>": [[x, y, building], ...] }. */
+  receivedAssists?: Record<string, unknown>;
 }
 
 /** A storage box as the save keeps it: { "<item id>": count }, or a list of counts by item id. */
@@ -48,6 +50,8 @@ export interface PlayerInfo {
     timestampLastBonus?: number;
     timeStampMondayBonus?: number;
     comebackBonusCollected?: number[];
+    /** When the player last helped each neighbour: { "u<pid>": time }. */
+    neighborAssists?: Record<string, number>;
   };
   /** The neighbours shown in the game: their player info, with their home town's level. */
   neighbors?: { pid: string | number; name?: string; level?: number | string }[];

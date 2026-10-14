@@ -15,6 +15,7 @@ import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
+import { arthur, carts } from "./rules/neighbours.ts";
 import { Doings, readGoals, type Need } from "./rules/goals.ts";
 import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
@@ -25,7 +26,8 @@ import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
 import { BankWindow } from "./ui/bank.ts";
-import { showHud, showStatus } from "./ui/hud.ts";
+import { showHud, showMessage, showStatus } from "./ui/hud.ts";
+import { Visit } from "./visit.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
@@ -36,6 +38,9 @@ import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 
+/** Arthur's portrait in the Neighbours window: the game's own king. */
+const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
+
 async function start(): Promise<void> {
   const settings = readPageSettings();
   const server = new GameServer(settings);
@@ -43,7 +48,9 @@ async function start(): Promise<void> {
   // ?visit=<player id> shows another player's town, as visiting a neighbour does.
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
   showStatus(visit ? "Loading their town…" : "Loading your town…");
-  const [config, info] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit })]);
+  // Visiting, the player's own town too: its numbers stay in the top bar.
+  const [config, info, mine] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit }),
+    visit === undefined ? null : server.playerInfo()]);
   // The game's clock: the server's time when the town arrived, plus the time since.
   const arrived = performance.now();
   const clock = () => info.timestamp + (performance.now() - arrived) / 1000;
@@ -79,8 +86,9 @@ async function start(): Promise<void> {
 
   const levels = readLevels(config.levels);
   const increase = Number(config.globals?.POPULATION_INCREASE) || 10;
-  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined, levels,
-    population: visit === undefined ? (t) => population(t, items, increase) : undefined });
+  const own = mine ? readTown(mine, items) : town;
+  const hud = showHud(own, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
+    population: (t) => population(t, items, increase) });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -88,6 +96,7 @@ async function start(): Promise<void> {
   app.ticker.add((ticker) => view.tick(ticker.deltaMS, camera.scale));
 
   // The player's own town can be changed; a visited one only looked at.
+  let afterDrawing = () => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -101,7 +110,9 @@ async function start(): Promise<void> {
       storage: () => editor.storageCards(),
       unlock: { price: unlockPrice, run: (item) => editor.unlock(item) },
     });
-    const neighbours = new NeighboursWindow(info.neighbors ?? [], (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
+    // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
+    const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE }];
+    const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
     const world = new WorldWindows(settings.classicUrl);
     const army = new ArmyWindow({
       units: () => unitsInTown(town),
@@ -123,6 +134,10 @@ async function start(): Promise<void> {
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts) });
     hud.offerCollectAll(() => editor.collectAll());
+    // Help from neighbours: their donkey carts, one after another.
+    const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
+    // Once the town is drawn: a cart added before would be drawn twice.
+    afterDrawing = () => editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
     const [cashForGold, goldForCash] = [Number(config.globals?.EXCHANGE_CASH) || 5, Number(config.globals?.EXCHANGE_GOLD) || 2500];
     const bank = new BankWindow({
       empire: settings.userId,
@@ -184,6 +199,19 @@ async function start(): Promise<void> {
     });
   } else {
     document.body.classList.add("visiting");
+    const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
+    let quiet: ReturnType<typeof setTimeout> | undefined;
+    const visitor = new Visit({
+      neighbour: visit, view, own, hud, commands, clock,
+      assists: mine?.privateState?.neighborAssists,
+      say: (text) => {
+        showMessage(text);
+        clearTimeout(quiet);
+        quiet = setTimeout(() => showMessage(""), 3000);
+      },
+    });
+    commands.start();  // after the visit's own leaving, so the help goes with the last send
+    camera.onTap = (at) => visitor.tap(at);
   }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {
@@ -193,6 +221,7 @@ async function start(): Promise<void> {
   } else {
     showStatus("");
   }
+  afterDrawing();
 }
 
 /** The town's units by kind, the most first, as the Army window lists them. */

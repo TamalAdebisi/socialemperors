@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, neighbours
+
+- **Arthur's portrait** is the game's own king picture, as in the Flash
+  client (which showed a princess instead to players who said they were
+  women; the server doesn't keep that, so it's always the king). The other
+  neighbours keep their letter portraits.
+- **Visiting shows your own numbers** in the top bar, as the Flash client
+  did, with "Visiting <name>" beside them.
+- **The cart asks with a bar** at the bottom (Let it in / No thanks) rather
+  than the Flash client's window; tapping a waiting cart asks again.
+- **A server fix:** letting a cart in used to lose its help on the server,
+  so nothing arrived. Fixed and tested.
+- **AcidCaos's built-in village stays for now;** it goes at launch with
+  the fresh start (the next slices), as ROADMAP.md says.
+
 ## 14 October 2026: Beta 1, missions and bonuses
 
 - **Where the goals' requirements come from:** the config has the goals'

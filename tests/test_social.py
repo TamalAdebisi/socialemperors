@@ -166,6 +166,16 @@ class NeighbourHelpTest(unittest.TestCase):
         self.friend.send("clean_received_assists", self.me.pid, TOWN)
         self.assertEqual(self.friend.map["receivedAssists"], {})
 
+    def test_the_cart_delivers_after_it_was_let_in(self):
+        # As the Flash client sends it: the cart is let in (clean) before it delivers.
+        self.friend.map["receivedAssists"] = {"u" + self.me.pid: [[10, 10, MILL]]}
+        food = self.friend.map["food"]
+        self.friend.send("clean_received_assists", self.me.pid, TOWN)
+        self.assertEqual(self.friend.map["receivedAssists"], {})
+        self.friend.batch(("assist_receive", TOWN, MILL), ("assist_receive", TOWN, MILL))
+        self.assertEqual(self.friend.map["food"], food + 75)  # once
+        self.assertEqual(self.friend.map["assistsOnTheWay"], {}, "that cart is done")
+
     def test_helping_a_village_that_ships_with_the_game(self):
         built_in = sessions.neighbor_session(BUILT_IN_NEIGHBOUR)
         before = json.dumps(built_in)
