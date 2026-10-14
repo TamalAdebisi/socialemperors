@@ -20,7 +20,7 @@
 # animated bosses and buildings. Check an item by eye:
 #   python tools/art/preview.py art/sheets/<item>.json
 #
-# How it works: tools/art/RenderSwf.java draws every picture of 20 items at a
+# How it works: tools/art/RenderSwf.java draws every picture of 5 items at a
 # time with FFDec's renderer (the Flash files are read, never their code),
 # tools/art/pack_sheet.py trims and packs them into sheets, and the pictures
 # are deleted, so the export needs little disk space.
@@ -62,6 +62,12 @@ todo=()
 for swf in "${mine[@]}"; do
     [ -f "$OUT/sheets/$(basename "$swf" .swf).json" ] || todo+=("$swf")
 done
+# Smallest files first: most items take a second, so most sheets are ready
+# early, and the big animated bosses (minutes each) come last.
+if [ ${#todo[@]} -gt 0 ]; then
+    mapfile -t todo < <(for swf in "${todo[@]}"; do printf '%s\t%s\n' "$(wc -c < "$swf")" "$swf"; done \
+        | sort -n | cut -f2-)
+fi
 echo "Making ${#todo[@]} of ${#mine[@]} sheets ($JOBS at a time)..."
 : > "$OUT/export.log"
 : > "$OUT/errors.log"
@@ -82,7 +88,7 @@ export -f batch
 export FFDEC_CP CLASSES OUT PYTHON ROOT
 if [ ${#todo[@]} -gt 0 ]; then
     # Each item's line shows here as it is done, and goes in the log.
-    printf '%s\0' "${todo[@]}" | xargs -0 -n 20 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
+    printf '%s\0' "${todo[@]}" | xargs -0 -n 5 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
 fi
 
 missing=()
