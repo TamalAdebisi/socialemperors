@@ -11,7 +11,7 @@ people can play on at once, safely.
 | The game's `user_key` was always `123456789` and the server trusted whatever `USERID` a request claimed | Each game page gets a **signed token**; every game request must carry a token matching its `USERID` |
 | Session secret was the literal string `SECRET_KEY` | Random secret, generated once and kept (or set `SE_SECRET_KEY`) |
 | Address hard-coded to `http://127.0.0.1:5050` | Set `SE_PUBLIC_URL` to your domain |
-| Each village a JSON file; all reloaded on every visit to the start page | SQLite database (or Cloudflare D1), loaded once, changes saved in batches every 5 s and on shutdown |
+| Each village a JSON file; all reloaded on every visit to the start page | SQLite database, or Postgres (Supabase) when hosted; loaded once, changes saved in batches every 5 s and on shutdown |
 | Flask's development server | gunicorn (`gunicorn server:app`, settings in `gunicorn.conf.py`) |
 | Every save on the machine shown as a neighbour | Built-in neighbours + the 30 most recently active players |
 | No way to manage players | An admin page at `/admin` for the usernames in `SE_ADMINS`: reset a password, delete an account or empire, and the bug radar |
@@ -33,6 +33,7 @@ SE_DATA_DIR=/data                            # must be on a persistent disk
 SE_SECRET_KEY=<long random string>           # optional; generated if unset
 SE_CLIENT_IP_HEADER=X-Real-IP                # header with the visitor's IP (Railway)
 SE_INVITE_CODE=letmein                       # optional closed beta
+SE_DATABASE_URL=postgresql://...             # optional: Postgres (Supabase) instead of SQLite
 ```
 
 **Hosting it:** see [DEPLOY.md](DEPLOY.md) for a step-by-step guide (Railway
@@ -50,7 +51,8 @@ gunicorn server:app           # production
 ```
 
 **Run exactly one server process.** Villages live in that process's memory
-(see `sessions.py`). gunicorn is configured with 1 worker and several threads.
+(see `sessions.py`), even with Postgres. gunicorn is configured with 1 worker
+and several threads.
 
 ## Old saves
 

@@ -24,9 +24,9 @@ GitHub Secrets or Railway variables.
 
 | What | Where |
 | --- | --- |
-| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main` |
-| Live game data | Railway volume `game-data` at `/data` (SQLite database + secret key) |
-| Staging server | Same project, service `game-server-staging`, deploys the working branch, volume `staging-data`, sleeps when idle |
+| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`, in Singapore |
+| Live game data | Supabase project `socialemperors` (Singapore), schema `game`, login `se_game` ([DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)). Railway volume `game-data` at `/data`: the secret key, and the SQLite database from before the move |
+| Staging server | Same Railway project, service `game-server-staging`, deploys the working branch, volume `staging-data`, sleeps when idle; its data in the same Supabase project, schema `staging`, login `se_staging` |
 | Art, sounds, SWFs | Cloudflare R2 bucket `socialempires-assets` at `assets.socialemperors.me`, uploaded by the *Upload assets to R2* GitHub Action |
 | Domain | `socialemperors.me`, registered at Namecheap, DNS on Cloudflare |
 
@@ -34,10 +34,11 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 ## Phases
 
-**Order of work:** finish Phase 2 and Cash next, then Phase 3 (which brings
-Discord sign-in), then Phase 4, the new game client. Phase 4's first two
-steps (the art, and a new client that only shows your town) don't change the
-server, so they go ahead alongside.
+**Order of work:** Phase 3 now, one pull request at a time: the database on
+Supabase first, then the sign-in options with new pages, then friends and
+gifts. Then Phase 4, the new game client. Phase 4's first two steps (the
+art, and a new client that only shows your town) don't change the server, so
+they go ahead alongside.
 
 ### Phase 0: Launch (done)
 
@@ -181,10 +182,20 @@ numbers, because the server writes them into the game config.
 
 ### Phase 3: Stronger foundations
 
-- [ ] Sign in with Discord, so a player can get back into an account without
-      the admin (moved here from Phase 1)
-- [ ] Move to Postgres (Supabase or Railway) once a single SQLite file and a
-      single server process are no longer enough
+- [x] The database on Supabase (Postgres), in Singapore next to the game
+      server (`storage.py`, [DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)).
+      The first start copies the players over from SQLite; each server has
+      its own login and schema, so staging can't reach real players; nothing
+      is on Supabase's public Data API; `tools/copy_database.py` makes
+      backups. The server still runs as one process: empires stay in its
+      memory, so more processes need more than a database
+- [ ] Sign-in options through Supabase Auth: Discord, Google and email, next
+      to username and password, which keep working; existing accounts can
+      link them. A player can then get back into an account without the admin
+- [ ] New login and home pages, in the game's own look, and a Settings page:
+      your empires, your sign-in methods, your password
+- [ ] Friends, as Facebook had: add players by name, friends are your
+      neighbours in the game, and you can send them gifts
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
@@ -230,11 +241,12 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 | --- | --- |
 | Railway, not Render | Persistent disk on the cheap plan, deploys from GitHub, usage-based price (about $5 a month). Comparison in [DEPLOY.md](DEPLOY.md#appendix-a-railway-vs-render) |
 | Assets on Cloudflare R2 | Free downloads (no egress fees); keeps 1.3 GB out of the server |
-| Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need Phase 3 first |
+| Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need them out of memory, not just a database server |
 | Ruffle instead of Flash Player | Works in every modern browser with no plugin |
 | Client version 0.9.26b, with one setting switched on | The one that works fully today; `tools/patch_client.py` turns on its welcome-back bonus, and nothing else changes |
 | PixiJS 8 for the new client | Light, fast with many sprites, and we keep control; confirmed by drawing real towns ([CLIENT.md](CLIENT.md#engine)) |
-| Supabase later, not now | Postgres and auth are useful at scale; one SQLite file is enough until then |
+| Supabase for the database, and for sign-in next | Postgres, plus sign-in with Discord, Google and email ready-made; the free plan is enough. Chosen over Railway's Postgres for the sign-in part |
+| Singapore for the server and the database | Most players are in Asia, then Europe. Railway's regions are California, Virginia, Amsterdam and Singapore; the database must be in the same city as the server, which asks it something on every page |
 
 ## Copyright
 
