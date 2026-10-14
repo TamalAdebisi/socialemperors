@@ -50,13 +50,15 @@ class PackSheetTest(unittest.TestCase):
         self.folder = tempfile.mkdtemp(prefix="se-art-")
         # Two directions of idle (one picture each), then an attack whose
         # first direction holds picture 2 for two frames, then an empty frame.
-        frames = [{"labels": ["QUIETO"], "images": [0]},
+        frames = [{"labels": ["QUIETO"], "images": [0], "bounds": {"x": -20, "y": -25, "w": 40, "h": 30}},
                   {"labels": [], "images": [1]},
                   {"labels": ["ATAQUE"], "images": [2, 2, 3]},
                   {"labels": [], "images": [3]},
                   {"labels": ["PICAR"], "images": [4]}]
         make_render(self.folder, frames, [(10, 5, 20, 20), (12, 6, 16, 19), (5, 1, 30, 24), (0, 10, 8, 8), None])
-        self.sheet, self.data, self.warnings = pack_sheet.build(self.folder)
+        sheets, pages, self.warnings = pack_sheet.build(self.folder)
+        self.assertEqual(len(pages), 1)
+        self.sheet, self.data = sheets[0], pages[0]
 
     def test_animations_are_named_by_label_and_direction(self):
         self.assertEqual(list(self.data["animations"]),
@@ -75,6 +77,10 @@ class PackSheetTest(unittest.TestCase):
         for frame in self.data["frames"].values():
             self.assertEqual(frame["anchor"], {"x": 0.5, "y": round(25 / 30, 6)})
         self.assertEqual(self.data["meta"]["origin"], ORIGIN)
+
+    def test_flash_bounds_are_kept_per_animation(self):
+        # Only the first frame has them here (manifests from before bounds have none).
+        self.assertEqual(self.data["meta"]["bounds"], {"QUIETO/0": {"x": -20, "y": -25, "w": 40, "h": 30}})
 
     def test_an_empty_picture_becomes_one_transparent_pixel(self):
         frame = self.data["frames"]["99_test_unit/4"]
@@ -110,13 +116,36 @@ class PackSheetTest(unittest.TestCase):
         _, _, warnings = pack_sheet.build(folder)
         self.assertEqual(warnings, ["an animation is longer than RenderSwf's limit and was cut short"])
 
-    def test_too_many_pictures_for_one_sheet_is_an_error(self):
+    def test_a_picture_bigger_than_a_sheet_is_an_error(self):
         with self.assertRaises(ValueError):
-            pack_sheet.pack([(3000, 3000), (3000, 3000)])
+            pack_sheet.pack([(5000, 10)])
+
+    def test_pictures_that_dont_fit_go_on_more_pages(self):
+        # Two 3000 x 3000 pictures can't share a 4096 x 4096 sheet.
+        positions, pages = pack_sheet.pack([(3000, 3000), (3000, 3000), (10, 10)])
+        self.assertEqual([page for page, _, _ in positions], [0, 1, 1])
+        self.assertEqual(len(pages), 2)
+        for w, h in pages:
+            self.assertLessEqual(max(w, h), 4096)
+
+    def test_a_multi_page_item_lists_its_pages_and_keeps_animations_on_the_first(self):
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=34)  # room for about one picture a page
+        self.assertGreater(len(pages), 1)
+        self.assertEqual(pages[0]["meta"]["related_multi_packs"],
+                         [f"99_test_unit-{n}.json" for n in range(1, len(pages))])
+        self.assertEqual(pages[1]["meta"]["image"], "99_test_unit-1.webp")
+        self.assertNotIn("animations", pages[1])
+        # Every picture is on exactly one page, and every animation's pictures exist.
+        names = [name for page in pages for name in page["frames"]]
+        self.assertEqual(sorted(names), sorted(f"99_test_unit/{n}" for n in range(5)))
+        for sequence in pages[0]["animations"].values():
+            self.assertTrue(set(sequence) <= set(names))
+        for sheet, page in zip(sheets, pages):
+            self.assertEqual(sheet.size, (page["meta"]["size"]["w"], page["meta"]["size"]["h"]))
 
     def test_writes_webp_and_json(self):
         out = tempfile.mkdtemp(prefix="se-art-out-")
-        pack_sheet.write(self.sheet, self.data, out)
+        pack_sheet.write([self.sheet], [self.data], out)
         self.assertEqual(sorted(os.listdir(out)), ["99_test_unit.json", "99_test_unit.webp"])
         with Image.open(os.path.join(out, "99_test_unit.webp")) as image:
             self.assertEqual(image.size, self.sheet.size)
@@ -132,16 +161,16 @@ class PreviewTest(unittest.TestCase):
         make_render(folder, [{"labels": ["QUIETO"], "images": [0]},
                              {"labels": ["ATAQUE"], "images": [1, 0, 1]}],
                     [(10, 5, 20, 20), (12, 6, 16, 19)])
-        sheet, data, _ = pack_sheet.build(folder)
-        frames, duration = preview.render(data, sheet)
+        sheets, pages, _ = pack_sheet.build(folder)
+        frames, duration = preview.render(pages, sheets)
         self.assertEqual(len(frames), 3)  # the longest animation
         self.assertEqual(duration, 33)    # 30 frames a second
         # The idle picture (painted at 10..30 x 5..25, origin 20,25) sits at the
         # same place relative to the cross in every frame.
-        pics = preview.pictures(data, sheet)
+        pics = preview.pictures(pages, sheets)
         self.assertEqual(pics["99_test_unit/0"][1], (10 - 20, 5 - 25))
         self.assertEqual(pics["99_test_unit/1"][1], (12 - 20, 6 - 25))
-        self.assertEqual(preview.layout(data), [("QUIETO", ["QUIETO/0"]), ("ATAQUE", ["ATAQUE/0"])])
+        self.assertEqual(preview.layout(pages[0]), [("QUIETO", ["QUIETO/0"]), ("ATAQUE", ["ATAQUE/0"])])
 
 
 if __name__ == "__main__":

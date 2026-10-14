@@ -23,12 +23,16 @@
 // Every image of one file is drawn on the same canvas, so a single point (the
 // origin: where the game positions the item) is at the same pixel in all of
 // them. The packer trims the empty space and keeps that point as the anchor.
+// Each frame also records its bounds as Flash measures them (transparent
+// parts of pictures included): the game places a building by those.
 //
 // Only pictures are read here; the game's code is never decompiled or copied.
 
 import com.jpexs.decompiler.flash.SWF;
 import com.jpexs.decompiler.flash.configuration.Configuration;
+import com.jpexs.decompiler.flash.exporters.commonshape.ExportRectangle;
 import com.jpexs.decompiler.flash.exporters.commonshape.Matrix;
+import com.jpexs.decompiler.flash.tags.base.BoundedTag;
 import com.jpexs.decompiler.flash.tags.base.CharacterTag;
 import com.jpexs.decompiler.flash.timeline.DepthState;
 import com.jpexs.decompiler.flash.timeline.Frame;
@@ -154,6 +158,7 @@ public class RenderSwf {
                 frames.append(",\n");
             }
             frames.append("    {\"labels\": ").append(jsonStrings(frame.labels))
+                    .append(", \"bounds\": ").append(bounds(frame))
                     .append(", \"images\": ").append(sequence).append("}");
         }
 
@@ -189,6 +194,37 @@ public class RenderSwf {
             throw new IllegalStateException("no sprite named " + name + "; exported: " + candidates);
         }
         return candidates.get(0);
+    }
+
+    /**
+     * The frame's box as Flash measures a sprite's width and height: each
+     * layer's box, moved by its matrix, all together. In pixels from the
+     * origin, as JSON, or null for an empty frame.
+     */
+    static String bounds(Frame frame) {
+        double xMin = Double.MAX_VALUE, yMin = Double.MAX_VALUE;
+        double xMax = -Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+        for (DepthState layer : frame.layers.values()) {
+            CharacterTag character = layer.getCharacter();
+            if (!(character instanceof BoundedTag) || layer.clipDepth > -1) {
+                continue;
+            }
+            RECT rect = ((BoundedTag) character).getRect();
+            if (rect == null || rect.Xmin > rect.Xmax || rect.Ymin > rect.Ymax) {
+                continue;
+            }
+            Matrix matrix = layer.matrix == null ? new Matrix() : new Matrix(layer.matrix);
+            ExportRectangle box = matrix.transform(new ExportRectangle(rect));
+            xMin = Math.min(xMin, box.xMin);
+            yMin = Math.min(yMin, box.yMin);
+            xMax = Math.max(xMax, box.xMax);
+            yMax = Math.max(yMax, box.yMax);
+        }
+        if (xMin > xMax) {
+            return "null";
+        }
+        return String.format(java.util.Locale.ROOT, "{\"x\": %.2f, \"y\": %.2f, \"w\": %.2f, \"h\": %.2f}",
+                xMin / TWIPS, yMin / TWIPS, (xMax - xMin) / TWIPS, (yMax - yMin) / TWIPS);
     }
 
     /** How many frames until a character's animation repeats: the longest timeline inside it. */

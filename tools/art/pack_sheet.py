@@ -1,8 +1,7 @@
 """
-Pack the pictures RenderSwf.java drew for one building or unit into a single
-sprite sheet: one WebP image plus a JSON file saying where each picture is and
-which pictures make up each animation. Step 1 of the new game client
-(CLIENT.md).
+Pack the pictures RenderSwf.java drew for one building or unit into a sprite
+sheet: a WebP image plus a JSON file saying where each picture is and which
+pictures make up each animation. Step 1 of the new game client (CLIENT.md).
 
     python tools/art/pack_sheet.py --out <output-folder> <rendered-item-folder>...
 
@@ -11,7 +10,7 @@ tools/export_art.sh. Needs Pillow (pip install Pillow), which the server
 itself doesn't use.
 
 The JSON is in the "JSON hash" layout of TexturePacker, which PixiJS and
-Phaser both load as it is:
+Phaser both load:
 
   frames      one entry per distinct picture, named "<item>/<n>": where it is
               in the sheet ("frame"), where it sat on the full canvas before
@@ -20,14 +19,23 @@ Phaser both load as it is:
               a fraction of the canvas
   animations  "<label>/<n>": the pictures to show, one per frame at meta.fps.
               <label> is the animation's name in the game files (QUIETO idle,
-              ANDAR walk, ATAQUE attack, MUERTE death, PICAR hit, and special
+              ANDAR walk, ATAQUE attack, MUERTE death, PICAR work, and special
               moves), or "frame" when there are no labels. <n> counts the
-              frames from that label: the direction for a unit (0 to 4; the
-              game mirrors these for the other three), the way a building faces
-  meta        the image file, its size, the frame rate and where it came from
+              frames from that label: for a unit, the direction (0 to 4: up,
+              up-right, right, down-right, down; the game mirrors 1 to 3 for
+              the other three), for a building the way it faces
+  meta        the image file, its size, the frame rate and where it came from;
+              "bounds": each animation's box as Flash measures it, in pixels
+              from the anchor, transparent parts of pictures included. The
+              game places a building by it: bottom centre on the building's
+              point
 
 A picture shown for several frames in a row is listed that many times, so an
 animation plays at a steady meta.fps.
+
+Pictures that don't fit in one 4096 x 4096 image (big bosses, the ground)
+go on more pages: <item>-1.webp and <item>-1.json (frames only), and so on,
+listed in the first JSON's meta.related_multi_packs as TexturePacker does.
 """
 
 import argparse
@@ -60,34 +68,39 @@ def trim(image):
 
 
 def pack(sizes, max_size=MAX_SIZE):
-    """Place boxes of the given (w, h) on shelves, tallest first.
+    """Place boxes of the given (w, h) on shelves, tallest first, on as few
+    pages of at most max_size x max_size as they need.
 
-    Returns ([(x, y)] in the order given, (width, height)) and raises
-    ValueError when they don't fit in max_size x max_size."""
+    Returns ([(page, x, y)] in the order given, [(width, height)] of each
+    page). Raises ValueError for a box bigger than a page."""
     if not sizes:
-        return [], (1, 1)
+        return [], [(1, 1)]
     widest = max(w for w, _ in sizes) + PADDING
+    tallest = max(h for _, h in sizes) + PADDING
+    if widest > max_size or tallest > max_size:
+        raise ValueError(f"a picture is {widest - PADDING}x{tallest - PADDING} pixels, "
+                         f"more than a {max_size}x{max_size} sheet")
     area = sum((w + PADDING) * (h + PADDING) for w, h in sizes)
+    # About square when all fits on one page; pages as wide as allowed when not.
     width = min(max_size, max(widest, math.ceil(math.sqrt(area) * 1.1)))
-    if widest > max_size:
-        raise ValueError(f"a picture is {widest - PADDING} pixels wide, more than {max_size}")
 
     order = sorted(range(len(sizes)), key=lambda i: (-sizes[i][1], i))
     positions = [None] * len(sizes)
-    x = y = shelf = 0
-    used_width = 0
+    pages = []
+    page = x = y = shelf = used_width = 0
     for i in order:
         w, h = sizes[i]
-        if x + w + PADDING > width:
+        if x + w + PADDING > width:  # the shelf is full: start the next one
             x, y, shelf = 0, y + shelf, 0
-        positions[i] = (x + PADDING // 2, y + PADDING // 2)
+        if x == 0 and y + h + PADDING > max_size:  # the page is full: start the next one
+            pages.append((used_width, y))
+            page, y, used_width = page + 1, 0, 0
+        positions[i] = (page, x + PADDING // 2, y + PADDING // 2)
         x += w + PADDING
         shelf = max(shelf, h + PADDING)
         used_width = max(used_width, x)
-    height = y + shelf
-    if height > max_size:
-        raise ValueError(f"the pictures need a {width}x{height} sheet, more than {max_size}x{max_size}")
-    return positions, (used_width, height)
+    pages.append((used_width, y + shelf))
+    return positions, pages
 
 
 def animations(manifest):
@@ -101,8 +114,19 @@ def animations(manifest):
     return result
 
 
-def build(render_dir):
-    """The sheet (a Pillow image) and its JSON data, from RenderSwf's output."""
+def bounds(manifest):
+    """{"<label>/<n>": {x, y, w, h}} for the frames whose bounds RenderSwf recorded."""
+    names = list(animations(manifest))
+    return {name: frame["bounds"] for name, frame in zip(names, manifest["frames"]) if frame.get("bounds")}
+
+
+def page_name(item, page):
+    return item if page == 0 else f"{item}-{page}"
+
+
+def build(render_dir, max_size=MAX_SIZE):
+    """The sheets (Pillow images) and their JSON data, one per page, from
+    RenderSwf's output, and any warnings."""
     manifest, images = load(render_dir)
     item = manifest["swf"][:-len(".swf")]
     canvas_w, canvas_h = manifest["canvas"]["w"], manifest["canvas"]["h"]
@@ -120,12 +144,12 @@ def build(render_dir):
             warnings.append(f"picture {n} touches the edge of its canvas and may be cut off")
         boxes.append(box)
 
-    positions, (sheet_w, sheet_h) = pack([(w, h) for _, _, w, h in boxes])
-    sheet = Image.new("RGBA", (sheet_w, sheet_h), (0, 0, 0, 0))
-    frames = {}
-    for n, (image, (bx, by, w, h), (x, y)) in enumerate(zip(images, boxes, positions)):
-        sheet.paste(image.crop((bx, by, bx + w, by + h)), (x, y))
-        frames[f"{item}/{n}"] = {
+    positions, sizes = pack([(w, h) for _, _, w, h in boxes], max_size)
+    sheets = [Image.new("RGBA", size, (0, 0, 0, 0)) for size in sizes]
+    pages = [{"frames": {}, "meta": {}} for _ in sizes]
+    for n, (image, (bx, by, w, h), (page, x, y)) in enumerate(zip(images, boxes, positions)):
+        sheets[page].paste(image.crop((bx, by, bx + w, by + h)), (x, y))
+        pages[page]["frames"][f"{item}/{n}"] = {
             "frame": {"x": x, "y": y, "w": w, "h": h},
             "rotated": False,
             "trimmed": True,
@@ -133,32 +157,37 @@ def build(render_dir):
             "sourceSize": {"w": canvas_w, "h": canvas_h},
             "anchor": {"x": round(origin["x"] / canvas_w, 6), "y": round(origin["y"] / canvas_h, 6)},
         }
-
-    data = {
-        "frames": frames,
-        "animations": {name: [f"{item}/{n}" for n in numbers]
-                       for name, numbers in animations(manifest).items()},
-        "meta": {
+    for page, (data, (w, h)) in enumerate(zip(pages, sizes)):
+        data["meta"] = {
             "app": "socialemperors tools/art",
             "version": "1",
-            "image": f"{item}.webp",
+            "image": f"{page_name(item, page)}.webp",
             "format": "RGBA8888",
-            "size": {"w": sheet_w, "h": sheet_h},
+            "size": {"w": w, "h": h},
             "scale": "1",
-            "fps": manifest["fps"],
-            "origin": origin,
-            "source": manifest["swf"],
-        },
-    }
-    return sheet, data, warnings
+        }
+
+    first = pages[0]
+    first["animations"] = {name: [f"{item}/{n}" for n in numbers]
+                           for name, numbers in animations(manifest).items()}
+    first["meta"].update({
+        "fps": manifest["fps"],
+        "origin": origin,
+        "bounds": bounds(manifest),
+        "source": manifest["swf"],
+    })
+    if len(pages) > 1:
+        first["meta"]["related_multi_packs"] = [f"{page_name(item, page)}.json" for page in range(1, len(pages))]
+    return sheets, pages, warnings
 
 
-def write(sheet, data, out_dir, quality=WEBP_QUALITY):
+def write(sheets, pages, out_dir, quality=WEBP_QUALITY):
     os.makedirs(out_dir, exist_ok=True)
-    item = data["meta"]["image"][:-len(".webp")]
-    sheet.save(os.path.join(out_dir, f"{item}.webp"), "WEBP", quality=quality, alpha_quality=100, method=6)
-    with open(os.path.join(out_dir, f"{item}.json"), "w", encoding="utf-8") as f:
-        json.dump(data, f, separators=(",", ":"))
+    for sheet, data in zip(sheets, pages):
+        name = data["meta"]["image"][:-len(".webp")]
+        sheet.save(os.path.join(out_dir, f"{name}.webp"), "WEBP", quality=quality, alpha_quality=100, method=6)
+        with open(os.path.join(out_dir, f"{name}.json"), "w", encoding="utf-8") as f:
+            json.dump(data, f, separators=(",", ":"))
 
 
 def main(argv=None):
@@ -171,16 +200,18 @@ def main(argv=None):
     failed = 0
     for render_dir in args.render_dirs:
         try:
-            sheet, data, warnings = build(render_dir)
+            sheets, pages, warnings = build(render_dir)
         except (ValueError, OSError) as e:
             print(f"FAIL {os.path.basename(os.path.normpath(render_dir))}: {e}")
             failed += 1
             continue
-        write(sheet, data, args.out, args.quality)
+        write(sheets, pages, args.out, args.quality)
+        meta = pages[0]["meta"]
         for warning in warnings:
-            print(f"warning {data['meta']['source']}: {warning}")
-        size = data["meta"]["size"]
-        print(f"ok {data['meta']['image']}: {len(data['frames'])} pictures, {size['w']}x{size['h']}")
+            print(f"warning {meta['source']}: {warning}")
+        sizes = ", ".join(f"{p['meta']['size']['w']}x{p['meta']['size']['h']}" for p in pages)
+        pictures = sum(len(p["frames"]) for p in pages)
+        print(f"ok {meta['image']}: {pictures} pictures, {len(pages)} page(s) {sizes}")
     return 1 if failed else 0
 
 

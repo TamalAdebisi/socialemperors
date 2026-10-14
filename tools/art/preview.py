@@ -24,8 +24,15 @@ MARGIN = 16
 LABEL_HEIGHT = 14
 
 
-def pictures(data, sheet):
-    """Each frame name -> (picture, its offset from the anchor)."""
+def pictures(pages, sheets):
+    """Each frame name -> (picture, its offset from the anchor), from every page."""
+    result = {}
+    for data, sheet in zip(pages, sheets):
+        result.update(page_pictures(data, sheet))
+    return result
+
+
+def page_pictures(data, sheet):
     result = {}
     for name, frame in data["frames"].items():
         f, trimmed, source = frame["frame"], frame["spriteSourceSize"], frame["sourceSize"]
@@ -47,9 +54,10 @@ def layout(data):
     return rows
 
 
-def render(data, sheet):
+def render(pages, sheets):
     """The preview's frames (Pillow images) and how long each is shown, in ms."""
-    pics = pictures(data, sheet)
+    data = pages[0]
+    pics = pictures(pages, sheets)
     rows = layout(data)
     # One cell fits every picture of the item around a shared anchor.
     left = min(dx for _, (dx, _) in pics.values())
@@ -85,10 +93,14 @@ def main(argv=None):
         return 2
     json_path = argv[0]
     out_path = argv[1] if len(argv) > 1 else os.path.splitext(json_path)[0] + ".preview.webp"
+    folder = os.path.dirname(json_path)
     with open(json_path, encoding="utf-8") as f:
-        data = json.load(f)
-    sheet = Image.open(os.path.join(os.path.dirname(json_path), data["meta"]["image"])).convert("RGBA")
-    frames, duration = render(data, sheet)
+        pages = [json.load(f)]
+    for other in pages[0]["meta"].get("related_multi_packs", []):
+        with open(os.path.join(folder, other), encoding="utf-8") as f:
+            pages.append(json.load(f))
+    sheets = [Image.open(os.path.join(folder, page["meta"]["image"])).convert("RGBA") for page in pages]
+    frames, duration = render(pages, sheets)
     frames[0].save(out_path, "WEBP", save_all=True, append_images=frames[1:], duration=duration,
                    loop=0, quality=80)
     print(f"ok {out_path}: {len(frames)} frames")
