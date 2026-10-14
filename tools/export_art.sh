@@ -13,8 +13,10 @@
 #
 # Settings, in the environment:
 #   JOBS=4      how many Java processes draw at once (default: one per core)
-#   SHARD=2/4   only every 4th file, starting with the 2nd: to share the work
-#               between machines (.github/workflows/export-art-r2.yml does)
+#   SHARD=2/4   only every 4th of the items still to make, starting with the
+#               2nd: to share the work between machines (.github/workflows/
+#               export-art-r2.yml does). Shared out by size, so each machine
+#               gets as many big bosses as the others
 #
 # Everything takes a few hours on 4 processor cores, mostly for the big
 # animated bosses and buildings. Check an item by eye:
@@ -45,12 +47,6 @@ else
 fi
 shard="${SHARD%/*}"
 shards="${SHARD#*/}"
-mine=()
-for i in "${!files[@]}"; do
-    if [ $((i % shards)) -eq $((shard - 1)) ]; then
-        mine+=("${files[$i]}")
-    fi
-done
 
 # Compile the renderer once, against FFDec.
 CLASSES="$TOOLS/art-classes"
@@ -58,17 +54,25 @@ mkdir -p "$CLASSES" "$OUT/sheets"
 javac -nowarn -cp "$FFDEC_CP" -d "$CLASSES" "$ROOT/tools/art/RenderSwf.java" 2>&1 | grep -v "^Note:" || true
 rm -rf "$OUT"/render.* "$OUT"/sheets/*.tmp  # left by an export that was stopped
 
-todo=()
-for swf in "${mine[@]}"; do
-    [ -f "$OUT/sheets/$(basename "$swf" .swf).json" ] || todo+=("$swf")
-done
-# Smallest files first: most items take a second, so most sheets are ready
+# What's still to make, smallest file first (then by name, so every machine
+# lists it the same way): most items take a second, so most sheets are ready
 # early, and the big animated bosses (minutes each) come last.
-if [ ${#todo[@]} -gt 0 ]; then
-    mapfile -t todo < <(for swf in "${todo[@]}"; do printf '%s\t%s\n' "$(wc -c < "$swf")" "$swf"; done \
-        | sort -n | cut -f2-)
+missing=()
+for swf in "${files[@]}"; do
+    [ -f "$OUT/sheets/$(basename "$swf" .swf).json" ] || missing+=("$swf")
+done
+if [ ${#missing[@]} -gt 0 ]; then
+    mapfile -t missing < <(for swf in "${missing[@]}"; do printf '%s\t%s\n' "$(wc -c < "$swf")" "$swf"; done \
+        | sort -t $'\t' -k1,1n -k2 | cut -f2-)
 fi
-echo "Making ${#todo[@]} of ${#mine[@]} sheets ($JOBS at a time)..."
+# This machine's share: every n-th of that list, so the big ones are shared out too.
+todo=()
+for i in "${!missing[@]}"; do
+    if [ $((i % shards)) -eq $((shard - 1)) ]; then
+        todo+=("${missing[$i]}")
+    fi
+done
+echo "Making ${#todo[@]} of the ${#missing[@]} sheets still missing ($JOBS at a time)..."
 : > "$OUT/export.log"
 : > "$OUT/errors.log"
 
@@ -91,13 +95,13 @@ if [ ${#todo[@]} -gt 0 ]; then
     printf '%s\0' "${todo[@]}" | xargs -0 -n 5 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
 fi
 
-missing=()
-for swf in "${mine[@]}"; do
-    [ -f "$OUT/sheets/$(basename "$swf" .swf).json" ] || missing+=("$(basename "$swf")")
+failed=()
+for swf in "${todo[@]}"; do
+    [ -f "$OUT/sheets/$(basename "$swf" .swf).json" ] || failed+=("$(basename "$swf")")
 done
-echo "Done: $((${#mine[@]} - ${#missing[@]})) of ${#mine[@]} items have sheets in $OUT/sheets ($(du -sh "$OUT/sheets" | cut -f1) in all)."
-if [ ${#missing[@]} -gt 0 ]; then
-    echo "No sheet for ${#missing[@]}: ${missing[*]:0:20}"
+echo "Done: made $((${#todo[@]} - ${#failed[@]})) of ${#todo[@]} sheets ($(du -sh "$OUT/sheets" | cut -f1) in $OUT/sheets)."
+if [ ${#failed[@]} -gt 0 ]; then
+    echo "No sheet for ${#failed[@]}: ${failed[*]:0:20}"
 fi
 grep -E '^(FAIL|warning)' "$OUT/export.log" | head -20 || true
 echo "Full log: $OUT/export.log (and Java's own messages in $OUT/errors.log)"
