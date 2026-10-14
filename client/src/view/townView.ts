@@ -1,8 +1,9 @@
 // Draws a town: the ground, then every building and unit from the back to
 // the front, placed as the Flash client places them (rules/geometry.ts).
-// Look only: nothing here changes the town (step 2 of CLIENT.md).
+// It shows changes (a thing moved, turned or gone) but doesn't make them:
+// rules/editing.ts does.
 
-import { AnimatedSprite, Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { AnimatedSprite, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
 import type { ItemInfo } from "../rules/config.ts";
 import {
@@ -19,8 +20,10 @@ import {
   unitPoint,
   type Point,
 } from "../rules/geometry.ts";
+import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
+import { isOpaqueAt } from "./hit.ts";
 
 /** How often the screen draws, which Pixi counts animation speed in. */
 const TICKER_FPS = 60;
@@ -28,16 +31,23 @@ const TICKER_FPS = 60;
 export class TownView {
   readonly root = new Container();
   private readonly ground = new Container();
+  /** Marks on the ground: a footprint being placed. */
+  private readonly marks = new Container();
   private readonly things = new Container();
   private readonly art: ArtLibrary;
   private readonly items: Map<number, ItemInfo>;
   private readonly town: Town;
+  /** Each thing on the map and the container its picture is drawn in. */
+  private readonly slots = new Map<PlacedItem, Container>();
+  private readonly glow = new ColorMatrixFilter();
+  private highlighted: PlacedItem | null = null;
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
     this.items = items;
     this.town = town;
-    this.root.addChild(this.ground, this.things);
+    this.glow.brightness(1.25, false);
+    this.root.addChild(this.ground, this.marks, this.things);
   }
 
   /** Draw everything; `progress` hears how many of the town's pictures are ready. */
@@ -50,13 +60,11 @@ export class TownView {
     for (const placed of sorted) {
       // A slot in the right order now; the picture goes in when it arrives.
       const slot = new Container();
+      this.slots.set(placed, slot);
       this.things.addChild(slot);
-      jobs.push(this.art.get(placed.item.art).then((art) => {
-        if (art === null) {
+      jobs.push(this.draw(placed, slot).then((drawn) => {
+        if (!drawn) {
           missing.add(placed.item.art);
-          slot.addChild(footprint(placed));
-        } else {
-          slot.addChild(placed.item.isUnit ? unitSprite(art, placed) : buildingSprite(art, placed, this.town.skin));
         }
       }));
     }
@@ -65,6 +73,107 @@ export class TownView {
     progress(0, jobs.length);
     await Promise.all(jobs.map((job) => job.then(() => progress(++done, jobs.length))));
     return { missing: [...missing] };
+  }
+
+  /** The thing whose picture is under a point of the screen, the one in front. */
+  itemAt(screen: Point): PlacedItem | null {
+    const slots = this.things.children;
+    for (let i = slots.length - 1; i >= 0; i--) {
+      const slot = slots[i];
+      const picture = slot.children[0];
+      if (picture && isOpaqueAt(picture, screen)) {
+        for (const [placed, s] of this.slots) {
+          if (s === slot) {
+            return placed;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /** Draw a thing again (it moved or turned), and put it back in order. */
+  async redraw(placed: PlacedItem): Promise<void> {
+    let slot = this.slots.get(placed);
+    if (!slot) {
+      slot = new Container();
+      this.slots.set(placed, slot);
+      this.things.addChild(slot);
+    }
+    await this.draw(placed, slot);
+    this.sort();
+    if (this.highlighted === placed) {
+      this.highlight(placed);
+    }
+  }
+
+  /** Take a thing off the map (sold, stored). */
+  remove(placed: PlacedItem): void {
+    const slot = this.slots.get(placed);
+    if (slot) {
+      this.things.removeChild(slot);
+      slot.destroy({ children: true });
+      this.slots.delete(placed);
+    }
+    if (this.highlighted === placed) {
+      this.highlighted = null;
+    }
+  }
+
+  /** Make one thing stand out (the one selected), or none. */
+  highlight(placed: PlacedItem | null): void {
+    for (const slot of this.slots.values()) {
+      slot.filters = [];
+    }
+    this.highlighted = placed;
+    const slot = placed ? this.slots.get(placed) : undefined;
+    if (slot) {
+      slot.filters = [this.glow];
+    }
+  }
+
+  /** See-through while being moved. */
+  setGhost(placed: PlacedItem, ghost: boolean): void {
+    const slot = this.slots.get(placed);
+    if (slot) {
+      slot.alpha = ghost ? 0.7 : 1;
+    }
+  }
+
+  /** Draw a thing as if it stood on another tile (while it's being moved). */
+  offset(placed: PlacedItem, tile: Point): void {
+    const slot = this.slots.get(placed);
+    if (slot) {
+      const from = buildingPoint(placed.tx, placed.ty);
+      const to = buildingPoint(tile.x, tile.y);
+      slot.position.set(to.x - from.x, to.y - from.y);
+    }
+  }
+
+  /** Show where a footprint would go, green if it fits and red if not; null hides it. */
+  showFootprint(placed: PlacedItem | null, fits = true): void {
+    this.marks.removeChildren().forEach((child) => child.destroy());
+    if (placed) {
+      this.marks.addChild(footprint(placed, fits ? 0x5fd35f : 0xe0533d));
+    }
+  }
+
+  private sort(): void {
+    const order = [...this.slots].sort(([a], [b]) => depth(a) - depth(b) || this.town.items.indexOf(a) - this.town.items.indexOf(b));
+    order.forEach(([, slot], index) => this.things.setChildIndex(slot, index));
+  }
+
+  /** Put a thing's picture in its slot. False when it has no art (yet): an outline instead. */
+  private async draw(placed: PlacedItem, slot: Container): Promise<boolean> {
+    const art = await this.art.get(placed.item.art);
+    slot.removeChildren().forEach((child) => child.destroy());
+    slot.position.set(0, 0);
+    if (art === null) {
+      slot.addChild(footprint(placed, 0xffffff));
+      return false;
+    }
+    slot.addChild(placed.item.isUnit ? unitSprite(art, placed) : buildingSprite(art, placed, this.town.skin));
+    return true;
   }
 
   private async buildGround(missing: Set<string>): Promise<void> {
@@ -140,16 +249,15 @@ function place(sprite: Container, at: Point): void {
   sprite.position.set(at.x, at.y);
 }
 
-/** Where an item without art (yet) stands: its outline on the ground. */
-function footprint(placed: PlacedItem): Graphics {
+/** A thing's footprint on the ground (and where an item without art stands). */
+function footprint(placed: PlacedItem, colour: number): Graphics {
   const { x, y } = placed.item.isUnit ? unitPoint(placed.tx, placed.ty) : buildingPoint(placed.tx, placed.ty);
-  const w = placed.item.isUnit ? 1 : placed.item.width;
-  const h = placed.item.isUnit ? 1 : placed.item.height;
+  const [w, h] = placed.item.isUnit ? [1, 1] : footprintSize(placed);
   const halfW = TILE_WIDTH / 2;
   const halfH = TILE_HEIGHT / 2;
   // The footprint's corners: bottom (the item's point), right, top, left.
   return new Graphics()
     .poly([x, y, x + halfW * h, y - halfH * h, x + halfW * (h - w), y - halfH * (w + h), x - halfW * w, y - halfH * w])
-    .fill({ color: 0xffffff, alpha: 0.15 })
-    .stroke({ color: 0xffffff, alpha: 0.5, width: 2 });
+    .fill({ color: colour, alpha: 0.25 })
+    .stroke({ color: colour, alpha: 0.8, width: 2 });
 }

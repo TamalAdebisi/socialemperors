@@ -62,6 +62,12 @@ export function tileAt(p: Point): Point {
   return { x: (a + b) / 2, y: (b - a) / 2 };
 }
 
+/** The tile a point of the map is on. */
+export function tileUnder(p: Point): Point {
+  const t = tileAt(p);
+  return { x: Math.ceil(t.x), y: Math.ceil(t.y) };
+}
+
 /** Which of the 25 blocks a tile is in, numbered like the save's expansions. */
 export function expansionOf(tx: number, ty: number): number {
   return Math.floor(tx / BLOCK_TILES) + BLOCKS * Math.floor(ty / BLOCK_TILES) + 1;

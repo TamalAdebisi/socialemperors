@@ -1,15 +1,18 @@
-// The new game client, step 2 of CLIENT.md: load the game config and the
-// player's town from our server, as the Flash client does, and draw it with
-// PixiJS. Look only for now.
+// The new game client (CLIENT.md, steps 2 and 3): load the game config and
+// the player's town from our server, as the Flash client does, draw it with
+// PixiJS, and let the player change it (so far: move, turn, store, sell).
 
 import "./ui/style.css";
 
 import { Application, Container } from "pixi.js";
 
+import { TownEditor } from "./editor.ts";
+import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readTown } from "./rules/town.ts";
+import { ActionBar } from "./ui/actions.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -53,10 +56,22 @@ async function start(): Promise<void> {
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
   app.ticker.add((ticker) => camera.update(ticker.deltaMS));
 
-  showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined });
+  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined });
 
   const view = new TownView(new ArtLibrary(settings.artUrl), items, town);
   world.addChild(view.root);
+
+  // The player's own town can be changed; a visited one only looked at.
+  if (visit === undefined) {
+    // The game's clock: the server's time when the town loaded, plus time since.
+    const loadedAt = performance.now();
+    const commands = new CommandSender(settings, {
+      clock: () => info.timestamp + (performance.now() - loadedAt) / 1000,
+      onFailure: (reason) => showStatus(reason),
+    });
+    commands.start();
+    new TownEditor(town, view, new ActionBar(), commands, hud, camera);
+  }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {
     console.warn("No art yet for:", missing);

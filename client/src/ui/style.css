@@ -166,3 +166,31 @@ body {
     font-size: 13px;
   }
 }
+
+/* The bar for the thing selected on the map (ui/actions.ts). */
+.actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bar);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.actions[hidden] {
+  display: none;
+}
+
+.actions-name {
+  font-weight: 600;
+  margin-right: 4px;
+}

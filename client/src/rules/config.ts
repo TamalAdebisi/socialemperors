@@ -17,6 +17,11 @@ export interface ConfigItem {
   subcat_functional: string;
   /** Units: 1 when it flies. */
   flying?: string;
+  /** What it costs, and in what: g gold, w wood, f food, s stone, c cash. */
+  cost?: string;
+  cost_type?: string;
+  /** How many ways it can face (its art's frames). */
+  max_frame?: string;
 }
 
 export interface GameConfig {
@@ -34,6 +39,10 @@ export interface ItemInfo {
   category: number;
   subcategory: number;
   flying: boolean;
+  cost: number;
+  costType: string;
+  /** How many ways it can face: turning it goes round these. */
+  facings: number;
 }
 
 export function itemInfo(item: ConfigItem): ItemInfo {
@@ -47,6 +56,9 @@ export function itemInfo(item: ConfigItem): ItemInfo {
     category: Number(item.category_id),
     subcategory: Number(item.subcat_functional),
     flying: item.flying === "1",
+    cost: Number(item.cost) || 0,
+    costType: item.cost_type ?? "g",
+    facings: Math.max(Number(item.max_frame) || 1, 1),
   };
 }
 
