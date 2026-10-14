@@ -26,6 +26,29 @@
 	{% endif %}
 	{% endmacro %}
 
+	{% if helps %}
+	<section class="section">
+		<h2><img src="img/villager.png" alt=""> Friends asking for help</h2>
+		{% for help in helps %}
+		<div class="row">
+			<span class="what"><span><b>{{ help.asker }}</b> asks for {{ help.what }}{% if help.empire_name %} <span class="muted">in {{ help.empire_name }}</span>{% endif %}</span></span>
+			<span class="inline">
+				<form method="post" action="/help/answer"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="help" value="{{ help.id }}"><button class="button small" type="submit">Help</button></form>
+				<form method="post" action="/help/dismiss"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="help" value="{{ help.id }}"><button class="button small plain" type="submit" data-tip="Turn it down; they can ask again">Not now</button></form>
+			</span>
+		</div>
+		{% endfor %}
+		{% if helps | length > 1 %}
+		<form method="post" action="/help/answer" style="margin-top: 10px;">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input type="hidden" name="help" value="all">
+			<button class="button small gold" type="submit">Help them all</button>
+		</form>
+		{% endif %}
+		<p class="hint">Helping costs you nothing. Your help shows in their empire when their town next loads.</p>
+	</section>
+	{% endif %}
+
 	{% if waiting %}
 	<section class="section">
 		<h2><img src="img/gift.png" alt=""> Gifts for you</h2>

@@ -217,10 +217,20 @@ numbers, because the server writes them into the game config.
       (`templates/_gifts.html`), which opens by itself when gifts are
       waiting; like the bank, it has the game send back what it holds
       before anything leaves storage, and reload the town after
-- [ ] Asking friends for help, which also went through Facebook: help to
-      collect sooner (`accept_collect_help`), hiring friends for the dragon
-      nest (`finish_dragon_help`) and the Round Table (`assist_send_feed`),
-      and found lost animals (`register_found_item.php`)
+- [x] Asking friends for help, which also went through Facebook
+      (`helps.py`): the game's own Ask friends buttons open our window
+      (`templates/_help.html`) to pick friends, and friends answer on the
+      Friends page. An hour off a building's work (`accept_collect_help`),
+      two steps for the dragon nest's dragon (`finish_dragon_help`), a place
+      at the Summit, the Allied Markets, the Recruitment camp and the Wonder,
+      and a seat at the Round Table, whose own window picks friends one by one
+      (`assist_send_feed`). Each friend helps a thing once a day; the game
+      says who helped when it next starts. The Recruitment camp, the Round
+      Table and the Wonder take no paid helpers, so before this they could
+      never be staffed
+- [ ] Found lost animals (`register_found_item.php`): the game shared them on
+      Facebook's wall, for friends to adopt; what friends got is unknown.
+      (Asking friends for potions has no button in this client.)
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))

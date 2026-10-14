@@ -261,6 +261,19 @@ def villages_of(owner_id) -> list:
         return [save_info(pid) for pid, owner in __owners.items() if owner == owner_id]
 
 
+def empires_of(owner_id) -> list:
+    """The pids of an account's empires."""
+    with LOCK:
+        return [pid for pid, owner in __owners.items() if owner == owner_id]
+
+
+def latest_empire(owner_id):
+    """The pid of the empire an account played last, or None: the one a
+    friend's help comes from (helps.py)."""
+    with LOCK:
+        return max(empires_of(owner_id), key=lambda pid: _last_seen(__saves[pid]), default=None)
+
+
 def world_population(USERID: str) -> list:
     """(pid, village, built in?) for every empire this one can meet on the
     world map: the villages that ship with the game (not Arthur's) and the

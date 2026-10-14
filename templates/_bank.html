@@ -185,10 +185,11 @@
     // Other calls the game makes to the page, for Facebook features that
     // don't exist here: they do nothing, as they did before the game could
     // reach the page.
+    // (Asking friends for help has its own window: _help.html.)
     ["getCrossData", "updateCrossData", "flashInitialized", "leveledUp", "showFeed", "showFeedItemFound",
-     "showFeedSEHire", "share_newtown",
-     "askForAchievementPermission", "gotoAdVideo", "openGame", "sendFbMessage", "showPopupSEHelpSocialItem",
-     "showPopupSEHelpPotion", "showPopupSEHelpNest", "showPopupSEHelpCollect", "openSpecialGiftFromFlash",
+     "share_newtown",
+     "askForAchievementPermission", "gotoAdVideo", "openGame", "sendFbMessage",
+     "showPopupSEHelpPotion", "openSpecialGiftFromFlash",
      "askInstallApplication", "gotoBuyWithOfferBuilding",
      "likeDialog", "bookmarDialog"].forEach(function (name) {
         window[name] = function () {};

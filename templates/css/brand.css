@@ -286,8 +286,8 @@ details[open] > summary::before { transform: rotate(90deg); }
 
 .frame::backdrop { background: rgba(20, 30, 10, 0.6); }
 
-/* Opened, a window takes the focus itself (autofocus on the dialog), not its
-   close button, so no ring shows until the keyboard moves. */
+/* Opened, a window takes the focus itself (its page calls focus() on it), not
+   its close button, so no ring shows until the keyboard moves. */
 .frame:focus { outline: none; }
 
 .frame::before,

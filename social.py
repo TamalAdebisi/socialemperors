@@ -7,7 +7,8 @@ per place) and the cash for each helper (worker_cost).
 
 Most social buildings are staffed once, then open for good: the client shows
 them as waiting for staff while "si" is there. Six keep a staff that fills up
-again and again, and the client lets them be used at any time:
+again and again, with helpers hired for cash or with friends (helps.py), and
+the client lets them be used at any time:
 
     the Summit             a full staff of 9 brings 9 allied knights
     the Allied Markets     each helper adds 125 to the next delivery
@@ -57,6 +58,18 @@ def _staff_names(building_id) -> list:
     return []
 
 
+def capacity(save: dict, town_id: int, building_id) -> int:
+    """How many the staff holds now. The Wonder's grows a fifth at a time:
+    the client shows the places of the step it is on, after the steps done."""
+    names = _staff_names(building_id)
+    if int(building_id) != WONDER:
+        return len(names)
+    config = get_game_config()["globals"]
+    per_step = round(len(names) / int(config["POPULATION_INCREASE_QTY"]))
+    done = int(save["maps"][town_id].get("increasedPopulation") or 0)
+    return min(per_step * (done + 1), len(names))
+
+
 def _worker_cost(building_id) -> int:
     for social in get_game_config().get("social_items", []):
         if int(social["id"]) == int(building_id):
@@ -101,7 +114,7 @@ def finish(save: dict, x, y, town_id: int, building_id, hero=0) -> str:
     if building_id in ALLIED_MARKETS:
         return _market_delivers(save, item, town_id, staff)
     if building_id == ROUND_TABLE:
-        attrs["si"], attrs["sif"] = [], []
+        attrs["si"], attrs["sif"] = [], {}  # sif: {"u" + neighbour: True}, those asked this round
         return _round_table_rewards(save, town_id, helpers, hero)
     if building_id in KEEP_STAFF:  # the Summit and the Recruitment camp start a new staff
         attrs["si"] = []

@@ -40,6 +40,7 @@ import comeback_bonus
 import csrf
 import friends
 import gifts
+import helps
 import radar
 import sign_in
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -151,8 +152,9 @@ def render_home(error=None, tab="login"):
 
 
 def friends_news(user) -> int:
-    """What waits on the Friends page: requests to answer and gifts to take."""
-    return len(storage().friend_requests(user["id"])["to_me"]) + len(storage().waiting_gifts(user["id"]))
+    """What waits on the Friends page: requests to answer, gifts to take, friends asking for help."""
+    return (len(storage().friend_requests(user["id"])["to_me"]) + len(storage().waiting_gifts(user["id"]))
+            + len(helps.asked_of(user["id"])))
 
 
 def sign_in_buttons() -> list:
@@ -433,7 +435,7 @@ def delete_empire(USERID):
 
 FRIENDS_DONE = {"accepted": "You're friends now: their empires come first among your neighbours.",
                 "declined": "Request declined.", "cancelled": "Request taken back.",
-                "removed": "You're not friends any more."}
+                "removed": "You're not friends any more.", "dismissed": "Request dismissed."}
 
 
 def render_friends(user, error=None, done=None, status=200):
@@ -446,6 +448,7 @@ def render_friends(user, error=None, done=None, status=200):
     level = account_level(user)
     return render_template("friends.html", user=user, friends=mine, requests=store.friend_requests(user["id"]),
                            max_friends=friends.MAX_FRIENDS, waiting=gifts.waiting(user["id"]),
+                           helps=helps.asked_of(user["id"]),
                            empires=villages_of(user["id"]), free=gifts.free_list(level),
                            next_free=gifts.next_free(level), error=error,
                            done=done or FRIENDS_DONE.get(request.args.get("done", ""))), status
@@ -604,6 +607,73 @@ def gifts_window():
             storage=gifts.storage_list(save, int(save["playerInfo"].get("default_map") or 0)),
             loaded_at=bank.loaded_at.get(USERID, 0), now=time.time())
     return json_response(reply, status)
+
+
+## ASKING FRIENDS FOR HELP (helps.py): the game's buttons ask, friends answer on the Friends page
+
+def _value_int(name, default=0):
+    try:
+        return int(request.values.get(name, default))
+    except ValueError:
+        abort(400, "Please try again.")
+
+
+@app.route("/help/game", methods=["GET", "POST"])
+def help_window():
+    """The game's Ask friends windows (templates/_help.html), for the empire
+    on that page and the thing asked about: who can be asked, and asking them."""
+    user = current_user()
+    USERID = request.args.get("empire", "")  # not the cookie's: another tab may have opened another empire
+    if user is None or not USERID or owner_of(USERID) != user["id"]:
+        return json_response({"error": "Please sign in again."}, 403)
+    kind = request.values.get("kind", "")
+    if kind not in helps.KINDS:
+        return json_response({"error": "Please try again."}, 400)
+    town, x, y, item = (_value_int(name) for name in ("town", "x", "y", "item"))
+    reply, status = {}, 200
+    with LOCK:
+        save = village_of(USERID)
+        if save is None:
+            return json_response({"error": "This empire is gone."}, 404)
+        if request.method == "POST":
+            if not csrf.valid():
+                return json_response({"error": "This page was open too long. Please reload it."}, 400)
+            try:
+                if request.form.get("seat"):  # the Round Table's window: one neighbour, by their empire
+                    reply["ok"] = helps.ask_seat(user, USERID, save, town, x, y, item, request.form["seat"])
+                else:
+                    friend_ids = [_account_id(f) for f in request.form.getlist("friend")]
+                    reply["ok"] = helps.ask(user, USERID, save, kind, town, x, y, item, friend_ids)
+                print(f"[HELP] {user['username']} -> {USERID}: {reply['ok']}")
+            except helps.HelpError as e:
+                reply["error"], status = str(e), 400
+        reply.update(helps.window(user, USERID, save, kind, town, x, y, item, bank.loaded_at.get(USERID, 0)))
+    return json_response(reply, status)
+
+
+@app.route("/help/answer", methods=["POST"])
+def answer_help():
+    """The Friends page: help a friend (or every friend asking)."""
+    user = friends_user()
+    wanted = request.form.get("help", "")
+    ids = [r["id"] for r in helps.asked_of(user["id"])] if wanted == "all" else [_form_int("help")]
+    done, refused = [], []
+    for request_id in ids:
+        try:
+            done.append(helps.answer(user, request_id))
+        except helps.HelpError as e:
+            refused.append(str(e))
+    print(f"[HELP] {user['username']} helped: {done} {refused}")
+    if not done:
+        return render_friends(user, error=" ".join(refused) or "Nobody is asking for help right now.", status=400)
+    return render_friends(user, done=" ".join(done), error=" ".join(refused) or None)
+
+
+@app.route("/help/dismiss", methods=["POST"])
+def dismiss_help():
+    user = friends_user()
+    helps.decline(user, _form_int("help"))
+    return redirect("/friends?done=dismissed")
 
 
 @app.route("/play", methods=["POST"])

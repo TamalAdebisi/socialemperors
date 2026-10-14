@@ -118,7 +118,7 @@ class SocialBuildingsTest(unittest.TestCase):
         self.me.batch(("finish_si", 50, 50, TOWN, ROUND_TABLE, 1000, 100, 534), ("collect_new", 50, 50, TOWN, ROUND_TABLE))
         self.assertEqual((self.me.map["coins"], self.me.map["xp"]), (gold + 1000, xp + 100))
         self.assertEqual(self.me.map["store"], {"534": 1})
-        self.assertEqual((table[7]["si"], table[7]["sif"]), ([], []))
+        self.assertEqual((table[7]["si"], table[7]["sif"]), ([], {}))  # sif: {"u" + neighbour: True}
 
     def test_a_round_table_short_of_knights(self):
         self.me.build(ROUND_TABLE, 50, 50, {"si": [1, 2, 3, 4, 5]})

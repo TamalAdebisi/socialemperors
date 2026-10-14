@@ -43,6 +43,7 @@ def some_players(store):
     store.add_friendship(alice, bob)
     store.add_friend_request(store.create_user("Asker", "hash-4"), alice)
     store.add_friend_gift(alice, bob, 2001, 1, True)
+    store.add_help_request(alice, "pid-a", bob, "collect", 0, 30, 30, 13)
     return alice, bob
 
 
@@ -54,7 +55,7 @@ class CopyingTest(unittest.TestCase):
         alice, bob = some_players(source)
         copied = storage.copy_database(source, target)
         self.assertEqual(copied, {"users": 3, "villages": 3, "problems": 1, "tournaments": 1, "sign_ins": 1,
-                                  "friend_requests": 1, "friends": 2, "friend_gifts": 1})
+                                  "friend_requests": 1, "friends": 2, "friend_gifts": 1, "help_requests": 1})
         self.assertEqual(target.get_user_by_name("alice")["id"], alice)
         self.assertEqual(target.get_password_hash(bob), "hash-2")
         self.assertEqual(sorted((pid, owner) for pid, owner, _ in target.load_all_villages()),
@@ -63,6 +64,7 @@ class CopyingTest(unittest.TestCase):
         self.assertEqual(target.find_sign_in("discord", "1234567890"), bob)  # Bob's Discord still finds him
         self.assertEqual([f["username"] for f in target.friends_of(alice)], ["Bob"])
         self.assertEqual([(g["item"], g["sender"]) for g in target.waiting_gifts(bob)], [(2001, "Alice")])
+        self.assertEqual([(h["kind"], h["asker"]) for h in target.help_asked_of(bob, 0)], [("collect", "Alice")])
 
     def test_only_into_an_empty_database(self):
         source, target = sqlite_store(self), sqlite_store(self)
