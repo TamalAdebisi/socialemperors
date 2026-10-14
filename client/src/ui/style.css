@@ -1100,3 +1100,245 @@ body {
 .bank-message:empty {
   display: none;
 }
+
+/* ---- Goals: the first few open ones under the resources ------------------- */
+/* Bottom left, beside the rail: the town's middle stays clear. */
+.goal-cards {
+  position: fixed;
+  z-index: 1;
+  left: calc(max(var(--edge), env(safe-area-inset-left)) + var(--rail-w) + 12px);
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goal-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 8px;
+  width: 240px;
+  padding: 5px 10px 6px 6px;
+  border: 2px solid var(--wood);
+  border-radius: 10px;
+  background: var(--parchment);
+  color: var(--ink);
+  font: 800 13px var(--round);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.goal-card img {
+  grid-row: span 3;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.goal-card.done {
+  border-color: var(--gold-edge);
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+}
+
+.goal-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.goal-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--parchment-deep);
+}
+
+.goal-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(var(--green-top), var(--green-bottom));
+}
+
+.goal-count {
+  grid-column: 2;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.goal-count:empty {
+  display: none;
+}
+
+.goal-row .row-text small {
+  white-space: normal;
+}
+
+.goal-state {
+  font-weight: 800;
+  color: var(--ink) !important;
+}
+
+.goal-reward {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 14px var(--round);
+  white-space: nowrap;
+}
+
+.goal-reward .icon {
+  height: 20px;
+}
+
+/* ---- Bonuses on offer: round buttons at the top right --------------------- */
+.offers {
+  position: fixed;
+  z-index: 1;
+  top: calc(max(var(--edge), env(safe-area-inset-top)) + 96px);
+  right: max(var(--edge), env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-open .offers {
+  right: calc(var(--panel-w) + 24px);
+}
+
+.offer {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35));
+}
+
+/* The picture bobs, not the button: a still button is easier to tap. */
+.offer img {
+  display: block;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  animation: offer-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes offer-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offer img {
+    animation: none;
+  }
+}
+
+.bonus-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bonus-days li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 2px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 10px;
+  background: #fff;
+  font: 800 12px var(--round);
+  text-align: center;
+}
+
+.bonus-days li.today {
+  border-color: var(--gold-edge);
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+}
+
+.bonus-days li.past {
+  opacity: 0.5;
+}
+
+.bonus-days .icon {
+  height: 26px;
+}
+
+.bonus-day {
+  color: var(--ink-soft);
+}
+
+.bonus .button {
+  align-self: center;
+}
+
+.bonus-chests {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bonus-chests .button {
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px 12px;
+}
+
+.bonus-chests img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.bonus-unit {
+  align-self: center;
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.bonus-won {
+  font: 800 16px var(--round);
+  color: var(--ink) !important;
+  text-align: center;
+}
+
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  /* On a phone the goals are one chip, the bonuses small, under the status bar. */
+  .goal-cards {
+    bottom: calc(var(--dock-h) + 10px);
+    left: 8px;
+  }
+  .panel-open .goal-cards,
+  body:has(.actions:not([hidden])) .goal-cards {
+    display: none;
+  }
+  .goal-card {
+    width: 200px;
+    padding: 3px 8px 4px 5px;
+    font-size: 12px;
+  }
+  .offers {
+    top: calc(max(6px, env(safe-area-inset-top)) + 96px);
+    right: 8px;
+    flex-direction: row;
+  }
+  .panel-open .offers {
+    right: 8px;
+  }
+  .offer img {
+    width: 44px;
+    height: 44px;
+  }
+}

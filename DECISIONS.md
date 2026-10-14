@@ -4,6 +4,26 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, missions and bonuses
+
+- **Where the goals' requirements come from:** the config has the goals'
+  titles and gold, but what each asks is only in the Flash client. Claude
+  read that list on this computer and wrote it as our own data,
+  `client/src/rules/goals.json` (our names for each kind, the numbers it
+  needs), not the client's code. The decompiled client stays uncommitted.
+  If you'd rather not have even that, the goals could be written out by
+  hand from their texts instead.
+- **The daily bonus waits for a tap:** a bobbing button at the top right,
+  rather than opening by itself on load as the Flash client's did after
+  its tutorial. Monday's and the welcome-back chests the same.
+- **One goal card**, the next one, bottom left beside the rail; tapping it
+  opens all 15. The Flash client showed a few on the left; here they'd
+  cover the town.
+- **Goals for battles, quests and the like** stay in the list and say
+  they're played in the classic game for now.
+- **A message per goal paid** ("Goal reached: … +10 gold"), not one when
+  reached and another when paid, so they don't crowd out other messages.
+
 ## 14 October 2026: Beta 1, land and cash
 
 - **Land is bought by tapping it** (the original also had an Expand tab in

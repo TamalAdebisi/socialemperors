@@ -27,6 +27,9 @@ export const ICONS = {
   world: new URL("./art/my-world.webp", import.meta.url).href,
   neighbours: new URL("./art/neighbours.webp", import.meta.url).href,
   population: new URL("./art/population.webp", import.meta.url).href,
+  // Bonuses: the game bar's daily bonus button, and its gift box for the chests.
+  "daily-bonus": new URL("./art/daily-bonus.webp", import.meta.url).href,
+  gifts: new URL("./art/gifts.webp", import.meta.url).href,
   // The selected thing's buttons, as on its info panel.
   move: new URL("./art/move.webp", import.meta.url).href,
   turn: new URL("./art/turn.webp", import.meta.url).href,

@@ -37,7 +37,18 @@ export interface PlayerInfo {
   playerInfo: { name: string; cash: number; map_names?: string[] };
   map: SaveMap;
   /** Buildings opened before their level, for cash: { "<item id>": true }. */
-  privateState?: { unlockedEarlyBuildings?: Record<string, unknown>; gifts?: Box };
+  privateState?: {
+    unlockedEarlyBuildings?: Record<string, unknown>;
+    gifts?: Box;
+    /** Goals done, and paid (rules/goals.ts). */
+    completedMissions?: number[];
+    rewardedMissions?: number[];
+    /** The bonuses (rules/bonuses.ts). */
+    bonusNextId?: number;
+    timestampLastBonus?: number;
+    timeStampMondayBonus?: number;
+    comebackBonusCollected?: number[];
+  };
   /** The neighbours shown in the game: their player info, with their home town's level. */
   neighbors?: { pid: string | number; name?: string; level?: number | string }[];
 }

@@ -197,6 +197,18 @@ export class Player {
     return (await bar.isHidden()) ? [] : (await bar.locator("button").allTextContents()).map((text) => text.trim());
   }
 
+  /** Waits (up to 10 s) for a message at the top that matches, as messages wait their turn; the text. */
+  async said(pattern) {
+    const until = Date.now() + 10_000;
+    let last = "";
+    while (Date.now() < until) {
+      last = await this.status();
+      if (pattern.test(last)) return last;
+      await this.wait(200);
+    }
+    throw new Error(`no message like ${pattern}; the last was "${last}"`);
+  }
+
   /** The message at the top, or "" when there's none. */
   async status() {
     const message = this.page.locator(".message.shown");

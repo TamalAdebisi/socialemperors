@@ -454,7 +454,10 @@ a new town's hall until there's no room (6 of 11 people to 11 of 11), and
 checks the save has them and the food paid. The cash test takes a town to
 level 20 (its prizes give cash), buys land for cash after gold is refused,
 opens House IV early, hurries a gold mine and trades cash for gold at the
-bank, checking the save for each. The menus test
+bank, checking the save for each. The bonus test collects the daily
+bonus's first day, reaches the first goal by building a farm (its gold is
+paid), and checks that skipping without cash says so and that the save has
+the goal and the bonus. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
 phone checks the dock, short numbers and the sheet closing when dragged
@@ -710,6 +713,58 @@ for 2 cash; and the bank, from the + on the gold and cash pills. Code:
   5 a day, and the game's own trade, 5 cash for 2,500 gold
   (`exchange_cash_new`, town). The window first sends the town's waiting
   commands, so the bank counts what the player sees.
+
+### Missions and bonuses
+
+Built (Beta 1's sixth slice). The next goal shows bottom left (tap it for
+all 15 open, with Skip for cash); goals reached are paid their gold. The
+daily bonus, Monday's chest and the welcome-back chest show as round
+buttons at the top right while on offer. Code: `rules/goals.ts` and
+`goals.json`, `rules/bonuses.ts` (with tests), `goals.ts`, `bonuses.ts`.
+
+**How the goals work**, read from the Flash client (our notes, our words):
+
+- The config's `missions` have each goal's title, text and gold; what each
+  asks is in `goals.json`, by the goal's number (the Flash client looks it
+  up by its place in its own list, and the numbers written in that list
+  drift by one from goal 80; the place is what matches the titles). The
+  server's config adds a stand-in for goal 1 after the real one: the first
+  counts.
+- The first 15 goals not both done and paid are open (up to goal 226).
+  Every 2 seconds the open ones are checked; those reached are sent as
+  done (`complete_mission`, the goal, 0), and the first done one is paid
+  its gold (`reward_mission`, town, goal), one a check.
+- Some goals count the town as it is: things built (on the map and units
+  inside buildings), units of a kind, units inside buildings of a kind,
+  people, land, walls along the south edge, units near the town hall, the
+  Small Refuge's units. Others count what the player did since the page
+  opened, as the Flash client counts them: collecting (buildings, trees and
+  rocks), working times chosen, units let out, buildings moved and stored,
+  something placed from storage, units trained at a building, units sent
+  into buildings, cash spent, zooming, the daily bonus's day.
+- Skip: 2 cash (the config's `PRICE_COMPLETE_GOAL`) makes a goal done
+  (`complete_mission`, the goal, 1); it's paid at the next check.
+- Goals about battles, quests, the market, the social buildings and
+  capturing animals say they're played in the classic game for now (72 of
+  the 226); the server keeps them done whichever client does them.
+
+**The bonuses** (the server pays from the same config, `daily_bonus.py`,
+`monday_bonus.py`, `comeback_bonus.py`):
+
+- Daily: on offer from the next calendar day (UTC) after the last; the
+  five days' prizes in turn, the first again after a day missed. A hero is
+  drawn at random and goes into storage. `win_bonus` (gold, town, hero,
+  day, cash).
+- Monday's chest: on a Monday (the player's own calendar) not yet
+  collected; previewed on Sundays. Three chests; whichever is picked holds
+  one of the config's three prizes by chance (gold, cash or a unit).
+  `weekly_reward` (kind, amount or unit).
+- Welcome-back: on the 2nd and 3rd day after the empire was made (the page
+  says how many days), from level 4, once each; a chest like Monday's, its
+  unit the day's own. `comeback_reward` (kind, amount or unit, day).
+
+**Not yet:** the troll raids and their treasure chest (with battles), and
+renaming the empire.
 
 ### Making the art look better
 

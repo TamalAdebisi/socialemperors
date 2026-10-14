@@ -15,6 +15,11 @@ import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
+import { Doings, readGoals, type Need } from "./rules/goals.ts";
+import { readBonusConfig } from "./rules/bonuses.ts";
+import goalNeeds from "./rules/goals.json" with { type: "json" };
+import { GoalKeeper } from "./goals.ts";
+import { BonusDesk } from "./bonuses.ts";
 import { readTown, type Town } from "./rules/town.ts";
 import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
@@ -112,7 +117,8 @@ async function start(): Promise<void> {
       { key: "world", label: "World", icon: ICONS.world, only: "dock", run: () => world.toggleWorld(), shortcut: "w" },
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
-    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items,
+    const doings = new Doings();
+    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts) });
@@ -142,6 +148,40 @@ async function start(): Promise<void> {
       },
     });
     hud.offerBank(() => void bank.open());
+
+    const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;
+    const privateState = info.privateState ?? {};
+    new GoalKeeper({
+      town, doings, items,
+      goals: readGoals((config.missions ?? []) as never, goalNeeds.goals as unknown as Record<string, Need>),
+      done: privateState.completedMissions ?? [],
+      paid: privateState.rewardedMissions ?? [],
+      skipPrice: Number(config.globals?.PRICE_COMPLETE_GOAL) || 2,
+      send: (cmd, ...args) => commands.add(cmd, ...args),
+      people: () => population(town, items, increase).current,
+      zoom: () => camera.scale,
+      say: (text) => editor.tell(text),
+      changed: () => hud.update(town),
+    });
+    new BonusDesk({
+      town, items, thumbnail,
+      state: privateState,
+      config: readBonusConfig(config.globals),
+      days: settings.days ?? 1000,
+      clock,
+      send: (cmd, ...args) => {
+        commands.add(cmd, ...args);
+        void commands.flush();  // as the Flash client does: a bonus is sent at once
+      },
+      say: (text) => editor.tell(text),
+      changed: () => {
+        hud.update(town);
+        editor.refresh();
+      },
+      dailyCollected: (day) => {
+        doings.dailyBonusDay = day;
+      },
+    });
   } else {
     document.body.classList.add("visiting");
   }

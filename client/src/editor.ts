@@ -21,6 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { Doings } from "./rules/goals.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { SUBCAT, canGoInside, canHarvest, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
@@ -48,6 +49,8 @@ export interface EditorParts {
   thumbnail?: (item: ItemInfo) => string;
   /** Land: the config's prices, and how many neighbours the player has (paying in gold needs some). */
   land?: { prices: LandPrice[]; neighbours: number };
+  /** Where what the player does is counted, for the goals. */
+  doings?: Doings;
 }
 
 export class TownEditor {
@@ -64,6 +67,7 @@ export class TownEditor {
   private readonly waiting: (gifts: number) => void;
   private readonly thumbnail: (item: ItemInfo) => string;
   private readonly land: { prices: LandPrice[]; neighbours: number };
+  private readonly doings: Doings;
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
   private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
@@ -87,6 +91,7 @@ export class TownEditor {
     this.waiting = parts.waiting ?? (() => {});
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
+    this.doings = parts.doings ?? new Doings();
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -284,6 +289,7 @@ export class TownEditor {
       return;
     }
     this.send([done.command]);
+    this.doings.placedStored = true;
     void this.view.redraw(done.placed);
     if (this.town.xp > xpBefore) {
       this.view.rise(done.placed, [{ text: `+${this.town.xp - xpBefore} XP`, colour: RESOURCE_COLOURS.xp }]);
@@ -488,6 +494,7 @@ export class TownEditor {
     }
     const done = harvested(this.town, resource, work.workers.size, this.clock(), this.items);
     this.send(done.commands);
+    this.doings.collected(resource.item);
     this.view.rise(resource, [
       { text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] },
       ...(done.xp > 0 ? [{ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp }] : []),
@@ -527,6 +534,7 @@ export class TownEditor {
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
       this.savedAt.delete(unit);
       this.send([goInside(this.town, unit, building, from, this.clock())]);
+      this.doings.pushedInto(unit.item, building.item);
       this.view.remove(unit);
       if (this.selected === unit) {
         this.select(building);
@@ -543,6 +551,7 @@ export class TownEditor {
       return;
     }
     this.send([out.command]);
+    this.doings.letOut(building.item);
     void this.view.redraw(out.unit);
     this.select(building);
     this.refresh();
@@ -603,6 +612,7 @@ export class TownEditor {
       return;
     }
     this.send([done.command]);
+    this.doings.trained(training.unit, building.item);
     void this.view.redraw(done.placed);
     this.hud.update(this.town);
     if (this.selected === building) {
@@ -678,6 +688,7 @@ export class TownEditor {
       this.say(done);
       return;
     }
+    this.doings.collected(placed.item);
     this.send(done.commands);
     const lines = [{ text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] }];
     if (done.xp > 0) {
@@ -720,6 +731,7 @@ export class TownEditor {
 
   private chooseWorkTime(placed: PlacedItem, choice: number): void {
     this.send([chooseWorkTime(this.town, placed, choice, this.clock())]);
+    this.doings.workTime(placed.item, WORK_TIMES[choice - 1].minutes);
     this.view.rise(placed, [{ text: `Working ${duration(WORK_TIMES[choice - 1].minutes * 60)}`, colour: 0xffffff }]);
     this.select(null);
     this.refresh();
@@ -745,6 +757,7 @@ export class TownEditor {
       return;
     }
     this.send([command]);
+    this.doings.moved(placed.item);
     this.endMove(placed);
   }
 
@@ -778,6 +791,7 @@ export class TownEditor {
   private store(placed: PlacedItem): void {
     this.emptyOut(placed);
     this.send([store(this.town, placed)]);
+    this.doings.stored(placed.item);
     this.view.remove(placed);
     this.select(null);
     this.say(`${placed.item.name} is in your storage.`);
@@ -787,6 +801,11 @@ export class TownEditor {
     for (const command of commands) {
       this.commands.add(command.cmd, ...command.args);
     }
+  }
+
+  /** A message for the player, at the top of the screen (the goals and bonuses use it too). */
+  tell(text: string): void {
+    this.say(text);
   }
 
   /** A message at the top of the screen for a moment, after any before it (the same one twice waits once). */

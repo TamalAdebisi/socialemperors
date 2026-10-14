@@ -23,7 +23,7 @@ export default async function shop({ newPlayer }) {
   await player.card("Farm Land").click();
   await player.wait(300);
   await player.tapTile(HALL);
-  assert.notEqual(await player.status(), "", "placing on the town hall says why not");
+  await player.said(/fit|Not enough|can't/);
   for (const spot of FARMS) await player.tapTile(spot);
   await player.shot("placing");
   await player.press("Done");

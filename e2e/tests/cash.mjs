@@ -29,7 +29,7 @@ export default async function cash({ newPlayer }) {
   assert.match(await player.bar(), /^Land for sale: 4,000 gold \(with 1 neighbour\) or 20 cash/);
   await player.shot("land-for-sale");
   await player.press("Buy for 4,000 gold");
-  assert.match(await player.status(), /Not enough gold/);
+  await player.said(/Not enough gold/);
   await player.press("Buy for 20 cash");
   await player.wait(1500);
   await player.shot("land-bought");
