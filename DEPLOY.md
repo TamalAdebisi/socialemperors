@@ -403,6 +403,11 @@ backup is kept for 6 days).
 
 ### 6.4 Connect the servers to Supabase
 
+> **Not like this for the live server.** The owner wants it to start
+> fresh on Supabase at Beta 1's launch, with nothing copied over (ROADMAP,
+> Beta 1). Step 3's automatic copy has to be switched off first, by a
+> setting still to be built. Staging can follow the steps as they are.
+
 1. Supabase → **Connect** (top of the page) → **Session pooler**. Copy the
    address. It looks like:
 
