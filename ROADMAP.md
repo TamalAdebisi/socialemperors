@@ -62,12 +62,13 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 The game client knows 154 server commands. The server used to handle 42 of
 them and silently ignore the rest, so much of what a player did on screen was
-undone by the next reload. It now handles 101. Of the other 53, 24 are never
+undone by the next reload. It now handles 105. Of the other 49, 24 are never
 sent by this client and most of the rest are unreachable (admin panel,
 Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 
 - [x] Arthur's tutorial is remembered once finished, instead of starting
-      over on every reload
+      over on every reload, and for the whole account: a second empire
+      doesn't start it again
 - [x] Supreme Dragon Temple (`temple.py`): the 12 offerings, the 48 hour wait,
       skipping it with cash, and summoning the Supreme Bahamut Dragon
 - [x] Collections (`game_collections.py`): pieces found are saved, finished
@@ -88,10 +89,33 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] A second town (`towns.py`): from level 20 the globe founds a troll town
       for 100,000 gold or 22 cash and travels between the two; each town keeps
       its own resources, level and quest
-- [ ] The world map: continent rankings (still a stub with one island) and
-      moving between worlds (`modify_position_univers` and friends)
+- [x] The world map (`worlds.py`): fifty continents of eight islands, seven
+      real rival players picked nearest your level, beating them in battle,
+      moving on to the next continent and its prize (cash and units, once a
+      continent), relocating, swapping islands, and browsing other continents
+- [x] The daily bonus (`daily_bonus.py`): the server decides the day and
+      pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (152 tests so far)
+- [ ] An automated test for every command (184 tests so far)
+
+### Cash (to decide)
+
+Cash was bought with real money on Facebook. Here it can't be (the server is
+free and non-commercial), so it only comes from the game's own free sources:
+the daily bonus (4 cash every 5 days), the Monday bonus (5 cash if the cash
+chest is picked) and the world map (1 cash a continent, 49 in all). That's
+enough for units (1 to 4 cash) but not for spells (35 to 55), packs (20 to
+60), map expansions (20 to 45) or a wonder (1299). Ways to bring it back, the
+game's own hooks first:
+
+- [ ] The welcome-back bonus: the client and the game config already have
+      it (a new player back on their 2nd or 3rd day picks 2,500 gold, a unit
+      or 5 cash), the server doesn't pay it yet (`comeback_reward`)
+- [ ] A daily cash collection from the town hall, growing with a login streak
+- [ ] A little cash the first time an island is won with three stars
+- [ ] More cash in the world map's continent prizes (the game's own table
+      pays 1 a continent)
+- [ ] Tournament prizes, once tournaments exist
 
 ### Phase 3: Stronger foundations
 
