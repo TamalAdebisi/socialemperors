@@ -125,7 +125,6 @@ def render_home(error=None, tab="login"):
                                invite_required=bool(config_env.INVITE_CODE))
     return render_template("login.html", user=user, saves_info=villages_of(user["id"]),
                            version=version_name, error=error,
-                           game_versions=config_env.GAME_VERSIONS,
                            can_create=len(villages_of(user["id"])) < config_env.MAX_VILLAGES_PER_USER,
                            max_villages=config_env.MAX_VILLAGES_PER_USER)
 
@@ -185,13 +184,9 @@ def choose_village():
     if user is None:
         return redirect("/")
     USERID = request.form.get("USERID", "")
-    GAMEVERSION = request.form.get("GAMEVERSION", config_env.DEFAULT_GAME_VERSION)
     if owner_of(USERID) != user["id"]:
         return render_home(error="That empire isn't yours."), 403
-    if GAMEVERSION not in config_env.GAME_VERSIONS:
-        return render_home(error="Unknown game version."), 400
     web_session["USERID"] = USERID
-    web_session["GAMEVERSION"] = GAMEVERSION
     player = "ruffle" if request.form.get("PLAYER") == "ruffle" else "play"
     return redirect(f"/{player}.html")
 
@@ -204,7 +199,6 @@ def new():
     if len(villages_of(user["id"])) >= config_env.MAX_VILLAGES_PER_USER:
         return render_home(error=f"You can have at most {config_env.MAX_VILLAGES_PER_USER} empires."), 400
     web_session["USERID"] = new_village(user["id"])
-    web_session["GAMEVERSION"] = config_env.DEFAULT_GAME_VERSION
     player = "ruffle" if request.form.get("PLAYER") == "ruffle" else "play"
     return redirect(f"/{player}.html")
 
@@ -212,14 +206,12 @@ def new():
 def _game_page(template):
     user = current_user()
     USERID = web_session.get("USERID")
-    GAMEVERSION = web_session.get("GAMEVERSION")
-    if user is None or not USERID or owner_of(USERID) != user["id"] \
-            or GAMEVERSION not in config_env.GAME_VERSIONS:
+    if user is None or not USERID or owner_of(USERID) != user["id"]:
         return redirect("/")
     print(f"[PLAY] {user['username']} -> {USERID} ({template})")
     return render_template(template, save_info=save_info(USERID), serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(USERID), version=version_name,
-                           GAMEVERSION=GAMEVERSION, PUBLIC_URL=config_env.PUBLIC_URL,
+                           GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
                            ASSETS_URL=config_env.ASSETS_URL,
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
