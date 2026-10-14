@@ -64,7 +64,8 @@ async function start(): Promise<void> {
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
   app.ticker.add((ticker) => camera.update(ticker.deltaMS));
 
-  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined });
+  const levels = readLevels(config.levels);
+  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined, levels });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -75,7 +76,6 @@ async function start(): Promise<void> {
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
-    const levels = readLevels(config.levels);
     const shop = new ShopWindow({
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),

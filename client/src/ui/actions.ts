@@ -1,5 +1,8 @@
 // The bar at the bottom of the screen for the thing selected on the map:
-// its name and what can be done with it. Selling (or removing) asks first.
+// its name and what can be done with it, with the buttons of the Flash
+// client's info panel. Selling (or removing) asks first.
+
+import { ICONS, type IconName } from "./icons.ts";
 
 export interface ActionChoices {
   name: string;
@@ -32,13 +35,14 @@ export class ActionBar {
     name.textContent = choices.name;
     this.bar.append(name);
     this.name = name;
-    this.button("Move", choices.move);
-    this.button("Turn", choices.turn);
-    this.button("Store", choices.store);
+    this.button("Move", choices.move, "Move", "move");
+    this.button("Turn", choices.turn, "Turn", "turn");
+    this.button("Store", choices.store, "Store", "store");
     // Selling what gives nothing back (a rock, a free decoration) is just removing it.
     const sell = choices.sell;
     const verb = choices.refund ? "Sell" : "Remove";
-    this.button(verb, sell && (() => this.confirm(`${verb} ${choices.name}${choices.refund ? ` for ${choices.refund}` : ""}?`, verb, sell)));
+    this.button(verb, sell && (() => this.confirm(`${verb} ${choices.name}${choices.refund ? ` for ${choices.refund}` : ""}?`, verb, sell)),
+      verb, "remove");
     this.button("✕", choices.close, "Close");
     this.bar.hidden = false;
   }
@@ -77,12 +81,21 @@ export class ActionBar {
     ]);
   }
 
-  private button(label: string, run: (() => void) | null, title = label): void {
+  /** A button; with `icon`, the info panel's picture over its name. */
+  private button(label: string, run: (() => void) | null, title = label, icon?: IconName): void {
     if (run === null) {
       return;
     }
     const button = document.createElement("button");
     button.type = "button";
+    if (icon) {
+      button.className = "picture-button";
+      button.innerHTML = `<img src="${ICONS[icon]}" alt=""><span></span>`;
+      button.querySelector("span")!.textContent = label;
+      button.addEventListener("click", run);
+      this.bar.append(button);
+      return;
+    }
     button.className = label === "✕" ? "button tiny plain" : "button tiny gold";
     button.textContent = label;
     if (title !== label) {

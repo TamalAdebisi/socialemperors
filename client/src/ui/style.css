@@ -59,9 +59,36 @@ body {
   text-overflow: ellipsis;
 }
 
+/* The level: the game's XP star, the number, and how far to the next. */
 .hud-level {
-  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
   white-space: nowrap;
+}
+
+.hud-xp {
+  width: 72px;
+  height: 9px;
+  overflow: hidden;
+  border: 2px solid var(--wood);
+  border-radius: 999px;
+  background: var(--parchment-deep);
+}
+
+.hud-xp-done {
+  display: block;
+  height: 100%;
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+}
+
+/* The game's own icons (ui/icons.ts), next to numbers and names. */
+.icon {
+  display: block;
+  width: auto;
+  height: 24px;
+  flex: none;
 }
 
 .hud-resources {
@@ -80,19 +107,53 @@ body {
   gap: 6px;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+.hud-resources .icon {
+  height: 26px;
 }
 
-.dot.gold { background: #f2c14e; }
-.dot.wood { background: #a86b3c; }
-.dot.food { background: #e2553f; }
-.dot.stone { background: #a9aeb5; }
-.dot.cash { background: #5cc96b; }
+/* The tools, bottom right, as on the Flash client's bar: its own pictures. */
+.tools {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 10px;
+}
 
+.tools[hidden] {
+  display: none;
+}
+
+.tool {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  transition: transform 0.12s;
+}
+
+.tool img {
+  display: block;
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+}
+
+.tool:hover,
+.tool:focus-visible {
+  transform: translateY(-3px) scale(1.06);
+}
+
+.tool:active {
+  transform: scale(0.96);
+}
+
+/* Their tips open upwards: there's no room below. */
+.tools [data-tip]::after {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
 .hud-buttons {
   display: flex;
   align-items: center;
@@ -154,6 +215,23 @@ body {
     padding: 0 8px;
     font-size: 12px;
   }
+  .hud-resources .icon {
+    height: 22px;
+  }
+  .hud-xp {
+    width: 52px;
+  }
+  /* The tools a little smaller, and the selection bar beside them, not under. */
+  .tool img {
+    width: 56px;
+    height: 56px;
+  }
+  .actions {
+    left: 12px;
+    right: 92px;
+    transform: none;
+    max-width: none;
+  }
 }
 
 /* The bar for the thing selected on the map (ui/actions.ts): a parchment
@@ -179,6 +257,33 @@ body {
 
 .actions[hidden] {
   display: none;
+}
+
+/* The info panel's buttons: the game's tile, its name under it. */
+.picture-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 800 12px var(--round);
+  cursor: pointer;
+}
+
+.picture-button img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  transition: transform 0.12s;
+}
+
+.picture-button:hover img,
+.picture-button:focus-visible img {
+  transform: translateY(-2px) scale(1.06);
 }
 
 .actions-name {
@@ -412,8 +517,5 @@ body {
   .shop-picture {
     width: 80px;
     height: 80px;
-  }
-  .hud-storage {
-    display: none;  /* room is short on a phone: Storage is a tab of the shop */
   }
 }

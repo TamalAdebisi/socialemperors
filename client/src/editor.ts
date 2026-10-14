@@ -79,6 +79,9 @@ export class TownEditor {
     // Buildings finish their work as time goes by: their signs, and the selected one's countdown.
     setInterval(() => this.refresh(), 1000);
     this.refresh();
+    // Experience the save already has past the next level (from the classic game, or the server).
+    this.levelUp();
+    this.hud.update(this.town);
   }
 
   /** Signs over the buildings (ready, asleep) and the selected one's countdown, as of now. */

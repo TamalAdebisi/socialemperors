@@ -7,6 +7,7 @@
 
 import type { ItemInfo } from "../rules/config.ts";
 import { describe, priceOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
+import { resourceIcon } from "./icons.ts";
 
 const numbers = new Intl.NumberFormat();
 /** The storage's place among the categories. */
@@ -204,7 +205,7 @@ export class ShopWindow {
     const price = priceOf(item);
     const cost = document.createElement("span");
     cost.className = "shop-price";
-    cost.innerHTML = `<span class="dot ${price.resource}"></span>`;
+    cost.innerHTML = `<img class="icon" src="${resourceIcon(price.resource)}" alt="">`;
     cost.append(numbers.format(price.amount));
     cost.setAttribute("aria-label", `${numbers.format(price.amount)} ${price.resource}`);
     button.append(cost);

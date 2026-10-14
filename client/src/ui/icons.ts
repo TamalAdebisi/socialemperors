@@ -1,0 +1,44 @@
+// The game's own icons and buttons, drawn from its Flash file by
+// tools/art/export_ui.py, for the windows in HTML and the signs on the map.
+// Vite copies each file named here into the build, under a name that
+// changes with its contents, so browsers keep it as long as it's the same.
+
+import type { Resource } from "../rules/production.ts";
+
+export const ICONS = {
+  // Resources, experience and people.
+  gold: new URL("./art/gold.webp", import.meta.url).href,
+  wood: new URL("./art/wood.webp", import.meta.url).href,
+  food: new URL("./art/food.svg", import.meta.url).href,  // our carrot: the game's was a steak
+  stone: new URL("./art/stone.webp", import.meta.url).href,
+  cash: new URL("./art/cash.webp", import.meta.url).href,
+  xp: new URL("./art/xp.webp", import.meta.url).href,
+  asleep: new URL("./art/asleep.webp", import.meta.url).href,
+  // The tools, as on the Flash client's bar.
+  build: new URL("./art/build.webp", import.meta.url).href,
+  storage: new URL("./art/storage.webp", import.meta.url).href,
+  // The selected thing's buttons, as on its info panel.
+  move: new URL("./art/move.webp", import.meta.url).href,
+  turn: new URL("./art/turn.webp", import.meta.url).href,
+  store: new URL("./art/store.webp", import.meta.url).href,
+  remove: new URL("./art/remove.webp", import.meta.url).href,
+  close: new URL("./art/close.webp", import.meta.url).href,
+} as const;
+
+export type IconName = keyof typeof ICONS;
+
+/** A resource's icon. */
+export function resourceIcon(resource: Resource): string {
+  return ICONS[resource];
+}
+
+/** An icon as an image, sized by CSS (class "icon"); `label` for screen readers, or "" when text says it already. */
+export function iconImage(name: IconName, label = ""): HTMLImageElement {
+  const image = new Image();
+  image.className = "icon";
+  image.src = ICONS[name];
+  image.alt = label;
+  image.decoding = "async";
+  image.draggable = false;
+  return image;
+}
