@@ -119,9 +119,11 @@ enough for units (1 to 4 cash) but not for spells (35 to 55), packs (20 to
 60), map expansions (20 to 45) or a wonder (1299). Ways to bring it back, the
 game's own hooks first:
 
-- [ ] The welcome-back bonus: the client and the game config already have
-      it (a new player back on their 2nd or 3rd day picks 2,500 gold, a unit
-      or 5 cash), the server doesn't pay it yet (`comeback_reward`)
+- [ ] The welcome-back bonus: the game config has it (a new player back on
+      their 2nd and 3rd day opens a chest: 2,500 gold, a unit or 5 cash), but
+      the game client we use has it switched off inside the game file, and
+      nothing the server or the page sends can switch it on. It needs a small
+      change to the client (one setting), so it waits for that
 - [ ] A daily cash collection from the town hall, growing with a login streak
 - [ ] A little cash the first time an island is won with three stars
 - [ ] More cash in the world map's continent prizes (the game's own table
