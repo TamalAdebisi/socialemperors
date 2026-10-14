@@ -66,6 +66,8 @@ class ClientPageTest(unittest.TestCase):
         self.assertTrue(accounts.check_game_token(settings["userId"], settings["userKey"]))
         self.assertEqual(settings["dynamicUrl"], server.DYNAMIC)
         self.assertEqual(settings["classicUrl"], "/ruffle.html")
+        # Where the Flash client's own files are, for the windows' item pictures (buildingthumbs/).
+        self.assertEqual(settings["assetsUrl"], config_env.ASSETS_URL)
         # The client asks for the town the way the Flash client does.
         reply = self.web.post(f"{server.DYNAMIC}/get_player_info.php",
                               data={"USERID": settings["userId"], "user_key": settings["userKey"]})

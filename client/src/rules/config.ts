@@ -45,6 +45,8 @@ export interface ConfigItem {
   display_order?: string;
   /** "1" for the shop's New tab. */
   new_item?: string;
+  /** Whose it is: "h" humans, "t" trolls, "a" anyone's, "n" nobody's (trees, rocks), "e" enemies'. */
+  race?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -101,6 +103,8 @@ export interface ItemInfo {
   isNew: boolean;
   /** The experience buying it gives. */
   xp: number;
+  /** Whose it is: "h", "t", "a" anyone's, "n" nobody's (trees, rocks), "e" enemies'. */
+  race: string;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -125,6 +129,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     displayOrder: Number(item.display_order) || 0,
     isNew: item.new_item === "1",
     xp: Number(item.xp) || 0,
+    race: item.race ?? "",
   };
 }
 

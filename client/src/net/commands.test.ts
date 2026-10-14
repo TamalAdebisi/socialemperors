@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { CommandSender } from "./commands.ts";
 import type { PageSettings } from "./server.ts";
 
-const settings: PageSettings = { userId: "u1", userKey: "k1", dynamicUrl: "/dyn", artUrl: "/art", classicUrl: "/ruffle.html" };
+const settings: PageSettings = { userId: "u1", userKey: "k1", dynamicUrl: "/dyn", artUrl: "/art", assetsUrl: "", classicUrl: "/ruffle.html" };
 
 /** A sender whose network answers with the given statuses, one per request, and keeps what was sent. */
 function sender(statuses: number[]) {

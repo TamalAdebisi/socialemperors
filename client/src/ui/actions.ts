@@ -1,5 +1,5 @@
 // The bar at the bottom of the screen for the thing selected on the map:
-// its name and what can be done with it. Selling asks first.
+// its name and what can be done with it. Selling (or removing) asks first.
 
 export interface ActionChoices {
   name: string;
@@ -35,8 +35,10 @@ export class ActionBar {
     this.button("Move", choices.move);
     this.button("Turn", choices.turn);
     this.button("Store", choices.store);
+    // Selling what gives nothing back (a rock, a free decoration) is just removing it.
     const sell = choices.sell;
-    this.button("Sell", sell && (() => this.confirm(`Sell ${choices.name}${choices.refund ? ` for ${choices.refund}` : ""}?`, sell)));
+    const verb = choices.refund ? "Sell" : "Remove";
+    this.button(verb, sell && (() => this.confirm(`${verb} ${choices.name}${choices.refund ? ` for ${choices.refund}` : ""}?`, verb, sell)));
     this.button("✕", choices.close, "Close");
     this.bar.hidden = false;
   }
@@ -68,9 +70,9 @@ export class ActionBar {
     this.name = null;
   }
 
-  private confirm(question: string, yes: () => void): void {
+  private confirm(question: string, verb: string, yes: () => void): void {
     this.prompt(question, [
-      { label: "Sell", run: yes },
+      { label: verb, run: yes },
       { label: "Cancel", run: () => this.hide() },
     ]);
   }

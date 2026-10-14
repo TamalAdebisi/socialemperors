@@ -20,7 +20,7 @@ import {
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false,
     cost: 0, costType: "g", facings: 2, production: null,
-    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, ...fields };
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
 }
 
 test("one tile along x is 54 px right and 27 down; along y, 54 left and 27 down", () => {

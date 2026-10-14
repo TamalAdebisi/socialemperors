@@ -1,6 +1,7 @@
 // The new game client (CLIENT.md, steps 2 and 3): load the game config and
 // the player's town from our server, as the Flash client does, draw it with
-// PixiJS, and let the player run it (so far: build, move, turn, store, sell, collect).
+// PixiJS, and let the player run it (so far: build, place from storage, move, turn,
+// store, sell, collect).
 
 import "./ui/style.css";
 
@@ -79,11 +80,13 @@ async function start(): Promise<void> {
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
       obstacle: (item) => obstacle(town, item),
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       picture: (item, canvas) => drawThumbnail(art, item, canvas),
       choose: (item) => editor.startBuilding(item),
+      storage: () => editor.storageCards(),
     });
-    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop });
-    hud.offerShop(() => editor.openShop());
+    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items });
+    hud.offerShop(() => editor.openShop(), () => editor.openStorage());
   }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {

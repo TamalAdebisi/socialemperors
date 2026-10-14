@@ -14,6 +14,8 @@ export interface PageSettings {
   dynamicUrl: string;
   /** Where the sprite sheets are: <artUrl>/<img_name>.json and .webp. */
   artUrl: string;
+  /** Where the game's other files are, as the Flash client finds them (buildingthumbs/...). */
+  assetsUrl: string;
   /** The Flash client's page, to go back to. */
   classicUrl: string;
 }

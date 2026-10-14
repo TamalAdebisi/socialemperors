@@ -8,7 +8,7 @@ import type { PlacedItem, Town } from "./town.ts";
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
     flying: false, cost: 30, costType: "w", facings: 2, production: null,
-    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, ...fields };
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
 }
 
 function placed(fields: Partial<ItemInfo>, tx: number, ty: number, more: Partial<PlacedItem> = {}): PlacedItem {
@@ -17,7 +17,7 @@ function placed(fields: Partial<ItemInfo>, tx: number, ty: number, more: Partial
 
 function town(items: PlacedItem[] = [], expansions = [13]): Town {
   return { id: 0, name: "", townName: "", level: 1, xp: 0, cash: 5, gold: 100, wood: 100, food: 100, stone: 100,
-    race: "h", skin: 0, expansions: new Set(expansions), unlocked: new Set(), items, unknown: [] };
+    race: "h", skin: 0, expansions: new Set(expansions), unlocked: new Set(), gifts: new Map(), store: new Map(), items, unknown: [] };
 }
 
 test("the save names a building's last tile; it covers width x height back from there", () => {
@@ -71,22 +71,30 @@ test("selling gives back a twentieth of the cost, in what it cost; nothing for c
   assert.deepEqual(refund(item({ cost: 1000, costType: "g" })), { resource: "gold", amount: 50 });
 });
 
-test("storing takes it off the map", () => {
+test("storing takes it off the map, into the town's store", () => {
   const house = placed({ id: 1 }, 50, 50);
   const t = town([house]);
   assert.deepEqual(store(t, house), { cmd: "store_item", args: [50, 50, 0, 1] });
   assert.deepEqual(t.items, []);
+  assert.deepEqual([...t.store], [[1, 1]]);
 });
 
-test("what can be done depends on what it is, as in the Flash client", () => {
+test("what can be done depends on what it is, and whose, as in the Flash client", () => {
   const can = (fields: Partial<ItemInfo>, more: Partial<PlacedItem> = {}, at = 50) => {
-    const { why: _, ...rest } = choices(placed(fields, at, at, more));
+    const { why: _, ...rest } = choices(town(), placed(fields, at, at, more));
     return rest;
   };
+  const NONE = { move: false, turn: false, store: false, sell: false };
   assert.deepEqual(can({}), { move: true, turn: true, store: true, sell: true });
   assert.deepEqual(can({ subcategory: 135 }), { move: true, turn: true, store: false, sell: false });  // town hall
-  assert.deepEqual(can({ subcategory: 125 }), { move: false, turn: false, store: false, sell: true });  // a tree
-  assert.deepEqual(can({ isUnit: true }), { move: false, turn: false, store: false, sell: false });
-  assert.deepEqual(can({}, { unitsInside: 2 }), { move: false, turn: false, store: false, sell: false });
-  assert.deepEqual(can({}, {}, 5), { move: false, turn: false, store: false, sell: false });  // on the wild ring
+  assert.deepEqual(can({ race: "a" }), { move: true, turn: true, store: true, sell: true });   // anyone's: the player's too
+  assert.deepEqual(can({ race: "t" }), NONE);                                                 // the trolls'
+  assert.deepEqual(can({ isUnit: true }), NONE);
+  assert.deepEqual(can({}, { unitsInside: 2 }), NONE);
+  assert.deepEqual(can({}, {}, 5), NONE);  // on the wild ring
+  // Nobody's: trees stay; gold and stone rocks can be cleared, but only from bought land.
+  assert.deepEqual(can({ race: "n", subcategory: 125 }), NONE);
+  assert.match(choices(town(), placed({ race: "n", subcategory: 125 }, 50, 50)).why, /villager/);
+  assert.deepEqual(can({ race: "n", subcategory: 126 }), { ...NONE, sell: true });
+  assert.deepEqual(can({ race: "n", subcategory: 127 }, {}, 30), NONE);  // block 7: not bought
 });
