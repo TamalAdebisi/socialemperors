@@ -1,18 +1,22 @@
 from sessions import session, neighbor_session, neighbors, save_session
 from engine import timestamp_now
+import towns
 
 
-def get_player_info(USERID):
+def get_player_info(USERID, map_number=None):
+    """The player's own village, opened at the town asked for (the default
+    town when none is asked for, or there is no such town)."""
     ts_now = timestamp_now()
     save = session(USERID)
     save["playerInfo"]["last_logged_in"] = ts_now
+    town_id = towns.open_town(save, map_number)
     save_session(USERID)  # remember the login time (used to rank active neighbours)
     return {
         "result": "ok",
         "processed_errors": 0,
         "timestamp": ts_now,
         "playerInfo": save["playerInfo"],
-        "map": save["maps"][0],
+        "map": save["maps"][town_id],
         "privateState": save["privateState"],
         "neighbors": neighbors(USERID),
     }

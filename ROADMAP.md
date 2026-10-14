@@ -62,7 +62,7 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 The game client knows 154 server commands. The server used to handle 42 of
 them and silently ignore the rest, so much of what a player did on screen was
-undone by the next reload. It now handles 100. Of the other 54, 24 are never
+undone by the next reload. It now handles 101. Of the other 53, 24 are never
 sent by this client and most of the rest are unreachable (admin panel,
 Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 
@@ -85,11 +85,13 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
       mode and the Monday bonus
 - [x] Social buildings (`social.py`), helping neighbours (`assists.py`) and
       attacking other empires (`pvp.py`)
-- [ ] A second town (`buy_map`); the server only really supports town 0 today
+- [x] A second town (`towns.py`): from level 20 the globe founds a troll town
+      for 100,000 gold or 22 cash and travels between the two; each town keeps
+      its own resources, level and quest
 - [ ] The world map: continent rankings (still a stub with one island) and
       moving between worlds (`modify_position_univers` and friends)
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (144 tests so far)
+- [ ] An automated test for every command (152 tests so far)
 
 ### Phase 3: Stronger foundations
 

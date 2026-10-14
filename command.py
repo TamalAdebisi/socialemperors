@@ -23,6 +23,7 @@ import monday_bonus
 import social
 import assists
 import pvp
+import towns
 
 TUTORIAL_END = 15  # the step Arthur's tutorial reports when its last lesson is closed
 
@@ -93,7 +94,7 @@ def do_command(USERID, cmd, args, previous=None):
         print(shop.offer_pack(save, int(args[0]), int(args[1]), item_won))
 
     elif cmd == Constant.CMD_ADD_ITEMS_TO_STORE:
-        print(shop.deal(save, args[0], args[1]))
+        print(shop.deal(save, args[0], args[1], towns.current(save)))
 
     elif cmd == Constant.CMD_BUY_STORED_ITEM_CASH:
         print(shop.collection_unit(save, int(args[0]), int(args[1]), args[2]))
@@ -105,7 +106,7 @@ def do_command(USERID, cmd, args, previous=None):
         print(shop.sacrifice(save, args[0], args[1], int(args[2]), args[3], args[4]))
 
     elif cmd == Constant.CMD_GOLD_STATUE_CONVERSION:
-        print(shop.gold_statue(save))
+        print(shop.gold_statue(save, towns.current(save)))
 
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
         tutorial_step = int(args[0])
@@ -254,7 +255,7 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_RT_LEVEL_UP:
         new_level = args[0]
         print("Level Up!:", new_level, end="")
-        map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
+        map = save["maps"][towns.current(save)]  # the client sends no town: the one open
         old_level = int(map.get("level") or 1)
         map["level"] = args[0]
         current_xp = map["xp"]
@@ -266,7 +267,7 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
         new_xp = args[0]
         print("xp set to", new_xp)
-        map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
+        map = save["maps"][towns.current(save)]
         map["xp"] = new_xp
         map["level"] = get_level_from_xp(new_xp)
 
@@ -312,7 +313,7 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_STORE_ADD_ITEMS:
         ids = args[0] # JSON list of item ids: prizes, and heroes bought without an altar
-        print(inventory.add_items(save, ids))
+        print(inventory.add_items(save, ids, towns.current(save)))
 
     elif cmd == Constant.CMD_PLACE_GIFT or cmd == Constant.CMD_PLACE_STORED_ITEM:
         item_id = args[0]
@@ -621,16 +622,19 @@ def do_command(USERID, cmd, args, previous=None):
         print(survival.start(save))
 
     elif cmd == Constant.CMD_SURVIVAL_END:
-        print(survival.end(save, args[0], args[1], args[2]))
+        print(survival.end(save, args[0], args[1], args[2], towns.current(save)))
 
     elif cmd == Constant.CMD_SURVIVAL_BUY_LIFE:
         print(survival.buy_life(save))
+
+    elif cmd == Constant.CMD_BUY_MAP:
+        print(towns.buy_map(save, *args[:4]))
 
     elif cmd == Constant.CMD_SURVIVAL_BUY_MAP:
         print(survival.buy_map(save, args[0]))
 
     elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
-        print(monday_bonus.collect(save, args[0], args[1]))
+        print(monday_bonus.collect(save, args[0], args[1], towns.current(save)))
 
     elif cmd == Constant.CMD_BUY_SI_HELP:
         x, y, town_id, building_id = args[:4]

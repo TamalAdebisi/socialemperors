@@ -328,8 +328,8 @@ def get_player_info_response(USERID):
     user = request.values.get('user')
     map_number = int(request.values['map']) if request.values.get('map', '').isdigit() else None
 
-    if user is None:  # the player's own village
-        return json_response(get_player_info(USERID))
+    if user is None or user == USERID:  # the player's own village (travelling between towns names it)
+        return json_response(get_player_info(USERID, map_number))
     if user.startswith("100000") and user not in (Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1,
                                                   Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2,
                                                   Constant.NEIGHBOUR_ARTHUR_GUINEVERE_3):
