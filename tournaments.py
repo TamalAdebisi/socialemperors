@@ -22,8 +22,12 @@ The game config's "tournament_type" table has eight kinds:
              once a week (Monday to Sunday, UTC), ranked against everyone
              else that week. The top 10 win the prize for their rank, as it
              is when their own tournament ends.
-    friends  private rooms: not yet. Creating one answers that there aren't
-             enough friends, and the fee comes back.
+    friends  private rooms of a public type, created by a player with at
+             least MIN_FRIENDS friends (the game's own rule). Friends are
+             the real players among the neighbours (sessions.friends()):
+             they see the room in their list and can join it. Only the
+             owner can cancel it, which gives every fee back; a room still
+             not full after FRIENDS_WAIT gets bots, like a public one.
 
 A tournament ends when every match has been played, or the type's
 "duration" (24 hours) after it started; matches not played by then are
@@ -33,10 +37,10 @@ time spent in matches: the client's own rule, so both show the same winner.
 How the client asks: POST tournaments/<service>.php, answered by service().
 
     get_tournament_info      {}                         the player's tournament, or the list
-    join_tournament          {tournament_type_id, category, team, tournament_id}
-    create_tournament        {tournament_type_id, team}  friends: not yet
+    join_tournament          {tournament_type_id, category, team, tournament_id: a friend's room, or ""}
+    create_tournament        {tournament_type_id, team}  a friends tournament
     leave_tournament         {tournament_id}
-    cancel_tournament        {tournament_id}            friends: the owner's leave
+    cancel_tournament        {tournament_id}            the owner, before it starts
     start_tournament_match   {victim_id, tournament_id}
     finish_tournament_match  {victim_id, attacker_won, attacker_points, tournament_id}
     clean_tournament         {}                         done looking at a finished one
@@ -55,6 +59,7 @@ storage's "tournaments" table, written with the villages (sessions.flush):
     {"id", "type": "1" to "8", "category", "reward_id": which of the type's prizes,
      "created", "date_ready", "date_finished", "week": weekly only,
      "rank": weekly only, the rank the prize was paid for,
+     "private", "owner_id", "owner": friends tournaments only,
      "players": [{"user_id", "user_name", "level", "country", "team": 20 unit ids,
                   "bot", "abandonned": left after the start (the client's spelling),
                   "cleaned": done looking at the end}],
@@ -78,6 +83,8 @@ from village import ON_MAP, give, take
 ARENA = "100000040"   # the map every tournament type's "map_id" names
 BOT_IDS = ("10000001", "10000002", "10000003")  # the client's own ids for computer players
 BOT_WAIT = 30 * 60    # a public room waits this long for real players, then bots fill it
+FRIENDS_WAIT = 24 * 3600  # a friends room waits this long for friends, then bots fill it
+MIN_FRIENDS = 3       # friends a player needs to create a friends tournament (the game's message says 3)
 MATCH_TIMEOUT = 3600  # a match started this long ago and never finished is lost
 KEEP_FINISHED = 30 * 24 * 3600  # a finished tournament nobody came back to see goes after this
 TEAM_SIZE = 20
@@ -314,11 +321,16 @@ def _public_room(type_id, category: int, me: dict, now: int) -> dict:
     """A room of this type and level bracket that is still waiting for
     players, or a new one."""
     room = next((t for t in __tournaments.values() if t["type"] == str(type_id) and t.get("week") is None
-                 and t["category"] == category and t["date_ready"] is None), None)
+                 and not t.get("private") and t["category"] == category and t["date_ready"] is None), None)
     if room is None:
         room = _new(type_id, now, category=category, reward_id=_prizes_today(now)[str(type_id)])
+    return _sit(room, me, now)
+
+
+def _sit(room: dict, me: dict, now: int) -> dict:
+    """A seat for the player; the last seat starts the tournament."""
     room["players"].append(me)
-    if len(room["players"]) >= _seats(type_id):
+    if len(room["players"]) >= _seats(room["type"]):
         _start(room, now)
     return room
 
@@ -427,7 +439,7 @@ def _sweep(now: int) -> None:
     and ones everybody is done with go."""
     for room in list(__tournaments.values()):
         if room["date_ready"] is None:
-            if now - int(room["created"]) >= BOT_WAIT:
+            if now - int(room["created"]) >= (FRIENDS_WAIT if room.get("private") else BOT_WAIT):
                 _fill_with_bots(room)
                 _start(room, now)
                 _touch(room)
@@ -472,7 +484,8 @@ def _view(room: dict, USERID: str) -> dict:
     players = sorted(room["players"], key=lambda p: p["user_id"] != USERID)
     view = {
         "tournament_id": room["id"], "tournament_type_id": room["type"], "reward_id": room["reward_id"],
-        "private": "0", "owner_id": "", "owner": "", "point_type": POINT_TYPE,
+        "private": "1" if room.get("private") else "0",  # the owner gets Cancel and Invite, the others Leave
+        "owner_id": room.get("owner_id", ""), "owner": room.get("owner", ""), "point_type": POINT_TYPE,
         "date_ready": room["date_ready"], "date_finished": room["date_finished"],
         "match_playing": any(m["date_started"] and not m["finished"] for m in room["matches"]),
         "players": [{"user_id": p["user_id"], "user_name": p["user_name"], "level": p["level"],
@@ -494,8 +507,18 @@ def _info(USERID: str, now: int) -> dict:
         "tournament_weekly": {type_id: {"open": "1", "timeLeft": _week_ends(week) - now,
                                         "full": "1" if _entered_this_week(USERID, type_id, week) else "0"}
                               for type_id in _types() if _is_weekly(type_id)},  # "full" hides the card
-        "tournament_friends": [],
+        "tournament_friends": _friends_rooms(USERID),
     }
+
+
+def _friends_rooms(USERID: str) -> list:
+    """The friends tournaments of the player's friends still waiting for
+    players: a card each in the list, "<owner>'s tournament"."""
+    waiting = [t for t in __tournaments.values() if t.get("private") and t["date_ready"] is None
+               and not _seat(t, USERID) and len(t["players"]) < _seats(t["type"])]
+    friends = set(sessions.friends(USERID)) if waiting else set()
+    return [{"tournament_id": t["id"], "tournament_type_id": t["type"], "reward_id": t["reward_id"],
+             "owner": t["owner"], "owner_id": t["owner_id"]} for t in waiting if t["owner_id"] in friends]
 
 
 def _entered_this_week(USERID: str, type_id, week: int) -> bool:
@@ -509,36 +532,67 @@ def _get_info(USERID: str, params: dict, now: int) -> dict:
     return _info(USERID, now)
 
 
+def _refused(result: str, type_id: str) -> dict:
+    """No: the client gives the fee back on screen; the server never took it.
+    No refund for a type the config doesn't have: the client would look its
+    fee up, and fail."""
+    if type_id not in _types():
+        return {"result": result}
+    return {"result": result, "resources": {"refund": 1, "tournament_type_id": type_id}}
+
+
+def _open_to(room, USERID: str, type_id: str) -> bool:
+    """A friend's room the player can still join."""
+    return (room is not None and room.get("private") and room["type"] == type_id and room["date_ready"] is None
+            and len(room["players"]) < _seats(type_id) and room["owner_id"] in sessions.friends(USERID))
+
+
 def _join(USERID: str, params: dict, now: int) -> dict:
     type_id = str(params.get("tournament_type_id", ""))
     if type_id not in _types():
-        return {"result": "NOK"}  # no refund: the client would look the fee up, and fail
-
-    def no(result):  # the client gives the fee back on screen; the server never took it
-        return {"result": result, "resources": {"refund": 1, "tournament_type_id": type_id}}
-
+        return _refused("NOK", type_id)
     weekly = _is_weekly(type_id)
     team = _team(params.get("team"), weekly)
     if team is None:
-        return no("NOTEAM")
-    if _current(USERID) or params.get("tournament_id"):  # one at a time; friends' rooms: not yet
-        return no("NOK")
+        return _refused("NOTEAM", type_id)
+    friends_room = __tournaments.get(str(params.get("tournament_id") or "")) if params.get("tournament_id") else None
+    if _current(USERID) or (params.get("tournament_id") and not _open_to(friends_room, USERID, type_id)):
+        return _refused("NOK", type_id)  # one at a time; a friend's room gone, full or started: "full"
     if weekly and _entered_this_week(USERID, type_id, _week(now)):
-        return no("NOK")
+        return _refused("NOK", type_id)
     if not _pay_fee(USERID, type_id):
-        return no("NOK")
+        return _refused("NOK", type_id)
     me = _entrant(USERID, sessions.session(USERID), team)
-    room = _weekly_room(type_id, me, now) if weekly else _public_room(type_id, int(params.get("category") or 0), me, now)
+    if friends_room is not None:
+        room = _sit(friends_room, me, now)
+    elif weekly:
+        room = _weekly_room(type_id, me, now)
+    else:
+        room = _public_room(type_id, int(params.get("category") or 0), me, now)
     _touch(room)
     return dict(_info(USERID, now), result="OK")
 
 
 def _create(USERID: str, params: dict, now: int) -> dict:
-    """Friends tournaments: not yet."""
+    """A friends tournament: the player's own room, which their friends see."""
     type_id = str(params.get("tournament_type_id", ""))
-    if type_id not in _types():
-        return {"result": "NOFRIENDS"}
-    return {"result": "NOFRIENDS", "resources": {"refund": 1, "tournament_type_id": type_id}}
+    if type_id not in _types() or _is_weekly(type_id):
+        return _refused("NOK", type_id)
+    team = _team(params.get("team"), weekly=False)
+    if team is None:
+        return _refused("NOTEAM", type_id)
+    if _current(USERID):
+        return _refused("NOK", type_id)
+    if len(sessions.friends(USERID)) < MIN_FRIENDS:
+        return _refused("NOFRIENDS", type_id)
+    if not _pay_fee(USERID, type_id):
+        return _refused("NOK", type_id)
+    me = _entrant(USERID, sessions.session(USERID), team)
+    room = _new(type_id, now, private=1, owner_id=USERID, owner=me["user_name"],
+                reward_id=_prizes_today(now)[type_id])
+    _sit(room, me, now)
+    _touch(room)
+    return dict(_info(USERID, now), result="OK")
 
 
 def _leave(USERID: str, params: dict, now: int) -> dict:
@@ -548,6 +602,8 @@ def _leave(USERID: str, params: dict, now: int) -> dict:
     room = _current(USERID)
     if room is None:
         return {"result": "OK"}
+    if room.get("private") and room["owner_id"] == USERID and room["date_ready"] is None:
+        return _cancel(USERID, params, now)  # the owner can't leave their own room: it is called off
     me = _seat(room, USERID)
     _touch(room)
     if room["date_ready"] is None:
@@ -565,6 +621,20 @@ def _leave(USERID: str, params: dict, now: int) -> dict:
     else:
         me["cleaned"] = 1
     return {"result": "OK"}
+
+
+def _cancel(USERID: str, params: dict, now: int) -> dict:
+    """The owner calls off a friends tournament before it starts, and every
+    fee comes back. The friends' games are never told, so the server gives
+    theirs back in their saves; the room is gone from their list."""
+    room = _current(USERID)
+    if room is None or not room.get("private") or room["owner_id"] != USERID or room["date_ready"] is not None:
+        return _leave(USERID, params, now)
+    for player in _humans(room):
+        if player["user_id"] != USERID:
+            _refund(player["user_id"], room["type"])
+    _delete(room)
+    return {"result": "OK", "resources": _refund(USERID, room["type"])}
 
 
 def _my_match(USERID: str, params: dict):
@@ -620,7 +690,7 @@ SERVICES = {
     "join_tournament": _join,
     "create_tournament": _create,
     "leave_tournament": _leave,
-    "cancel_tournament": _leave,
+    "cancel_tournament": _cancel,
     "start_tournament_match": _start_match,
     "finish_tournament_match": _finish_match,
     "clean_tournament": _clean,

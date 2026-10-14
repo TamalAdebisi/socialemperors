@@ -1,0 +1,30 @@
+{# What the game's Invite buttons open: the one in a friends tournament's
+   waiting room (showPopupInviteTournament) and the one shown to a player
+   with too few friends to create one (showPopupInvite). They opened
+   Facebook's invite window; here friends find a tournament in their own
+   Tourney window (tournaments.py), so this says so. Styled like the bank. #}
+<dialog id="invite" aria-labelledby="invite-title">
+    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
+    <h2 id="invite-title">Invite friends</h2>
+    <p data-for="tournament">Your tournament is waiting for players. Everyone you see as a neighbour
+        finds it in their <b>Tourney</b> window, as your tournament: tell them to join!
+        Seats still empty after a day get computer players.</p>
+    <p data-for="game">Your friends are the players you see as neighbours. Social Empires is more fun
+        with more of them: send your friends <b>{{ PUBLIC_URL }}</b> to start an empire.</p>
+</dialog>
+
+<script>
+    (function () {
+        var dialog = document.getElementById("invite");
+
+        function open(which) {
+            dialog.querySelectorAll("[data-for]").forEach(function (text) {
+                text.hidden = text.getAttribute("data-for") !== which;
+            });
+            setTimeout(function () { dialog.showModal(); }, 0);  // not inside the game's own call
+        }
+
+        window.showPopupInviteTournament = function () { open("tournament"); };
+        window.showPopupInvite = function () { open("game"); };
+    })();
+</script>

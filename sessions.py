@@ -309,6 +309,14 @@ def _neighbor_villages(USERID: str) -> list:
     return statics + players[:config_env.MAX_NEIGHBORS]
 
 
+def friends(USERID: str) -> list:
+    """The players among the neighbours (not the villages that ship with the
+    game): the game's "friends", for friends tournaments."""
+    with LOCK:
+        return [str(v["playerInfo"]["pid"]) for v in _neighbor_villages(USERID)
+                if str(v["playerInfo"]["pid"]) in __saves]
+
+
 def fb_friends_str(USERID: str) -> list:
     friends = []
     with LOCK:
