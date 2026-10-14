@@ -33,6 +33,7 @@ class SavesTest(unittest.TestCase):
             self.assertEqual(map[key], {}, key)
         self.assertEqual(map["warehouseAditionalCapacitySingle"], 50)
         self.assertEqual(map["resourceAlliesMarket"], "n")
+        self.assertEqual(map["universAttackWin"], [])
 
     def test_a_new_village(self):
         self.check_fields(sessions.session(sessions.new_village(owner_id=None)))
@@ -49,6 +50,16 @@ class SavesTest(unittest.TestCase):
         save["privateState"]["countTimePacket"] = [0] * 6
         self.check_fields(save)
         self.assertEqual(save["maps"][0]["items"], keep)
+
+    def test_a_save_of_this_version_made_before_a_field_was_added(self):
+        pid = sessions.new_village(owner_id=None)
+        save = sessions.session(pid)
+        del save["maps"][0]["resourceAlliesMarket"]
+        save["maps"][0]["universAttackWin"] = {}
+        sessions.save_session(pid)
+        sessions.flush()
+        sessions.load_saved_villages()  # the server starts again
+        self.check_fields(sessions.session(pid))
 
 
 if __name__ == "__main__":

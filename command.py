@@ -25,6 +25,7 @@ import assists
 import pvp
 import towns
 import tutorial
+import worlds
 
 
 def get_strategy_type(id):
@@ -673,6 +674,15 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_RESET_ISLAND_CHANGE:
         save["privateState"]["worldChange"] = 0
         print("On to the new world.")
+
+    elif cmd == Constant.CMD_MODIFY_POSITION_UNIVERSE:
+        print(worlds.swap(save, args[0], args[1]))
+
+    elif cmd == Constant.CMD_RESET_POSITION_UNIVERSE:
+        print(worlds.relocate(save))
+
+    elif cmd == Constant.CMD_APPLY_REWARDS_RANKING:
+        print(worlds.prize(save, args[0]))  # the client's cash and units are its copy of the config's
 
     elif cmd == Constant.CMD_CLEAR_MSG:
         save["privateState"]["message"] = ""

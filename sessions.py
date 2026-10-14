@@ -76,6 +76,7 @@ def load_saved_villages():
             __owners[pid] = owner_id
             if migrate_loaded_save(village):
                 __dirty.add(pid)
+            add_missing_fields(village)  # fields added since the save was last migrated; saved with its next change
         print(f" * Loaded {len(__saves)} player villages and {len(__villages)} static neighbours")
 
         _import_legacy_saves()
@@ -201,6 +202,18 @@ def owner_of(USERID: str):
 def villages_of(owner_id) -> list:
     with LOCK:
         return [save_info(pid) for pid, owner in __owners.items() if owner == owner_id]
+
+
+def world_population(USERID: str) -> list:
+    """(pid, village, built in?) for every empire this one can meet on the
+    world map: the villages that ship with the game (not Arthur's) and the
+    empires of every other account."""
+    with LOCK:
+        owner = __owners.get(USERID)
+        statics = [(pid, v, True) for pid, v in __villages.items() if pid not in ARTHUR_PIDS]
+        players = [(pid, v, False) for pid, v in __saves.items()
+                   if pid != USERID and (owner is None or __owners.get(pid) != owner)]
+        return statics + players
 
 
 def all_saves_userid() -> list:

@@ -68,9 +68,13 @@ def make_game_token(USERID: str) -> str:
     return _serializer.dumps(USERID)
 
 
-def check_game_token(USERID: str, token: str) -> bool:
+def game_token_owner(token: str):
+    """The empire a game token was made for, or None if it's forged or too old."""
     try:
-        signed_userid = _serializer.loads(token or "", max_age=config_env.TOKEN_MAX_AGE)
+        return _serializer.loads(token or "", max_age=config_env.TOKEN_MAX_AGE)
     except (BadSignature, SignatureExpired):
-        return False
-    return signed_userid == USERID
+        return None
+
+
+def check_game_token(USERID: str, token: str) -> bool:
+    return game_token_owner(token) == USERID

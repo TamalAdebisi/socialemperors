@@ -39,6 +39,7 @@ from constants import Constant
 from engine import timestamp_now
 from quests import get_quest_map
 from version import version_name
+import worlds
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.secret_key = config_env.SECRET_KEY
@@ -371,15 +372,30 @@ def command_response(USERID):
     return json_response({"result": "success"})
 
 
+def _number(name):
+    value = request.values.get(name, "")
+    return int(value) if value.isdigit() else None
+
+
 @app.route(f"{DYNAMIC}/get_continent_ranking.php")
 @game_request
 def get_continent_ranking_response(USERID):
-    # TODO - stub
-    return json_response({
-        "world_id": 0,
-        "continent": [{"posicion": 0, "nivel": 1, "user_id": 1111}]  # villages/AcidCaos
-                     + [{"posicion": i, "nivel": 0} for i in range(1, 8)]
-    })
+    # The world map (worlds.py): the town's continent, or another one to look at.
+    return json_response(worlds.ranking(USERID, _number("map"), _number("level_id"),
+                                        relocate=request.values.get("relocate") == "1",
+                                        move_on=request.values.get("worldChange") == "1"))
+
+
+@app.route(f"{DYNAMIC}/get_public_player_info.php")
+def get_public_player_info_response():
+    # The Profile button on the world map. USERID is the player looked at; the
+    # key is the viewer's own, so any player in a game may look.
+    viewer = accounts.game_token_owner(request.values.get("user_key", ""))
+    if viewer is None or village_of(viewer) is None:
+        return ("Invalid session, please reload the game.", 403)
+    with LOCK:
+        shown = worlds.profile(request.values.get("USERID", ""))
+        return json_response(shown) if shown is not None else ("", 404)
 
 
 # Start the background saver whenever the app is loaded (python or gunicorn).
