@@ -51,6 +51,10 @@ body.game-page {
     gap: 6px;
 }
 
+#gamebar nav form {
+    display: contents;
+}
+
 #gamebar nav a,
 #gamebar nav button {
     display: inline-flex;

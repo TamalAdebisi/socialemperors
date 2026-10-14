@@ -37,6 +37,8 @@ def add_missing_fields(save: dict) -> None:
         map.setdefault("numTradesDone", 0)
         map.setdefault("timestampLastTrade", 0)
         map.setdefault("resourceAlliesMarket", "n")  # the Allied Market starts with no resource chosen
+        if not isinstance(map.get("universAttackWin"), list):
+            map["universAttackWin"] = []  # the world map's islands beaten (worlds.py)
 
 
 def migrate_loaded_save(save: dict) -> bool:

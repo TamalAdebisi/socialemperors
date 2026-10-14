@@ -17,6 +17,9 @@
 			.hint { color: #666; font-size: 11px; margin-left: 22px; }
 			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin: 10px 20px 0; font-size: 13px; }
 			.who { float: right; margin: 6px 12px 0 0; font-size: 12px; }
+			.who form { display: inline; }
+			.who button { border: 0; padding: 0; background: none; color: #3b5998; font: inherit; cursor: pointer; }
+			.who button:hover { text-decoration: underline; }
 			hr { border: 0; border-top: 1px solid #ddd; margin: 16px 0; }
 		</style>
 	</head>
@@ -26,7 +29,8 @@
 			<div class="uiHeader uiHeaderBottomBorder mhl mts uiHeaderPage interstitialHeader">
 				<div class="clearfix uiHeaderTop">
 					<div>
-						<span class="who">Hi <b>{{ user.username }}</b> · <a href="/logout">log out</a></span>
+						<span class="who">Hi <b>{{ user.username }}</b> · <a href="/account">account</a> ·
+							<form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button>log out</button></form></span>
 						<img src="img/sword.png" height="18px" style="margin-left: 5px;">
 						<h2 class="uiHeaderTitle" style="margin-left: 2px; display: inline-block;">
 							<a href="/" style="text-decoration: none;">Social Empires</a>
@@ -49,6 +53,7 @@
 
 				{% if saves_info %}
 				<form method="post" action="/play">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
 					<label class="title" for="USERID"><img src="img/villager.png" style="height: 18px; vertical-align: middle;"> Your empires</label>
 					<select id="USERID" name="USERID" required>
 						{% for save in saves_info %}
@@ -64,6 +69,7 @@
 
 				{% if can_create %}
 				<form method="post" action="/new">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
 					{% if not saves_info %}
 					<p>Welcome! You don't have an empire yet.</p>
 					{{ player_choice() }}

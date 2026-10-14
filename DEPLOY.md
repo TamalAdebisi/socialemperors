@@ -219,6 +219,7 @@ Optional extras (add the same way, any time):
 | `SE_INVITE_CODE=somecode` | Closed beta: sign-up asks for this code. |
 | `SE_ALLOW_REGISTRATION=0` | Stop new sign-ups entirely. |
 | `SE_MAX_VILLAGES=3` | Empires per account. |
+| `SE_ADMINS=yourname` | Usernames (comma-separated) that can open the admin page at `/admin`: the bug radar, password resets, deleting accounts. Nobody can until you set it; for everyone else the page doesn't exist. |
 
 You don't need `SE_SECRET_KEY`: the server creates one and keeps it on the
 volume.

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title id="pageTitle">Your account ~ Social Empires</title>
+		<link rel="shortcut icon" href="img/icon.gif"/>
+		<link rel="icon" type="image/png" href="img/icon.gif"/>
+		<link rel="stylesheet" href="css/facebook.css"/>
+		<style>
+			.pick { padding: 8px 20px 20px; font-size: 13px; }
+			.pick h3 { font-size: 14px; margin: 12px 0 4px; }
+			.pick label { display: block; font-weight: bold; margin: 10px 0 4px; }
+			.pick input { width: 100%; max-width: 300px; height: 26px; box-sizing: border-box; padding: 0 6px; }
+			.pick button { margin-top: 14px; font-size: 14px; height: 27px; padding: 0 14px; }
+			.hint { color: #666; font-size: 11px; margin-top: 3px; }
+			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin: 10px 20px 0; font-size: 13px; }
+			.done { background: #e7f3d7; border: 1px solid #7fae1c; padding: 8px 12px; margin: 10px 20px 0; font-size: 13px; }
+			.who { float: right; margin: 6px 12px 0 0; font-size: 12px; }
+		</style>
+	</head>
+	<body class="ego_wide canvas center_fixed_width_app fbx UIPage_LoggedOut liquid hideBanner Locale_en_US" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); overflow: auto;">
+		<center><img src="img/logo.png" style="width: 200px;"/></center>
+		<div class="mvl ptm uiInterstitial canvas_error_page uiInterstitialLarge uiBoxWhite">
+			<div class="uiHeader uiHeaderBottomBorder mhl mts uiHeaderPage interstitialHeader">
+				<div class="clearfix uiHeaderTop">
+					<div>
+						<span class="who"><a href="/">back to your empires</a></span>
+						<img src="img/sword.png" height="18px" style="margin-left: 5px;">
+						<h2 class="uiHeaderTitle" style="margin-left: 2px; display: inline-block;">
+							<a href="/" style="text-decoration: none;">Social Empires</a>
+						</h2>
+						<p style="display: inline-block; margin: 0 0 4px 6px;">By the Social Emperors team ~ {{ version | default("?") }}</p>
+					</div>
+				</div>
+			</div>
+
+			{% if error %}<div class="error">{{ error }}</div>{% endif %}
+			{% if changed %}<div class="done">Your password is changed. Any other browser signed in to <b>{{ user.username }}</b> is now signed out.</div>{% endif %}
+
+			<div class="pick">
+				<h3>{{ user.username }}</h3>
+				<form method="post" action="/account">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+					<input type="text" name="username" value="{{ user.username }}" autocomplete="username" hidden>
+					<label for="password">Current password</label>
+					<input id="password" name="password" type="password" autocomplete="current-password" required>
+					<label for="new_password">New password</label>
+					<input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" required>
+					<div class="hint">At least 8 characters</div>
+					<label for="repeat_password">New password again</label>
+					<input id="repeat_password" name="repeat_password" type="password" autocomplete="new-password" minlength="8" required>
+					<br><button type="submit">Change password</button>
+				</form>
+				<p class="hint" style="margin-top: 14px;">Changing your password signs out every other browser and game
+					using your account. Do it if you think someone else knows your password.</p>
+			</div>
+		</div>
+	</body>
+</html>

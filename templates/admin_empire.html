@@ -1,0 +1,39 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ empire.name }}{% endblock %}
+{% block main %}
+	<section>
+		<h2>{{ empire.name }}</h2>
+		<p class="muted"><code>{{ empire.pid }}</code> ·
+			{% if owner %}account <a href="{{ url_for('admin.account', user_id=owner.id) }}">{{ owner.username }}</a>
+			{% else %}no account{% endif %}</p>
+		<table>
+			<tr><th class="n">Level</th><th class="n">XP</th><th class="n">Gold</th><th class="n">Cash</th><th class="n">Towns</th><th class="n">Continent</th><th class="n">Tutorial step</th><th>Last played</th></tr>
+			<tr>
+				<td class="n">{{ empire.level }}</td>
+				<td class="n">{{ empire.xp }}</td>
+				<td class="n">{{ empire.gold }}</td>
+				<td class="n">{{ empire.cash }}</td>
+				<td class="n">{{ empire.towns }}</td>
+				<td class="n">{{ empire.continent or "" }}</td>
+				<td class="n">{{ empire.tutorial }}</td>
+				<td>{{ empire.last_seen | ago }}</td>
+			</tr>
+		</table>
+	</section>
+
+	<section>
+		<h2>Everything saved</h2>
+		<p class="muted">The save as the server keeps it, to look at when a player reports a problem.</p>
+		<pre>{{ raw }}</pre>
+	</section>
+
+	<section class="danger">
+		<h2>Delete this empire</h2>
+		<p>Only this empire goes{% if owner %}; the account and its other empires stay{% endif %}. There is no undo.</p>
+		<form method="post" action="{{ url_for('admin.delete_empire', pid=empire.pid) }}">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<label><input type="checkbox" name="sure" value="1" required> I'm sure</label>
+			<button class="red">Delete for good</button>
+		</form>
+	</section>
+{% endblock %}

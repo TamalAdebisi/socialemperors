@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="robots" content="noindex"/>
+		<title>{% block title %}Admin{% endblock %} ~ Social Empires</title>
+		<link rel="icon" type="image/png" href="/img/icon.gif"/>
+		<style>
+			body { margin: 0; background: #e9ebee; color: #1d2129; font: 13px 'lucida grande', tahoma, verdana, arial, sans-serif; }
+			header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: linear-gradient(#a3cf3c, #7fae1c); border-bottom: 3px solid #6e5335; }
+			header img { height: 32px; }
+			header h1 { font-size: 16px; margin: 0; }
+			header h1 a { color: #1d2129; text-decoration: none; }
+			header .who { margin-left: auto; }
+			main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+			section { background: #fff; border: 1px solid #dddfe2; border-radius: 3px; padding: 12px 16px; margin-bottom: 16px; overflow-x: auto; }
+			h2 { font-size: 14px; margin: 0 0 10px; }
+			a { color: #365899; }
+			table { border-collapse: collapse; width: 100%; }
+			th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+			th { color: #606770; font-weight: normal; white-space: nowrap; }
+			.n { text-align: right; font-variant-numeric: tabular-nums; }
+			code, pre { font: 12px Menlo, Consolas, monospace; }
+			pre { background: #f5f6f7; padding: 10px; max-height: 600px; overflow: auto; }
+			.muted { color: #606770; }
+			.stats { display: flex; gap: 32px; flex-wrap: wrap; }
+			.stats b { display: block; font-size: 22px; }
+			.done { background: #e7f3d7; border: 1px solid #7fae1c; padding: 8px 12px; margin-bottom: 16px; }
+			.error { background: #ffebe8; border: 1px solid #dd3c10; padding: 8px 12px; margin-bottom: 16px; }
+			.secret { font: bold 16px Menlo, Consolas, monospace; background: #fff8c4; padding: 2px 6px; }
+			.danger { border-color: #dd3c10; }
+			.danger h2 { color: #b22a00; }
+			form.inline { display: inline; margin: 0; }
+			button { font-size: 12px; padding: 3px 10px; cursor: pointer; }
+			button.red { color: #fff; background: #d33; border: 1px solid #a11; border-radius: 2px; }
+			input[type=search], input[type=text] { height: 24px; padding: 0 6px; width: 220px; max-width: 100%; }
+			.badge { display: inline-block; padding: 0 6px; border-radius: 8px; font-size: 11px; background: #ddd; }
+			.badge.unhandled { background: #fff1c4; }
+			.badge.failed { background: #ffd4cc; }
+			.badge.client { background: #d6e4ff; }
+		</style>
+	</head>
+	<body>
+		<header>
+			<img src="/img/logo.png" alt=""/>
+			<h1><a href="{{ url_for('admin.home') }}">Admin</a></h1>
+			<span class="who">{{ admin.username }} · <a href="/">back to the game</a></span>
+		</header>
+		<main>
+			{% block main %}{% endblock %}
+		</main>
+	</body>
+</html>

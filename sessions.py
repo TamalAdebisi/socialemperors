@@ -25,6 +25,7 @@ from constants import Constant
 from engine import timestamp_now
 from storage import open_storage
 from version import version_code, migrate_loaded_save, add_missing_fields
+import radar
 import tutorial
 
 # Every request that reads or changes game state holds this lock, so two
@@ -36,6 +37,11 @@ __saves = {}     # player villages: pid -> village dict
 __owners = {}    # pid -> account id (None for old imported saves)
 __dirty = set()  # pids changed since the last flush
 __storage = None
+
+# Held while villages are written to storage (without LOCK, so play goes on).
+# Deleting a village takes it too, so a write already under way, made from a
+# copy taken before the delete, can't bring the village back.
+__writing = threading.Lock()
 
 __initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json")))
 
@@ -76,6 +82,7 @@ def load_saved_villages():
             __owners[pid] = owner_id
             if migrate_loaded_save(village):
                 __dirty.add(pid)
+            add_missing_fields(village)  # fields added since the save was last migrated; saved with its next change
         print(f" * Loaded {len(__saves)} player villages and {len(__villages)} static neighbours")
 
         _import_legacy_saves()
@@ -116,19 +123,22 @@ def save_session(USERID: str):
 
 
 def flush():
-    """Write every changed village to storage now."""
-    with LOCK:
-        if not __dirty or __storage is None:
-            return
-        # Snapshot under the lock so we never write a half-applied command.
-        items = [(pid, __owners.get(pid), copy.deepcopy(__saves[pid])) for pid in __dirty if pid in __saves]
-        __dirty.clear()
-    try:
-        __storage.save_villages(items)
-    except Exception as e:
-        print(f" [!] Saving failed, will retry: {e}")
+    """Write every changed village (and the bug radar's counts) to storage now."""
+    if __storage is None:
+        return
+    with __writing:
         with LOCK:
-            __dirty.update(pid for pid, _, _ in items)
+            # Snapshot under the lock so we never write a half-applied command.
+            items = [(pid, __owners.get(pid), copy.deepcopy(__saves[pid])) for pid in __dirty if pid in __saves]
+            __dirty.clear()
+        if items:
+            try:
+                __storage.save_villages(items)
+            except Exception as e:
+                print(f" [!] Saving failed, will retry: {e}")
+                with LOCK:
+                    __dirty.update(pid for pid, _, _ in items)
+    radar.flush(__storage)
 
 
 def start_background_saver(interval_seconds: int = 5, handle_sigterm: bool = False):
@@ -186,6 +196,37 @@ def share_tutorial(USERID: str) -> bool:
         return True
 
 
+# Deleting (the admin page). Never called holding LOCK: it waits for a write
+# under way, and the write waits for LOCK.
+
+def delete_village(USERID: str) -> bool:
+    """An empire gone for good. False if there is no such player empire."""
+    with LOCK:
+        if USERID not in __saves:
+            return False
+        del __saves[USERID]
+        __owners.pop(USERID, None)
+        __dirty.discard(USERID)
+    with __writing:
+        __storage.delete_village(USERID)
+    return True
+
+
+def delete_account(owner_id: int) -> int:
+    """An account and all its empires gone for good. How many empires went."""
+    with LOCK:
+        pids = [pid for pid, owner in __owners.items() if owner == owner_id]
+        for pid in pids:
+            del __saves[pid]
+            del __owners[pid]
+            __dirty.discard(pid)
+    with __writing:
+        for pid in pids:
+            __storage.delete_village(pid)
+        __storage.delete_user(owner_id)  # and any village of it not loaded
+    return len(pids)
+
+
 def assign_owner(USERID: str, owner_id: int):
     with LOCK:
         __owners[USERID] = owner_id
@@ -201,6 +242,18 @@ def owner_of(USERID: str):
 def villages_of(owner_id) -> list:
     with LOCK:
         return [save_info(pid) for pid, owner in __owners.items() if owner == owner_id]
+
+
+def world_population(USERID: str) -> list:
+    """(pid, village, built in?) for every empire this one can meet on the
+    world map: the villages that ship with the game (not Arthur's) and the
+    empires of every other account."""
+    with LOCK:
+        owner = __owners.get(USERID)
+        statics = [(pid, v, True) for pid, v in __villages.items() if pid not in ARTHUR_PIDS]
+        players = [(pid, v, False) for pid, v in __saves.items()
+                   if pid != USERID and (owner is None or __owners.get(pid) != owner)]
+        return statics + players
 
 
 def all_saves_userid() -> list:

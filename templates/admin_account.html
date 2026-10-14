@@ -1,0 +1,57 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ user.username }}{% endblock %}
+{% block main %}
+	{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+	<section>
+		<h2>{{ user.username }}</h2>
+		<p class="muted">Account {{ user.id }} · signed up {{ user.created_at | ago }}</p>
+		{% if empires %}
+		<table>
+			<tr><th>Empire</th><th class="n">Level</th><th class="n">XP</th><th class="n">Gold</th><th class="n">Cash</th><th class="n">Towns</th><th class="n">Tutorial step</th><th>Last played</th></tr>
+			{% for e in empires %}
+			<tr>
+				<td><a href="{{ url_for('admin.empire', pid=e.pid) }}">{{ e.name }}</a></td>
+				<td class="n">{{ e.level }}</td>
+				<td class="n">{{ e.xp }}</td>
+				<td class="n">{{ e.gold }}</td>
+				<td class="n">{{ e.cash }}</td>
+				<td class="n">{{ e.towns }}</td>
+				<td class="n">{{ e.tutorial }}</td>
+				<td>{{ e.last_seen | ago }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		{% else %}
+		<p>No empires yet.</p>
+		{% endif %}
+	</section>
+
+	<section>
+		<h2>Reset the password</h2>
+		{% if new_password %}
+		<p>The new password is <span class="secret">{{ new_password }}</span></p>
+		<p class="muted">It is shown only this once. Pass it on privately, and ask them to change it.</p>
+		{% else %}
+		<p class="muted">For a player who forgot theirs. The server makes up a new one and shows it here once.</p>
+		<form method="post" action="{{ url_for('admin.reset_password', user_id=user.id) }}"
+		      onsubmit="return confirm('Make a new password? The old one stops working.')">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<button>Make a new password</button>
+		</form>
+		{% endif %}
+	</section>
+
+	{% if user.id != admin.id %}
+	<section class="danger">
+		<h2>Delete the account</h2>
+		<p>The account and all its empires go for good. There is no undo.</p>
+		<form method="post" action="{{ url_for('admin.delete_account', user_id=user.id) }}">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<label>Type <b>{{ user.username }}</b> to confirm:
+				<input type="text" name="confirm" autocomplete="off" required></label>
+			<button class="red">Delete for good</button>
+		</form>
+	</section>
+	{% endif %}
+{% endblock %}

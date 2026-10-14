@@ -14,6 +14,8 @@ people can play on at once, safely.
 | Each village a JSON file; all reloaded on every visit to the start page | SQLite database (or Cloudflare D1), loaded once, changes saved in batches every 5 s and on shutdown |
 | Flask's development server | gunicorn (`gunicorn server:app`, settings in `gunicorn.conf.py`) |
 | Every save on the machine shown as a neighbour | Built-in neighbours + the 30 most recently active players |
+| No way to manage players | An admin page at `/admin` for the usernames in `SE_ADMINS`: reset a password, delete an account or empire, and the bug radar |
+| A password change left other logins working | The login cookie and game tokens carry a fingerprint of the password, so changing it (at `/account`) signs out everywhere else; forms carry CSRF tokens |
 
 Also fixed: path traversal in asset and quest loading, missing-asset fallback
 (now off by default), neighbour listing writing junk into other players'

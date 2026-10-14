@@ -10,7 +10,7 @@
                 <a href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="img/discord.png" alt=""><span class="label">Discord</span></a>
                 <a href="https://github.com/AcidCaos/socialemperors#readme" target="_blank" rel="noopener"><img src="img/github.png" alt=""><span class="label">GitHub</span></a>
                 <a href="/" title="Pick another empire">Empires</a>
-                <a href="/logout" title="Log out {{ user.username }}">Log out</a>
+                <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button title="Log out {{ user.username }}">Log out</button></form>
             </nav>
             <span class="version">{{ version }}</span>
         </header>

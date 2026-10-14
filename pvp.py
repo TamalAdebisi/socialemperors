@@ -14,9 +14,9 @@ gold for each attacker its defence killed.
                                      on the next visit home while viewPending
     privateState["spyings"]          [{time, victim_id}]
     privateState["honor"], ["attacksWon"], ["attacksLost"]
-    map["universAttackWin"]          the world map's islands beaten; all 7
-                                     open the way to the next world
-    privateState["worldChange"]      1 once all 7 are beaten
+    map["universAttackWin"]          the world map's islands beaten: a
+                                     battle won against the rival on one
+                                     (worlds.py)
 
 Commands from the client:
 
@@ -25,7 +25,7 @@ Commands from the client:
                           had no town hall (then nothing is won)
     "spy_player"          [victim]
     "clean_attacks"       []   the defender has seen the history popup
-    "reset_world_change"  []
+    "reset_world_change"  []   the client has shown the next continent
 """
 
 import json
@@ -37,8 +37,8 @@ import magic
 import quests
 from sessions import save_session, session
 from village import number
+import worlds
 
-ISLANDS_PER_WORLD = 7
 KILL_GOLD_CAP = 200   # MAX_GOLD_FROM_ASSAULT in the client
 MAX_HONOR = 10        # the most one battle gives (HonorManager)
 
@@ -121,13 +121,7 @@ def end(save: dict, report: dict, no_town_hall=False) -> str:
     else:  # attack_player went missing
         sent.append({"time": timestamp_now(), "victim_id": victim_id, "description": description})
 
-    island = victim.get("posicion")
-    if won and island is not None:
-        beaten = _list(map, "universAttackWin")
-        if island not in beaten:
-            beaten.append(island)
-        if len(beaten) >= ISLANDS_PER_WORLD:
-            pState["worldChange"] = 1
+    island = won and worlds.beaten(save, town_id, victim)
 
     their_save = session(victim_id) if victim_id else None  # None for the villages that ship with the game
     if their_save is not None and victim_id != str(save["playerInfo"]["pid"]):
@@ -142,7 +136,8 @@ def end(save: dict, report: dict, no_town_hall=False) -> str:
         save_session(victim_id)
 
     outcome = "won" if won else "lost"
-    return f"Attack on {victim_id} {outcome}: +{gold} gold, +{xp} xp, +{honor} honor, {len(lost)} units lost."
+    beaten = f", island {victim.get('posicion')} beaten" if island else ""
+    return f"Attack on {victim_id} {outcome}: +{gold} gold, +{xp} xp, +{honor} honor, {len(lost)} units lost{beaten}."
 
 
 def seen_attacks(save: dict) -> str:

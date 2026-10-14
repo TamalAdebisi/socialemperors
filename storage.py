@@ -42,6 +42,19 @@ SCHEMA = [
         updated_at INTEGER NOT NULL
     )""",
     "CREATE INDEX IF NOT EXISTS villages_owner ON villages(owner_id)",
+    # The bug radar (radar.py): what players' games asked that the server
+    # couldn't do, counted.
+    """CREATE TABLE IF NOT EXISTS problems (
+        kind TEXT NOT NULL,
+        name TEXT NOT NULL,
+        detail TEXT NOT NULL,
+        count INTEGER NOT NULL,
+        first_seen INTEGER NOT NULL,
+        last_seen INTEGER NOT NULL,
+        last_player TEXT,
+        example TEXT,
+        PRIMARY KEY (kind, name, detail)
+    )""",
 ]
 
 UPSERT_VILLAGE = """INSERT INTO villages (pid, owner_id, data, updated_at)
@@ -49,6 +62,20 @@ UPSERT_VILLAGE = """INSERT INTO villages (pid, owner_id, data, updated_at)
     ON CONFLICT(pid) DO UPDATE SET data = excluded.data,
         owner_id = COALESCE(villages.owner_id, excluded.owner_id),
         updated_at = excluded.updated_at"""
+
+# The bug radar: a problem seen before counts up; a new one is added while
+# there are fewer than MAX_PROBLEMS (players can send made-up commands).
+MAX_PROBLEMS = 1000
+COUNT_PROBLEM = """UPDATE problems SET count = count + ?, last_seen = ?, last_player = ?, example = ?
+    WHERE kind = ? AND name = ? AND detail = ?"""
+ADD_PROBLEM = f"""INSERT OR IGNORE INTO problems (kind, name, detail, count, first_seen, last_seen, last_player, example)
+    SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT count(*) FROM problems) < {MAX_PROBLEMS}"""
+
+
+def _problem_statements(row):
+    """(sql, params) to save one row of the radar: count it, else add it."""
+    kind, name, detail, count, first, last, player, example = row
+    return [(COUNT_PROBLEM, (count, last, player, example, kind, name, detail)), (ADD_PROBLEM, tuple(row))]
 
 
 class UsernameTaken(Exception):
@@ -84,8 +111,28 @@ class BaseStorage:
         return rows[0] if rows else None
 
     def get_user(self, user_id: int):
-        rows = self._query("SELECT id, username FROM users WHERE id = ?", (user_id,))
+        rows = self._query("SELECT id, username, created_at FROM users WHERE id = ?", (user_id,))
         return rows[0] if rows else None
+
+    def find_users(self, text: str, limit: int = 50) -> list:
+        """Accounts whose name contains text (any case), for the admin page."""
+        return self._query("SELECT id, username, created_at FROM users WHERE instr(lower(username), lower(?)) > 0 "
+                           "ORDER BY username LIMIT ?", (text, limit))
+
+    def count_users(self) -> int:
+        return self._query("SELECT count(*) AS n FROM users")[0]["n"]
+
+    def get_password_hash(self, user_id: int):
+        rows = self._query("SELECT password_hash FROM users WHERE id = ?", (user_id,))
+        return rows[0]["password_hash"] if rows else None
+
+    def set_password(self, user_id: int, password_hash: str):
+        self._query("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+
+    def delete_user(self, user_id: int):
+        """The account and every village it owns."""
+        self._query("DELETE FROM villages WHERE owner_id = ?", (user_id,))
+        self._query("DELETE FROM users WHERE id = ?", (user_id,))
 
     # Villages
     def load_all_villages(self) -> list:
@@ -98,6 +145,26 @@ class BaseStorage:
         now = int(time.time())
         for pid, owner_id, village in items:
             self._query(UPSERT_VILLAGE, (pid, owner_id, json.dumps(village), now))
+
+    def delete_village(self, pid: str):
+        self._query("DELETE FROM villages WHERE pid = ?", (pid,))
+
+    # The bug radar
+    def save_problems(self, rows: list):
+        """rows: (kind, name, detail, count, first_seen, last_seen, last_player, example);
+        counts are added to those already saved."""
+        for row in rows:
+            for sql, params in _problem_statements(row):
+                self._query(sql, params)
+
+    def list_problems(self, limit: int = 200) -> list:
+        return self._query("SELECT * FROM problems ORDER BY count DESC, last_seen DESC LIMIT ?", (limit,))
+
+    def clear_problem(self, kind: str, name: str, detail: str):
+        self._query("DELETE FROM problems WHERE kind = ? AND name = ? AND detail = ?", (kind, name, detail))
+
+    def clear_problems(self):
+        self._query("DELETE FROM problems")
 
 
 class SQLiteStorage(BaseStorage):
@@ -135,6 +202,12 @@ class SQLiteStorage(BaseStorage):
         with conn:
             conn.executemany(UPSERT_VILLAGE, [(p, o, json.dumps(v), now) for p, o, v in items])
 
+    def save_problems(self, rows):
+        with self._conn() as conn:  # one transaction
+            for row in rows:
+                for sql, params in _problem_statements(row):
+                    conn.execute(sql, params)
+
 
 class D1Storage(BaseStorage):
     """Cloudflare D1 over the REST API.
@@ -171,6 +244,11 @@ class D1Storage(BaseStorage):
         now = int(time.time())
         batch = [{"sql": UPSERT_VILLAGE, "params": [p, o, json.dumps(v), now]} for p, o, v in items]
         self._post({"batch": batch})
+
+    def save_problems(self, rows):
+        if rows:
+            self._post({"batch": [{"sql": sql, "params": list(params)}
+                                  for row in rows for sql, params in _problem_statements(row)]})
 
 
 def open_storage() -> BaseStorage:

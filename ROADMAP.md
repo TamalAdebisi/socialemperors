@@ -54,20 +54,31 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
       repurpose it once we can change the client
 - [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
-- [ ] Admin tools: reset a password, delete an account, inspect a village
-- [ ] Bug radar: count which unhandled commands players trigger, so we fix the
-      most-used missing features first
+- [x] Login security: changing your password (on the new account page)
+      signs out every other browser and game; every form carries a CSRF
+      token; logging out is a button, not a link; at most 5 new accounts an
+      hour and 10 wrong passwords in 10 minutes per visitor
+- [ ] Getting back into an account without the admin: sign in with Discord,
+      or an email address for password reset links (to decide)
+- [x] Admin page (`/admin`, `admin.py`), for the usernames in `SE_ADMINS`:
+      find an account, reset its password, delete it or one of its empires,
+      look inside an empire's save, and see who played last
+- [x] Bug radar (`radar.py`, on the admin page): counts the commands the
+      server doesn't handle yet, the commands that hit an error (by the line
+      of code) and the sync errors the game reports, most frequent first, so
+      we fix the most-used missing features first
 
 ### Phase 2: Finish the missing game features
 
 The game client knows 154 server commands. The server used to handle 42 of
 them and silently ignore the rest, so much of what a player did on screen was
-undone by the next reload. It now handles 101. Of the other 53, 24 are never
+undone by the next reload. It now handles 105. Of the other 49, 24 are never
 sent by this client and most of the rest are unreachable (admin panel,
 Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 
 - [x] Arthur's tutorial is remembered once finished, instead of starting
-      over on every reload
+      over on every reload, and for the whole account: a second empire
+      doesn't start it again
 - [x] Supreme Dragon Temple (`temple.py`): the 12 offerings, the 48 hour wait,
       skipping it with cash, and summoning the Supreme Bahamut Dragon
 - [x] Collections (`game_collections.py`): pieces found are saved, finished
@@ -88,10 +99,33 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] A second town (`towns.py`): from level 20 the globe founds a troll town
       for 100,000 gold or 22 cash and travels between the two; each town keeps
       its own resources, level and quest
-- [ ] The world map: continent rankings (still a stub with one island) and
-      moving between worlds (`modify_position_univers` and friends)
+- [x] The world map (`worlds.py`): fifty continents of eight islands, seven
+      real rival players picked nearest your level, beating them in battle,
+      moving on to the next continent and its prize (cash and units, once a
+      continent), relocating, swapping islands, and browsing other continents
+- [x] The daily bonus (`daily_bonus.py`): the server decides the day and
+      pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (152 tests so far)
+- [ ] An automated test for every command (209 tests so far)
+
+### Cash (to decide)
+
+Cash was bought with real money on Facebook. Here it can't be (the server is
+free and non-commercial), so it only comes from the game's own free sources:
+the daily bonus (4 cash every 5 days), the Monday bonus (5 cash if the cash
+chest is picked) and the world map (1 cash a continent, 49 in all). That's
+enough for units (1 to 4 cash) but not for spells (35 to 55), packs (20 to
+60), map expansions (20 to 45) or a wonder (1299). Ways to bring it back, the
+game's own hooks first:
+
+- [ ] The welcome-back bonus: the client and the game config already have
+      it (a new player back on their 2nd or 3rd day picks 2,500 gold, a unit
+      or 5 cash), the server doesn't pay it yet (`comeback_reward`)
+- [ ] A daily cash collection from the town hall, growing with a login streak
+- [ ] A little cash the first time an island is won with three stars
+- [ ] More cash in the world map's continent prizes (the game's own table
+      pays 1 a continent)
+- [ ] Tournament prizes, once tournaments exist
 
 ### Phase 3: Stronger foundations
 

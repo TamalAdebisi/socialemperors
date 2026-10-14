@@ -239,12 +239,13 @@ class AttackTest(unittest.TestCase):
         self.me.send("end_attack", self.report(1, 500, 25, 3), True)
         self.assertEqual((self.me.map["coins"], self.me.pState["honor"]), (gold, 0))
 
-    def test_beating_the_islands_of_a_world(self):
-        for island in range(7):
-            victim = {"user_id": BUILT_IN_NEIGHBOUR, "posicion": island, "name": "AcidCaos", "level": 5}
-            self.me.send("end_attack", self.report(1, 100, 5, 1, victim=victim))
-        self.assertEqual(self.me.map["universAttackWin"], list(range(7)))
-        self.assertEqual(self.me.pState["worldChange"], 1)
+    def test_an_island_counts_only_for_its_rival(self):
+        # Before the town has rivals on the world map (tests/test_worlds.py), no battle beats an island.
+        victim = {"user_id": BUILT_IN_NEIGHBOUR, "posicion": 3, "nivel": 1, "name": "AcidCaos", "level": 5}
+        self.me.send("end_attack", self.report(1, 100, 5, 1, victim=victim))
+        self.assertEqual(self.me.map["universAttackWin"], [])
+        self.assertEqual(self.me.pState["worldChange"], 0)
+        self.me.pState["worldChange"] = 1
         self.me.send("reset_world_change")
         self.assertEqual(self.me.pState["worldChange"], 0)
 
