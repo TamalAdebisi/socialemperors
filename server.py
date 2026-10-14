@@ -23,7 +23,7 @@ from get_game_config import get_game_config, patch_game_config
 print(" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
 from sessions import (LOCK, load_saved_villages, start_background_saver, save_info, new_village,
-                      fb_friends_str, owner_of, villages_of, session as village_of)
+                      fb_friends_str, owner_of, villages_of, share_tutorial, session as village_of)
 load_saved_villages()
 
 print(" [+] Loading server...")
@@ -186,6 +186,7 @@ def choose_village():
     USERID = request.form.get("USERID", "")
     if owner_of(USERID) != user["id"]:
         return render_home(error="That empire isn't yours."), 403
+    share_tutorial(USERID)  # so the page knows, too
     web_session["USERID"] = USERID
     player = "ruffle" if request.form.get("PLAYER") == "ruffle" else "play"
     return redirect(f"/{player}.html")

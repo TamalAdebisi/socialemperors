@@ -1,4 +1,4 @@
-from sessions import session, neighbor_session, neighbors, save_session
+from sessions import session, neighbor_session, neighbors, save_session, share_tutorial
 from engine import timestamp_now
 import towns
 
@@ -10,6 +10,7 @@ def get_player_info(USERID, map_number=None):
     save = session(USERID)
     save["playerInfo"]["last_logged_in"] = ts_now
     town_id = towns.open_town(save, map_number)
+    share_tutorial(USERID)  # done in another empire of this account: not again here
     save_session(USERID)  # remember the login time (used to rank active neighbours)
     return {
         "result": "ok",
