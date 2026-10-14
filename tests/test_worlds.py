@@ -19,6 +19,7 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 import sessions
 import worlds
 from command import do_command
+from get_player_info import get_player_info
 from engine import timestamp_now
 from get_game_config import get_game_config
 
@@ -136,19 +137,63 @@ class WorldMapTest(unittest.TestCase):
         self.assertEqual(self.map["universAttackWin"], [])
         self.assertEqual(self.look(move_on=True)["continent"][0]["nivel"], 2)  # once only
 
-    def test_the_prize_for_a_continent(self):
+    def beat_them_all(self):
         self.crowd()
         for island in self.rivals(self.look()):
             self.fight(island)
-        row = next(r for r in get_game_config()["level_ranking_reward"] if r["level"] == 2)
+        return next(r for r in get_game_config()["level_ranking_reward"] if r["level"] == 2)
+
+    def assertPrized(self, cash, row):
+        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
+        self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
+
+    def test_the_prize_for_a_continent(self):
+        row = self.beat_them_all()
         cash = self.save["playerInfo"]["cash"]
-        self.look(move_on=True)  # given as the town moves on, before the player closes the window
-        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
-        self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
-        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])  # the window closed
+        self.look(move_on=True)
+        self.assertEqual(self.save["playerInfo"]["cash"], cash)  # the client shows the window first
+        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])  # claimed
+        self.assertPrized(cash, row)
+        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])  # once
         do_command(self.me, "apply_rewards_ranking", [3, 1, "{}"])  # not there yet
-        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
-        self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
+        get_player_info(self.me)
+        self.assertPrized(cash, row)
+
+    def test_home_from_the_last_battle(self):
+        row = self.beat_them_all()
+        cash = self.save["playerInfo"]["cash"]
+        loaded = get_player_info(self.me)  # every battle ends with the client loading the town again
+        self.assertEqual(self.map["worldMap"]["nivel"], 2)
+        self.assertEqual(loaded["map"]["universAttackWin"], [])  # nothing beaten on the new continent
+        self.assertEqual(loaded["privateState"]["worldChange"], 1)  # the client owes the prize window
+        self.assertEqual(self.save["playerInfo"]["cash"], cash)
+        self.assertEqual(get_player_info(self.me)["privateState"]["worldChange"], 1)  # until the map opens
+        self.assertEqual({i["nivel"] for i in self.look(move_on=True)["continent"]}, {2})  # once only
+        do_command(self.me, "reset_world_change", [])  # the window opens
+        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])
+        self.assertPrized(cash, row)
+        get_player_info(self.me)
+        self.assertEqual(self.map["worldMap"]["nivel"], 2)
+        self.assertPrized(cash, row)
+
+    def test_a_prize_window_closed_without_claiming(self):
+        row = self.beat_them_all()
+        cash = self.save["playerInfo"]["cash"]
+        get_player_info(self.me)
+        do_command(self.me, "reset_world_change", [])  # the window opens; the game is closed
+        get_player_info(self.me)  # the next visit home
+        self.assertPrized(cash, row)
+        self.assertEqual(self.save["privateState"]["worldChange"], 0)
+
+    def test_the_last_continent(self):
+        self.beat_them_all()
+        self.map["worldMap"].update(nivel=worlds.LAST, rewarded=worlds.LAST)
+        cash = self.save["playerInfo"]["cash"]
+        get_player_info(self.me)
+        self.assertEqual(self.map["worldMap"]["nivel"], worlds.LAST)
+        self.assertEqual(self.map["universAttackWin"], [])  # seven new rivals
+        self.assertEqual(self.save["privateState"]["worldChange"], 0)  # no prize window: nothing new to win
+        self.assertEqual(self.save["playerInfo"]["cash"], cash)
 
     def test_a_prize_missed_is_claimed_from_the_window(self):
         self.crowd()

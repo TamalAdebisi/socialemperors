@@ -6,11 +6,11 @@ starts on the first) with seven rival islands around it: towns of other
 players, picked nearest the town's level (the most recently active first),
 and AcidCaos, the village that ships with the game, when there are not seven
 players to pick. Beat all seven in battle and the town moves on to the next
-continent and seven new rivals. Reaching a continent wins its prize: the cash
-and units of the game config's "level_ranking_reward" row for it, given as
-the town moves on (the client shows it then, and claims it again when the
-player closes that window: once is all it gets, and closing the game first
-loses nothing).
+continent and seven new rivals, as the player comes home from the last battle
+(home()). Reaching a continent wins its prize: the cash and units of the game
+config's "level_ranking_reward" row for it, given when the player claims it
+from the window the client shows on the new continent, or at the next visit
+home if they never did. Once a continent.
 
 A town keeps its rivals until it moves on or relocates (the Relocate button:
 a new island and new rivals, and the islands beaten so far are lost). A rival
@@ -39,9 +39,16 @@ How the client asks (get_continent_ranking.php, answered by ranking()):
                      client which continent is home
     level_id=<n>     browsing continent n: the towns there, or one empty island
     relocate=1       after the Relocate button
-    worldChange=1    the client counted seven islands beaten: on to the next
-                     continent (the server never sets privateState.worldChange
-                     itself, or the client would show the prize twice)
+    worldChange=1    the prize window is due; a town with seven islands beaten
+                     moves on (the server has usually moved it already)
+
+privateState["worldChange"] is 1 while the client owes the player that window.
+The server sets it when home() moves a town on, the client shows the window
+the next time the map opens and sends "reset_world_change". The client also
+counts to seven itself, but only the islands it had when the page loaded, and
+every battle ends with a fresh load, so it is the server that sees the
+seventh: a client left counting would draw the beaten islands on the new
+continent too, and show the window twice.
 
 Commands from the client:
 
@@ -49,11 +56,10 @@ Commands from the client:
                                swapped with another
     "reset_position_univers"   []  Relocate: the islands beaten are lost
     "apply_rewards_ranking"    [continent, cash, units]  the prize for reaching
-                               a continent, as the player closes its window;
-                               the client has put the units in storage itself
-                               and sends no command for them. Already given
-                               when the town moved on, so only a town that
-                               missed it gets it here
+                               a continent, claimed from its window; the
+                               client has put the units in storage itself and
+                               sends no command for them. The prize is the
+                               config's, not the client's numbers
 """
 
 import random
@@ -179,15 +185,12 @@ def ranking(USERID: str, town_id=None, continent=None, relocate=False, move_on=F
     save = sessions.session(USERID)
     if not (isinstance(town_id, int) and 0 <= town_id < len(save["maps"])):
         town_id = towns.current(save)
-    map = save["maps"][town_id]
     record = _record(save, town_id)
     if relocate:
         _settle(save, town_id, record, record["nivel"])
         print(f"World map: {USERID} town {town_id} relocated on continent {record['nivel']}")
-    elif move_on and len(set(_wins(map))) >= RIVALS:
-        _settle(save, town_id, record, min(record["nivel"] + 1, LAST))
-        print(f"World map: {USERID} town {town_id} moved on to continent {record['nivel']}: "
-              + _give_prize(save, town_id, record["nivel"]))
+    elif move_on and _move_on(save, town_id, record):
+        print(f"World map: {USERID} town {town_id} moved on to continent {record['nivel']}")
     _fill(USERID, save, town_id, record)
     sessions.save_session(USERID)
 
@@ -200,6 +203,35 @@ def ranking(USERID: str, town_id=None, continent=None, relocate=False, move_on=F
             islands.append(_island(rival["user_id"], village, rival["map"], record["nivel"], rival["posicion"]))
         islands.sort(key=lambda island: island["posicion"])
     return {"world_id": world_id(record["nivel"], record["slot"]), "continent": islands}
+
+
+def _move_on(save: dict, town_id: int, record: dict) -> bool:
+    """All seven beaten: the town lands on the next continent (the last one
+    deals it seven new rivals). True if it moved."""
+    if len(set(_wins(save["maps"][town_id]))) < RIVALS:
+        return False
+    _settle(save, town_id, record, min(record["nivel"] + 1, LAST))
+    return True
+
+
+def home(save: dict, town_id: int) -> str:
+    """The player's own town loads: the game starts, or they come home from a
+    battle. A town with seven islands beaten moves on now and the client owes
+    the prize window; a prize whose window was closed without claiming it is
+    given now. What happened, or "" if nothing did."""
+    record = save["maps"][town_id].get("worldMap")
+    if not isinstance(record, dict):
+        return ""  # never looked at the map: nothing beaten there yet
+    record = _record(save, town_id)
+    pState = save["privateState"]
+    if _move_on(save, town_id, record):
+        if not _unclaimed(record):
+            return f"beat seven more on continent {record['nivel']}, the last"
+        pState["worldChange"] = 1
+        return f"moved on to continent {record['nivel']}, its prize window is due"
+    if int(pState.get("worldChange") or 0) != 1 and _unclaimed(record):
+        return "never claimed its prize: " + _give_prize(save, town_id, record["nivel"])
+    return ""
 
 
 def _browse(USERID: str, nivel: int) -> list:
@@ -264,10 +296,14 @@ def prize(save: dict, nivel) -> str:
     return _give_prize(save, towns.current(save), int(nivel))
 
 
+def _unclaimed(record: dict) -> bool:
+    return record["nivel"] > int(record.get("rewarded") or FIRST)
+
+
 def _give_prize(save: dict, town_id: int, nivel: int) -> str:
     """The prize for reaching a continent, once a continent."""
     record = _record(save, town_id)
-    if nivel != record["nivel"] or nivel <= int(record.get("rewarded") or 0):
+    if nivel != record["nivel"] or not _unclaimed(record):
         return f"No prize for continent {nivel} (the town is on {record['nivel']}, prized up to {record.get('rewarded')})."
     row = next((r for r in get_game_config()["level_ranking_reward"] if int(r["level"]) == nivel), None)
     if row is None:
