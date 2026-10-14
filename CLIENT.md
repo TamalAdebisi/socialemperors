@@ -212,7 +212,9 @@ and puts it in the bucket under `art/` ([DEPLOY.md](DEPLOY.md)).
    the game positions the item by is at the same pixel in each. A picture
    repeated across frames is kept once. It also notes each frame's box as
    Flash measures it, transparent edges included: the game places buildings
-   by it. Only pictures are read, never code.
+   by it. When something is drawn outside the sprite's bounds and reaches
+   the canvas's edge (a glow on a part inside, as on some decorations), it
+   draws the item again with more room. Only pictures are read, never code.
 2. `tools/art/pack_sheet.py` trims the empty space, packs the pictures into
    one WebP (quality 85, transparency kept exact) and writes the JSON in
    TexturePacker's "JSON hash" layout, which PixiJS and Phaser both load as it

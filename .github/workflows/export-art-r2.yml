@@ -4,8 +4,9 @@
 #
 # Run it by hand: GitHub -> Actions -> "Export art to R2" -> Run workflow.
 # The work is shared between 8 machines. Sheets already in the bucket are not
-# made again, so running it again only adds what's missing; tick "Make every
-# sheet again" after a change to the export itself.
+# made again, so running it again only adds what's missing; name items under
+# "Make these again" to redo a few, or tick "Make every sheet again" after a
+# change that affects them all.
 name: Export art to R2
 
 on:
@@ -15,6 +16,10 @@ on:
         description: Make every sheet again, even those already in the bucket
         type: boolean
         default: false
+      items:
+        description: Make these again (item names, like 1403_deco 1456_dragon_statue)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -61,7 +66,11 @@ jobs:
 
       - name: Note the sheets already in the bucket (their JSON files only)
         if: ${{ !inputs.redo }}
-        run: aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --no-progress
+        env:
+          ITEMS: ${{ inputs.items }}
+        run: |
+          aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --no-progress
+          for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
 
       - name: Make this machine's share of the sheets
         run: SHARD=${{ matrix.shard }}/8 tools/export_art.sh
@@ -69,7 +78,14 @@ jobs:
       - name: Upload them
         # Normally by size, so the JSON files fetched above stay as they are;
         # when making everything again, every file.
+        env:
+          ITEMS: ${{ inputs.items }}
         run: |
           compare="--size-only"
           if [ "${{ inputs.redo }}" = "true" ]; then compare=""; fi
           aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --cache-control "$CACHE" --no-progress
+          # The items made again, whatever their size.
+          for item in $ITEMS; do
+            aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \
+              --include "$item.*" --include "$item-*" --cache-control "$CACHE" --no-progress
+          done
