@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, units walking
+
+- **The path finder is a correct one.** The original's has a slip in its
+  arithmetic, so it doesn't add up the length of the way so far and its
+  paths can wander a little. Ours finds the shortest way, with the same
+  rules for what blocks a unit and the same 8 directions. A unit gets to
+  the same place; its path may be a little straighter.
+- **A unit's stop is sent as it stops,** in the next batch, rather than on
+  a separate 6-second timer: the same command, sooner.
+- **Selected units glow** like selected buildings, instead of the
+  original's mark under their feet.
+
 ## 14 October 2026: Beta 1, the menus
 
 - **Neighbours' button picture:** the game has none of its own for it, so

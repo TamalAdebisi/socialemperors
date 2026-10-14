@@ -25,6 +25,7 @@ import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { Markers, type Sign } from "./markers.ts";
+import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
 
 /** How often the screen draws, which Pixi counts animation speed in. */
 const TICKER_FPS = 60;
@@ -47,6 +48,10 @@ export class TownView {
   /** A building being bought, drawn see-through where it would go. */
   private readonly ghostLayer = new Container();
   private ghost: { slot: Container; drawnAt: Point } | null = null;
+  /** Which way each unit faces (rules/geometry.ts numbers them), and where it is on the map while it walks. */
+  private readonly facing = new Map<PlacedItem, number>();
+  private readonly walkers = new Map<PlacedItem, Walk>();
+  private lookAroundIn = LOOK_AROUND_MS;
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
@@ -80,6 +85,92 @@ export class TownView {
   /** Move animations along: `ms` since the last frame, at the camera's zoom. */
   tick(ms: number, zoom: number): void {
     this.markers.tick(ms, zoom);
+    for (const [placed, walk] of this.walkers) {
+      this.stepWalk(placed, walk, Math.min(ms, 100));
+    }
+    this.lookAroundIn -= ms;
+    if (this.lookAroundIn <= 0) {
+      this.lookAroundIn += LOOK_AROUND_MS;
+      for (const [placed, direction] of this.facing) {
+        const turned = this.walkers.has(placed) ? null : lookAround(placed, direction);
+        if (turned !== null && turned !== direction) {
+          this.facing.set(placed, turned);
+          void this.redrawUnit(placed);
+        }
+      }
+    }
+  }
+
+  /**
+   * Walk a unit along a path of tiles (rules/walking.ts), playing its walk.
+   * `enter` hears each tile it reaches and may stop it there (false: it's
+   * blocked now); `arrive` hears when it stops. A unit already walking goes
+   * on to the tile it's heading for, then takes the new path from there.
+   */
+  walk(placed: PlacedItem, path: Point[], enter: (tile: Point) => boolean, arrive: () => void): void {
+    const walking = this.walkers.get(placed);
+    if (walking) {
+      walking.path = path;
+      walking.enter = enter;
+      walking.arrive = arrive;
+      return;
+    }
+    if (path.length === 0) {
+      arrive();
+      return;
+    }
+    const at = unitPoint(placed.tx, placed.ty);
+    const walk: Walk = { at, next: null, path, enter, arrive };
+    this.walkers.set(placed, walk);
+    this.nextTile(placed, walk);
+  }
+
+  /** The tile a walking unit is heading for (its next one), or where it stands. */
+  headingFor(placed: PlacedItem): Point {
+    const walk = this.walkers.get(placed);
+    return walk?.next ?? { x: placed.tx, y: placed.ty };
+  }
+
+  isWalking(placed: PlacedItem): boolean {
+    return this.walkers.has(placed);
+  }
+
+  private nextTile(placed: PlacedItem, walk: Walk): void {
+    const tile = walk.path.shift();
+    if (!tile) {
+      this.walkers.delete(placed);
+      walk.next = null;
+      void this.redrawUnit(placed);
+      walk.arrive();
+      return;
+    }
+    walk.next = tile;
+    const direction = headingTo(walk.at, unitPoint(tile.x, tile.y), this.facing.get(placed) ?? 5);
+    // A new way to face, or the first step: the walk, that way.
+    if (direction !== this.facing.get(placed) || !walk.started) {
+      this.facing.set(placed, direction);
+      walk.started = true;
+      void this.redrawUnit(placed);
+    }
+  }
+
+  private stepWalk(placed: PlacedItem, walk: Walk, ms: number): void {
+    if (!walk.next) {
+      return;
+    }
+    const target = unitPoint(walk.next.x, walk.next.y);
+    walk.at = stepTowards(walk.at, target, placed.item.velocity, ms);
+    this.slots.get(placed)?.children[0]?.position.set(walk.at.x, walk.at.y);
+    this.markers.moveTo(placed, this.topOf(placed));
+    if (walk.at.x === target.x && walk.at.y === target.y) {
+      const tile = walk.next;
+      if (!walk.enter(tile)) {
+        walk.path = [];
+      }
+      // On its new tile now: drawn in its place among the others.
+      this.sort();
+      this.nextTile(placed, walk);
+    }
   }
 
   /** Show a sign over a thing (ready, asleep), or none. */
@@ -231,8 +322,30 @@ export class TownView {
       slot.addChild(footprint(placed, 0xffffff));
       return false;
     }
-    slot.addChild(placed.item.isUnit ? unitSprite(art, placed) : buildingSprite(art, placed, this.town.skin));
+    if (placed.item.isUnit) {
+      if (!this.facing.has(placed)) {
+        // A unit waiting in town faces down, down-right or down-left, by chance.
+        this.facing.set(placed, IDLE_DIRECTIONS[Math.floor(Math.random() * IDLE_DIRECTIONS.length)]);
+      }
+      const walk = this.walkers.get(placed);
+      slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
+    } else {
+      slot.addChild(buildingSprite(art, placed, this.town.skin));
+    }
     return true;
+  }
+
+  /** Draw a unit again: facing another way, or walking, or standing still. */
+  private async redrawUnit(placed: PlacedItem, at?: Point, pose?: "ANDAR" | "QUIETO"): Promise<void> {
+    const slot = this.slots.get(placed);
+    const art = await this.art.get(placed.item.art);
+    if (!slot || slot.destroyed || art === null) {
+      return;
+    }
+    const walk = this.walkers.get(placed);
+    const sprite = unitSprite(art, this.facing.get(placed) ?? 5, pose ?? (walk ? "ANDAR" : "QUIETO"), walk?.at ?? at ?? unitPoint(placed.tx, placed.ty));
+    slot.removeChildren().forEach((child) => child.destroy());
+    slot.addChild(sprite);
   }
 
   private async buildGround(missing: Set<string>): Promise<void> {
@@ -272,17 +385,27 @@ function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Contain
   return sprite;
 }
 
-function unitSprite(art: ItemArt, placed: PlacedItem): Container {
-  // A unit waiting in town faces down, down-right or down-left, by chance.
-  const direction = IDLE_DIRECTIONS[Math.floor(Math.random() * IDLE_DIRECTIONS.length)];
+/** A unit facing one of its 8 ways, standing (QUIETO) or walking (ANDAR), at a point of the map. */
+function unitSprite(art: ItemArt, direction: number, pose: "QUIETO" | "ANDAR", at: Point): Container {
   const facing = unitFacing(direction);
-  const name = art.has(`QUIETO/${facing.frame}`) ? `QUIETO/${facing.frame}` : "frame/0";
+  const name = art.has(`${pose}/${facing.frame}`) ? `${pose}/${facing.frame}`
+    : art.has(`QUIETO/${facing.frame}`) ? `QUIETO/${facing.frame}` : "frame/0";
   const sprite = animated(art.animation(name) ?? [], art.fps);
   if (facing.mirrored) {
     sprite.scale.x = -1;
   }
-  place(sprite, unitPoint(placed.tx, placed.ty));
+  place(sprite, at);
   return sprite;
+}
+
+/** A unit on its way: where it is, the tile it's heading for, and the tiles after. */
+interface Walk {
+  at: Point;
+  next: Point | null;
+  path: Point[];
+  enter: (tile: Point) => boolean;
+  arrive: () => void;
+  started?: boolean;
 }
 
 /** A still picture, or an animation playing at the art's own speed. */

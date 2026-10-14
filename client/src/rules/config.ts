@@ -19,6 +19,8 @@ export interface ConfigItem {
   subcat_functional: string;
   /** Units: 1 when it flies. */
   flying?: string;
+  /** Units: how fast they walk, in pixels a frame of the Flash client (30 a second). */
+  velocity?: string;
   /** What it costs, and in what: g gold, w wood, f food, s stone, c cash. */
   cost?: string;
   cost_type?: string;
@@ -88,6 +90,8 @@ export interface ItemInfo {
   category: number;
   subcategory: number;
   flying: boolean;
+  /** Units: pixels a frame of the Flash client (rules/walking.ts); 0 for things that don't walk. */
+  velocity: number;
   cost: number;
   costType: string;
   /** How many ways it can face: turning it goes round these. */
@@ -118,6 +122,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     category: Number(item.category_id),
     subcategory: Number(item.subcat_functional),
     flying: item.flying === "1",
+    velocity: Number(item.velocity) || 0,
     cost: Number(item.cost) || 0,
     costType: item.cost_type ?? "g",
     facings: Math.max(Number(item.max_frame) || 1, 1),

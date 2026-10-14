@@ -443,7 +443,10 @@ its prize), the mill's card then says "You have one", and the save has all
 four, the wood paid and the experience. Another checks the original's
 rules for nobody's things (a tree has no Sell, a stone rock on bought land
 can be removed) and the storage: a tower and a house stored, the tower
-placed again, the house sold for 1 wood; the save agrees. The menus test
+placed again, the house sold for 1 wood; the save agrees. The walk test
+sends a new town's Light Knight round the town hall and checks the save
+has it where it stopped, that closed land is out of reach, and that it's
+there after reloading. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
 phone checks the dock, short numbers and the sheet closing when dragged
@@ -453,8 +456,8 @@ now 309 KB (93 KB compressed).
 **Not yet in step 3** (Beta 1's next slices): turning a building while placing it, unlocking a
 building early with cash, buying resources with cash when short (the Flash
 client offers it), training units, placing units from storage,
-units walking (so trees, rocks and gold on the map, which a villager works,
-and putting workers into buildings), hurrying with cash, and moving or
+trees, rocks and gold on the map, which a villager works, and putting
+workers into buildings (units walk now: [Units walking](#units-walking)), hurrying with cash, and moving or
 selling buildings with units inside (the Flash client lets them out first;
 for now the bar says to use the classic game). Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
@@ -557,6 +560,40 @@ real town; a monitor on the left, a phone on the right):
   on the glove.
 - Shortcuts on a keyboard: B build, S storage, A army, Q quests, W world
   (phones), N neighbours, C collect all, Escape to close.
+
+### Units walking
+
+Built (Beta 1's second slice). Tap one of your units, then the ground: it
+walks there, round what's in the way, playing its walk, and stops on that
+tile; the server hears where. Code: `rules/walking.ts` (the rules, with
+tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
+
+**How units walk**, read from the Flash client (our notes, our words):
+
+- Bought land can be walked on, except under buildings. Fields (farms)
+  can be walked over, and units don't stand in each other's way. Closed
+  land, the wild ring and the sea can't be reached.
+- A path goes tile by tile in 8 directions, but never squeezes diagonally
+  between two corners. Flying units go in a straight line, over anything.
+  A tile that has become a building since the unit set off stops it there.
+- Speed is the config's `velocity`: pixels a frame of the Flash client (30
+  a second), along the longer of the two screen directions, the other in
+  proportion. A villager (3) takes about 0.6 seconds a tile.
+- A walking unit faces where it's going: left or right of it, then up or
+  down, which picks one of 8 ways (5 drawn, 3 mirrored). It plays `ANDAR`
+  while it walks and `QUIETO` when it stops.
+- A unit standing in town looks around now and then: every 61 frames
+  (about 2 seconds) there's a 4% chance it turns towards a tile beside it.
+- What the server hears: `move` with the tile the save had, the item, the
+  tile it stopped on, which way it faces, the town and "Unitat". The Flash
+  client sends it every 6 seconds for each unit that has stopped somewhere
+  new; we send it as it stops, in the next batch.
+- Only the player's own units walk (their people's, or anyone's); wild
+  animals and trolls on the island don't answer.
+
+**Not yet:** the speech bubbles units say now and then, a unit sent to a
+building or a tree (the next slice: villagers at work), wild animals
+following a unit home, and a mark on the ground where a unit is going.
 
 ### Making the art look better
 

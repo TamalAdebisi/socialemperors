@@ -18,7 +18,7 @@ import {
 } from "./geometry.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
-  return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false,
+  return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false, velocity: 0,
     cost: 0, costType: "g", facings: 2, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
 }
