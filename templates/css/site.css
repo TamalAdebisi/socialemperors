@@ -283,6 +283,17 @@ button:focus-visible,
 .button.small { min-height: 36px; padding: 0 14px; font-size: 14px; margin-top: 0; }
 .inline input { display: inline-block; }
 
+select {
+    height: 36px;
+    max-width: 100%;
+    padding: 0 8px;
+    border: 2px solid var(--parchment-edge);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+}
+
 .button.danger {
     border-color: #7e1010;
     background: linear-gradient(#f0675c, #c2271c);

@@ -91,6 +91,27 @@ def _take(save: dict, town_id: int, item_id: int, gift_first: bool) -> bool:
     return False
 
 
+def held(save: dict, town_id: int) -> dict:
+    """Everything in the town's storage window, both boxes together: {item id: count}."""
+    counts = {}
+    for box in (gifts(save), store(save, town_id)):
+        pairs = box.items() if isinstance(box, dict) else enumerate(box)
+        for item_id, count in pairs:
+            if int(count) > 0:
+                counts[int(item_id)] = counts.get(int(item_id), 0) + int(count)
+    return counts
+
+
+def take(save: dict, town_id: int, item_id: int, count: int) -> bool:
+    """count of an item out of the town's storage window, gifts first;
+    nothing taken unless there are that many."""
+    if held(save, town_id).get(int(item_id), 0) < count:
+        return False
+    for _ in range(count):
+        _take(save, town_id, int(item_id), gift_first=True)
+    return True
+
+
 def put_away(save: dict, x, y, town_id: int, item_id) -> str:
     map = save["maps"][town_id]
     item = item_at(map, item_id, x, y)

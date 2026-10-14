@@ -26,6 +26,7 @@ from engine import timestamp_now
 from storage import open_storage
 from version import version_code, migrate_loaded_save, add_missing_fields
 import friends as friendships  # the module; friends() below is the tournaments' list
+import gifts
 import radar
 import tutorial
 
@@ -88,6 +89,7 @@ def load_saved_villages():
 
         __storage = open_storage()
         friendships.load(__storage)
+        gifts.use(__storage)
         for pid, owner_id, village in __storage.load_all_villages():
             __saves[pid] = village
             __owners[pid] = owner_id
@@ -238,6 +240,7 @@ def delete_account(owner_id: int) -> int:
             __storage.delete_village(pid)
         __storage.delete_user(owner_id)  # and any village of it not loaded, its friends, its gifts
     friendships.forget(owner_id)
+    __usernames.pop(owner_id, None)
     return len(pids)
 
 
@@ -330,13 +333,32 @@ def friends(USERID: str) -> list:
                 if str(v["playerInfo"]["pid"]) in __saves]
 
 
+__usernames = {}  # account id -> username, for neighbours' names (usernames never change)
+
+
+def _username(pid: str):
+    """The username of the account an empire belongs to, or None (the
+    villages that ship with the game, old saves with no owner)."""
+    owner = __owners.get(str(pid))
+    if owner is None:
+        return None
+    if owner not in __usernames:
+        user = __storage.get_user(owner)
+        if user is None:
+            return None
+        __usernames[owner] = user["username"]
+    return __usernames[owner]
+
+
 def fb_friends_str(USERID: str) -> list:
     friends = []
     with LOCK:
         for vill in _neighbor_villages(USERID):
+            pid = vill["playerInfo"]["pid"]
             friends.append({
-                "uid": vill["playerInfo"]["pid"],
+                "uid": pid,
                 "pic_square": vill["playerInfo"].get("pic") or "/img/profile/1025.png",
+                "first_name": _username(pid) or vill["playerInfo"].get("name") or "",
             })
     return friends
 
@@ -351,6 +373,9 @@ def neighbors(USERID: str) -> list:
             home = vill["maps"][0]
             for key in ("coins", "xp", "level", "stone", "wood", "food"):
                 neigh[key] = home[key]
+            # A player's name under their portrait, as their Facebook name
+            # was: every empire is called "Emperor" otherwise.
+            neigh["name"] = _username(neigh["pid"]) or neigh.get("name")
             result.append(neigh)
     return result
 

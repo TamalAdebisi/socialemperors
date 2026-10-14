@@ -131,6 +131,9 @@ class FriendsTest(unittest.TestCase):
         self.assertIn(bob_pid, neighbours)
         self.assertNotIn(carol_pid, neighbours)  # no room left for the latest stranger
         self.assertEqual(players[0], bob_pid)
+        names = {str(n["pid"]): n["name"] for n in sessions.neighbors(pid)}
+        self.assertEqual(names[bob_pid], bob[1])  # their username under the portrait, not "Emperor"
+        self.assertIn(bob[1], [f["first_name"] for f in sessions.fb_friends_str(pid)])
 
     def test_friendships_survive_a_restart(self):
         alice, bob = self.player(), self.player()

@@ -122,10 +122,11 @@ body.native #stage ruffle-player,
     height: 600px;
 }
 
-/* The bank's exchange window (_bank.html), and the invite notice
-   (_invite.html): a parchment notice in a wooden frame, over the dimmed game. */
+/* The bank's exchange window (_bank.html), the gifts window (_gifts.html) and
+   the invite notice (_invite.html): a parchment notice in a wooden frame,
+   over the dimmed game. */
 
-#bank, #invite {
+#bank, #invite, #gifts {
     width: min(380px, calc(100vw - 32px));
     box-sizing: border-box;
     padding: 18px 20px 14px;
@@ -137,21 +138,21 @@ body.native #stage ruffle-player,
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-#bank::backdrop, #invite::backdrop {
+#bank::backdrop, #invite::backdrop, #gifts::backdrop {
     background: rgba(20, 30, 10, 0.6);
 }
 
-#bank h2, #invite h2 {
+#bank h2, #invite h2, #gifts h2 {
     margin: 0 28px 6px 0;
     color: var(--wood);
     font-size: 18px;
 }
 
-#bank p, #invite p {
+#bank p, #invite p, #gifts p {
     margin: 0 0 10px;
 }
 
-#bank button, #invite button {
+#bank button, #invite button, #gifts button {
     min-height: 28px;
     padding: 0 10px;
     border: 1.5px solid #9e7747;
@@ -162,11 +163,11 @@ body.native #stage ruffle-player,
     cursor: pointer;
 }
 
-#bank button:hover, #invite button:hover {
+#bank button:hover, #invite button:hover, #gifts button:hover {
     background: rgb(250, 237, 90);
 }
 
-#bank button:disabled {
+#bank button:disabled, #gifts button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
     background: rgb(255, 245, 131);
@@ -179,7 +180,7 @@ body.native #stage ruffle-player,
     margin: 0;
 }
 
-#bank .bank-close button, #invite .bank-close button {
+#bank .bank-close button, #invite .bank-close button, #gifts .bank-close button {
     width: 28px;
     padding: 0;
 }
@@ -284,14 +285,109 @@ body.native #stage ruffle-player,
     white-space: nowrap;
 }
 
-#bank .bank-message {
+#bank .bank-message, #gifts .bank-message {
     min-height: 1.4em;
     margin-top: 8px;
     font-weight: bold;
 }
 
-#bank .bank-more {
+#bank .bank-more, #gifts .bank-more {
     margin: 4px 0 0;
     color: #7a6040;
     font-size: 11px;
+}
+
+/* The gifts window (_gifts.html): three tabs, one shown at a time. */
+
+#gifts {
+    width: min(420px, calc(100vw - 32px));
+}
+
+#gifts h2 img {
+    height: 22px;
+    vertical-align: -4px;
+}
+
+.gifts-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 4px 0 10px;
+    border-bottom: 2px solid #e3d09d;
+}
+
+#gifts .gifts-tabs button {
+    border-bottom: 0;
+    border-radius: 6px 6px 0 0;
+    background: #f1e2b4;
+}
+
+#gifts .gifts-tabs button[aria-selected="true"] {
+    background: rgb(255, 245, 131);
+    font-weight: bold;
+}
+
+.gifts-tab[hidden] {
+    display: none;
+}
+
+.gifts-list {
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.gifts-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid #e3d09d;
+}
+
+.gifts-list .from {
+    color: #7a6040;
+}
+
+.gifts-form label {
+    display: block;
+    margin: 6px 0 3px;
+    font-weight: bold;
+}
+
+.gifts-form select,
+.gifts-form input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 28px;
+    border: 1.5px solid #9e7747;
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+}
+
+.gifts-form .gifts-send {
+    margin-top: 10px;
+}
+
+.gifts-empty {
+    color: #7a6040;
+    font-style: italic;
+}
+
+#gifts a, #invite a {
+    color: #6b3e12;
+}
+
+#invite .invite-friends {
+    display: inline-block;
+    padding: 5px 12px;
+    border: 1.5px solid #9e7747;
+    border-radius: 6px;
+    background: rgb(255, 245, 131);
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
 }

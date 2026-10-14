@@ -201,8 +201,26 @@ numbers, because the server writes them into the game config.
       delete your empires, link Discord and Google, and set or change your
       password. Off the game's bar: the Discord and GitHub links, and the
       version
-- [ ] Friends, as Facebook had: add players by name, friends are your
-      neighbours in the game, and you can send them gifts
+- [x] Friends, as Facebook had (`friends.py`): ask by username, the other
+      accepts or declines (the Friends page, `/friends`). Friends' empires
+      come first among your neighbours in the game, then the most recently
+      active players, and each player's username shows under their
+      portrait instead of "Emperor". The game's ways to ask for more
+      neighbours (an empty place in the bar, "Need allies?") point to the
+      Friends page
+- [x] Gifts between friends (`gifts.py`): a free gift a day for each friend,
+      from the 34 items the game config marks giftable, opening with the
+      sender's level (a Yellow Tree from the start, a Scorpion at 30); and
+      anything from your own storage. A gift waits, with who sent it, until
+      it is taken into one of your empires' Gifts and Storage. The game's
+      own Send gift button and empty gift box open our Gifts window
+      (`templates/_gifts.html`), which opens by itself when gifts are
+      waiting; like the bank, it has the game send back what it holds
+      before anything leaves storage, and reload the town after
+- [ ] Asking friends for help, which also went through Facebook: help to
+      collect sooner (`accept_collect_help`), hiring friends for the dragon
+      nest (`finish_dragon_help`) and the Round Table (`assist_send_feed`),
+      and found lost animals (`register_found_item.php`)
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
