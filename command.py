@@ -5,6 +5,7 @@ from sessions import session, save_session
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
+import bank
 import temple
 import game_collections
 import graveyard
@@ -296,10 +297,7 @@ def do_command(USERID, cmd, args, previous=None):
         save["playerInfo"]["map_names"][town_id] = new_name
 
     elif cmd == Constant.CMD_EXCHANGE_CASH:
-        town_id = args[0]
-        print("Exchange cash -> coins.")
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - 5, 0)#maybe make function for editing resources
-        save["maps"][town_id]["coins"] += 2500
+        print(bank.buy_gold(save, args[0]))
 
     elif cmd == Constant.CMD_STORE_ITEM or cmd == Constant.CMD_STORE_ITEM_FROMBUG:
         x = args[0]

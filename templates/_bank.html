@@ -1,0 +1,194 @@
+{# The bank's exchange window (bank.py). Every "get more cash" button in the
+   game (the bank's ADD CASH NOW!, "not enough cash", the store) calls the
+   page's gotoBuy(), which used to open Facebook's payment page; it opens
+   this window instead. Needs allowScriptAccess in the Ruffle settings. #}
+<dialog id="bank" aria-labelledby="bank-title">
+    <form method="dialog" class="bank-close"><button aria-label="Close">✕</button></form>
+    <h2 id="bank-title">Trade for cash</h2>
+    <p class="bank-intro">The bank trades <b><span data-per-cash>2,000</span> of one resource for 1 cash</b>,
+        up to <span data-per-day>5</span> cash a day.</p>
+
+    <div class="bank-body" data-state="loading">
+        <p class="bank-wait">Counting your treasury…</p>
+        <p class="bank-away">The bank only opens in your own town. Finish the battle or the visit, then try again.</p>
+        <p class="bank-down">The bank can't be reached right now. Please try again in a moment.</p>
+
+        <div class="bank-open">
+            <div class="bank-balance">
+                <span><img src="img/cash.png" alt=""> <b data-cash>0</b> cash</span>
+                <span data-left></span>
+            </div>
+            <div class="bank-amount">
+                <span id="bank-amount-label">Cash to get</span>
+                <button type="button" data-step="-1" aria-label="One less">−</button>
+                <output data-amount aria-labelledby="bank-amount-label">1</output>
+                <button type="button" data-step="1" aria-label="One more">+</button>
+            </div>
+            <ul class="bank-resources">
+                {% for letter, name in (("g", "Gold"), ("w", "Wood"), ("f", "Food"), ("s", "Stone")) %}
+                <li class="bank-{{ letter }}">
+                    <span class="bank-name"><i></i>{{ name }}</span>
+                    <span class="bank-have" data-have="{{ letter }}"></span>
+                    <button type="button" data-trade="{{ letter }}"></button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <p class="bank-message" role="status" aria-live="polite"></p>
+    </div>
+
+    <p class="bank-more">Cash also comes from levelling up, the daily bonus, Monday's chest and every new continent.</p>
+</dialog>
+
+<script>
+    // The bank window: opened by the game, through gotoBuy().
+    (function () {
+        var dialog = document.getElementById("bank");
+        var body = dialog.querySelector(".bank-body");
+        var message = dialog.querySelector(".bank-message");
+        var down = dialog.querySelector(".bank-down"), downText = down.textContent;
+        var names = {g: "gold", w: "wood", f: "food", s: "stone"};
+        var csrf = "{{ csrf_token() }}";
+        var empire = "{{ save_info.userid }}";
+        var bank = null;      // what the server says the bank offers
+        var amount = 1;       // cash to get
+        var traded = false;   // the game's town shows old numbers until it loads again
+        var opening = 0;      // which opening is current, so a late answer can't spoil a newer one
+
+        function number(n) { return n.toLocaleString("en-US"); }
+
+        function show(state, text) {
+            body.dataset.state = state;
+            if (state === "down") {
+                down.textContent = text || downText;  // the server's reason, if it gave one
+                text = "";
+            }
+            message.textContent = text || "";
+        }
+
+        function ask(method, data) {
+            return fetch("bank?empire=" + encodeURIComponent(empire), {
+                method: method,
+                cache: "no-store",
+                body: data ? new URLSearchParams(data) : undefined
+            }).then(function (response) {
+                return response.json().catch(function () { throw new Error("not json"); });
+            });
+        }
+
+        function reloadTown() {
+            try {
+                player.forceReloadInfo();  // the game sends what it holds back, then loads the town again
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function draw() {
+            var left = bank.left_today;
+            amount = Math.max(1, Math.min(amount, left || 1));
+            dialog.querySelector("[data-cash]").textContent = number(bank.cash);
+            dialog.querySelector("[data-per-cash]").textContent = number(bank.per_cash);
+            dialog.querySelector("[data-per-day]").textContent = bank.per_day;
+            dialog.querySelector("[data-left]").textContent = left > 0
+                ? left + " of " + bank.per_day + " left today"
+                : "Open again in " + Math.ceil(bank.next_day_in / 3600) + " h";
+            dialog.querySelector("[data-amount]").textContent = amount;
+            dialog.querySelector('[data-step="-1"]').disabled = amount <= 1 || left < 1;
+            dialog.querySelector('[data-step="1"]').disabled = amount >= left;
+            Object.keys(names).forEach(function (r) {
+                var price = amount * bank.per_cash, have = bank.resources[r];
+                dialog.querySelector('[data-have="' + r + '"]').textContent = number(have);
+                var button = dialog.querySelector('[data-trade="' + r + '"]');
+                button.textContent = number(price) + " → " + amount + " cash";
+                button.disabled = left < 1 || have < price;
+            });
+        }
+
+        // Before showing anything, the game sends what it is holding back
+        // and loads the town; once the server has seen that load, its
+        // numbers are the ones on screen.
+        function open() {
+            var mine = ++opening, since = null, tries = 0;
+            bank = null;
+            show("loading");
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(function () {});  // the window is outside the game
+            }
+            if (!dialog.open) dialog.showModal();
+            function poll() {
+                ask("GET").then(function (reply) {
+                    if (mine !== opening) return;
+                    if (reply.error) return show("down", reply.error);
+                    if (since === null) {
+                        since = reply.now;
+                        if (!reloadTown()) return show("away");
+                    } else if (reply.loaded_at >= since) {
+                        bank = reply;
+                        draw();
+                        return show("open");
+                    }
+                    if (++tries > 25) return show("away");  // about 15 seconds: the game didn't load the town
+                    setTimeout(poll, 600);
+                }).catch(function () {
+                    if (mine === opening) show("down");
+                });
+            }
+            poll();
+        }
+
+        dialog.addEventListener("click", function (event) {
+            var step = event.target.closest("[data-step]");
+            var trade = event.target.closest("[data-trade]");
+            if (event.target === dialog) {
+                dialog.close();  // a click on the dark backdrop
+            } else if (step && bank) {
+                amount += parseInt(step.dataset.step, 10);
+                draw();
+            } else if (trade && bank) {
+                var resource = trade.dataset.trade;
+                dialog.querySelectorAll("[data-trade], [data-step]").forEach(function (b) { b.disabled = true; });
+                ask("POST", {csrf: csrf, resource: resource, cash: amount}).then(function (reply) {
+                    if (reply.cash === undefined) return show("down", reply.error);
+                    bank = reply;
+                    draw();
+                    if (reply.ok) {
+                        traded = true;
+                        show("open", "+" + amount + " cash for " + number(amount * reply.per_cash) + " " + names[resource]
+                             + ". Your town updates when this window closes.");
+                    } else {
+                        show("open", reply.error);
+                    }
+                }).catch(function () {
+                    show("down");
+                });
+            }
+        });
+
+        dialog.addEventListener("close", function () {
+            opening++;
+            if (traded) {
+                traded = false;
+                reloadTown();
+            }
+        });
+
+        window.gotoBuy = function () {
+            setTimeout(open, 0);  // not inside the game's own call
+        };
+    })();
+
+    // Other calls the game makes to the page, for Facebook features that
+    // don't exist here: they do nothing, as they did before the game could
+    // reach the page.
+    ["getCrossData", "updateCrossData", "flashInitialized", "leveledUp", "showFeed", "showFeedItemFound",
+     "showFeedSEHire", "share_newtown", "gotoGifts", "gotoInitialGifts", "gotoNeighbors", "gotoInitialInvite",
+     "askForAchievementPermission", "gotoAdVideo", "openGame", "sendFbMessage", "showPopupSEHelpSocialItem",
+     "showPopupSEHelpPotion", "showPopupSEHelpNest", "showPopupSEHelpCollect", "openSpecialGiftFromFlash",
+     "askInstallApplication", "showPopupInvite", "showPopupInviteTournament", "gotoBuyWithOfferBuilding",
+     "likeDialog", "bookmarDialog"].forEach(function (name) {
+        window[name] = function () {};
+    });
+    window.SocialPoint = {FlashApi: function () {}};
+</script>

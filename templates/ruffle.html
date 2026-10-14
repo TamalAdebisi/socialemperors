@@ -39,7 +39,7 @@
             player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
                 url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAME_CLIENT}}",
                 backgroundColor: "#669C2C",
-                allowScriptAccess: false,
+                allowScriptAccess: true, // the game calls the page's gotoBuy() to open the bank (_bank.html)
                 allowFullscreen: true, // lets the game's own full screen button work
                 autoplay: "on",
                 quality: pick("quality", ["low", "medium", "high", "best"]),
@@ -106,5 +106,6 @@
                 });
             }
         </script>
+        {% include "_bank.html" %}
     </body>
 </html>

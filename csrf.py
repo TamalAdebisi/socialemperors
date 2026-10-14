@@ -26,7 +26,11 @@ def token() -> str:
     return session[FIELD]
 
 
-def check():
+def valid() -> bool:
     sent = request.form.get(FIELD, "")
-    if not sent or not hmac.compare_digest(sent, session.get(FIELD, "")):
+    return bool(sent) and hmac.compare_digest(sent, session.get(FIELD, ""))
+
+
+def check():
+    if not valid():
         abort(400, description=EXPIRED)
