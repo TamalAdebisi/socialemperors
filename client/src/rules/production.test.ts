@@ -27,7 +27,7 @@ function placed(item: ConfigItem, more: Partial<PlacedItem> = {}): PlacedItem {
 
 function town(): Town {
   return { id: 0, name: "", townName: "", level: 1, xp: 0, cash: 0, gold: 0, wood: 100, food: 0, stone: 0,
-    race: "h", skin: 0, expansions: new Set([13]), items: [], unknown: [] };
+    race: "h", skin: 0, expansions: new Set([13]), unlocked: new Set(), items: [], unknown: [] };
 }
 
 test("what produces, and how", () => {

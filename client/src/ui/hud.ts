@@ -14,6 +14,8 @@ export interface HudActions {
 export interface Hud {
   /** Show the town's numbers again (after a sale...). */
   update(town: Town): void;
+  /** Show the Shop button, which calls `open` (not when visiting). */
+  offerShop(open: () => void): void;
 }
 
 export function showHud(town: Town, actions: HudActions): Hud {
@@ -32,7 +34,8 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <li title="Cash"><span class="dot cash"></span><span data-n="cash"></span></li>
     </ul>
     <div class="hud-buttons">
-      <span class="hud-badge" title="The new game: so far you can move, turn, store, sell and collect; for the rest, use the classic game">Preview</span>
+      <button class="hud-button hud-shop" type="button" hidden>Shop</button>
+      <span class="hud-badge" title="The new game: so far you can build, move, turn, store, sell and collect; for the rest, use the classic game">Preview</span>
       <a class="hud-button" href="">Classic game</a>
       <button class="hud-button" type="button" data-fullscreen>Full screen</button>
     </div>`;
@@ -63,7 +66,14 @@ export function showHud(town: Town, actions: HudActions): Hud {
   });
 
   document.body.appendChild(bar);
-  return { update };
+  const shop = bar.querySelector<HTMLButtonElement>(".hud-shop")!;
+  return {
+    update,
+    offerShop(open) {
+      shop.hidden = false;
+      shop.addEventListener("click", open);
+    },
+  };
 }
 
 /** The message in the middle of the screen while loading, or when something fails. */

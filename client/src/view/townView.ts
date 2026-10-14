@@ -44,13 +44,37 @@ export class TownView {
   private highlighted: PlacedItem | null = null;
   /** Signs over buildings: ready to collect, asleep... */
   private readonly markers = new Markers();
+  /** A building being bought, drawn see-through where it would go. */
+  private readonly ghostLayer = new Container();
+  private ghost: { slot: Container; drawnAt: Point } | null = null;
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
     this.items = items;
     this.town = town;
     this.glow.brightness(1.25, false);
-    this.root.addChild(this.ground, this.marks, this.things, this.markers.layer);
+    this.root.addChild(this.ground, this.marks, this.things, this.ghostLayer, this.markers.layer);
+    this.ghostLayer.alpha = 0.7;
+  }
+
+  /** Show a building that isn't on the map yet (being bought) see-through at its tile; null takes it away. */
+  showGhost(placed: PlacedItem | null): void {
+    this.ghost?.slot.destroy({ children: true });
+    this.ghost = null;
+    if (placed) {
+      const slot = new Container();
+      this.ghostLayer.addChild(slot);
+      this.ghost = { slot, drawnAt: buildingPoint(placed.tx, placed.ty) };
+      void this.draw(placed, slot);
+    }
+  }
+
+  /** Move the see-through building to another tile. */
+  moveGhost(tile: Point): void {
+    if (this.ghost) {
+      const to = buildingPoint(tile.x, tile.y);
+      this.ghost.slot.position.set(to.x - this.ghost.drawnAt.x, to.y - this.ghost.drawnAt.y);
+    }
   }
 
   /** Move animations along: `ms` since the last frame, at the camera's zoom. */
@@ -197,8 +221,12 @@ export class TownView {
   /** Put a thing's picture in its slot. False when it has no art (yet): an outline instead. */
   private async draw(placed: PlacedItem, slot: Container): Promise<boolean> {
     const art = await this.art.get(placed.item.art);
+    if (slot.destroyed) {
+      return art !== null;  // taken away while its art loaded (a see-through building no longer wanted)
+    }
+    const offset = slot === this.ghost?.slot ? { x: slot.x, y: slot.y } : { x: 0, y: 0 };
     slot.removeChildren().forEach((child) => child.destroy());
-    slot.position.set(0, 0);
+    slot.position.set(offset.x, offset.y);
     if (art === null) {
       slot.addChild(footprint(placed, 0xffffff));
       return false;

@@ -14,7 +14,7 @@ const LEVELS = readLevels([
 
 function town(level: number, xp: number): Town {
   return { id: 0, name: "", townName: "", level, xp, cash: 0, gold: 0, wood: 0, food: 0, stone: 0,
-    race: "h", skin: 0, expansions: new Set(), items: [], unknown: [] };
+    race: "h", skin: 0, expansions: new Set(), unlocked: new Set(), items: [], unknown: [] };
 }
 
 test("enough experience for the next level: up one, with its prize", () => {

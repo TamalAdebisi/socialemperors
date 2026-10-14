@@ -7,7 +7,8 @@ import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
-    flying: false, cost: 30, costType: "w", facings: 2, production: null, ...fields };
+    flying: false, cost: 30, costType: "w", facings: 2, production: null,
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, ...fields };
 }
 
 function placed(fields: Partial<ItemInfo>, tx: number, ty: number, more: Partial<PlacedItem> = {}): PlacedItem {
@@ -16,7 +17,7 @@ function placed(fields: Partial<ItemInfo>, tx: number, ty: number, more: Partial
 
 function town(items: PlacedItem[] = [], expansions = [13]): Town {
   return { id: 0, name: "", townName: "", level: 1, xp: 0, cash: 5, gold: 100, wood: 100, food: 100, stone: 100,
-    race: "h", skin: 0, expansions: new Set(expansions), items, unknown: [] };
+    race: "h", skin: 0, expansions: new Set(expansions), unlocked: new Set(), items, unknown: [] };
 }
 
 test("the save names a building's last tile; it covers width x height back from there", () => {

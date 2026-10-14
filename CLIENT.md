@@ -167,7 +167,7 @@ actually use; the bug radar on the admin page shows what that is.
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
-| 3. Run your town (started: move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
+| 3. Run your town (started: shop, move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
 | 6. Switch over | The new client becomes the default; the Flash one stays as "classic" for a while | Small |
@@ -295,8 +295,9 @@ players get.
 
 ### Step 3: run your town
 
-Built so far: **move, turn, store and sell**, and **collecting from
-buildings**, with levels. Tap (or click) a building to select it; a bar at the bottom shows its name and what can be done with it.
+Built so far: **the shop and building**, **move, turn, store and sell**,
+and **collecting from buildings**, with levels. Tap (or click) a building
+to select it; a bar at the bottom shows its name and what can be done with it.
 Selling asks first and says what it gives back. While moving, the footprint
 under the pointer shows green where it fits and red where it doesn't; tap
 the new place, or Cancel (Escape). Tapping picks the picture actually under
@@ -365,6 +366,35 @@ producing building shows when it will be ready.
 - Not the same as the Flash client: a farm collected without enough wood is
   left as it is, with a message; the Flash client lets it go to waste.
 
+**The shop.** The Shop button opens a window with the game's categories
+(Village, Defense, Army, Decorations, Wonders, New) and their tabs, and a
+card for each building: its picture (cut from the same sprite sheet the map
+uses, loaded as the card scrolls into view), price, experience, and what
+stops buying it ("From level 11", "You have one", "Not enough wood").
+Choosing one closes the window and the building follows the pointer,
+see-through, with its footprint green or red; each tap buys one, until Done.
+
+**How the shop works**, read from the Flash client (our notes, our words):
+
+- Humans are sold items whose `in_store` is 1 or 3, trolls 2 or 4. An item
+  shows from its `store_level`, and can be bought from its `min_level`, or
+  sooner once unlocked with cash (the save's
+  `privateState.unlockedEarlyBuildings`).
+- Each category lists its items by `display_order`, the locked ones last;
+  its tabs are the config's `categories` table, by `subcategory_id`. The
+  New category has its own items, and the other categories' new ones
+  (`new_item`) and cash ones in tabs of their own. Two castles are for gold
+  members only, which nobody is here.
+- How many a town may have: one of each level of mill and of gold, stone and
+  lumber mine; one of about fifty special buildings (the university, temple,
+  bakery, markets...); one market and one eagle building; three nurseries;
+  and 400 towers bought with resources per block of land.
+- Buying pays the price (`cost`, in `cost_type`) and gives the item's `xp`,
+  then sends `buy` (item, place, facing, town, 0, 1, "b"); the server does
+  the same to the save. A building that produces starts its first round
+  then. The Flash client also stays ready to place another, until the
+  player stops.
+
 **Tested:** the rules and the command queue have unit tests (`npm test`).
 A browser test edits a new town (turns a tower, moves a house, sells a tree
 and a house, stores a tower) and checks the server's save afterwards: every
@@ -373,9 +403,16 @@ left. Another sets a new town up as the Flash client would (a farm, a ranch
 and a gold mine, with a villager in each), then in the new client chooses
 the mine's working time and collects the farm and the ranch: the save has
 the harvests, the farm's wood, the experience, level 2 with its prize, and
-the timers started again. The client is now 294 KB (89 KB compressed).
+the timers started again. A third buys three farms and a mill in a new
+town through the shop: placing on the town hall is refused, placing goes on
+after each farm and stops after the mill (one per town, and level 2 with
+its prize), the mill's card then says "You have one", and the save has all
+four, the wood paid and the experience. The client is now 303 KB (92 KB
+compressed).
 
-**Not yet in step 3:** the shop and building, placing what's in storage,
+**Not yet in step 3:** turning a building while placing it, unlocking a
+building early with cash, buying resources with cash when short (the Flash
+client offers it), training units, placing what's in storage,
 units walking (so trees, rocks and gold on the map, which a villager works,
 and putting workers into buildings), hurrying with cash, and moving or
 selling buildings with units inside (the Flash client lets them out first;
