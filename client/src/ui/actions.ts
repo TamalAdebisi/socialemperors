@@ -18,6 +18,8 @@ export interface ActionChoices {
   refund: string;
   /** Let one of the units inside out (null when nobody's inside). */
   letOut?: (() => void) | null;
+  /** Finish its work now, for cash (null when it can't be hurried). */
+  hurry?: { price: number; run: () => void } | null;
   /** Train its unit: the unit's picture and price, and the same for cash (null when it trains nothing). */
   train?: { unit: string; picture: string; price: string; run: () => void; cash: { price: string; run: () => void } | null } | null;
   close: () => void;
@@ -51,6 +53,17 @@ export class ActionBar {
     tiles.className = "actions-tiles";
     this.tiles = tiles;
     this.bar.append(name, detail, tiles);
+    if (choices.hurry) {
+      const hurry = choices.hurry;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "button tiny gold train-cash";
+      button.innerHTML = `<img class="icon" src="${ICONS.cash}" alt="">`;
+      button.append(`${hurry.price}: finish now`);
+      button.setAttribute("aria-label", `Finish now for ${hurry.price} cash`);
+      button.addEventListener("click", hurry.run);
+      (this.tiles ?? this.bar).append(button);
+    }
     if (choices.train) {
       this.trainButtons(choices.train);
     }

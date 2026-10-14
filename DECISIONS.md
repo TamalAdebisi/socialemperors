@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, land and cash
+
+- **Land is bought by tapping it** (the original also had an Expand tab in
+  its shop that did the same); the offer shows both prices, and the gold
+  one says how many neighbours it needs.
+- **The bank opens from a + on the gold and cash pills,** a small green
+  button in the game's style, rather than the game's wide "Add Cash"
+  picture, which said cash on the gold pill too.
+- **"Not enough gold" just says so;** the original also offered its
+  payment page, which is the bank here, a tap away on the +.
+
 ## 14 October 2026: Beta 1, training and population
 
 - **The Train button is the unit's picture with its price under it** on

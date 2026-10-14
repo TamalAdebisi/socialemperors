@@ -9,8 +9,8 @@ import type { ItemInfo } from "./rules/config.ts";
 import { choices, fits, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
-import { WORK_TIMES, chooseWorkTime, collect, harvest, workState } from "./rules/production.ts";
-import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
+import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected } from "./rules/production.ts";
+import { buy, describe, obstacle, priceOf, unlock, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
@@ -21,6 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { SUBCAT, canGoInside, canHarvest, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
@@ -45,6 +46,8 @@ export interface EditorParts {
   waiting?: (gifts: number) => void;
   /** An item's picture in the Flash client's windows (a unit to train). */
   thumbnail?: (item: ItemInfo) => string;
+  /** Land: the config's prices, and how many neighbours the player has (paying in gold needs some). */
+  land?: { prices: LandPrice[]; neighbours: number };
 }
 
 export class TownEditor {
@@ -60,6 +63,7 @@ export class TownEditor {
   private readonly items: Map<number, ItemInfo>;
   private readonly waiting: (gifts: number) => void;
   private readonly thumbnail: (item: ItemInfo) => string;
+  private readonly land: { prices: LandPrice[]; neighbours: number };
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
   private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
@@ -82,6 +86,7 @@ export class TownEditor {
       camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
     this.waiting = parts.waiting ?? (() => {});
     this.thumbnail = parts.thumbnail ?? (() => "");
+    this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -167,6 +172,18 @@ export class TownEditor {
 
   openStorage(): void {
     this.openShop(STORAGE);
+  }
+
+  /** Open a building early, for cash, from the shop. */
+  unlock(item: ItemInfo): void {
+    const done = unlock(this.town, item);
+    if (typeof done === "string") {
+      this.say(done);
+      return;
+    }
+    this.send([done]);
+    this.hud.update(this.town);
+    this.say(`${item.name} is open to you now.`);
   }
 
   /** What's in storage, as the storage window shows it, with what each card's buttons do. */
@@ -301,6 +318,14 @@ export class TownEditor {
       this.walkTo(unit, this.tileAt(at));
       return;
     }
+    if (!placed) {
+      const tile = this.tileAt(at);
+      const block = landForSale(this.town, tile.x, tile.y);
+      if (block !== null) {
+        this.offerLand(block);
+        return;
+      }
+    }
     if (unit && placed && canHarvest(unit.item, placed.item)) {
       this.work(unit, placed);
       return;
@@ -351,6 +376,7 @@ export class TownEditor {
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       train: this.trainChoice(placed),
+      hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
       close: () => this.select(null),
     });
   }
@@ -602,7 +628,52 @@ export class TownEditor {
   }
 
   private collect(placed: PlacedItem): void {
-    const done = collect(this.town, placed, this.clock());
+    this.collected(placed, collect(this.town, placed, this.clock()));
+  }
+
+  /** Finish a building's work now, for cash, and collect it. */
+  private hurry(placed: PlacedItem): void {
+    const cashBefore = this.town.cash;
+    this.collected(placed, hurry(this.town, placed, this.clock()));
+    if (this.town.cash < cashBefore) {
+      this.view.rise(placed, [{ text: `−${cashBefore - this.town.cash} cash`, colour: RESOURCE_COLOURS.cash }]);
+      this.select(placed);
+    }
+  }
+
+  /** Land for sale tapped: what it costs, in gold (with enough neighbours) or cash. */
+  private offerLand(block: number): void {
+    this.select(null);
+    const price = landPrice(this.town, this.land.prices);
+    if (!price) {
+      return;
+    }
+    const gold = new Intl.NumberFormat("en-US").format(price.coins);
+    this.bar.prompt(`Land for sale: ${gold} gold (with ${price.neighbors} neighbour${price.neighbors > 1 ? "s" : ""}) or ${price.cash} cash`, [
+      { label: `Buy for ${gold} gold`, run: () => this.buyLand(block, false) },
+      { label: `Buy for ${price.cash} cash`, run: () => this.buyLand(block, true) },
+      { label: "Cancel", run: () => this.bar.hide() },
+    ]);
+  }
+
+  private buyLand(block: number, withCash: boolean): void {
+    const price = landPrice(this.town, this.land.prices);
+    if (!price) {
+      return;
+    }
+    const why = cantBuyLand(this.town, price, withCash, this.land.neighbours);
+    if (why) {
+      this.say(why);
+      return;
+    }
+    this.send([buyLand(this.town, block, price, withCash)]);
+    this.bar.hide();
+    this.hud.update(this.town);
+    void this.view.redrawGround();
+    this.say("The land is yours.");
+  }
+
+  private collected(placed: PlacedItem, done: Collected | string): void {
     if (typeof done === "string") {
       this.say(done);
       return;

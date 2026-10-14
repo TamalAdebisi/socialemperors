@@ -155,6 +155,27 @@ export function describe(obstacle: Obstacle): string {
   }
 }
 
+/** Opening a building before its level costs a third of the level in cash, rounded up. */
+export function unlockPrice(item: ItemInfo): number {
+  return Math.ceil(item.minLevel / 3);
+}
+
+/** Whether a building can be opened early now: shown in the shop but still above the level, and not opened already. */
+export function canUnlock(town: Town, item: ItemInfo): boolean {
+  return isLocked(town, item);
+}
+
+/** Open a building early, for cash: the shop sells it from now on. A string when there isn't enough cash. */
+export function unlock(town: Town, item: ItemInfo): Command | string {
+  const cash = unlockPrice(item);
+  if (town.cash < cash) {
+    return `Not enough cash: opening ${item.name} early costs ${cash}.`;
+  }
+  town.cash -= cash;
+  town.unlocked.add(item.id);
+  return { cmd: "unlock_building", args: [String(item.id)] };
+}
+
 /** Buy a building and put it on a tile: the price is paid and its experience gained. A string when it can't be. */
 export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: number): { command: Command; placed: PlacedItem } | string {
   const blocked = obstacle(town, item);

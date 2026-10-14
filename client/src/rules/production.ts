@@ -142,9 +142,9 @@ export interface Collected {
  * work starts over (a "chosen" one waits for a new choice). A string when it
  * can't be collected.
  */
-export function collect(town: Town, placed: PlacedItem, now: number): Collected | string {
+export function collect(town: Town, placed: PlacedItem, now: number, hurried = false): Collected | string {
   const production = placed.item.production;
-  if (!production || workState(placed, now)?.status !== "ready") {
+  if (!production || (!hurried && workState(placed, now)?.status !== "ready")) {
     return `${placed.item.name} isn't ready yet.`;
   }
   const wood = farmWood(production);
@@ -166,6 +166,33 @@ export function collect(town: Town, placed: PlacedItem, now: number): Collected 
     commands.push({ cmd: "activate", args: [placed.tx, placed.ty, town.id, placed.item.id, 0] });
   }
   return { commands, resource: production.resource, amount, xp: production.xp, wood };
+}
+
+/** What finishing a building's work at once costs, in cash (the Flash client's hurry up). */
+export const HURRY_CASH = 2;
+const HURRIED = new Set([SUBCAT.mill, SUBCAT.mine, SUBCAT.foodShop]);
+
+/** Whether a building working now can be hurried: mills, mines, the bakery, and wonders that house nobody. */
+export function canHurry(placed: PlacedItem, now: number): boolean {
+  const item = placed.item;
+  const kind = HURRIED.has(item.subcategory) || (item.subcategory === SUBCAT.wonder && item.population === 0);
+  return kind && workState(placed, now)?.status === "working";
+}
+
+/** Finish a building's work now for cash, and collect it: as collecting, with the cash in the command. */
+export function hurry(town: Town, placed: PlacedItem, now: number): Collected | string {
+  if (!canHurry(placed, now)) {
+    return `${placed.item.name} isn't working.`;
+  }
+  if (town.cash < HURRY_CASH) {
+    return `Not enough cash: it costs ${HURRY_CASH}.`;
+  }
+  const done = collect(town, placed, now, true);
+  if (typeof done !== "string") {
+    town.cash -= HURRY_CASH;
+    done.commands[0].args[6] = HURRY_CASH;
+  }
+  return done;
 }
 
 /** Choose how long a "chosen" building works (1 to 4: WORK_TIMES); it starts now. */

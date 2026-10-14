@@ -451,16 +451,18 @@ the houses (it cuts one and goes on to the next), one to a stone rock
 (which leaves one growing back) and one into a gold mine, lets it out
 again, and checks the save after each. The train test trains villagers at
 a new town's hall until there's no room (6 of 11 people to 11 of 11), and
-checks the save has them and the food paid. The menus test
+checks the save has them and the food paid. The cash test takes a town to
+level 20 (its prizes give cash), buys land for cash after gold is refused,
+opens House IV early, hurries a gold mine and trades cash for gold at the
+bank, checking the save for each. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
 phone checks the dock, short numbers and the sheet closing when dragged
 down; the collect test ends with the glove collecting two buildings. The client is
 now 309 KB (93 KB compressed).
 
-**Not yet in step 3** (Beta 1's next slices): turning a building while placing it, unlocking a
-building early with cash, buying resources with cash when short (the Flash
-client offers it), and hurrying with cash (units walk and villagers work now:
+**Not yet in step 3** (Beta 1's next slices): turning a building while
+placing it (units walk, villagers work, and land and cash are in now:
 [Units walking](#units-walking), [Villagers at work](#villagers-at-work)).
 Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
@@ -680,6 +682,34 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
 **Not yet:** hurrying a training with cash isn't in the Flash client
 either; the dragon nest's riders, the hatchery and other special training
 windows are in the classic game for now.
+
+### Land and cash
+
+Built (Beta 1's fifth slice). Tap land for sale to buy it, in gold or cash;
+open a building early from the shop for cash; finish a building's work now
+for 2 cash; and the bank, from the + on the gold and cash pills. Code:
+`rules/land.ts`, `unlock` in `rules/shop.ts`, `hurry` in
+`rules/production.ts` (all with tests), `ui/bank.ts`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- Land: a closed block in the middle 3 x 3 is for sale when the block
+  before or after it, or above or below it, is open. Its price is the
+  config's `expansion_prices` row for how many blocks are open (the first
+  4,000 gold or 20 cash). Paying in gold needs that row's number of
+  neighbours (every neighbour counts but "Best Empire"); cash doesn't.
+  `expand` (block, "gold" or "cash", town).
+- Opening a building early: a building the shop shows but whose level
+  isn't reached costs a third of that level in cash, rounded up (House IV,
+  level 31: 11 cash); the shop sells it from then on. `unlock_building`
+  (its id, as text).
+- Hurrying: 2 cash finishes a working mill, mine, bakery or a wonder that
+  houses nobody, and collects it at once; the cash goes in `collect_new`'s
+  last place. Farms and ranches can't be hurried.
+- The bank is the site's (bank.py): 2,000 of a resource for 1 cash, up to
+  5 a day, and the game's own trade, 5 cash for 2,500 gold
+  (`exchange_cash_new`, town). The window first sends the town's waiting
+  commands, so the bank counts what the player sees.
 
 ### Making the art look better
 

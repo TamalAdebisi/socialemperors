@@ -29,6 +29,8 @@ export interface Hud {
   offerCollectAll(run: () => void): void;
   /** How many buildings are ready: the glove shows when there are any, with the count. */
   ready(count: number): void;
+  /** Offer the bank: a + on the gold and cash pills. */
+  offerBank(open: () => void): void;
 }
 
 const RESOURCES = ["gold", "wood", "food", "stone", "cash"] as const;
@@ -127,6 +129,18 @@ export function showHud(town: Town, actions: HudActions): Hud {
           run();
         }
       });
+    },
+    offerBank(open) {
+      for (const key of ["gold", "cash"]) {
+        const pill = bar.querySelector(`[data-n="${key}"]`)!.parentElement!;
+        const plus = document.createElement("button");
+        plus.type = "button";
+        plus.className = "pill-plus";
+        plus.setAttribute("aria-label", key === "cash" ? "Bank: get cash" : "Bank: get gold");
+        plus.textContent = "+";
+        plus.addEventListener("click", open);
+        pill.append(plus);
+      }
     },
     ready(count) {
       glove.hidden = !offered || count === 0;

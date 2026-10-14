@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { itemInfo, type ConfigItem, type ItemInfo } from "./config.ts";
-import { atLimit, buy, describe, obstacle, readShop, shopItems } from "./shop.ts";
+import { atLimit, buy, canUnlock, describe, obstacle, readShop, shopItems, unlock, unlockPrice } from "./shop.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
 const config = (fields: Partial<ConfigItem>): ConfigItem => ({
@@ -81,4 +81,16 @@ test("buying pays, gives experience, puts it on the map and sends what the Flash
   assert.equal(buy(t, HOUSE, 30, 30, 5000), "House I doesn't fit there.");  // not bought land
   assert.equal(buy(t, BIG_HOUSE, 45, 45, 5000), "House IV: from level 10.");
   assert.deepEqual([t.wood, t.items.length], [70, 1]);  // nothing changed
+});
+
+test("opening a building early: a third of its level in cash, rounded up; then the shop sells it", () => {
+  const t = town(3);
+  assert.equal(unlockPrice(BIG_HOUSE), 4);
+  assert.equal(canUnlock(t, BIG_HOUSE), true);
+  assert.equal(canUnlock(t, HOUSE), false, "not locked");
+  assert.match(unlock({ ...t, cash: 3 }, BIG_HOUSE) as string, /Not enough cash/);
+  assert.deepEqual(unlock(t, BIG_HOUSE), { cmd: "unlock_building", args: ["4"] });
+  assert.equal(t.cash, 1);
+  assert.equal(canUnlock(t, BIG_HOUSE), false);
+  assert.equal(obstacle(t, BIG_HOUSE)?.kind, "price", "only its price stops it now");
 });
