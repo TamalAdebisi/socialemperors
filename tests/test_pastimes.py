@@ -12,6 +12,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import economy
 import sessions
 from command import command, do_command
 from engine import timestamp_now
@@ -121,7 +122,7 @@ class PastimesTest(unittest.TestCase):
 
     def test_a_monday_bonus_that_is_not_on_offer(self):
         self.send("weekly_reward", "c", 500)
-        self.assertEqual(self.cash(), 105)  # the config's amount
+        self.assertEqual(self.cash(), 100 + economy.MONDAY_BONUS_CASH)  # the config's amount
         self.pState["timeStampMondayBonus"] = 0
         self.send("weekly_reward", "u", "608")
         self.assertEqual(self.map["store"], {})
@@ -140,7 +141,7 @@ class PastimesTest(unittest.TestCase):
             self.a_day_later()
             self.send("win_bonus", 0, TOWN, hero, day, cash)
         self.assertEqual(self.map["store"], {"555": 1, "534": 1})
-        self.assertEqual(self.cash(), 104)
+        self.assertEqual(self.cash(), 100 + sum(economy.DAILY_BONUS_CASH.values()))  # the config's amounts
         self.a_day_later()
         self.send("win_bonus", 250, TOWN, 0, 1, 0)  # and again from day one
         self.assertEqual(self.map["coins"], 1500)

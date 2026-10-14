@@ -34,6 +34,7 @@ class SavesTest(unittest.TestCase):
         self.assertEqual(map["warehouseAditionalCapacitySingle"], 50)
         self.assertEqual(map["resourceAlliesMarket"], "n")
         self.assertEqual(map["universAttackWin"], [])
+        self.assertEqual(map["levelPaid"], 1)
 
     def test_a_new_village(self):
         self.check_fields(sessions.session(sessions.new_village(owner_id=None)))

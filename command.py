@@ -12,6 +12,7 @@ import inventory
 import production
 import quests
 import shop
+import levels
 import magic
 import market
 import missions
@@ -251,13 +252,12 @@ def do_command(USERID, cmd, args, previous=None):
         new_level = args[0]
         print("Level Up!:", new_level, end="")
         map = save["maps"][towns.current(save)]  # the client sends no town: the one open
-        old_level = int(map.get("level") or 1)
         map["level"] = args[0]
         current_xp = map["xp"]
         min_expected_xp = get_xp_from_level(max(0, new_level - 1))
         map["xp"] = max(min_expected_xp, current_xp) # try to fix problems with not counting XP... by keeping up with client-side level counting
-        mana = magic.level_up(save, old_level, new_level)
-        print(f" (+{mana} mana)" if mana else "")
+        paid = levels.reached(save, map, new_level)  # the level up window's prize, and mana
+        print(f" ({paid})" if paid else "")
 
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
         new_xp = args[0]
@@ -265,6 +265,9 @@ def do_command(USERID, cmd, args, previous=None):
         map = save["maps"][towns.current(save)]
         map["xp"] = new_xp
         map["level"] = get_level_from_xp(new_xp)
+        paid = levels.reached(save, map, map["level"])  # a level up the server missed
+        if paid:
+            print("Level up:", paid)
 
     elif cmd == Constant.CMD_EXPAND:
         land_id = args[0]

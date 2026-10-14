@@ -60,14 +60,14 @@ class MagicTest(unittest.TestCase):
         self.assertEqual((self.save["playerInfo"]["cash"], self.map["coins"]), (99, 30000))
 
     def test_mana_from_level_36(self):
-        self.map.update(level=34, xp=get_xp_from_level(33))
+        self.map.update(level=34, levelPaid=34, xp=get_xp_from_level(33))
         for level in (35, 36, 37):
             self.send("rt_level_up", level)
         self.send("rt_level_up", 37)  # sent twice: counted once
         self.assertEqual(self.pState["mana"], 4)
 
     def test_mana_for_levels_gained_on_a_quest(self):
-        self.map.update(level=36, xp=get_xp_from_level(35))  # counted from 0: the xp where level 36 starts
+        self.map.update(level=36, levelPaid=36, xp=get_xp_from_level(35))  # counted from 0: the xp where level 36 starts
         self.send("end_quest", json.dumps({"map": TOWN, "quest_id": 100000001, "win": 0, "units": [],
                                            "resources": {"g": 0, "x": get_xp_from_level(37) - self.map["xp"]}}))
         self.assertEqual(self.map["level"], 38)

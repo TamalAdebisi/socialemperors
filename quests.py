@@ -38,7 +38,7 @@ from engine import timestamp_now
 from get_game_config import get_game_config, get_level_from_xp
 import graveyard
 import inventory
-import magic
+import levels
 
 UNIT_ID, SENT, KILLED, RECOVERED = 0, 1, 2, 3
 
@@ -101,9 +101,8 @@ def end(save: dict, result: dict) -> str:
     resources = result.get("resources", {})
     map["coins"] += max(int(resources.get("g", 0)), 0)
     map["xp"] += max(int(resources.get("x", 0)), 0)
-    old_level = int(map.get("level", 1))
-    map["level"] = max(old_level, get_level_from_xp(map["xp"]))  # level ups during the quest were not sent
-    magic.level_up(save, old_level, map["level"])  # nor was their mana
+    map["level"] = max(int(map.get("level", 1)), get_level_from_xp(map["xp"]))  # level ups during the quest were not sent
+    levels.reached(save, map, map["level"])  # nor were their prizes
 
     _quest_times(map).setdefault(quest_id, timestamp_now())  # normally set by start_quest
 
