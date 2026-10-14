@@ -78,14 +78,10 @@ TOKEN_MAX_AGE = _int("SE_TOKEN_MAX_AGE", 7 * 24 * 3600)
 TRUSTED_PROXIES = _int("SE_TRUSTED_PROXIES", 0)
 CLIENT_IP_HEADER = os.environ.get("SE_CLIENT_IP_HEADER", "").strip() or None
 
-# Game client versions players may pick. Anything else is rejected, so a
-# crafted form can't inject text into the game page.
-GAME_VERSIONS = {
-    "SocialEmpires0926bsec.swf": "0.9.26b (Working)",
-    "SocialEmpires1.1.5sec.swf": "1.1.5 (Experimental)",
-    "SocialEmpires1.4.07sec.swf": "1.4.07 (Broken)",
-}
-DEFAULT_GAME_VERSION = "SocialEmpires0926bsec.swf"
+# The game client everybody plays: Social Empires 0.9.26b, the one this
+# server is written for. (The 1.1.5 and 1.4.07 clients are still in the
+# assets but never loaded.) Our own releases are named in version.py.
+GAME_CLIENT = "SocialEmpires0926bsec.swf"
 
 
 def _load_secret_key() -> str:

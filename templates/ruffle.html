@@ -35,7 +35,7 @@
             var player = window.RufflePlayer.newest().createPlayer();
             document.getElementById("stage").appendChild(player);
             player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
-                url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAMEVERSION}}",
+                url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAME_CLIENT}}",
                 backgroundColor: "#669C2C",
                 allowScriptAccess: false,
                 allowFullscreen: true, // lets the game's own full screen button work

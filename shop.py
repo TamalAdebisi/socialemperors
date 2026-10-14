@@ -206,8 +206,8 @@ def sacrifice(save: dict, x, y, town_id: int, altar_id, unit_id) -> str:
     return f"Unit {unit_id} sacrificed for {gold} gold."
 
 
-def gold_statue(save: dict) -> str:
-    give(save, save["maps"][0], "g", GOLD_PER_STATUE)
+def gold_statue(save: dict, town_id: int = 0) -> str:
+    give(save, save["maps"][town_id], "g", GOLD_PER_STATUE)
     return f"{GOLD_PER_STATUE} gold from a golden statue."
 
 

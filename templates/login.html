@@ -56,14 +56,6 @@
 						{% endfor %}
 					</select>
 
-					<label class="title" for="GAMEVERSION"><img src="img/knight.png" style="height: 18px; vertical-align: middle;"> Game version</label>
-					<select id="GAMEVERSION" name="GAMEVERSION" required>
-						{% for file, label in game_versions.items() %}
-						<option value="{{ file }}">{{ label }}</option>
-						{% endfor %}
-					</select>
-					<div style="margin-top: 6px;"><i>Tip: 0.9.26b contains legacy Troll Missions!</i></div>
-
 					{{ player_choice() }}
 					<br><button type="submit">Play</button>
 				</form>

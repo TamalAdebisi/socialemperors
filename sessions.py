@@ -25,6 +25,7 @@ from constants import Constant
 from engine import timestamp_now
 from storage import open_storage
 from version import version_code, migrate_loaded_save, add_missing_fields
+import tutorial
 
 # Every request that reads or changes game state holds this lock, so two
 # requests can never change the same village at the same moment.
@@ -166,8 +167,23 @@ def new_village(owner_id) -> str:
         __saves[USERID] = village
         __owners[USERID] = owner_id
         __dirty.add(USERID)
+        share_tutorial(USERID)
     flush()  # don't make a brand-new empire wait for the next batch
     return USERID
+
+
+def share_tutorial(USERID: str) -> bool:
+    """Arthur's tutorial is the player's, not one empire's: an empire whose
+    account has been through it in another empire doesn't start it again."""
+    with LOCK:
+        owner = __owners.get(USERID)
+        if owner is None or USERID not in __saves:
+            return False
+        others = [__saves[pid] for pid, other_owner in __owners.items() if other_owner == owner and pid != USERID]
+        if not tutorial.carry_over(__saves[USERID], others):
+            return False
+        __dirty.add(USERID)
+        return True
 
 
 def assign_owner(USERID: str, owner_id: int):
@@ -201,7 +217,7 @@ def save_info(USERID: str) -> dict:
     empire_name = str(save["playerInfo"]["map_names"][default_map])
     xp = save["maps"][default_map]["xp"]
     level = save["maps"][default_map]["level"]
-    tutorial_done = bool(save["playerInfo"].get("completed_tutorial"))
+    tutorial_done = tutorial.step(save) > 0
     return {"userid": USERID, "name": empire_name, "xp": xp, "level": level,
             "tutorial_done": tutorial_done}
 

@@ -83,14 +83,14 @@ def start(save: dict) -> str:
     return f"Survival started with {note}."
 
 
-def end(save: dict, map_id, seconds, units_json) -> str:
+def end(save: dict, map_id, seconds, units_json, town_id: int = 0) -> str:
     map_id, seconds = str(map_id), max(int(seconds), 0)
     won = prize(map_id, seconds)
     claimed = json.loads(units_json) if units_json else None
     if claimed and set(int(u) for u in claimed) != {won}:
         print(f"(the client listed {claimed}; the time held gives {won}) ", end="")
     if won is not None:
-        inventory.add_stored(save, 0, won)  # shown in storage by the client, which sends nothing for it
+        inventory.add_stored(save, town_id, won)  # shown in storage by the client, which sends nothing for it
     maps = _maps(save)
     best = int((maps.get(map_id) or {}).get("tp", 0))
     maps[map_id] = {"ts": timestamp_now(), "tp": max(best, seconds)}
