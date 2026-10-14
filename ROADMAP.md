@@ -54,7 +54,9 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
       instead of loading it from unpkg.com
 - [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
       repurpose it once we can change the client
-- [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
+- [x] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody
+      has it): a copy of the fireball `p.fireBall_02` under the class name
+      the game looks for, made by `tools/rename_swf_class.py`
 - [x] Login security: changing your password (on the new account page)
       signs out every other browser and game; every form carries a CSRF
       token; logging out is a button, not a link; at most 5 new accounts an
