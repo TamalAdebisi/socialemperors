@@ -60,6 +60,10 @@ body.game-page {
     display: contents;
 }
 
+#gamebar .badge {
+    margin-right: -2px;
+}
+
 #gamebar .fps {
     color: #2f4220;
     font-size: 11px;
@@ -69,6 +73,13 @@ body.game-page {
 @media (max-width: 720px) {
     #gamebar .fps,
     #gamebar nav .label {
+        display: none;
+    }
+}
+
+/* Phones: the buttons need the room more than a cut-off empire name. */
+@media (max-width: 480px) {
+    #gamebar .empire {
         display: none;
     }
 }

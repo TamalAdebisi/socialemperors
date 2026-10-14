@@ -478,6 +478,15 @@ def friends_page():
     return render_friends(user)
 
 
+@app.route("/friends/news")
+def friends_news_count():
+    """The game bar's Friends badge, kept up to date while the game is open."""
+    user = current_user()
+    if user is None:
+        return json_response({"error": "Please sign in again."}, 403)
+    return json_response({"news": friends_news(user)})
+
+
 @app.route("/friends/ask", methods=["POST"])
 def ask_friend():
     user = friends_user()
@@ -719,7 +728,7 @@ def _game_page(template):
                            GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
                            ASSETS_URL=config_env.ASSETS_URL, DAYS=comeback_bonus.page_days(village_of(USERID)),
                            DYNAMIC=DYNAMIC, ART_URL=art_url(), GIFTS_WAITING=bool(gifts.waiting(user["id"])),
-                           USER_KEY=accounts.make_game_token(USERID), user=user)
+                           USER_KEY=accounts.make_game_token(USERID), user=user, news=friends_news(user))
 
 
 @app.route("/play.html")

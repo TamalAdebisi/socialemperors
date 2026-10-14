@@ -115,6 +115,17 @@ class FriendsTest(unittest.TestCase):
 
     def test_the_friends_page_needs_signing_in(self):
         self.assertEqual(server.app.test_client().get("/friends").status_code, 302)
+        self.assertEqual(server.app.test_client().get("/friends/news").status_code, 403)
+
+    def test_the_game_bar_shows_whats_waiting(self):
+        alice, bob = self.player(), self.player()
+        bar = text(bob[0].get("/ruffle.html"))
+        self.assertIn('href="/friends" target="_blank"', bar)  # a new tab: the game plays on
+        self.assertIn("data-friends-news hidden>0<", bar)       # nothing waiting: no badge
+        send_form(alice[0], "/friends/ask", username=bob[1])
+        self.assertIn("data-friends-news >1<", text(bob[0].get("/ruffle.html")))
+        self.assertIn('aria-label="Friends, 1 waiting"', text(bob[0].get("/ruffle.html")))
+        self.assertEqual(bob[0].get("/friends/news").get_json(), {"news": 1})  # what the bar asks while the game is open
 
     # Friends in the game
 
