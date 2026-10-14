@@ -276,6 +276,13 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       bonuses; neighbours; sound and speed; then a full run-through against
       the Flash game. Players can use the new client for everything but
       battles, which open in the classic game.
+      **Launch: a fresh start.** The live server moves to Supabase with an
+      empty database: none of today's accounts or empires go with it (the
+      owner's call). The server copies SQLite over by itself when it meets
+      an empty database, so it first needs a setting to skip that. The
+      owner signs up first and becomes the admin (`SE_ADMINS`); test
+      accounts stay on staging and in the browser tests, never on the live
+      game.
 - [ ] **Beta 2, battles and quests** (step 4): combat, defending a town,
       spells and heroes, the island map, then the quests in batches with
       their bosses, checked side by side against the Flash game.

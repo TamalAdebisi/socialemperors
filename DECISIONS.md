@@ -4,6 +4,26 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## Waiting on the owner
+
+- **The built-in neighbours at the fresh start.** AcidCaos's village (the
+  first project's creator) and three called Arthur30 to Arthur32 ship in
+  `villages/` and are shown to players with fewer than seven neighbours.
+  A fresh database doesn't remove them. Ask before Beta 1's launch whether
+  they go.
+
+## 14 October 2026: a fresh start at Beta 1
+
+- **The owner's call:** when the live server moves to Supabase, at Beta
+  1's launch, it starts empty. Today's accounts and empires (the first
+  project's creator's, the test accounts) stay behind, and the owner and
+  friends start from a clean slate.
+- **Claude's suggestions, in the plan:** a setting to skip the automatic
+  copy from SQLite (built as part of the launch); the owner signs up first
+  and is made admin through `SE_ADMINS`, so no password passes through
+  Claude; test accounts stay on staging and in the browser tests, so the
+  live game holds real players only.
+
 ## 14 October 2026: the menus, and the servers
 
 - **The owner picked option 3, the rail and dock**, after comparing it
