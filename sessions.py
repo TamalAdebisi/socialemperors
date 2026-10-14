@@ -56,6 +56,15 @@ def storage():
     return __storage
 
 
+__also_flushed = []  # other game state written with the villages: tournaments.py
+
+
+def also_flush(write) -> None:
+    """write(storage) runs with every flush, after the villages. For state
+    that lives outside the villages but must be saved the same way."""
+    __also_flushed.append(write)
+
+
 # Loading
 
 def load_saved_villages():
@@ -138,6 +147,8 @@ def flush():
                 print(f" [!] Saving failed, will retry: {e}")
                 with LOCK:
                     __dirty.update(pid for pid, _, _ in items)
+        for write in __also_flushed:
+            write(__storage)
     radar.flush(__storage)
 
 

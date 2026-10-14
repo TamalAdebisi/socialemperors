@@ -55,6 +55,12 @@ SCHEMA = [
         example TEXT,
         PRIMARY KEY (kind, name, detail)
     )""",
+    # Tournaments (tournaments.py): rooms several players share, so not in a village.
+    """CREATE TABLE IF NOT EXISTS tournaments (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+    )""",
 ]
 
 UPSERT_VILLAGE = """INSERT INTO villages (pid, owner_id, data, updated_at)
@@ -76,6 +82,17 @@ def _problem_statements(row):
     """(sql, params) to save one row of the radar: count it, else add it."""
     kind, name, detail, count, first, last, player, example = row
     return [(COUNT_PROBLEM, (count, last, player, example, kind, name, detail)), (ADD_PROBLEM, tuple(row))]
+
+
+UPSERT_TOURNAMENT = """INSERT INTO tournaments (id, data, updated_at) VALUES (?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"""
+
+
+def _tournament_statements(records, deleted):
+    """(sql, params) to save these tournaments and delete those."""
+    now = int(time.time())
+    return ([(UPSERT_TOURNAMENT, (record["id"], json.dumps(record), now)) for record in records] +
+            [("DELETE FROM tournaments WHERE id = ?", (tournament_id,)) for tournament_id in deleted])
 
 
 class UsernameTaken(Exception):
@@ -166,6 +183,15 @@ class BaseStorage:
     def clear_problems(self):
         self._query("DELETE FROM problems")
 
+    # Tournaments
+    def load_all_tournaments(self) -> list:
+        return [json.loads(r["data"]) for r in self._query("SELECT data FROM tournaments")]
+
+    def save_tournaments(self, records: list, deleted: list = ()):
+        """records: tournament dicts (each with its "id"); deleted: ids."""
+        for sql, params in _tournament_statements(records, deleted):
+            self._query(sql, params)
+
 
 class SQLiteStorage(BaseStorage):
     def __init__(self, path: str):
@@ -208,6 +234,11 @@ class SQLiteStorage(BaseStorage):
                 for sql, params in _problem_statements(row):
                     conn.execute(sql, params)
 
+    def save_tournaments(self, records, deleted=()):
+        with self._conn() as conn:  # one transaction
+            for sql, params in _tournament_statements(records, deleted):
+                conn.execute(sql, params)
+
 
 class D1Storage(BaseStorage):
     """Cloudflare D1 over the REST API.
@@ -249,6 +280,11 @@ class D1Storage(BaseStorage):
         if rows:
             self._post({"batch": [{"sql": sql, "params": list(params)}
                                   for row in rows for sql, params in _problem_statements(row)]})
+
+    def save_tournaments(self, records, deleted=()):
+        statements = _tournament_statements(records, deleted)
+        if statements:
+            self._post({"batch": [{"sql": sql, "params": list(params)} for sql, params in statements]})
 
 
 def open_storage() -> BaseStorage:
