@@ -15,6 +15,7 @@ USERID.
 """
 
 import re
+import secrets
 
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -62,6 +63,28 @@ def authenticate(username: str, password: str):
     if check_password_hash(user["password_hash"], password or ""):
         return {"id": user["id"], "username": user["username"]}
     return None
+
+
+def signed_in(web_session) -> dict:
+    """The account a browser is signed in to, as {"id", "username"}, or None
+    (signed out, or the account was deleted since)."""
+    user_id = web_session.get("user_id")
+    user = storage().get_user(user_id) if user_id is not None else None
+    if user is None:
+        return None
+    return {"id": user["id"], "username": user["username"]}
+
+
+def is_admin(user) -> bool:
+    return user is not None and user["username"].lower() in config_env.ADMINS
+
+
+def new_password(user_id: int) -> str:
+    """A new random password for an account (the admin page's reset), shown
+    once to the admin to pass on."""
+    password = secrets.token_urlsafe(9)  # 12 characters
+    storage().set_password(user_id, generate_password_hash(password))
+    return password
 
 
 def make_game_token(USERID: str) -> str:

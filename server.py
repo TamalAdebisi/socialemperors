@@ -33,6 +33,9 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import safe_join
 
 import accounts
+import admin
+import csrf
+import radar
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
 from command import command
 from constants import Constant
@@ -51,6 +54,8 @@ app.config.update(
 )
 if config_env.TRUSTED_PROXIES:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=config_env.TRUSTED_PROXIES, x_proto=config_env.TRUSTED_PROXIES)
+app.jinja_env.globals["csrf_token"] = csrf.token  # every form: <input type="hidden" name="csrf" ...>
+app.register_blueprint(admin.admin)  # /admin, for the accounts in SE_ADMINS
 
 print(" [+] Configuring server routes...")
 
@@ -61,9 +66,7 @@ print(" [+] Configuring server routes...")
 
 def current_user():
     """The logged-in account as {"id", "username"}, or None."""
-    if "user_id" not in web_session:
-        return None
-    return {"id": web_session["user_id"], "username": web_session.get("username", "?")}
+    return accounts.signed_in(web_session)
 
 
 def json_response(data, status=200):
@@ -338,6 +341,11 @@ def get_player_info_response(USERID):
 def sync_error_track_response():
     print(f"sync_error_track: USERID={request.values.get('USERID')} error={request.values.get('error')} "
           f"tries={request.values.get('tries')}")
+    USERID = request.values.get("USERID", "")
+    if accounts.check_game_token(USERID, request.values.get("user_key", "")):  # from a real game
+        radar.note(radar.CLIENT, "sync_error", request.values.get("error", ""),
+                   f"{request.values.get('description', '')} tries={request.values.get('tries')} "
+                   f"mode={request.values.get('game_mode')}", USERID)
     return ("", 200)
 
 
@@ -346,7 +354,10 @@ def flash_sync_error_response():
     reasons = {"flash_sync_error": "reload On Sync Error",
                "flash_reload_quest": "reload On End Quest",
                "flash_reload_attack": "reload On End Attack"}
-    print("flash_sync_error", reasons.get(request.values.get('sp_ref_cat'), "?"))
+    reason = reasons.get(request.values.get('sp_ref_cat'), "?")
+    print("flash_sync_error", reason)
+    if request.values.get('sp_ref_cat') == "flash_sync_error" and web_session.get("USERID"):
+        radar.note(radar.CLIENT, "reload", reason, player=web_session["USERID"])  # the others are routine
     return redirect(request.referrer if request.referrer and request.referrer.endswith("ruffle.html")
                     else "/play.html")
 
@@ -368,6 +379,7 @@ def command_response(USERID):
     except Exception as e:
         # One bad command shouldn't crash the request or leave the lock held.
         print(f" [!] Command failed for {USERID}: {e!r}")
+        radar.failure("command.php", e, data_str[65:], USERID)
         return json_response({"result": "error"}, 500)
     return json_response({"result": "success"})
 

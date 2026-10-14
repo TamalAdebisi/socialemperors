@@ -54,9 +54,13 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
       repurpose it once we can change the client
 - [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
-- [ ] Admin tools: reset a password, delete an account, inspect a village
-- [ ] Bug radar: count which unhandled commands players trigger, so we fix the
-      most-used missing features first
+- [x] Admin page (`/admin`, `admin.py`), for the usernames in `SE_ADMINS`:
+      find an account, reset its password, delete it or one of its empires,
+      look inside an empire's save, and see who played last
+- [x] Bug radar (`radar.py`, on the admin page): counts the commands the
+      server doesn't handle yet, the commands that hit an error (by the line
+      of code) and the sync errors the game reports, most frequent first, so
+      we fix the most-used missing features first
 
 ### Phase 2: Finish the missing game features
 
@@ -96,7 +100,7 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] The daily bonus (`daily_bonus.py`): the server decides the day and
       pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (184 tests so far)
+- [ ] An automated test for every command (199 tests so far)
 
 ### Cash (to decide)
 

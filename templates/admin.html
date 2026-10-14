@@ -1,0 +1,96 @@
+{% extends "admin_base.html" %}
+{% block main %}
+	{% if done %}<div class="done">{{ done }}</div>{% endif %}
+
+	<section>
+		<div class="stats">
+			<div><b>{{ stats.accounts }}</b> accounts</div>
+			<div><b>{{ stats.empires }}</b> empires</div>
+			<div><b>{{ stats.day }}</b> played in the last day</div>
+			<div><b>{{ stats.hour }}</b> in the last hour</div>
+		</div>
+	</section>
+
+	<section>
+		<h2>Bug radar</h2>
+		<p class="muted">What players' games asked of the server that it couldn't do, most often first.
+			<span class="badge unhandled">unhandled</span> a command the server doesn't know yet ·
+			<span class="badge failed">failed</span> a command or page that hit an error ·
+			<span class="badge client">client</span> an error the game itself reported.</p>
+		{% if problems %}
+		<table>
+			<tr><th>Kind</th><th>What</th><th>Count</th><th>Last seen</th><th>Last player</th><th>Example</th><th></th></tr>
+			{% for p in problems %}
+			<tr>
+				<td><span class="badge {{ p.kind }}">{{ p.kind }}</span></td>
+				<td><code>{{ p.name }}</code>{% if p.detail %}<br><span class="muted">{{ p.detail }}</span>{% endif %}</td>
+				<td class="n">{{ p.count }}</td>
+				<td title="first seen {{ p.first_seen | ago }}">{{ p.last_seen | ago }}</td>
+				<td>{% if p.last_player %}<a href="{{ url_for('admin.empire', pid=p.last_player) }}"><code>{{ p.last_player }}</code></a>{% endif %}</td>
+				<td><code>{{ p.example }}</code></td>
+				<td>
+					<form class="inline" method="post" action="{{ url_for('admin.clear_problems') }}">
+						<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+						<input type="hidden" name="kind" value="{{ p.kind }}">
+						<input type="hidden" name="name" value="{{ p.name }}">
+						<input type="hidden" name="detail" value="{{ p.detail }}">
+						<button title="Clear it once it's fixed: if it comes back, it isn't">Clear</button>
+					</form>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+		<form method="post" action="{{ url_for('admin.clear_problems') }}" style="margin-top: 10px;"
+		      onsubmit="return confirm('Clear the whole bug radar?')">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input type="hidden" name="all" value="1">
+			<button>Clear all</button>
+		</form>
+		{% else %}
+		<p>Nothing on the radar.</p>
+		{% endif %}
+	</section>
+
+	<section>
+		<h2>Find an account</h2>
+		<form method="get" action="{{ url_for('admin.home') }}">
+			<input type="search" name="q" value="{{ query }}" placeholder="Part of a username" autofocus>
+			<button>Search</button>
+		</form>
+		{% if query %}
+		{% if found %}
+		<table style="margin-top: 10px;">
+			<tr><th>Username</th><th>Signed up</th><th>Empires</th></tr>
+			{% for user in found %}
+			<tr>
+				<td><a href="{{ url_for('admin.account', user_id=user.id) }}">{{ user.username }}</a></td>
+				<td>{{ user.created_at | ago }}</td>
+				<td class="n">{{ user.empires }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		{% else %}
+		<p>No account has "{{ query }}" in its name.</p>
+		{% endif %}
+		{% endif %}
+	</section>
+
+	<section>
+		<h2>Played most recently</h2>
+		<table>
+			<tr><th>Empire</th><th>Account</th><th>Level</th><th>Gold</th><th>Cash</th><th>Towns</th><th>Continent</th><th>Last played</th></tr>
+			{% for e in recent %}
+			<tr>
+				<td><a href="{{ url_for('admin.empire', pid=e.pid) }}">{{ e.name }}</a></td>
+				<td>{% if e.owner is not none %}<a href="{{ url_for('admin.account', user_id=e.owner) }}">{{ owners[e.owner] }}</a>{% else %}<span class="muted">none</span>{% endif %}</td>
+				<td class="n">{{ e.level }}</td>
+				<td class="n">{{ e.gold }}</td>
+				<td class="n">{{ e.cash }}</td>
+				<td class="n">{{ e.towns }}</td>
+				<td class="n">{{ e.continent or "" }}</td>
+				<td>{{ e.last_seen | ago }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</section>
+{% endblock %}

@@ -72,6 +72,9 @@ MAX_VILLAGES_PER_USER = _int("SE_MAX_VILLAGES", 3)
 MAX_NEIGHBORS = _int("SE_MAX_NEIGHBORS", 30)
 CDN_FALLBACK = _flag("SE_CDN_FALLBACK", False)
 TOKEN_MAX_AGE = _int("SE_TOKEN_MAX_AGE", 7 * 24 * 3600)
+# Usernames (comma-separated) of the accounts that may open /admin. None by
+# default, and then /admin doesn't exist for anybody.
+ADMINS = {name.strip().lower() for name in os.environ.get("SE_ADMINS", "").split(",") if name.strip()}
 # Number of proxies that each add an X-Forwarded-For entry in front of the
 # app. Used to read the visitor's real IP for login rate-limiting. 0 = none.
 # Railway adds an internal hop of its own, so use SE_CLIENT_IP_HEADER there.

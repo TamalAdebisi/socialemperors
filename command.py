@@ -24,6 +24,7 @@ import daily_bonus
 import social
 import assists
 import pvp
+import radar
 import towns
 import tutorial
 import worlds
@@ -54,10 +55,11 @@ def command(USERID, data):
         args = comm["args"]
         try:
             do_command(USERID, cmd, args, previous)
-        except Exception:
+        except Exception as e:
             # One command the server gets wrong must not cost the player the rest of the batch.
             print(f"\n [!] Command failed: {cmd} {args}")
             traceback.print_exc()
+            radar.failure(cmd, e, args, USERID)
         previous = comm
     save_session(USERID) # Save session
 
@@ -681,5 +683,6 @@ def do_command(USERID, cmd, args, previous=None):
 
     else:
         print(f"Unhandled command '{cmd}' -> args", args)
+        radar.note(radar.UNHANDLED, cmd, example=args, player=USERID)
         return
     
