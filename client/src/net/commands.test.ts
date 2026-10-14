@@ -98,3 +98,14 @@ test("an expired game token stops sending and says so", async () => {
   await commands.tick();
   assert.match(failures[0], /expired/);
 });
+
+test("flush sends what's waiting now, trying a failed batch again, and says whether it all got there", async () => {
+  const { commands, sent } = sender([500, 200]);
+  commands.add("expand", 12, "gold", 0);
+  assert.equal(await commands.flush(), true);
+  assert.equal(sent.length, 2, "the failed batch, then again");
+  assert.equal(commands.pending, 0);
+  const down = sender([500, 500, 500]);
+  down.commands.add("expand", 12, "gold", 0);
+  assert.equal(await down.commands.flush(), false);
+});

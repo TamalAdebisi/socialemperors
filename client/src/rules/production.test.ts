@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { itemInfo, type ConfigItem } from "./config.ts";
-import { chooseWorkTime, collect, harvest, productionOf, workState } from "./production.ts";
+import { canHurry, chooseWorkTime, collect, harvest, hurry, productionOf, workState } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
 // Items as the game config has them (numbers are strings there).
@@ -101,4 +101,19 @@ test("a wonder works on its own", () => {
     assert.deepEqual(done.commands, [{ cmd: "collect_new", args: [50, 50, 0, 52, 0, 1, 0] }]);
   }
   assert.equal(t.gold, 600);
+});
+
+test("hurrying: 2 cash finishes a working mill, mine or wonder and collects it; not farms or ranches", () => {
+  const t = { ...town(), cash: 5 };
+  const wonder = placed(WONDER, { unitsInside: 0, startedAt: 1000 });
+  assert.equal(canHurry(wonder, 2000), true);
+  const done = hurry(t, wonder, 2000);
+  assert.ok(typeof done !== "string");
+  assert.equal(t.cash, 3);
+  assert.equal(t.gold, 600);
+  assert.deepEqual(done.commands[0].args, [50, 50, 0, 52, 0, 1, 2], "the cash goes in the command");
+  assert.equal(wonder.startedAt, 2000, "it starts over");
+  assert.equal(canHurry(placed(FARM), 1010), false);
+  assert.equal(canHurry(placed(WONDER, { startedAt: 1000 }), 1000 + 21600), false, "ready already: just collect");
+  assert.match(hurry({ ...town(), cash: 1 }, placed(WONDER), 2000) as string, /Not enough cash/);
 });

@@ -79,6 +79,22 @@ export class CommandSender {
     this.stopped = true;
   }
 
+  /**
+   * Send everything waiting now, and wait for the server to have it: before
+   * something that reads the save outside the commands (the bank). False
+   * when it couldn't all be sent.
+   */
+  async flush(): Promise<boolean> {
+    for (let round = 0; round < 50 && this.pending > 0 && !this.stopped; round++) {
+      if (this.inFlight !== null) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } else {
+        await this.tick();
+      }
+    }
+    return this.pending === 0;
+  }
+
   /** One round: send the failed batch again, or the queue as a new batch. */
   async tick(): Promise<void> {
     if (this.inFlight !== null || this.stopped) {

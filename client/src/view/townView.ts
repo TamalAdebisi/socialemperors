@@ -366,6 +366,13 @@ export class TownView {
     slot.addChild(sprite);
   }
 
+  /** Draw the ground again: land bought. */
+  async redrawGround(): Promise<void> {
+    const old = this.ground.removeChildren();
+    await this.buildGround(new Set());
+    old.forEach((child) => child.destroy());
+  }
+
   private async buildGround(missing: Set<string>): Promise<void> {
     const terrain = this.items.get(terrainItemId(this.town.skin)) ?? this.items.get(terrainItemId(0));
     const art = terrain ? await this.art.get(terrain.art) : null;

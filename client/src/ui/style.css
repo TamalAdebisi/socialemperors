@@ -786,8 +786,27 @@ body {
 
 
 /* Not yet: grey, with the level in red, as in the original. */
+.shop-card.locked {
+  cursor: default;
+}
+
 .shop-card.locked .shop-name {
   color: var(--ink-soft);
+}
+
+.shop-card.locked .shop-picture {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.shop-card.locked .button {
+  margin-top: 4px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.shop-card.locked .button .icon {
+  height: 16px;
 }
 
 .shop-note.level {
@@ -1037,4 +1056,47 @@ body {
 
 .train-cash .icon {
   height: 18px;
+}
+
+/* The + on the gold and cash pills: the bank, as the game's own green + by its cash. */
+.pill-plus {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: 0 -8px 0 2px;
+  padding: 0;
+  border: 2px solid var(--green-edge);
+  border-radius: 50%;
+  background: linear-gradient(var(--green-top), var(--green-bottom));
+  color: #fff;
+  font: 900 16px/1 var(--round);
+  text-shadow: 0 1px 0 #2c5a0b;
+  cursor: pointer;
+}
+
+.pill-plus:hover {
+  transform: scale(1.1);
+}
+
+/* The bank's window. */
+.bank-amount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 800 14px var(--round);
+}
+
+.bank-amount output {
+  min-width: 2ch;
+  text-align: center;
+  font-size: 18px;
+}
+
+.bank .row .button {
+  flex: none;
+}
+
+.bank-message:empty {
+  display: none;
 }

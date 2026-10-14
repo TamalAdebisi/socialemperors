@@ -13,11 +13,13 @@ import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
-import { obstacle, readShop, shopItems } from "./rules/shop.ts";
+import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
+import { readLandPrices } from "./rules/land.ts";
 import { readTown, type Town } from "./rules/town.ts";
 import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
+import { BankWindow } from "./ui/bank.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
@@ -92,6 +94,7 @@ async function start(): Promise<void> {
       picture: (item, canvas) => drawThumbnail(art, item, canvas),
       choose: (item) => editor.startBuilding(item),
       storage: () => editor.storageCards(),
+      unlock: { price: unlockPrice, run: (item) => editor.unlock(item) },
     });
     const neighbours = new NeighboursWindow(info.neighbors ?? [], (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
     const world = new WorldWindows(settings.classicUrl);
@@ -111,8 +114,34 @@ async function start(): Promise<void> {
     ]);
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items,
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts) });
     hud.offerCollectAll(() => editor.collectAll());
+    const [cashForGold, goldForCash] = [Number(config.globals?.EXCHANGE_CASH) || 5, Number(config.globals?.EXCHANGE_GOLD) || 2500];
+    const bank = new BankWindow({
+      empire: settings.userId,
+      csrf: settings.csrf ?? "",
+      flush: () => commands.flush(),
+      changed: (cash, resources) => {
+        town.cash = cash;
+        town.gold = resources.g ?? town.gold;
+        town.wood = resources.w ?? town.wood;
+        town.food = resources.f ?? town.food;
+        town.stone = resources.s ?? town.stone;
+        hud.update(town);
+      },
+      cashForGold: () => {
+        if (town.cash < cashForGold) {
+          return false;
+        }
+        town.cash -= cashForGold;
+        town.gold += goldForCash;
+        commands.add("exchange_cash_new", town.id);
+        hud.update(town);
+        return true;
+      },
+    });
+    hud.offerBank(() => void bank.open());
   } else {
     document.body.classList.add("visiting");
   }

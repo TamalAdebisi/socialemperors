@@ -18,6 +18,8 @@ export interface PageSettings {
   assetsUrl: string;
   /** The Flash client's page, to go back to. */
   classicUrl: string;
+  /** The page's form token, for the site's own windows (the bank). */
+  csrf?: string;
 }
 
 export function readPageSettings(doc: Document = document): PageSettings {

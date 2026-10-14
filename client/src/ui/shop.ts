@@ -41,6 +41,8 @@ export interface ShopWindowParts {
   choose: (item: ItemInfo) => void;
   /** What's in storage. */
   storage: () => StorageCard[];
+  /** Opening a building before its level, for cash: its price, and doing it. */
+  unlock?: { price: (item: ItemInfo) => number; run: (item: ItemInfo) => void };
 }
 
 export class ShopWindow {
@@ -198,11 +200,23 @@ export class ShopWindow {
     this.cardTop(item, button);
     const blocked = this.parts.obstacle(item);
     if (blocked?.kind === "level") {
-      // Not yet: grey, and the level in red where the price would be, as the original shows it.
-      button.append(this.note(`Level ${blocked.level}`, "level"));
-      button.disabled = true;
-      button.classList.add("locked");
-      li.append(button);
+      // Not yet: grey, and the level in red where the price would be, as the original shows it; it can be opened early for cash.
+      const card = document.createElement("div");
+      card.className = "shop-card locked";
+      card.append(...button.childNodes);
+      card.append(this.note(`Level ${blocked.level}`, "level"));
+      const unlock = this.parts.unlock;
+      if (unlock) {
+        const open = this.action("", () => {
+          unlock.run(item);
+          this.refresh();
+        });
+        open.innerHTML = `<img class="icon" src="${resourceIcon("cash")}" alt="">`;
+        open.append(`Unlock: ${unlock.price(item)}`);
+        open.setAttribute("aria-label", `Unlock ${item.name} for ${unlock.price(item)} cash`);
+        card.append(open);
+      }
+      li.append(card);
       return li;
     }
     const price = priceOf(item);
