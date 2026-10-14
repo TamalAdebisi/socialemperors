@@ -24,6 +24,10 @@ what they get.
     The bank       2,000 of one resource (gold, wood, food or stone) for 1
                    cash, a few cash a day (bank.py). The game's own trade
                    the other way, 5 cash for 2,500 gold, stays.
+    Tournaments    a cash tournament's prize is the entry fee back with
+                   its unit (tournaments.py), not twice the fee as in the
+                   game: computer players fill the empty seats, so a good
+                   player could win over and over, and print cash.
     Islands        the first win of a quest island on 3 stars, the
                    hardest difficulty (quests.py). The game has no window
                    for it, so the island window's "Choose difficulty"
@@ -61,6 +65,9 @@ BANK_CASH_PER_DAY = 5
 
 # Quest islands: the cash for the first win of an island on 3 stars (quests.py)
 ISLAND_THREE_STAR_CASH = 5
+
+# Tournaments: a cash tournament's prize, in entry fees (the game gave 2)
+TOURNAMENT_CASH_PRIZE_IN_FEES = 1
 
 # Texts the game shows, by their id in the config's localization_strings
 TEXTS = {
@@ -110,6 +117,11 @@ def patch_config(config: dict) -> None:
     for row in rows:
         row["cash"] = continent_cash(row["level"])
     config["level_ranking_reward"] = rows
+
+    for kind in config["tournament_type"].values():
+        if kind["resource_type"] == "c":
+            for prize in kind["prize"]:
+                prize["c"] = int(kind["cost"]) * TOURNAMENT_CASH_PRIZE_IN_FEES
 
     for text in config["localization_strings"]:
         if isinstance(text, dict) and text.get("id") in TEXTS:

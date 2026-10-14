@@ -27,6 +27,7 @@ import social
 import assists
 import pvp
 import radar
+import tournaments
 import towns
 import tutorial
 import worlds
@@ -538,6 +539,10 @@ def do_command(USERID, cmd, args, previous=None):
             pState["teams"] = {}
         pState["teams"][mode] = json.loads(args[1])
         print("Team for", mode, "saved.")
+
+    elif cmd in (Constant.CMD_TOURNAMENT_SUBSTRACT_RESOURCES, Constant.CMD_TOURNAMENT_REFUND_RESOURCES,
+                 Constant.CMD_TOURNAMENT_WIN_REWARD):
+        print(tournaments.bookkeeping(cmd, args))
 
     elif cmd == Constant.CMD_SET_INFO_SHOWED:
         pState = save["privateState"]
