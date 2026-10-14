@@ -189,11 +189,18 @@ numbers, because the server writes them into the game config.
       is on Supabase's public Data API; `tools/copy_database.py` makes
       backups. The server still runs as one process: empires stay in its
       memory, so more processes need more than a database
-- [ ] Sign-in options through Supabase Auth: Discord, Google and email, next
-      to username and password, which keep working; existing accounts can
-      link them. A player can then get back into an account without the admin
-- [ ] New login and home pages, in the game's own look, and a Settings page:
-      your empires, your sign-in methods, your password
+- [x] Signing in with Discord or Google, through Supabase Auth
+      (`sign_in.py`, [DEPLOY.md](DEPLOY.md#part-7-signing-in-with-discord-and-google)),
+      next to usernames and passwords, which stay. A first sign-in picks a
+      username, or links an account already here; Settings links and
+      unlinks them. A player can then get back into an account without the
+      admin. (Email sign-in would need a mail service; not for now)
+- [x] New pages around the game, in its own look (sky and hills,
+      parchment, its round lettering and buttons): signing in, your empires
+      as cards with their Play buttons, and a Settings page to rename or
+      delete your empires, link Discord and Google, and set or change your
+      password. Off the game's bar: the Discord and GitHub links, and the
+      version
 - [ ] Friends, as Facebook had: add players by name, friends are your
       neighbours in the game, and you can send them gifts
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns

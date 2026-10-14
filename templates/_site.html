@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+{# The pages around the game (signing in, your empires, settings): the game's
+   sky and hills behind a parchment card. Each page fills in "card". #}
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>{% block title %}Social Empires{% endblock %}</title>
+		<link rel="icon" type="image/gif" href="img/icon.gif"/>
+		<link rel="stylesheet" href="css/site.css"/>
+	</head>
+	<body>
+		<div class="scene" aria-hidden="true">
+			<div class="cloud c1"></div>
+			<div class="cloud c2"></div>
+			<div class="cloud c3"></div>
+			<svg class="hills" viewBox="0 0 1440 400" preserveAspectRatio="none">
+				<path fill="#a9d65a" d="M0 170 C 220 90 420 80 640 150 S 1080 210 1440 110 L1440 400 L0 400 Z"/>
+				<path fill="#8cc63f" d="M0 250 C 260 170 520 190 760 250 S 1200 300 1440 220 L1440 400 L0 400 Z"/>
+				<path fill="#6aa82a" d="M0 330 C 300 280 700 300 980 340 S 1300 360 1440 330 L1440 400 L0 400 Z"/>
+			</svg>
+		</div>
+		<main class="page">
+			<a class="logo" href="/"><img src="img/logo.png" alt="Social Empires"></a>
+			<div class="card">
+				{% block card %}{% endblock %}
+			</div>
+		</main>
+	</body>
+</html>

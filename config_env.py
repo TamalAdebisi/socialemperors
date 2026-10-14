@@ -26,6 +26,11 @@ SE_DATABASE_URL      A Postgres connection string, e.g. Supabase's session poole
                      players from SQLite over (storage.py). Default: unset, SQLite
 SE_DATABASE_SCHEMA   The schema in that database the tables live in (default
                      "game"; staging uses "staging")
+SE_SUPABASE_URL      The Supabase project's address, e.g.
+                     https://<project>.supabase.co, for signing in with Discord
+                     and Google (sign_in.py). Unset: usernames and passwords only
+SE_SUPABASE_KEY      The project's publishable key (sb_publishable_...). Not a
+                     secret: it only lets the server start a sign-in
 SE_ALLOW_REGISTRATION  "1" (default) to let anyone sign up, "0" to close sign-ups
 SE_INVITE_CODE       If set, new accounts must enter this code (closed beta)
 SE_MAX_VILLAGES      Max empires per account (default 3)
@@ -72,6 +77,8 @@ ASSETS_URL = (os.environ.get("SE_ASSETS_URL")
 DATA_DIR = os.environ.get("SE_DATA_DIR", os.path.join(".", "data"))
 DATABASE_URL = os.environ.get("SE_DATABASE_URL", "").strip() or None
 DATABASE_SCHEMA = os.environ.get("SE_DATABASE_SCHEMA", "").strip() or "game"
+SUPABASE_URL = os.environ.get("SE_SUPABASE_URL", "").strip().rstrip("/") or None
+SUPABASE_KEY = os.environ.get("SE_SUPABASE_KEY", "").strip() or None
 
 ALLOW_REGISTRATION = _flag("SE_ALLOW_REGISTRATION", True)
 INVITE_CODE = os.environ.get("SE_INVITE_CODE") or None

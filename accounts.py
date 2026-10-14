@@ -19,6 +19,12 @@ secret key, so it gives nothing away). A new password means a new stamp, so
 changing it signs out every browser and stops every game opened with the old
 one: if someone else got into your account, changing your password throws
 them out.
+
+Discord and Google: an account can also be signed in to with a Discord or
+Google account linked to it (sign_in.py does the talking to them). One made
+that way has no password until the player sets one on the Settings page: its
+password_hash is NO_PASSWORD and random letters, which no password matches (a
+real hash has "$" in it), and which still gives it a stamp of its own.
 """
 
 import hmac
@@ -31,10 +37,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import config_env
 from sessions import owner_of, storage
+from sign_in import PROVIDERS
 from storage import UsernameTaken
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_]{3,20}$")
 MIN_PASSWORD = 8
+NO_PASSWORD = "!"
 
 _serializer = URLSafeTimedSerializer(config_env.SECRET_KEY, salt="game-token")
 
@@ -58,19 +66,76 @@ def _check_new_password(username: str, password: str):
         raise AccountError("Your password can't be your username.")
 
 
-def register(username: str, password: str, invite_code: str = "") -> int:
-    username = (username or "").strip()
+def _check_sign_up(username: str, invite_code: str):
     if not config_env.ALLOW_REGISTRATION:
         raise AccountError("Sign-ups are closed right now.")
-    if config_env.INVITE_CODE and invite_code.strip() != config_env.INVITE_CODE:
+    if config_env.INVITE_CODE and (invite_code or "").strip() != config_env.INVITE_CODE:
         raise AccountError("That invite code isn't right.")
     if not USERNAME_RE.match(username):
         raise AccountError("Usernames are 3-20 characters: letters, numbers and _ only.")
-    _check_new_password(username, password)
+
+
+def _create(username: str, password_hash: str) -> int:
     try:
-        return storage().create_user(username, generate_password_hash(password))
+        return storage().create_user(username, password_hash)
     except UsernameTaken:
         raise AccountError("That username is taken.")
+
+
+def register(username: str, password: str, invite_code: str = "") -> int:
+    username = (username or "").strip()
+    _check_sign_up(username, invite_code)
+    _check_new_password(username, password)
+    return _create(username, generate_password_hash(password))
+
+
+def register_with(provider: str, account: str, label: str, username: str, invite_code: str = "") -> int:
+    """A new player who came with Discord or Google: an account with no
+    password, signed in to with that."""
+    username = (username or "").strip()
+    _check_sign_up(username, invite_code)
+    if storage().find_sign_in(provider, account) is not None:
+        raise AccountError(f"That {PROVIDERS[provider]} account already has a player here. Log in with it instead.")
+    user_id = _create(username, NO_PASSWORD + secrets.token_hex(16))
+    try:
+        storage().add_sign_in(user_id, provider, account, label)
+    except Exception:  # the same Discord account signing up twice at once
+        storage().delete_user(user_id)
+        raise AccountError(f"That {PROVIDERS[provider]} account already has a player here. Log in with it instead.")
+    return user_id
+
+
+def signed_in_with(provider: str, account: str):
+    """The account a Discord or Google account signs in to, as
+    {"id", "username"}, or None."""
+    user_id = storage().find_sign_in(provider, account)
+    user = storage().get_user(user_id) if user_id is not None else None
+    return {"id": user["id"], "username": user["username"]} if user else None
+
+
+def has_password(user_id: int) -> bool:
+    password_hash = storage().get_password_hash(user_id)
+    return bool(password_hash) and not password_hash.startswith(NO_PASSWORD)
+
+
+def link(user: dict, provider: str, account: str, label: str):
+    """Sign in to this account with that Discord or Google account from now on."""
+    name = PROVIDERS[provider]
+    owner = storage().find_sign_in(provider, account)
+    if owner == user["id"]:
+        return
+    if owner is not None:
+        raise AccountError(f"That {name} account is already linked to another player.")
+    if any(s["provider"] == provider for s in storage().sign_ins_of(user["id"])):
+        raise AccountError(f"You already have a {name} account linked. Unlink it first.")
+    storage().add_sign_in(user["id"], provider, account, label)
+
+
+def unlink(user: dict, provider: str):
+    others = [s for s in storage().sign_ins_of(user["id"]) if s["provider"] != provider]
+    if not others and not has_password(user["id"]):
+        raise AccountError("Set a password first: otherwise you'd have no way left to sign in.")
+    storage().remove_sign_in(user["id"], provider)
 
 
 def authenticate(username: str, password: str):
@@ -139,9 +204,10 @@ def signed_in(web_session) -> dict:
 
 
 def change_password(user: dict, current: str, new: str):
-    """The player's own change, on the account page: the current password
-    first, so a browser left signed in can't be used to take the account."""
-    if authenticate(user["username"], current) is None:
+    """The player's own change, on the Settings page: the current password
+    first, so a browser left signed in can't be used to take the account.
+    An account made with Discord or Google sets its first one without."""
+    if has_password(user["id"]) and authenticate(user["username"], current) is None:
         raise WrongPassword("Your current password isn't right.")
     _check_new_password(user["username"], new)
     _set_password(user["id"], new)

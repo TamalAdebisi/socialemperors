@@ -39,6 +39,7 @@ def some_players(store):
     store.save_villages([("pid-a", alice, {"name": "A"}), ("pid-b", bob, {"name": "B"}), ("pid-old", None, {})])
     store.save_tournaments([{"id": "t1", "players": ["pid-a"]}])
     store.save_problems([("unhandled", "cmd", "", 3, 10, 20, "pid-a", "{}")])
+    store.add_sign_in(bob, "discord", "1234567890", "Bob on Discord")
     return alice, bob
 
 
@@ -49,12 +50,13 @@ class CopyingTest(unittest.TestCase):
         source, target = sqlite_store(self), sqlite_store(self)
         alice, bob = some_players(source)
         copied = storage.copy_database(source, target)
-        self.assertEqual(copied, {"users": 2, "villages": 3, "problems": 1, "tournaments": 1})
+        self.assertEqual(copied, {"users": 2, "villages": 3, "problems": 1, "tournaments": 1, "sign_ins": 1})
         self.assertEqual(target.get_user_by_name("alice")["id"], alice)
         self.assertEqual(target.get_password_hash(bob), "hash-2")
         self.assertEqual(sorted((pid, owner) for pid, owner, _ in target.load_all_villages()),
                          [("pid-a", alice), ("pid-b", bob), ("pid-old", None)])
         self.assertGreater(target.create_user("Carol", "hash-3"), bob)
+        self.assertEqual(target.find_sign_in("discord", "1234567890"), bob)  # Bob's Discord still finds him
 
     def test_only_into_an_empty_database(self):
         source, target = sqlite_store(self), sqlite_store(self)

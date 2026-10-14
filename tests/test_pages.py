@@ -50,7 +50,7 @@ class PagesTest(unittest.TestCase):
         home = self.web.get("/").get_data(as_text=True)
         self.assertNotIn("GAMEVERSION", home)
         self.assertNotIn("1.4.07", home)
-        self.assertIn("alpha", home)  # our own release name stays
+        self.assertNotIn("alpha", home)  # nor our own release name: players don't need it
 
     def test_everybody_plays_the_working_client(self):
         pid, page = self.new_empire()

@@ -1,0 +1,97 @@
+{% extends "_site.html" %}
+{% import "_macros.html" as ui %}
+{# The player's own settings (server.py, "SETTINGS"): their empires, the ways
+   they sign in, their password. #}
+
+{% block title %}Settings ~ Social Empires{% endblock %}
+
+{% block card %}
+	<div class="topbar">
+		<a href="/">← Your empires</a>
+		<nav>
+			<span><b>{{ user.username }}</b></span>
+			<form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="link-button">Log out</button></form>
+		</nav>
+	</div>
+
+	{{ ui.messages(error, done) }}
+
+	<section class="section">
+		<h2><img src="img/villager.png" alt=""> Empires</h2>
+		{% for empire in empires %}
+		<div class="row">
+			<div>
+				<form class="inline" method="post" action="/settings/empire/{{ empire.userid }}/rename">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+					<input name="name" value="{{ empire.name }}" maxlength="{{ max_name }}" required aria-label="Name of {{ empire.name }}">
+					<button class="button small plain" type="submit">Rename</button>
+				</form>
+				<div class="hint">Level {{ empire.level }} · {{ empire.xp }} xp</div>
+				<details class="delete">
+					<summary>Delete this empire…</summary>
+					<form class="inline" method="post" action="/settings/empire/{{ empire.userid }}/delete">
+						<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+						<input name="confirm" placeholder="Type {{ empire.name }}" autocomplete="off" required aria-label="Type the empire's name to delete it">
+						<button class="button small danger" type="submit">Delete for good</button>
+					</form>
+					<div class="hint">Everything in it goes, and can't be brought back.</div>
+				</details>
+			</div>
+		</div>
+		{% else %}
+		<p class="muted">No empires yet. <a href="/">Make one</a>.</p>
+		{% endfor %}
+	</section>
+
+	<section class="section">
+		<h2><img src="img/knight.png" alt=""> Ways to sign in</h2>
+		{% for provider, name in providers.items() %}
+		{% if provider in linked or provider in available %}
+		<div class="row">
+			<div class="what">
+				{{ ui.provider_icon(provider) }}
+				{% if provider in linked %}
+				<span>{{ name }}: <b>{{ linked[provider].label }}</b></span>
+				{% else %}
+				<span class="muted">{{ name }}: not linked</span>
+				{% endif %}
+			</div>
+			{% if provider in linked %}
+			<form method="post" action="/settings/unlink/{{ provider }}">
+				<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+				<button class="button small plain" type="submit">Unlink</button>
+			</form>
+			{% else %}
+			<form method="post" action="/auth/{{ provider }}">
+				<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+				<input type="hidden" name="link" value="1">
+				<button class="button small provider {{ provider }}" type="submit">{{ ui.provider_icon(provider) }} Link {{ name }}</button>
+			</form>
+			{% endif %}
+		</div>
+		{% endif %}
+		{% endfor %}
+
+		<div class="row">
+			<div style="width: 100%;">
+				<h3>{{ "Change your password" if has_password else "Set a password" }}</h3>
+				{% if not has_password %}<p class="muted">Then you can also log in with your username, <b>{{ user.username }}</b>.</p>{% endif %}
+				<form method="post" action="/settings/password">
+					<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+					<input type="text" name="username" value="{{ user.username }}" autocomplete="username" hidden>
+					{% if has_password %}
+					<label for="password">Current password</label>
+					<input id="password" name="password" type="password" autocomplete="current-password" required>
+					{% endif %}
+					<label for="new_password">New password</label>
+					<input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="8" required>
+					<div class="hint">At least 8 characters</div>
+					<label for="repeat_password">New password again</label>
+					<input id="repeat_password" name="repeat_password" type="password" autocomplete="new-password" minlength="8" required>
+					<button class="button" type="submit">Save password</button>
+				</form>
+				<p class="hint" style="margin-top: 12px;">A new password signs out every other browser and game using your account.</p>
+			</div>
+		</div>
+	</section>
+{% endblock %}
