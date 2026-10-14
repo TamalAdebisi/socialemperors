@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: the art export
+
+- **11 sprite sheets wait for Beta 2.** The export made 1,575 of 1,587; the
+  rest are top dragons, gods and bosses that need a change first (a picture
+  too big for a sheet, too slow to draw, or a crash; CLIENT.md, Step 1).
+  Nobody owns them in Beta 1's fresh start, and the likely fix for the big
+  ones touches how the client lines pictures up, which Beta 1 was changing.
+  They come first in Beta 2, where bosses matter.
+- **Each item gets its own drawing process and two hours** (it was five
+  items to one hour, which silently lost the biggest ones). An item stopped
+  by the limit now says so in the log.
+
 ## 14 October 2026: Beta 1, launch preparation
 
 - **Arthur's lessons are offered, not forced:** a new player in the new

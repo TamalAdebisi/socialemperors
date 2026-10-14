@@ -293,8 +293,9 @@ on the Railway address the game files would be blocked.
   again (Part 2.4). It only uploads what changed.
 * **The new game client's pictures** (`/client.html`, [CLIENT.md](CLIENT.md)):
   run the **Export art to R2** workflow the same way. It turns the game's
-  Flash files into sprite sheets on 8 machines at once (an hour or two the
-  first time, the giant bosses taking longest) and puts them in the bucket
+  Flash files into sprite sheets on 8 machines at once (about four hours
+  the first time: most items take seconds, but the biggest dragons and
+  bosses take up to two hours each) and puts them in the bucket
   under `art/`, sending each as soon as it's made. Run it again when
   buildings or units are added, or if a run stopped part way: it only makes
   the sheets that are missing. To make a few

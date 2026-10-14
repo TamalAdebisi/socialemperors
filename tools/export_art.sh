@@ -18,8 +18,9 @@
 #               export-art-r2.yml does). Shared out by size, so each machine
 #               gets as many big bosses as the others
 #
-# Everything takes a few hours on 4 processor cores, mostly for the big
-# animated bosses and buildings. Check an item by eye:
+# Everything takes more than a day on 4 processor cores (about four hours
+# on the workflow's 8 machines), almost all of it for the biggest animated
+# dragons and bosses, up to two hours each. Check an item by eye:
 #   python tools/art/preview.py art/sheets/<item>.json
 #
 # How it works: tools/art/RenderSwf.java draws every picture of an item with

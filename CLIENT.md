@@ -186,9 +186,11 @@ server's Docker image builds it; the art goes to R2 with a GitHub workflow.
 `assets/buildingsprites/`) into sprite sheets: `art/sheets/<item>.webp` and
 `<item>.json`, named like the item's `img_name` in the game config. It needs
 a Java JDK (for FFDec, which `tools/ffdec.sh` builds) and Python with Pillow,
-and makes everything in a few hours on 4 processor cores. `art/` is not
-committed: the **Export art to R2** workflow makes it on 8 machines at once
-and puts it in the bucket under `art/` ([DEPLOY.md](DEPLOY.md)).
+and takes more than a day on one 4-core computer, almost all of it for the
+biggest animated dragons and bosses (up to two hours each; most items take
+seconds). `art/` is not committed: the **Export art to R2** workflow makes
+it on 8 machines at once, in about four hours, and puts it in the bucket
+under `art/` ([DEPLOY.md](DEPLOY.md)).
 
 **How the files are laid out**, read from all 1,587:
 
@@ -232,6 +234,29 @@ one 1,750 x 1,854 sheet of 0.58 MB (the Flash file is 0.94 MB).
 
 Found on the way: `1410_bahamut_heart.swf`, the Bahamut Heart, is an empty
 file in the repository, so neither client can draw it.
+
+**Made: 1,575 of the 1,587** (October 2026). The other 11 are among the
+biggest dragons, gods and bosses, and each needs a change before it can be
+made:
+
+- **A picture bigger than a sheet** (4,096 pixels each way, the most phones'
+  graphics chips accept), at the game's own size: `2085_elemental_water_god`,
+  `3035_chained_water_god` and `3057_chained_watergc` (6,097 x 4,018),
+  `2354_abyssAncientDragon` and `2356_abyssAncientDragonRider`
+  (6,479 x 4,278), `2338_cerberusAncientDragonRider` (4,266 x 2,069). The
+  likely fix: store these at half size, with `meta.scale` set so PixiJS
+  draws them at full size, checking the client lines them up and hit-tests
+  them right.
+- **Still drawing after the two hours an item gets:** `2167_genesisIceGod`,
+  `2299_coreAncientDragon`, `2301_coreAncientDragonRider`,
+  `2336_cerberusAncientDragon`. The slowest that finished took 1 hour 53
+  minutes. A longer limit fits in GitHub's 6 hours per machine; drawing an
+  item's frames in parallel would be faster.
+- **The renderer stops with an error:** `2099_medieval_slayer`
+  (`NegativeArraySizeException`: some picture's size is too large to count,
+  probably a stray shape far outside the rest).
+
+They are on the list for Beta 2, where bosses and the top dragons matter.
 
 Still to do for the art: the effects in `assets/fx/` (mostly vector
 drawings, which can be drawn sharper than the original), the sounds inside
