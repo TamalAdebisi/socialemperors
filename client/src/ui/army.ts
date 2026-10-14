@@ -1,6 +1,6 @@
-// The Army window: the units in this town, by kind, with how many of each.
-// Training them, and the town's population, come with Beta 1's training
-// slice; until then the window says where to train.
+// The Army window: the units in this town, by kind, with how many of each,
+// and the town's people against the room for them. Units are trained at
+// the buildings that train them (barracks, archery ranges, stables...).
 
 import type { ItemInfo } from "../rules/config.ts";
 import { Panel } from "./panel.ts";
@@ -10,6 +10,8 @@ export interface ArmyParts {
   units: () => { item: ItemInfo; count: number }[];
   /** The item's picture in the Flash client's windows. */
   thumbnail: (item: ItemInfo) => string;
+  /** The town's people and the room for them. */
+  people: () => { current: number; max: number };
 }
 
 export class ArmyWindow {
@@ -50,10 +52,13 @@ export class ArmyWindow {
       card.append(picture, name, many);
       list.append(card);
     }
+    const people = this.parts.people();
+    const room = document.createElement("p");
+    room.className = "rows-note army-people";
+    room.textContent = `People: ${people.current} of ${people.max}. Houses make room for more.`;
     const note = document.createElement("p");
     note.className = "rows-note";
-    note.textContent = total ? "Train more in the classic game for now: training comes to the new game soon."
-      : "No units in this town yet. Train them in the classic game for now: training comes to the new game soon.";
-    this.panel.body.replaceChildren(list, note);
+    note.textContent = "Train units at the barracks, archery range, stables or workshop (villagers at the town hall): select it and choose Train.";
+    this.panel.body.replaceChildren(room, list, note);
   }
 }

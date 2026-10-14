@@ -39,7 +39,7 @@ export function storedItems(town: Town, items: Map<number, ItemInfo>): Stored[] 
 }
 
 /** What can be done with a stored thing: the storage window's Use and Sell, and why not. */
-export function storageChoices(town: Town, stored: Stored): { place: boolean; sell: boolean; why: string } {
+export function storageChoices(town: Town, stored: Stored, room = 0): { place: boolean; sell: boolean; why: string } {
   const { item } = stored;
   if (item.id === BAHAMUT_HEART || item.subcategory === SPECIAL_COLLECTION) {
     return { place: false, sell: false, why: "Kept for something special" };
@@ -48,8 +48,9 @@ export function storageChoices(town: Town, stored: Stored): { place: boolean; se
   if (item.race !== town.race && item.race !== "n" && item.race !== "a") {
     return { place: false, sell, why: town.race === "t" ? "For a human town" : "For a troll town" };
   }
-  if (item.isUnit) {
-    return { place: false, sell, why: "Units: from the classic game, for now" };
+  // A unit needs room among the town's people (`room`: how much there is, rules/training.ts).
+  if (item.isUnit && room < item.population) {
+    return { place: false, sell, why: "No room for more people" };
   }
   const most = atLimit(town, item);
   if (most !== null) {
@@ -93,13 +94,13 @@ export function sellStored(town: Town, stored: Stored): Command {
  * level-up statue: what's missing for the next level). A string when it can't be.
  */
 export function placeStored(town: Town, stored: Stored, tx: number, ty: number, now: number,
-  levels: Level[]): { command: Command; placed: PlacedItem } | string {
+  levels: Level[], room = 0): { command: Command; placed: PlacedItem } | string {
   const { item } = stored;
-  const can = storageChoices(town, stored);
+  const can = storageChoices(town, stored, room);
   if (!can.place || stored.count <= 0) {
     return `${item.name}: ${(can.why || "none left").toLowerCase()}.`;
   }
-  const placed: PlacedItem = { item, tx, ty, orientation: 0, unitsInside: 0, startedAt: now, workTime: 0 };
+  const placed: PlacedItem = { item, tx, ty, orientation: 0, unitsInside: 0, units: [], startedAt: item.isUnit ? null : now, workTime: 0 };
   if (!fits(town, placed)) {
     return `${item.name} doesn't fit there.`;
   }

@@ -18,6 +18,8 @@ export interface HudActions {
   visiting?: boolean;
   /** The levels table, for how far the town is from the next. */
   levels?: Level[];
+  /** The town's people and the room for them. */
+  population?: (town: Town) => { current: number; max: number };
 }
 
 export interface Hud {
@@ -45,6 +47,9 @@ export function showHud(town: Town, actions: HudActions): Hud {
         ${RESOURCES.map((key) => `<li class="pill-dark" data-tip="${key[0].toUpperCase()}${key.slice(1)}" tabindex="0">
           <img class="icon" src="${ICONS[key]}" alt=""><span class="n-full" data-n="${key}"></span><span class="n-short" aria-hidden="true" data-short="${key}"></span>
         </li>`).join("")}
+        <li class="pill-dark hud-people" data-tip="People: room for more by building houses" tabindex="0" hidden>
+          <img class="icon" src="${ICONS.population}" alt=""><span data-people></span>
+        </li>
       </ul>
     </div>
     <div class="hud-buttons">
@@ -71,6 +76,13 @@ export function showHud(town: Town, actions: HudActions): Hud {
     bar.querySelector<HTMLElement>(".hud-xp-done")!.style.width = `${Math.round(done * 100)}%`;
     level.dataset.tip = (actions.visiting ? "" : `${who}: `) + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
       : `${numbers.format(t.xp)} of ${numbers.format(to)} XP for level ${t.level + 1}`);
+    if (actions.population) {
+      const people = actions.population(t);
+      const pill = bar.querySelector<HTMLElement>(".hud-people")!;
+      pill.hidden = false;
+      pill.querySelector("[data-people]")!.textContent = `${people.current}/${people.max}`;
+      pill.setAttribute("aria-label", `${people.current} people, room for ${people.max}`);
+    }
     for (const key of RESOURCES) {
       bar.querySelector(`[data-n="${key}"]`)!.textContent = numbers.format(t[key]);
       bar.querySelector(`[data-short="${key}"]`)!.textContent = short(t[key]);

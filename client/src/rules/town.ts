@@ -24,6 +24,8 @@ export interface SaveMap {
   items: SaveItem[];
   /** What this town put away: { "<item id>": count } (older saves: a list indexed by id). */
   store?: Box;
+  /** The Great Church's steps done: each adds room for people. */
+  increasedPopulation?: number;
 }
 
 /** A storage box as the save keeps it: { "<item id>": count }, or a list of counts by item id. */
@@ -80,6 +82,8 @@ export interface Town {
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
+  /** The Great Church's steps done (rules/training.ts). */
+  increasedPopulation?: number;
 }
 
 export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
@@ -120,6 +124,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     store: readBox(map.store),
     items: placed,
     unknown,
+    increasedPopulation: Number(map.increasedPopulation) || 0,
   };
 }
 

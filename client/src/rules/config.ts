@@ -49,6 +49,13 @@ export interface ConfigItem {
   new_item?: string;
   /** Whose it is: "h" humans, "t" trolls, "a" anyone's, "n" nobody's (trees, rocks), "e" enemies'. */
   race?: string;
+  /** Buildings: the unit they train (0 none). */
+  trains?: string;
+  /** Buildings: the room they give the town's people; units: the room they take. */
+  population?: string;
+  /** How many of it a town may have (0: no limit), and what it costs in cash instead. */
+  units_limit?: string;
+  cost_unit_cash?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -99,6 +106,14 @@ export interface ItemInfo {
   collect: number;
   collectType: string;
   collectXp: number;
+  /** Buildings: the unit they train, or 0. */
+  trains: number;
+  /** Buildings: room for the town's people; units: the room they take. */
+  population: number;
+  /** How many a town may have (0: no limit). */
+  unitsLimit: number;
+  /** Units: their price in cash, instead of their cost. */
+  cashCost: number;
   cost: number;
   costType: string;
   /** How many ways it can face: turning it goes round these. */
@@ -135,6 +150,10 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     collect: Number(item.collect) || 0,
     collectType: item.collect_type ?? "",
     collectXp: Number(item.collect_xp) || 0,
+    trains: Number(item.trains) || 0,
+    population: Number(item.population) || 0,
+    unitsLimit: Number(item.units_limit) || 0,
+    cashCost: Number(item.cost_unit_cash) || 0,
     cost: Number(item.cost) || 0,
     costType: item.cost_type ?? "g",
     facings: Math.max(Number(item.max_frame) || 1, 1),

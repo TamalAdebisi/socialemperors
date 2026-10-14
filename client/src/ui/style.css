@@ -1023,3 +1023,18 @@ body {
     height: 60px;
   }
 }
+
+/* Train: the unit's picture, as on the Flash client's info panel, with its price under it. */
+.picture-button.train img {
+  border: 2px solid var(--parchment-edge);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.train-cash {
+  align-self: center;
+}
+
+.train-cash .icon {
+  height: 18px;
+}

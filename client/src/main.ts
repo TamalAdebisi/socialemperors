@@ -15,6 +15,7 @@ import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readTown, type Town } from "./rules/town.ts";
+import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
@@ -70,7 +71,9 @@ async function start(): Promise<void> {
   app.ticker.add((ticker) => camera.update(ticker.deltaMS));
 
   const levels = readLevels(config.levels);
-  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined, levels });
+  const increase = Number(config.globals?.POPULATION_INCREASE) || 10;
+  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit !== undefined, levels,
+    population: visit === undefined ? (t) => population(t, items, increase) : undefined });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -94,6 +97,7 @@ async function start(): Promise<void> {
     const world = new WorldWindows(settings.classicUrl);
     const army = new ArmyWindow({
       units: () => unitsInTown(town),
+      people: () => population(town, items, increase),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
     });
     const menus = new Menus([
@@ -106,6 +110,7 @@ async function start(): Promise<void> {
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       waiting: (gifts) => menus.count("storage", gifts) });
     hud.offerCollectAll(() => editor.collectAll());
   } else {

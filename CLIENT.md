@@ -449,7 +449,9 @@ has it where it stopped, that closed land is out of reach, and that it's
 there after reloading. The work test sends one villager to the trees by
 the houses (it cuts one and goes on to the next), one to a stone rock
 (which leaves one growing back) and one into a gold mine, lets it out
-again, and checks the save after each. The menus test
+again, and checks the save after each. The train test trains villagers at
+a new town's hall until there's no room (6 of 11 people to 11 of 11), and
+checks the save has them and the food paid. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
 phone checks the dock, short numbers and the sheet closing when dragged
@@ -458,8 +460,7 @@ now 309 KB (93 KB compressed).
 
 **Not yet in step 3** (Beta 1's next slices): turning a building while placing it, unlocking a
 building early with cash, buying resources with cash when short (the Flash
-client offers it), training units, placing units from storage,
-and hurrying with cash (units walk and villagers work now:
+client offers it), and hurrying with cash (units walk and villagers work now:
 [Units walking](#units-walking), [Villagers at work](#villagers-at-work)).
 Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
@@ -645,6 +646,40 @@ now gives the same as the client (`production.py`).
 hatchery, the sacrifice altar and the dragon nest (in the classic game for
 now); villagers putting out fires after a battle; the collection pieces
 the Flash client sometimes drops from a harvest.
+
+### Training and population
+
+Built (Beta 1's fourth slice). A building that trains a unit (the town hall
+villagers, barracks spearmen, stables knights...) shows the unit's picture
+on its card with the price: tap it to train one, or the cash button to pay
+in cash. The top bar counts the town's people against the room for them,
+and so does the Army window. Units in storage can be placed when there's
+room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- Each building trains one kind of unit (the config's `trains`), one at a
+  time, in 3 seconds. The price is paid when it starts, with the unit's
+  experience; then it stands on the nearest free tile beside the building.
+- Price: the unit's `cost` (a blacksmith takes a tenth off footmen,
+  horsemen and archers, a university off siege engines, rounded up), and
+  twice that in food; villagers need no food. Or the unit's
+  `cost_unit_cash` in cash instead.
+- Room: the `population` of the player's buildings (houses, the town
+  hall...), at most 175, plus that of the wonders on top (they count in
+  both, as in the Flash client), plus the Great Church's steps (10 room
+  each). Taken: the `population` of the player's units, on the map and
+  inside buildings. Wild animals and the island's trolls don't count.
+- What stops it: no room for the unit, the unit's `units_limit` reached
+  (counting those inside buildings), not enough to pay, or the building
+  already training.
+- The commands: `buy` (unit, tile, 0, town, 0, the discount as 1 or 0.9,
+  "u"); the server charges the same price and food. With cash: `buy_cash`
+  (unit, tile, 0, town).
+
+**Not yet:** hurrying a training with cash isn't in the Flash client
+either; the dragon nest's riders, the hatchery and other special training
+windows are in the classic game for now.
 
 ### Making the art look better
 
