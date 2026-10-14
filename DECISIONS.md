@@ -12,12 +12,13 @@ them can be found and reversed. The big, agreed decisions are in
   added a Neighbours button to the rail and the dock, and the phone's dock
   has World (which holds Quests and the battle modes) in place of separate
   Quests and Battle buttons, so five fit.
-- **Moving the servers to Singapore is waiting on a backup.** The live
-  server still keeps every account and empire in SQLite on its own volume,
-  and neither volume had a backup or a backup schedule. Backups can only
-  be made from Railway's dashboard, so the owner makes one first
-  (DEPLOY.md 6.3, now with that step). Staging's move is staged in
-  Railway, not yet applied.
+- **The servers moved to Singapore**, nearer most players. Claude held
+  off at first: the live server keeps every account and empire in SQLite
+  on its own volume, neither volume had a backup, and backups can only be
+  made from Railway's dashboard (DEPLOY.md 6.3 now starts with one). The
+  owner made the move from the dashboard at 18:34 UTC. Checked afterwards:
+  both volumes are in Singapore, and the live server loaded the same 4
+  player empires as before the move, from the same database.
 
 ## 14 October 2026: tidying up, ground rules, browser tests
 

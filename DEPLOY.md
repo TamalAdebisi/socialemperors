@@ -385,7 +385,7 @@ yourself, so they never pass through anyone else.
 
 3. Clear the editor afterwards (Supabase keeps a history of queries).
 
-### 6.3 Move the game servers to Singapore
+### 6.3 Move the game servers to Singapore (done)
 
 Do staging first, as a rehearsal. Before each one, back up its volume:
 until 6.4 is done, the live server's volume holds every account and
