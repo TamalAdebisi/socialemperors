@@ -24,7 +24,7 @@ from bundle import VILLAGES_DIR, SAVES_DIR
 from constants import Constant
 from engine import timestamp_now
 from storage import open_storage
-from version import version_code, migrate_loaded_save
+from version import version_code, migrate_loaded_save, add_missing_fields
 
 # Every request that reads or changes game state holds this lock, so two
 # requests can never change the same village at the same moment.
@@ -160,6 +160,7 @@ def new_village(owner_id) -> str:
     village["playerInfo"]["pid"] = USERID
     village["maps"][0]["timestamp"] = timestamp_now()
     village["privateState"]["dartsRandomSeed"] = abs(int((2**16 - 1) * random.random()))
+    add_missing_fields(village)
     with LOCK:
         assert USERID not in __saves and USERID not in __villages
         __saves[USERID] = village

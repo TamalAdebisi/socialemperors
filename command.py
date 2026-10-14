@@ -1,10 +1,30 @@
 import json
+import traceback
 
 from sessions import session, save_session
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import temple
+import game_collections
+import graveyard
+import inventory
+import production
+import quests
+import shop
+import magic
+import market
+import missions
+import warehouse
+import time_machine
+import darts
+import survival
+import monday_bonus
+import social
+import assists
+import pvp
+
+TUTORIAL_END = 15  # the step Arthur's tutorial reports when its last lesson is closed
 
 def get_strategy_type(id):
     if id == 8:
@@ -25,13 +45,20 @@ def command(USERID, data):
     publishActions = data["publishActions"]
     commands = data["commands"]
     
+    previous = None
     for i, comm in enumerate(commands):
         cmd = comm["cmd"]
         args = comm["args"]
-        do_command(USERID, cmd, args)
+        try:
+            do_command(USERID, cmd, args, previous)
+        except Exception:
+            # One command the server gets wrong must not cost the player the rest of the batch.
+            print(f"\n [!] Command failed: {cmd} {args}")
+            traceback.print_exc()
+        previous = comm
     save_session(USERID) # Save session
 
-def do_command(USERID, cmd, args):
+def do_command(USERID, cmd, args, previous=None):
     save = session(USERID)
     print (" [+] COMMAND: ", cmd, "(", args, ") -> ", sep='', end='')
 
@@ -42,29 +69,55 @@ def do_command(USERID, cmd, args):
         id = args[0]
         x = args[1]
         y = args[2]
-        frame = args[3] # TODO ??
-        town_id = args[4]
-        bool_dont_modify_resources = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
+        orientation = args[3]
+        town_id = int(args[4])
+        free = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
         price_multiplier = args[6]
-        type = args[7]
-        print("Add", str(get_name_from_item_id(id)), "at", f"({x},{y})")
-        collected_at_timestamp = timestamp_now()
-        level = 0 # TODO 
-        orientation = 0
-        map = save["maps"][town_id]
-        if not bool_dont_modify_resources:
-            apply_cost(save["playerInfo"], map, id, price_multiplier)
-            xp = int(get_attribute_from_item_id(id, "xp"))
-            map["xp"] = map["xp"] + xp
-        map["items"] += [[id, x, y, orientation, collected_at_timestamp, level]]
-    
+        print("Add", str(get_name_from_item_id(id)), end=": ")
+        print(shop.buy(save, id, x, y, orientation, town_id, free, price_multiplier))
+
+    elif cmd == Constant.CMD_BUY_UNIT_WITH_CASH:
+        id = args[0]
+        x = args[1]
+        y = args[2]
+        orientation = args[3]
+        town_id = int(args[4])
+        # A hero with no Altar of Heroes to stand by goes to storage: the client stores it just before.
+        already_stored = previous is not None and previous.get("cmd") == Constant.CMD_STORE_ADD_ITEMS \
+            and [int(i) for i in json.loads(previous["args"][0])] == [int(id)]
+        print("Buy", str(get_name_from_item_id(id)), "with cash", end=": ")
+        print(shop.buy_with_cash(save, id, x, y, orientation, town_id, already_stored))
+
+    elif cmd == Constant.CMD_BUY_OFFER_PACK:
+        item_won = args[2] if len(args) > 2 else None
+        print(shop.offer_pack(save, int(args[0]), int(args[1]), item_won))
+
+    elif cmd == Constant.CMD_ADD_ITEMS_TO_STORE:
+        print(shop.deal(save, args[0], args[1]))
+
+    elif cmd == Constant.CMD_BUY_STORED_ITEM_CASH:
+        print(shop.collection_unit(save, int(args[0]), int(args[1]), args[2]))
+
+    elif cmd == Constant.CMD_UNIT_COLLECTION_COMPLETED:
+        print(shop.unit_collection_completed(save, int(args[0])))
+
+    elif cmd == Constant.CMD_POP_SELL:
+        print(shop.sacrifice(save, args[0], args[1], int(args[2]), args[3], args[4]))
+
+    elif cmd == Constant.CMD_GOLD_STATUE_CONVERSION:
+        print(shop.gold_statue(save))
+
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
-        tutorial_step = args[0]
+        tutorial_step = int(args[0])
         print("Tutorial step", tutorial_step, "reached.")
-        if tutorial_step >= 31: # 31 is Dragon choosing. After that, you have some freedom. There's at least until step 45.
+        # Closing Arthur's last lesson reports step 15 in both working clients
+        # (the lessons before it report their own number). The client starts
+        # the tutorial over from the first lesson whenever this is still 0, so
+        # a reload partway through repeats it.
+        if tutorial_step >= TUTORIAL_END:
             print("Tutorial COMPLETED!")
-            save["playerInfo"]["completed_tutorial"] = 1
-            save["privateState"]["dragonNestActive"] = 1 
+            save["playerInfo"]["completed_tutorial"] = tutorial_step  # what the client keeps too
+            save["privateState"]["dragonNestActive"] = 1
     
     elif cmd == Constant.CMD_MOVE:
         ix = args[0]
@@ -86,15 +139,21 @@ def do_command(USERID, cmd, args):
     elif cmd == Constant.CMD_COLLECT:
         x = args[0]
         y = args[1]
-        town_id = args[2]
+        town_id = int(args[2])
         id = args[3]
-        num_units_contained_when_harvested = args[4]#TODO does this affect multiplier?
-        resource_multiplier = args[5]
-        cash_to_substract = args[6]
-        print("Collect", str(get_name_from_item_id(id)))
-        map = save["maps"][town_id]
-        apply_collect(save["playerInfo"], map, id, resource_multiplier)
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
+        print("Collect", str(get_name_from_item_id(id)), end=": ")
+        if len(args) > 4: # a building: [..., workers inside, multiplier, cash to hurry]
+            print(production.collect(save, x, y, town_id, id, workers=int(args[4]), multiplier=args[5], cash=args[6]))
+        else: # not a building, or the Round Table
+            print(production.collect(save, x, y, town_id, id))
+
+    elif cmd == Constant.CMD_ACTIVATE:
+        x = args[0]
+        y = args[1]
+        town_id = int(args[2])
+        id = args[3]
+        choice = args[4] # how long a farm or mill works, 1-4; 0 after collecting
+        print(production.choose_working_time(save, x, y, town_id, id, choice))
     
     elif cmd == Constant.CMD_SELL:
         x = args[0]
@@ -114,7 +173,7 @@ def do_command(USERID, cmd, args):
             if get_attribute_from_item_id(id, "cost_type") != "c":
                 apply_cost(save["playerInfo"], save["maps"][town_id], id, price_multiplier)
         if reason == 'KILL':
-            pass # TODO : add to graveyard
+            print(graveyard.unit_died(save, id, args[6] if len(args) > 6 else 0))
     
     elif cmd == Constant.CMD_KILL:
         x = args[0]
@@ -133,20 +192,15 @@ def do_command(USERID, cmd, args):
     elif cmd == Constant.CMD_COMPLETE_MISSION:
         mission_id = args[0]
         skipped_with_cash = bool(args[1])
-        print("Complete mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        if skipped_with_cash:
-            cash_to_substract = 0 # TODO 
-            save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
-        save["privateState"]["completedMissions"] += [mission_id]
-    
+        print(str(get_attribute_from_mission_id(mission_id, "title")), end=": ")
+        print(missions.complete(save, mission_id, skipped_with_cash))
+
     elif cmd == Constant.CMD_REWARD_MISSION:
-        town_id = args[0]
+        town_id = int(args[0])
         mission_id = args[1]
-        print("Reward mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        reward = int(get_attribute_from_mission_id(mission_id, "reward")) # gold
-        save["maps"][town_id]["coins"] += reward   
-        save["privateState"]["rewardedMissions"] += [mission_id]
-    
+        print(str(get_attribute_from_mission_id(mission_id, "title")), end=": ")
+        print(missions.reward(save, town_id, mission_id))
+
     elif cmd == Constant.CMD_PUSH_UNIT:
         unit_x = args[0]
         unit_y = args[1]
@@ -161,7 +215,9 @@ def do_command(USERID, cmd, args):
             if item[1] == b_x and item[2] == b_y:
                 if len(item) < 7:
                     item += [[]]
+                workers_before = len(item[6])
                 item[6] += [unit_id]
+                production.worker_entered(item, workers_before)
                 break
         # Remove unit
         for item in map["items"]:
@@ -197,12 +253,15 @@ def do_command(USERID, cmd, args):
     
     elif cmd == Constant.CMD_RT_LEVEL_UP:
         new_level = args[0]
-        print("Level Up!:", new_level)
+        print("Level Up!:", new_level, end="")
         map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
+        old_level = int(map.get("level") or 1)
         map["level"] = args[0]
         current_xp = map["xp"]
         min_expected_xp = get_xp_from_level(max(0, new_level - 1))
         map["xp"] = max(min_expected_xp, current_xp) # try to fix problems with not counting XP... by keeping up with client-side level counting
+        mana = magic.level_up(save, old_level, new_level)
+        print(f" (+{mana} mana)" if mana else "")
 
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
         new_xp = args[0]
@@ -243,55 +302,32 @@ def do_command(USERID, cmd, args):
         save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - 5, 0)#maybe make function for editing resources
         save["maps"][town_id]["coins"] += 2500
 
-    elif cmd == Constant.CMD_STORE_ITEM:
+    elif cmd == Constant.CMD_STORE_ITEM or cmd == Constant.CMD_STORE_ITEM_FROMBUG:
         x = args[0]
         y = args[1]
         town_id = int(args[2])
         item_id = args[3]
-        print("Store", str(get_name_from_item_id(item_id)), "from", f"({x},{y})")
-        map = save["maps"][town_id]
-        for item in map["items"]:
-            if item[0] == item_id and item[1] == x and item[2] == y:
-                map["items"].remove(item)
-                break
-        length = len(save["privateState"]["gifts"])
-        if length <= item_id:
-            for i in range(item_id - length + 1):
-                save["privateState"]["gifts"].append(0)
-        save["privateState"]["gifts"][item_id] += 1
+        print("Store", str(get_name_from_item_id(item_id)), "from", f"({x},{y})", end=": ")
+        print(inventory.put_away(save, x, y, town_id, item_id))
 
-    elif cmd == Constant.CMD_PLACE_GIFT:
+    elif cmd == Constant.CMD_STORE_ADD_ITEMS:
+        ids = args[0] # JSON list of item ids: prizes, and heroes bought without an altar
+        print(inventory.add_items(save, ids))
+
+    elif cmd == Constant.CMD_PLACE_GIFT or cmd == Constant.CMD_PLACE_STORED_ITEM:
         item_id = args[0]
         x = args[1]
         y = args[2]
-        town_id = args[3]#unsure, both 3 and 4 seem to stay 0
-        args[4]#unknown yet
-        print("Add", str(get_name_from_item_id(item_id)), "at", f"({x},{y})")
-        items = save["maps"][town_id]["items"]
-        orientation = 0#TODO
-        collected_at_timestamp = timestamp_now()
-        level = 0
-        items += [[item_id, x, y, orientation, collected_at_timestamp, level]]#maybe make function for adding items
-        save["privateState"]["gifts"][item_id] -= 1
-        if save["privateState"]["gifts"][item_id] == 0: #removes excess zeros at end if necessary
-            while(save["privateState"]["gifts"][-1] == 0):
-                save["privateState"]["gifts"].pop()  
+        orientation = args[3]
+        town_id = int(args[4])
+        print("Add", str(get_name_from_item_id(item_id)), "at", f"({x},{y})", end=": ")
+        print(inventory.place(save, item_id, x, y, orientation, town_id, is_gift=(cmd == Constant.CMD_PLACE_GIFT)))
 
     elif cmd == Constant.CMD_SELL_GIFT or cmd == Constant.CMD_SELL_STORED:
         item_id = args[0]
-        town_id = args[1]
-        print("Gift", str(get_name_from_item_id(item_id)), "sold on town:",town_id)
-        gifts = save["privateState"]["gifts"] # store_item keeps stored items here too
-        if item_id >= len(gifts) or gifts[item_id] <= 0:
-            print("Not in inventory, nothing sold.")
-            return
-        gifts[item_id] -= 1
-        if gifts[item_id] == 0: #removes excess zeros at end if necessary
-            while(len(gifts) != 0 and gifts[-1] == 0):
-                gifts.pop()
-        price_multiplier = -0.05
-        if get_attribute_from_item_id(item_id, "cost_type") != "c":
-            apply_cost(save["playerInfo"], save["maps"][town_id], item_id, price_multiplier)
+        town_id = int(args[1])
+        print("Sell", str(get_name_from_item_id(item_id)), "from storage", end=": ")
+        print(inventory.sell(save, item_id, town_id, is_gift=(cmd == Constant.CMD_SELL_GIFT)))
     
     elif cmd == Constant.CMD_ACTIVATE_DRAGON:
         currency = args[0]
@@ -427,11 +463,7 @@ def do_command(USERID, cmd, args):
             print("Added " + str(coins) + " Gold to players balance")
 
         if hero != 0:
-            length = len(save["privateState"]["gifts"])
-            if length <= hero:
-                for i in range(hero - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][hero] += 1
+            inventory.add_gift(save, hero)
             print("Added Hero ID=" + str(hero))
 
         pState = save["privateState"]
@@ -464,39 +496,17 @@ def do_command(USERID, cmd, args):
         x = args[1]
         y = args[2]
         town_id = args[3]
-        bool_used_potion = len(args) > 4 and args[4] == '1'
+        used_potion = len(args) > 4 and str(args[4]) == "1"
         print("Resurrect", str(get_name_from_item_id(unit_id)), "from graveyard")
-        # pay
-        if bool_used_potion:
-            quantity = 1
-            save["privateState"]["potion"] = max(int(save["privateState"]["potion"] - quantity), 0)
-        else:
-            pass # TODO 
-        # Place unit
-        collected_at_timestamp = timestamp_now()
-        level = 0 # TODO 
-        orientation = 0
-        map["items"] += [[id, x, y, orientation, collected_at_timestamp, level]]
+        print(graveyard.resurrect(save, unit_id, x, y, town_id, used_potion))
+
+    elif cmd == Constant.CMD_PUT_GRAVEYARD:
+        unit_id = args[0] # a phoenix whose egg was destroyed
+        print(graveyard.bury(save, unit_id))
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
-        town_id = args[0]
-        unknown2 = args[1] # this is probably the super offer pack ID?
-        items = args[2]
-        cash_used = args[3]
-        
-        map = save["maps"][town_id]
-
-        item_array = items.split(',')
-        for item in item_array:
-            item_id = int(item)
-            length = len(save["privateState"]["gifts"])
-            if length <= item_id:
-                for i in range(item_id - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][item_id] += 1
-
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_used, 0)#maybe make function for editing resources
-        print(f"Used {cash_used} cash to buy super offer pack!")
+        items = args[2] # "item,item,..."; the price comes from shop.py, not args[3]
+        print(shop.super_offer_pack(save, int(args[0]), int(args[1]), items))
 
     elif cmd == Constant.CMD_SET_STRATEGY:
         strategy_type = args[0]
@@ -506,39 +516,175 @@ def do_command(USERID, cmd, args):
 
     elif cmd == Constant.CMD_START_QUEST:
         quest_id = args[0]
-        town_id = args[1]
-        print(f"Start quest {quest_id}")
+        town_id = int(args[1])
+        print(quests.start(save, quest_id, town_id))
 
     elif cmd == Constant.CMD_END_QUEST:
-        data = json.loads(args[0])
-        town_id = data["map"]
-        gold_gained = data["resources"]["g"]
-        xp_gained = data["resources"]["x"]
-        units = data["units"]
-        win = data["win"] == 1
-        duration_sec = data["duration"]
-        voluntary_end = data["voluntary_end"] == 1
-        quest_id = int(data["quest_id"])
-        item_rewards = data["item_rewards"] if "item_rewards" in data else None
-        activators_left = data["activators_left"] if "activators_left" in data else None
-        difficulty = data["difficulty"]
-
-        # Resources
-        save["maps"][town_id]["coins"] += int(gold_gained)
-        save["maps"][town_id]["xp"] += int(xp_gained)
-
-        # Update quests data
-        save["privateState"]["unlockedQuestIndex"] = max(quest_id + 1, save["privateState"]["unlockedQuestIndex"], 0)
-        # save["privateState"]["questsRank"] = TODO 
-        # save["maps"]["questTimes"] [quest_id] = TODO min (... , duration_sec)
-        # save["maps"]["lastQuestTimes"] [quest_id] = TODO min (... , duration_sec)
-
-        print(f"Ended quest {quest_id}.")
+        result = json.loads(args[0]) # gold, xp, units sent/killed/recovered, win, difficulty, boss rewards
+        print(quests.end(save, result))
 
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
-        collection_id = args[0]
-        collectible_id = args[1]
-        # TODO 
+        collection_id = int(args[0])
+        collectible_id = int(args[1])
+        print(game_collections.add_piece(save, collection_id, collectible_id))
+
+    elif cmd == Constant.CMD_FINISH_COLLECTION:
+        collection_id = int(args[0])
+        if len(args) > 1: # [collection, 1, price]: bought with cash; game_collections.py has its own prices
+            print(game_collections.buy(save, collection_id))
+        else:
+            print(game_collections.exchange(save, collection_id))
+
+    elif cmd == Constant.CMD_UNLOCK_BUILDING:
+        print(shop.unlock_early(save, int(args[0])))
+
+    elif cmd == Constant.CMD_SET_QUEST_VAR:
+        print(missions.set_quest_var(save, int(args[0]), args[1], args[2]))
+
+    elif cmd == Constant.CMD_COLLECT_TREASURE:
+        gold, xp, next_raid, food, stone, town_id = args
+        print(missions.collect_treasure(save, gold, xp, next_raid, food, stone, int(town_id)))
+
+    elif cmd == Constant.CMD_BUY_MAGIC:
+        print(magic.learn(save, args[0], int(args[1]), args[2]))
+
+    elif cmd == Constant.CMD_USE_MAGIC:
+        print(magic.cast(save, args[0]))
+
+    elif cmd == Constant.CMD_BUY_MANA:
+        print(magic.buy_mana(save, int(args[0]), args[1]))
+
+    elif cmd == Constant.CMD_TRADE_RESOURCE:
+        print(market.trade(save, int(args[0]), args[1], args[2], args[3]))
+
+    elif cmd == Constant.CMD_SET_ATTACK_TEAM:
+        mode = args[0] # "quest" or "tournament"
+        pState = save["privateState"]
+        if not isinstance(pState.get("teams"), dict):
+            pState["teams"] = {}
+        pState["teams"][mode] = json.loads(args[1])
+        print("Team for", mode, "saved.")
+
+    elif cmd == Constant.CMD_SET_INFO_SHOWED:
+        pState = save["privateState"]
+        if not isinstance(pState.get("infoShowed"), dict):
+            pState["infoShowed"] = {}
+        pState["infoShowed"][args[0]] = args[1]
+        print("Info", args[0], "shown.")
+
+    elif cmd == Constant.CMD_SET_HELP_MAP:
+        pState = save["privateState"]
+        if not isinstance(pState.get("helpMap"), list):
+            pState["helpMap"] = []
+        if args[0] not in pState["helpMap"]:
+            pState["helpMap"].append(args[0])
+        print("Help", args[0], "shown.")
+
+    elif cmd == Constant.CMD_ADD_UNIT_WAREHOUSE:
+        x, y, town_id, unit_id = args
+        print(warehouse.add_unit(save, x, y, int(town_id), unit_id))
+
+    elif cmd == Constant.CMD_PLACE_WAREHOUSED_ITEM:
+        unit_id, x, y, orientation, town_id = args
+        print(warehouse.place_unit(save, unit_id, x, y, orientation, int(town_id)))
+
+    elif cmd == Constant.CMD_BUY_WAREHOUSE_CAPACITY_NEW:
+        print(warehouse.buy_capacity(save, int(args[0])))
+
+    elif cmd == Constant.CMD_RESET_WAREHOUSE:
+        print(warehouse.empty(save, int(args[0])))
+
+    elif cmd == Constant.CMD_TIME_MACHINE_BUY:
+        print(time_machine.buy(save, int(args[0])))
+
+    elif cmd == Constant.CMD_TIME_MACHINE_USE:
+        print(time_machine.jump(save, int(args[0])))
+
+    elif cmd == Constant.CMD_DARTS_RESET:
+        print(darts.reset(save, args[0]))
+
+    elif cmd == Constant.CMD_DARTS_NEW_FREE:
+        print(darts.new_free(save))
+
+    elif cmd == Constant.CMD_DARTS_SHOOT_BALLOON:
+        print(darts.shoot(save, args[0], args[1], args[2]))
+
+    elif cmd == Constant.CMD_UNLOCK_SKIN:
+        print(shop.unlock_skin(save, args[0]))
+
+    elif cmd == Constant.CMD_SET_SKIN:
+        town_id, skin_id = int(args[0]), int(args[1])
+        save["maps"][town_id]["skin"] = skin_id
+        print("Island skin set to", skin_id)
+
+    elif cmd == Constant.CMD_SURVIVAL_START:
+        print(survival.start(save))
+
+    elif cmd == Constant.CMD_SURVIVAL_END:
+        print(survival.end(save, args[0], args[1], args[2]))
+
+    elif cmd == Constant.CMD_SURVIVAL_BUY_LIFE:
+        print(survival.buy_life(save))
+
+    elif cmd == Constant.CMD_SURVIVAL_BUY_MAP:
+        print(survival.buy_map(save, args[0]))
+
+    elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
+        print(monday_bonus.collect(save, args[0], args[1]))
+
+    elif cmd == Constant.CMD_BUY_SI_HELP:
+        x, y, town_id, building_id = args[:4]
+        free = len(args) > 4 and str(args[4]) == "1"
+        print(social.buy_helper(save, x, y, int(town_id), building_id, free))
+
+    elif cmd == Constant.CMD_FINISH_SI:
+        x, y, town_id, building_id = args[:4]
+        hero = args[6] if len(args) > 6 else 0 # the Round Table also sends [gold, xp, hero]; social.py has its own table
+        print(social.finish(save, x, y, int(town_id), building_id, hero))
+
+    elif cmd == Constant.CMD_SET_RESOURCE_ALLIES:
+        resource, x, y, town_id, building_id = args
+        print(social.set_market_resource(save, resource, x, y, int(town_id), building_id))
+
+    elif cmd == Constant.CMD_INCREASE_POPULATION:
+        print(social.increase_population(save, int(args[0])))
+
+    elif cmd == Constant.CMD_ASSIST_NEIGHBOUR_NEW:
+        print(assists.help_buildings(save, args[0], args[2]))
+
+    elif cmd == Constant.CMD_ASSIST_NEIGHBOUR:
+        neighbour, request, town_id = args
+        print(assists.help_request(save, neighbour, int(town_id)))
+
+    elif cmd == Constant.CMD_ASSIST_RECEIVE:
+        print(assists.receive(save, int(args[0]), args[1]))
+
+    elif cmd == Constant.CMD_CLEAN_RECEIVED_ASSISTS:
+        print(assists.clean(save, args[0], int(args[1])))
+
+    elif cmd == Constant.CMD_ATTACK_PLAYER:
+        print(pvp.attack(save, args[0]))
+
+    elif cmd == Constant.CMD_END_ATTACK:
+        no_town_hall = len(args) > 1 and bool(args[1])
+        print(pvp.end(save, json.loads(args[0]), no_town_hall))
+
+    elif cmd == Constant.CMD_SPY:
+        print(pvp.spy(save, args[0]))
+
+    elif cmd == Constant.CMD_CLEAN_ATTACKS:
+        print(pvp.seen_attacks(save))
+
+    elif cmd == Constant.CMD_RESET_ISLAND_CHANGE:
+        save["privateState"]["worldChange"] = 0
+        print("On to the new world.")
+
+    elif cmd == Constant.CMD_CLEAR_MSG:
+        save["privateState"]["message"] = ""
+        print("Message read.")
+
+    elif cmd == Constant.CMD_PING:
+        print("Still here, in game mode", args[0] if args else "?")
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_NEXT_STEP:
         offering = args[0] # JSON of what the client paid; temple.py has its own table

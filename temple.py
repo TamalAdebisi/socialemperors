@@ -25,6 +25,7 @@ from what the client sends.
 """
 
 from engine import timestamp_now
+from village import take
 
 TEMPLE_ID = 1394
 SKIP_WAIT_CASH = 5
@@ -63,16 +64,6 @@ def _temple_map(save: dict) -> dict:
     return save["maps"][save["playerInfo"]["default_map"]]
 
 
-def _pay(save: dict, map: dict, resource: str, amount: int) -> None:
-    if resource == "c":
-        owner, key = save["playerInfo"], "cash"
-    elif resource == "m":
-        owner, key = save["privateState"], "mana"
-    else:
-        owner, key = map, {"g": "coins", "s": "stone", "w": "wood", "f": "food"}[resource]
-    owner[key] = max(int(owner.get(key, 0)) - amount, 0)
-
-
 def next_step(save: dict, step: int) -> str:
     """Record one offering. Returns what happened, for the server log."""
     done = _progress(save)
@@ -84,14 +75,14 @@ def next_step(save: dict, step: int) -> str:
     if kind == RESOURCES:
         map = _temple_map(save)
         for resource, amount in data.items():
-            _pay(save, map, resource, amount)
+            take(save, map, resource, amount)
     done.append(step)
     save["privateState"]["timeStampTemple"] = timestamp_now()
     return f"Temple: step {step} done ({len(done)}/{len(STEPS)})."
 
 
 def skip_wait(save: dict) -> str:
-    _pay(save, None, "c", SKIP_WAIT_CASH)
+    take(save, None, "c", SKIP_WAIT_CASH)
     save["privateState"]["timeStampTemple"] = 0
     return "Temple: wait skipped with cash."
 

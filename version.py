@@ -2,8 +2,42 @@ import random
 
 from engine import timestamp_now
 
-version_name = "alpha 0.04"
-version_code = "0.04a"
+version_name = "alpha 0.05"
+version_code = "0.05a"
+
+
+def _has_entries(value) -> bool:
+    """A dict, or a list with something in it (the client reads both alike)."""
+    return isinstance(value, dict) or (isinstance(value, list) and len(value) > 0)
+
+
+def add_missing_fields(save: dict) -> None:
+    """Fields the game client reads that older saves (and the starting
+    village) lack, or keep in a shape the client no longer understands.
+    Safe to run on any save: nothing already there is changed."""
+    pState = save["privateState"]
+    for key in ("deadHeroes", "infoShowed", "teams"):
+        if not _has_entries(pState.get(key)):
+            pState[key] = {}  # older saves have [] here
+    for key in ("attacksReceived", "spyings", "helpMap"):
+        pState.setdefault(key, [])
+    for key in ("honor", "attacksWon", "attacksLost", "worldChange"):
+        pState.setdefault(key, 0)
+    packets = pState.get("countTimePacket")
+    packets = packets if isinstance(packets, list) else []
+    pState["countTimePacket"] = packets + [0] * (6 - len(packets))  # one count per time machine jump
+    if not pState.get("maps"):
+        pState["maps"] = [{"r": m.get("race", "h")} for m in save["maps"]]  # the client asks how many towns there are
+
+    for map in save["maps"]:
+        for key in ("questTimes", "store", "currentQuestVars", "warehousedUnits"):
+            if not _has_entries(map.get(key)):
+                map[key] = {}
+        map.setdefault("warehouseAditionalCapacitySingle", 50)  # the client's name; without it the warehouse holds nothing
+        map.setdefault("numTradesDone", 0)
+        map.setdefault("timestampLastTrade", 0)
+        map.setdefault("resourceAlliesMarket", "n")  # the Allied Market starts with no resource chosen
+
 
 def migrate_loaded_save(save: dict) -> bool:
 
@@ -64,8 +98,14 @@ def migrate_loaded_save(save: dict) -> bool:
         print("   > migrated to 0.04a")
 
     # 0.04a -> 0.05a
-    #if save["version"] == "0.04a":
-    #    save["version"] = "0.05a"
-    #    print("   > migrated to 0.05a")
+    if save["version"] == "0.04a":
+        add_missing_fields(save)
+        save["version"] = "0.05a"
+        print("   > migrated to 0.05a")
+
+    # 0.05a -> 0.06a
+    #if save["version"] == "0.05a":
+    #    save["version"] = "0.06a"
+    #    print("   > migrated to 0.06a")
 
     return True

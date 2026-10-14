@@ -60,18 +60,36 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 ### Phase 2: Finish the missing game features
 
-The game client knows 154 server commands. The server handles 42 of them and
-silently ignores the rest, which is why some buttons do nothing.
+The game client knows 154 server commands. The server used to handle 42 of
+them and silently ignore the rest, so much of what a player did on screen was
+undone by the next reload. It now handles 100. Of the other 54, 24 are never
+sent by this client and most of the rest are unreachable (admin panel,
+Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 
+- [x] Arthur's tutorial is remembered once finished, instead of starting
+      over on every reload
 - [x] Supreme Dragon Temple (`temple.py`): the 12 offerings, the 48 hour wait,
-      skipping it with cash, and summoning the Supreme Bahamut Dragon.
-      Steps 1 to 9 (resources and the three nest dragons) work today
-- [ ] Collections: save collected items and hand out the rewards. This
-      unlocks the Red and Golden Bahamut and the Bahamut Heart, the last three
-      temple steps
-- [ ] Next features in bug-radar order
-- [ ] Continent rankings (currently an empty stub)
-- [ ] An automated test for every command
+      skipping it with cash, and summoning the Supreme Bahamut Dragon
+- [x] Collections (`game_collections.py`): pieces found are saved, finished
+      sets are exchanged for their reward or bought with cash. The Golden and
+      Red Bahamut and the Bahamut Heart come from these (their pieces drop on
+      hardcore and god islands), so all 12 temple steps can now be completed
+- [x] Quests (`quests.py`): stars, best times, the next island opening, units
+      lost going to the graveyard; the graveyard itself (`graveyard.py`)
+- [x] Collecting and storage (`production.py`, `inventory.py`): production
+      timers, the worker bonus, storing and placing items in the right town
+- [x] Buying (`shop.py`): training food, offer packs, deals, unit collections
+- [x] Missions, troll raids, spells and mana, the Market (`missions.py`,
+      `magic.py`, `market.py`)
+- [x] The Unit Warehouse, the Time Machine, darts, island skins, survival
+      mode and the Monday bonus
+- [x] Social buildings (`social.py`), helping neighbours (`assists.py`) and
+      attacking other empires (`pvp.py`)
+- [ ] A second town (`buy_map`); the server only really supports town 0 today
+- [ ] The world map: continent rankings (still a stub with one island) and
+      moving between worlds (`modify_position_univers` and friends)
+- [ ] Tournaments (needs a small tournament service)
+- [ ] An automated test for every command (144 tests so far)
 
 ### Phase 3: Stronger foundations
 
@@ -94,8 +112,9 @@ once Phase 2 shows how much of the game we have.
    command name in `core/Constants.as` and read what the client sends and what
    it does with the answer.
 3. **Write the server side** in our own words in `command.py` (or its own
-   module, like `temple.py`), with a test in `tests/` that replays the
-   commands the client sends. Run them with `python -m unittest discover tests`.
+   module, like `temple.py` or `game_collections.py`), with a test in
+   `tests/` that replays the commands the client sends. Run them with
+   `python -m unittest discover tests`.
 4. **Try it on staging**, then merge.
 
 ## Decisions so far
