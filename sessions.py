@@ -363,6 +363,12 @@ def _username(pid: str):
     return __usernames[owner]
 
 
+def username_of(pid) -> str | None:
+    """The username of the account an empire belongs to, or None (built-in villages)."""
+    with LOCK:
+        return _username(str(pid))
+
+
 def fb_friends_str(USERID: str) -> list:
     friends = []
     with LOCK:

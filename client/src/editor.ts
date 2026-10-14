@@ -15,13 +15,13 @@ import { placeStored, sellStored, storageChoices, storageRefund, storedItems, ty
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
-import { showStatus, type Hud } from "./ui/hud.ts";
+import { showMessage, type Hud } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 
-/** How long a message stays in the middle of the screen, and how many may wait to show. */
+/** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
 const MOST_WAITING = 3;
 
@@ -38,6 +38,8 @@ export interface EditorParts {
   shop: ShopWindow;
   /** Every item the game knows, by id: what's in storage is named by id. */
   items: Map<number, ItemInfo>;
+  /** Told what's waiting, for the menus' red counts: gifts in storage. */
+  waiting?: (gifts: number) => void;
 }
 
 export class TownEditor {
@@ -51,6 +53,7 @@ export class TownEditor {
   private readonly levels: Level[];
   private readonly shop: ShopWindow;
   private readonly items: Map<number, ItemInfo>;
+  private readonly waiting: (gifts: number) => void;
   private selected: PlacedItem | null = null;
   private moving: PlacedItem | null = null;
   /** What was chosen in the shop or storage, while the player places it: see-through, not on the map yet. */
@@ -63,6 +66,7 @@ export class TownEditor {
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
       camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
+    this.waiting = parts.waiting ?? (() => {});
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -84,24 +88,37 @@ export class TownEditor {
     this.hud.update(this.town);
   }
 
-  /** Signs over the buildings (ready, asleep) and the selected one's countdown, as of now. */
+  /** Signs over the buildings (ready, asleep), the selected one's countdown and what's waiting, as of now. */
   refresh(): void {
     const now = this.clock();
+    let ready = 0;
     for (const placed of this.town.items) {
       const state = workState(placed, now);
       if (state === null) {
         continue;
       }
       const resource = placed.item.production!.resource;
+      ready += state.status === "ready" ? 1 : 0;
       this.view.sign(placed, state.status === "ready" ? { kind: "ready", resource }
         : state.status === "asleep" ? { kind: "asleep" } : null);
     }
+    this.hud.ready(ready);
+    this.waiting([...this.town.gifts.values()].reduce((sum, n) => sum + n, 0));
     if (this.selected && !this.moving) {
-      this.bar.rename(this.label(this.selected));
+      this.bar.describe(this.detail(this.selected));
     }
   }
 
-  /** Open the shop (or its storage), leaving whatever was going on. */
+  /** The glove: collect every building that's ready, as tapping each would. */
+  collectAll(): void {
+    const now = this.clock();
+    const ready = this.town.items.filter((placed) => workState(placed, now)?.status === "ready");
+    for (const placed of ready) {
+      this.collect(placed);
+    }
+  }
+
+  /** Open the shop (or its storage), leaving whatever was going on; pressed again, put it away. */
   openShop(category?: number): void {
     if (this.building) {
       this.stopBuilding();
@@ -110,7 +127,7 @@ export class TownEditor {
       this.cancelMove();
     }
     this.select(null);
-    this.shop.open(category);
+    this.shop.toggle(category);
   }
 
   openStorage(): void {
@@ -274,7 +291,8 @@ export class TownEditor {
     const can = choices(this.town, placed);
     const back = refund(placed.item);
     this.bar.show({
-      name: this.label(placed),
+      name: placed.item.name,
+      detail: this.detail(placed),
       move: can.move ? () => this.startMove(placed) : null,
       turn: can.turn ? () => this.turn(placed) : null,
       store: can.store ? () => this.store(placed) : null,
@@ -284,24 +302,23 @@ export class TownEditor {
     });
   }
 
-  /** A thing's name and what it's doing: "Mill I: ready in 2 h 13 min". Its work comes first. */
-  private label(placed: PlacedItem): string {
-    const { name } = placed.item;
+  /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
+  private detail(placed: PlacedItem): string {
     const state = workState(placed, this.clock());
     switch (state?.status) {
       case "working":
-        return `${name}: ready in ${duration(state.secondsLeft)}`;
+        return `Ready in ${duration(state.secondsLeft)}`;
       case "ready":
-        return `${name}: ready, tap it to collect`;
+        return "Ready: tap it to collect";
       case "asleep":
-        return `${name}: tap it to choose how long it works`;
+        return "Tap it to choose how long it works";
       case "idle":
         if (placed.item.production!.kind !== "always") {
-          return `${name}: no workers inside (put villagers in from the classic game)`;
+          return "No workers inside (put villagers in from the classic game)";
         }
     }
     const why = choices(this.town, placed).why;
-    return why ? `${name}: ${why}` : name;
+    return why ? why[0].toUpperCase() + why.slice(1) : "";
   }
 
   private collect(placed: PlacedItem): void {
@@ -418,7 +435,7 @@ export class TownEditor {
     }
   }
 
-  /** A message in the middle of the screen for a moment, after any before it (the same one twice waits once). */
+  /** A message at the top of the screen for a moment, after any before it (the same one twice waits once). */
   private say(text: string): void {
     if (this.sayQueue.includes(text) || this.sayQueue.length >= MOST_WAITING) {
       return;
@@ -434,10 +451,10 @@ export class TownEditor {
     if (text === undefined) {
       return;
     }
-    showStatus(text);
+    showMessage(text);
     setTimeout(() => {
       this.sayQueue.shift();
-      showStatus("");
+      showMessage("");
       this.sayNext();
     }, SAY_MS);
   }

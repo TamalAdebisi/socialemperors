@@ -34,7 +34,7 @@ export default async function collect({ newPlayer }) {
   // The farm and the ranch are working: selecting one shows how long is left.
   const farm = await player.select(FARM.slice(1), "Farm Land");
   await player.press("Close");
-  const ranch = await player.select(RANCH.slice(1), "Sheep Ranch I");
+  await player.select(RANCH.slice(1), "Sheep Ranch I");
   await player.press("Close");
 
   // The farm is ready 32.4 s after its villager walked in: one tap collects,
@@ -46,15 +46,16 @@ export default async function collect({ newPlayer }) {
   await player.shot("farm-collected");
   assert.equal(await player.bar(), "", "collecting doesn't select the farm");
 
-  // The ranch after 90 s.
+  // After 90 s the ranch is ready, and the farm again: the glove shows, with how many, and collects both.
   await player.wait(Math.max(0, setUpAt + 92_000 - Date.now()));
-  await player.click(ranch.point);
-  await player.wait(250);
+  assert.equal((await player.button("Collect all").textContent()).trim(), "2", "the glove counts the farm and the ranch");
+  await player.press("Collect all");
   await player.shot("ranch-collected");
+  assert.ok(await player.button("Collect all").isHidden(), "nothing's ready now: the glove goes");
 
   const after = await player.saved();
   const startedAfterSetup = (building) => itemAt(after, building[0], building.slice(1))?.[4] - Math.floor(setUpAt / 1000);
-  assert.ok(startedAfterSetup(FARM) >= 30, "the farm started again when collected");
+  assert.ok(startedAfterSetup(FARM) >= 88, "the farm started again when collected the second time");
   assert.ok(startedAfterSetup(RANCH) >= 88, "the ranch started again when collected");
   assert.ok(startedAfterSetup(MINE) >= 0, "the mine started when its time was chosen");
   assert.ok(after.xp > before.xp, `collecting gives experience: ${before.xp} -> ${after.xp}`);

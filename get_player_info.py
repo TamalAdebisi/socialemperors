@@ -1,4 +1,4 @@
-from sessions import session, neighbor_session, neighbors, save_session, share_tutorial
+from sessions import session, neighbor_session, neighbors, save_session, share_tutorial, username_of
 from engine import timestamp_now
 import towns
 import worlds
@@ -36,11 +36,14 @@ def get_neighbor_info(userid, map_number):
     map_number = map_number or 0
     if not (0 <= map_number < len(village["maps"])):
         return None
+    # Their username, as the neighbours list shows it: every empire is "Emperor" otherwise.
+    info = dict(village["playerInfo"])
+    info["name"] = username_of(info["pid"]) or info.get("name")
     return {
         "result": "ok",
         "processed_errors": 0,
         "timestamp": timestamp_now(),
-        "playerInfo": village["playerInfo"],
+        "playerInfo": info,
         "map": village["maps"][map_number],
         "privateState": village["privateState"],
         "neighbors": neighbors(userid),

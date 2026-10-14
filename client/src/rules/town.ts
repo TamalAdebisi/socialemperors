@@ -36,6 +36,8 @@ export interface PlayerInfo {
   map: SaveMap;
   /** Buildings opened before their level, for cash: { "<item id>": true }. */
   privateState?: { unlockedEarlyBuildings?: Record<string, unknown>; gifts?: Box };
+  /** The neighbours shown in the game: their player info, with their home town's level. */
+  neighbors?: { pid: string | number; name?: string; level?: number | string }[];
 }
 
 export interface PlacedItem {

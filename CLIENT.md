@@ -443,10 +443,14 @@ its prize), the mill's card then says "You have one", and the save has all
 four, the wood paid and the experience. Another checks the original's
 rules for nobody's things (a tree has no Sell, a stone rock on bought land
 can be removed) and the storage: a tower and a house stored, the tower
-placed again, the house sold for 1 wood; the save agrees. The client is
+placed again, the house sold for 1 wood; the save agrees. The menus test
+opens every window from the rail, checks one is open at a time with its
+button lit, visits another test player from the neighbours list, and on a
+phone checks the dock, short numbers and the sheet closing when dragged
+down; the collect test ends with the glove collecting two buildings. The client is
 now 309 KB (93 KB compressed).
 
-**Not yet in step 3:** turning a building while placing it, unlocking a
+**Not yet in step 3** (Beta 1's next slices): turning a building while placing it, unlocking a
 building early with cash, buying resources with cash when short (the Flash
 client offers it), training units, placing units from storage,
 units walking (so trees, rocks and gold on the map, which a villager works,
@@ -473,7 +477,10 @@ the player's own copy of the first when they have one, or Nunito.
 ### The menus: rail and dock
 
 The owner picked this layout in October 2026 (option 3 of the plan's
-three), and building it is Beta 1's first slice. The same buttons and
+three); it is built (Beta 1's first slice): `ui/menus.ts` (the buttons),
+`ui/panel.ts` (the windows), `ui/hud.ts` (the numbers, the glove and the
+messages), `ui/actions.ts` (the selected thing's card), and the windows in
+`ui/shop.ts`, `ui/neighbours.ts`, `ui/world.ts` and `ui/army.ts`. The same buttons and
 windows are arranged one way on a wide screen and another on a phone,
 using the game's own button pictures (`client/src/ui/art/`).
 
@@ -517,8 +524,39 @@ classic game. The mockups are the reference for the look (drawn over a
 real town; a monitor on the left, a phone on the right):
 [neighbours](docs/menus/neighbours.webp), [the shop](docs/menus/shop.webp),
 [a building selected](docs/menus/selected.webp) and
-[battles and quests](docs/menus/world.webp). The exact point where the
-phone arrangement takes over is for the slice to choose.
+[battles and quests](docs/menus/world.webp).
+
+**How it's built:**
+
+- The rail and the dock are one row of buttons; the style sheet stands it
+  up or lays it down, and shows Quests and Battle on the rail, World in
+  the dock. The phone arrangement takes over below 720 pixels wide, or on
+  any screen held upright up to 1000 wide (so a tablet held upright gets
+  the dock); `NARROW` in `ui/panel.ts` and the last rule of `style.css`
+  say the same. On a short screen (a phone held sideways) the rail's
+  pictures shrink so all six fit.
+- One window is open at a time. Its menu button is lit; pressing it again,
+  the window's close button or Escape puts it away. A sheet also closes
+  when its handle or title is dragged down past 80 pixels.
+- While a panel is open, what sits on the right (Classic game, Full
+  screen, the glove) moves left of it, and the selected thing's card
+  centres on the space between the rail and the panel.
+- The shop's things above the player's level are grey with "Level N" in
+  red where the price would be. Storage has its own button and is still a
+  tab of the same window, as in the original; whichever is showing is lit.
+- Neighbours: the list the server sends with the town (friends first, then
+  the players most recently seen). Each row has the player's initial on a
+  colour of its own (Facebook's pictures are gone) and Visit, which opens
+  their town to look at; a visited town has no menus, only Back home.
+- Army: the town's units by kind, with how many. Training comes with the
+  training slice; until then the window says to train in the classic game.
+- The glove (the Flash client's fast-collect button) shows bottom right
+  when something is ready, with how many, and collects them all in one
+  press, sending what tapping each would.
+- Red counts: the gifts waiting in storage on Storage, the ready buildings
+  on the glove.
+- Shortcuts on a keyboard: B build, S storage, A army, Q quests, W world
+  (phones), N neighbours, C collect all, Escape to close.
 
 ### Making the art look better
 
