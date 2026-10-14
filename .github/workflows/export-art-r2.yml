@@ -3,8 +3,9 @@
 # where the client's page finds them (SE_ASSETS_URL/art). See DEPLOY.md.
 #
 # Run it by hand: GitHub -> Actions -> "Export art to R2" -> Run workflow.
-# The work is shared between 8 machines. Sheets already in the bucket are not
-# made again, so running it again only adds what's missing; name items under
+# The sheets still missing are shared between 8 machines (sheets already in
+# the bucket are not made again), so running it again only adds what's
+# missing, on all 8; name items under
 # "Make these again" to redo a few, or tick "Make every sheet again" after a
 # change that affects them all.
 name: Export art to R2
@@ -41,6 +42,10 @@ jobs:
       # Newer AWS CLI versions add checksums R2 may reject; send them only when required.
       AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
       AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
+      # Eight machines read and write the bucket at once, and R2 sometimes asks
+      # one to slow down ("ServiceUnavailable"): wait and try again, up to 10 times.
+      AWS_RETRY_MODE: adaptive
+      AWS_MAX_ATTEMPTS: "10"
       # A day: a new export reaches players by the next day at the latest.
       CACHE: public, max-age=86400
     steps:
@@ -68,8 +73,14 @@ jobs:
         if: ${{ !inputs.redo }}
         env:
           ITEMS: ${{ inputs.items }}
+        # A file that still doesn't come after three tries only means its item
+        # is made again: never a reason to stop this machine.
         run: |
-          aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --no-progress
+          for try in 1 2 3; do
+            aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --only-show-errors && break
+            echo "Some files didn't come (try $try of 3); trying again."
+            sleep $((15 * try))
+          done
           for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
 
       - name: Make this machine's share of the sheets, sending them as they come
