@@ -60,6 +60,7 @@ class PackSheetTest(unittest.TestCase):
         sheets, pages, self.warnings = pack_sheet.build(self.folder)
         self.assertEqual(len(pages), 1)
         self.sheet, self.data = sheets[0], pages[0]
+        self.image = self.sheet.image()
 
     def test_animations_are_named_by_label_and_direction(self):
         self.assertEqual(list(self.data["animations"]),
@@ -87,7 +88,7 @@ class PackSheetTest(unittest.TestCase):
         frame = self.data["frames"]["99_test_unit/4"]
         self.assertEqual((frame["frame"]["w"], frame["frame"]["h"]), (1, 1))
         x, y = frame["frame"]["x"], frame["frame"]["y"]
-        self.assertEqual(self.sheet.getpixel((x, y))[3], 0)
+        self.assertEqual(self.image.getpixel((x, y))[3], 0)
 
     def test_the_sheet_holds_each_picture_where_the_json_says(self):
         self.assertEqual(self.sheet.size, (self.data["meta"]["size"]["w"], self.data["meta"]["size"]["h"]))
@@ -96,7 +97,7 @@ class PackSheetTest(unittest.TestCase):
             f = frame["frame"]
             if f["w"] > 1:
                 # Every pixel of a picture is the red we painted.
-                self.assertEqual(self.sheet.crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])).getcolors(),
+                self.assertEqual(self.image.crop((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])).getcolors(),
                                  [(f["w"] * f["h"], (255, 0, 0, 255))], name)
             boxes.append((f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"]))
         for i, a in enumerate(boxes):  # and no two overlap
@@ -180,6 +181,7 @@ class PreviewTest(unittest.TestCase):
                              {"labels": ["ATAQUE"], "images": [1, 0, 1]}],
                     [(10, 5, 20, 20), (12, 6, 16, 19)])
         sheets, pages, _ = pack_sheet.build(folder)
+        sheets = [sheet.image() for sheet in sheets]
         frames, duration = preview.render(pages, sheets)
         self.assertEqual(len(frames), 3)  # the longest animation
         self.assertEqual(duration, 33)    # 30 frames a second
