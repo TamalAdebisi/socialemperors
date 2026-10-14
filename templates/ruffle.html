@@ -6,9 +6,11 @@
         <title>Social Empires</title>
         <link rel="icon" type="image/gif" href="img/icon.gif"/>
         <link rel="stylesheet" href="css/game.css"/>
-        <!-- Ruffle, the Flash emulator. Pinned to a tested version; the
-             integrity hash makes the browser refuse any other file. -->
-        <script src="https://unpkg.com/@ruffle-rs/ruffle@0.7.1/ruffle.js"
+        <!-- Ruffle, the Flash emulator. Our own copy of a tested version
+             (assets/ruffle/), next to the game's files; the integrity hash
+             makes the browser refuse any other file. Ruffle downloads the
+             rest of itself from the same folder. -->
+        <script src="{{ASSETS_URL}}/ruffle/0.7.1/ruffle.js"
                 integrity="sha384-6NrmfJx+zTZZPW41eipMGvyVrfvsDKenrh0v/YJ+nJq0WzzLvOHX6GCcQQ1GbIic"
                 crossorigin="anonymous"></script>
     </head>
@@ -37,7 +39,7 @@
             player.load({ // https://ruffle.rs/js-docs/master/interfaces/URLLoadOptions.html
                 url: "{{ASSETS_URL}}/flash/SELoader.swf?swftoload={{ASSETS_URL}}/flash/{{GAME_CLIENT}}",
                 backgroundColor: "#669C2C",
-                allowScriptAccess: false,
+                allowScriptAccess: true, // the game calls the page's gotoBuy() to open the bank (_bank.html)
                 allowFullscreen: true, // lets the game's own full screen button work
                 autoplay: "on",
                 quality: pick("quality", ["low", "medium", "high", "best"]),
@@ -104,5 +106,6 @@
                 });
             }
         </script>
+        {% include "_bank.html" %}
     </body>
 </html>

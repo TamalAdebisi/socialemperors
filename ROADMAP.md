@@ -50,10 +50,14 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [x] Ruffle settings: tried every quality and renderer switch on the game
       page. Ruffle's own defaults are as good as any. WebGPU crashed the game
       (Chrome on a Mac), so the page no longer offers it
-- [ ] Ruffle: host it ourselves instead of loading it from unpkg.com
-- [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
-      repurpose it once we can change the client
-- [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
+- [x] Ruffle: our own copy (`assets/ruffle/0.7.1/`) next to the game's files,
+      instead of loading it from unpkg.com
+- [x] The game's *Add Cash* buttons, which opened Facebook's payment page,
+      open our bank's exchange instead (the game asks the page, through
+      `gotoBuy()`; `templates/_bank.html`)
+- [x] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody
+      has it): a copy of the fireball `p.fireBall_02` under the class name
+      the game looks for, made by `tools/rename_swf_class.py`
 - [x] Login security: changing your password (on the new account page)
       signs out every other browser and game; every form carries a CSRF
       token; logging out is a button, not a link; at most 5 new accounts an
@@ -106,26 +110,40 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] The daily bonus (`daily_bonus.py`): the server decides the day and
       pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (209 tests so far)
+- [ ] An automated test for every command (236 tests so far)
 
-### Cash (to decide)
+### Cash
 
-Cash was bought with real money on Facebook. Here it can't be (the server is
-free and non-commercial), so it only comes from the game's own free sources:
-the daily bonus (4 cash every 5 days), the Monday bonus (5 cash if the cash
-chest is picked) and the world map (1 cash a continent, 49 in all). That's
-enough for units (1 to 4 cash) but not for spells (35 to 55), packs (20 to
-60), map expansions (20 to 45) or a wonder (1299). Ways to bring it back, the
-game's own hooks first:
+Cash was bought with real money on Facebook. This server is free and has
+nothing to sell, so cash is earned by playing: small amounts often, bigger
+ones for milestones, and nothing that can be bought. Every number is in
+`economy.py`, to tweak in one place. The game's own windows show the same
+numbers, because the server writes them into the game config.
 
-- [ ] The welcome-back bonus: the client and the game config already have
-      it (a new player back on their 2nd or 3rd day picks 2,500 gold, a unit
-      or 5 cash), the server doesn't pay it yet (`comeback_reward`)
-- [ ] A daily cash collection from the town hall, growing with a login streak
+- [x] Levels: 2 cash a level from level 5, 5 every 5th level, 10 every 10th
+      (about 150 cash by level 50, 300 by level 100). The level up window
+      always showed a prize, but nothing saved it; now the server pays it,
+      once a level per town (`levels.py`). Saves from before (version 0.06a)
+      get the prizes of the levels they had already reached, once
+- [x] Daily bonus: 2 cash on day 3 of the streak, 5 on day 5 (was 1 and 3)
+- [x] Monday bonus: the cash chest holds 10 (was 5)
+- [x] World map: 5 cash for reaching continents 2 to 11, 10 for 12 to 21, up
+      to 25 (was 1 each). The prize table's order is fixed too: the game
+      showed the wrong units for continents 19 to 24
+- [x] The bank: 2,000 gold, wood, food or stone for 1 cash, up to 5 cash a
+      day (`bank.py`). The game's own trade the other way (5 cash for 2,500
+      gold) stays. Together with the daily bonus, it is the "daily" source of
+      cash, instead of a new town hall feature
+- [ ] The welcome-back bonus: the game config has it (a new player back on
+      their 2nd and 3rd day opens a chest: 2,500 gold, a unit or 5 cash), but
+      the game client we use has it switched off inside the game file, and
+      nothing the server or the page sends can switch it on. It needs a small
+      change to the client (one setting), so it waits for that
 - [ ] A little cash the first time an island is won with three stars
-- [ ] More cash in the world map's continent prizes (the game's own table
-      pays 1 a continent)
 - [ ] Tournament prizes, once tournaments exist
+- [ ] Known gap: the server still believes the experience and battle gold
+      the game reports, so a determined cheater could fake levels, and with
+      them their cash. Checking battles on the server is a bigger project
 
 ### Phase 3: Stronger foundations
 

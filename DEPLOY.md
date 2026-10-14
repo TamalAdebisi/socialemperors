@@ -287,6 +287,13 @@ on the Railway address the game files would be blocked.
   See [ROADMAP.md](ROADMAP.md) for how changes go from staging to live.
 * **Changed files in `assets/`:** run the **Upload assets to R2** workflow
   again (Part 2.4). It only uploads what changed.
+* **Updating Ruffle** (the Flash emulator): it's in `assets/ruffle/<version>/`,
+  copied unchanged from the `@ruffle-rs/ruffle` npm package (licence files
+  included). For a new version: add its folder next to the old one, change
+  the version and the `integrity` hash in `templates/ruffle.html`, run the
+  **Upload assets to R2** workflow, and try it on staging before merging.
+  Keep the old folder until the new version is live: pages already open
+  still use it.
 * **Backups:** Railway → click the volume → **Backups** → turn on a
   **daily** schedule. If something goes wrong you can roll the database back
   to an earlier day.

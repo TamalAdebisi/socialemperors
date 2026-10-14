@@ -1,9 +1,10 @@
 import random
 
 from engine import timestamp_now
+import levels
 
-version_name = "alpha 0.05"
-version_code = "0.05a"
+version_name = "alpha 0.06"
+version_code = "0.06a"
 
 
 def _has_entries(value) -> bool:
@@ -39,6 +40,7 @@ def add_missing_fields(save: dict) -> None:
         map.setdefault("resourceAlliesMarket", "n")  # the Allied Market starts with no resource chosen
         if not isinstance(map.get("universAttackWin"), list):
             map["universAttackWin"] = []  # the world map's islands beaten (worlds.py)
+        map.setdefault("levelPaid", int(map.get("level") or 1))  # levels.py; a new town is paid up
 
 
 def migrate_loaded_save(save: dict) -> bool:
@@ -105,9 +107,15 @@ def migrate_loaded_save(save: dict) -> bool:
         save["version"] = "0.05a"
         print("   > migrated to 0.05a")
 
-    # 0.05a -> 0.06a
-    #if save["version"] == "0.05a":
-    #    save["version"] = "0.06a"
-    #    print("   > migrated to 0.06a")
+    # 0.05a -> 0.06a: levels pay their prize (levels.py), also the ones already reached
+    if save["version"] == "0.05a":
+        levels.back_pay(save)
+        save["version"] = "0.06a"
+        print("   > migrated to 0.06a")
+
+    # 0.06a -> 0.07a
+    #if save["version"] == "0.06a":
+    #    save["version"] = "0.07a"
+    #    print("   > migrated to 0.07a")
 
     return True

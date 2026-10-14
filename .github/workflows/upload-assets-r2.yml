@@ -29,7 +29,16 @@ jobs:
 
       - name: Upload assets/
         # --size-only: a fresh checkout makes every file look "new" by date.
-        run: aws s3 sync assets/ "s3://$BUCKET/" --endpoint-url "$ENDPOINT" --size-only --cache-control "$CACHE" --no-progress
+        run: aws s3 sync assets/ "s3://$BUCKET/" --endpoint-url "$ENDPOINT" --size-only --cache-control "$CACHE" --no-progress --exclude "ruffle/*"
+
+      - name: Upload Ruffle, the Flash emulator (assets/ruffle/)
+        # Each Ruffle version has its own folder and never changes, so browsers
+        # may keep it for a year. Its .wasm files must be labelled as WebAssembly
+        # for browsers to start them while they download.
+        run: |
+          KEEP="public, max-age=31536000, immutable"
+          aws s3 sync assets/ruffle/ "s3://$BUCKET/ruffle/" --endpoint-url "$ENDPOINT" --size-only --cache-control "$KEEP" --no-progress --exclude "*.wasm"
+          aws s3 sync assets/ruffle/ "s3://$BUCKET/ruffle/" --endpoint-url "$ENDPOINT" --size-only --cache-control "$KEEP" --no-progress --exclude "*" --include "*.wasm" --content-type application/wasm
 
       - name: Upload renamed copies the game asks for (same as the routes in server.py)
         run: |

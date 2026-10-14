@@ -33,7 +33,7 @@ import math
 
 from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config, get_level_from_xp
-import magic
+import levels
 import quests
 from sessions import save_session, session
 from village import number
@@ -94,9 +94,8 @@ def end(save: dict, report: dict, no_town_hall=False) -> str:
         gold = xp = honor = 0
     map["coins"] += gold
     map["xp"] += xp
-    old_level = int(map.get("level", 1))
-    map["level"] = max(old_level, get_level_from_xp(map["xp"]))  # level ups in battle were not sent
-    magic.level_up(save, old_level, map["level"])
+    map["level"] = max(int(map.get("level", 1)), get_level_from_xp(map["xp"]))  # level ups in battle were not sent
+    levels.reached(save, map, map["level"])
 
     lost = quests.lose_units(save, map, report.get("attacker_units"))
 

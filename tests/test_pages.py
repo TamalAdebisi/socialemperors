@@ -1,10 +1,13 @@
 """
 The web pages around the game: everybody plays the one working client, and
-the page knows when an account has already been through Arthur's tutorial.
+the page knows when an account has already been through Arthur's tutorial,
+and the page loads our own copy of Ruffle.
 
 Run from the repository folder:  python -m unittest discover tests
 """
 
+import base64
+import hashlib
 import os
 import re
 import tempfile
@@ -13,6 +16,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import config_env
 import server
 from command import do_command
 
@@ -64,6 +68,24 @@ class PagesTest(unittest.TestCase):
         do_command(first, "complete_tutorial", [15])
         second, page = self.new_empire()
         self.assertNotIn(FULL_SCREEN_LOCKED, page)
+
+    def test_ruffle_comes_from_our_own_files(self):
+        _, page = self.new_empire()
+        self.assertNotIn("unpkg.com", page)
+        src, integrity = re.search(r'<script src="([^"]+/ruffle\.js)"\s+integrity="([^"]+)"', page).groups()
+        self.assertTrue(src.startswith(config_env.ASSETS_URL + "/ruffle/"), src)
+        folder = os.path.join(server.ASSETS_DIR, "ruffle", src.split("/")[-2])
+        # The hash in the page must be our copy's, or browsers refuse to run it.
+        with open(os.path.join(folder, "ruffle.js"), "rb") as f:
+            digest = base64.b64encode(hashlib.sha384(f.read()).digest()).decode()
+        self.assertEqual(integrity, "sha384-" + digest)
+        self.assertTrue(os.path.isfile(os.path.join(folder, "LICENSE_MIT")))
+        self.assertTrue(os.path.isfile(os.path.join(folder, "LICENSE_APACHE")))
+        # A server without R2 hands out the files itself, labelled so browsers can start them.
+        self.assertEqual(self.web.get(src).status_code, 200)
+        wasm = [name for name in os.listdir(folder) if name.endswith(".wasm")]
+        self.assertEqual(len(wasm), 2)  # Ruffle picks the one the browser can run
+        self.assertEqual(self.web.get(src.replace("ruffle.js", wasm[0])).mimetype, "application/wasm")
 
 
 if __name__ == "__main__":

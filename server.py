@@ -23,7 +23,8 @@ from get_game_config import get_game_config, patch_game_config
 print(" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
 from sessions import (LOCK, load_saved_villages, start_background_saver, save_info, new_village,
-                      fb_friends_str, owner_of, villages_of, share_tutorial, session as village_of)
+                      fb_friends_str, owner_of, villages_of, share_tutorial, save_session,
+                      session as village_of)
 load_saved_villages()
 
 print(" [+] Loading server...")
@@ -34,6 +35,7 @@ from werkzeug.utils import safe_join
 
 import accounts
 import admin
+import bank
 import csrf
 import radar
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -273,6 +275,34 @@ def ruffle():
     return _game_page("ruffle.html")
 
 
+@app.route("/bank", methods=["GET", "POST"])
+def bank_window():
+    """The bank's exchange window on the game page (templates/_bank.html):
+    what it offers the empire on that page, and its trades."""
+    user = current_user()
+    USERID = request.args.get("empire", "")  # not the cookie's: another tab may have opened another empire
+    if user is None or not USERID or owner_of(USERID) != user["id"]:
+        return json_response({"error": "Please sign in again."}, 403)
+    with LOCK:
+        save = village_of(USERID)
+        if save is None:
+            return json_response({"error": "This empire is gone."}, 404)
+        done, status = None, 200
+        if request.method == "POST":
+            if not csrf.valid():
+                return json_response({"error": "This page was open too long. Please reload it."}, 400)
+            try:
+                done = bank.buy_cash(save, request.form.get("resource", ""), request.form.get("cash"))
+                save_session(USERID)
+                print(f"[BANK] {user['username']} -> {USERID}: {done}")
+            except bank.BankError as e:
+                done, status = str(e), 400
+        reply = dict(bank.state(save), loaded_at=bank.loaded_at.get(USERID, 0), now=time.time())
+        if done:
+            reply["ok" if status == 200 else "error"] = done
+        return json_response(reply, status)
+
+
 @app.errorhandler(400)
 def bad_request(e):
     # Most often a form from a page left open too long (csrf.py): show the
@@ -375,6 +405,7 @@ def get_player_info_response(USERID):
     map_number = int(request.values['map']) if request.values.get('map', '').isdigit() else None
 
     if user is None or user == USERID:  # the player's own village (travelling between towns names it)
+        bank.town_loaded(USERID)
         return json_response(get_player_info(USERID, map_number))
     if user.startswith("100000") and user not in (Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1,
                                                   Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2,
