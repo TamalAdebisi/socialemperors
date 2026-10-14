@@ -36,6 +36,7 @@ from werkzeug.utils import safe_join
 import accounts
 import admin
 import bank
+import comeback_bonus
 import csrf
 import radar
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -43,6 +44,7 @@ from command import command
 from constants import Constant
 from engine import timestamp_now
 from quests import get_quest_map
+import tournaments
 from version import version_name
 import worlds
 
@@ -265,7 +267,8 @@ def _game_page(template):
     return render_template(template, save_info=save_info(USERID), serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(USERID), version=version_name,
                            GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
-                           ASSETS_URL=config_env.ASSETS_URL, DYNAMIC=DYNAMIC, ART_URL=art_url(),
+                           ASSETS_URL=config_env.ASSETS_URL, DAYS=comeback_bonus.page_days(village_of(USERID)),
+                           DYNAMIC=DYNAMIC, ART_URL=art_url(),
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
 
@@ -450,6 +453,8 @@ def get_player_info_response(USERID):
     if user is None or user == USERID:  # the player's own village (travelling between towns names it)
         bank.town_loaded(USERID)
         return json_response(get_player_info(USERID, map_number))
+    if user == tournaments.ARENA:  # where tournament matches are fought
+        return json_response(tournaments.arena())
     if user.startswith("100000") and user not in (Constant.NEIGHBOUR_ARTHUR_GUINEVERE_1,
                                                   Constant.NEIGHBOUR_ARTHUR_GUINEVERE_2,
                                                   Constant.NEIGHBOUR_ARTHUR_GUINEVERE_3):
@@ -505,6 +510,29 @@ def command_response(USERID):
         radar.failure("command.php", e, data_str[65:], USERID)
         return json_response({"result": "error"}, 500)
     return json_response({"result": "success"})
+
+
+@app.route(f"{DYNAMIC}/tournaments/<name>.php", methods=['POST'])
+@game_request
+def tournament_response(USERID, name):
+    # Tournaments (tournaments.py). The same envelope as command.php, though
+    # some clients leave the hash out; the reply goes under "data".
+    data_str = request.values.get("data", "")
+    payload = data_str[65:] if len(data_str) > 64 and data_str[64] == ';' else data_str
+    try:
+        params = json.loads(payload or "{}")
+    except json.JSONDecodeError:
+        return ("Malformed request.", 400)
+    try:
+        reply = tournaments.service(USERID, name, params)
+    except Exception as e:
+        print(f" [!] Tournament {name} failed for {USERID}: {e!r}")
+        radar.failure(f"tournaments/{name}", e, payload, USERID)
+        return json_response({"result": "error"}, 500)
+    if reply is None:
+        radar.note(radar.UNHANDLED, f"tournaments/{name}.php", example=payload, player=USERID)
+        return ("", 404)
+    return json_response({"data": reply})
 
 
 def _number(name):

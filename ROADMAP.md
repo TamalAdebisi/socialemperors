@@ -112,8 +112,26 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
       continent), relocating, swapping islands, and browsing other continents
 - [x] The daily bonus (`daily_bonus.py`): the server decides the day and
       pays the game's own prize for it, instead of trusting the client
-- [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (236 tests so far)
+- [x] Tournaments (`tournaments.py`): the game's *Tourney* window, from level
+      15. Seven public tournaments of four players, matched by level: a room
+      still not full after 30 minutes gets computer players with the real
+      players' armies, so nobody waits for a crowd. And the weekly
+      tournament: you against three bots, once a week, ranked against
+      everyone else that week. Matches are fought against the other
+      player's army, run by the game, so nobody has to be online together,
+      and no units are lost. The battlefield (map 100000040) was missing
+      too
+- [x] Friends tournaments: *Create Tournament* makes a private room your
+      friends (the real players among your neighbours) see in their list
+      and can join; you can call it off and every fee comes back, and empty
+      seats get bots after a day. The game's Invite buttons, which opened
+      Facebook, open a short notice on the page instead
+- [x] A test for every command the server handles (325 tests), and a test
+      that fails if a handled command has none (`tests/test_every_command.py`).
+      Writing them found four bugs: a monster nest reopened after the last
+      monster closed itself again, opening a nest took gold from the first
+      town instead of the open one and ignored the config's prices, and
+      taking a unit the server didn't know about out of a building lost it
 
 ### Cash
 
@@ -137,16 +155,29 @@ numbers, because the server writes them into the game config.
       day (`bank.py`). The game's own trade the other way (5 cash for 2,500
       gold) stays. Together with the daily bonus, it is the "daily" source of
       cash, instead of a new town hall feature
-- [ ] The welcome-back bonus: the game config has it (a new player back on
-      their 2nd and 3rd day opens a chest: 2,500 gold, a unit or 5 cash), but
-      the game client we use has it switched off inside the game file, and
-      nothing the server or the page sends can switch it on. It needs a small
-      change to the client (one setting), so it waits for that
-- [ ] A little cash the first time an island is won with three stars
-- [ ] Tournament prizes, once tournaments exist
-- [ ] Known gap: the server still believes the experience and battle gold
-      the game reports, so a determined cheater could fake levels, and with
-      them their cash. Checking battles on the server is a bigger project
+- [x] Islands: 5 cash the first time a quest island is won on three stars,
+      the hardest difficulty (`quests.py`): 165 over the 33 islands.
+      The game has no window for it, so the island window's *Choose
+      difficulty* says so, and the cash shows once the player is home. Saves
+      from before (version 0.07a) get it for the islands they had already
+      won on three stars, once
+- [x] Tournament prizes: the winner of a public tournament gets the prize
+      the game shows (gold or cash, and a unit in the gift box); the weekly
+      top 10 get the prize for their rank, as it is when their own
+      tournament ends. A cash tournament's prize is the entry fee back with
+      the unit, not twice the fee as in the game: with bots filling seats, a
+      good player could win over and over and print cash (`economy.py`)
+- [x] The welcome-back bonus: a chest on a new empire's 2nd and 3rd day
+      (2,500 gold, a unit or 10 cash: the client draws it from the Monday
+      chest's list). The client had it switched off inside the game file;
+      `tools/patch_client.py` switches that one setting on (3 bytes) in a
+      copy, `SocialEmpires0926bsec_comeback.swf`, which the page now loads
+      and tells the empire's day (`comeback_bonus.py`)
+- [ ] Known gap, for after Phases 3 and 4: the server still believes the
+      experience and battle gold the game reports, so a determined cheater
+      could fake levels, and with them their cash. Checking battles on the
+      server is a bigger project, and much easier once the new client's
+      battles are repeatable ([CLIENT.md](CLIENT.md#who-decides-what-happened))
 
 ### Phase 3: Stronger foundations
 
@@ -201,7 +232,7 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 | Assets on Cloudflare R2 | Free downloads (no egress fees); keeps 1.3 GB out of the server |
 | Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need Phase 3 first |
 | Ruffle instead of Flash Player | Works in every modern browser with no plugin |
-| Client version 0.9.26b | The one that works fully today |
+| Client version 0.9.26b, with one setting switched on | The one that works fully today; `tools/patch_client.py` turns on its welcome-back bonus, and nothing else changes |
 | PixiJS 8 for the new client | Light, fast with many sprites, and we keep control; confirmed by drawing real towns ([CLIENT.md](CLIENT.md#engine)) |
 | Supabase later, not now | Postgres and auth are useful at scale; one SQLite file is enough until then |
 

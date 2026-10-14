@@ -19,18 +19,31 @@ what they get.
     Daily bonus    a streak of 5 days (daily_bonus.py): day 3 and day 5 pay
                    cash; a missed day starts the streak over.
     Monday bonus   the cash chest, one of three (monday_bonus.py).
+    Welcome back   a chest on a new empire's 2nd and 3rd day
+                   (comeback_bonus.py). The game client draws it from the
+                   Monday chest's list, so it holds the same: 2,500 gold,
+                   a unit, or MONDAY_BONUS_CASH.
     Continents     the world map's prize for reaching a continent
                    (worlds.py): more cash the further the continent.
     The bank       2,000 of one resource (gold, wood, food or stone) for 1
                    cash, a few cash a day (bank.py). The game's own trade
                    the other way, 5 cash for 2,500 gold, stays.
+    Tournaments    a cash tournament's prize is the entry fee back with
+                   its unit (tournaments.py), not twice the fee as in the
+                   game: computer players fill the empty seats, so a good
+                   player could win over and over, and print cash.
+    Islands        the first win of a quest island on 3 stars, the
+                   hardest difficulty (quests.py). The game has no window
+                   for it, so the island window's "Choose difficulty"
+                   says so, and the cash shows when the player is home.
     Cash Wonder    already in the game: 50 cash, then 1 cash a day.
 
 What it adds up to, roughly: about 150 cash by level 50 and 300 by level
 100 from levels; 7 every 5 days from the daily bonus; 5 to 25 a continent;
-up to 5 a day from the bank. Prices for comparison: heroes 3 to 9 cash,
-dragons 10, packs 20 to 200, spells 30 to 80, the Supreme Bahamut Dragon
-200, the Diamond Castle 450.
+5 an island won on 3 stars (165 over the 33 islands); up to 5 a day from the
+bank. Prices for comparison: heroes 3 to 9 cash, dragons 10, packs 20 to
+200, spells 30 to 80, the Supreme Bahamut Dragon 200, the Diamond Castle
+450.
 """
 
 # Levels: the cash for reaching a level (levels below FIRST_CASH_LEVEL keep the game's prize)
@@ -54,8 +67,15 @@ BANK_RESOURCES = ("g", "w", "f", "s")  # gold, wood, food, stone
 BANK_RESOURCE_PER_CASH = 2000
 BANK_CASH_PER_DAY = 5
 
+# Quest islands: the cash for the first win of an island on 3 stars (quests.py)
+ISLAND_THREE_STAR_CASH = 5
+
+# Tournaments: a cash tournament's prize, in entry fees (the game gave 2)
+TOURNAMENT_CASH_PRIZE_IN_FEES = 1
+
 # Texts the game shows, by their id in the config's localization_strings
 TEXTS = {
+    498: f"Choose difficulty (first 3 stars: {ISLAND_THREE_STAR_CASH} cash)",  # POPUP_QUEST_ELIGE_DIFICULTAD, over the island's stars once one is won
     1430: "Updating your empire",  # RELOADING_PLAYER_INFO_TEXT, shown while the bank reloads the town (was "Reloading Gifts")
 }
 
@@ -101,6 +121,11 @@ def patch_config(config: dict) -> None:
     for row in rows:
         row["cash"] = continent_cash(row["level"])
     config["level_ranking_reward"] = rows
+
+    for kind in config["tournament_type"].values():
+        if kind["resource_type"] == "c":
+            for prize in kind["prize"]:
+                prize["c"] = int(kind["cost"]) * TOURNAMENT_CASH_PRIZE_IN_FEES
 
     for text in config["localization_strings"]:
         if isinstance(text, dict) and text.get("id") in TEXTS:

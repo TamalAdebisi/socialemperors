@@ -128,10 +128,10 @@ body.native #stage ruffle-player,
     height: 600px;
 }
 
-/* The bank's exchange window (_bank.html): a parchment notice in a wooden
-   frame, over the dimmed game. */
+/* The bank's exchange window (_bank.html), and the invite notice
+   (_invite.html): a parchment notice in a wooden frame, over the dimmed game. */
 
-#bank {
+#bank, #invite {
     width: min(380px, calc(100vw - 32px));
     box-sizing: border-box;
     padding: 18px 20px 14px;
@@ -143,21 +143,21 @@ body.native #stage ruffle-player,
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-#bank::backdrop {
+#bank::backdrop, #invite::backdrop {
     background: rgba(20, 30, 10, 0.6);
 }
 
-#bank h2 {
+#bank h2, #invite h2 {
     margin: 0 28px 6px 0;
     color: var(--wood);
     font-size: 18px;
 }
 
-#bank p {
+#bank p, #invite p {
     margin: 0 0 10px;
 }
 
-#bank button {
+#bank button, #invite button {
     min-height: 28px;
     padding: 0 10px;
     border: 1.5px solid #9e7747;
@@ -168,7 +168,7 @@ body.native #stage ruffle-player,
     cursor: pointer;
 }
 
-#bank button:hover {
+#bank button:hover, #invite button:hover {
     background: rgb(250, 237, 90);
 }
 
@@ -185,7 +185,7 @@ body.native #stage ruffle-player,
     margin: 0;
 }
 
-#bank .bank-close button {
+#bank .bank-close button, #invite .bank-close button {
     width: 28px;
     padding: 0;
 }

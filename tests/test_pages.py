@@ -20,7 +20,7 @@ import config_env
 import server
 from command import do_command
 
-GAME_CLIENT = "SocialEmpires0926bsec.swf"
+GAME_CLIENT = "SocialEmpires0926bsec_comeback.swf"
 FULL_SCREEN_LOCKED = "Available after the tutorial"
 
 

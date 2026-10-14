@@ -56,6 +56,15 @@ def storage():
     return __storage
 
 
+__also_flushed = []  # other game state written with the villages: tournaments.py
+
+
+def also_flush(write) -> None:
+    """write(storage) runs with every flush, after the villages. For state
+    that lives outside the villages but must be saved the same way."""
+    __also_flushed.append(write)
+
+
 # Loading
 
 def load_saved_villages():
@@ -138,6 +147,8 @@ def flush():
                 print(f" [!] Saving failed, will retry: {e}")
                 with LOCK:
                     __dirty.update(pid for pid, _, _ in items)
+        for write in __also_flushed:
+            write(__storage)
     radar.flush(__storage)
 
 
@@ -296,6 +307,14 @@ def _neighbor_villages(USERID: str) -> list:
     players = [v for pid, v in __saves.items() if pid != USERID]
     players.sort(key=lambda v: v["playerInfo"].get("last_logged_in", 0) or 0, reverse=True)
     return statics + players[:config_env.MAX_NEIGHBORS]
+
+
+def friends(USERID: str) -> list:
+    """The players among the neighbours (not the villages that ship with the
+    game): the game's "friends", for friends tournaments."""
+    with LOCK:
+        return [str(v["playerInfo"]["pid"]) for v in _neighbor_villages(USERID)
+                if str(v["playerInfo"]["pid"]) in __saves]
 
 
 def fb_friends_str(USERID: str) -> list:

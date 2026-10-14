@@ -10,7 +10,8 @@ copy is what the player sees:
                                         the start, each win opens the next)
     privateState["questsRank"]          {quest id: highest difficulty won, 1-3},
                                         shown as stars; each star opens the
-                                        next difficulty
+                                        next difficulty. The first win on 3
+                                        stars pays cash (economy.py)
     map["questTimes"]                   {quest id: when it was last attacked};
                                         the client waits 4 hours before the
                                         same island can be attacked again
@@ -36,23 +37,27 @@ import os
 from bundle import QUESTS_DIR
 from engine import timestamp_now
 from get_game_config import get_game_config, get_level_from_xp
+import economy
 import graveyard
 import inventory
 import levels
+from village import give
 
 UNIT_ID, SENT, KILLED, RECOVERED = 0, 1, 2, 3
 
 
-def get_quest_map(questid):
-    # Quest ids are plain numbers. Rejecting anything else stops requests like
-    # "100000/../../something" from reading files outside the quests folder.
+def is_island(questid) -> bool:
+    """A quest island the game has a map for. Quest ids are plain numbers:
+    rejecting anything else stops requests like "100000/../../something"
+    from reading files outside the quests folder."""
     questid = str(questid)
-    if not questid.isdigit():
+    return questid.isdigit() and os.path.exists(os.path.join(QUESTS_DIR, questid + ".json"))
+
+
+def get_quest_map(questid):
+    if not is_island(questid):
         return ("", 404)
-    file = os.path.join(QUESTS_DIR, questid + ".json")
-    if not os.path.exists(file):
-        return ("", 404)
-    with open(file, "r") as f:
+    with open(os.path.join(QUESTS_DIR, str(questid) + ".json"), "r") as f:
         return (json.load(f), 200)
 
 
@@ -106,10 +111,15 @@ def end(save: dict, result: dict) -> str:
 
     _quest_times(map).setdefault(quest_id, timestamp_now())  # normally set by start_quest
 
+    prize = 0
     if won:
         difficulty = min(max(int(result.get("difficulty", 1)), 1), 3)
         ranks = _ranks(save)
-        ranks[quest_id] = max(int(ranks.get(quest_id, 0)), difficulty)
+        stars = int(ranks.get(quest_id, 0))
+        ranks[quest_id] = max(stars, difficulty)
+        if stars < 3 <= difficulty and is_island(quest_id):  # stars never go down, so once an island
+            prize = economy.ISLAND_THREE_STAR_CASH
+            give(save, map, "c", prize)
         order = get_game_config()["globals"]["ISLE_ORDER"]
         if quest_id in order:
             pState["unlockedQuestIndex"] = max(int(pState.get("unlockedQuestIndex", 0)), order.index(quest_id) + 1)
@@ -120,4 +130,18 @@ def end(save: dict, result: dict) -> str:
         inventory.add_gift(save, int(item_id), int(count))
 
     outcome = "won" if won else "lost"
-    return f"Quest {quest_id} {outcome}: +{resources.get('g', 0)} gold, +{resources.get('x', 0)} xp, {len(lost)} units lost."
+    first_three_stars = f", first 3 stars: +{prize} cash" if prize else ""
+    return (f"Quest {quest_id} {outcome}: +{resources.get('g', 0)} gold, +{resources.get('x', 0)} xp, "
+            f"{len(lost)} units lost{first_three_stars}.")
+
+
+def back_pay(save: dict) -> None:
+    """Saves from before the 3 star prize: the islands already won on 3
+    stars pay it, once. Runs on every save at startup, so a strange value
+    is skipped rather than stopping the server."""
+    islands = [quest_id for quest_id, stars in _ranks(save).items()
+               if str(stars).isdigit() and int(stars) >= 3 and is_island(quest_id)]
+    if islands:
+        cash = economy.ISLAND_THREE_STAR_CASH * len(islands)
+        give(save, save["maps"][0], "c", cash)
+        print(f"   > back pay for {len(islands)} islands won on 3 stars: {cash} cash")
