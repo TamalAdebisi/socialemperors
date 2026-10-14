@@ -12,12 +12,23 @@ import { ICONS } from "./icons.ts";
 
 const numbers = new Intl.NumberFormat("en-US");
 
+/** What the music and sound buttons switch (the page's Sound). */
+export interface SoundSwitches {
+  readonly musicPlaying: boolean;
+  readonly effectsPlaying: boolean;
+  setMusic(on: boolean): void;
+  setEffects(on: boolean): void;
+  onChange(listener: () => void): void;
+}
+
 export interface HudActions {
   classicUrl: string;
   /** Showing another player's town: their name (the numbers stay the player's own). */
   visiting?: string;
   /** The levels table, for how far the town is from the next. */
   levels?: Level[];
+  /** Music and sound effects: their on/off buttons. */
+  sound?: SoundSwitches;
   /** The town's people and the room for them. */
   population?: (town: Town) => { current: number; max: number };
 }
@@ -57,6 +68,8 @@ export function showHud(town: Town, actions: HudActions): Hud {
     <div class="hud-buttons">
       <span class="hud-visiting pill-light" hidden></span>
       <a class="button tiny gold" data-home href="/client.html" hidden>Back home</a>
+      <button class="hud-sound" type="button" data-music hidden></button>
+      <button class="hud-sound" type="button" data-effects hidden></button>
       <a class="button tiny gold" data-classic href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
@@ -92,6 +105,26 @@ export function showHud(town: Town, actions: HudActions): Hud {
   };
   update(town);
   bar.querySelector<HTMLAnchorElement>("[data-classic]")!.href = actions.classicUrl;
+
+  // Music and sound: the Flash client's own buttons, a note and a speaker, crossed out when off.
+  const sound = actions.sound;
+  if (sound) {
+    const music = bar.querySelector<HTMLButtonElement>("[data-music]")!;
+    const effects = bar.querySelector<HTMLButtonElement>("[data-effects]")!;
+    const show = () => {
+      music.innerHTML = `<img src="${ICONS[sound.musicPlaying ? "music-on" : "music-off"]}" alt="">`;
+      music.setAttribute("aria-label", sound.musicPlaying ? "Music: on" : "Music: off");
+      music.dataset.tip = sound.musicPlaying ? "Music on" : "Music off";
+      effects.innerHTML = `<img src="${ICONS[sound.effectsPlaying ? "sound-on" : "sound-off"]}" alt="">`;
+      effects.setAttribute("aria-label", sound.effectsPlaying ? "Sounds: on" : "Sounds: off");
+      effects.dataset.tip = sound.effectsPlaying ? "Sounds on" : "Sounds off";
+    };
+    music.addEventListener("click", () => sound.setMusic(!sound.musicPlaying));
+    effects.addEventListener("click", () => sound.setEffects(!sound.effectsPlaying));
+    sound.onChange(show);
+    show();
+    music.hidden = effects.hidden = false;
+  }
 
   const fullscreen = bar.querySelector<HTMLButtonElement>("[data-fullscreen]")!;
   if (!document.fullscreenEnabled) {

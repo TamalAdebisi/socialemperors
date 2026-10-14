@@ -243,6 +243,30 @@ body {
   margin-left: auto;
 }
 
+/* Music and sound: the game's own square buttons. */
+.hud-sound {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.hud-sound img {
+  width: 30px;
+  height: 29px;
+}
+
+.hud-sound:hover img,
+.hud-sound:focus-visible img {
+  filter: brightness(1.12);
+}
+
+.hud-sound[hidden] {
+  display: none;
+}
+
 /* ---- Windows: a panel down the right ------------------------------------- */
 .panel {
   position: fixed;
@@ -953,6 +977,10 @@ body {
   }
   .hud-visiting {
     font-size: 13px;
+  }
+  .hud-sound img {
+    width: 26px;
+    height: 25px;
   }
 
   /* Windows as sheets over the lower half, above the dock, with a handle. */

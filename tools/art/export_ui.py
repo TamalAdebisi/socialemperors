@@ -64,6 +64,11 @@ PICTURES = {
     # The top bar.
     "add-cash": ("AddCashButton", 0),
     "daily-bonus": ("DailyButtonMC", 0),
+    # The options panel: music and sound, on and off.
+    "music-on": ("GuiMC/options_panel/bm", 0),
+    "music-off": ("GuiMC/options_panel/bmo", 0),
+    "sound-on": ("GuiMC/options_panel/bs", 0),
+    "sound-off": ("GuiMC/options_panel/bso", 0),
 }
 
 

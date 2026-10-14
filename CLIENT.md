@@ -291,7 +291,8 @@ villagers working at trees and mines, the "for sale" signs on closed land,
 what the Flash client adds by itself (lost objects, wandering trolls...),
 effects and sound. A big town (400 items) took 16 seconds to load on our
 test machine, a busy server with no graphics card; staging will show what
-players get.
+players get. (Since then: under 3 seconds with its art cached, about 10
+the first time; see "Sound and speed".)
 
 ### Step 3: run your town
 
@@ -800,6 +801,40 @@ neighbours, Arthur last; Visit opens their town. Code:
 
 **Not yet:** gifts and requests between neighbours, and adding neighbours
 from inside the game (the site's friends page does it).
+
+### Sound and speed
+
+Built (Beta 1's eighth slice). Code: `sound.ts`, the sounds in
+`client/src/sound/` (made by `tools/art/export_sounds.sh` from the game's
+own library, `assets/swf/120608_dynamic.swf`), and `compress.py` on the
+server.
+
+**Sound**, as the Flash client plays it (our notes, our words):
+
+- **Music:** "Spirit of Eternity" on a loop in a town ("trollcamp" in a
+  troll town), at a quarter of full volume, from the game's `music/`
+  folder in the assets bucket. Browsers only allow sound after the first
+  tap or key, so it starts then; it pauses while the page is hidden.
+- **Effects,** at a quarter of full volume, each 50 to 150 ms after what
+  made it, and at most 3 of one at a time (2 for the rock sound), so ten
+  farms collected at once don't make ten times the noise: a click for
+  every button; a building placed, a unit trained or sent off (the game's
+  "roll over" sound); collecting; a building turning ready; a level
+  reached; a villager starting on a tree or a rock.
+- **The switches:** the Flash client's own music and sound buttons, in the
+  top bar; each is remembered in the browser. Both start on, as in the
+  original.
+- The battle, quest and construction sounds wait for those parts.
+
+**Speed:** the server now sends text gzip-compressed (`compress.py`): the
+game's config, which every start needs before anything shows, goes from
+1.9 MB to 145 KB; the client's script from 415 KB to 143 KB; towns
+too. Each packed copy is kept, so the config is packed once, not at every
+start. Files keep their version tags (marked "weak"), so a browser that
+has the client already gets a short "unchanged". Arthur's grown town (402
+things, 69 pictures) opens in under 3 seconds on our test machine once its
+art is cached, and in about 10 the first time, mostly downloading the
+pictures; the bucket keeps them a day in the browser's cache.
 
 ### Making the art look better
 
