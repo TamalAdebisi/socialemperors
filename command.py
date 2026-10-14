@@ -6,6 +6,7 @@ from get_game_config import get_game_config, get_level_from_xp, get_name_from_it
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import bank
+import comeback_bonus
 import temple
 import game_collections
 import graveyard
@@ -621,6 +622,9 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_SURVIVAL_BUY_MAP:
         print(survival.buy_map(save, args[0]))
+
+    elif cmd == Constant.CMD_COLLECT_COMEBACK_BONUS:
+        print(comeback_bonus.collect(save, args[0], args[1], args[2], towns.current(save)))
 
     elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
         print(monday_bonus.collect(save, args[0], args[1], towns.current(save)))

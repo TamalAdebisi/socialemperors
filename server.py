@@ -36,6 +36,7 @@ from werkzeug.utils import safe_join
 import accounts
 import admin
 import bank
+import comeback_bonus
 import csrf
 import radar
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -262,7 +263,7 @@ def _game_page(template):
     return render_template(template, save_info=save_info(USERID), serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(USERID), version=version_name,
                            GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
-                           ASSETS_URL=config_env.ASSETS_URL,
+                           ASSETS_URL=config_env.ASSETS_URL, DAYS=comeback_bonus.page_days(village_of(USERID)),
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
 

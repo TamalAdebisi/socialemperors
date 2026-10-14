@@ -83,9 +83,11 @@ TRUSTED_PROXIES = _int("SE_TRUSTED_PROXIES", 0)
 CLIENT_IP_HEADER = os.environ.get("SE_CLIENT_IP_HEADER", "").strip() or None
 
 # The game client everybody plays: Social Empires 0.9.26b, the one this
-# server is written for. (The 1.1.5 and 1.4.07 clients are still in the
-# assets but never loaded.) Our own releases are named in version.py.
-GAME_CLIENT = "SocialEmpires0926bsec.swf"
+# server is written for, with its welcome-back bonus switched on
+# (tools/patch_client.py, comeback_bonus.py); the original is kept next to
+# it. (The 1.1.5 and 1.4.07 clients are still in the assets but never
+# loaded.) Our own releases are named in version.py.
+GAME_CLIENT = "SocialEmpires0926bsec_comeback.swf"
 
 
 def _load_secret_key() -> str:

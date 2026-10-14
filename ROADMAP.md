@@ -124,7 +124,12 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
       and can join; you can call it off and every fee comes back, and empty
       seats get bots after a day. The game's Invite buttons, which opened
       Facebook, open a short notice on the page instead
-- [ ] An automated test for every command (271 tests so far)
+- [x] A test for every command the server handles (325 tests), and a test
+      that fails if a handled command has none (`tests/test_every_command.py`).
+      Writing them found four bugs: a monster nest reopened after the last
+      monster closed itself again, opening a nest took gold from the first
+      town instead of the open one and ignored the config's prices, and
+      taking a unit the server didn't know about out of a building lost it
 
 ### Cash
 
@@ -160,11 +165,12 @@ numbers, because the server writes them into the game config.
       tournament ends. A cash tournament's prize is the entry fee back with
       the unit, not twice the fee as in the game: with bots filling seats, a
       good player could win over and over and print cash (`economy.py`)
-- [ ] The welcome-back bonus: the game config has it (a new player back on
-      their 2nd and 3rd day opens a chest: 2,500 gold, a unit or 5 cash), but
-      the game client we use has it switched off inside the game file, and
-      nothing the server or the page sends can switch it on. It needs a small
-      change to the client (one setting), so it waits for that
+- [x] The welcome-back bonus: a chest on a new empire's 2nd and 3rd day
+      (2,500 gold, a unit or 10 cash: the client draws it from the Monday
+      chest's list). The client had it switched off inside the game file;
+      `tools/patch_client.py` switches that one setting on (3 bytes) in a
+      copy, `SocialEmpires0926bsec_comeback.swf`, which the page now loads
+      and tells the empire's day (`comeback_bonus.py`)
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the
       experience and battle gold the game reports, so a determined cheater
       could fake levels, and with them their cash. Checking battles on the
@@ -216,7 +222,7 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 | Assets on Cloudflare R2 | Free downloads (no egress fees); keeps 1.3 GB out of the server |
 | Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need Phase 3 first |
 | Ruffle instead of Flash Player | Works in every modern browser with no plugin |
-| Client version 0.9.26b | The one that works fully today |
+| Client version 0.9.26b, with one setting switched on | The one that works fully today; `tools/patch_client.py` turns on its welcome-back bonus, and nothing else changes |
 | Supabase later, not now | Postgres and auth are useful at scale; one SQLite file is enough until then |
 
 ## Copyright
