@@ -28,7 +28,7 @@ export default async function walk({ newPlayer }) {
 
   // Closed land can't be reached: it says so, and stays put.
   await player.tapTile([50, 61]);  // block 18, not bought
-  assert.match(await player.status(), /can't get there/);
+  await player.said(/can't get there/);
 
   // Tapping a building with a unit selected selects the building.
   await player.select([51, 47], "Tower I");

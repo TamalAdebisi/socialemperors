@@ -30,7 +30,7 @@ export default async function train({ newPlayer }) {
   await player.shot("trained");
   // Full: the next one says why.
   await player.press("Train Villager I");
-  assert.match(await player.status(), /No room for more people/);
+  await player.said(/No room for more people/);
 
   const after = await player.saved();
   const villagers = (map) => map.items.filter((i) => i[0] === VILLAGER).length;
