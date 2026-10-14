@@ -241,7 +241,8 @@ def do_command(USERID, cmd, args, previous=None):
             if item[1] == b_x and item[2] == b_y:
                 if len(item) < 7:
                     break
-                item[6].remove(unit_id)
+                if unit_id in item[6]: # one the server didn't know was inside still comes out
+                    item[6].remove(unit_id)
                 break
         if place_popped_unit:
             # Spawn unit outside
@@ -330,13 +331,18 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_ACTIVATE_DRAGON:
         currency = args[0]
         print("Dragon nest activated.")
+        prices = get_game_config()["globals"]
         if currency == 'c':
-            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - 50), 0)
+            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - int(prices["ACTIVATE_DRAGON_NEST_CASH"])), 0)
         elif currency == 'g':
-            map = save["maps"]
-            map[0]["coins"] = max(int(map[0]["coins"] - 100000), 0)
-        save["privateState"]["dragonNestActive"] = 1
-        save["privateState"]["timeStampTakeCare"] = -1 # remove timer if any
+            map = save["maps"][towns.current(save)]  # the client takes the gold of the town that is open
+            map["coins"] = max(int(map["coins"] - int(prices["ACTIVATE_DRAGON_NEST_GOLD"])), 0)
+        pState = save["privateState"]
+        pState["dragonNestActive"] = 1
+        # start again at the first egg, as the client does
+        pState["stepNumber"] = 0
+        pState["dragonNumber"] = 0
+        pState["timeStampTakeCare"] = -1 # remove timer if any
     
     elif cmd == Constant.CMD_DESACTIVATE_DRAGON:
         print("Dragon nest deactivated.")
@@ -412,20 +418,25 @@ def do_command(USERID, cmd, args, previous=None):
     elif cmd == Constant.CMD_ACTIVATE_MONSTER:
         currency = args[0]
         print("Monster nest activated.")
+        prices = get_game_config()["globals"]
         if currency == 'c':
-            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - 50), 0)
+            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - int(prices["ACTIVATE_MONSTER_NEST_CASH"])), 0)
         elif currency == 'g':
-            map = save["maps"]
-            map[0]["coins"] = max(int(map[0]["coins"] - 100000), 0)
-        save["privateState"]["monsterNestActive"] = 1
-        save["privateState"]["timeStampTakeCareMonster"] = -1 # remove timer if any
+            map = save["maps"][towns.current(save)]  # the client takes the gold of the town that is open
+            map["coins"] = max(int(map["coins"] - int(prices["ACTIVATE_MONSTER_NEST_GOLD"])), 0)
+        pState = save["privateState"]
+        pState["monsterNestActive"] = 1
+        # start again at the first monster, as the client does (this also mends saves left on the last one)
+        pState["stepMonsterNumber"] = 0
+        pState["monsterNumber"] = 0
+        pState["timeStampTakeCareMonster"] = -1 # remove timer if any
     
     elif cmd == Constant.CMD_DESACTIVATE_MONSTER: # cmd called too late
         print("Monster nest deactivated.")
         pState = save["privateState"]
         pState["monsterNestActive"] = 0
         pState["stepMonsterNumber"] = 0
-        pState["MonsterNumber"] = 0
+        pState["monsterNumber"] = 0
         pState["timeStampTakeCareMonster"] = -1 # remove timer if any
 
 
