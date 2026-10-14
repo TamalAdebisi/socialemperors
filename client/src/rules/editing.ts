@@ -108,13 +108,9 @@ export function choices(town: Town, placed: PlacedItem): { move: boolean; turn: 
       return { ...none, sell: true, why: "" };
     }
     if (item.subcategory === SUBCAT.tree) {
-      return { ...none, why: "A villager can cut it for wood (in the classic game, for now)." };
+      return { ...none, why: "Select a villager, then tap it to cut it for wood." };
     }
     return { ...none, why: "" };
-  }
-  if (placed.unitsInside > 0) {
-    // The Flash client lets the units out first; this client doesn't yet.
-    return { ...none, why: "There are units inside: use the classic game to move or sell it." };
   }
   if (item.subcategory === SUBCAT.townHall) {
     return { ...none, move: true, turn: item.facings > 1, why: "" };

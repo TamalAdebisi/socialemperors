@@ -41,6 +41,19 @@ class ProductionTest(unittest.TestCase):
         self.map["items"].append(item)
         return item
 
+    def test_a_tree_gives_the_same_whoever_cut_it(self):
+        # As the Flash client sends it: collect (with the villagers at it), then the harvest's sale.
+        tree = self.building(19, X, Y)
+        self.send("collect_new", X, Y, TOWN, 19, 2, 1, 0)
+        self.send("sell", X, Y, 19, TOWN, 0, "HARV")
+        self.assertEqual(self.map["wood"], 1000 + 20)  # 20, not a fifth more for the second villager
+        self.assertNotIn(tree, self.map["items"])
+
+    def test_gold_rocks_give_more_with_the_level(self):
+        self.building(73, X, Y)
+        self.send("collect_new", X, Y, TOWN, 73, 1, 3, 0)  # level 16 to 20: three times
+        self.assertEqual(self.map["coins"], 30)
+
     def test_collecting_starts_the_work_over(self):
         mine = self.building(GOLD_MINE, X, Y, [PEASANT])
         before = int(time.time())

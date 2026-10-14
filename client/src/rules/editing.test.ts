@@ -7,7 +7,7 @@ import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
-    flying: false, velocity: 0, cost: 30, costType: "w", facings: 2, production: null,
+    flying: false, velocity: 0, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, cost: 30, costType: "w", facings: 2, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
 }
 
@@ -90,7 +90,8 @@ test("what can be done depends on what it is, and whose, as in the Flash client"
   assert.deepEqual(can({ race: "a" }), { move: true, turn: true, store: true, sell: true });   // anyone's: the player's too
   assert.deepEqual(can({ race: "t" }), NONE);                                                 // the trolls'
   assert.deepEqual(can({ isUnit: true }), NONE);
-  assert.deepEqual(can({}, { unitsInside: 2 }), NONE);
+  // Units inside come out first when it's sold or stored (the editor lets them out), so nothing stops it.
+  assert.deepEqual(can({}, { unitsInside: 2 }), { move: true, turn: true, store: true, sell: true });
   assert.deepEqual(can({}, {}, 5), NONE);  // on the wild ring
   // Nobody's: trees stay; gold and stone rocks can be cleared, but only from bought land.
   assert.deepEqual(can({ race: "n", subcategory: 125 }), NONE);

@@ -92,6 +92,13 @@ export interface ItemInfo {
   flying: boolean;
   /** Units: pixels a frame of the Flash client (rules/walking.ts); 0 for things that don't walk. */
   velocity: number;
+  /** How many units fit inside. */
+  capacity: number;
+  /** One round of work (seconds), what it gives and in what (g, w, f, s, c), and the experience: the config's raw numbers. */
+  activation: number;
+  collect: number;
+  collectType: string;
+  collectXp: number;
   cost: number;
   costType: string;
   /** How many ways it can face: turning it goes round these. */
@@ -123,6 +130,11 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     subcategory: Number(item.subcat_functional),
     flying: item.flying === "1",
     velocity: Number(item.velocity) || 0,
+    capacity: Number(item.unit_capacity) || 0,
+    activation: Number(item.activation) || 0,
+    collect: Number(item.collect) || 0,
+    collectType: item.collect_type ?? "",
+    collectXp: Number(item.collect_xp) || 0,
     cost: Number(item.cost) || 0,
     costType: item.cost_type ?? "g",
     facings: Math.max(Number(item.max_frame) || 1, 1),

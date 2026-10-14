@@ -158,6 +158,8 @@ export class Player {
    */
   async select([tx, ty], wanted) {
     const ok = typeof wanted === "function" ? wanted : (text) => text.startsWith(wanted);
+    // Start from nothing selected, so what was selected before can't pass for it.
+    if (await this.bar()) await this.page.keyboard.press("Escape");
     for (let up = 10; up <= 220; up += 15) {
       const point = this.screenOf(tx, ty, up);
       await this.click(point);

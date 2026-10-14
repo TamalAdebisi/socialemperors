@@ -41,6 +41,9 @@ from village import ATTRS, STARTED, UNITS, flash_round, full, give, item_at, num
 
 EXTRA_PER_WORKER = 0.2
 FARM = "122"  # subcat_functional of farms
+# Trees, stone and gold on the map: the client gives their harvest whoever
+# worked them, so the server does too (no extra for a second villager).
+RESOURCES_ON_THE_MAP = ("125", "126", "127")
 HATCHERY = 226  # needs two units inside before it works
 
 
@@ -68,6 +71,8 @@ def collect(save: dict, x, y, town_id: int, item_id, workers=None, multiplier=1,
     map = save["maps"][town_id]
     item = item_at(map, item_id, x, y)
     multiplier = min(max(int(multiplier), 1), 5)  # the client's bonus goes from 1 to 5 with the level
+    if str(get_attribute_from_item_id(item_id, "subcat_functional")) in RESOURCES_ON_THE_MAP:
+        workers = None
     amount = harvest(item_id, item, workers, multiplier)
     resource = get_attribute_from_item_id(item_id, "collect_type")
     if str(get_attribute_from_item_id(item_id, "subcat_functional")) == FARM:

@@ -16,6 +16,8 @@ export interface ActionChoices {
   sell: (() => void) | null;
   /** What selling gives back, to show before asking ("12 gold"), or "" for nothing. */
   refund: string;
+  /** Let one of the units inside out (null when nobody's inside). */
+  letOut?: (() => void) | null;
   close: () => void;
 }
 
@@ -47,6 +49,7 @@ export class ActionBar {
     tiles.className = "actions-tiles";
     this.tiles = tiles;
     this.bar.append(name, detail, tiles);
+    this.button("Let out", choices.letOut ?? null, "Let out", "population");
     this.button("Move", choices.move, "Move", "move");
     this.button("Turn", choices.turn, "Turn", "turn");
     this.button("Store", choices.store, "Store", "store");

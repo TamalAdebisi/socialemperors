@@ -446,7 +446,10 @@ can be removed) and the storage: a tower and a house stored, the tower
 placed again, the house sold for 1 wood; the save agrees. The walk test
 sends a new town's Light Knight round the town hall and checks the save
 has it where it stopped, that closed land is out of reach, and that it's
-there after reloading. The menus test
+there after reloading. The work test sends one villager to the trees by
+the houses (it cuts one and goes on to the next), one to a stone rock
+(which leaves one growing back) and one into a gold mine, lets it out
+again, and checks the save after each. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
 phone checks the dock, short numbers and the sheet closing when dragged
@@ -456,10 +459,9 @@ now 309 KB (93 KB compressed).
 **Not yet in step 3** (Beta 1's next slices): turning a building while placing it, unlocking a
 building early with cash, buying resources with cash when short (the Flash
 client offers it), training units, placing units from storage,
-trees, rocks and gold on the map, which a villager works, and putting
-workers into buildings (units walk now: [Units walking](#units-walking)), hurrying with cash, and moving or
-selling buildings with units inside (the Flash client lets them out first;
-for now the bar says to use the classic game). Moving on a phone places on
+and hurrying with cash (units walk and villagers work now:
+[Units walking](#units-walking), [Villagers at work](#villagers-at-work)).
+Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
 
 **The look.** The windows take the site's look (parchment in a wooden
@@ -594,6 +596,55 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 **Not yet:** the speech bubbles units say now and then, a unit sent to a
 building or a tree (the next slice: villagers at work), wild animals
 following a unit home, and a mark on the ground where a unit is going.
+
+### Villagers at work
+
+Built (Beta 1's third slice). With a villager selected, tap a tree, a stone
+or gold rock, or a mill, mine or farm; with any unit, a refuge. It walks
+there and works it, or goes inside. A building with units inside offers
+Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
+`goInto` and `letOne`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- Villagers work trees (wood), stone and gold rocks. A unit stands on a
+  free tile beside what it works or goes into: the first ring of tiles
+  around it with any free, then the tile nearest the unit, up to four rings
+  out. A villager at a tree plays its attack (`ATAQUE`), at a rock its
+  `PICAR`, facing it.
+- A tree or rock takes the config's `activation` in whole seconds (4 for a
+  tree, 7 for a rock) from the first villager's arrival; more villagers
+  don't make it quicker. If they all leave first, the work is lost.
+- Done: it gives the config's `collect` (20 wood, 10 stone, 10 gold) and
+  its experience (1). Gold gives more as the town grows: 1 to 5 times (up to
+  level 10, 15, 20, 25, then more). The tree or rock goes. The commands:
+  `collect_new` (place, town, item, villagers at it, the gold multiplier,
+  0), then `sell` (place, item, town, 0, "HARV").
+- A rock leaves one growing back (`buy` of item 81 for stone, 80 for gold).
+  After its `activation` (3 hours) it's sold ("REGEN") and a new rock of
+  one of the four kinds, by chance, is bought in its place.
+- Then the villager goes on to the next tree or rock of the same kind that
+  touches the one done (or touches those, and so on), nearest first,
+  skipping any another villager is at, until there are none.
+- Into buildings: villagers into mills, mines and farms; any unit but
+  siege engines into a refuge; only the player's own, with room. The unit
+  leaves the map; a building with nobody inside starts its work as the
+  first comes in (a mine whose time is chosen waits for the choice).
+  `push_unit` (where the save had the unit, its item, the building's
+  place, town).
+- Let out: the last unit in comes out on the nearest free tile around the
+  building (`pop_unit`: the building's place, town, item, the tile, 0).
+  Selling or storing a building lets everybody out first, as the Flash
+  client does.
+
+**Not the same as the Flash client:** the server gave a fifth more for each
+extra villager at a tree or rock, which the Flash client never showed; it
+now gives the same as the client (`production.py`).
+
+**Not yet:** animals into ranches and stables, the Unit Warehouse, the
+hatchery, the sacrifice altar and the dragon nest (in the classic game for
+now); villagers putting out fires after a battle; the collection pieces
+the Flash client sometimes drops from a harvest.
 
 ### Making the art look better
 

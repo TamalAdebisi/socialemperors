@@ -51,6 +51,8 @@ export class TownView {
   /** Which way each unit faces (rules/geometry.ts numbers them), and where it is on the map while it walks. */
   private readonly facing = new Map<PlacedItem, number>();
   private readonly walkers = new Map<PlacedItem, Walk>();
+  /** What a unit standing still is doing: working a tree (ATAQUE) or a rock (PICAR); standing (QUIETO) when it's not here. */
+  private readonly poses = new Map<PlacedItem, Pose>();
   private lookAroundIn = LOOK_AROUND_MS;
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
@@ -92,7 +94,7 @@ export class TownView {
     if (this.lookAroundIn <= 0) {
       this.lookAroundIn += LOOK_AROUND_MS;
       for (const [placed, direction] of this.facing) {
-        const turned = this.walkers.has(placed) ? null : lookAround(placed, direction);
+        const turned = this.walkers.has(placed) || this.poses.has(placed) ? null : lookAround(placed, direction);
         if (turned !== null && turned !== direction) {
           this.facing.set(placed, turned);
           void this.redrawUnit(placed);
@@ -123,6 +125,19 @@ export class TownView {
     const walk: Walk = { at, next: null, path, enter, arrive };
     this.walkers.set(placed, walk);
     this.nextTile(placed, walk);
+  }
+
+  /** A unit standing still works (facing a tile), or just stands (null). */
+  pose(placed: PlacedItem, pose: Pose | null, face?: Point): void {
+    if (pose === null) {
+      this.poses.delete(placed);
+    } else {
+      this.poses.set(placed, pose);
+    }
+    if (face) {
+      this.facing.set(placed, headingTo(unitPoint(placed.tx, placed.ty), unitPoint(face.x, face.y), this.facing.get(placed) ?? 5));
+    }
+    void this.redrawUnit(placed);
   }
 
   /** The tile a walking unit is heading for (its next one), or where it stands. */
@@ -253,6 +268,9 @@ export class TownView {
 
   /** Take a thing off the map (sold, stored). */
   remove(placed: PlacedItem): void {
+    this.walkers.delete(placed);
+    this.poses.delete(placed);
+    this.facing.delete(placed);
     const slot = this.slots.get(placed);
     if (slot) {
       this.things.removeChild(slot);
@@ -328,7 +346,7 @@ export class TownView {
         this.facing.set(placed, IDLE_DIRECTIONS[Math.floor(Math.random() * IDLE_DIRECTIONS.length)]);
       }
       const walk = this.walkers.get(placed);
-      slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
+      slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
     } else {
       slot.addChild(buildingSprite(art, placed, this.town.skin));
     }
@@ -336,14 +354,14 @@ export class TownView {
   }
 
   /** Draw a unit again: facing another way, or walking, or standing still. */
-  private async redrawUnit(placed: PlacedItem, at?: Point, pose?: "ANDAR" | "QUIETO"): Promise<void> {
+  private async redrawUnit(placed: PlacedItem): Promise<void> {
     const slot = this.slots.get(placed);
     const art = await this.art.get(placed.item.art);
     if (!slot || slot.destroyed || art === null) {
       return;
     }
     const walk = this.walkers.get(placed);
-    const sprite = unitSprite(art, this.facing.get(placed) ?? 5, pose ?? (walk ? "ANDAR" : "QUIETO"), walk?.at ?? at ?? unitPoint(placed.tx, placed.ty));
+    const sprite = unitSprite(art, this.facing.get(placed) ?? 5, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty));
     slot.removeChildren().forEach((child) => child.destroy());
     slot.addChild(sprite);
   }
@@ -385,8 +403,11 @@ function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Contain
   return sprite;
 }
 
-/** A unit facing one of its 8 ways, standing (QUIETO) or walking (ANDAR), at a point of the map. */
-function unitSprite(art: ItemArt, direction: number, pose: "QUIETO" | "ANDAR", at: Point): Container {
+/** What a unit's picture shows: standing, walking, chopping (its attack) or picking at a rock. */
+export type Pose = "QUIETO" | "ANDAR" | "ATAQUE" | "PICAR";
+
+/** A unit facing one of its 8 ways, in a pose, at a point of the map. */
+function unitSprite(art: ItemArt, direction: number, pose: Pose, at: Point): Container {
   const facing = unitFacing(direction);
   const name = art.has(`${pose}/${facing.frame}`) ? `${pose}/${facing.frame}`
     : art.has(`QUIETO/${facing.frame}`) ? `QUIETO/${facing.frame}` : "frame/0";
