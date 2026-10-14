@@ -14,8 +14,8 @@ export interface HudActions {
 export interface Hud {
   /** Show the town's numbers again (after a sale...). */
   update(town: Town): void;
-  /** Show the Shop button, which calls `open` (not when visiting). */
-  offerShop(open: () => void): void;
+  /** Show the Shop and Storage buttons (not when visiting). */
+  offerShop(openShop: () => void, openStorage: () => void): void;
 }
 
 export function showHud(town: Town, actions: HudActions): Hud {
@@ -35,7 +35,8 @@ export function showHud(town: Town, actions: HudActions): Hud {
     </ul>
     <div class="hud-buttons">
       <button class="button tiny gold hud-shop" type="button" hidden>Shop</button>
-      <span class="hud-badge tip-left" data-tip="The new game: so far you can build, move, turn, store, sell and collect; for the rest, use the classic game" tabindex="0">Preview</span>
+      <button class="button tiny gold hud-storage" type="button" hidden>Storage</button>
+      <span class="hud-badge tip-left" data-tip="The new game: so far you can build, place from storage, move, turn, store, sell and collect; for the rest, use the classic game" tabindex="0">Preview</span>
       <a class="button tiny gold" href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
@@ -67,11 +68,14 @@ export function showHud(town: Town, actions: HudActions): Hud {
 
   document.body.appendChild(bar);
   const shop = bar.querySelector<HTMLButtonElement>(".hud-shop")!;
+  const storage = bar.querySelector<HTMLButtonElement>(".hud-storage")!;
   return {
     update,
-    offerShop(open) {
+    offerShop(openShop, openStorage) {
       shop.hidden = false;
-      shop.addEventListener("click", open);
+      storage.hidden = false;
+      shop.addEventListener("click", openShop);
+      storage.addEventListener("click", openStorage);
     },
   };
 }

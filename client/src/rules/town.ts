@@ -22,7 +22,12 @@ export interface SaveMap {
   /** The island's look. */
   skin: number;
   items: SaveItem[];
+  /** What this town put away: { "<item id>": count } (older saves: a list indexed by id). */
+  store?: Box;
 }
+
+/** A storage box as the save keeps it: { "<item id>": count }, or a list of counts by item id. */
+export type Box = Record<string, number> | number[];
 
 export interface PlayerInfo {
   result: string;
@@ -30,7 +35,7 @@ export interface PlayerInfo {
   playerInfo: { name: string; cash: number; map_names?: string[] };
   map: SaveMap;
   /** Buildings opened before their level, for cash: { "<item id>": true }. */
-  privateState?: { unlockedEarlyBuildings?: Record<string, unknown> };
+  privateState?: { unlockedEarlyBuildings?: Record<string, unknown>; gifts?: Box };
 }
 
 export interface PlacedItem {
@@ -65,6 +70,9 @@ export interface Town {
   expansions: Set<number>;
   /** Buildings opened before their level, for cash: the shop sells them already. */
   unlocked: Set<number>;
+  /** Storage, by item id: gifts and prizes (shared by the player's towns), and what this town put away. */
+  gifts: Map<number, number>;
+  store: Map<number, number>;
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
@@ -103,7 +111,21 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     skin: map.skin ?? 0,
     expansions: new Set(map.expansions),
     unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
+    gifts: readBox(info.privateState?.gifts),
+    store: readBox(map.store),
     items: placed,
     unknown,
   };
+}
+
+/** A storage box as counts by item id, whichever way the save keeps it. */
+export function readBox(box: Box | undefined): Map<number, number> {
+  const counts = new Map<number, number>();
+  const entries: [string | number, number][] = Array.isArray(box) ? box.map((count, id) => [id, count]) : Object.entries(box ?? {});
+  for (const [id, count] of entries) {
+    if (Number(count) > 0) {
+      counts.set(Number(id), Number(count));
+    }
+  }
+  return counts;
 }

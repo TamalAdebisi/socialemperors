@@ -24,6 +24,8 @@ const SUBCAT = {
   isle: 1111,
   specialCollection: 1611,
 };
+/** Rocks the bulldozer clears from bought land, though they're nobody's. */
+const ROCKS = new Set([SUBCAT.stone, SUBCAT.gold]);
 /** Things with no Move, Turn or Store: resources, treasures, scenery... */
 const NO_BUTTONS = new Set([SUBCAT.tree, SUBCAT.stone, SUBCAT.gold, SUBCAT.regrowing, SUBCAT.treasure,
   SUBCAT.activator, SUBCAT.bossStatue, SUBCAT.lost, SUBCAT.scenery, SUBCAT.isle, SUBCAT.specialCollection, TERRAIN]);
@@ -85,14 +87,29 @@ export function fits(town: Town, placed: Spot, except?: PlacedItem): boolean {
   return footprintTiles(placed).every(([x, y]) => isOpenLand(town, x, y) && !taken.has(`${x},${y}`));
 }
 
+/** Whether a thing is the player's: their people's, or anyone's ("a"). Trees and rocks are nobody's ("n"). */
+export function isTheirs(town: Town, item: ItemInfo): boolean {
+  return item.race === "a" || item.race === town.race;
+}
+
 /** What can be done to a thing: the buttons the Flash client's info panel shows, and its bulldozer. */
-export function choices(placed: PlacedItem): { move: boolean; turn: boolean; store: boolean; sell: boolean; why: string } {
+export function choices(town: Town, placed: PlacedItem): { move: boolean; turn: boolean; store: boolean; sell: boolean; why: string } {
   const none = { move: false, turn: false, store: false, sell: false };
   const { item } = placed;
   if (onWildRing(placed.tx, placed.ty)) {
     return { ...none, why: "It isn't on your land." };
   }
   if (item.isUnit) {
+    return { ...none, why: "" };
+  }
+  if (!isTheirs(town, item)) {
+    // The bulldozer takes only the player's things, and gold and stone rocks on their land.
+    if (ROCKS.has(item.subcategory) && isOpenLand(town, placed.tx, placed.ty)) {
+      return { ...none, sell: true, why: "" };
+    }
+    if (item.subcategory === SUBCAT.tree) {
+      return { ...none, why: "A villager can cut it for wood (in the classic game, for now)." };
+    }
     return { ...none, why: "" };
   }
   if (placed.unitsInside > 0) {
@@ -147,6 +164,7 @@ export function sell(town: Town, placed: PlacedItem): Command {
 /** Put a thing away in the town's store, to place again later. */
 export function store(town: Town, placed: PlacedItem): Command {
   remove(town, placed);
+  town.store.set(placed.item.id, (town.store.get(placed.item.id) ?? 0) + 1);
   return { cmd: "store_item", args: [placed.tx, placed.ty, town.id, placed.item.id] };
 }
 

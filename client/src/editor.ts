@@ -11,11 +11,12 @@ import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
 import { WORK_TIMES, chooseWorkTime, collect, harvest, workState } from "./rules/production.ts";
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
+import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
 import { showStatus, type Hud } from "./ui/hud.ts";
-import type { ShopWindow } from "./ui/shop.ts";
+import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
@@ -35,6 +36,8 @@ export interface EditorParts {
   clock: () => number;
   levels: Level[];
   shop: ShopWindow;
+  /** Every item the game knows, by id: what's in storage is named by id. */
+  items: Map<number, ItemInfo>;
 }
 
 export class TownEditor {
@@ -47,16 +50,19 @@ export class TownEditor {
   private readonly clock: () => number;
   private readonly levels: Level[];
   private readonly shop: ShopWindow;
+  private readonly items: Map<number, ItemInfo>;
   private selected: PlacedItem | null = null;
   private moving: PlacedItem | null = null;
-  /** What was chosen in the shop, while the player places it: see-through, not on the map yet. */
+  /** What was chosen in the shop or storage, while the player places it: see-through, not on the map yet. */
   private building: PlacedItem | null = null;
+  /** Where it comes from: storage (one, then done), or null for the shop (as many as they like). */
+  private fromStorage: Stored | null = null;
   /** Messages for the middle of the screen: the first shows, the others wait their turn. */
   private sayQueue: string[] = [];
 
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
-      camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop } = parts);
+      camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -92,8 +98,8 @@ export class TownEditor {
     }
   }
 
-  /** Open the shop, leaving whatever was going on. */
-  openShop(): void {
+  /** Open the shop (or its storage), leaving whatever was going on. */
+  openShop(category?: number): void {
     if (this.building) {
       this.stopBuilding();
     }
@@ -101,19 +107,58 @@ export class TownEditor {
       this.cancelMove();
     }
     this.select(null);
-    this.shop.open();
+    this.shop.open(category);
   }
 
-  /** The player chose something in the shop: place it, as many as they like, until Done. */
-  startBuilding(item: ItemInfo): void {
+  openStorage(): void {
+    this.openShop(STORAGE);
+  }
+
+  /** What's in storage, as the storage window shows it, with what each card's buttons do. */
+  storageCards(): StorageCard[] {
+    return storedItems(this.town, this.items).map((stored) => {
+      const can = storageChoices(this.town, stored);
+      const back = storageRefund(stored.item);
+      return {
+        item: stored.item,
+        count: stored.count,
+        gift: stored.gift,
+        note: can.why,
+        place: can.place ? () => this.startPlacingStored(stored) : null,
+        sell: can.sell ? {
+          label: back ? `Sell for ${back.amount} ${back.resource}` : "Sell for nothing",
+          run: () => this.sellFromStorage(stored),
+        } : null,
+      };
+    });
+  }
+
+  private sellFromStorage(stored: Stored): void {
+    this.send([sellStored(this.town, stored)]);
+    this.hud.update(this.town);
+    this.shop.refresh();
+  }
+
+  /** Place one thing from storage: like building, but one, and it's free. */
+  private startPlacingStored(stored: Stored): void {
+    this.startBuilding(stored.item, stored);
+  }
+
+  /** The player chose something in the shop: place it, as many as they like, until Done. Or one from storage. */
+  startBuilding(item: ItemInfo, fromStorage: Stored | null = null): void {
     this.select(null);
     const centre = this.tileAt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     this.building = { item, tx: centre.x, ty: centre.y, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
+    this.fromStorage = fromStorage;
     this.view.showGhost(this.building);
     this.previewBuilding(centre);
-    const price = priceOf(item);
-    this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)`,
-      [{ label: "Done", run: () => this.stopBuilding() }]);
+    if (fromStorage) {
+      this.bar.prompt(`Tap where ${item.name} goes`, [{ label: "Cancel", run: () => this.stopBuilding() }]);
+    } else {
+      const price = priceOf(item);
+      this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)`,
+        [{ label: "Done", run: () => this.stopBuilding() }]);
+    }
   }
 
   private previewBuilding(tile: Point): void {
@@ -125,6 +170,10 @@ export class TownEditor {
   }
 
   private placeBuilding(tile: Point): void {
+    if (this.fromStorage) {
+      this.placeFromStorage(this.fromStorage, tile);
+      return;
+    }
     const item = this.building!.item;
     const bought = buy(this.town, item, tile.x, tile.y, this.clock());
     if (typeof bought === "string") {
@@ -152,8 +201,28 @@ export class TownEditor {
     }
   }
 
+  private placeFromStorage(stored: Stored, tile: Point): void {
+    const xpBefore = this.town.xp;
+    const done = placeStored(this.town, stored, tile.x, tile.y, this.clock(), this.levels);
+    if (typeof done === "string") {
+      this.previewBuilding(tile);
+      this.say(done);
+      return;
+    }
+    this.send([done.command]);
+    void this.view.redraw(done.placed);
+    if (this.town.xp > xpBefore) {
+      this.view.rise(done.placed, [{ text: `+${this.town.xp - xpBefore} XP`, colour: RESOURCE_COLOURS.xp }]);
+      this.levelUp();
+      this.hud.update(this.town);
+    }
+    this.refresh();
+    this.stopBuilding();
+  }
+
   private stopBuilding(): void {
     this.building = null;
+    this.fromStorage = null;
     this.view.showGhost(null);
     this.view.showFootprint(null);
     this.bar.hide();
@@ -199,7 +268,7 @@ export class TownEditor {
       this.bar.hide();
       return;
     }
-    const can = choices(placed);
+    const can = choices(this.town, placed);
     const back = refund(placed.item);
     this.bar.show({
       name: this.label(placed),
@@ -228,7 +297,7 @@ export class TownEditor {
           return `${name}: no workers inside (put villagers in from the classic game)`;
         }
     }
-    const why = choices(placed).why;
+    const why = choices(this.town, placed).why;
     return why ? `${name}: ${why}` : name;
   }
 

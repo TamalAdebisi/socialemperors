@@ -167,7 +167,7 @@ actually use; the bug radar on the admin page shows what that is.
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
-| 3. Run your town (started: shop, move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
+| 3. Run your town (started: shop, storage, move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
 | 6. Switch over | The new client becomes the default; the Flash one stays as "classic" for a while | Small |
@@ -295,8 +295,8 @@ players get.
 
 ### Step 3: run your town
 
-Built so far: **the shop and building**, **move, turn, store and sell**,
-and **collecting from buildings**, with levels. Tap (or click) a building
+Built so far: **the shop and building**, **storage**, **move, turn, store
+and sell**, and **collecting from buildings**, with levels. Tap (or click) a building
 to select it; a bar at the bottom shows its name and what can be done with it.
 Selling asks first and says what it gives back. While moving, the footprint
 under the pointer shows green where it fits and red where it doesn't; tap
@@ -321,11 +321,18 @@ the server.
 - Turning goes round the item's ways of facing (its art's frames).
 - Selling gives back a twentieth of the price, in what it was bought with,
   rounded down; nothing for things bought with cash.
-- What the info panel offers: most buildings can be moved, turned, stored
-  and sold. The town hall can only be moved and turned. Trees, rocks, mines,
-  treasures, scenery and boss statues can only be sold (the bulldozer).
+- Whose things are: an item's `race` in the config says. The player's own
+  people's ("h" or "t") and anyone's ("a") are the player's; trees, rocks,
+  scenery, treasures and lost things are nobody's ("n"). Only the player's
+  can be moved, turned, stored or sold.
+- What the info panel offers: most of the player's buildings can be moved,
+  turned, stored and sold. The town hall can only be moved and turned.
+  Treasures, scenery and boss statues can only be sold (the bulldozer).
   Units have no buttons. What stands on the wild ring around the island
   isn't the player's.
+- The bulldozer also clears gold and stone rocks, though they're nobody's,
+  but only from bought land; they give nothing back, so the button says
+  Remove. Trees can't be removed: a villager cuts them, for wood.
 - The commands: `move` (old place, item, new place, facing, town),
   `orient` (place, new facing, town), `sell` (place, item, town) and
   `store_item` (place, town, item).
@@ -368,9 +375,11 @@ producing building shows when it will be ready.
 
 **The shop.** The Shop button opens a window with the game's categories
 (Village, Defense, Army, Decorations, Wonders, New) and their tabs, and a
-card for each building: its picture (cut from the same sprite sheet the map
-uses, loaded as the card scrolls into view), price, experience, and what
-stops buying it ("From level 11", "You have one", "Not enough wood").
+card for each building: its picture (the Flash client's own,
+`buildingthumbs/<img_name>.jpg`, loaded as the card scrolls into view;
+drawn from the map's sprite sheet for the few without one), price,
+experience, and what stops buying it ("From level 11", "You have one",
+"Not enough wood").
 Choosing one closes the window and the building follows the pointer,
 see-through, with its footprint green or red; each tap buys one, until Done.
 
@@ -395,6 +404,28 @@ see-through, with its footprint green or red; each tap buys one, until Done.
   then. The Flash client also stays ready to place another, until the
   player stops.
 
+**Storage.** As in the Flash client, the storage is part of the same
+window (the Storage button opens it there): a card for each thing kept,
+with how many, Place and Sell. Place works like building, for one, free;
+Sell asks first, on the card itself.
+
+**How storage works**, read from the Flash client (our notes, our words):
+
+- Two boxes: gifts and prizes (`privateState.gifts`), shared by the
+  player's towns, and what a town put away (`map.store`). Both are counts
+  by item id; older saves keep them as lists indexed by id.
+- Placing one obeys the shop's limits (one mill...), and not what belongs
+  to the other people's towns (a troll's thing in a human town). A gift
+  also gives its experience when placed; the level-up statue gives what's
+  missing for the next level. `place_gift` or `place_stored_item` (item,
+  place, facing, town).
+- Selling one gives back a twentieth of its price, rounded down; nothing
+  for cash things, the Dock or the Zeppelin Tower. `sell_gift` or
+  `sell_stored_item` (item, town). The town hall can't be sold; the
+  Bahamut Heart and the pieces of special collections are only kept.
+- Units can be stored too (heroes); placing them waits for training units,
+  which needs the town's population.
+
 **Tested:** the rules and the command queue have unit tests (`npm test`).
 A browser test edits a new town (turns a tower, moves a house, sells a tree
 and a house, stores a tower) and checks the server's save afterwards: every
@@ -407,17 +438,29 @@ the timers started again. A third buys three farms and a mill in a new
 town through the shop: placing on the town hall is refused, placing goes on
 after each farm and stops after the mill (one per town, and level 2 with
 its prize), the mill's card then says "You have one", and the save has all
-four, the wood paid and the experience. The client is now 303 KB (92 KB
-compressed).
+four, the wood paid and the experience. Another checks the original's
+rules for nobody's things (a tree has no Sell, a stone rock on bought land
+can be removed) and the storage: a tower and a house stored, the tower
+placed again, the house sold for 1 wood; the save agrees. The client is
+now 309 KB (93 KB compressed).
 
 **Not yet in step 3:** turning a building while placing it, unlocking a
 building early with cash, buying resources with cash when short (the Flash
-client offers it), training units, placing what's in storage,
+client offers it), training units, placing units from storage,
 units walking (so trees, rocks and gold on the map, which a villager works,
 and putting workers into buildings), hurrying with cash, and moving or
 selling buildings with units inside (the Flash client lets them out first;
 for now the bar says to use the classic game). Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
+
+**The look.** The windows so far are plain, to get the game working
+first. Next they take the Flash client's look: its resource icons (gold
+bars, logs, meat, stone, cash) and experience bar at the top, its picture
+buttons at the bottom right (build, storage's gift box...), white windows
+with green titles and its round blue and orange buttons, exported from the
+game's files like the rest of the art. Its fonts (Arial Rounded Bold and
+Eras Bold, in `assets/fonts/`) are licensed fonts we can't hand out, so the
+page uses the player's own copy when they have one, or close free ones.
 
 ### Making the art look better
 

@@ -27,7 +27,7 @@ const ALL = [BIG_HOUSE, FARM, HOUSE, GOLD_MINE, TROLL_HUT, LATE, CASTLE, GOLDEN_
 function town(level = 1, items: ItemInfo[] = []): Town {
   const placed: PlacedItem[] = items.map((item, i) => ({ item, tx: 40 + 3 * i, ty: 59, orientation: 0, unitsInside: 0, startedAt: 0, workTime: 0 }));
   return { id: 0, name: "", townName: "", level, xp: 0, cash: 5, gold: 100, wood: 100, food: 100, stone: 100,
-    race: "h", skin: 0, expansions: new Set([13]), unlocked: new Set(), items: placed, unknown: [] };
+    race: "h", skin: 0, expansions: new Set([13]), unlocked: new Set(), gifts: new Map(), store: new Map(), items: placed, unknown: [] };
 }
 const names = (items: ItemInfo[]) => items.map((i) => i.name);
 
