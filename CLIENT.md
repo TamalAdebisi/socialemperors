@@ -221,9 +221,9 @@ and puts it in the bucket under `art/` ([DEPLOY.md](DEPLOY.md)).
    is: where each picture is, its anchor, and each animation as
    `<label>/<direction>` (for example `ATAQUE/2`), one picture per frame.
    What doesn't fit in one 4,096 x 4,096 image (big bosses, the ground) goes
-   on more pages, `<item>-1.webp` and so on. Each batch of 20 items is packed
+   on more pages, `<item>-1.webp` and so on. Each batch of 5 items is packed
    as soon as it is drawn and its pictures deleted, so the export needs
-   little disk space.
+   little disk space; small files go first, the big animated bosses last.
 3. `tools/art/preview.py` plays a sheet back into an animated WebP, reading
    only the sheet and the JSON, to check it by eye against the game.
 
