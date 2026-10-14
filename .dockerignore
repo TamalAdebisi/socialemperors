@@ -12,3 +12,6 @@ data/
 decompiled/
 tests/
 .tools/
+/art/
+client/node_modules/
+client/dist/

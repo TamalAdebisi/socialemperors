@@ -1,0 +1,24 @@
+{
+  "name": "socialemperors-client",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The new Social Empires game client (CLIENT.md): TypeScript and PixiJS",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "build": "tsc && vite build",
+    "watch": "vite build --watch",
+    "check": "tsc",
+    "test": "node --test \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "pixi.js": "8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.4"
+  }
+}

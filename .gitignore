@@ -18,3 +18,10 @@ data/
 # Decompiled game client (copyrighted - never commit) and the tools that make it
 decompiled/
 .tools/
+
+# Sprite sheets made from the game's Flash files (tools/export_art.sh)
+/art/
+
+# The new game client's packages and build (client/, built by npm run build)
+client/node_modules/
+client/dist/

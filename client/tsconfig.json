@@ -1,0 +1,23 @@
+{
+  // Type checking only (npm run check); Vite builds the game and Node runs
+  // the tests, both by stripping the types. Hence the rules below: imports
+  // name the .ts file, type-only imports say "import type", and no syntax
+  // that needs translating (enums, namespaces, constructor parameter fields).
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "vite.config.ts"]
+}

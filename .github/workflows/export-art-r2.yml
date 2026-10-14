@@ -1,0 +1,75 @@
+# Makes the new game client's sprite sheets from the game's Flash files
+# (tools/export_art.sh, CLIENT.md) and puts them in the R2 bucket under art/,
+# where the client's page finds them (SE_ASSETS_URL/art). See DEPLOY.md.
+#
+# Run it by hand: GitHub -> Actions -> "Export art to R2" -> Run workflow.
+# The work is shared between 8 machines. Sheets already in the bucket are not
+# made again, so running it again only adds what's missing; tick "Make every
+# sheet again" after a change to the export itself.
+name: Export art to R2
+
+on:
+  workflow_dispatch:
+    inputs:
+      redo:
+        description: Make every sheet again, even those already in the bucket
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    env:
+      BUCKET: socialempires-assets
+      ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # Newer AWS CLI versions add checksums R2 may reject; send them only when required.
+      AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
+      AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
+      # A day: a new export reaches players by the next day at the latest.
+      CACHE: public, max-age=86400
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install Pillow (the packer's image library)
+        run: pip install Pillow==12.3.0
+
+      - name: Keep FFDec between runs (tools/ffdec.sh builds it into .tools/)
+        uses: actions/cache@v6
+        with:
+          path: .tools
+          key: ffdec-${{ hashFiles('tools/ffdec.sh') }}
+
+      - name: Note the sheets already in the bucket (their JSON files only)
+        if: ${{ !inputs.redo }}
+        run: aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --no-progress
+
+      - name: Make this machine's share of the sheets
+        run: SHARD=${{ matrix.shard }}/8 tools/export_art.sh
+
+      - name: Upload them
+        # Normally by size, so the JSON files fetched above stay as they are;
+        # when making everything again, every file.
+        run: |
+          compare="--size-only"
+          if [ "${{ inputs.redo }}" = "true" ]; then compare=""; fi
+          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --cache-control "$CACHE" --no-progress

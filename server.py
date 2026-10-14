@@ -237,8 +237,7 @@ def choose_village():
         return render_home(error="That empire isn't yours."), 403
     share_tutorial(USERID)  # so the page knows, too
     web_session["USERID"] = USERID
-    player = "ruffle" if request.form.get("PLAYER") == "ruffle" else "play"
-    return redirect(f"/{player}.html")
+    return redirect(game_page_for(request.form.get("PLAYER")))
 
 
 @app.route("/new", methods=["POST"])
@@ -250,8 +249,13 @@ def new():
     if len(villages_of(user["id"])) >= config_env.MAX_VILLAGES_PER_USER:
         return render_home(error=f"You can have at most {config_env.MAX_VILLAGES_PER_USER} empires."), 400
     web_session["USERID"] = new_village(user["id"])
-    player = "ruffle" if request.form.get("PLAYER") == "ruffle" else "play"
-    return redirect(f"/{player}.html")
+    return redirect(game_page_for(request.form.get("PLAYER")))
+
+
+def game_page_for(player):
+    """The page for the player picked on the home page: Ruffle, the new
+    client, or else the Flash plugin."""
+    return {"ruffle": "/ruffle.html", "client": "/client.html"}.get(player, "/play.html")
 
 
 def _game_page(template):
@@ -264,6 +268,7 @@ def _game_page(template):
                            friendsInfo=fb_friends_str(USERID), version=version_name,
                            GAME_CLIENT=config_env.GAME_CLIENT, PUBLIC_URL=config_env.PUBLIC_URL,
                            ASSETS_URL=config_env.ASSETS_URL, DAYS=comeback_bonus.page_days(village_of(USERID)),
+                           DYNAMIC=DYNAMIC, ART_URL=art_url(),
                            USER_KEY=accounts.make_game_token(USERID), user=user)
 
 
@@ -275,6 +280,45 @@ def play():
 @app.route("/ruffle.html")
 def ruffle():
     return _game_page("ruffle.html")
+
+
+## THE NEW CLIENT (CLIENT.md): TypeScript and PixiJS, side by side with Flash
+
+CLIENT_DIR = os.path.join(BASE_DIR, "client", "dist")  # built by npm run build in client/
+ART_DIR = os.path.join(BASE_DIR, "art", "sheets")      # made by tools/export_art.sh
+
+
+@app.route("/client.html")
+def new_client():
+    """The new game client. It shows the town; the Flash client still plays it."""
+    if not os.path.isfile(os.path.join(CLIENT_DIR, "client.js")):
+        return ("The new client isn't built on this server: run npm ci and npm run build "
+                "in client/ (CLIENT.md).", 503)
+    return _game_page("client.html")
+
+
+def art_url():
+    """Where the new client finds its sprite sheets: this server's, when it
+    has made them, or else next to the other assets (R2 on hosted servers)."""
+    return "/art" if os.path.isdir(ART_DIR) else f"{config_env.ASSETS_URL}/art"
+
+
+@app.route("/client/<path:path>")
+def client_files(path):
+    # client.js and client.css keep their names, so browsers check for a
+    # newer copy each time; the rest are named by their contents and kept.
+    if path.startswith("chunks/"):
+        return send_from_directory(CLIENT_DIR, path, max_age=31536000)
+    response = send_from_directory(CLIENT_DIR, path)
+    response.cache_control.no_cache = True
+    return response
+
+
+@app.route("/art/<path:path>")
+def art_files(path):
+    response = send_from_directory(ART_DIR, path)
+    response.cache_control.no_cache = True  # a new export changes them
+    return response
 
 
 @app.route("/bank", methods=["GET", "POST"])

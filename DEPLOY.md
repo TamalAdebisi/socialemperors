@@ -287,6 +287,13 @@ on the Railway address the game files would be blocked.
   See [ROADMAP.md](ROADMAP.md) for how changes go from staging to live.
 * **Changed files in `assets/`:** run the **Upload assets to R2** workflow
   again (Part 2.4). It only uploads what changed.
+* **The new game client's pictures** (`/client.html`, [CLIENT.md](CLIENT.md)):
+  run the **Export art to R2** workflow the same way. It turns the game's
+  Flash files into sprite sheets on 8 machines at once (well under an hour)
+  and puts them in the bucket under `art/`. Run it again when buildings or
+  units are added: it only makes the sheets that are missing. The server
+  builds the client's code itself (the first part of the `Dockerfile`), so
+  nothing else is needed.
 * **Updating Ruffle** (the Flash emulator): it's in `assets/ruffle/<version>/`,
   copied unchanged from the `@ruffle-rs/ruffle` npm package (licence files
   included). For a new version: add its folder next to the old one, change
@@ -356,8 +363,9 @@ Sources: [Railway pricing](https://railway.com/pricing),
 
 | File | Purpose |
 | --- | --- |
-| `Dockerfile` | Recipe Railway builds the server from |
+| `Dockerfile` | Recipe Railway builds the server from (and the new game client, with Node) |
 | `.dockerignore` | Keeps `assets/` and other big folders out of the server |
 | `gunicorn.conf.py` | Production web server settings (1 process, 8 threads, saves on shutdown) |
 | `.github/workflows/upload-assets-r2.yml` | The "Upload assets to R2" button |
+| `.github/workflows/export-art-r2.yml` | The "Export art to R2" button: sprite sheets for the new client |
 | `config_env.py` | Every setting the server reads, with explanations |
