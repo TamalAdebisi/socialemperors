@@ -34,6 +34,9 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 
 ## Phases
 
+**Order of work:** finish Phase 2 and Cash next, then Phase 3 (which brings
+Discord sign-in), then Phase 4, the new game client.
+
 ### Phase 0: Launch (done)
 
 - [x] Accounts, signed game tokens, SQLite with batched saves, gunicorn
@@ -41,7 +44,7 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [x] Real visitor IPs for login rate limits
 - [x] Script to decompile the game client for research (`tools/decompile_client.sh`)
 
-### Phase 1: Polish what exists
+### Phase 1: Polish what exists (done)
 
 - [x] Staging server
 - [x] Game page: remove leftovers from Facebook days (*Get Cash*, *Free Gifts*),
@@ -62,8 +65,6 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
       signs out every other browser and game; every form carries a CSRF
       token; logging out is a button, not a link; at most 5 new accounts an
       hour and 10 wrong passwords in 10 minutes per visitor
-- [ ] Getting back into an account without the admin: sign in with Discord,
-      or an email address for password reset links (to decide)
 - [x] Admin page (`/admin`, `admin.py`), for the usernames in `SE_ADMINS`:
       find an account, reset its password, delete it or one of its empires,
       look inside an empire's save, and see who played last
@@ -147,17 +148,28 @@ numbers, because the server writes them into the game config.
 
 ### Phase 3: Stronger foundations
 
+- [ ] Sign in with Discord, so a player can get back into an account without
+      the admin (moved here from Phase 1)
 - [ ] Move to Postgres (Supabase or Railway) once a single SQLite file and a
       single server process are no longer enough
-- [ ] Asset pipeline: extract images and sounds from the SWFs into normal files
+- [ ] Asset pipeline: extract images and sounds from the SWFs into normal
+      files (sprite sheets, WebP). This is also the first step of the new
+      client: a test export of a unit was pixel-perfect ([CLIENT.md](CLIENT.md#the-art))
 - [ ] Content editor for adding new units, buildings and quests
 
-### Phase 4: New game client (decided later)
+### Phase 4: New game client (scoped)
 
-Replace the Flash client with a modern one (TypeScript with PixiJS or Phaser)
-that draws the same art and talks to the same server. Phase 2 work is reused
-either way, because the server rules stay the same. We decide on the tech
-once Phase 2 shows how much of the game we have.
+Replace the Flash client with a modern one that draws the same art and talks
+to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
+
+- The Flash client is the whole game, not just its pictures: about 184,000
+  lines of decompiled code, roughly 25 times our server. It is the biggest
+  project on the roadmap.
+- It can be built a piece at a time. The new client sends the same commands
+  as the Flash one, so both run side by side on the same saves, and Phase 2
+  work is reused as it is.
+- Recommended: TypeScript with PixiJS 8 for the map and HTML for the windows,
+  confirmed once the new client can draw a real town.
 
 ## How we add a missing feature
 
