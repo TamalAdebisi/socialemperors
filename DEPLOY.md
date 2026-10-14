@@ -403,10 +403,10 @@ backup is kept for 6 days).
 
 ### 6.4 Connect the servers to Supabase
 
-> **Not like this for the live server.** The owner wants it to start
-> fresh on Supabase at Beta 1's launch, with nothing copied over (ROADMAP,
-> Beta 1). Step 3's automatic copy has to be switched off first, by a
-> setting still to be built. Staging can follow the steps as they are.
+> **The live server starts fresh.** The owner wants nothing copied over
+> at Beta 1's launch (ROADMAP, Beta 1), so step 5 adds `SE_COPY_SQLITE=0`,
+> which switches off step 3's automatic copy. Staging copies its players,
+> as the steps say.
 
 1. Supabase → **Connect** (top of the page) → **Session pooler**. Copy the
    address. It looks like:
@@ -439,16 +439,21 @@ backup is kept for 6 days).
    it was.
 4. Play-test staging: log in, open an empire, build something, reload.
 5. **Live:** the same on **game-server**, with `se_game.` and the first
-   password, and **no** `SE_DATABASE_SCHEMA` line (the live schema, `game`,
-   is the default):
+   password, **no** `SE_DATABASE_SCHEMA` line (the live schema, `game`,
+   is the default), and `SE_COPY_SQLITE=0` for the fresh start:
 
    ```
    SE_DATABASE_URL=postgresql://se_game.mosoygwxatxkhndasqfp:FIRST-PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_COPY_SQLITE=0
    ```
 
-6. Check the logs for the same two lines, then log in on
-   <https://socialemperors.me>: your empires should all be there. In
-   Supabase → **Table Editor** → schema **game**, you can now see them.
+6. Check the logs for `Storage: Postgres, schema game`, then
+   `Postgres starts empty (SE_COPY_SQLITE=0)`. Sign up on
+   <https://socialemperors.me> first, with the username in `SE_ADMINS`, so
+   the admin page is yours from the start. In Supabase → **Table Editor**
+   → schema **game**, you can see your account. The old SQLite file stays
+   on the volume, untouched, should you ever want the old empires back
+   (6.5).
 
 ### 6.5 Going back to SQLite
 

@@ -24,6 +24,7 @@ import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walk
 import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
+import { skipLessons } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
@@ -838,6 +839,27 @@ export class TownEditor {
     for (const command of commands) {
       this.commands.add(command.cmd, ...command.args);
     }
+  }
+
+  /**
+   * Arthur's lessons not started: the Flash client would give them now. They
+   * are in the classic game for now, on this same empire; or they can be
+   * skipped, as if finished. Asked again on each visit until answered.
+   */
+  offerLessons(classicUrl: string): void {
+    this.bar.prompt("Arthur teaches the first steps: a villager, a farm, a house, a knight and a first battle. "
+      + "His lessons are in the classic game for now.", [
+      { label: "Take the lessons", run: () => {
+        this.bar.hide();
+        void this.commands.flush().finally(() => location.assign(classicUrl));
+      } },
+      { label: "Skip them", run: () => {
+        this.bar.hide();
+        this.send([skipLessons()]);
+        void this.commands.flush();  // at once: the classic game reads it too
+        this.say("Lessons skipped. Your empire awaits!");
+      } },
+    ]);
   }
 
   /**

@@ -271,25 +271,26 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 slices, about one task each; every slice ends tested, documented and merged.
 The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
-- [ ] **Beta 1, the town builder** (the rest of step 3): the menus as a
-      rail and dock (the owner's pick, done: the shop, storage, army,
-      neighbours and battle windows, the glove, messages at the top); units walking
-      (done: tap a unit, then the ground); villagers at work (done: trees, rocks,
-      workers into buildings and out again); training and population (done); land and cash (done: land, opening
-      early, hurrying, the bank); missions and
-      bonuses (done: goals, the daily bonus, Monday's and welcome-back chests); neighbours (done: visiting
-      and helping, Arthur, the donkey carts); sound and speed (done: the town's music and
-      sounds, compressed downloads); then a full run-through against
-      the Flash game. Players can use the new client for everything but
+- [x] **Beta 1, the town builder** (the rest of step 3), built 14 October
+      2026: the menus as a rail and dock (the owner's pick: the shop,
+      storage, army, neighbours and battle windows, the glove, messages at
+      the top); units walking; villagers at work (trees, rocks, workers into
+      buildings and out again); training and population; land and cash
+      (land, opening early, hurrying, the bank); missions and bonuses
+      (goals, the daily bonus, Monday's and welcome-back chests); neighbours
+      (visiting and helping, Arthur, the donkey carts); sound and speed (the
+      town's music and sounds, compressed downloads); and a run-through
+      against the Flash game (`e2e/tests/classic.mjs`: an empire played in
+      the new client opens in the classic game, and Arthur's lessons are
+      offered there). Players can use the new client for everything but
       battles, which open in the classic game.
-      **Launch: a fresh start.** The live server moves to Supabase with an
-      empty database: none of today's accounts or empires go with it (the
-      owner's call). The server copies SQLite over by itself when it meets
-      an empty database, so it first needs a setting to skip that. The
-      owner signs up first and becomes the admin (`SE_ADMINS`); test
-      accounts stay on staging and in the browser tests, never on the live
-      game. AcidCaos's built-in village goes; Arthur's stay, and his town
-      keeps changing over time as in the original (the neighbours slice).
+      **Launch: a fresh start,** ready for the owner (DEPLOY.md, 6.4). The
+      live server moves to Supabase with an empty database: none of today's
+      accounts or empires go with it (the owner's call). `SE_COPY_SQLITE=0`
+      stops the automatic copy from SQLite. The owner signs up first and
+      becomes the admin (`SE_ADMINS`); test accounts stay on staging and in
+      the browser tests, never on the live game. AcidCaos's built-in village
+      is gone; Arthur's stay, and his town grows with the player's.
 - [ ] **Beta 2, battles and quests** (step 4): combat, defending a town,
       spells and heroes, the island map, then the quests in batches with
       their bosses, checked side by side against the Flash game.

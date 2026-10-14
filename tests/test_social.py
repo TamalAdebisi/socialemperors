@@ -25,7 +25,7 @@ SUMMIT = 234         # 9 allies at 3 cash
 ALLIED_MARKET = 266  # 8 helpers at 2 cash; 125 for each, plus 125
 ROUND_TABLE = 389
 SWORDSMAN = 507      # costs 150 gold: worth 75 gold when killed
-BUILT_IN_NEIGHBOUR = "1111"  # villages/AcidCaos.json
+BUILT_IN_NEIGHBOUR = "100000030"  # villages/Arthur30.json: Arthur, a village that ships with the game
 
 
 class Village:
@@ -251,7 +251,7 @@ class AttackTest(unittest.TestCase):
 
     def test_an_island_counts_only_for_its_rival(self):
         # Before the town has rivals on the world map (tests/test_worlds.py), no battle beats an island.
-        victim = {"user_id": BUILT_IN_NEIGHBOUR, "posicion": 3, "nivel": 1, "name": "AcidCaos", "level": 5}
+        victim = {"user_id": BUILT_IN_NEIGHBOUR, "posicion": 3, "nivel": 1, "name": "Arthur", "level": 5}
         self.me.send("end_attack", self.report(1, 100, 5, 1, victim=victim))
         self.assertEqual(self.me.map["universAttackWin"], [])
         self.assertEqual(self.me.pState["worldChange"], 0)

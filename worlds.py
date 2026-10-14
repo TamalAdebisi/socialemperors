@@ -3,9 +3,9 @@ The world map: fifty continents of eight islands.
 
 Each town of an empire has its own island on one of fifty continents (it
 starts on the first) with seven rival islands around it: towns of other
-players, picked nearest the town's level (the most recently active first),
-and AcidCaos, the village that ships with the game, when there are not seven
-players to pick. Beat all seven in battle and the town moves on to the next
+players, picked nearest the town's level (the most recently active first).
+(A village shipped in villages/ would be picked too; Arthur's never are, and
+since the fresh start no other ships.) Beat all seven in battle and the town moves on to the next
 continent and seven new rivals, as the player comes home from the last battle
 (home()). Reaching a continent wins its prize: the cash and units of the game
 config's "level_ranking_reward" row for it, given when the player claims it

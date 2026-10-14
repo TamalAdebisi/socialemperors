@@ -717,8 +717,12 @@ def open_storage() -> BaseStorage:
     store = PostgresStorage(config_env.DATABASE_URL, config_env.DATABASE_SCHEMA)
     print(f" [+] Storage: Postgres, schema {store.schema}")
     # The first start on Postgres: bring over the players kept in SQLite until
-    # now. The SQLite file stays as it was, as a backup.
+    # now, unless told to start afresh (SE_COPY_SQLITE=0). Either way the
+    # SQLite file stays as it was, as a backup.
     if os.path.exists(sqlite_path) and store.is_empty():
+        if not config_env.COPY_SQLITE:
+            print(" [+] Postgres starts empty (SE_COPY_SQLITE=0): nothing copied from SQLite")
+            return store
         old = SQLiteStorage(sqlite_path)
         copied = copy_database(old, store)
         old.close()

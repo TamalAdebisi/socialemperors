@@ -157,6 +157,18 @@ class PostgresTest(unittest.TestCase):
         self.assertIsNone(again.get_user_by_name("OnlyInSQLite"))
         self.assertEqual(len(again.load_all_villages()), 3)
 
+    def test_a_fresh_start_copies_nothing(self):
+        data_dir = tempfile.mkdtemp(prefix="se-test-")
+        some_players(sqlite_store(self, data_dir))
+        settings = {"DATA_DIR": data_dir, "DATABASE_URL": URL, "DATABASE_SCHEMA": self.schema, "COPY_SQLITE": False}
+        with mock.patch.multiple("config_env", **settings):
+            store = storage.open_storage()
+            self.addCleanup(store.close)
+        self.assertTrue(store.is_empty())
+        self.assertIsNone(store.get_user_by_name("alice"))
+        # The SQLite file is left as it was, a backup.
+        self.assertIsNotNone(sqlite_store(self, data_dir).get_user_by_name("alice"))
+
     # Safety
 
     def test_no_table_is_open_to_supabases_data_api(self):

@@ -26,6 +26,9 @@ SE_DATABASE_URL      A Postgres connection string, e.g. Supabase's session poole
                      players from SQLite over (storage.py). Default: unset, SQLite
 SE_DATABASE_SCHEMA   The schema in that database the tables live in (default
                      "game"; staging uses "staging")
+SE_COPY_SQLITE       "1" (default) to copy the players from SQLite into an
+                     empty Postgres database at the first start; "0" to start
+                     it empty instead (the live game's fresh start, DEPLOY.md)
 SE_SUPABASE_URL      The Supabase project's address, e.g.
                      https://<project>.supabase.co, for signing in with Discord
                      and Google (sign_in.py). Unset: usernames and passwords only
@@ -77,6 +80,7 @@ ASSETS_URL = (os.environ.get("SE_ASSETS_URL")
 DATA_DIR = os.environ.get("SE_DATA_DIR", os.path.join(".", "data"))
 DATABASE_URL = os.environ.get("SE_DATABASE_URL", "").strip() or None
 DATABASE_SCHEMA = os.environ.get("SE_DATABASE_SCHEMA", "").strip() or "game"
+COPY_SQLITE = _flag("SE_COPY_SQLITE", True)
 SUPABASE_URL = os.environ.get("SE_SUPABASE_URL", "").strip().rstrip("/") or None
 SUPABASE_KEY = os.environ.get("SE_SUPABASE_KEY", "").strip() or None
 

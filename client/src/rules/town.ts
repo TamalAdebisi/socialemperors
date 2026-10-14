@@ -36,7 +36,8 @@ export type Box = Record<string, number> | number[];
 export interface PlayerInfo {
   result: string;
   timestamp: number;
-  playerInfo: { name: string; cash: number; map_names?: string[] };
+  /** completed_tutorial: the last of Arthur's lessons reached (0: none; rules/lessons.ts). */
+  playerInfo: { name: string; cash: number; map_names?: string[]; completed_tutorial?: number | string };
   map: SaveMap;
   /** Buildings opened before their level, for cash: { "<item id>": true }. */
   privateState?: {
