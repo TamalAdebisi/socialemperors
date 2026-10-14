@@ -1,0 +1,62 @@
+// Producing buildings: a town set up as the Flash client would (a farm, a
+// ranch and a gold mine, each with a villager), then choosing a working time
+// and collecting in the new client. Takes about a minute and a half: the
+// ranch needs 90 seconds.
+
+import assert from "node:assert/strict";
+import { itemAt } from "../lib.mjs";
+
+const FARM = [10, 42, 53], RANCH = [11, 47, 58], MINE = [13, 46, 49];
+const VILLAGER = 500, SPOTS = [[43, 53], [44, 53], [46, 50]];
+
+export default async function collect({ newPlayer }) {
+  const player = await newPlayer();
+  // The Flash client's commands: buy each building and a villager, then each villager walks in.
+  const setup = [];
+  for (const [id, x, y] of [FARM, RANCH, MINE]) setup.push({ cmd: "buy", args: [id, x, y, 0, 0, 0, 1] });
+  for (const [x, y] of SPOTS) setup.push({ cmd: "buy", args: [VILLAGER, x, y, 0, 0, 0, 1] });
+  [FARM, RANCH, MINE].forEach(([, bx, by], i) => setup.push({ cmd: "push_unit", args: [...SPOTS[i], VILLAGER, bx, by, 0] }));
+  await player.send(setup);
+  const setUpAt = Date.now();
+  const before = await player.saved({ waitForBatch: false });
+  await player.reload();
+  await player.shot("start");
+
+  // The mine's villager waits for a working time; tapping the mine asks how long.
+  const mine = await player.select(MINE.slice(1), "How long should Gold Mine I work?");
+  await player.shot("picker");
+  await player.press("5 min: 100 gold");
+  await player.click(mine.point);
+  const mineWorking = await player.bar();
+  assert.ok(mineWorking.startsWith("Gold Mine I") && !mineWorking.includes("How long"), `the mine works: "${mineWorking}"`);
+  await player.press("Close");
+
+  // The farm and the ranch are working: selecting one shows how long is left.
+  const farm = await player.select(FARM.slice(1), "Farm Land");
+  await player.press("Close");
+  const ranch = await player.select(RANCH.slice(1), "Sheep Ranch I");
+  await player.press("Close");
+
+  // The farm is ready 32.4 s after its villager walked in: one tap collects,
+  // and what it gave rises over it ("+15 food").
+  await player.wait(Math.max(0, setUpAt + 34_000 - Date.now()));
+  await player.shot("farm-ready");
+  await player.page.mouse.click(farm.point.x, farm.point.y);
+  await player.wait(250);
+  await player.shot("farm-collected");
+  assert.equal(await player.bar(), "", "collecting doesn't select the farm");
+
+  // The ranch after 90 s.
+  await player.wait(Math.max(0, setUpAt + 92_000 - Date.now()));
+  await player.click(ranch.point);
+  await player.wait(250);
+  await player.shot("ranch-collected");
+
+  const after = await player.saved();
+  const startedAfterSetup = (building) => itemAt(after, building[0], building.slice(1))?.[4] - Math.floor(setUpAt / 1000);
+  assert.ok(startedAfterSetup(FARM) >= 30, "the farm started again when collected");
+  assert.ok(startedAfterSetup(RANCH) >= 88, "the ranch started again when collected");
+  assert.ok(startedAfterSetup(MINE) >= 0, "the mine started when its time was chosen");
+  assert.ok(after.xp > before.xp, `collecting gives experience: ${before.xp} -> ${after.xp}`);
+  assert.ok(after.food > before.food, `the farm and ranch give food: ${before.food} -> ${after.food}`);
+}

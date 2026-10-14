@@ -21,7 +21,7 @@ import comeback_bonus
 import config_env
 import economy
 import sessions
-from bundle import VILLAGES_DIR
+from paths import VILLAGES_DIR
 from command import do_command
 from get_game_config import get_game_config
 from version import add_missing_fields

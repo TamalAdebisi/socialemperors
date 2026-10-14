@@ -14,7 +14,7 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import levels
 import sessions
-from bundle import VILLAGES_DIR
+from paths import VILLAGES_DIR
 from command import do_command
 from get_game_config import get_game_config, get_xp_from_level
 from version import migrate_loaded_save

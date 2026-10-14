@@ -43,7 +43,7 @@ import gifts
 import helps
 import radar
 import sign_in
-from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
+from paths import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
 from command import command
 from constants import Constant
 from engine import timestamp_now

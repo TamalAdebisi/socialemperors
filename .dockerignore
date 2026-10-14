@@ -1,8 +1,5 @@
 # Not needed inside the server container (keeps it small and fast to deploy).
 assets/
-download_assets/
-distr/
-build/
 saves/
 data/
 .git/
@@ -15,3 +12,4 @@ tests/
 /art/
 client/node_modules/
 client/dist/
+e2e/

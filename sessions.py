@@ -20,7 +20,7 @@ import threading
 import uuid
 
 import config_env
-from bundle import VILLAGES_DIR, SAVES_DIR
+from paths import VILLAGES_DIR, SAVES_DIR
 from constants import Constant
 from engine import timestamp_now
 from storage import open_storage

@@ -34,7 +34,7 @@ only reach the save through item_rewards.
 import json
 import os
 
-from bundle import QUESTS_DIR
+from paths import QUESTS_DIR
 from engine import timestamp_now
 from get_game_config import get_game_config, get_level_from_xp
 import economy

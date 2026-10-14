@@ -1,61 +1,95 @@
 ![Social Empires](templates/img/logo.png "Social Empires logo")
 
-The Social Empires preservation project by the Social Emperors team.
-This project is dedicated to preserving this Flash game so that it's not lost to time.
+**Social Empires**, Social Point's strategy game from Facebook, playable
+again at **[socialemperors.me](https://socialemperors.me)**: free, online,
+your empire saved on the server, with neighbours to visit and the original
+art, music and quests.
 
-[![Downloads](https://img.shields.io/github/downloads/AcidCaos/socialemperors/total?label=downloads%40all)](../../releases/latest)
-[![Discord](https://img.shields.io/discord/984545703558783016?logo=discord&label=Discord&color=blue)](https://discord.gg/zW5gSbQJBw)
+This is a non-commercial fan project. Nothing is for sale, and the game's
+art and music still belong to their owners ([Copyright](ROADMAP.md#copyright)).
 
----
+## Play
 
-## Latest Release
+Make an account at [socialemperors.me](https://socialemperors.me), then
+choose how to play. All three play the same empire, so you can switch at any
+time.
 
-| Version | Release date | Source | Download |
-| --- | --- | --- | --- |
-| **alpha 0.04a** | September 26, 2025 | :label: [tag](../../releases/tag/0.04a) | :package: [Bundle](../../releases/download/0.04a/social-emperors_0.04a.zip) |
+- **Any modern browser:** the original game in [Ruffle](https://ruffle.rs),
+  a Flash emulator. Nothing to install; a few things don't work in it yet.
+- **A Flash browser:** the original game in Adobe's own Flash Player, the
+  most faithful way to play. How to get one: [FLASH.md](FLASH.md).
+- **The new game (preview):** our own game client, sharp and full screen on
+  phones and computers, being built to replace Flash
+  ([CLIENT.md](CLIENT.md)). For now you can build and run your town in it;
+  battles and quests come next.
 
-:information_source: For older versions check [this](RELEASES.md).
+## What's in here
 
-## Reporting Bugs and Contacting
+| Folder | What |
+| --- | --- |
+| *(the top folder)* | The game server, in Python with Flask: `server.py`, and a module for each part of the game (`shop.py`, `quests.py`, `pvp.py`, ...). Accounts and empires in SQLite, or Postgres on Supabase |
+| `templates/` | The website: signing in, choosing how to play, settings, the game pages |
+| `client/` | The new game client, in TypeScript with PixiJS, built with Vite |
+| `config/` | The game's own settings (every unit, building and level), and our fixes to them in `config/patch/` |
+| `villages/` | The starting town, the built-in neighbours, and the quest maps |
+| `assets/` | The game's files: its Flash movies, pictures and music. Players get them from Cloudflare R2 |
+| `tools/` | Turning the game's art into sprite sheets for the new client, and reading the Flash client for research |
+| `tests/`, `e2e/` | The server's tests, and browser tests that play the new client |
 
-:speech_balloon: Check our [Discord group](https://discord.gg/zW5gSbQJBw)
+## Run it on your computer
 
-:paw_prints: The project [Contributors](../../contributors)
+You need Python 3.13 (what the live server runs) and, for the new client, Node 22.
 
-## How to Install on Windows
+```
+python -m venv .venv
+. .venv/bin/activate                 # on Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+(cd client && npm ci && npm run build)
+python server.py                     # then open http://127.0.0.1:5050
+```
 
-- Download a flash-compatible browser. :flashlight: **Recommended:** [FlashBrowser](https://github.com/radubirsan/FlashBrowser/releases/latest). Alternatives can be found [here](FLASH.md).
-- Download the latest Bundle version from the [Latest Release](#latest-release) section.
-- Extract the downloaded zip file to a suitable location.
+Tests:
 
-## How to Play
+```
+python -m unittest discover tests    # the server
+(cd client && npm test)              # the new client's rules
+node e2e/run.mjs                     # the new client in a real browser (e2e/run.mjs says what it needs)
+```
 
-- Run the *social-emperors* executable.
-- Open your flash browser and navigate to `http://127.0.0.1:5050/`.
+## Read more
 
-:information_source: To play on GNU/Linux check [this page](LINUX.md).
+| | |
+| --- | --- |
+| [ROADMAP.md](ROADMAP.md) | Where the project is going, how changes reach players, and the decisions so far |
+| [CLIENT.md](CLIENT.md) | The new game client: why, how it's built, and how the game works underneath |
+| [DECISIONS.md](DECISIONS.md) | Smaller calls made along the way, so any of them can be found and undone |
+| [DEPLOY.md](DEPLOY.md) | Putting the game online, step by step: Railway, Cloudflare R2, Supabase |
+| [MULTIPLAYER.md](MULTIPLAYER.md) | The server's settings |
+| [FLASH.md](FLASH.md) | Playing with real Flash |
+| [CLAUDE.md](CLAUDE.md) | The ground rules for Claude, which does much of the work on this project |
 
-## Tools
+## Credits
 
-:penguin: [Social Empires on GNU/Linux](LINUX.md)
+This started as a fork of the
+[Social Empires preservation project](https://github.com/AcidCaos/socialemperors)
+by AcidCaos, Nerroth and the Social Emperors team, who wrote the first server
+that brought the game back. Social Empires itself is by Social Point.
 
-:flashlight: [Flash Continuation](FLASH.md) documentation
+Some places that keep games like this one alive:
 
-## On archives and accessibility to digital heritage
-
-- [Exemption to PCCPSACT](https://www.federalregister.gov/documents/2018/10/26/2018-23241/exemption-to-prohibition-on-circumvention-of-copyright-protection-systems-for-access-control), exemptions to the provision of the Digital Millennium Copyright Act (“DMCA”). 
+- [The 2018 DMCA exemption](https://www.federalregister.gov/documents/2018/10/26/2018-23241/exemption-to-prohibition-on-circumvention-of-copyright-protection-systems-for-access-control), the US rule that lets libraries and archives preserve games whose servers have shut down.
+- [The Internet Archive](https://archive.org/), a digital library of the web and other cultural artifacts.
+- [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/), the web game preservation project.
 - [EFGAMP](https://efgamp.eu/), the European Federation of Video Game Archives, Museums and Preservation projects.
-- [UNESCO PERSIST Programme](https://unescopersist.org/), helps ensure that digital information can continue to be accessed in the future.
-- [The Internet Archive](https://archive.org/), a digital library of Internet sites and other cultural artifacts in digital form.
-- [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/), the webgame preservation project.
-- [Adobe Flash Player Archive](https://archive.org/download/flashplayerarchive/), the Adobe Inc. archive.org Flash Player Archive.
+- [UNESCO PERSIST](https://unescopersist.org/), on keeping digital information accessible in the future.
 
----
+## License
 
-## License [![GPL v3](https://img.shields.io/badge/GPL%20v3-blue)](http://www.gnu.org/licenses/gpl-3.0)
+GNU General Public License, version 3 ([LICENSE](LICENSE)).
 
 ```
 Social Empires preservation project.
 Copyright (C) 2022  The Social Emperors team
+Changed since 2026 for socialemperors.me.
 See the GNU General Public License <https://www.gnu.org/licenses/>.
 ```

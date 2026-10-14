@@ -35,7 +35,7 @@ import copy
 import json
 import os
 
-from bundle import VILLAGES_DIR
+from paths import VILLAGES_DIR
 from engine import timestamp_now
 from version import add_missing_fields
 from village import ID, take
