@@ -221,10 +221,10 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 - [x] 2. Look at your town: `/client.html` draws the map, buildings and units
       from the config and the save, with PixiJS; smooth scrolling and zoom,
       touch, full screen. Look only ([CLIENT.md](CLIENT.md#step-2-look-at-your-town))
-- [ ] 3. Run your town (started): move, turn, store and sell buildings;
-      collect from them, with levels; all with the Flash client's commands
-      ([CLIENT.md](CLIENT.md#step-3-run-your-town)). Next: the shop,
-      placing stored things, units walking
+- [ ] 3. Run your town (started): the shop and building; move, turn, store
+      and sell buildings; collect from them, with levels; all with the Flash
+      client's commands ([CLIENT.md](CLIENT.md#step-3-run-your-town)). Next:
+      placing stored things, units walking, training units
 - [ ] 4. Battles, 5. everything else, 6. switch over
 
 ## How we add a missing feature

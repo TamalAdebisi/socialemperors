@@ -1,24 +1,28 @@
 // What happens when the player taps the map: collect from a ready building,
-// choose how long a mill works, or select a thing to move, turn, store or
-// sell. The rules (rules/editing.ts, rules/production.ts, rules/levels.ts)
-// change the town and say what to send; this ties them to the map, the bar
-// and the server.
+// choose how long a mill works, select a thing to move, turn, store or sell,
+// or place what was chosen in the shop. The rules (rules/editing.ts,
+// production.ts, levels.ts, shop.ts) change the town and say what to send;
+// this ties them to the map, the bar, the shop window and the server.
 
 import type { Command, CommandSender } from "./net/commands.ts";
+import type { ItemInfo } from "./rules/config.ts";
 import { choices, fits, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
 import { WORK_TIMES, chooseWorkTime, collect, harvest, workState } from "./rules/production.ts";
+import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
 import { showStatus, type Hud } from "./ui/hud.ts";
+import type { ShopWindow } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 
-/** How long a message stays in the middle of the screen. */
+/** How long a message stays in the middle of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
+const MOST_WAITING = 3;
 
 export interface EditorParts {
   town: Town;
@@ -30,6 +34,7 @@ export interface EditorParts {
   /** The game's clock: the server's time, in seconds. */
   clock: () => number;
   levels: Level[];
+  shop: ShopWindow;
 }
 
 export class TownEditor {
@@ -41,18 +46,28 @@ export class TownEditor {
   private readonly camera: Camera;
   private readonly clock: () => number;
   private readonly levels: Level[];
+  private readonly shop: ShopWindow;
   private selected: PlacedItem | null = null;
   private moving: PlacedItem | null = null;
-  private sayTimer: ReturnType<typeof setTimeout> | undefined;
+  /** What was chosen in the shop, while the player places it: see-through, not on the map yet. */
+  private building: PlacedItem | null = null;
+  /** Messages for the middle of the screen: the first shows, the others wait their turn. */
+  private sayQueue: string[] = [];
 
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
-      camera: this.camera, clock: this.clock, levels: this.levels } = parts);
+      camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop } = parts);
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        this.moving ? this.cancelMove() : this.select(null);
+        if (this.building) {
+          this.stopBuilding();
+        } else if (this.moving) {
+          this.cancelMove();
+        } else {
+          this.select(null);
+        }
       }
     });
     // Buildings finish their work as time goes by: their signs, and the selected one's countdown.
@@ -77,7 +92,78 @@ export class TownEditor {
     }
   }
 
+  /** Open the shop, leaving whatever was going on. */
+  openShop(): void {
+    if (this.building) {
+      this.stopBuilding();
+    }
+    if (this.moving) {
+      this.cancelMove();
+    }
+    this.select(null);
+    this.shop.open();
+  }
+
+  /** The player chose something in the shop: place it, as many as they like, until Done. */
+  startBuilding(item: ItemInfo): void {
+    this.select(null);
+    const centre = this.tileAt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    this.building = { item, tx: centre.x, ty: centre.y, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
+    this.view.showGhost(this.building);
+    this.previewBuilding(centre);
+    const price = priceOf(item);
+    this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)`,
+      [{ label: "Done", run: () => this.stopBuilding() }]);
+  }
+
+  private previewBuilding(tile: Point): void {
+    const building = this.building!;
+    building.tx = tile.x;
+    building.ty = tile.y;
+    this.view.moveGhost(tile);
+    this.view.showFootprint(building, fits(this.town, building));
+  }
+
+  private placeBuilding(tile: Point): void {
+    const item = this.building!.item;
+    const bought = buy(this.town, item, tile.x, tile.y, this.clock());
+    if (typeof bought === "string") {
+      this.previewBuilding(tile);
+      this.say(bought);
+      return;
+    }
+    this.send([bought.command]);
+    void this.view.redraw(bought.placed);
+    const price = priceOf(item);
+    const lines = [{ text: `−${price.amount} ${price.resource}`, colour: RESOURCE_COLOURS[price.resource] }];
+    if (item.xp > 0) {
+      lines.push({ text: `+${item.xp} XP`, colour: RESOURCE_COLOURS.xp });
+    }
+    this.view.rise(bought.placed, lines);
+    this.levelUp();
+    this.hud.update(this.town);
+    this.refresh();
+    const next = obstacle(this.town, item);
+    if (next) {
+      this.stopBuilding();
+      this.say(noMore(item, next));
+    } else {
+      this.previewBuilding(tile);  // red now: it's taken
+    }
+  }
+
+  private stopBuilding(): void {
+    this.building = null;
+    this.view.showGhost(null);
+    this.view.showFootprint(null);
+    this.bar.hide();
+  }
+
   private tap(at: Point): void {
+    if (this.building) {
+      this.placeBuilding(this.tileAt(at));
+      return;
+    }
     if (this.moving) {
       this.place(this.moving, this.tileAt(at));
       return;
@@ -94,7 +180,9 @@ export class TownEditor {
   }
 
   private hover(at: Point): void {
-    if (this.moving) {
+    if (this.building) {
+      this.previewBuilding(this.tileAt(at));
+    } else if (this.moving) {
       this.preview(this.moving, this.tileAt(at));
     }
   }
@@ -258,10 +346,39 @@ export class TownEditor {
     }
   }
 
-  /** A message in the middle of the screen for a moment. */
+  /** A message in the middle of the screen for a moment, after any before it (the same one twice waits once). */
   private say(text: string): void {
-    clearTimeout(this.sayTimer);
+    if (this.sayQueue.includes(text) || this.sayQueue.length >= MOST_WAITING) {
+      return;
+    }
+    this.sayQueue.push(text);
+    if (this.sayQueue.length === 1) {
+      this.sayNext();
+    }
+  }
+
+  private sayNext(): void {
+    const text = this.sayQueue[0];
+    if (text === undefined) {
+      return;
+    }
     showStatus(text);
-    this.sayTimer = setTimeout(() => showStatus(""), SAY_MS);
+    setTimeout(() => {
+      this.sayQueue.shift();
+      showStatus("");
+      this.sayNext();
+    }, SAY_MS);
+  }
+}
+
+/** Why placing stopped after the last one: "Not enough wood for another Farm Land." */
+function noMore(item: ItemInfo, why: Obstacle): string {
+  switch (why.kind) {
+    case "price":
+      return `Not enough ${why.price.resource} for another ${item.name}.`;
+    case "limit":
+      return `That's as many ${item.name} as a town can have.`;
+    case "level":
+      return `${item.name}: ${describe(why).toLowerCase()}.`;
   }
 }

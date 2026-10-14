@@ -32,6 +32,26 @@ export interface ConfigItem {
   collect_xp?: string;
   /** How many units fit inside (a mill's workers, a barracks' soldiers). */
   unit_capacity?: string;
+  /** The shop: 1 or 3 sold to humans, 2 or 4 to trolls, 0 not sold. */
+  in_store?: string;
+  /** The shop's tab (the categories table's "sub" ids: 11 Houses...). */
+  subcategory_id?: string;
+  /** The level it can be bought from, and the level it shows in the shop from (0: always). */
+  min_level?: string;
+  store_level?: string;
+  /** The experience buying it gives. */
+  xp?: string;
+  /** Its place in the shop: smaller first. */
+  display_order?: string;
+  /** "1" for the shop's New tab. */
+  new_item?: string;
+}
+
+/** A tab of the shop and its smaller tabs: the config's categories table. */
+export interface ConfigCategory {
+  id?: number;
+  name?: string;
+  sub: { id: number; name: string; parent: number }[];
 }
 
 /** One row of the levels table: level n is row n - 1. */
@@ -47,6 +67,7 @@ export interface ConfigLevel {
 export interface GameConfig {
   items: ConfigItem[];
   levels?: ConfigLevel[];
+  categories?: Record<string, ConfigCategory>;
   globals?: {
     /** Producing buildings that work for a time the player chooses. */
     COLLECT_VARIABLE_IDS?: (number | string)[];
@@ -71,6 +92,15 @@ export interface ItemInfo {
   facings: number;
   /** What it produces and how, or null when it doesn't (rules/production.ts). */
   production: Production | null;
+  /** The shop (rules/shop.ts): who it's sold to (in_store), its tab, from which levels, in what order. */
+  inStore: number;
+  shopTab: number;
+  minLevel: number;
+  storeLevel: number;
+  displayOrder: number;
+  isNew: boolean;
+  /** The experience buying it gives. */
+  xp: number;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -88,6 +118,13 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     costType: item.cost_type ?? "g",
     facings: Math.max(Number(item.max_frame) || 1, 1),
     production: productionOf(item, chosenTime),
+    inStore: Number(item.in_store) || 0,
+    shopTab: Number(item.subcategory_id) || 0,
+    minLevel: Number(item.min_level) || 0,
+    storeLevel: Number(item.store_level) || 0,
+    displayOrder: Number(item.display_order) || 0,
+    isNew: item.new_item === "1",
+    xp: Number(item.xp) || 0,
   };
 }
 

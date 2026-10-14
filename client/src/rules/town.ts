@@ -29,6 +29,8 @@ export interface PlayerInfo {
   timestamp: number;
   playerInfo: { name: string; cash: number; map_names?: string[] };
   map: SaveMap;
+  /** Buildings opened before their level, for cash: { "<item id>": true }. */
+  privateState?: { unlockedEarlyBuildings?: Record<string, unknown> };
 }
 
 export interface PlacedItem {
@@ -61,6 +63,8 @@ export interface Town {
   race: string;
   skin: number;
   expansions: Set<number>;
+  /** Buildings opened before their level, for cash: the shop sells them already. */
+  unlocked: Set<number>;
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
@@ -98,6 +102,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     race: map.race,
     skin: map.skin ?? 0,
     expansions: new Set(map.expansions),
+    unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
     items: placed,
     unknown,
   };
