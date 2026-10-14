@@ -282,7 +282,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       an empty database, so it first needs a setting to skip that. The
       owner signs up first and becomes the admin (`SE_ADMINS`); test
       accounts stay on staging and in the browser tests, never on the live
-      game.
+      game. AcidCaos's built-in village goes; Arthur's stay, and his town
+      keeps changing over time as in the original (the neighbours slice).
 - [ ] **Beta 2, battles and quests** (step 4): combat, defending a town,
       spells and heroes, the island map, then the quests in batches with
       their bosses, checked side by side against the Flash game.
