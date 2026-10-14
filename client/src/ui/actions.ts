@@ -18,6 +18,8 @@ export interface ActionChoices {
   refund: string;
   /** Let one of the units inside out (null when nobody's inside). */
   letOut?: (() => void) | null;
+  /** Train its unit: the unit's picture and price, and the same for cash (null when it trains nothing). */
+  train?: { unit: string; picture: string; price: string; run: () => void; cash: { price: string; run: () => void } | null } | null;
   close: () => void;
 }
 
@@ -49,6 +51,9 @@ export class ActionBar {
     tiles.className = "actions-tiles";
     this.tiles = tiles;
     this.bar.append(name, detail, tiles);
+    if (choices.train) {
+      this.trainButtons(choices.train);
+    }
     this.button("Let out", choices.letOut ?? null, "Let out", "population");
     this.button("Move", choices.move, "Move", "move");
     this.button("Turn", choices.turn, "Turn", "turn");
@@ -122,6 +127,31 @@ export class ActionBar {
     }
     button.addEventListener("click", run);
     (this.tiles ?? this.bar).append(button);
+  }
+
+  /** Train: the unit's picture with its price under it, then the same for cash. */
+  private trainButtons(train: NonNullable<ActionChoices["train"]>): void {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "picture-button train";
+    button.innerHTML = `<img alt=""><span></span>`;
+    button.querySelector("img")!.src = train.picture;
+    button.querySelector("span")!.textContent = train.price;
+    button.setAttribute("aria-label", `Train ${train.unit}`);
+    button.title = `Train ${train.unit}: ${train.price}`;
+    button.addEventListener("click", train.run);
+    (this.tiles ?? this.bar).append(button);
+    if (train.cash) {
+      const cash = train.cash;
+      const pay = document.createElement("button");
+      pay.type = "button";
+      pay.className = "button tiny gold train-cash";
+      pay.innerHTML = `<img class="icon" src="${ICONS.cash}" alt="">`;
+      pay.append(cash.price);
+      pay.setAttribute("aria-label", `Train ${train.unit} for ${cash.price} cash`);
+      pay.addEventListener("click", cash.run);
+      (this.tiles ?? this.bar).append(pay);
+    }
   }
 
   /** The game's close button, in the card's corner. */

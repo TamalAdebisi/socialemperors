@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, training and population
+
+- **The Train button is the unit's picture with its price under it** on
+  the selected building's card (the original showed the same picture on
+  its info panel), and a cash button beside it.
+- **The people count is in the top bar** as a sixth pill (people / room),
+  and in the Army window.
+- **Kept from the original:** wonders count twice towards the room for
+  people, and a unit in training doesn't take room until it's out, so two
+  buildings training at once can go one over.
+
 ## 14 October 2026: Beta 1, villagers at work
 
 - **A server fix:** two villagers at one tree got a fifth more wood from

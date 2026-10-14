@@ -21,6 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { SUBCAT, canGoInside, canHarvest, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
@@ -42,6 +43,8 @@ export interface EditorParts {
   items: Map<number, ItemInfo>;
   /** Told what's waiting, for the menus' red counts: gifts in storage. */
   waiting?: (gifts: number) => void;
+  /** An item's picture in the Flash client's windows (a unit to train). */
+  thumbnail?: (item: ItemInfo) => string;
 }
 
 export class TownEditor {
@@ -56,6 +59,9 @@ export class TownEditor {
   private readonly shop: ShopWindow;
   private readonly items: Map<number, ItemInfo>;
   private readonly waiting: (gifts: number) => void;
+  private readonly thumbnail: (item: ItemInfo) => string;
+  /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
+  private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
   private moving: PlacedItem | null = null;
   /** What was chosen in the shop or storage, while the player places it: see-through, not on the map yet. */
@@ -75,6 +81,7 @@ export class TownEditor {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
       camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
     this.waiting = parts.waiting ?? (() => {});
+    this.thumbnail = parts.thumbnail ?? (() => "");
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -111,6 +118,11 @@ export class TownEditor {
         : state.status === "asleep" ? { kind: "asleep" } : null);
     }
     this.hud.ready(ready);
+    for (const [building, training] of this.training) {
+      if (performance.now() >= training.done) {
+        this.finishTraining(building);
+      }
+    }
     for (const [resource, work] of this.working) {
       if (now - work.since >= harvestSeconds(resource.item)) {
         this.finishHarvest(resource);
@@ -159,8 +171,9 @@ export class TownEditor {
 
   /** What's in storage, as the storage window shows it, with what each card's buttons do. */
   storageCards(): StorageCard[] {
+    const people = population(this.town, this.items);
     return storedItems(this.town, this.items).map((stored) => {
-      const can = storageChoices(this.town, stored);
+      const can = storageChoices(this.town, stored, people.max - people.current);
       const back = storageRefund(stored.item);
       return {
         item: stored.item,
@@ -246,7 +259,8 @@ export class TownEditor {
 
   private placeFromStorage(stored: Stored, tile: Point): void {
     const xpBefore = this.town.xp;
-    const done = placeStored(this.town, stored, tile.x, tile.y, this.clock(), this.levels);
+    const people = population(this.town, this.items);
+    const done = placeStored(this.town, stored, tile.x, tile.y, this.clock(), this.levels, people.max - people.current);
     if (typeof done === "string") {
       this.previewBuilding(tile);
       this.say(done);
@@ -257,8 +271,8 @@ export class TownEditor {
     if (this.town.xp > xpBefore) {
       this.view.rise(done.placed, [{ text: `+${this.town.xp - xpBefore} XP`, colour: RESOURCE_COLOURS.xp }]);
       this.levelUp();
-      this.hud.update(this.town);
     }
+    this.hud.update(this.town);  // a unit placed takes room among the people
     this.refresh();
     this.stopBuilding();
   }
@@ -336,12 +350,17 @@ export class TownEditor {
       sell: can.sell ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
+      train: this.trainChoice(placed),
       close: () => this.select(null),
     });
   }
 
   /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
   private detail(placed: PlacedItem): string {
+    const training = this.training.get(placed);
+    if (training) {
+      return `Training ${training.unit.name}… ${duration((training.done - performance.now()) / 1000)}`;
+    }
     const state = workState(placed, this.clock());
     switch (state?.status) {
       case "working":
@@ -501,6 +520,68 @@ export class TownEditor {
     void this.view.redraw(out.unit);
     this.select(building);
     this.refresh();
+  }
+
+  /** What the card offers a building that trains a unit (its own, of the player's people): Train, with the price. */
+  private trainChoice(building: PlacedItem): NonNullable<Parameters<ActionBar["show"]>[0]["train"]> | null {
+    const unit = this.items.get(building.item.trains);
+    if (!unit || !unit.isUnit || !choices(this.town, building).move) {
+      return null;
+    }
+    const price = trainingPrice(this.town, unit);
+    const label = `${price.amount} ${price.resource}${price.food ? ` + ${price.food} food` : ""}`;
+    return {
+      unit: unit.name,
+      picture: this.thumbnail(unit),
+      price: label,
+      run: () => this.train(building, unit, false),
+      cash: unit.cashCost > 0 ? { price: String(unit.cashCost), run: () => this.train(building, unit, true) } : null,
+    };
+  }
+
+  /** Train a unit: paid now, out beside the building in 3 seconds, one at a time. */
+  private train(building: PlacedItem, unit: ItemInfo, withCash: boolean): void {
+    if (this.training.has(building)) {
+      this.say(`${building.item.name} is training already.`);
+      return;
+    }
+    const why = cantTrain(this.town, unit, this.items, withCash);
+    if (why) {
+      this.say(why);
+      return;
+    }
+    const price = payForTraining(this.town, unit, withCash);
+    this.training.set(building, { unit, done: performance.now() + TRAINING_MS, price, withCash });
+    const lines = withCash ? [{ text: `−${unit.cashCost} cash`, colour: RESOURCE_COLOURS.cash }]
+      : [{ text: `−${price.amount} ${price.resource}`, colour: RESOURCE_COLOURS[price.resource] },
+        ...(price.food ? [{ text: `−${price.food} food`, colour: RESOURCE_COLOURS.food }] : [])];
+    if (unit.xp > 0) {
+      lines.push({ text: `+${unit.xp} XP`, colour: RESOURCE_COLOURS.xp });
+    }
+    this.view.rise(building, lines);
+    this.levelUp();
+    this.hud.update(this.town);
+    this.refresh();
+    setTimeout(() => this.refresh(), TRAINING_MS + 50);
+  }
+
+  private finishTraining(building: PlacedItem): void {
+    const training = this.training.get(building)!;
+    this.training.delete(building);
+    if (!this.town.items.includes(building)) {
+      return;  // sold or stored meanwhile: the Flash client loses it too
+    }
+    const done = trained(this.town, building, training.unit, training.price, training.withCash);
+    if (!done) {
+      this.say(`No room around ${building.item.name} for ${training.unit.name}.`);
+      return;
+    }
+    this.send([done.command]);
+    void this.view.redraw(done.placed);
+    this.hud.update(this.town);
+    if (this.selected === building) {
+      this.select(building);
+    }
   }
 
   /** Before a building is sold or stored, everybody inside comes out, as in the Flash client. */
