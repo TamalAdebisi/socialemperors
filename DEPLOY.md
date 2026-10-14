@@ -461,6 +461,91 @@ python tools/copy_database.py "<the live SE_DATABASE_URL>" backup-2026-10-14.db
 
 It works the other way too, into an empty schema: see the top of the script.
 
+## Part 7: Signing in with Discord and Google
+
+Players can sign in (and sign up) with their Discord or Google account, as
+well as with a username and password. Supabase does the talking to Discord
+and Google (`sign_in.py` explains how), so the game server never sees anyone's
+Discord or Google password. The buttons only show once a way in is switched
+on in Supabase, so this part can be done one step at a time, and staging
+first.
+
+Two addresses come up below:
+
+| | |
+| --- | --- |
+| Supabase's **callback**, where Discord and Google send players back to Supabase | `https://mosoygwxatxkhndasqfp.supabase.co/auth/v1/callback` |
+| Our **callback**, where Supabase sends them back to the game | `https://socialemperors.me/auth/callback` (staging: `https://game-server-staging-production.up.railway.app/auth/callback`) |
+
+### 7.1 Tell Supabase where players may come back to
+
+Supabase only sends players back to addresses on its list, so nobody can use
+your project to send them to a site of their own.
+
+1. Supabase → **Authentication** → **URL Configuration**.
+2. **Site URL**: `https://socialemperors.me` → **Save**.
+3. **Redirect URLs** → **Add URL**, once for each:
+   * `https://socialemperors.me/auth/callback`
+   * `https://game-server-staging-production.up.railway.app/auth/callback`
+   * `http://127.0.0.1:5050/auth/callback` (for playing on your own computer)
+4. **Authentication** → **Sign In / Providers** → **Email**: switch it **off**.
+   The game doesn't use Supabase's email sign-in, and nothing should be on
+   that isn't used.
+
+### 7.2 Discord
+
+1. <https://discord.com/developers/applications> → **New Application** →
+   name it `Social Empires` → **Create**. On **General Information** you can
+   add the logo: players see it on Discord's "Authorize" screen.
+2. **OAuth2** (left) → **Redirects** → **Add Redirect** → paste Supabase's
+   callback (above) → **Save Changes**.
+3. Still on **OAuth2**: copy the **Client ID**, then **Reset Secret** and
+   copy the **Client Secret**. Discord shows the secret once.
+4. Supabase → **Authentication** → **Sign In / Providers** → **Discord** →
+   switch it on, paste the Client ID and the Client Secret → **Save**.
+
+### 7.3 Google
+
+1. <https://console.cloud.google.com> → the project picker (top left) →
+   **New Project** → `Social Empires` → **Create**, and select it.
+2. Open the **Google Auth Platform** (<https://console.cloud.google.com/auth/overview>)
+   → **Get started**:
+   * **App name** `Social Empires`, your **support email**.
+   * **Audience**: **External**.
+   * **Contact information**: your email. Agree, **Create**.
+3. **Data Access** → **Add or remove scopes**: tick `openid`,
+   `.../auth/userinfo.email` and `.../auth/userinfo.profile` → **Update** →
+   **Save**. Only these three: anything more makes Google review the app.
+4. **Clients** → **Create client** → **Web application**:
+   * **Authorized JavaScript origins**: `https://socialemperors.me` and
+     `https://game-server-staging-production.up.railway.app`.
+   * **Authorized redirect URIs**: Supabase's callback (above).
+   * **Create**, and copy the **Client ID** and **Client secret**.
+5. **Audience** → **Publish app** → **Confirm**. Until then only test users
+   you list there can sign in.
+6. Supabase → **Authentication** → **Sign In / Providers** → **Google** →
+   switch it on, paste the Client ID and the Client Secret → **Save**.
+
+Google's screen names `mosoygwxatxkhndasqfp.supabase.co` as the site asking.
+That's Supabase's address for the project; a custom domain (a paid Supabase
+add-on) would show `socialemperors.me` instead. Adding the logo under
+**Branding** (Google checks it within a few days) also helps players trust it.
+
+### 7.4 The game servers
+
+Railway → each service (**game-server-staging** first, then **game-server**)
+→ **Variables** → **Raw Editor**, add, and **Update Variables**:
+
+```
+SE_SUPABASE_URL=https://mosoygwxatxkhndasqfp.supabase.co
+SE_SUPABASE_KEY=sb_publishable_5tbgh9ASDSFDhGR-_uUoEw_11fYQaCq
+```
+
+Neither is a secret: the key is the project's *publishable* one, made to be
+seen, which only lets the server start a sign-in. After the update, the start
+page shows **Continue with Discord** and **Continue with Google**. Try both on
+staging: sign up as someone new, then link the other one under **Settings**.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -476,6 +561,11 @@ It works the other way too, into an empty schema: see the top of the script.
 | Logs: `Tenant or user not found` | The name before the `:` in `SE_DATABASE_URL` is wrong | It's `se_game.` (or `se_staging.`) then the project ID: `se_game.mosoygwxatxkhndasqfp` |
 | Logs: `transaction pooler (port 6543)` | The *Transaction pooler* string was copied | Use the *Session pooler* one, port 5432 (6.4) |
 | Logs: `permission denied for schema` | The two servers' settings are swapped | Staging is `se_staging` with `SE_DATABASE_SCHEMA=staging`; live is `se_game` and no schema setting |
+| No Discord or Google buttons | Not switched on in Supabase, or `SE_SUPABASE_URL`/`SE_SUPABASE_KEY` missing | 7.2-7.4. The server asks Supabase every 5 minutes |
+| After Discord or Google, the player lands on Supabase's Site URL instead of the game | Our callback isn't on Supabase's Redirect URLs | 7.1, step 3: the address exactly, with `/auth/callback` |
+| Discord says `Invalid OAuth2 redirect_uri` | Supabase's callback isn't on the Discord app | 7.2, step 2 |
+| Google says `redirect_uri_mismatch` | Supabase's callback isn't on the Google client | 7.3, step 4 |
+| Logs: `Signing in with Discord failed: Supabase answered ...` | The code was used twice, or was more than 5 minutes old | The player tries again; if it keeps happening, send me the line |
 
 ---
 
@@ -523,3 +613,4 @@ Sources: [Railway pricing](https://railway.com/pricing),
 | `.github/workflows/export-art-r2.yml` | The "Export art to R2" button: sprite sheets for the new client |
 | `config_env.py` | Every setting the server reads, with explanations |
 | `tools/copy_database.py` | Copies the whole database between Supabase and a SQLite file: backups (Part 6) |
+| `sign_in.py` | Signing in with Discord and Google, through Supabase (Part 7) |

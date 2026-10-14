@@ -71,6 +71,19 @@ SCHEMA = [
         data TEXT NOT NULL,
         updated_at INTEGER NOT NULL
     )""",
+    # Signing in with Discord or Google (sign_in.py): which account there is
+    # whose here. account is the player's id at the provider, which never
+    # changes; label is what the Settings page shows (their name or email
+    # there). One of each provider per player.
+    """CREATE TABLE IF NOT EXISTS sign_ins (
+        provider TEXT NOT NULL,
+        account TEXT NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        label TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY (provider, account),
+        UNIQUE (user_id, provider)
+    )""",
 ]
 
 # The same tables in Postgres. Usernames are unique in any case, as with
@@ -107,6 +120,15 @@ POSTGRES_SCHEMA = [
         data TEXT NOT NULL,
         updated_at BIGINT NOT NULL
     )""",
+    """CREATE TABLE IF NOT EXISTS sign_ins (
+        provider TEXT NOT NULL,
+        account TEXT NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        label TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        PRIMARY KEY (provider, account),
+        UNIQUE (user_id, provider)
+    )""",
 ]
 
 # Every table and its columns, in an order where an empire's owner is always
@@ -116,6 +138,7 @@ TABLES = {
     "villages": ("pid", "owner_id", "data", "updated_at"),
     "problems": ("kind", "name", "detail", "count", "first_seen", "last_seen", "last_player", "example"),
     "tournaments": ("id", "data", "updated_at"),
+    "sign_ins": ("provider", "account", "user_id", "label", "created_at"),
 }
 
 UPSERT_VILLAGE = """INSERT INTO villages (pid, owner_id, data, updated_at)
@@ -203,9 +226,27 @@ class BaseStorage:
         self._query("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
 
     def delete_user(self, user_id: int):
-        """The account and every village it owns."""
+        """The account, every village it owns and its ways to sign in."""
         self._query("DELETE FROM villages WHERE owner_id = ?", (user_id,))
+        self._query("DELETE FROM sign_ins WHERE user_id = ?", (user_id,))
         self._query("DELETE FROM users WHERE id = ?", (user_id,))
+
+    # Signing in with Discord or Google
+    def find_sign_in(self, provider: str, account: str):
+        """The account id this Discord or Google account signs in to, or None."""
+        rows = self._query("SELECT user_id FROM sign_ins WHERE provider = ? AND account = ?", (provider, account))
+        return rows[0]["user_id"] if rows else None
+
+    def sign_ins_of(self, user_id: int) -> list:
+        return self._query("SELECT provider, label, created_at FROM sign_ins WHERE user_id = ? ORDER BY provider",
+                           (user_id,))
+
+    def add_sign_in(self, user_id: int, provider: str, account: str, label: str):
+        self._query("INSERT INTO sign_ins (provider, account, user_id, label, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (provider, account, user_id, label, int(time.time())))
+
+    def remove_sign_in(self, user_id: int, provider: str):
+        self._query("DELETE FROM sign_ins WHERE user_id = ? AND provider = ?", (user_id, provider))
 
     # Villages
     def load_all_villages(self) -> list:

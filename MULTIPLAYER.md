@@ -7,7 +7,7 @@ people can play on at once, safely.
 
 | Before (single player) | Now (public) |
 | --- | --- |
-| No accounts: the start page listed every save and anyone could pick any | Username + password accounts; you only see and play your own empires |
+| No accounts: the start page listed every save and anyone could pick any | Accounts with a username and password, or Discord or Google (`sign_in.py`); you only see and play your own empires |
 | The game's `user_key` was always `123456789` and the server trusted whatever `USERID` a request claimed | Each game page gets a **signed token**; every game request must carry a token matching its `USERID` |
 | Session secret was the literal string `SECRET_KEY` | Random secret, generated once and kept (or set `SE_SECRET_KEY`) |
 | Address hard-coded to `http://127.0.0.1:5050` | Set `SE_PUBLIC_URL` to your domain |
@@ -34,6 +34,7 @@ SE_SECRET_KEY=<long random string>           # optional; generated if unset
 SE_CLIENT_IP_HEADER=X-Real-IP                # header with the visitor's IP (Railway)
 SE_INVITE_CODE=letmein                       # optional closed beta
 SE_DATABASE_URL=postgresql://...             # optional: Postgres (Supabase) instead of SQLite
+SE_SUPABASE_URL=https://<project>.supabase.co  # optional, with SE_SUPABASE_KEY: Discord and Google sign-in
 ```
 
 **Hosting it:** see [DEPLOY.md](DEPLOY.md) for a step-by-step guide (Railway

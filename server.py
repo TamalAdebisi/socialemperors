@@ -23,12 +23,12 @@ from get_game_config import get_game_config, patch_game_config
 print(" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
 from sessions import (LOCK, load_saved_villages, start_background_saver, save_info, new_village,
-                      fb_friends_str, owner_of, villages_of, share_tutorial, save_session,
-                      session as village_of)
+                      fb_friends_str, owner_of, villages_of, share_tutorial, save_session, delete_village,
+                      storage, session as village_of)
 load_saved_villages()
 
 print(" [+] Loading server...")
-from flask import Flask, Response, render_template, send_from_directory, request, redirect, abort
+from flask import Flask, Response, render_template, send_from_directory, request, redirect, abort, make_response
 from flask import session as web_session
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import safe_join
@@ -39,6 +39,7 @@ import bank
 import comeback_bonus
 import csrf
 import radar
+import sign_in
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
 from command import command
 from constants import Constant
@@ -138,13 +139,18 @@ def client_ip():
 def render_home(error=None, tab="login"):
     user = current_user()
     if user is None:
-        return render_template("auth.html", error=error, tab=tab, version=version_name,
+        return render_template("auth.html", error=error, tab=tab, providers=sign_in_buttons(),
                                allow_registration=config_env.ALLOW_REGISTRATION,
                                invite_required=bool(config_env.INVITE_CODE))
-    return render_template("login.html", user=user, saves_info=villages_of(user["id"]),
-                           version=version_name, error=error,
-                           can_create=len(villages_of(user["id"])) < config_env.MAX_VILLAGES_PER_USER,
+    empires = villages_of(user["id"])
+    return render_template("home.html", user=user, saves_info=empires, error=error,
+                           can_create=len(empires) < config_env.MAX_VILLAGES_PER_USER,
                            max_villages=config_env.MAX_VILLAGES_PER_USER)
+
+
+def sign_in_buttons() -> list:
+    """The Discord and Google buttons to show, as (provider, name): those switched on in Supabase."""
+    return [(provider, sign_in.PROVIDERS[provider]) for provider in sign_in.available()]
 
 
 ##########
@@ -199,19 +205,167 @@ def logout():
     return redirect("/")
 
 
-@app.route("/account", methods=["GET", "POST"])
-def account():
-    """The player's own account page: change the password."""
+## SIGNING IN WITH DISCORD OR GOOGLE (sign_in.py)
+
+SIGN_IN_TIME = 600  # seconds to get through Discord or Google and back
+
+
+@app.route("/auth/<provider>", methods=["POST"])
+def start_sign_in(provider):
+    """The Discord and Google buttons: on the start page to sign in (or up),
+    on the Settings page to link one to the account."""
+    csrf.check()
+    user = current_user()
+    linking = request.form.get("link") == "1"
+    if provider not in sign_in.available() or (linking and user is None):
+        return redirect("/")
+    url, verifier = sign_in.start(provider, f"{config_env.PUBLIC_URL}/auth/callback")
+    web_session["sign_in"] = {"provider": provider, "verifier": verifier, "started": int(time.time()),
+                              "link": user["id"] if linking else None}
+    return redirect(url)
+
+
+@app.route("/auth/callback")
+def finish_sign_in():
+    """Back from Discord or Google, through Supabase."""
+    flow = web_session.pop("sign_in", None)
+    if not flow or time.time() - flow.get("started", 0) > SIGN_IN_TIME:
+        return render_home(error="That sign-in took too long, or began in another browser. Please try again."), 400
+    provider = flow["provider"]
+    name = sign_in.PROVIDERS[provider]
+    user = current_user()
+    if flow["link"] is not None and (user is None or user["id"] != flow["link"]):
+        return redirect("/")
+
+    def failed(message):
+        return render_settings(user, error=message, status=400) if flow["link"] else (render_home(error=message), 400)
+
+    if request.args.get("error") or not request.args.get("code"):
+        return failed(f"Signing in with {name} was cancelled.")
+    try:
+        who = sign_in.finish(provider, request.args["code"], flow["verifier"])
+    except sign_in.SignInFailed as e:
+        print(f"[ACCOUNT] Signing in with {name} failed: {e}")
+        return failed(f"Signing in with {name} didn't work. Please try again.")
+
+    if flow["link"]:
+        try:
+            accounts.link(user, provider, who["account"], who["label"])
+        except accounts.AccountError as e:
+            return failed(str(e))
+        print(f"[ACCOUNT] {user['username']} linked {name}")
+        return redirect(f"/settings?done=linked-{provider}")
+
+    known = accounts.signed_in_with(provider, who["account"])
+    if known is not None:
+        accounts.sign_in(web_session, known)
+        return redirect("/")
+    # New here, or here already without having linked it: the welcome page asks which.
+    web_session["new_player"] = dict(who, provider=provider, started=int(time.time()))
+    return redirect("/welcome")
+
+
+@app.route("/welcome", methods=["GET", "POST"])
+def welcome():
+    """Back from Discord or Google the first time: a name for a new account,
+    or the username and password of one already here, to link it to."""
+    pending = web_session.get("new_player")
+    if not pending or time.time() - pending.get("started", 0) > SIGN_IN_TIME:
+        web_session.pop("new_player", None)
+        return redirect("/")
+    provider = pending["provider"]
+    name = sign_in.PROVIDERS[provider]
+
+    def page(error=None, status=200, tab="new"):
+        return render_template("welcome.html", pending=pending, provider=provider, provider_name=name,
+                               error=error, tab=tab, allow_registration=config_env.ALLOW_REGISTRATION,
+                               invite_required=bool(config_env.INVITE_CODE)), status
+
+    if request.method == "GET":
+        return page()
+    csrf.check()
+    ip = client_ip()
+    if request.form.get("existing") == "1":
+        if failed_logins.full(ip):
+            return page("Too many failed attempts. Try again in a few minutes.", 429, "existing")
+        user = accounts.authenticate(request.form.get("username", ""), request.form.get("password", ""))
+        if user is None:
+            failed_logins.add(ip)
+            return page("Wrong username or password.", 401, "existing")
+        try:
+            accounts.link(user, provider, pending["account"], pending["label"])
+        except accounts.AccountError as e:
+            return page(str(e), 400, "existing")
+        accounts.sign_in(web_session, user)
+        print(f"[ACCOUNT] {user['username']} linked {name}")
+        return redirect("/")
+    if signups.full(ip):
+        return page("Too many new accounts from here. Try again in an hour.", 429)
+    username = request.form.get("username", "").strip()
+    try:
+        user_id = accounts.register_with(provider, pending["account"], pending["label"], username,
+                                         request.form.get("invite", ""))
+    except accounts.AccountError as e:
+        return page(str(e), 400)
+    signups.add(ip)
+    accounts.sign_in(web_session, {"id": user_id, "username": username})
+    print(f"[ACCOUNT] Registered {username} (id {user_id}) with {name}")
+    return redirect("/")
+
+
+## SETTINGS: the player's empires, ways to sign in and password
+
+EMPIRE_NAME_LENGTH = 24
+
+DONE = {"password": "Your password is saved. Any other browser signed in to your account is now signed out.",
+        "renamed": "Your empire has its new name.",
+        "deleted": "The empire is deleted."}
+for _provider, _name in sign_in.PROVIDERS.items():
+    DONE[f"linked-{_provider}"] = f"{_name} is linked: you can sign in with it now."
+    DONE[f"unlinked-{_provider}"] = f"{_name} is unlinked."
+
+
+def render_settings(user, error=None, status=200):
+    linked = {s["provider"]: s for s in storage().sign_ins_of(user["id"])}
+    return render_template("settings.html", user=user, empires=villages_of(user["id"]), linked=linked,
+                           providers=sign_in.PROVIDERS, available=sign_in.available(),
+                           has_password=accounts.has_password(user["id"]), max_name=EMPIRE_NAME_LENGTH,
+                           done=DONE.get(request.args.get("done", "")), error=error), status
+
+
+def settings_user():
+    """The signed-in account, for the Settings forms (which carry a CSRF token)."""
+    user = current_user()
+    if user is None:
+        abort(redirect("/"))
+    csrf.check()
+    return user
+
+
+def your_empire(user, USERID):
+    if owner_of(USERID) != user["id"]:
+        abort(make_response(*render_settings(user, error="That empire isn't yours.", status=403)))
+
+
+@app.route("/settings")
+def settings():
     user = current_user()
     if user is None:
         return redirect("/")
-    if request.method == "GET":
-        return render_template("account.html", user=user, version=version_name)
-    csrf.check()
+    return render_settings(user)
+
+
+@app.route("/account")
+def old_account_page():
+    return redirect("/settings")
+
+
+@app.route("/settings/password", methods=["POST"])
+def change_password():
+    user = settings_user()
     ip = client_ip()
     if failed_logins.full(ip):
-        return render_template("account.html", user=user, version=version_name,
-                               error="Too many failed attempts. Try again in a few minutes."), 429
+        return render_settings(user, error="Too many failed attempts. Try again in a few minutes.", status=429)
     new = request.form.get("new_password", "")
     try:
         if new != request.form.get("repeat_password", ""):
@@ -220,10 +374,52 @@ def account():
     except accounts.AccountError as e:
         if isinstance(e, accounts.WrongPassword):
             failed_logins.add(ip)
-        return render_template("account.html", user=user, version=version_name, error=str(e)), 400
+        return render_settings(user, error=str(e), status=400)
     accounts.sign_in(web_session, user)  # this browser stays in; every other one is out
     print(f"[ACCOUNT] {user['username']} changed their password")
-    return render_template("account.html", user=user, version=version_name, changed=True)
+    return redirect("/settings?done=password")
+
+
+@app.route("/settings/unlink/<provider>", methods=["POST"])
+def unlink(provider):
+    user = settings_user()
+    if provider not in sign_in.PROVIDERS:
+        abort(404)
+    try:
+        accounts.unlink(user, provider)
+    except accounts.AccountError as e:
+        return render_settings(user, error=str(e), status=400)
+    print(f"[ACCOUNT] {user['username']} unlinked {sign_in.PROVIDERS[provider]}")
+    return redirect(f"/settings?done=unlinked-{provider}")
+
+
+@app.route("/settings/empire/<USERID>/rename", methods=["POST"])
+def rename_empire(USERID):
+    user = settings_user()
+    your_empire(user, USERID)
+    name = " ".join(request.form.get("name", "").split())
+    if not 1 <= len(name) <= EMPIRE_NAME_LENGTH or not name.isprintable():
+        return render_settings(user, error=f"Empire names are 1-{EMPIRE_NAME_LENGTH} characters.", status=400)
+    with LOCK:
+        info = village_of(USERID)["playerInfo"]
+        info["map_names"][int(info.get("default_map") or 0)] = name  # the town the home page shows
+        save_session(USERID)
+    return redirect("/settings?done=renamed")
+
+
+@app.route("/settings/empire/<USERID>/delete", methods=["POST"])
+def delete_empire(USERID):
+    user = settings_user()
+    your_empire(user, USERID)
+    with LOCK:
+        name = save_info(USERID)["name"]
+    if request.form.get("confirm", "").strip().lower() != name.lower():
+        return render_settings(user, error=f"To delete {name}, type its name in the box first.", status=400)
+    delete_village(USERID)  # never holding LOCK (sessions.py)
+    if web_session.get("USERID") == USERID:
+        web_session.pop("USERID")
+    print(f"[ACCOUNT] {user['username']} deleted their empire {name} ({USERID})")
+    return redirect("/settings?done=deleted")
 
 
 @app.route("/play", methods=["POST"])

@@ -83,11 +83,6 @@ body.game-page {
     background: rgb(255, 245, 131);
 }
 
-#gamebar nav img {
-    height: 16px;
-}
-
-#gamebar .version,
 #gamebar .fps {
     color: #2f4220;
     font-size: 11px;
@@ -95,7 +90,6 @@ body.game-page {
 
 /* Small screens: keep the buttons, drop the extras. */
 @media (max-width: 720px) {
-    #gamebar .version,
     #gamebar .fps,
     #gamebar nav .label {
         display: none;

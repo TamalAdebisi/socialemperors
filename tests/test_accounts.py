@@ -62,8 +62,12 @@ class AccountsTest(unittest.TestCase):
         return web.post(f"{server.DYNAMIC}/get_player_info.php", data={"USERID": pid, "user_key": key}).status_code
 
     def change(self, current, new, repeat=None):
-        return send_form(self.web, "/account", password=current, new_password=new,
-                         repeat_password=new if repeat is None else repeat)
+        """The password form on the Settings page; the page it ends on."""
+        page = self.web.get("/settings").get_data(as_text=True)
+        token = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
+        return self.web.post("/settings/password", follow_redirects=True,
+                             data={"csrf": token, "password": current, "new_password": new,
+                                   "repeat_password": new if repeat is None else repeat})
 
     # Changing the password
 
@@ -74,7 +78,7 @@ class AccountsTest(unittest.TestCase):
 
         reply = self.change(self.password, "a-new-password")
         self.assertEqual(reply.status_code, 200)
-        self.assertIn("Your password is changed", reply.get_data(as_text=True))
+        self.assertIn("Your password is saved", reply.get_data(as_text=True))
         self.assertIn(SIGNED_IN, self.home(self.web))   # this browser stays in
         self.assertIn(SIGNED_OUT, self.home(other))     # the other one is out
         self.assertEqual(self.plays(other, pid, key), 403)  # and so is its game
@@ -95,9 +99,10 @@ class AccountsTest(unittest.TestCase):
             self.assertIn(why, html.unescape(reply.get_data(as_text=True)))
         self.assertIsNotNone(accounts.authenticate(self.name, self.password))
 
-    def test_the_account_page_needs_signing_in(self):
-        self.assertEqual(server.app.test_client().get("/account").status_code, 302)
-        self.assertIn(self.name, self.web.get("/account").get_data(as_text=True))
+    def test_the_settings_page_needs_signing_in(self):
+        self.assertEqual(server.app.test_client().get("/settings").status_code, 302)
+        self.assertIn(self.name, self.web.get("/settings").get_data(as_text=True))
+        self.assertEqual(self.web.get("/account").headers["Location"], "/settings")  # its old address
 
     def test_an_admin_reset_signs_everyone_out(self):
         pid, key = self.game(self.web)
@@ -120,8 +125,12 @@ class AccountsTest(unittest.TestCase):
                              ("/register", {"username": self.name + "x", "password": self.password}),
                              ("/new", {"PLAYER": "ruffle"}),
                              ("/play", {"USERID": "anything"}),
-                             ("/account", {"password": self.password, "new_password": "a-new-password",
-                                           "repeat_password": "a-new-password"}),
+                             ("/settings/password", {"password": self.password, "new_password": "a-new-password",
+                                                     "repeat_password": "a-new-password"}),
+                             ("/settings/empire/anything/rename", {"name": "Taken over"}),
+                             ("/settings/empire/anything/delete", {"confirm": "My Empire"}),
+                             ("/settings/unlink/discord", {}),
+                             ("/auth/discord", {}),
                              ("/logout", {})):
             self.assertEqual(self.web.post(path, data=fields).status_code, 400, path)
             reply = self.web.post(path, data=dict(fields, csrf="made-up"))
@@ -155,7 +164,7 @@ class AccountsTest(unittest.TestCase):
         reply = send_form(web, "/login", username=self.name, password=self.password)
         self.assertEqual(reply.status_code, 429)
 
-    def test_guessing_on_the_account_page_too(self):
+    def test_guessing_on_the_settings_page_too(self):
         """A browser left signed in can't be used to guess the password."""
         for _ in range(10):
             self.assertEqual(self.change("wrong-guess", "a-new-password").status_code, 400)
