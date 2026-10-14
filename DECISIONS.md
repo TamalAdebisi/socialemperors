@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, launch preparation
+
+- **Arthur's lessons are offered, not forced:** a new player in the new
+  client is asked once a visit, until answered, whether to take Arthur's
+  lessons in the classic game or skip them. The lessons are the original
+  game's and are built around a fresh town, so the question comes first
+  thing. Skipping sends the same report the Flash client sends when they
+  end, which also puts the player on other players' world maps.
+- **The live server's move to Supabase is yours to start,** because you
+  sign up first to become the admin, and today's players would meet an
+  empty game. DEPLOY.md 6.4 has the steps, with the new
+  `SE_COPY_SQLITE=0`.
+- **AcidCaos's village is gone,** as agreed. The tests that used it now use
+  Arthur's first town, which players can also visit and help now.
+
 ## 14 October 2026: Beta 1, sound and speed
 
 - **The music and sound buttons are in the top bar,** the Flash client's

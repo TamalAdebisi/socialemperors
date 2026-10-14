@@ -25,7 +25,7 @@ from get_game_config import get_game_config
 
 LEVEL = 60          # far from the other tests' empires, so the rivals here are this test's
 WEEK = 7 * 24 * 3600
-BUILT_IN_NEIGHBOUR = "1111"  # villages/AcidCaos.json
+BUILT_IN_NEIGHBOUR = "100000030"  # villages/Arthur30.json: Arthur, a village that ships with the game
 
 
 def new_account():
@@ -309,7 +309,7 @@ class WorldMapPagesTest(unittest.TestCase):
         self.assertEqual(forged.status_code, 403)
 
     def test_a_profile(self):
-        do_command(self.pid, "end_attack", [json.dumps({"attacker": {"map": 0}, "victim": {"user_id": "1111"},
+        do_command(self.pid, "end_attack", [json.dumps({"attacker": {"map": 0}, "victim": {"user_id": BUILT_IN_NEIGHBOUR},
                                                         "win": 1, "honor": 3})])
         asked = {"USERID": BUILT_IN_NEIGHBOUR, "user_key": self.key}  # the one looked at, the viewer's key
         reply = self.web.get(f"{self.dynamic}/get_public_player_info.php", query_string=asked)

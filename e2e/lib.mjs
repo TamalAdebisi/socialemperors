@@ -2,14 +2,14 @@
 // the new client, and the ways to tap, read and check it.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 
 /** A new account with a new town, open in the new client. Its own browser window, as its own visitor. */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false } = {}) {
   const context = await browser.newContext({
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
@@ -23,12 +23,25 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
   await player.open();
+  // A new player is asked about Arthur's lessons first; most tests skip them, as a player may.
+  if (!lessons) {
+    const sent = page.waitForResponse((r) => r.url().endsWith("/command.php"));
+    await player.press("Skip them");
+    await sent;
+  }
   return player;
 }
 
 // The live bucket only lets the game's own site read its art, so a page on
 // this computer can't. When the test server uses it, the test windows fetch
 // the art themselves instead, and keep a copy for the next run.
+// What each kind of file is, for the browser: Ruffle (the classic game) needs its
+// script and WebAssembly named as such.
+const TYPES = {
+  ".json": "application/json", ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg",
+  ".js": "text/javascript", ".wasm": "application/wasm", ".swf": "application/x-shockwave-flash",
+  ".mp3": "audio/mpeg", ".xml": "text/xml",
+};
 const ART_CACHE = join(dirname(dirname(fileURLToPath(import.meta.url))), ".tools", "art-cache");
 
 async function serveArt(context) {
@@ -48,7 +61,7 @@ async function serveArt(context) {
         writeFileSync(file, body);
       }
     }
-    const type = file.endsWith(".json") ? "application/json" : file.endsWith(".webp") ? "image/webp" : "application/octet-stream";
+    const type = TYPES[extname(file)] ?? "application/octet-stream";
     await route.fulfill({ status, body: body ?? "", headers: { "content-type": type, "access-control-allow-origin": "*" } });
   });
 }

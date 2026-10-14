@@ -16,6 +16,7 @@ import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
+import { lessonsNotStarted } from "./rules/lessons.ts";
 import { Doings, readGoals, type Need } from "./rules/goals.ts";
 import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
@@ -141,7 +142,14 @@ async function start(): Promise<void> {
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.
-    afterDrawing = () => editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+    afterDrawing = () => {
+      // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
+      if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
+        editor.offerLessons(settings.classicUrl);
+      } else {
+        editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+      }
+    };
     const [cashForGold, goldForCash] = [Number(config.globals?.EXCHANGE_CASH) || 5, Number(config.globals?.EXCHANGE_GOLD) || 2500];
     const bank = new BankWindow({
       empire: settings.userId,

@@ -836,6 +836,27 @@ things, 69 pictures) opens in under 3 seconds on our test machine once its
 art is cached, and in about 10 the first time, mostly downloading the
 pictures; the bucket keeps them a day in the browser's cache.
 
+### Arthur's lessons
+
+Built with Beta 1's launch preparation. The Flash client gives Arthur's
+lessons (its tutorial: the town hall, a villager, a tree, a farm, a house,
+a knight and a first battle) in a player's first town while
+`playerInfo.completed_tutorial` is 0, and reports each lesson reached
+(`complete_tutorial`, the lesson; the last is 15). They're built around a
+new town's layout, so they're best taken before playing on.
+
+The new client has no lessons of its own yet (they come with "The
+switch"). A player who hasn't started them is asked at the bottom: **Take
+the lessons** opens the classic game on the same empire, where they start;
+**Skip them** sends the Flash client's report of the last lesson, as if
+they were done. It asks on each visit until answered. Skipping matters
+beyond the lessons: the world map only picks rivals who are past them.
+Code: `rules/lessons.ts` (with tests), `TownEditor.offerLessons`.
+
+The run-through (`e2e/tests/classic.mjs`) plays a new empire a little in
+the new client, takes the lessons, and checks that the classic game opens
+it and draws the farm the new client built; another player skips them.
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the
