@@ -167,7 +167,7 @@ actually use; the bug radar on the admin page shows what that is.
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
-| 3. Run your town | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
+| 3. Run your town (started: move, turn, store, sell) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
 | 6. Switch over | The new client becomes the default; the Flash one stays as "classic" for a while | Small |
@@ -243,9 +243,9 @@ construction (in `assets/swf/120608_dynamic.swf`).
 `/client.html` is the new client's page, offered on the home page as "The
 new game (preview)" next to Ruffle and Flash. It opens the same empire with
 the same signed game token, asks for the game config and the town exactly as
-the Flash client does (`get_game_config.php`, `get_player_info.php`), draws
-the town and changes nothing. `/client.html?visit=<player id>` shows another
-player's town, as visiting a neighbour does.
+the Flash client does (`get_game_config.php`, `get_player_info.php`) and
+draws the town (step 3 adds changing it). `/client.html?visit=<player id>`
+shows another player's town, as visiting a neighbour does, to look at only.
 
 - The ground and every building and unit, in the game's drawing order, each
   where the Flash client puts it: side by side with the Flash client, a new
@@ -292,6 +292,55 @@ what the Flash client adds by itself (lost objects, wandering trolls...),
 effects and sound. A big town (400 items) took 16 seconds to load on our
 test machine, a busy server with no graphics card; staging will show what
 players get.
+
+### Step 3: run your town
+
+Built so far: **move, turn, store and sell.** Tap (or click) a building to
+select it; a bar at the bottom shows its name and what can be done with it.
+Selling asks first and says what it gives back. While moving, the footprint
+under the pointer shows green where it fits and red where it doesn't; tap
+the new place, or Cancel (Escape). Tapping picks the picture actually under
+the finger, not its box, so a tree in front of a house doesn't steal the tap.
+
+**How the changes reach the save:** exactly as the Flash client sends them,
+so both clients can be used on the same empire. Actions wait in a queue and
+go to `command.php` in a batch every 3 seconds, one batch at a time; a batch
+that fails is tried again, up to 3 times, then the player is told to reload.
+What's left when the page closes is sent on the way out. Our copy of the
+town changes at once, as in the Flash client, so the game doesn't wait for
+the server.
+
+**The rules**, read from the Flash client (our notes, our words):
+
+- A building covers width x height tiles back from the tile the save names,
+  whichever way it faces (turning doesn't swap them). A unit takes its own
+  tile.
+- Something fits where all its tiles are on bought land (the save's
+  expansions) and none is taken by a building or a standing unit.
+- Turning goes round the item's ways of facing (its art's frames).
+- Selling gives back a twentieth of the price, in what it was bought with,
+  rounded down; nothing for things bought with cash.
+- What the info panel offers: most buildings can be moved, turned, stored
+  and sold. The town hall can only be moved and turned. Trees, rocks, mines,
+  treasures, scenery and boss statues can only be sold (the bulldozer).
+  Units have no buttons. What stands on the wild ring around the island
+  isn't the player's.
+- The commands: `move` (old place, item, new place, facing, town),
+  `orient` (place, new facing, town), `sell` (place, item, town) and
+  `store_item` (place, town, item).
+
+**Tested:** the rules and the command queue have unit tests (`npm test`).
+A browser test edits a new town (turns a tower, moves a house, sells a tree
+and a house, stores a tower) and checks the server's save afterwards: every
+change is there, with the refund, and reloading shows the town as it was
+left. The client is now 272 KB (82 KB compressed).
+
+**Not yet in step 3:** collecting from buildings and their timers, the shop
+and building, placing what's in storage, levels and experience, units
+walking, and buildings with units inside (the Flash client lets them out
+before moving or selling; for now the bar says to use the classic game).
+Moving on a phone places on the first tap, without the green/red preview a
+mouse gets.
 
 ### Making the art look better
 

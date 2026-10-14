@@ -38,9 +38,13 @@ export interface PlacedItem {
   ty: number;
   /** Buildings: which way it faces (the sprite's frame). Units: their direction. */
   orientation: number;
+  /** How many units are inside (a barracks' soldiers, a mill's workers). */
+  unitsInside: number;
 }
 
 export interface Town {
+  /** Which of the player's towns this is (the server's town number, 0 or 1). */
+  id: number;
   name: string;
   townName: string;
   level: number;
@@ -62,15 +66,16 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
   const map = info.map;
   const placed: PlacedItem[] = [];
   const unknown: number[] = [];
-  for (const [id, tx, ty, orientation] of map.items) {
+  for (const [id, tx, ty, orientation, , , units] of map.items) {
     const item = items.get(id);
     if (item === undefined) {
       unknown.push(id);
       continue;
     }
-    placed.push({ item, tx, ty, orientation: orientation ?? 0 });
+    placed.push({ item, tx, ty, orientation: orientation ?? 0, unitsInside: Array.isArray(units) ? units.length : 0 });
   }
   return {
+    id: map.id ?? 0,
     name: info.playerInfo.name,
     townName: info.playerInfo.map_names?.[map.id] ?? "",
     level: map.level,

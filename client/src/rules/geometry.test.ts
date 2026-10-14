@@ -12,12 +12,14 @@ import {
   skinColour,
   terrainItemId,
   tileAt,
+  tileUnder,
   unitFacing,
   unitPoint,
 } from "./geometry.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
-  return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false, ...fields };
+  return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false,
+    cost: 0, costType: "g", facings: 2, ...fields };
 }
 
 test("one tile along x is 54 px right and 27 down; along y, 54 left and 27 down", () => {
@@ -42,6 +44,16 @@ test("tileAt undoes buildingPoint", () => {
   for (const [tx, ty] of [[0, 0], [52, 52], [99, 3], [7, 81]]) {
     assert.deepEqual(tileAt(buildingPoint(tx, ty)), { x: tx, y: ty });
   }
+});
+
+test("tileUnder finds the tile a point is on: any point inside its diamond", () => {
+  const bottom = buildingPoint(52, 52);
+  // Just above the bottom corner, the middle, and near the top corner of tile 52, 52.
+  for (const dy of [1, 27, 53]) {
+    assert.deepEqual(tileUnder({ x: bottom.x, y: bottom.y - dy }), { x: 52, y: 52 });
+  }
+  // Just below its bottom corner is the next tile down.
+  assert.deepEqual(tileUnder({ x: bottom.x, y: bottom.y + 1 }), { x: 53, y: 53 });
 });
 
 test("expansions are numbered across then down, from 1; the first town opens the middle one", () => {
@@ -73,9 +85,9 @@ test("the ground's look and colour follow the island's skin", () => {
 });
 
 test("things further back are drawn first; farms under everything", () => {
-  const house = { item: item({ width: 2 }), tx: 52, ty: 52, orientation: 0 };
-  const behind = { item: item(), tx: 50, ty: 51, orientation: 0 };
-  const farm = { item: item({ subcategory: 122, width: 2 }), tx: 60, ty: 60, orientation: 0 };
+  const house = { item: item({ width: 2 }), tx: 52, ty: 52, orientation: 0, unitsInside: 0 };
+  const behind = { item: item(), tx: 50, ty: 51, orientation: 0, unitsInside: 0 };
+  const farm = { item: item({ subcategory: 122, width: 2 }), tx: 60, ty: 60, orientation: 0, unitsInside: 0 };
   assert.ok(depth(behind) < depth(house));
   assert.ok(depth(farm) < depth(behind));
 });
