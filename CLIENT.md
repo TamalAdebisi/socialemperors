@@ -167,7 +167,7 @@ actually use; the bug radar on the admin page shows what that is.
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
-| 3. Run your town (started: move, turn, store, sell) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
+| 3. Run your town (started: move, turn, store, sell, collect, levels) | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The server's tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
 | 6. Switch over | The new client becomes the default; the Flash one stays as "classic" for a while | Small |
@@ -295,8 +295,8 @@ players get.
 
 ### Step 3: run your town
 
-Built so far: **move, turn, store and sell.** Tap (or click) a building to
-select it; a bar at the bottom shows its name and what can be done with it.
+Built so far: **move, turn, store and sell**, and **collecting from
+buildings**, with levels. Tap (or click) a building to select it; a bar at the bottom shows its name and what can be done with it.
 Selling asks first and says what it gives back. While moving, the footprint
 under the pointer shows green where it fits and red where it doesn't; tap
 the new place, or Cancel (Escape). Tapping picks the picture actually under
@@ -329,18 +329,58 @@ the server.
   `orient` (place, new facing, town), `sell` (place, item, town) and
   `store_item` (place, town, item).
 
+**Collecting.** A building that's ready has a bubble over it in the colour
+of what it gives; tap it to collect, and the harvest and experience rise
+from it. Mills and mines whose workers wait for orders show "zz": tapping
+asks how long they should work, with what each choice gives. Selecting a
+producing building shows when it will be ready.
+
+**How production works**, read from the Flash client (our notes, our words):
+
+- Each round of work starts at the time the save keeps for the building
+  (`item[4]`, the server's clock); it's ready once its working time has
+  passed since then. The Flash client counts it up second by second; we
+  work it out from the clock, which comes to the same.
+- Three kinds of producing building:
+  - with workers (farms, ranches, troll mills and mines): they work while
+    units are inside, for the config's `activation` seconds, then again;
+  - with a working time (human mills, and gold, stone and lumber mines:
+    the config's `COLLECT_VARIABLE_IDS`): units inside, and the player picks
+    5 minutes, 1, 4 or 8 hours for half, once, twice or three times the
+    harvest (`activate` with 1 to 4). After each collect they go back to
+    sleep (`activate` with 0) until the player picks again;
+  - on their own (wonders, the bakery, the restaurant, the temple): no
+    workers, round after round.
+- The harvest is the config's `collect`; each worker after the first adds a
+  fifth, then the working time's share; all rounded down. Farms use up a
+  third of their harvest in wood (rounded). The config's `collect_xp` comes
+  with it.
+- Collecting sends `collect_new` (place, town, item, workers inside, 1, 0),
+  and its work starts over then. The 1 is a bonus the Flash client only
+  gives gold rocks on the map; the 0 is cash paid to hurry it.
+- Levels: when experience reaches the next level's in the config's `levels`
+  table, the town goes up one level at a time, each paying its prize, and
+  sends `rt_level_up` with the new level (the server pays the same prize
+  into the save).
+- Not the same as the Flash client: a farm collected without enough wood is
+  left as it is, with a message; the Flash client lets it go to waste.
+
 **Tested:** the rules and the command queue have unit tests (`npm test`).
 A browser test edits a new town (turns a tower, moves a house, sells a tree
 and a house, stores a tower) and checks the server's save afterwards: every
 change is there, with the refund, and reloading shows the town as it was
-left. The client is now 272 KB (82 KB compressed).
+left. Another sets a new town up as the Flash client would (a farm, a ranch
+and a gold mine, with a villager in each), then in the new client chooses
+the mine's working time and collects the farm and the ranch: the save has
+the harvests, the farm's wood, the experience, level 2 with its prize, and
+the timers started again. The client is now 294 KB (89 KB compressed).
 
-**Not yet in step 3:** collecting from buildings and their timers, the shop
-and building, placing what's in storage, levels and experience, units
-walking, and buildings with units inside (the Flash client lets them out
-before moving or selling; for now the bar says to use the classic game).
-Moving on a phone places on the first tap, without the green/red preview a
-mouse gets.
+**Not yet in step 3:** the shop and building, placing what's in storage,
+units walking (so trees, rocks and gold on the map, which a villager works,
+and putting workers into buildings), hurrying with cash, and moving or
+selling buildings with units inside (the Flash client lets them out first;
+for now the bar says to use the classic game). Moving on a phone places on
+the first tap, without the green/red preview a mouse gets.
 
 ### Making the art look better
 

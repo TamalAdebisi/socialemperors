@@ -1,6 +1,6 @@
 // The new game client (CLIENT.md, steps 2 and 3): load the game config and
 // the player's town from our server, as the Flash client does, draw it with
-// PixiJS, and let the player change it (so far: move, turn, store, sell).
+// PixiJS, and let the player run it (so far: move, turn, store, sell, collect).
 
 import "./ui/style.css";
 
@@ -11,6 +11,7 @@ import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
+import { readLevels } from "./rules/levels.ts";
 import { readTown } from "./rules/town.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
@@ -26,6 +27,9 @@ async function start(): Promise<void> {
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
   showStatus(visit ? "Loading their town…" : "Loading your town…");
   const [config, info] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit })]);
+  // The game's clock: the server's time when the town arrived, plus the time since.
+  const arrived = performance.now();
+  const clock = () => info.timestamp + (performance.now() - arrived) / 1000;
   const items = itemsById(config);
   const town = readTown(info, items);
   if (town.unknown.length) {
@@ -60,17 +64,14 @@ async function start(): Promise<void> {
 
   const view = new TownView(new ArtLibrary(settings.artUrl), items, town);
   world.addChild(view.root);
+  app.ticker.add((ticker) => view.tick(ticker.deltaMS, camera.scale));
 
   // The player's own town can be changed; a visited one only looked at.
   if (visit === undefined) {
-    // The game's clock: the server's time when the town loaded, plus time since.
-    const loadedAt = performance.now();
-    const commands = new CommandSender(settings, {
-      clock: () => info.timestamp + (performance.now() - loadedAt) / 1000,
-      onFailure: (reason) => showStatus(reason),
-    });
+    const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
-    new TownEditor(town, view, new ActionBar(), commands, hud, camera);
+    const levels = readLevels(config.levels);
+    new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels });
   }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {

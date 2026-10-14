@@ -19,7 +19,7 @@ import {
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false,
-    cost: 0, costType: "g", facings: 2, ...fields };
+    cost: 0, costType: "g", facings: 2, production: null, ...fields };
 }
 
 test("one tile along x is 54 px right and 27 down; along y, 54 left and 27 down", () => {
@@ -85,9 +85,9 @@ test("the ground's look and colour follow the island's skin", () => {
 });
 
 test("things further back are drawn first; farms under everything", () => {
-  const house = { item: item({ width: 2 }), tx: 52, ty: 52, orientation: 0, unitsInside: 0 };
-  const behind = { item: item(), tx: 50, ty: 51, orientation: 0, unitsInside: 0 };
-  const farm = { item: item({ subcategory: 122, width: 2 }), tx: 60, ty: 60, orientation: 0, unitsInside: 0 };
+  const house = { item: item({ width: 2 }), tx: 52, ty: 52, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
+  const behind = { item: item(), tx: 50, ty: 51, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
+  const farm = { item: item({ subcategory: 122, width: 2 }), tx: 60, ty: 60, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
   assert.ok(depth(behind) < depth(house));
   assert.ok(depth(farm) < depth(behind));
 });

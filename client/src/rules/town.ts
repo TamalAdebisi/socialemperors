@@ -40,6 +40,10 @@ export interface PlacedItem {
   orientation: number;
   /** How many units are inside (a barracks' soldiers, a mill's workers). */
   unitsInside: number;
+  /** When its current round of work started (the server's clock, seconds), or null. */
+  startedAt: number | null;
+  /** The working time chosen for a mill or mine (1 to 4), or 0 for none (rules/production.ts). */
+  workTime: number;
 }
 
 export interface Town {
@@ -66,13 +70,19 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
   const map = info.map;
   const placed: PlacedItem[] = [];
   const unknown: number[] = [];
-  for (const [id, tx, ty, orientation, , , units] of map.items) {
+  for (const [id, tx, ty, orientation, started, , units, attributes] of map.items) {
     const item = items.get(id);
     if (item === undefined) {
       unknown.push(id);
       continue;
     }
-    placed.push({ item, tx, ty, orientation: orientation ?? 0, unitsInside: Array.isArray(units) ? units.length : 0 });
+    placed.push({
+      item, tx, ty,
+      orientation: orientation ?? 0,
+      unitsInside: Array.isArray(units) ? units.length : 0,
+      startedAt: Number.isFinite(started) ? Number(started) : null,
+      workTime: Number(attributes?.cp) || 0,
+    });
   }
   return {
     id: map.id ?? 0,

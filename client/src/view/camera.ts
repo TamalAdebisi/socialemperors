@@ -164,6 +164,11 @@ export class Camera {
     this.apply();
   }
 
+  /** How big the map is drawn: 1 is the art's own size. */
+  get scale(): number {
+    return this.zoom;
+  }
+
   /** The point of the map under a point of the screen. */
   toMap(screen: Point): Point {
     return {
