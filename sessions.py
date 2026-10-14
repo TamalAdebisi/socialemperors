@@ -25,6 +25,7 @@ from constants import Constant
 from engine import timestamp_now
 from storage import open_storage
 from version import version_code, migrate_loaded_save, add_missing_fields
+import friends as friendships  # the module; friends() below is the tournaments' list
 import radar
 import tutorial
 
@@ -86,6 +87,7 @@ def load_saved_villages():
             __villages.setdefault(pid, village)
 
         __storage = open_storage()
+        friendships.load(__storage)
         for pid, owner_id, village in __storage.load_all_villages():
             __saves[pid] = village
             __owners[pid] = owner_id
@@ -234,7 +236,8 @@ def delete_account(owner_id: int) -> int:
     with __writing:
         for pid in pids:
             __storage.delete_village(pid)
-        __storage.delete_user(owner_id)  # and any village of it not loaded
+        __storage.delete_user(owner_id)  # and any village of it not loaded, its friends, its gifts
+    friendships.forget(owner_id)
     return len(pids)
 
 
@@ -300,13 +303,23 @@ def neighbor_session(USERID: str) -> dict:
 #
 # The original showed every save on the computer as a neighbour. On a public
 # server that would mean sending every player's village summary to everyone,
-# so we show the static neighbours plus the most recently active players.
+# so we show the static neighbours, then every empire of the player's friends
+# (friends.py), then the most recently active other players, up to
+# SE_MAX_NEIGHBORS players in all.
+
+def _last_seen(village) -> int:
+    return village["playerInfo"].get("last_logged_in", 0) or 0
+
 
 def _neighbor_villages(USERID: str) -> list:
     statics = [v for pid, v in __villages.items() if pid not in ARTHUR_PIDS]
-    players = [v for pid, v in __saves.items() if pid != USERID]
-    players.sort(key=lambda v: v["playerInfo"].get("last_logged_in", 0) or 0, reverse=True)
-    return statics + players[:config_env.MAX_NEIGHBORS]
+    owner = __owners.get(USERID)
+    friend_ids = friendships.of(owner) if owner is not None else set()
+    theirs = [v for pid, v in __saves.items() if pid != USERID and __owners.get(pid) in friend_ids]
+    others = [v for pid, v in __saves.items() if pid != USERID and __owners.get(pid) not in friend_ids]
+    theirs.sort(key=_last_seen, reverse=True)
+    others.sort(key=_last_seen, reverse=True)
+    return statics + theirs + others[:max(config_env.MAX_NEIGHBORS - len(theirs), 0)]
 
 
 def friends(USERID: str) -> list:
