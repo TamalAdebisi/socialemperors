@@ -60,7 +60,9 @@ import javax.imageio.ImageIO;
 public class RenderSwf {
 
     static final int TWIPS = 20;          // Flash measures in 1/20 of a pixel
-    static final int PAD = 4 * TWIPS;     // a little room around the sprite's bounds
+    // Room around the sprite's bounds: a little, or more when something is
+    // drawn outside them (a glow on a part inside the sprite) and reaches the edge.
+    static final int[] PADS = {4 * TWIPS, 64 * TWIPS, 256 * TWIPS};
     static final int MAX_TIME = 600;      // longest animation we render (20 s at 30 fps)
     static final double ZOOM = 1.0;       // the art's bitmaps are drawn 1:1 (bitmap fill scale 20.0)
 
@@ -95,17 +97,32 @@ public class RenderSwf {
         }
         String className = findClass(swf, name);
         Timeline timeline = ((Timelined) swf.getCharacterByClass(className)).getTimeline();
+        File out = new File(outRoot, name);
+        for (int i = 0; i < PADS.length; i++) {
+            int images = draw(swf, swfFile, className, timeline, out, PADS[i], i == PADS.length - 1);
+            if (images >= 0) {
+                return images;
+            }
+        }
+        throw new IllegalStateException("unreachable");
+    }
 
+    /**
+     * Draws every picture with `pad` of room around the sprite's bounds.
+     * Returns how many different pictures there are, or -1 when one reaches
+     * the edge of the canvas (and `last` is false): it needs more room.
+     */
+    static int draw(SWF swf, File swfFile, String className, Timeline timeline, File out, int pad, boolean last)
+            throws Exception {
         // The canvas: the sprite's bounds over all frames, children included,
-        // in whole pixels, with a little padding.
+        // in whole pixels, with the padding.
         RECT bounds = timeline.getDisplayRectWithFilters();
         RECT rect = new RECT(
-                Math.floorDiv(bounds.Xmin, TWIPS) * TWIPS - PAD,
-                Math.floorDiv(bounds.Xmax + TWIPS - 1, TWIPS) * TWIPS + PAD,
-                Math.floorDiv(bounds.Ymin, TWIPS) * TWIPS - PAD,
-                Math.floorDiv(bounds.Ymax + TWIPS - 1, TWIPS) * TWIPS + PAD);
+                Math.floorDiv(bounds.Xmin, TWIPS) * TWIPS - pad,
+                Math.floorDiv(bounds.Xmax + TWIPS - 1, TWIPS) * TWIPS + pad,
+                Math.floorDiv(bounds.Ymin, TWIPS) * TWIPS - pad,
+                Math.floorDiv(bounds.Ymax + TWIPS - 1, TWIPS) * TWIPS + pad);
 
-        File out = new File(outRoot, name);
         out.mkdirs();
         for (File old : out.listFiles()) {
             old.delete();
@@ -144,6 +161,9 @@ public class RenderSwf {
                 width = image.getWidth();
                 height = image.getHeight();
                 int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+                if (!last && touchesEdge(data, width, height)) {
+                    return -1;
+                }
                 String fingerprint = fingerprint(data);
                 Integer number = seen.get(fingerprint);
                 if (number == null) {
@@ -175,6 +195,21 @@ public class RenderSwf {
                 + "}\n";
         Files.writeString(new File(out, "manifest.json").toPath(), manifest, StandardCharsets.UTF_8);
         return seen.size();
+    }
+
+    /** Whether any pixel on the picture's border shows something. */
+    static boolean touchesEdge(int[] pixels, int width, int height) {
+        for (int x = 0; x < width; x++) {
+            if ((pixels[x] >>> 24) != 0 || (pixels[(height - 1) * width + x] >>> 24) != 0) {
+                return true;
+            }
+        }
+        for (int y = 0; y < height; y++) {
+            if ((pixels[y * width] >>> 24) != 0 || (pixels[y * width + width - 1] >>> 24) != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The sprite named after the file, or the only exported one. */

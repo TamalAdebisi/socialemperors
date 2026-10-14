@@ -56,7 +56,7 @@ done
 CLASSES="$TOOLS/art-classes"
 mkdir -p "$CLASSES" "$OUT/sheets"
 javac -nowarn -cp "$FFDEC_CP" -d "$CLASSES" "$ROOT/tools/art/RenderSwf.java" 2>&1 | grep -v "^Note:" || true
-rm -rf "$OUT"/render.*  # pictures left by an export that was stopped
+rm -rf "$OUT"/render.* "$OUT"/sheets/*.tmp  # left by an export that was stopped
 
 todo=()
 for swf in "${mine[@]}"; do
@@ -81,7 +81,8 @@ batch() {
 export -f batch
 export FFDEC_CP CLASSES OUT PYTHON ROOT
 if [ ${#todo[@]} -gt 0 ]; then
-    printf '%s\0' "${todo[@]}" | xargs -0 -n 20 -P "$JOBS" bash -c 'batch "$@"' _ >> "$OUT/export.log" || true
+    # Each item's line shows here as it is done, and goes in the log.
+    printf '%s\0' "${todo[@]}" | xargs -0 -n 20 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
 fi
 
 missing=()
