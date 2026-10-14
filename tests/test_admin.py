@@ -211,6 +211,8 @@ class AdminTest(unittest.TestCase):
         page = self.admin.get(f"/admin/empire/{self.pid}").get_data(as_text=True)
         self.assertIn(self.player_name, page)
         self.assertIn("&#34;privateState&#34;", page)  # the save, escaped
+        self.assertIn("never", page)  # a new empire's login time is -1 until it is played
+        self.assertNotIn("days ago", page)
         self.assertEqual(self.admin.get("/admin/empire/no-such-empire").status_code, 404)
 
     def test_deleting_an_empire(self):

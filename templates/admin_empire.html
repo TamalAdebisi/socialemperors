@@ -7,7 +7,7 @@
 			{% if owner %}account <a href="{{ url_for('admin.account', user_id=owner.id) }}">{{ owner.username }}</a>
 			{% else %}no account{% endif %}</p>
 		<table>
-			<tr><th>Level</th><th>XP</th><th>Gold</th><th>Cash</th><th>Towns</th><th>Continent</th><th>Tutorial step</th><th>Last played</th></tr>
+			<tr><th class="n">Level</th><th class="n">XP</th><th class="n">Gold</th><th class="n">Cash</th><th class="n">Towns</th><th class="n">Continent</th><th class="n">Tutorial step</th><th>Last played</th></tr>
 			<tr>
 				<td class="n">{{ empire.level }}</td>
 				<td class="n">{{ empire.xp }}</td>

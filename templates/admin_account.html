@@ -8,7 +8,7 @@
 		<p class="muted">Account {{ user.id }} · signed up {{ user.created_at | ago }}</p>
 		{% if empires %}
 		<table>
-			<tr><th>Empire</th><th>Level</th><th>XP</th><th>Gold</th><th>Cash</th><th>Towns</th><th>Tutorial step</th><th>Last played</th></tr>
+			<tr><th>Empire</th><th class="n">Level</th><th class="n">XP</th><th class="n">Gold</th><th class="n">Cash</th><th class="n">Towns</th><th class="n">Tutorial step</th><th>Last played</th></tr>
 			{% for e in empires %}
 			<tr>
 				<td><a href="{{ url_for('admin.empire', pid=e.pid) }}">{{ e.name }}</a></td>

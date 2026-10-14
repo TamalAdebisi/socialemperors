@@ -19,7 +19,7 @@
 			<span class="badge client">client</span> an error the game itself reported.</p>
 		{% if problems %}
 		<table>
-			<tr><th>Kind</th><th>What</th><th>Count</th><th>Last seen</th><th>Last player</th><th>Example</th><th></th></tr>
+			<tr><th>Kind</th><th>What</th><th class="n">Count</th><th>Last seen</th><th>Last player</th><th>Example</th><th></th></tr>
 			{% for p in problems %}
 			<tr>
 				<td><span class="badge {{ p.kind }}">{{ p.kind }}</span></td>
@@ -60,7 +60,7 @@
 		{% if query %}
 		{% if found %}
 		<table style="margin-top: 10px;">
-			<tr><th>Username</th><th>Signed up</th><th>Empires</th></tr>
+			<tr><th>Username</th><th>Signed up</th><th class="n">Empires</th></tr>
 			{% for user in found %}
 			<tr>
 				<td><a href="{{ url_for('admin.account', user_id=user.id) }}">{{ user.username }}</a></td>
@@ -78,7 +78,7 @@
 	<section>
 		<h2>Played most recently</h2>
 		<table>
-			<tr><th>Empire</th><th>Account</th><th>Level</th><th>Gold</th><th>Cash</th><th>Towns</th><th>Continent</th><th>Last played</th></tr>
+			<tr><th>Empire</th><th>Account</th><th class="n">Level</th><th class="n">Gold</th><th class="n">Cash</th><th class="n">Towns</th><th class="n">Continent</th><th>Last played</th></tr>
 			{% for e in recent %}
 			<tr>
 				<td><a href="{{ url_for('admin.empire', pid=e.pid) }}">{{ e.name }}</a></td>

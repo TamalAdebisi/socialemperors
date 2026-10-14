@@ -43,7 +43,7 @@ def private(response):
 
 @admin.app_template_filter("ago")
 def ago(timestamp) -> str:
-    if not timestamp:
+    if not timestamp or int(timestamp) <= 0:  # new empires start at -1: never played
         return "never"
     seconds = max(0, int(time.time()) - int(timestamp))
     for size, unit in ((86400, "day"), (3600, "hour"), (60, "minute")):
@@ -65,7 +65,7 @@ def _empire(pid: str) -> dict:
     shown = sessions.save_info(pid)  # its name, level and xp, as on the home page
     shown.update(pid=pid, owner=sessions.owner_of(pid), gold=home.get("coins"), cash=info.get("cash"),
                  towns=len(save["maps"]), continent=(home.get("worldMap") or {}).get("nivel"),
-                 tutorial=tutorial.step(save), last_seen=int(info.get("last_logged_in") or 0))
+                 tutorial=tutorial.step(save), last_seen=max(0, int(info.get("last_logged_in") or 0)))
     return shown
 
 
