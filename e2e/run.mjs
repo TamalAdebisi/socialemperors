@@ -100,6 +100,7 @@ for (const name of ["SE_DATABASE_URL", "SE_SUPABASE_URL", "SE_SUPABASE_KEY", "SE
 }
 if (!existsSync(join(ROOT, "art", "sheets")) && !env.SE_ASSETS_URL) {
   env.SE_ASSETS_URL = LIVE_ASSETS;
+  process.env.SE_E2E_LIVE_ASSETS = LIVE_ASSETS;  // lib.mjs fetches it for the page
 }
 const log = join(OUT, "server.log");
 const logStream = createWriteStream(log);

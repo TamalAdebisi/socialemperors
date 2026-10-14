@@ -4,6 +4,30 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, the menus
+
+- **Neighbours' button picture:** the game has none of its own for it, so
+  it's the villager portrait the site's Friends button already uses (from
+  the game's art).
+- **Neighbours' portraits:** their initial on a colour of their own, as in
+  the mockup; the original showed Facebook pictures, which are gone.
+- **Visiting shows the player's username**, as the neighbours list does,
+  not "Emperor" (every empire's name in its save). A small server change
+  (`get_neighbor_info`); the save itself is left as it is.
+- **Where the phone layout starts:** below 720 pixels wide, or held upright
+  up to 1000 wide, so a tablet held upright gets the dock.
+- **The glove collects everything at once.** In the original it was a mode
+  where each tap collected; here one press collects all that's ready, and
+  it only shows when something is, with how many.
+- **Pressing a lit menu button again closes its window**, besides the close
+  button, Escape and (on phones) dragging the sheet down.
+- **The Army window lists the town's units** until training comes; Quests,
+  Battle and World open the classic game for every mode, as agreed.
+- **Extras:** keyboard shortcuts (B, S, A, Q, W, N, C, Escape).
+- **Browser tests fetch the art themselves:** the bucket only lets the
+  game's own site read it, so the test windows fetch it and keep a copy in
+  `.tools/art-cache/`.
+
 ## 14 October 2026: a fresh start at Beta 1
 
 - **The built-in neighbours** (`villages/`, shown to players with fewer

@@ -1,7 +1,7 @@
 // The new game client (CLIENT.md, steps 2 and 3): load the game config and
 // the player's town from our server, as the Flash client does, draw it with
 // PixiJS, and let the player run it (so far: build, place from storage, move, turn,
-// store, sell, collect).
+// store, sell, collect), with the menus as a rail and dock.
 
 import "./ui/style.css";
 
@@ -10,14 +10,19 @@ import { Application, Container } from "pixi.js";
 import { TownEditor } from "./editor.ts";
 import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
-import { itemsById } from "./rules/config.ts";
+import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
-import { readTown } from "./rules/town.ts";
+import { readTown, type Town } from "./rules/town.ts";
 import { ActionBar } from "./ui/actions.ts";
+import { ArmyWindow } from "./ui/army.ts";
 import { showHud, showStatus } from "./ui/hud.ts";
+import { ICONS } from "./ui/icons.ts";
+import { Menus } from "./ui/menus.ts";
+import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
+import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
@@ -85,8 +90,26 @@ async function start(): Promise<void> {
       choose: (item) => editor.startBuilding(item),
       storage: () => editor.storageCards(),
     });
-    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items });
-    hud.offerShop(() => editor.openShop(), () => editor.openStorage());
+    const neighbours = new NeighboursWindow(info.neighbors ?? [], (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
+    const world = new WorldWindows(settings.classicUrl);
+    const army = new ArmyWindow({
+      units: () => unitsInTown(town),
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+    });
+    const menus = new Menus([
+      { key: "build", label: "Build", icon: ICONS.build, run: () => editor.openShop(), shortcut: "b" },
+      { key: "storage", label: "Storage", icon: ICONS.storage, run: () => editor.openStorage(), shortcut: "s" },
+      { key: "army", label: "Army", icon: ICONS.units, run: () => army.toggle(), shortcut: "a" },
+      { key: "quests", label: "Quests", icon: ICONS.quests, only: "rail", run: () => world.toggleQuests(), shortcut: "q" },
+      { key: "battle", label: "Battle", icon: ICONS.pvp, only: "rail", run: () => world.toggleBattles() },
+      { key: "world", label: "World", icon: ICONS.world, only: "dock", run: () => world.toggleWorld(), shortcut: "w" },
+      { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
+    ]);
+    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items,
+      waiting: (gifts) => menus.count("storage", gifts) });
+    hud.offerCollectAll(() => editor.collectAll());
+  } else {
+    document.body.classList.add("visiting");
   }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
   if (missing.length) {
@@ -96,6 +119,17 @@ async function start(): Promise<void> {
   } else {
     showStatus("");
   }
+}
+
+/** The town's units by kind, the most first, as the Army window lists them. */
+function unitsInTown(town: Town): { item: ItemInfo; count: number }[] {
+  const counts = new Map<ItemInfo, number>();
+  for (const placed of town.items) {
+    if (placed.item.isUnit) {
+      counts.set(placed.item, (counts.get(placed.item) ?? 0) + 1);
+    }
+  }
+  return [...counts].map(([item, count]) => ({ item, count })).sort((a, b) => b.count - a.count || a.item.name.localeCompare(b.item.name));
 }
 
 /**

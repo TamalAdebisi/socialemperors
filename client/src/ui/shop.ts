@@ -1,13 +1,15 @@
-// The shop window, in HTML over the map (CLIENT.md: windows in HTML): the
-// categories and their tabs, a card for each building with its picture,
-// price and experience, and what stops buying it; and, as in the Flash
-// client's build window, the storage, with Place and Sell on each card.
+// The shop window, a panel beside the town (ui/panel.ts): the categories
+// and their tabs, a card for each building with its picture, price and
+// experience, and what stops buying it (grey, with the level in red, as in
+// the original); and, as in the Flash client's build window, the storage,
+// with Place and Sell on each card.
 // Choosing to buy or place closes the window; the editor then places it.
 // What's sold, and what can be done with what's stored, is up to the rules.
 
 import type { ItemInfo } from "../rules/config.ts";
 import { describe, priceOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
 import { resourceIcon } from "./icons.ts";
+import { Panel } from "./panel.ts";
 
 const numbers = new Intl.NumberFormat();
 /** The storage's place among the categories. */
@@ -43,8 +45,7 @@ export interface ShopWindowParts {
 
 export class ShopWindow {
   private readonly parts: ShopWindowParts;
-  private readonly panel: HTMLElement;
-  private readonly title: HTMLElement;
+  private readonly panel: Panel;
   private readonly categoryBar: HTMLElement;
   private readonly tabBar: HTMLElement;
   private readonly list: HTMLElement;
@@ -56,30 +57,14 @@ export class ShopWindow {
   constructor(parts: ShopWindowParts) {
     this.parts = parts;
     this.category = parts.categories[0]?.id ?? 0;
-    this.panel = document.createElement("section");
-    this.panel.className = "shop";
-    this.panel.hidden = true;
-    this.panel.setAttribute("role", "dialog");
-    this.panel.innerHTML = `
-      <header class="shop-head">
-        <h2></h2>
-        <button class="button tiny plain" type="button" aria-label="Close">✕</button>
-      </header>
+    this.panel = new Panel("build", "Shop", { className: "shop" });
+    this.panel.body.innerHTML = `
       <nav class="shop-categories" aria-label="Categories"></nav>
       <nav class="shop-tabs" aria-label="Kinds"></nav>
       <ul class="shop-items"></ul>`;
-    this.title = this.panel.querySelector("h2")!;
-    this.categoryBar = this.panel.querySelector(".shop-categories")!;
-    this.tabBar = this.panel.querySelector(".shop-tabs")!;
-    this.list = this.panel.querySelector(".shop-items")!;
-    this.panel.querySelector(".shop-head button")!.addEventListener("click", () => this.close());
-    // Escape closes the window, wherever the focus is; nothing else hears it then.
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.isOpen) {
-        e.stopImmediatePropagation();
-        this.close();
-      }
-    });
+    this.categoryBar = this.panel.body.querySelector(".shop-categories")!;
+    this.tabBar = this.panel.body.querySelector(".shop-tabs")!;
+    this.list = this.panel.body.querySelector(".shop-items")!;
     // Pictures load as their cards come into view, not all of a category at once.
     this.pictures = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -91,11 +76,10 @@ export class ShopWindow {
         }
       }
     }, { root: this.list, rootMargin: "200px" });
-    document.body.appendChild(this.panel);
   }
 
   get isOpen(): boolean {
-    return !this.panel.hidden;
+    return this.panel.isOpen;
   }
 
   /** Open at a category (STORAGE for the storage), or where it was last. */
@@ -103,12 +87,22 @@ export class ShopWindow {
     this.category = category;
     this.tab = 0;
     this.render();
-    this.panel.hidden = false;
-    this.panel.querySelector<HTMLButtonElement>(".shop-categories [aria-pressed=true]")?.focus();
+    this.panel.open();
+    this.panel.element.querySelector<HTMLButtonElement>(".shop-categories [aria-pressed=true]")?.focus({ preventScroll: true });
+  }
+
+  /** The menu's Build or Storage pressed: open there, or put the window away if it's already showing that. */
+  toggle(category?: number): void {
+    const storing = category === STORAGE;
+    if (this.isOpen && (this.category === STORAGE) === storing) {
+      this.close();
+    } else {
+      this.open(category);
+    }
   }
 
   close(): void {
-    this.panel.hidden = true;
+    this.panel.close();
   }
 
   /** Show it again as things are now (after a sale from storage...). */
@@ -126,22 +120,22 @@ export class ShopWindow {
     this.render();
     this.list.scrollTop = 0;
     // The buttons were made again: keep the keyboard where it was.
-    this.panel.querySelector<HTMLButtonElement>(`.shop-${focus} [aria-pressed=true]`)?.focus();
+    this.panel.element.querySelector<HTMLButtonElement>(`.shop-${focus} [aria-pressed=true]`)?.focus();
   }
 
   private render(): void {
     const storing = this.category === STORAGE;
-    this.title.textContent = storing ? "Storage" : "Shop";
-    this.panel.setAttribute("aria-label", this.title.textContent);
+    this.panel.title = storing ? "Storage" : "Shop";
+    this.panel.key = storing ? "storage" : "build";
     const stored = this.parts.storage();
     const inStorage = stored.reduce((sum, card) => sum + card.count, 0);
     this.categoryBar.replaceChildren(
-      ...this.parts.categories.map((c) => this.toggle(c.name, c.id === this.category, () => this.show(c.id, 0, "categories"))),
-      this.toggle(inStorage ? `Storage (${inStorage})` : "Storage", storing, () => this.show(STORAGE, 0, "categories"), "shop-storage"),
+      ...this.parts.categories.map((c) => this.pill(c.name, c.id === this.category, () => this.show(c.id, 0, "categories"))),
+      this.pill(inStorage ? `Storage (${inStorage})` : "Storage", storing, () => this.show(STORAGE, 0, "categories"), "shop-storage"),
     );
     const current = this.parts.categories.find((c) => c.id === this.category);
     const tabs = current && current.tabs.length > 1 ? [{ id: 0, name: "All" }, ...current.tabs] : [];
-    this.tabBar.replaceChildren(...tabs.map((t) => this.toggle(t.name, t.id === this.tab, () => this.show(this.category, t.id, "tabs"))));
+    this.tabBar.replaceChildren(...tabs.map((t) => this.pill(t.name, t.id === this.tab, () => this.show(this.category, t.id, "tabs"))));
     this.tabBar.hidden = tabs.length === 0;
 
     this.waiting.clear();
@@ -158,7 +152,7 @@ export class ShopWindow {
     }
   }
 
-  private toggle(label: string, pressed: boolean, run: () => void, className = ""): HTMLButtonElement {
+  private pill(label: string, pressed: boolean, run: () => void, className = ""): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `shop-toggle ${className}`.trim();
@@ -202,6 +196,15 @@ export class ShopWindow {
     button.type = "button";
     button.className = "shop-card";
     this.cardTop(item, button);
+    const blocked = this.parts.obstacle(item);
+    if (blocked?.kind === "level") {
+      // Not yet: grey, and the level in red where the price would be, as the original shows it.
+      button.append(this.note(`Level ${blocked.level}`, "level"));
+      button.disabled = true;
+      button.classList.add("locked");
+      li.append(button);
+      return li;
+    }
     const price = priceOf(item);
     const cost = document.createElement("span");
     cost.className = "shop-price";
@@ -215,7 +218,6 @@ export class ShopWindow {
       xp.textContent = `+${numbers.format(item.xp)} XP`;
       button.append(xp);
     }
-    const blocked = this.parts.obstacle(item);
     if (blocked) {
       button.append(this.note(describe(blocked), blocked.kind));
       button.disabled = true;

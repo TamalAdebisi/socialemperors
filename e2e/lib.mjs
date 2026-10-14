@@ -1,7 +1,9 @@
 // What the browser tests play with: a new player with a new town, open in
 // the new client, and the ways to tap, read and check it.
 
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
@@ -12,14 +14,43 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
   });
+  await serveArt(context);
   const page = await context.newPage();
   const player = new Player(page, base, out, viewport);
   const name = `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
   const signUp = await page.request.post(base + "/register", { form: { username: name, password: `${name}-password`, csrf: await player.csrf() } });
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
+  player.name = name;
   await player.open();
   return player;
+}
+
+// The live bucket only lets the game's own site read its art, so a page on
+// this computer can't. When the test server uses it, the test windows fetch
+// the art themselves instead, and keep a copy for the next run.
+const ART_CACHE = join(dirname(dirname(fileURLToPath(import.meta.url))), ".tools", "art-cache");
+
+async function serveArt(context) {
+  const live = process.env.SE_E2E_LIVE_ASSETS;
+  if (!live) return;
+  await context.route(`${live}/**`, async (route) => {
+    const url = route.request().url();
+    const file = join(ART_CACHE, new URL(url).pathname);
+    let body = existsSync(file) ? readFileSync(file) : null;
+    let status = 200;
+    if (!body) {
+      const response = await context.request.get(url).catch(() => null);
+      status = response?.status() ?? 502;
+      if (status === 200) {
+        body = await response.body();
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, body);
+      }
+    }
+    const type = file.endsWith(".json") ? "application/json" : file.endsWith(".webp") ? "image/webp" : "application/octet-stream";
+    await route.fulfill({ status, body: body ?? "", headers: { "content-type": type, "access-control-allow-origin": "*" } });
+  });
 }
 
 export class Player {
@@ -80,6 +111,7 @@ export class Player {
       viewport: PHONE, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "en-US",
     });
     await context.addCookies(await mine.cookies());
+    await serveArt(context);
     const phone = new Player(await context.newPage(), this.base, this.out, PHONE);
     this.companions.push(phone);
     await phone.open();
@@ -141,6 +173,12 @@ export class Player {
     return this.page.getByRole("button", { name: label, exact: true });
   }
 
+  /** A button of the rail (or the dock), by its name. */
+  async menu(label) {
+    await this.page.locator(`.menus button[aria-label="${label}"]`).click();
+    await this.wait(300);
+  }
+
   async press(label) {
     await this.button(label).click();
     await this.wait(300);
@@ -159,8 +197,8 @@ export class Player {
 
   /** The message at the top, or "" when there's none. */
   async status() {
-    const status = this.page.locator(".status");
-    return (await status.isHidden()) ? "" : (await status.textContent()).trim();
+    const message = this.page.locator(".message.shown");
+    return (await message.count()) ? (await message.textContent()).trim() : "";
   }
 
   /** A card in the shop or storage, by the item's name. */

@@ -262,7 +262,7 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 - [ ] 3. Run your town (started): the shop and building; storage; move,
       turn, store and sell buildings; collect from them, with levels; all
       with the Flash client's commands ([CLIENT.md](CLIENT.md#step-3-run-your-town)).
-      The Flash client's own icons are in; next, the menus: the rail and
+      The Flash client's own icons are in, and the menus as a rail and
       dock ([CLIENT.md](CLIENT.md#the-menus-rail-and-dock))
 - [ ] 4. Battles, 5. everything else, 6. switch over
 
@@ -271,7 +271,8 @@ slices, about one task each; every slice ends tested, documented and merged.
 The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
 - [ ] **Beta 1, the town builder** (the rest of step 3): the menus as a
-      rail and dock (the owner's pick); units walking; villagers at work (trees, rocks, workers into
+      rail and dock (the owner's pick, done: the shop, storage, army,
+      neighbours and battle windows, the glove, messages at the top); units walking; villagers at work (trees, rocks, workers into
       buildings); training and population; land and cash; missions and
       bonuses; neighbours; sound and speed; then a full run-through against
       the Flash game. Players can use the new client for everything but

@@ -146,6 +146,14 @@ class FriendsTest(unittest.TestCase):
         self.assertEqual(names[bob_pid], bob[1])  # their username under the portrait, not "Emperor"
         self.assertIn(bob[1], [f["first_name"] for f in sessions.fb_friends_str(pid)])
 
+    def test_visiting_shows_their_username(self):
+        bob = self.player()
+        bob_pid = sessions.villages_of(bob[2])[0]["userid"]
+        import get_player_info
+        visit = get_player_info.get_neighbor_info(bob_pid, 0)
+        self.assertEqual(visit["playerInfo"]["name"], bob[1])  # as the neighbours list says, not "Emperor"
+        self.assertEqual(sessions.neighbor_session(bob_pid)["playerInfo"]["name"], "Emperor")  # the save itself is left be
+
     def test_friendships_survive_a_restart(self):
         alice, bob = self.player(), self.player()
         self.befriend(alice, bob)

@@ -17,6 +17,16 @@ export const ICONS = {
   // The tools, as on the Flash client's bar.
   build: new URL("./art/build.webp", import.meta.url).href,
   storage: new URL("./art/storage.webp", import.meta.url).href,
+  "fast-collect": new URL("./art/fast-collect.webp", import.meta.url).href,
+  // The menus' other buttons: the game bar's own, and its villager for the neighbours.
+  units: new URL("./art/units.webp", import.meta.url).href,
+  quests: new URL("./art/quests.webp", import.meta.url).href,
+  pvp: new URL("./art/pvp.webp", import.meta.url).href,
+  survival: new URL("./art/survival.webp", import.meta.url).href,
+  tournament: new URL("./art/tournament.webp", import.meta.url).href,
+  world: new URL("./art/my-world.webp", import.meta.url).href,
+  neighbours: new URL("./art/neighbours.webp", import.meta.url).href,
+  population: new URL("./art/population.webp", import.meta.url).href,
   // The selected thing's buttons, as on its info panel.
   move: new URL("./art/move.webp", import.meta.url).href,
   turn: new URL("./art/turn.webp", import.meta.url).href,
