@@ -238,7 +238,8 @@ numbers, because the server writes them into the game config.
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
 - [x] The sheets on R2: the **Export art to R2** workflow ([DEPLOY.md](DEPLOY.md))
-- [ ] Asset pipeline for the effects and sounds
+- [ ] Asset pipeline for the effects and sounds (the town's sounds done:
+      `tools/art/export_sounds.sh`; the effects and battle sounds to come)
 - [ ] Content editor for adding new units, buildings and quests
 
 ### Phase 4: New game client (started)
@@ -277,7 +278,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       workers into buildings and out again); training and population (done); land and cash (done: land, opening
       early, hurrying, the bank); missions and
       bonuses (done: goals, the daily bonus, Monday's and welcome-back chests); neighbours (done: visiting
-      and helping, Arthur, the donkey carts); sound and speed; then a full run-through against
+      and helping, Arthur, the donkey carts); sound and speed (done: the town's music and
+      sounds, compressed downloads); then a full run-through against
       the Flash game. Players can use the new client for everything but
       battles, which open in the classic game.
       **Launch: a fresh start.** The live server moves to Supabase with an

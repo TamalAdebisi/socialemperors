@@ -27,6 +27,7 @@ import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
 import { BankWindow } from "./ui/bank.ts";
 import { showHud, showMessage, showStatus } from "./ui/hud.ts";
+import { Sound } from "./sound.ts";
 import { Visit } from "./visit.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
@@ -87,8 +88,10 @@ async function start(): Promise<void> {
   const levels = readLevels(config.levels);
   const increase = Number(config.globals?.POPULATION_INCREASE) || 10;
   const own = mine ? readTown(mine, items) : town;
+  // The music of the town shown (the trolls' for a troll town), and the game's sound effects.
+  const sound = new Sound(settings.assetsUrl, town.race);
   const hud = showHud(own, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
-    population: (t) => population(t, items, increase) });
+    population: (t) => population(t, items, increase), sound });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -130,6 +133,7 @@ async function start(): Promise<void> {
     ]);
     const doings = new Doings();
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
+      sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts) });

@@ -22,6 +22,7 @@ import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
+import type { Effect } from "./sound.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
@@ -52,6 +53,8 @@ export interface EditorParts {
   land?: { prices: LandPrice[]; neighbours: number };
   /** Where what the player does is counted, for the goals. */
   doings?: Doings;
+  /** The game's sound effects. */
+  sound?: (effect: Effect) => void;
 }
 
 export class TownEditor {
@@ -69,6 +72,9 @@ export class TownEditor {
   private readonly thumbnail: (item: ItemInfo) => string;
   private readonly land: { prices: LandPrice[]; neighbours: number };
   private readonly doings: Doings;
+  private readonly sound: (effect: Effect) => void;
+  /** Buildings ready to collect at the last look: one turning ready makes its sound. */
+  private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
   private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
@@ -95,6 +101,7 @@ export class TownEditor {
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
+    this.sound = parts.sound ?? (() => {});
     this.camera.onTap = (at) => this.tap(at);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
@@ -120,17 +127,25 @@ export class TownEditor {
   refresh(): void {
     const now = this.clock();
     let ready = 0;
+    const readyNow = new Set<PlacedItem>();
     for (const placed of this.town.items) {
       const state = workState(placed, now);
       if (state === null) {
         continue;
       }
       const resource = placed.item.production!.resource;
-      ready += state.status === "ready" ? 1 : 0;
+      if (state.status === "ready") {
+        ready++;
+        readyNow.add(placed);
+        if (!this.readyBefore.has(placed)) {
+          this.sound("ready");
+        }
+      }
       this.view.sign(placed, state.status === "ready" ? { kind: "ready", resource }
         : state.status === "asleep" ? { kind: "asleep" } : null);
     }
     this.hud.ready(ready);
+    this.readyBefore = readyNow;
     for (const [building, training] of this.training) {
       if (performance.now() >= training.done) {
         this.finishTraining(building);
@@ -263,6 +278,7 @@ export class TownEditor {
       return;
     }
     this.send([bought.command]);
+    this.sound("place");
     void this.view.redraw(bought.placed);
     const price = priceOf(item);
     const lines = [{ text: `−${price.amount} ${price.resource}`, colour: RESOURCE_COLOURS[price.resource] }];
@@ -292,6 +308,7 @@ export class TownEditor {
       return;
     }
     this.send([done.command]);
+    this.sound("place");
     this.doings.placedStored = true;
     void this.view.redraw(done.placed);
     if (this.town.xp > xpBefore) {
@@ -332,7 +349,9 @@ export class TownEditor {
     // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
     if (unit && !placed) {
-      this.walkTo(unit, this.tileAt(at));
+      if (this.walkTo(unit, this.tileAt(at))) {
+        this.sound("place");  // the Flash client's sound for a unit sent off
+      }
       return;
     }
     if (!placed) {
@@ -344,10 +363,12 @@ export class TownEditor {
       }
     }
     if (unit && placed && canHarvest(unit.item, placed.item)) {
+      this.sound("place");
       this.work(unit, placed);
       return;
     }
     if (unit && placed && canGoInside(this.town, unit.item, placed)) {
+      this.sound("place");
       this.goInto(unit, placed);
       return;
     }
@@ -471,7 +492,9 @@ export class TownEditor {
       work.workers.add(unit);
       this.working.set(resource, work);
       this.workingOn.set(unit, resource);
-      this.view.pose(unit, resource.item.subcategory === SUBCAT.tree ? "ATAQUE" : "PICAR", { x: resource.tx, y: resource.ty });
+      const tree = resource.item.subcategory === SUBCAT.tree;
+      this.view.pose(unit, tree ? "ATAQUE" : "PICAR", { x: resource.tx, y: resource.ty });
+      this.sound(tree ? "lumber" : "stone");
       this.refresh();
     });
   }
@@ -623,6 +646,7 @@ export class TownEditor {
       return;
     }
     this.send([done.command]);
+    this.sound("place");
     this.doings.trained(training.unit, building.item);
     void this.view.redraw(done.placed);
     this.hud.update(this.town);
@@ -701,6 +725,7 @@ export class TownEditor {
     }
     this.doings.collected(placed.item);
     this.send(done.commands);
+    this.sound("collect");
     const lines = [{ text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] }];
     if (done.xp > 0) {
       lines.push({ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp });
@@ -720,6 +745,7 @@ export class TownEditor {
     this.send(commands);
     const last = reached.at(-1);
     if (last) {
+      this.sound("level-up");
       const prizes = reached.filter((r) => r.prize).map((r) => `${r.prize!.amount} ${r.prize!.resource}`);
       this.say(`Level ${last.level}: ${last.name}!${prizes.length ? ` You get ${prizes.join(", ")}.` : ""}`);
     }

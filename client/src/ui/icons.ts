@@ -29,6 +29,10 @@ export const ICONS = {
   population: new URL("./art/population.webp", import.meta.url).href,
   // Bonuses: the game bar's daily bonus button, and its gift box for the chests.
   "daily-bonus": new URL("./art/daily-bonus.webp", import.meta.url).href,
+  "music-on": new URL("./art/music-on.webp", import.meta.url).href,
+  "music-off": new URL("./art/music-off.webp", import.meta.url).href,
+  "sound-on": new URL("./art/sound-on.webp", import.meta.url).href,
+  "sound-off": new URL("./art/sound-off.webp", import.meta.url).href,
   gifts: new URL("./art/gifts.webp", import.meta.url).href,
   // The selected thing's buttons, as on its info panel.
   move: new URL("./art/move.webp", import.meta.url).href,

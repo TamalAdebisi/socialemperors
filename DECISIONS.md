@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, sound and speed
+
+- **The music and sound buttons are in the top bar,** the Flash client's
+  own pictures (it kept them in a small options panel). Both start on, as
+  in the original; your choice is remembered in each browser.
+- **The music waits for your first tap,** because browsers don't let a page
+  make sound before then.
+- **A sound for a building turning ready** plays while you're playing, not
+  for everything already ready when the town opens (browsers would block
+  those anyway).
+- **Compression is on for everything the server sends as text,** the
+  classic game included: browsers unpack it for Flash and Ruffle as well.
+
 ## 14 October 2026: Beta 1, neighbours
 
 - **Arthur's portrait** is the game's own king picture, as in the Flash
