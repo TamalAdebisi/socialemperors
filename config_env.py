@@ -29,6 +29,7 @@ SE_CDN_FALLBACK      "1" to fetch missing assets from Social Point's old CDN
                      (default 0 - off, because on a public server it lets
                      strangers make your server download files)
 SE_TOKEN_MAX_AGE     Seconds a game token stays valid (default 7 days)
+SE_ADMINS            Usernames (comma-separated) that may open /admin (default none)
 SE_TRUSTED_PROXIES   How many proxies sit in front of the server (default 0)
 SE_CLIENT_IP_HEADER  Header the host's proxy puts the visitor's IP in, e.g.
                      X-Real-IP on Railway. When set, it is used instead of

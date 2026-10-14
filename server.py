@@ -93,10 +93,33 @@ def game_request(view):
     return wrapper
 
 
-# Simple login rate limit: max 10 failed attempts per IP per 10 minutes.
-_failed_logins = {}
-_failed_lock = threading.Lock()
-LOGIN_WINDOW, LOGIN_MAX_FAILS = 600, 10
+class RateLimit:
+    """At most `most` of something per visitor (IP address) in `window`
+    seconds: wrong passwords, new accounts."""
+
+    def __init__(self, window: int, most: int):
+        self.window, self.most = window, most
+        self.seen = {}  # ip -> times
+        self.lock = threading.Lock()
+
+    def _recent(self, ip, now):
+        return [t for t in self.seen.get(ip, []) if now - t < self.window]
+
+    def full(self, ip) -> bool:
+        with self.lock:
+            return len(self._recent(ip, time.time())) >= self.most
+
+    def add(self, ip):
+        now = time.time()
+        with self.lock:
+            self.seen[ip] = self._recent(ip, now) + [now]
+            if len(self.seen) > 10000:  # forget the visitors who stopped
+                recent = {ip: self._recent(ip, now) for ip in self.seen}
+                self.seen = {ip: times for ip, times in recent.items() if times}
+
+
+failed_logins = RateLimit(600, 10)  # 10 wrong passwords in 10 minutes, then wait
+signups = RateLimit(3600, 5)        # 5 new accounts an hour
 
 
 def client_ip():
@@ -106,19 +129,6 @@ def client_ip():
         if ip:
             return ip.strip()
     return request.remote_addr or "?"
-
-
-def _too_many_failures(ip):
-    now = time.time()
-    with _failed_lock:
-        attempts = [t for t in _failed_logins.get(ip, []) if now - t < LOGIN_WINDOW]
-        _failed_logins[ip] = attempts
-        return len(attempts) >= LOGIN_MAX_FAILS
-
-
-def _record_failure(ip):
-    with _failed_lock:
-        _failed_logins.setdefault(ip, []).append(time.time())
 
 
 def render_home(error=None, tab="login"):
@@ -146,44 +156,75 @@ def home():
 
 @app.route("/register", methods=["POST"])
 def register():
+    csrf.check()
+    ip = client_ip()
+    if signups.full(ip):
+        return render_home(error="Too many new accounts from here. Try again in an hour.", tab="register"), 429
+    username = request.form.get("username", "").strip()
     try:
-        user_id = accounts.register(request.form.get("username", ""), request.form.get("password", ""),
-                                    request.form.get("invite", ""))
+        user_id = accounts.register(username, request.form.get("password", ""), request.form.get("invite", ""))
     except accounts.AccountError as e:
         return render_home(error=str(e), tab="register"), 400
-    web_session.clear()
-    web_session.permanent = True
-    web_session["user_id"] = user_id
-    web_session["username"] = request.form["username"].strip()
-    print(f"[ACCOUNT] Registered {web_session['username']} (id {user_id})")
+    signups.add(ip)
+    accounts.sign_in(web_session, {"id": user_id, "username": username})
+    print(f"[ACCOUNT] Registered {username} (id {user_id})")
     return redirect("/")
 
 
 @app.route("/login", methods=["POST"])
 def login():
+    csrf.check()
     ip = client_ip()
-    if _too_many_failures(ip):
+    if failed_logins.full(ip):
         return render_home(error="Too many failed attempts. Try again in a few minutes."), 429
     user = accounts.authenticate(request.form.get("username", ""), request.form.get("password", ""))
     if user is None:
-        _record_failure(ip)
+        failed_logins.add(ip)
         print(f"[ACCOUNT] Failed login for {request.form.get('username', '')!r} from {ip}")
         return render_home(error="Wrong username or password."), 401
-    web_session.clear()
-    web_session.permanent = True
-    web_session["user_id"] = user["id"]
-    web_session["username"] = user["username"]
+    accounts.sign_in(web_session, user)
     return redirect("/")
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
-    web_session.clear()
+    # A button, not a link: another site could send your browser to a link.
+    if request.method == "POST":
+        csrf.check()
+        web_session.clear()
     return redirect("/")
+
+
+@app.route("/account", methods=["GET", "POST"])
+def account():
+    """The player's own account page: change the password."""
+    user = current_user()
+    if user is None:
+        return redirect("/")
+    if request.method == "GET":
+        return render_template("account.html", user=user, version=version_name)
+    csrf.check()
+    ip = client_ip()
+    if failed_logins.full(ip):
+        return render_template("account.html", user=user, version=version_name,
+                               error="Too many failed attempts. Try again in a few minutes."), 429
+    new = request.form.get("new_password", "")
+    try:
+        if new != request.form.get("repeat_password", ""):
+            raise accounts.AccountError("The two new passwords aren't the same.")
+        accounts.change_password(user, request.form.get("password", ""), new)
+    except accounts.AccountError as e:
+        if isinstance(e, accounts.WrongPassword):
+            failed_logins.add(ip)
+        return render_template("account.html", user=user, version=version_name, error=str(e)), 400
+    accounts.sign_in(web_session, user)  # this browser stays in; every other one is out
+    print(f"[ACCOUNT] {user['username']} changed their password")
+    return render_template("account.html", user=user, version=version_name, changed=True)
 
 
 @app.route("/play", methods=["POST"])
 def choose_village():
+    csrf.check()
     user = current_user()
     if user is None:
         return redirect("/")
@@ -198,6 +239,7 @@ def choose_village():
 
 @app.route("/new", methods=["POST"])
 def new():
+    csrf.check()
     user = current_user()
     if user is None:
         return redirect("/")
@@ -229,6 +271,13 @@ def play():
 @app.route("/ruffle.html")
 def ruffle():
     return _game_page("ruffle.html")
+
+
+@app.errorhandler(400)
+def bad_request(e):
+    # Most often a form from a page left open too long (csrf.py): show the
+    # start page again, with fresh forms.
+    return render_home(error=e.description), 400
 
 
 @app.route("/healthz")

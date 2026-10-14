@@ -122,6 +122,10 @@ class BaseStorage:
     def count_users(self) -> int:
         return self._query("SELECT count(*) AS n FROM users")[0]["n"]
 
+    def get_password_hash(self, user_id: int):
+        rows = self._query("SELECT password_hash FROM users WHERE id = ?", (user_id,))
+        return rows[0]["password_hash"] if rows else None
+
     def set_password(self, user_id: int, password_hash: str):
         self._query("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
 

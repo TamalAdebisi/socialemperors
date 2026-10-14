@@ -149,6 +149,7 @@ def delete_account(user_id):
     if request.form.get("confirm", "").strip().lower() != user["username"].lower():
         return _account_page(user_id, 400, error=f"Type {user['username']} in the box to delete the account.")
     gone = sessions.delete_account(user_id)
+    accounts.forget(user_id)
     _log(f"deleted the account {user['username']} (id {user_id}) and its {gone} empire(s)")
     return redirect(url_for("admin.home", done=f"Deleted {user['username']} and {gone} empire(s)."))
 

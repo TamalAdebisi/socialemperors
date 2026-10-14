@@ -275,15 +275,23 @@ class WorldMapTest(unittest.TestCase):
         self.assertEqual(self.save["playerInfo"]["world_id"], home["world_id"])  # the first town's
 
 
+def send_form(web, path, **fields):
+    """Send one of our forms the way a browser does: with the token from the page."""
+    page = web.get("/").get_data(as_text=True)
+    token = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
+    return web.post(path, data=dict(fields, csrf=token))
+
+
 class WorldMapPagesTest(unittest.TestCase):
     """What the game asks over the web."""
 
     def setUp(self):
         import server
         self.web = server.app.test_client()
+        server.signups.seen.clear()  # every test signs up from the same address
         name = f"w{time.time_ns() % 10**15}"
-        self.web.post("/register", data={"username": name, "password": name + "-password"})
-        self.web.post("/new", data={"PLAYER": "ruffle"})
+        send_form(self.web, "/register", username=name, password=name + "-password")
+        send_form(self.web, "/new", PLAYER="ruffle")
         page = self.web.get("/ruffle.html").get_data(as_text=True)
         self.pid = re.search(r"&fb_sig_user=([^&]+)&", page).group(1)
         self.key = re.search(r"&user_key=([^&]+)&", page).group(1)

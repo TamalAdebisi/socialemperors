@@ -54,6 +54,12 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
       repurpose it once we can change the client
 - [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
+- [x] Login security: changing your password (on the new account page)
+      signs out every other browser and game; every form carries a CSRF
+      token; logging out is a button, not a link; at most 5 new accounts an
+      hour and 10 wrong passwords in 10 minutes per visitor
+- [ ] Getting back into an account without the admin: sign in with Discord,
+      or an email address for password reset links (to decide)
 - [x] Admin page (`/admin`, `admin.py`), for the usernames in `SE_ADMINS`:
       find an account, reset its password, delete it or one of its empires,
       look inside an empire's save, and see who played last
@@ -100,7 +106,7 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] The daily bonus (`daily_bonus.py`): the server decides the day and
       pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (199 tests so far)
+- [ ] An automated test for every command (209 tests so far)
 
 ### Cash (to decide)
 

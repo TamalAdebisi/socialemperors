@@ -31,23 +31,31 @@ def batch(*commands):
             "commands": [{"cmd": cmd, "args": args} for cmd, args in commands]}
 
 
+def send_form(web, path, **fields):
+    """Send one of our forms the way a browser does: with the token from the page."""
+    page = web.get("/").get_data(as_text=True)
+    token = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
+    return web.post(path, data=dict(fields, csrf=token))
+
+
 class AdminTest(unittest.TestCase):
 
     def setUp(self):
         server.app.config["TESTING"] = True
+        server.signups.seen.clear()  # every test signs up from the same address
         self.admin, self.admin_name = self.sign_up("a")
         patch = mock.patch.object(config_env, "ADMINS", {self.admin_name.lower()})
         patch.start()
         self.addCleanup(patch.stop)
         self.player, self.player_name = self.sign_up("p")
-        self.player.post("/new", data={"PLAYER": "ruffle"})
+        send_form(self.player, "/new", PLAYER="ruffle")
         self.pid = self.player.get("/ruffle.html").get_data(as_text=True).split("&fb_sig_user=")[1].split("&")[0]
         self.player_id = sessions.owner_of(self.pid)
 
     def sign_up(self, prefix):
         web = server.app.test_client()
         name = f"{prefix}{time.time_ns() % 10**15}"
-        web.post("/register", data={"username": name, "password": name + "-password"})
+        send_form(web, "/register", username=name, password=name + "-password")
         return web, name
 
     def form(self, path, **fields):
@@ -168,8 +176,7 @@ class AdminTest(unittest.TestCase):
         self.assertGreaterEqual(len(password), accounts.MIN_PASSWORD)
         self.assertIsNone(accounts.authenticate(self.player_name, self.player_name + "-password"))
         web = server.app.test_client()
-        self.assertEqual(web.post("/login", data={"username": self.player_name, "password": password}).status_code,
-                         302)
+        self.assertEqual(send_form(web, "/login", username=self.player_name, password=password).status_code, 302)
         self.assertIn("Your empires", web.get("/").get_data(as_text=True))
 
     def test_deleting_an_account(self):
@@ -207,7 +214,7 @@ class AdminTest(unittest.TestCase):
         self.assertEqual(self.admin.get("/admin/empire/no-such-empire").status_code, 404)
 
     def test_deleting_an_empire(self):
-        self.player.post("/new", data={"PLAYER": "ruffle"})
+        send_form(self.player, "/new", PLAYER="ruffle")
         other = [v["userid"] for v in sessions.villages_of(self.player_id) if v["userid"] != self.pid][0]
         sessions.flush()
         self.form(f"/admin/empire/{self.pid}/delete")  # not ticked "I'm sure"

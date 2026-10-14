@@ -17,6 +17,7 @@ import secrets
 from flask import abort, request, session
 
 FIELD = "csrf"
+EXPIRED = "That page was open too long, so nothing was done. Please try again."
 
 
 def token() -> str:
@@ -28,4 +29,4 @@ def token() -> str:
 def check():
     sent = request.form.get(FIELD, "")
     if not sent or not hmac.compare_digest(sent, session.get(FIELD, "")):
-        abort(400, description="This form has expired. Go back, reload the page and try again.")
+        abort(400, description=EXPIRED)
