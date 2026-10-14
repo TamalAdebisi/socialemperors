@@ -766,6 +766,41 @@ buttons at the top right while on offer. Code: `rules/goals.ts` and
 **Not yet:** the troll raids and their treasure chest (with battles), and
 renaming the empire.
 
+### Neighbours
+
+Built (Beta 1's seventh slice). The Neighbours window lists the player's
+neighbours, Arthur last; Visit opens their town. Code:
+`rules/neighbours.ts` (with tests), `visit.ts`, and the carts in
+`editor.ts`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- **Arthur** is added after the other neighbours by the client, not the
+  server. His level is a fifth above the player's (no higher than the last
+  level), and the town shown is the one for the player's stage: up to
+  level 10, up to 20, then the grown one (the server's villages
+  100000030 to 32). So his town grows as the player's does.
+- **Visiting**, the top bar keeps the player's own numbers, with "Visiting
+  <name>" and Back home. Their farms, mills, mines, ranches, the bakery
+  and wonders that house nobody can be helped: up to 5, each once, for 10
+  gold and 3 XP each. A neighbour can be helped once a day (the player's
+  `neighborAssists`). The help goes to the server as one command on
+  leaving (`assist_neighbor_new`, neighbour, 0, the buildings as
+  `[[x, y, id], ...]`), sent before Back home moves on.
+- **The donkey cart:** on their next visit home, the helped player sees a
+  cart by the town hall for each neighbour who helped (`receivedAssists`),
+  one after another. Let it in, and it goes to each building helped and
+  brings it a quarter of one harvest and 10 XP (`assist_receive`, town,
+  building); No thanks sends it away. Either way the server hears first
+  (`clean_received_assists`, helper, town). A cart left waiting asks again
+  when tapped.
+- **A server fix:** the server used to drop the cart's help when told the
+  cart was met, so the shares that followed found nothing. It now keeps
+  them as "on the way" (`assistsOnTheWay`) until each is delivered.
+
+**Not yet:** gifts and requests between neighbours, and adding neighbours
+from inside the game (the site's friends page does it).
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

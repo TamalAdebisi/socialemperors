@@ -9,6 +9,10 @@ on their next visit home.
                                       a day later
     map["receivedAssists"]           {"u" + helper: [[x, y, building], ...]}
                                      help waiting for the donkey cart
+    map["assistsOnTheWay"]           the same, once the player has let the
+                                     cart in: the client says so
+                                     ("clean_received_assists") before the
+                                     cart delivers each share ("assist_receive")
 
 Commands from the client:
 
@@ -96,13 +100,21 @@ def help_request(save: dict, neighbour, town_id: int) -> str:
     return f"Helped {neighbour}: +{gold} gold, +{xp} xp."
 
 
+def _on_the_way(map: dict) -> dict:
+    if not isinstance(map.get("assistsOnTheWay"), dict):
+        map["assistsOnTheWay"] = {}
+    return map["assistsOnTheWay"]
+
+
 def receive(save: dict, town_id: int, building_id) -> str:
     map = save["maps"][town_id]
     building_id = int(building_id)
-    for key, buildings in _received(map).items():
+    for key, buildings in [*_received(map).items(), *_on_the_way(map).items()]:
         for entry in buildings:
             if int(entry[2]) == building_id:
                 buildings.remove(entry)  # each help is delivered once
+                if not buildings and key in _on_the_way(map):
+                    del _on_the_way(map)[key]  # that cart is done
                 share = number(building_id, "collect") // SHARE_DIVISOR
                 resource = _collect_type(building_id)
                 give(save, map, resource, share)
@@ -117,5 +129,11 @@ def _collect_type(building_id) -> str:
 
 
 def clean(save: dict, helper, town_id: int) -> str:
-    _received(save["maps"][town_id]).pop("u" + str(helper), None)
+    """The player has met that helper's cart: let in (its shares are still to
+    be delivered, one "assist_receive" each) or sent away (then they never are)."""
+    map = save["maps"][town_id]
+    key = "u" + str(helper)
+    waiting = _received(map).pop(key, None)
+    if waiting:
+        _on_the_way(map)[key] = waiting  # the client delivers after saying this
     return f"The cart from {helper} has gone."

@@ -14,8 +14,8 @@ const numbers = new Intl.NumberFormat("en-US");
 
 export interface HudActions {
   classicUrl: string;
-  /** Showing another player's town. */
-  visiting?: boolean;
+  /** Showing another player's town: their name (the numbers stay the player's own). */
+  visiting?: string;
   /** The levels table, for how far the town is from the next. */
   levels?: Level[];
   /** The town's people and the room for them. */
@@ -64,7 +64,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
   const level = bar.querySelector<HTMLElement>(".hud-level")!;
   if (actions.visiting) {
     const visiting = bar.querySelector<HTMLElement>(".hud-visiting")!;
-    visiting.textContent = `Visiting ${who}`;
+    visiting.textContent = `Visiting ${actions.visiting}`;
     visiting.hidden = false;
     bar.querySelector<HTMLElement>("[data-home]")!.hidden = false;
     bar.classList.add("visiting");
@@ -76,7 +76,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
     const to = actions.levels?.[t.level]?.xp;
     const done = to === undefined ? 1 : Math.min(Math.max((t.xp - from) / (to - from), 0), 1);
     bar.querySelector<HTMLElement>(".hud-xp-done")!.style.width = `${Math.round(done * 100)}%`;
-    level.dataset.tip = (actions.visiting ? "" : `${who}: `) + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
+    level.dataset.tip = `${who}: ` + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
       : `${numbers.format(t.xp)} of ${numbers.format(to)} XP for level ${t.level + 1}`);
     if (actions.population) {
       const people = actions.population(t);

@@ -22,9 +22,10 @@ import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
+import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
-import { SUBCAT, canGoInside, canHarvest, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
+import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -82,6 +83,8 @@ export class TownEditor {
   private readonly savedAt = new Map<PlacedItem, Point>();
   /** Trees and rocks being worked: since when (the game's clock), and by whom. */
   private readonly working = new Map<PlacedItem, { since: number; workers: Set<PlacedItem> }>();
+  /** Carts waiting to be let in: tapping one asks again. */
+  private readonly cartsWaiting = new Map<PlacedItem, () => void>();
   /** What each villager at work is working. */
   private readonly workingOn = new Map<PlacedItem, PlacedItem>();
 
@@ -318,6 +321,14 @@ export class TownEditor {
       return;
     }
     const placed = this.view.itemAt(at);
+    const cart = placed ? this.cartsWaiting.get(placed) : undefined;
+    if (cart) {
+      cart();  // a neighbour's cart, waiting: ask again
+      return;
+    }
+    if (placed?.item.id === CART) {
+      return;  // a cart on its round: only the client has it, so it can't be sent anywhere
+    }
     // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
     if (unit && !placed) {
@@ -800,6 +811,77 @@ export class TownEditor {
   private send(commands: Command[]): void {
     for (const command of commands) {
       this.commands.add(command.cmd, ...command.args);
+    }
+  }
+
+  /**
+   * The donkey carts that bring neighbours' help, one after another, as the
+   * Flash client shows them: each asks to be let in, then goes from building
+   * to building helped, bringing each its share.
+   */
+  welcomeCarts(list: { helper: string; buildings: { x: number; y: number; id: number }[] }[], nameOf: (pid: string) => string): void {
+    const [cart, ...rest] = list;
+    const item = this.items.get(CART);
+    if (!cart || !item) {
+      return;
+    }
+    const tile = freeTileNear(this.town, { tx: 50, ty: 50 } as PlacedItem);
+    if (!tile) {
+      return;
+    }
+    const unit: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
+    this.town.items.push(unit);
+    void this.view.redraw(unit);
+    const gone = () => {
+      this.view.remove(unit);
+      this.town.items.splice(this.town.items.indexOf(unit), 1);
+      this.welcomeCarts(rest, nameOf);
+    };
+    const count = cart.buildings.length;
+    const ask = () => this.bar.prompt(`${nameOf(cart.helper)} helped you: their cart brings a share for ${count} building${count > 1 ? "s" : ""}.`, [
+      { label: "Let it in", run: () => {
+        this.cartsWaiting.delete(unit);
+        this.bar.hide();
+        this.send([cartMet(this.town, cart.helper)]);
+        this.cartRound(unit, [...cart.buildings], gone);
+      } },
+      { label: "No thanks", run: () => {
+        this.cartsWaiting.delete(unit);
+        this.bar.hide();
+        this.send([cartMet(this.town, cart.helper)]);
+        gone();
+      } },
+    ]);
+    this.cartsWaiting.set(unit, ask);
+    ask();
+  }
+
+  /** The cart goes to the next building helped and brings it its share; then the one after. */
+  private cartRound(cart: PlacedItem, left: { x: number; y: number; id: number }[], done: () => void): void {
+    const next = left.shift();
+    if (!next) {
+      done();
+      return;
+    }
+    const building = this.town.items.find((p) => p.item.id === next.id && p.tx === next.x && p.ty === next.y);
+    const tile = building && canBeHelped(building.item) ? standingTile(this.town, cart, building) : null;
+    if (!building || !tile) {
+      this.cartRound(cart, left, done);  // gone, or out of reach: on to the next
+      return;
+    }
+    const walking = this.walkTo(cart, tile, () => {
+      const brought = deliver(this.town, building);
+      this.send([brought.command]);
+      this.view.rise(building, [
+        { text: `+${brought.amount} ${brought.resource}`, colour: RESOURCE_COLOURS[brought.resource] },
+        { text: `+${brought.xp} XP`, colour: RESOURCE_COLOURS.xp },
+      ]);
+      this.levelUp();
+      this.hud.update(this.town);
+      this.cartRound(cart, left, done);
+    });
+    if (!walking) {
+      this.cartRound(cart, left, done);
     }
   }
 
