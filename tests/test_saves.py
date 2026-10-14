@@ -13,7 +13,7 @@ import unittest
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import sessions
-from bundle import VILLAGES_DIR
+from paths import VILLAGES_DIR
 from version import migrate_loaded_save, version_code
 
 

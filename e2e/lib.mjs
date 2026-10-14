@@ -1,0 +1,204 @@
+// What the browser tests play with: a new player with a new town, open in
+// the new client, and the ways to tap, read and check it.
+
+import { join } from "node:path";
+
+export const DESKTOP = { width: 1280, height: 800 };
+export const PHONE = { width: 390, height: 844 };
+
+/** A new account with a new town, open in the new client. Its own browser window, as its own visitor. */
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false } = {}) {
+  const context = await browser.newContext({
+    viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
+    ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
+  });
+  const page = await context.newPage();
+  const player = new Player(page, base, out, viewport);
+  const name = `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
+  const signUp = await page.request.post(base + "/register", { form: { username: name, password: `${name}-password`, csrf: await player.csrf() } });
+  if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
+  await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
+  await player.open();
+  return player;
+}
+
+export class Player {
+  constructor(page, base, out, viewport) {
+    this.page = page;
+    this.base = base;
+    this.out = out;
+    this.viewport = viewport;
+    /** Errors the page reported: a test fails on any. */
+    this.problems = [];
+    /** The same player in other windows (onPhone). */
+    this.companions = [];
+    page.on("pageerror", (error) => this.problems.push(error.message));
+    page.on("console", (message) => {
+      // A missing picture is the art's business (the shop draws its own then), not the client's.
+      if (message.type() === "error" && !message.text().includes("404")) this.problems.push(message.text());
+    });
+  }
+
+  async csrf() {
+    await this.page.goto(this.base + "/");
+    return this.page.locator('input[name="csrf"]').first().getAttribute("value");
+  }
+
+  /** The new client, once the town is drawn. */
+  async open() {
+    await this.page.goto(this.base + "/client.html");
+    await this.loaded();
+    this.settings = JSON.parse(await this.page.locator("#se-settings").textContent());
+  }
+
+  async reload() {
+    await this.page.reload();
+    await this.loaded();
+  }
+
+  async loaded() {
+    await this.page.waitForFunction(() => {
+      const status = document.querySelector(".status");
+      return status && status.hidden;
+    }, null, { timeout: 60_000 });
+    await this.wait(800);  // signs come up with the first refresh
+  }
+
+  wait(ms) {
+    return this.page.waitForTimeout(ms);
+  }
+
+  async close() {
+    await Promise.all(this.companions.map((other) => other.close()));
+    await this.page.context().close();
+  }
+
+  /** The same player signed in on a phone, in a window of its own. */
+  async onPhone() {
+    const mine = this.page.context();
+    const context = await mine.browser().newContext({
+      viewport: PHONE, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "en-US",
+    });
+    await context.addCookies(await mine.cookies());
+    const phone = new Player(await context.newPage(), this.base, this.out, PHONE);
+    this.companions.push(phone);
+    await phone.open();
+    return phone;
+  }
+
+  shot(name) {
+    return this.page.screenshot({ path: join(this.out, `${name}.png`) });
+  }
+
+  // ---- Where things are -----------------------------------------------------
+
+  /** The screen point `up` pixels (at zoom 1) above tile (tx, ty)'s bottom corner, with the camera where it starts. */
+  screenOf(tx, ty, up = 15) {
+    const { width, height } = this.viewport;
+    const zoom = 0.7 * Math.min(Math.max(Math.min(width / 760, height / 600), 0.6), 3);
+    return {
+      x: width / 2 + (54 * (tx - ty) + 84) * zoom,
+      y: height / 2 + (27 * (tx + ty) - 54 - up - 2679) * zoom,
+    };
+  }
+
+  async click(point) {
+    await this.page.mouse.click(point.x, point.y);
+    await this.wait(250);
+  }
+
+  async hover([tx, ty]) {
+    const point = this.screenOf(tx, ty);
+    await this.page.mouse.move(point.x, point.y);
+    await this.wait(250);
+  }
+
+  /** Taps tile (tx, ty)'s spot, for placing and moving. */
+  async tapTile([tx, ty]) {
+    await this.hover([tx, ty]);
+    await this.click(this.screenOf(tx, ty));
+  }
+
+  /**
+   * Taps ever higher above a tile until the action bar shows what's wanted
+   * (text it starts with, or a test): pictures stand higher or lower than a
+   * guess, and the grass between them selects nothing. The point that worked.
+   */
+  async select([tx, ty], wanted) {
+    const ok = typeof wanted === "function" ? wanted : (text) => text.startsWith(wanted);
+    for (let up = 10; up <= 220; up += 15) {
+      const point = this.screenOf(tx, ty, up);
+      await this.click(point);
+      const text = await this.bar();
+      if (ok(text)) return { point, text };
+    }
+    throw new Error(`nothing right above ${tx}, ${ty}; the bar says "${await this.bar()}"`);
+  }
+
+  // ---- What's on screen -----------------------------------------------------
+
+  button(label) {
+    return this.page.getByRole("button", { name: label, exact: true });
+  }
+
+  async press(label) {
+    await this.button(label).click();
+    await this.wait(300);
+  }
+
+  /** The action bar's text, or "" when it's hidden. */
+  async bar() {
+    const bar = this.page.locator(".actions");
+    return (await bar.isHidden()) ? "" : (await bar.textContent()).trim();
+  }
+
+  async barButtons() {
+    const bar = this.page.locator(".actions");
+    return (await bar.isHidden()) ? [] : (await bar.locator("button").allTextContents()).map((text) => text.trim());
+  }
+
+  /** The message at the top, or "" when there's none. */
+  async status() {
+    const status = this.page.locator(".status");
+    return (await status.isHidden()) ? "" : (await status.textContent()).trim();
+  }
+
+  /** A card in the shop or storage, by the item's name. */
+  card(name) {
+    return this.page.locator(".shop-card", { has: this.page.locator(".shop-name", { hasText: new RegExp(`^${name}$`) }) });
+  }
+
+  // ---- The server's side ----------------------------------------------------
+
+  /** Sends commands as the Flash client does, to set a town up. */
+  async send(commands) {
+    const response = await this.page.request.post(`${this.base}${this.settings.dynamicUrl}/command.php`, { form: {
+      USERID: this.settings.userId, user_key: this.settings.userKey,
+      data: "0".repeat(64) + ";" + JSON.stringify({ first_number: 0, commands, tries: 1, accessToken: "", publishActions: "0", ts: Math.floor(Date.now() / 1000) }),
+    } });
+    if (!response.ok()) throw new Error(`the server refused the commands: ${response.status()}`);
+  }
+
+  /** The town as the server has it saved, after the client's next batch of commands (every 3 seconds). */
+  async saved({ waitForBatch = true } = {}) {
+    if (waitForBatch) await this.wait(4000);
+    const response = await this.page.request.post(`${this.base}${this.settings.dynamicUrl}/get_player_info.php`,
+      { form: { USERID: this.settings.userId, user_key: this.settings.userKey } });
+    return (await response.json()).map;
+  }
+}
+
+/** Whether a saved town has item `id` at (x, y). */
+export function has(map, id, [x, y]) {
+  return map.items.some((item) => item[0] === id && item[1] === x && item[2] === y);
+}
+
+/** The saved item `id` at (x, y), if there is one. */
+export function itemAt(map, id, [x, y]) {
+  return map.items.find((item) => item[0] === id && item[1] === x && item[2] === y);
+}
+
+/** How many of item `id` a storage box holds: saves keep it as {id: count} or as a list by id. */
+export function stored(box, id) {
+  return Number((Array.isArray(box) ? box[id] : box?.[id]) ?? 0);
+}

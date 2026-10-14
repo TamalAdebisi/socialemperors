@@ -13,9 +13,10 @@ This is a non-commercial fan project. See [Copyright](#copyright) below.
 2. Every push to that branch is deployed to **staging** automatically:
    <https://game-server-staging-production.up.railway.app>. Staging has its own
    empty database, so testing there never touches real players' empires.
-3. The live game changes **only when the owner merges** the pull request.
-   Railway then rebuilds `main` (about 2 minutes, then a short reconnect for
-   players).
+3. The live game changes **only when a pull request is merged** into `main`:
+   by the owner, or by Claude for its own once all its tests pass, as the
+   owner allows. Railway then rebuilds `main` (about 2 minutes, then a short
+   reconnect for players).
 
 Passwords, API keys and tokens never go in chat or in the repository, only in
 GitHub Secrets or Railway variables.
@@ -259,9 +260,26 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 - [ ] 3. Run your town (started): the shop and building; storage; move,
       turn, store and sell buildings; collect from them, with levels; all
       with the Flash client's commands ([CLIENT.md](CLIENT.md#step-3-run-your-town)).
-      Next: the Flash client's look for the windows, then units walking and
-      training units
+      The Flash client's own icons are in; next, the menus' layout
 - [ ] 4. Battles, 5. everything else, 6. switch over
+
+**From here, in three stops** (agreed October 2026). Each is built in
+slices, about one task each; every slice ends tested, documented and merged.
+The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
+
+- [ ] **Beta 1, the town builder** (the rest of step 3): the menus in the
+      layout the owner picks (option 1, classic corners, is the favourite);
+      units walking; villagers at work (trees, rocks, workers into
+      buildings); training and population; land and cash; missions and
+      bonuses; neighbours; sound and speed; then a full run-through against
+      the Flash game. Players can use the new client for everything but
+      battles, which open in the classic game.
+- [ ] **Beta 2, battles and quests** (step 4): combat, defending a town,
+      spells and heroes, the island map, then the quests in batches with
+      their bosses, checked side by side against the Flash game.
+- [ ] **The switch** (steps 5 and 6): battles against players, the long
+      tail, the tutorial and polish. The new client becomes the default, with
+      the Flash game one tap away for a while.
 
 ## How we add a missing feature
 

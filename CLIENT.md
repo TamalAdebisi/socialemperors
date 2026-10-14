@@ -427,8 +427,10 @@ Sell asks first, on the card itself.
   which needs the town's population.
 
 **Tested:** the rules and the command queue have unit tests (`npm test`).
-A browser test edits a new town (turns a tower, moves a house, sells a tree
-and a house, stores a tower) and checks the server's save afterwards: every
+The browser tests are in `e2e/tests/`, and `node e2e/run.mjs` plays them
+against a server of its own with a throwaway database. One edits a new town
+(turns a tower, moves a house, finds a tree can't be sold, sells a house,
+stores a tower) and checks the server's save afterwards: every
 change is there, with the refund, and reloading shows the town as it was
 left. Another sets a new town up as the Flash client would (a farm, a ranch
 and a gold mine, with a villager in each), then in the new client chooses

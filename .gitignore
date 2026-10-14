@@ -1,13 +1,9 @@
-social-emperors_*.exe
-build/
 .venv/
 saves/
 .idea
 __pycache__/
 .DS_Store
 .vs/
-*.lnk
-download_assets/
 Include/
 Lib/
 Scripts/
@@ -25,3 +21,6 @@ decompiled/
 # The new game client's packages and build (client/, built by npm run build)
 client/node_modules/
 client/dist/
+
+# The browser tests' screenshots and server log (node e2e/run.mjs)
+e2e/out/

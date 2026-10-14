@@ -2,7 +2,7 @@ import json
 import os
 import jsonpatch
 import economy
-from bundle import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
+from paths import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
 
