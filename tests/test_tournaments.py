@@ -9,6 +9,7 @@ import json
 import os
 import re
 import tempfile
+import time
 import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
@@ -38,11 +39,17 @@ class TournamentsTest(unittest.TestCase):
         self.now = WEDNESDAY_NOON
         self.clock, tournaments._now = tournaments._now, lambda: self.now
         self.dice = tournaments.BOT_WIN_CHANCE
+        self.friends = sessions.friends
         self.me = self.player()
 
     def tearDown(self):
         tournaments._now = self.clock
         tournaments.BOT_WIN_CHANCE = self.dice
+        sessions.friends = self.friends
+
+    def befriend(self, *pids):
+        """These players are all friends with each other, and with nobody else."""
+        sessions.friends = lambda USERID: [p for p in pids if p != USERID] if USERID in pids else []
 
     def player(self, gold=100000, cash=100):
         pid = sessions.new_village(owner_id=None)
@@ -273,20 +280,108 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(self.join(ADVANCED)["result"], "NOK")
         self.assertEqual(self.cash(), 100)
 
-    def test_friends_tournaments_are_not_here_yet(self):
-        reply = self.ask("create_tournament", tournament_type_id=NEWBIES, team=SWORDSMEN, usersFriends=[])
-        self.assertEqual(reply, {"result": "NOFRIENDS", "resources": {"refund": 1, "tournament_type_id": NEWBIES}})
-        self.assertEqual(self.join(tournament_id="someones")["result"], "NOK")
-        self.assertEqual(self.gold(), 100000)
-
     def test_a_type_that_does_not_exist(self):
         self.assertEqual(self.join("99"), {"result": "NOK"})  # no refund: the client would look up the fee and fail
+        self.assertEqual(self.create("99"), {"result": "NOK"})
         self.assertIsNone(tournaments.service(self.me, "no_such_service", {}))
 
     def test_the_client_bookkeeping_changes_nothing(self):
         do_command(self.me, "tournament_substract_resources", ["g", 500, NEWBIES, 0])
         do_command(self.me, "tournament_refund_resources", ["g", 500])
         self.assertEqual(self.gold(), 100000)
+
+    # Friends tournaments
+
+    def create(self, type_id=NEWBIES, pid=None, team=SWORDSMEN):
+        return self.ask("create_tournament", pid, tournament_type_id=type_id, team=team,
+                        usersFriends=[], flashSubResources=1)
+
+    def join_friend(self, room, pid, type_id=NEWBIES):
+        return self.join(type_id, pid=pid, tournament_id=room["tournament_id"])
+
+    def test_a_friends_tournament(self):
+        friends = [self.player() for _ in range(3)]
+        stranger = self.player()
+        self.befriend(self.me, *friends)
+        reply = self.create()
+        self.assertEqual(reply["result"], "OK")
+        self.assertEqual(self.gold(), 100000 - 500)
+        room = reply["tournament"]
+        name = room["players"][0]["user_name"]
+        self.assertEqual((room["private"], room["owner_id"], room["owner"]), ("1", self.me, name))
+        self.assertIsNone(room["date_ready"])
+
+        card = {"tournament_id": room["tournament_id"], "tournament_type_id": NEWBIES,
+                "reward_id": room["reward_id"], "owner": name, "owner_id": self.me}
+        self.assertEqual(self.ask("get_tournament_info", friends[0])["tournament_friends"], [card])
+        self.assertEqual(self.ask("get_tournament_info", stranger)["tournament_friends"], [])
+        self.assertEqual(self.join_friend(room, stranger)["result"], "NOK")
+        self.assertEqual(self.gold(stranger), 100000)
+
+        for pid in friends:
+            self.assertEqual(self.join_friend(room, pid)["result"], "OK")
+        room = self.tournament(friends[0])
+        self.assertEqual(room["date_ready"], self.now)
+        self.assertEqual(room["private"], "1")
+        self.assertEqual(sorted(p["user_id"] for p in room["players"]), sorted([self.me] + friends))
+        self.assertEqual(sum(len(p["matches"]) for p in room["players"]), 12)
+        self.assertEqual(self.ask("get_tournament_info", stranger)["tournament_friends"], [])  # full
+
+    def test_too_few_friends(self):
+        friends = [self.player() for _ in range(2)]
+        self.befriend(self.me, *friends)
+        self.assertEqual(self.create(), {"result": "NOFRIENDS", "resources": {"refund": 1, "tournament_type_id": NEWBIES}})
+        self.assertEqual(self.gold(), 100000)
+        self.assertIsNone(self.tournament())
+
+    def test_the_owner_calls_it_off(self):
+        friends = [self.player() for _ in range(3)]
+        self.befriend(self.me, *friends)
+        room = self.create()["tournament"]
+        self.join_friend(room, friends[0])
+        self.assertEqual(self.gold(friends[0]), 100000 - 500)
+        reply = self.ask("cancel_tournament", tournament_id=room["tournament_id"])
+        self.assertEqual(reply, {"result": "OK", "resources": {"refund": 1, "tournament_type_id": NEWBIES}})
+        self.assertEqual((self.gold(), self.gold(friends[0])), (100000, 100000))  # every fee back
+        self.assertIsNone(self.tournament(friends[0]))
+        self.assertEqual(self.ask("get_tournament_info", friends[1])["tournament_friends"], [])
+
+    def test_a_friend_leaves_before_the_start(self):
+        friends = [self.player() for _ in range(3)]
+        self.befriend(self.me, *friends)
+        room = self.create()["tournament"]
+        self.join_friend(room, friends[0])
+        reply = self.ask("leave_tournament", friends[0], tournament_id=room["tournament_id"])
+        self.assertEqual(reply["resources"], {"refund": 1, "tournament_type_id": NEWBIES})
+        self.assertEqual(self.gold(friends[0]), 100000)
+        self.assertEqual([p["user_id"] for p in self.tournament()["players"]], [self.me])  # still waiting
+
+    def test_friends_get_a_day_then_bots(self):
+        self.befriend(self.me, *[self.player() for _ in range(3)])
+        self.create()
+        self.now += 23 * HOUR
+        self.assertIsNone(self.tournament()["date_ready"])
+        self.now += HOUR
+        room = self.tournament()
+        self.assertEqual([p["user_id"] for p in room["players"][1:]], BOTS)
+        self.assertEqual(room["owner_id"], self.me)
+
+    def test_public_rooms_are_not_friends_rooms(self):
+        self.befriend(self.me, *[self.player() for _ in range(3)])
+        self.create()
+        other = self.player()
+        self.join(pid=other, category=0)
+        self.assertEqual(len(self.tournament()["players"]), 1)
+        self.assertEqual(self.tournament(other)["private"], "0")
+
+    def test_friends_are_the_players_among_the_neighbours(self):
+        sessions.friends = self.friends
+        other = self.player()
+        sessions.session(other)["playerInfo"]["last_logged_in"] = self.now  # one of the most recently active
+        friends = sessions.friends(self.me)
+        self.assertIn(other, friends)
+        self.assertNotIn(self.me, friends)
+        self.assertTrue(all(sessions.session(pid) for pid in friends))  # players, not the villages that ship with the game
 
     # The weekly tournament
 
@@ -365,7 +460,7 @@ class ServerTest(unittest.TestCase):
             fields["csrf"] = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
             web.post(path, data=fields)
 
-        name = f"t{os.getpid()}{id(self)}"
+        name = f"t{time.time_ns() % 10**15}"  # usernames are 3 to 20 characters
         send_form("/register", username=name, password=name + "-password")
         send_form("/new", PLAYER="ruffle")
         game = web.get("/ruffle.html").get_data(as_text=True)
@@ -386,6 +481,12 @@ class ServerTest(unittest.TestCase):
 
     def test_no_such_service(self):
         self.assertEqual(self.call("tournaments/no_such_thing.php").status_code, 404)
+
+    def test_the_invite_buttons_open_a_notice(self):
+        page = self.web.get("/ruffle.html").get_data(as_text=True)
+        self.assertIn('<dialog id="invite"', page)
+        self.assertIn("window.showPopupInviteTournament = function", page)
+        self.assertNotIn('"showPopupInviteTournament"', page)  # no longer one of the page's do-nothing calls
 
     def test_the_arena(self):
         reply = self.call("get_player_info.php", {"user": tournaments.ARENA})

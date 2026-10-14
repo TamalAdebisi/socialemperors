@@ -42,6 +42,8 @@ def add_missing_fields(save: dict) -> None:
         if not isinstance(map.get("universAttackWin"), list):
             map["universAttackWin"] = []  # the world map's islands beaten (worlds.py)
         map.setdefault("levelPaid", int(map.get("level") or 1))  # levels.py; a new town is paid up
+    if not isinstance(pState.get("comebackBonusCollected"), list):
+        pState["comebackBonusCollected"] = []  # the welcome-back chest (comeback_bonus.py); the client breaks without it
 
 
 def migrate_loaded_save(save: dict) -> bool:

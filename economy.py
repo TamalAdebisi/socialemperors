@@ -19,6 +19,10 @@ what they get.
     Daily bonus    a streak of 5 days (daily_bonus.py): day 3 and day 5 pay
                    cash; a missed day starts the streak over.
     Monday bonus   the cash chest, one of three (monday_bonus.py).
+    Welcome back   a chest on a new empire's 2nd and 3rd day
+                   (comeback_bonus.py). The game client draws it from the
+                   Monday chest's list, so it holds the same: 2,500 gold,
+                   a unit, or MONDAY_BONUS_CASH.
     Continents     the world map's prize for reaching a continent
                    (worlds.py): more cash the further the continent.
     The bank       2,000 of one resource (gold, wood, food or stone) for 1
