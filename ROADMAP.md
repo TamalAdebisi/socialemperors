@@ -50,7 +50,8 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 - [x] Ruffle settings: tried every quality and renderer switch on the game
       page. Ruffle's own defaults are as good as any. WebGPU crashed the game
       (Chrome on a Mac), so the page no longer offers it
-- [ ] Ruffle: host it ourselves instead of loading it from unpkg.com
+- [x] Ruffle: our own copy (`assets/ruffle/0.7.1/`) next to the game's files,
+      instead of loading it from unpkg.com
 - [ ] The in-game *Add Cash* button is drawn by the game itself; hide or
       repurpose it once we can change the client
 - [ ] Missing file: `fx/p.miniFireball2.swf` (the game asks for it, nobody has it)
