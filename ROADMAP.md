@@ -157,10 +157,11 @@ numbers, because the server writes them into the game config.
 - [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
       them into sprite sheets (WebP, plus JSON naming the animations). This is
       also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
-- [ ] Asset pipeline for the effects and sounds, and uploading it all to R2
+- [x] The sheets on R2: the **Export art to R2** workflow ([DEPLOY.md](DEPLOY.md))
+- [ ] Asset pipeline for the effects and sounds
 - [ ] Content editor for adding new units, buildings and quests
 
-### Phase 4: New game client (scoped)
+### Phase 4: New game client (started)
 
 Replace the Flash client with a modern one that draws the same art and talks
 to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
@@ -175,8 +176,9 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
   confirmed once the new client can draw a real town.
 
 - [x] 1. Art pipeline: buildings and units as sprite sheets (`tools/export_art.sh`)
-- [ ] 2. Look at your town: a read-only page that draws the map, buildings and
-      units from the config and the save. Confirms the engine
+- [x] 2. Look at your town: `/client.html` draws the map, buildings and units
+      from the config and the save, with PixiJS; smooth scrolling and zoom,
+      touch, full screen. Look only ([CLIENT.md](CLIENT.md#step-2-look-at-your-town))
 - [ ] 3. Run your town, 4. battles, 5. everything else, 6. switch over
 
 ## How we add a missing feature
@@ -200,6 +202,7 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 | Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need Phase 3 first |
 | Ruffle instead of Flash Player | Works in every modern browser with no plugin |
 | Client version 0.9.26b | The one that works fully today |
+| PixiJS 8 for the new client | Light, fast with many sprites, and we keep control; confirmed by drawing real towns ([CLIENT.md](CLIENT.md#engine)) |
 | Supabase later, not now | Postgres and auth are useful at scale; one SQLite file is enough until then |
 
 ## Copyright

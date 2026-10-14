@@ -3,9 +3,10 @@
 Phase 4 of the [roadmap](ROADMAP.md): replacing the Flash client with a
 modern one that draws the same art and talks to the same server. This is a
 first pass at what that involves, measured on the client we run today
-(0.9.26b) in October 2026. Steps 1 and 2 below don't change the server, so
-they go ahead alongside Phase 2 and Cash. Step 1, the art pipeline, is built
-([below](#step-1-the-art-pipeline)).
+(0.9.26b) in October 2026. Steps 1 and 2 below don't change the game's
+server, so they went ahead alongside Phase 2 and Cash. Both are built: the
+art pipeline ([step 1](#step-1-the-art-pipeline)) and a page that shows your
+town with PixiJS ([step 2](#step-2-look-at-your-town)).
 
 ## In short
 
@@ -126,6 +127,10 @@ either way. The choice matters less than it looks, as long as the game rules
 are kept out of the drawing code. Step 2 below (drawing a real town) is where
 we confirm it: if PixiJS struggles there, switching is still cheap.
 
+**Chosen: PixiJS 8** (October 2026). Step 2 draws a fully grown town of 400
+items with it, animated and in order, with smooth zooming; nothing needed
+more than PixiJS gives.
+
 ### Windows in HTML, not drawn by the engine
 
 The game has about 100 kinds of window. Built as HTML and CSS on top of the
@@ -161,7 +166,7 @@ actually use; the bug radar on the admin page shows what that is.
 | Step | What it delivers | Size |
 | --- | --- | --- |
 | 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
-| 2. Look at your town | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
+| 2. Look at your town (built: `/client.html`) | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
 | 3. Run your town | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The 236 server tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
 | 5. Everything else | The world map, temple, collections, market, dragons, survival, darts, the time machine, the tutorial, sound; the special units and items | Large, long tail |
@@ -172,8 +177,8 @@ who aren't fighting, which is a good moment to open it as a beta.
 
 **In the repository:** a `client/` folder (TypeScript, built with Vite), with
 the game rules (`rules/`, no drawing, unit-tested), the drawing (`view/`,
-PixiJS), the windows (`ui/`) and the server calls (`net/`) kept apart. A
-GitHub Action builds it and uploads it to R2, as it does for the assets.
+PixiJS), the windows (`ui/`) and the server calls (`net/`) kept apart. The
+server's Docker image builds it; the art goes to R2 with a GitHub workflow.
 
 ### Step 1: the art pipeline
 
@@ -181,9 +186,9 @@ GitHub Action builds it and uploads it to R2, as it does for the assets.
 `assets/buildingsprites/`) into sprite sheets: `art/sheets/<item>.webp` and
 `<item>.json`, named like the item's `img_name` in the game config. It needs
 a Java JDK (for FFDec, which `tools/ffdec.sh` builds) and Python with Pillow,
-and draws everything in a few hours on 4 processor cores. `art/` is not
-committed; a GitHub Action will make it and upload it to R2 once the new
-client uses it.
+and makes everything in a few hours on 4 processor cores. `art/` is not
+committed: the **Export art to R2** workflow makes it on 8 machines at once
+and puts it in the bucket under `art/` ([DEPLOY.md](DEPLOY.md)).
 
 **How the files are laid out**, read from all 1,587:
 
@@ -205,12 +210,18 @@ client uses it.
    FFDec's renderer, letting child animations play, as the game does when it
    jumps to a frame. All of an item's pictures share one canvas, so the point
    the game positions the item by is at the same pixel in each. A picture
-   repeated across frames is kept once. Only pictures are read, never code.
+   repeated across frames is kept once. It also notes each frame's box as
+   Flash measures it, transparent edges included: the game places buildings
+   by it. Only pictures are read, never code.
 2. `tools/art/pack_sheet.py` trims the empty space, packs the pictures into
    one WebP (quality 85, transparency kept exact) and writes the JSON in
    TexturePacker's "JSON hash" layout, which PixiJS and Phaser both load as it
    is: where each picture is, its anchor, and each animation as
    `<label>/<direction>` (for example `ATAQUE/2`), one picture per frame.
+   What doesn't fit in one 4,096 x 4,096 image (big bosses, the ground) goes
+   on more pages, `<item>-1.webp` and so on. Each batch of 20 items is packed
+   as soon as it is drawn and its pictures deleted, so the export needs
+   little disk space.
 3. `tools/art/preview.py` plays a sheet back into an animated WebP, reading
    only the sheet and the JSON, to check it by eye against the game.
 
@@ -222,7 +233,82 @@ file in the repository, so neither client can draw it.
 
 Still to do for the art: the effects in `assets/fx/` (mostly vector
 drawings, which can be drawn sharper than the original), the sounds inside
-the Flash files, and the upload to R2.
+the Flash files, and the scaffolding pictures for buildings under
+construction (in `assets/swf/120608_dynamic.swf`).
+
+### Step 2: look at your town
+
+`/client.html` is the new client's page, offered on the home page as "The
+new game (preview)" next to Ruffle and Flash. It opens the same empire with
+the same signed game token, asks for the game config and the town exactly as
+the Flash client does (`get_game_config.php`, `get_player_info.php`), draws
+the town and changes nothing. `/client.html?visit=<player id>` shows another
+player's town, as visiting a neighbour does.
+
+- The ground and every building and unit, in the game's drawing order, each
+  where the Flash client puts it: side by side with the Flash client, a new
+  town lines up, and the walls of a fully grown town meet without gaps.
+- Units waiting in town play their idle animation, animated buildings theirs,
+  each from a random point so a crowd doesn't move in step.
+- Drawn as often as the screen shows a new picture (60 or 120 times a
+  second; Flash drew 24 or 30), and sharp on high-resolution screens.
+- Drag to move, with a glide after letting go; wheel or pinch to zoom,
+  smoothly, around the pointer; arrow keys; full screen; phones and tablets.
+- A bar in HTML with the player's name, level, resources and cash, and a way
+  back to the classic game.
+
+**How a town is laid out**, read from the Flash client (our notes, our words):
+
+- 100 x 100 tiles, drawn as 2:1 diamonds 108 px wide and 54 high: one tile
+  along x moves 54 px right and 27 down, along y 54 px left and 27 down. The
+  map is cut into 5 x 5 blocks of 20 x 20 tiles; players open the middle
+  3 x 3 (the save's `expansions`, numbered 1 to 25 across, then down). The
+  outer ring is never opened.
+- A building's x and y in the save name the last tile of its footprint. Its
+  picture stands with its bottom centre on that tile's bottom corner, the
+  picture measured as Flash measures it, transparent edges included (a
+  picture with transparent margins would otherwise sit up to 32 px off).
+- A unit stands in the middle of its tile, half a tile higher. In town it
+  faces down-right, down or down-left, by chance. Its art draws 5 directions
+  (up, up-right, right, down-right, down) and mirrors 3 of them.
+- Drawing order, back to front: by tx + ty - width; farms under everything.
+- The ground: each block is one 2,160 x 1,080 terrain picture for the
+  island's skin (item 1000 + skin): open land as it is, the rest darker.
+  Trees change with the skin. Around the island, a flat colour per skin.
+- The camera starts where the Flash client's does, at its zoom (0.7 of its
+  760 x 600 stage, scaled to the window), and zooms from 0.15 to 1.4 likewise.
+
+**Code:** `client/`. `npm run build` there makes `client/dist/`, which the
+server sends at `/client/`; `npm test` runs its tests with Node's own test
+runner (no test library needed). Everything, PixiJS included, is 252 KB
+(74 KB compressed). The page needs the sheets in the bucket: run **Export
+art to R2** before trying it on staging; until then items show as outlines.
+
+**Not yet:** buildings under construction (the game shows scaffolding), the
+villagers working at trees and mines, the "for sale" signs on closed land,
+what the Flash client adds by itself (lost objects, wandering trolls...),
+effects and sound. A big town (400 items) took 16 seconds to load on our
+test machine, a busy server with no graphics card; staging will show what
+players get.
+
+### Making the art look better
+
+- **Smoothness comes from the engine**, and step 2 has it: drawing at the
+  screen's rate, the gliding camera, smooth zoom. The animations themselves
+  are drawn "on twos and threes" (each picture held for 2 or 3 frames), a
+  cartoon style; making up pictures in between would smear fast moves like
+  the catapult's swing, so we keep them as they are.
+- **Sharper pictures** are a choice. The art is drawn at the size the game
+  shows it (one picture pixel per screen pixel at zoom 1), so it is enlarged
+  on big or high-resolution screens. We tried an AI upscaler (Real-ESRGAN,
+  its model for drawn art) on the catapult and a building, at twice the size.
+  Much sharper than plain enlarging, and steady from frame to frame, but it
+  changes the style: dark outlines where the artists drew soft edges,
+  painted texture flattened, a few made-up details. About 3 times the file
+  size, and about 17 seconds a picture on a processor (days for the whole
+  game; an hour or so on a graphics card). If we want it, it would be a
+  second set of sheets for big screens, with the originals kept.
+
 
 ## Risks
 
@@ -236,8 +322,11 @@ the Flash files, and the upload to R2.
 
 ## Decisions to make
 
-- [ ] Engine: PixiJS 8 (recommended) or Phaser 4, confirmed at step 2
-- [ ] Windows in HTML and CSS (recommended)
+- [x] Engine: PixiJS 8 (chosen; step 2 is built with it)
+- [x] Windows in HTML and CSS (the top bar is; the same for the rest)
 - [ ] The new client sends the existing commands at first (recommended), with
       repeatable battles so the server can check them later
-- [ ] The beta page's name and how players find it
+- [x] The beta page: `/client.html`, a choice on the home page, "The new game
+      (preview)" (easy to rename)
+- [ ] AI-upscaled art for big screens: sharper but restyled
+      ([Making the art look better](#making-the-art-look-better))
