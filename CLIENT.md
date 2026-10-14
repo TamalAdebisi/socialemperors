@@ -3,8 +3,9 @@
 Phase 4 of the [roadmap](ROADMAP.md): replacing the Flash client with a
 modern one that draws the same art and talks to the same server. This is a
 first pass at what that involves, measured on the client we run today
-(0.9.26b) in October 2026. Nothing here is built yet, and the work starts
-after Phase 2, Cash and Phase 3.
+(0.9.26b) in October 2026. Steps 1 and 2 below don't change the server, so
+they go ahead alongside Phase 2 and Cash. Step 1, the art pipeline, is built
+([below](#step-1-the-art-pipeline)).
 
 ## In short
 
@@ -21,8 +22,8 @@ after Phase 2, Cash and Phase 3.
 - **Recommendation:** TypeScript, PixiJS 8 to draw the map, windows in HTML
   and CSS, and the game rules kept apart from the drawing code.
 - It is the biggest project on the roadmap, bigger than Phase 2. Its first
-  step, turning the Flash art into ordinary image files, is Phase 3's asset
-  pipeline.
+  step, turning the Flash art into ordinary image files, is built:
+  `tools/export_art.sh`.
 
 ## Why replace it
 
@@ -104,10 +105,10 @@ file, and by exporting one unit with FFDec (the decompiler that
 what the game shows. As PNG the pictures take 3.1 MB; as WebP at quality 85,
 0.73 MB. So the converted art doesn't need to be bigger than today's 1.3 GB.
 
-The asset pipeline in Phase 3 is therefore the first step of the new client:
-one script that turns the Flash files into sprite sheets (WebP) plus a small
-JSON file per item naming its animations, uploaded to R2 like the assets are
-now.
+The asset pipeline is therefore the first step of the new client: one script
+that turns the Flash files into sprite sheets (WebP) plus a small JSON file
+per item naming its animations. It is built for buildings and units; see
+[Step 1](#step-1-the-art-pipeline).
 
 ## Choices
 
@@ -159,7 +160,7 @@ actually use; the bug radar on the admin page shows what that is.
 
 | Step | What it delivers | Size |
 | --- | --- | --- |
-| 1. Art pipeline (Phase 3) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
+| 1. Art pipeline (built for buildings and units) | A script that turns the Flash files into sprite sheets and animation files on R2 | Small |
 | 2. Look at your town | Load the config and the save; draw the map, buildings and idle units; scroll, zoom, full screen, touch. Read-only. Confirms the engine | Medium |
 | 3. Run your town | Collect, build, move, store, sell, the shop, levels, sending the same commands as the Flash client. The 236 server tests show what each command looks like | Large |
 | 4. Battles | Island quests, unit behaviour, projectiles, spells, attacking other empires | Largest |
@@ -173,6 +174,55 @@ who aren't fighting, which is a good moment to open it as a beta.
 the game rules (`rules/`, no drawing, unit-tested), the drawing (`view/`,
 PixiJS), the windows (`ui/`) and the server calls (`net/`) kept apart. A
 GitHub Action builds it and uploads it to R2, as it does for the assets.
+
+### Step 1: the art pipeline
+
+`tools/export_art.sh` turns the buildings and units (the 1,587 files in
+`assets/buildingsprites/`) into sprite sheets: `art/sheets/<item>.webp` and
+`<item>.json`, named like the item's `img_name` in the game config. It needs
+a Java JDK (for FFDec, which `tools/ffdec.sh` builds) and Python with Pillow,
+and draws everything in a few hours on 4 processor cores. `art/` is not
+committed; a GitHub Action will make it and upload it to R2 once the new
+client uses it.
+
+**How the files are laid out**, read from all 1,587:
+
+- **Units:** one sprite, named after the file. For each animation it has 5
+  frames, one per drawn direction; the game mirrors these for the other 3.
+  The animations are labelled `QUIETO` (idle), `ANDAR` (walk), `ATAQUE`
+  (attack), `MUERTE` (death) and `PICAR` (work: empty for units that don't),
+  and about 1 unit in 3 adds special moves (`sp attack1`, `RAY`, `LIMIT`...).
+  A frame shows either one picture or a child animation that plays by
+  itself, like the catapult's 87-frame attack.
+- **Buildings:** 873 of 898 have 2 frames and no labels: the two ways a
+  building can face, each drawn separately (not mirrored). A few have more
+  frames, for animation or variants.
+- Units play at 30 frames a second, most buildings at 24.
+
+**What the script does:**
+
+1. `tools/art/RenderSwf.java` draws every frame of the item's sprite with
+   FFDec's renderer, letting child animations play, as the game does when it
+   jumps to a frame. All of an item's pictures share one canvas, so the point
+   the game positions the item by is at the same pixel in each. A picture
+   repeated across frames is kept once. Only pictures are read, never code.
+2. `tools/art/pack_sheet.py` trims the empty space, packs the pictures into
+   one WebP (quality 85, transparency kept exact) and writes the JSON in
+   TexturePacker's "JSON hash" layout, which PixiJS and Phaser both load as it
+   is: where each picture is, its anchor, and each animation as
+   `<label>/<direction>` (for example `ATAQUE/2`), one picture per frame.
+3. `tools/art/preview.py` plays a sheet back into an animated WebP, reading
+   only the sheet and the JSON, to check it by eye against the game.
+
+The Advanced Catapult, for example: 435 frames drawn, 61 different pictures,
+one 1,750 x 1,854 sheet of 0.58 MB (the Flash file is 0.94 MB).
+
+Found on the way: `1410_bahamut_heart.swf`, the Bahamut Heart, is an empty
+file in the repository, so neither client can draw it.
+
+Still to do for the art: the effects in `assets/fx/` (mostly vector
+drawings, which can be drawn sharper than the original), the sounds inside
+the Flash files, and the upload to R2.
 
 ## Risks
 

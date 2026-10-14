@@ -18,3 +18,6 @@ data/
 # Decompiled game client (copyrighted - never commit) and the tools that make it
 decompiled/
 .tools/
+
+# Sprite sheets made from the game's Flash files (tools/export_art.sh)
+/art/

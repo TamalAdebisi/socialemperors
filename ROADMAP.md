@@ -35,7 +35,9 @@ Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPL
 ## Phases
 
 **Order of work:** finish Phase 2 and Cash next, then Phase 3 (which brings
-Discord sign-in), then Phase 4, the new game client.
+Discord sign-in), then Phase 4, the new game client. Phase 4's first two
+steps (the art, and a new client that only shows your town) don't change the
+server, so they go ahead alongside.
 
 ### Phase 0: Launch (done)
 
@@ -152,9 +154,10 @@ numbers, because the server writes them into the game config.
       the admin (moved here from Phase 1)
 - [ ] Move to Postgres (Supabase or Railway) once a single SQLite file and a
       single server process are no longer enough
-- [ ] Asset pipeline: extract images and sounds from the SWFs into normal
-      files (sprite sheets, WebP). This is also the first step of the new
-      client: a test export of a unit was pixel-perfect ([CLIENT.md](CLIENT.md#the-art))
+- [x] Asset pipeline for buildings and units: `tools/export_art.sh` turns
+      them into sprite sheets (WebP, plus JSON naming the animations). This is
+      also the first step of the new client ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
+- [ ] Asset pipeline for the effects and sounds, and uploading it all to R2
 - [ ] Content editor for adding new units, buildings and quests
 
 ### Phase 4: New game client (scoped)
@@ -170,6 +173,11 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
   work is reused as it is.
 - Recommended: TypeScript with PixiJS 8 for the map and HTML for the windows,
   confirmed once the new client can draw a real town.
+
+- [x] 1. Art pipeline: buildings and units as sprite sheets (`tools/export_art.sh`)
+- [ ] 2. Look at your town: a read-only page that draws the map, buildings and
+      units from the config and the save. Confirms the engine
+- [ ] 3. Run your town, 4. battles, 5. everything else, 6. switch over
 
 ## How we add a missing feature
 
