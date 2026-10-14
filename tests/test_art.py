@@ -11,6 +11,7 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools", "art"))
 
@@ -142,6 +143,23 @@ class PackSheetTest(unittest.TestCase):
             self.assertTrue(set(sequence) <= set(names))
         for sheet, page in zip(sheets, pages):
             self.assertEqual(sheet.size, (page["meta"]["size"]["w"], page["meta"]["size"]["h"]))
+
+    def test_a_multi_page_item_writes_its_first_json_last_and_leaves_no_half_files(self):
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=34)
+        out = tempfile.mkdtemp(prefix="se-art-out-")
+        finished = []  # each file, as it gets its real name
+        real_replace = os.replace
+        def replace(source, target):
+            finished.append(os.path.basename(target))
+            real_replace(source, target)
+        with unittest.mock.patch.object(pack_sheet.os, "replace", replace):
+            pack_sheet.write(sheets, pages, out)
+        files = os.listdir(out)
+        self.assertFalse([f for f in files if f.endswith(".tmp")])
+        self.assertEqual(sorted(finished), sorted(files))
+        self.assertEqual(len([f for f in files if f.endswith(".webp")]), len(pages))
+        # The first page's JSON is finished after everything else.
+        self.assertEqual(finished[-1], "99_test_unit.json")
 
     def test_writes_webp_and_json(self):
         out = tempfile.mkdtemp(prefix="se-art-out-")

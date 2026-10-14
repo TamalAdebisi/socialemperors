@@ -49,6 +49,7 @@ from PIL import Image
 PADDING = 2           # empty pixels around each picture, so neighbours don't bleed in when scaled
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
+WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
 
 
 def load(render_dir):
@@ -182,12 +183,21 @@ def build(render_dir, max_size=MAX_SIZE):
 
 
 def write(sheets, pages, out_dir, quality=WEBP_QUALITY):
+    """Write the images, then the JSON files, the first page's last: once
+    <item>.json is there, the whole item is. Each file is written under
+    another name and renamed when complete, so nothing (an upload running
+    alongside, a game loading it) ever sees half a file."""
     os.makedirs(out_dir, exist_ok=True)
-    for sheet, data in zip(sheets, pages):
-        name = data["meta"]["image"][:-len(".webp")]
-        sheet.save(os.path.join(out_dir, f"{name}.webp"), "WEBP", quality=quality, alpha_quality=100, method=6)
-        with open(os.path.join(out_dir, f"{name}.json"), "w", encoding="utf-8") as f:
+    names = [data["meta"]["image"][:-len(".webp")] for data in pages]
+    for sheet, name in zip(sheets, names):
+        path = os.path.join(out_dir, f"{name}.webp")
+        sheet.save(path + ".tmp", "WEBP", quality=quality, alpha_quality=100, method=WEBP_METHOD)
+        os.replace(path + ".tmp", path)
+    for data, name in reversed(list(zip(pages, names))):
+        path = os.path.join(out_dir, f"{name}.json")
+        with open(path + ".tmp", "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"))
+        os.replace(path + ".tmp", path)
 
 
 def main(argv=None):

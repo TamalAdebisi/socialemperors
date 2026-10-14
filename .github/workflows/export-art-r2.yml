@@ -72,18 +72,29 @@ jobs:
           aws s3 sync "s3://$BUCKET/art/" art/sheets/ --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" --no-progress
           for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
 
-      - name: Make this machine's share of the sheets
-        run: SHARD=${{ matrix.shard }}/8 tools/export_art.sh
+      - name: Make this machine's share of the sheets, sending them as they come
+        # Every minute, what's finished goes to the bucket: it fills as the
+        # work goes on, and a machine that stops keeps what it has done.
+        run: |
+          (while sleep 60; do
+            aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --size-only \
+              --exclude "*.tmp" --cache-control "$CACHE" --only-show-errors || true
+          done) &
+          uploader=$!
+          SHARD=${{ matrix.shard }}/8 tools/export_art.sh
+          kill "$uploader" || true
 
-      - name: Upload them
+      - name: Upload the rest
+        # Even if making them stopped early: whatever was made goes up.
         # Normally by size, so the JSON files fetched above stay as they are;
         # when making everything again, every file.
+        if: ${{ !cancelled() }}
         env:
           ITEMS: ${{ inputs.items }}
         run: |
           compare="--size-only"
           if [ "${{ inputs.redo }}" = "true" ]; then compare=""; fi
-          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --cache-control "$CACHE" --no-progress
+          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*.tmp" --cache-control "$CACHE" --no-progress
           # The items made again, whatever their size.
           for item in $ITEMS; do
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \
