@@ -470,6 +470,56 @@ game's style) instead of the game's steak. The game's fonts (Arial Rounded
 Bold and Eras Bold) are licensed fonts we can't hand out: the page uses
 the player's own copy of the first when they have one, or Nunito.
 
+### The menus: rail and dock
+
+The owner picked this layout in October 2026 (option 3 of the plan's
+three), and building it is Beta 1's first slice. The same buttons and
+windows are arranged one way on a wide screen and another on a phone,
+using the game's own button pictures (`client/src/ui/art/`).
+
+**Wide screens** (computers, tablets held sideways):
+
+- A **rail** down the left edge, parchment in a wooden frame, with Build,
+  Storage, Army, Quests, Battle and Neighbours, each the game's picture
+  with its name under it. The open one is lit in gold.
+- Beside the rail at the top: the **level** (the experience star, the
+  level, a bar to the next) and the **resources** (gold, wood, food,
+  stone, cash) as dark pills with the game's icons. Classic game and Full
+  screen stay at the top right.
+- **Windows open as a panel on the right**, about a third of the screen
+  wide and nearly its full height, with a title and the game's close
+  button. The town stays in view, and can still be scrolled and tapped.
+  - Shop: category tabs that wrap onto a second line when they must, then
+    the game's pictures three to a row with their prices. Things above the
+    player's level are grey, with "Level N" in red, as in the original.
+  - Neighbours: a list, one row each (picture, name, level, Visit).
+  - Battle: a row per mode (Attack a player, Survival, Tournament), each
+    with its icon, a line on what it is, and Play.
+- A **selected building's card** sits at the bottom middle: its name, what
+  it's doing, and the info panel's tiles (Move, Turn, Store, Sell).
+
+**Phones held upright** (or any narrow screen):
+
+- A **status bar** across the top: the level with its bar, and the
+  resources with short numbers (12.4k). The empire's name is left out
+  there: today's page cuts it to "E…" on phones.
+- A **dock** across the bottom: Build, Storage, Army, World, Neighbours.
+- **Windows open as sheets** over the lower half, just above the dock, with
+  a handle at the top: drag down or tap close to put them away. World's
+  sheet lists Quests, Attack a player, Survival and Tournament.
+- A selected building's card sits just above the dock.
+
+**In both:** messages slide in at the top instead of over the middle of
+the town; red counts on buttons for what's waiting (gifts, ready
+buildings); and a **Collect all** button, like the original's fast-collect
+glove. Until Beta 2, Quests, Battle and World's battle modes open the
+classic game. The mockups are the reference for the look (drawn over a
+real town; a monitor on the left, a phone on the right):
+[neighbours](docs/menus/neighbours.webp), [the shop](docs/menus/shop.webp),
+[a building selected](docs/menus/selected.webp) and
+[battles and quests](docs/menus/world.webp). The exact point where the
+phone arrangement takes over is for the slice to choose.
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

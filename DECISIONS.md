@@ -4,12 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
-## Waiting on the owner
+## 14 October 2026: the menus, and the servers
 
-- **The new client's menu layout.** Option 1, classic corners (buttons in
-  the corners, a neighbours drawer along the bottom, the World button's
-  pop-up), is the favourite of both of us over option 3 (a rail and a
-  dock). It becomes the first slice of Beta 1 once the owner says so.
+- **The owner picked option 3, the rail and dock**, after comparing it
+  with option 1 with the menus open. CLIENT.md ("The menus: rail and
+  dock") describes it for Beta 1's first slice. In the comparison, Claude
+  added a Neighbours button to the rail and the dock, and the phone's dock
+  has World (which holds Quests and the battle modes) in place of separate
+  Quests and Battle buttons, so five fit.
+- **Moving the servers to Singapore is waiting on a backup.** The live
+  server still keeps every account and empire in SQLite on its own volume,
+  and neither volume had a backup or a backup schedule. Backups can only
+  be made from Railway's dashboard, so the owner makes one first
+  (DEPLOY.md 6.3, now with that step). Staging's move is staged in
+  Railway, not yet applied.
 
 ## 14 October 2026: tidying up, ground rules, browser tests
 

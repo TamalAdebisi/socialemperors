@@ -49,11 +49,12 @@ The owner set these in October 2026. They hold for every task.
 Phase 4 of the roadmap, in three stops. Each is built in slices, about one
 task each, and every slice ends tested, documented and merged.
 
-- **Beta 1, the town builder.** The menus in the layout the owner picks
-  (option 1, classic corners, is the favourite), units walking, villagers at
-  work, training and population, land and cash, missions and bonuses,
-  neighbours, sound and speed, then a full run-through against the Flash
-  game. Players can then use the new client for everything but battles.
+- **Beta 1, the town builder.** The menus as a rail and dock, the
+  layout the owner picked (CLIENT.md, "The menus: rail and dock"), units
+  walking, villagers at work, training and population, land and cash,
+  missions and bonuses, neighbours, sound and speed, then a full
+  run-through against the Flash game. Players can then use the new client
+  for everything but battles.
 - **Beta 2, battles and quests.** Combat, defending a town, spells and
   heroes, the island map, the quests in batches with their bosses.
 - **The switch.** Battles against players, the long tail, the tutorial and
