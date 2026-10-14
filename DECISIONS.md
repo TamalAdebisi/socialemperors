@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 14 October 2026: Beta 1, villagers at work
+
+- **A server fix:** two villagers at one tree got a fifth more wood from
+  the server than the Flash client showed. The server now gives what the
+  client shows, for trees and rocks only.
+- **A mine waiting for its working time** asks how long when tapped, as
+  before; that question now also offers Let out, so a worker can be taken
+  back out without choosing a time.
+- **Let out** takes the last unit to go in, one per tap, from the
+  building's card (the original showed each unit's portrait).
+- **Moving a building keeps its units inside;** selling or storing it lets
+  them out first.
+
 ## 14 October 2026: Beta 1, units walking
 
 - **The path finder is a correct one.** The original's has a slip in its

@@ -49,6 +49,8 @@ export interface PlacedItem {
   orientation: number;
   /** How many units are inside (a barracks' soldiers, a mill's workers). */
   unitsInside: number;
+  /** Which: their item ids, as the save keeps them (rules/work.ts keeps both in step). */
+  units?: number[];
   /** When its current round of work started (the server's clock, seconds), or null. */
   startedAt: number | null;
   /** The working time chosen for a mill or mine (1 to 4), or 0 for none (rules/production.ts). */
@@ -94,6 +96,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       item, tx, ty,
       orientation: orientation ?? 0,
       unitsInside: Array.isArray(units) ? units.length : 0,
+      units: Array.isArray(units) ? units.map(Number) : [],
       startedAt: Number.isFinite(started) ? Number(started) : null,
       workTime: Number(attributes?.cp) || 0,
     });

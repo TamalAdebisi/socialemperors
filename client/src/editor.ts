@@ -21,6 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { SUBCAT, canGoInside, canHarvest, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -65,6 +66,10 @@ export class TownEditor {
   private sayQueue: string[] = [];
   /** Where the save has each unit that's walked, until the server hears where it stopped. */
   private readonly savedAt = new Map<PlacedItem, Point>();
+  /** Trees and rocks being worked: since when (the game's clock), and by whom. */
+  private readonly working = new Map<PlacedItem, { since: number; workers: Set<PlacedItem> }>();
+  /** What each villager at work is working. */
+  private readonly workingOn = new Map<PlacedItem, PlacedItem>();
 
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
@@ -106,6 +111,21 @@ export class TownEditor {
         : state.status === "asleep" ? { kind: "asleep" } : null);
     }
     this.hud.ready(ready);
+    for (const [resource, work] of this.working) {
+      if (now - work.since >= harvestSeconds(resource.item)) {
+        this.finishHarvest(resource);
+      }
+    }
+    for (const placed of [...this.town.items]) {
+      if (placed.item.subcategory === SUBCAT.regrowing) {
+        const grown = regrow(this.town, placed, now, this.items);
+        if (grown) {
+          this.send(grown.commands);
+          this.view.remove(placed);
+          void this.view.redraw(grown.rock);
+        }
+      }
+    }
     this.waiting([...this.town.gifts.values()].reduce((sum, n) => sum + n, 0));
     if (this.selected && !this.moving) {
       this.bar.describe(this.detail(this.selected));
@@ -261,9 +281,18 @@ export class TownEditor {
       return;
     }
     const placed = this.view.itemAt(at);
-    // A unit of theirs selected, and the ground tapped: it walks there.
-    if (!placed && this.selected && canWalk(this.town, this.selected)) {
-      this.walkTo(this.selected, this.tileAt(at));
+    // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
+    const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
+    if (unit && !placed) {
+      this.walkTo(unit, this.tileAt(at));
+      return;
+    }
+    if (unit && placed && canHarvest(unit.item, placed.item)) {
+      this.work(unit, placed);
+      return;
+    }
+    if (unit && placed && canGoInside(this.town, unit.item, placed)) {
+      this.goInto(unit, placed);
       return;
     }
     const state = placed ? workState(placed, this.clock()) : null;
@@ -306,6 +335,7 @@ export class TownEditor {
       store: can.store ? () => this.store(placed) : null,
       sell: can.sell ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
+      letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       close: () => this.select(null),
     });
   }
@@ -322,8 +352,15 @@ export class TownEditor {
         return "Tap it to choose how long it works";
       case "idle":
         if (placed.item.production!.kind !== "always") {
-          return "No workers inside (put villagers in from the classic game)";
+          return "No workers inside: select a villager, then tap it";
         }
+    }
+    if (placed.unitsInside > 0) {
+      return `${placed.unitsInside} of ${placed.item.capacity} inside`;
+    }
+    if (isResource(placed.item) && this.working.has(placed)) {
+      const left = harvestSeconds(placed.item) - (this.clock() - this.working.get(placed)!.since);
+      return `Being worked: ${duration(Math.max(left, 0))} left`;
     }
     if (canWalk(this.town, placed)) {
       return "Tap the ground where it should go";
@@ -332,14 +369,15 @@ export class TownEditor {
     return why ? why[0].toUpperCase() + why.slice(1) : "";
   }
 
-  /** Send a unit walking to a tile, round what's in the way, as the Flash client does. */
-  private walkTo(unit: PlacedItem, tile: Point): void {
+  /** Send a unit walking to a tile, round what's in the way, as the Flash client does; `then` when it gets there. */
+  private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit)): boolean {
     const from = this.view.headingFor(unit);
     const path = findPath(walkGrid(this.town), from, tile, unit.item.flying);
     if (path === null) {
       this.say(`${unit.item.name} can't get there.`);
-      return;
+      return false;
     }
+    this.stopWorking(unit);
     if (!this.savedAt.has(unit)) {
       this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
     }
@@ -351,7 +389,126 @@ export class TownEditor {
       unit.tx = next.x;
       unit.ty = next.y;
       return true;
-    }, () => this.unitStopped(unit));
+    }, then);
+    return true;
+  }
+
+  /** A villager sent to a tree or rock: it walks beside it, then works it until it's done, then the next one touching it. */
+  private work(unit: PlacedItem, resource: PlacedItem): void {
+    const tile = standingTile(this.town, unit, resource);
+    if (!tile) {
+      this.say(`${unit.item.name} can't get to ${resource.item.name}.`);
+      return;
+    }
+    this.walkTo(unit, tile, () => {
+      this.unitStopped(unit);
+      if (!this.town.items.includes(resource)) {
+        return;  // gone while it walked (another villager finished it)
+      }
+      const work = this.working.get(resource) ?? { since: this.clock(), workers: new Set<PlacedItem>() };
+      work.workers.add(unit);
+      this.working.set(resource, work);
+      this.workingOn.set(unit, resource);
+      this.view.pose(unit, resource.item.subcategory === SUBCAT.tree ? "ATAQUE" : "PICAR", { x: resource.tx, y: resource.ty });
+      this.refresh();
+    });
+  }
+
+  /** A unit leaves the tree or rock it was working; nobody left at it, its work is lost. */
+  private stopWorking(unit: PlacedItem): void {
+    const resource = this.workingOn.get(unit);
+    if (!resource) {
+      return;
+    }
+    this.workingOn.delete(unit);
+    this.view.pose(unit, null);
+    const work = this.working.get(resource);
+    work?.workers.delete(unit);
+    if (work && work.workers.size === 0) {
+      this.working.delete(resource);
+    }
+  }
+
+  /** A tree or rock worked to the end: its harvest, a rock growing back, and the villagers on to the next. */
+  private finishHarvest(resource: PlacedItem): void {
+    const work = this.working.get(resource)!;
+    this.working.delete(resource);
+    if (!this.town.items.includes(resource)) {
+      // Removed while being worked (the bulldozer): the villagers just stop.
+      for (const unit of work.workers) {
+        this.workingOn.delete(unit);
+        this.view.pose(unit, null);
+      }
+      return;
+    }
+    const done = harvested(this.town, resource, work.workers.size, this.clock(), this.items);
+    this.send(done.commands);
+    this.view.rise(resource, [
+      { text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] },
+      ...(done.xp > 0 ? [{ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp }] : []),
+    ]);
+    this.view.remove(resource);
+    if (this.selected === resource) {
+      this.select(null);
+    }
+    if (done.regrowing) {
+      void this.view.redraw(done.regrowing);
+    }
+    this.levelUp();
+    this.hud.update(this.town);
+    const busy = (placed: PlacedItem) => this.working.has(placed);
+    for (const unit of work.workers) {
+      this.workingOn.delete(unit);
+      this.view.pose(unit, null);
+      const next = nextResources(this.town, { x: resource.tx, y: resource.ty }, resource.item.subcategory, busy)[0];
+      if (next) {
+        this.work(unit, next);
+      }
+    }
+  }
+
+  /** A unit sent into a building: it walks to its door and goes in, if there's still room. */
+  private goInto(unit: PlacedItem, building: PlacedItem): void {
+    const tile = standingTile(this.town, unit, building);
+    if (!tile) {
+      this.say(`${unit.item.name} can't get to ${building.item.name}.`);
+      return;
+    }
+    this.walkTo(unit, tile, () => {
+      if (!this.town.items.includes(building) || !canGoInside(this.town, unit.item, building)) {
+        this.unitStopped(unit);
+        return;
+      }
+      const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
+      this.savedAt.delete(unit);
+      this.send([goInside(this.town, unit, building, from, this.clock())]);
+      this.view.remove(unit);
+      if (this.selected === unit) {
+        this.select(building);
+      }
+      this.refresh();
+    });
+  }
+
+  /** Let one unit out of the selected building, beside it. */
+  private letOne(building: PlacedItem): void {
+    const out = letOut(this.town, building, this.items);
+    if (!out) {
+      this.say(`There's no room around ${building.item.name}.`);
+      return;
+    }
+    this.send([out.command]);
+    void this.view.redraw(out.unit);
+    this.select(building);
+    this.refresh();
+  }
+
+  /** Before a building is sold or stored, everybody inside comes out, as in the Flash client. */
+  private emptyOut(building: PlacedItem): void {
+    for (const out of letAllOut(this.town, building, this.items)) {
+      this.send([out.command]);
+      void this.view.redraw(out.unit);
+    }
   }
 
   /** A unit stopped walking: the server hears where, as the Flash client tells it. */
@@ -404,6 +561,7 @@ export class TownEditor {
         label: `${duration(time.minutes * 60)}: ${harvest(placed, i + 1)} ${resource}`,
         run: () => this.chooseWorkTime(placed, i + 1),
       })),
+      ...((placed.units?.length ?? 0) > 0 ? [{ label: "Let out", run: () => this.letOne(placed) }] : []),
       { label: "Cancel", run: () => this.select(null) },
     ]);
   }
@@ -458,6 +616,7 @@ export class TownEditor {
   }
 
   private sell(placed: PlacedItem): void {
+    this.emptyOut(placed);
     this.send([sell(this.town, placed)]);
     this.view.remove(placed);
     this.hud.update(this.town);
@@ -465,6 +624,7 @@ export class TownEditor {
   }
 
   private store(placed: PlacedItem): void {
+    this.emptyOut(placed);
     this.send([store(this.town, placed)]);
     this.view.remove(placed);
     this.select(null);
