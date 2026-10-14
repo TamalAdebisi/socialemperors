@@ -1,5 +1,5 @@
 """
-Darts, island skins, survival mode and the Monday bonus: replays the
+Darts, island skins, survival mode and the Monday and daily bonuses: replays the
 commands the game client sends.
 
 Run from the repository folder:  python -m unittest discover tests
@@ -125,6 +125,41 @@ class PastimesTest(unittest.TestCase):
         self.pState["timeStampMondayBonus"] = 0
         self.send("weekly_reward", "u", "608")
         self.assertEqual(self.map["store"], {})
+
+    # The daily bonus: [gold, town, hero, day, cash] as the client sends it
+
+    def a_day_later(self):
+        self.pState["timestampLastBonus"] -= 24 * 3600
+
+    def test_five_days_of_the_daily_bonus(self):
+        self.send("win_bonus", 250, TOWN, 0, 1, 0)
+        self.assertEqual(self.map["coins"], 1250)
+        self.send("win_bonus", 0, TOWN, 555, 2, 0)  # once a day
+        self.assertEqual(self.map["store"], {})
+        for day, hero, cash in ((2, 555, 0), (3, 0, 1), (4, 534, 0), (5, 0, 3)):
+            self.a_day_later()
+            self.send("win_bonus", 0, TOWN, hero, day, cash)
+        self.assertEqual(self.map["store"], {"555": 1, "534": 1})
+        self.assertEqual(self.cash(), 104)
+        self.a_day_later()
+        self.send("win_bonus", 250, TOWN, 0, 1, 0)  # and again from day one
+        self.assertEqual(self.map["coins"], 1500)
+        self.assertEqual(self.pState["bonusNextId"], 2)
+
+    def test_a_daily_bonus_the_client_made_up(self):
+        self.send("win_bonus", 0, TOWN, 0, 5, 3)          # not the next day
+        self.send("win_bonus", 99999, TOWN, 0, 1, 500)    # the config's prize, not the client's
+        self.assertEqual((self.map["coins"], self.cash()), (1250, 100))
+        self.a_day_later()
+        self.send("win_bonus", 0, TOWN, 640, 2, 0)        # not a daily bonus hero
+        self.assertEqual(self.map["store"], {})
+        self.assertEqual(self.pState["bonusNextId"], 2)
+
+    def test_after_a_day_missed_the_daily_bonus_starts_again(self):
+        self.send("win_bonus", 250, TOWN, 0, 1, 0)
+        self.pState["timestampLastBonus"] -= 3 * 24 * 3600
+        self.send("win_bonus", 250, TOWN, 0, 1, 0)
+        self.assertEqual((self.map["coins"], self.pState["bonusNextId"]), (1500, 2))
 
 
 if __name__ == "__main__":

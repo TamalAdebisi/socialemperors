@@ -20,6 +20,7 @@ import time_machine
 import darts
 import survival
 import monday_bonus
+import daily_bonus
 import social
 import assists
 import pvp
@@ -438,30 +439,7 @@ def do_command(USERID, cmd, args, previous=None):
         pState["timeStampTakeCareMonster"] = -1 # remove timer
 
     elif cmd == Constant.CMD_WIN_BONUS:
-        coins = args[0]
-        town_id = args[1]
-        hero = args[2]
-        claimId = args[3]
-        cash = args[4]
-
-        print("Claiming Win Bonus")
-        map = save["maps"][town_id]
-
-        if cash != 0:
-            save["playerInfo"]["cash"] = save["playerInfo"]["cash"] + cash
-            print("Added " + str(cash) + " Cash to players balance")
-
-        if coins != 0:
-            map["coins"] = map["coins"] + coins
-            print("Added " + str(coins) + " Gold to players balance")
-
-        if hero != 0:
-            inventory.add_gift(save, hero)
-            print("Added Hero ID=" + str(hero))
-
-        pState = save["privateState"]
-        pState["bonusNextId"] = claimId + 1
-        pState["timestampLastBonus"] = timestamp_now()
+        print(daily_bonus.collect(save, args[1], args[2], args[3]))
 
     elif cmd == Constant.CMD_ADMIN_ADD_ANIMAL:
         subcatFunc = str(args[0])
