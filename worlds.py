@@ -7,7 +7,10 @@ players, picked nearest the town's level (the most recently active first),
 and AcidCaos, the village that ships with the game, when there are not seven
 players to pick. Beat all seven in battle and the town moves on to the next
 continent and seven new rivals. Reaching a continent wins its prize: the cash
-and units of the game config's "level_ranking_reward" row for it.
+and units of the game config's "level_ranking_reward" row for it, given as
+the town moves on (the client shows it then, and claims it again when the
+player closes that window: once is all it gets, and closing the game first
+loses nothing).
 
 A town keeps its rivals until it moves on or relocates (the Relocate button:
 a new island and new rivals, and the islands beaten so far are lost). A rival
@@ -46,9 +49,11 @@ Commands from the client:
                                swapped with another
     "reset_position_univers"   []  Relocate: the islands beaten are lost
     "apply_rewards_ranking"    [continent, cash, units]  the prize for reaching
-                               a continent; the client has already shown it and
-                               put the units in storage, but sends no command
-                               for them
+                               a continent, as the player closes its window;
+                               the client has put the units in storage itself
+                               and sends no command for them. Already given
+                               when the town moved on, so only a town that
+                               missed it gets it here
 """
 
 import random
@@ -181,7 +186,8 @@ def ranking(USERID: str, town_id=None, continent=None, relocate=False, move_on=F
         print(f"World map: {USERID} town {town_id} relocated on continent {record['nivel']}")
     elif move_on and len(set(_wins(map))) >= RIVALS:
         _settle(save, town_id, record, min(record["nivel"] + 1, LAST))
-        print(f"World map: {USERID} town {town_id} moved on to continent {record['nivel']}")
+        print(f"World map: {USERID} town {town_id} moved on to continent {record['nivel']}: "
+              + _give_prize(save, town_id, record["nivel"]))
     _fill(USERID, save, town_id, record)
     sessions.save_session(USERID)
 
@@ -254,10 +260,13 @@ def relocate(save: dict) -> str:
 
 
 def prize(save: dict, nivel) -> str:
+    """The prize claimed from the client's window."""
+    return _give_prize(save, towns.current(save), int(nivel))
+
+
+def _give_prize(save: dict, town_id: int, nivel: int) -> str:
     """The prize for reaching a continent, once a continent."""
-    town_id = towns.current(save)
     record = _record(save, town_id)
-    nivel = int(nivel)
     if nivel != record["nivel"] or nivel <= int(record.get("rewarded") or 0):
         return f"No prize for continent {nivel} (the town is on {record['nivel']}, prized up to {record.get('rewarded')})."
     row = next((r for r in get_game_config()["level_ranking_reward"] if int(r["level"]) == nivel), None)

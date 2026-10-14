@@ -140,15 +140,25 @@ class WorldMapTest(unittest.TestCase):
         self.crowd()
         for island in self.rivals(self.look()):
             self.fight(island)
-        self.look(move_on=True)
+        row = next(r for r in get_game_config()["level_ranking_reward"] if r["level"] == 2)
+        cash = self.save["playerInfo"]["cash"]
+        self.look(move_on=True)  # given as the town moves on, before the player closes the window
+        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
+        self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
+        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])  # the window closed
+        do_command(self.me, "apply_rewards_ranking", [3, 1, "{}"])  # not there yet
+        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
+        self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
+
+    def test_a_prize_missed_is_claimed_from_the_window(self):
+        self.crowd()
+        self.look()
+        self.map["worldMap"].update(nivel=2)  # a town that moved on before prizes were given that way
         row = next(r for r in get_game_config()["level_ranking_reward"] if r["level"] == 2)
         cash = self.save["playerInfo"]["cash"]
         do_command(self.me, "apply_rewards_ranking", [2, 999, json.dumps({"712": 50})])
         self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])  # the config's, not the client's
         self.assertEqual(self.map["store"], {unit: count for unit, count in row["units"].items()})
-        do_command(self.me, "apply_rewards_ranking", [2, row["cash"], json.dumps(row["units"])])
-        do_command(self.me, "apply_rewards_ranking", [3, 1, "{}"])  # not there yet
-        self.assertEqual(self.save["playerInfo"]["cash"], cash + row["cash"])
 
     def test_no_prize_on_the_first_continent(self):
         self.look()
