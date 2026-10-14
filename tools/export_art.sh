@@ -22,10 +22,13 @@
 # animated bosses and buildings. Check an item by eye:
 #   python tools/art/preview.py art/sheets/<item>.json
 #
-# How it works: tools/art/RenderSwf.java draws every picture of 5 items at a
-# time with FFDec's renderer (the Flash files are read, never their code),
+# How it works: tools/art/RenderSwf.java draws every picture of an item with
+# FFDec's renderer (the Flash files are read, never their code),
 # tools/art/pack_sheet.py trims and packs them into sheets, and the pictures
-# are deleted, so the export needs little disk space.
+# are deleted, so the export needs little disk space. Each item gets a Java
+# process of its own and up to two hours: the biggest animated bosses take
+# up to an hour each, and when five shared one hour, the ones it didn't
+# reach were lost.
 #
 # Needs: what tools/ffdec.sh needs (a Java JDK...), and Python 3 with Pillow
 # (pip install Pillow).
@@ -76,12 +79,15 @@ echo "Making ${#todo[@]} of the ${#missing[@]} sheets still missing ($JOBS at a 
 : > "$OUT/export.log"
 : > "$OUT/errors.log"
 
-# One batch: draw the items into a folder of their own, pack them, delete the pictures.
+# One item: draw it into a folder of its own, pack it, delete the pictures.
 batch() {
-    local pictures
+    local pictures status=0
     pictures="$(mktemp -d "$OUT/render.XXXXXX")"
-    timeout 3600 java -Djava.awt.headless=true -Xmx3g -cp "$FFDEC_CP:$CLASSES" RenderSwf "$pictures" "$@" \
-        2>> "$OUT/errors.log" || true
+    timeout 7200 java -Djava.awt.headless=true -Xmx3g -cp "$FFDEC_CP:$CLASSES" RenderSwf "$pictures" "$@" \
+        2>> "$OUT/errors.log" || status=$?
+    if [ "$status" -eq 124 ]; then
+        echo "FAIL $(basename "$1"): still drawing after 2 hours, stopped"
+    fi
     local drawn=("$pictures"/*/manifest.json)
     if [ -f "${drawn[0]}" ]; then
         "$PYTHON" "$ROOT/tools/art/pack_sheet.py" --out "$OUT/sheets" "${drawn[@]%/manifest.json}" || true
@@ -92,7 +98,7 @@ export -f batch
 export FFDEC_CP CLASSES OUT PYTHON ROOT
 if [ ${#todo[@]} -gt 0 ]; then
     # Each item's line shows here as it is done, and goes in the log.
-    printf '%s\0' "${todo[@]}" | xargs -0 -n 5 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
+    printf '%s\0' "${todo[@]}" | xargs -0 -n 1 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
 fi
 
 failed=()
