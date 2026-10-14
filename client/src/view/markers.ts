@@ -3,16 +3,31 @@
 // its workers wait for a working time, and the "+240" that rises from a
 // building as it's collected. Drawn on the map, so they move with it.
 
-import { Container, Graphics, Text } from "pixi.js";
+import { Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
 
 import type { Point } from "../rules/geometry.ts";
 import type { Resource } from "../rules/production.ts";
 import type { PlacedItem } from "../rules/town.ts";
+import { ICONS } from "../ui/icons.ts";
 
-/** The same colours as the top bar's (ui/style.css). */
+/** The resources' colours, from their icons (food: our carrot's orange). */
 export const RESOURCE_COLOURS: Record<Resource | "xp", number> = {
-  gold: 0xf2c14e, wood: 0xa86b3c, food: 0xe2553f, stone: 0xa9aeb5, cash: 0x5cc96b, xp: 0x7fb2ff,
+  gold: 0xf2c14e, wood: 0xa86b3c, food: 0xff8f1f, stone: 0xa9aeb5, cash: 0x5cc96b, xp: 0x7fb2ff,
 };
+
+/** How big an icon is in its bubble, on the map. */
+const ICON_SIZE = 28;
+/** The icons' pictures, loaded once for every sign. */
+const textures = new Map<string, Promise<Texture | null>>();
+
+function texture(url: string): Promise<Texture | null> {
+  let loading = textures.get(url);
+  if (!loading) {
+    loading = Assets.load<Texture>(url).catch(() => null);
+    textures.set(url, loading);
+  }
+  return loading;
+}
 
 export type Sign = { kind: "ready"; resource: Resource } | { kind: "asleep" };
 
@@ -48,7 +63,7 @@ export class Markers {
     if (sign === null || top === null) {
       return;
     }
-    const drawn = sign.kind === "ready" ? readySign(RESOURCE_COLOURS[sign.resource]) : asleepSign();
+    const drawn = signWith(sign.kind === "ready" ? ICONS[sign.resource] : ICONS.asleep);
     drawn.position.set(top.x, top.y);
     drawn.scale.set(this.scale);
     this.layer.addChild(drawn);
@@ -130,17 +145,19 @@ function bubble(): Graphics {
     .poly([-8, -10, 8, -10, 0, 0]).fill({ color: 0xffffff });
 }
 
-function readySign(colour: number): Container {
+/** A bubble with one of the game's icons in it: the resource that's ready, or "zZ". */
+function signWith(url: string): Container {
   const sign = new Container();
-  sign.addChild(bubble(), new Graphics().circle(0, -26, 12).fill({ color: colour }).stroke({ color: 0x000000, width: 2, alpha: 0.2 }));
-  return sign;
-}
-
-function asleepSign(): Container {
-  const sign = new Container();
-  const zz = new Text({ text: "zz", style: { fontFamily: "system-ui, sans-serif", fontSize: 20, fontWeight: "800", fill: 0x4a5a8a } });
-  zz.anchor.set(0.5);
-  zz.y = -27;
-  sign.addChild(bubble(), zz);
+  sign.addChild(bubble());
+  void texture(url).then((loaded) => {
+    if (!loaded || sign.destroyed) {
+      return;
+    }
+    const icon = new Sprite(loaded);
+    icon.anchor.set(0.5);
+    icon.scale.set(ICON_SIZE / Math.max(loaded.width, loaded.height));
+    icon.y = -26;
+    sign.addChild(icon);
+  });
   return sign;
 }

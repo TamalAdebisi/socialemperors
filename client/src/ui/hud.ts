@@ -1,7 +1,11 @@
 // The bar at the top of the screen, in HTML over the map (CLIENT.md: windows
-// in HTML, sharp at any size): who is playing, their numbers, and buttons.
+// in HTML, sharp at any size): who is playing, their level and numbers with
+// the game's own icons, and buttons; and the tools at the bottom right, as
+// on the Flash client's bar (Build, Storage).
 
+import type { Level } from "../rules/levels.ts";
 import type { Town } from "../rules/town.ts";
+import { ICONS } from "./icons.ts";
 
 const numbers = new Intl.NumberFormat();
 
@@ -9,6 +13,8 @@ export interface HudActions {
   classicUrl: string;
   /** Showing another player's town. */
   visiting?: boolean;
+  /** The levels table, for how far the town is from the next. */
+  levels?: Level[];
 }
 
 export interface Hud {
@@ -24,26 +30,36 @@ export function showHud(town: Town, actions: HudActions): Hud {
   bar.innerHTML = `
     <div class="hud-player">
       <span class="hud-name"></span>
-      <span class="hud-level"></span>
+      <span class="hud-level" tabindex="0">
+        <img class="icon" src="${ICONS.xp}" alt="">
+        <span class="hud-level-number"></span>
+        <span class="hud-xp" aria-hidden="true"><span class="hud-xp-done"></span></span>
+      </span>
     </div>
     <ul class="hud-resources">
-      <li data-tip="Gold" tabindex="0"><span class="dot gold"></span><span data-n="gold"></span></li>
-      <li data-tip="Wood" tabindex="0"><span class="dot wood"></span><span data-n="wood"></span></li>
-      <li data-tip="Food" tabindex="0"><span class="dot food"></span><span data-n="food"></span></li>
-      <li data-tip="Stone" tabindex="0"><span class="dot stone"></span><span data-n="stone"></span></li>
-      <li data-tip="Cash" tabindex="0"><span class="dot cash"></span><span data-n="cash"></span></li>
+      <li data-tip="Gold" tabindex="0"><img class="icon" src="${ICONS.gold}" alt=""><span data-n="gold"></span></li>
+      <li data-tip="Wood" tabindex="0"><img class="icon" src="${ICONS.wood}" alt=""><span data-n="wood"></span></li>
+      <li data-tip="Food" tabindex="0"><img class="icon" src="${ICONS.food}" alt=""><span data-n="food"></span></li>
+      <li data-tip="Stone" tabindex="0"><img class="icon" src="${ICONS.stone}" alt=""><span data-n="stone"></span></li>
+      <li data-tip="Cash" tabindex="0"><img class="icon" src="${ICONS.cash}" alt=""><span data-n="cash"></span></li>
     </ul>
     <div class="hud-buttons">
-      <button class="button tiny gold hud-shop" type="button" hidden>Shop</button>
-      <button class="button tiny gold hud-storage" type="button" hidden>Storage</button>
       <span class="hud-badge tip-left" data-tip="The new game: so far you can build, place from storage, move, turn, store, sell and collect; for the rest, use the classic game" tabindex="0">Preview</span>
       <a class="button tiny gold" href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
   const who = town.townName ? `${town.name} · ${town.townName}` : town.name;
   bar.querySelector(".hud-name")!.textContent = actions.visiting ? `Visiting ${who}` : who;
+  const level = bar.querySelector<HTMLElement>(".hud-level")!;
   const update = (t: Town) => {
-    bar.querySelector(".hud-level")!.textContent = `Level ${t.level}`;
+    bar.querySelector(".hud-level-number")!.textContent = `Level ${t.level}`;
+    // How far from this level's experience to the next one's.
+    const from = actions.levels?.[t.level - 1]?.xp ?? 0;
+    const to = actions.levels?.[t.level]?.xp;
+    const done = to === undefined ? 1 : Math.min(Math.max((t.xp - from) / (to - from), 0), 1);
+    bar.querySelector<HTMLElement>(".hud-xp-done")!.style.width = `${Math.round(done * 100)}%`;
+    level.dataset.tip = to === undefined ? `${numbers.format(t.xp)} XP: the last level`
+      : `${numbers.format(t.xp)} of ${numbers.format(to)} XP for level ${t.level + 1}`;
     for (const key of ["gold", "wood", "food", "stone", "cash"] as const) {
       bar.querySelector(`[data-n="${key}"]`)!.textContent = numbers.format(t[key]);
     }
@@ -67,15 +83,23 @@ export function showHud(town: Town, actions: HudActions): Hud {
   });
 
   document.body.appendChild(bar);
-  const shop = bar.querySelector<HTMLButtonElement>(".hud-shop")!;
-  const storage = bar.querySelector<HTMLButtonElement>(".hud-storage")!;
+
+  // The tools, bottom right: picture buttons, as on the Flash client's bar.
+  const tools = document.createElement("nav");
+  tools.className = "tools";
+  tools.setAttribute("aria-label", "Tools");
+  tools.hidden = true;
+  tools.innerHTML = `
+    <button class="tool tip-left" type="button" data-tip="Build" aria-label="Build"><img src="${ICONS.build}" alt=""></button>
+    <button class="tool tip-left" type="button" data-tip="Storage" aria-label="Storage"><img src="${ICONS.storage}" alt=""></button>`;
+  document.body.appendChild(tools);
   return {
     update,
     offerShop(openShop, openStorage) {
-      shop.hidden = false;
-      storage.hidden = false;
+      const [shop, storage] = tools.querySelectorAll("button");
       shop.addEventListener("click", openShop);
       storage.addEventListener("click", openStorage);
+      tools.hidden = false;
     },
   };
 }

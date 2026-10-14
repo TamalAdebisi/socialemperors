@@ -453,14 +453,20 @@ selling buildings with units inside (the Flash client lets them out first;
 for now the bar says to use the classic game). Moving on a phone places on
 the first tap, without the green/red preview a mouse gets.
 
-**The look.** The windows so far are plain, to get the game working
-first. Next they take the Flash client's look: its resource icons (gold
-bars, logs, meat, stone, cash) and experience bar at the top, its picture
-buttons at the bottom right (build, storage's gift box...), white windows
-with green titles and its round blue and orange buttons, exported from the
-game's files like the rest of the art. Its fonts (Arial Rounded Bold and
-Eras Bold, in `assets/fonts/`) are licensed fonts we can't hand out, so the
-page uses the player's own copy when they have one, or close free ones.
+**The look.** The windows take the site's look (parchment in a wooden
+frame, gold buttons, a round font) and the Flash client's own pictures:
+its resource icons with each number in the top bar, its experience star
+with a bar to the next level, its Build and gift-box buttons at the bottom
+right (Storage), its info panel's tiles for Move, Turn, Store and the
+red ✕ for Sell or Remove, its resource icons and "zZ" in the bubbles over
+buildings, and in the shop's prices. `tools/art/export_ui.py` draws them
+from the game's file (`tools/art/RenderSymbols.java`, which finds a picture
+by its class or by the names the game's code gives its parts, like
+`GuiMC/bgBar/storeButton`) at three times their size, into
+`client/src/ui/art/`. Food is a carrot of our own (`food.svg`, in the
+game's style) instead of the game's steak. The game's fonts (Arial Rounded
+Bold and Eras Bold) are licensed fonts we can't hand out: the page uses
+the player's own copy of the first when they have one, or Nunito.
 
 ### Making the art look better
 
