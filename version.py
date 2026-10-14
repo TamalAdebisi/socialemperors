@@ -2,9 +2,10 @@ import random
 
 from engine import timestamp_now
 import levels
+import quests
 
-version_name = "alpha 0.06"
-version_code = "0.06a"
+version_name = "alpha 0.07"
+version_code = "0.07a"
 
 
 def _has_entries(value) -> bool:
@@ -113,9 +114,15 @@ def migrate_loaded_save(save: dict) -> bool:
         save["version"] = "0.06a"
         print("   > migrated to 0.06a")
 
-    # 0.06a -> 0.07a
-    #if save["version"] == "0.06a":
-    #    save["version"] = "0.07a"
-    #    print("   > migrated to 0.07a")
+    # 0.06a -> 0.07a: the first win of an island on 3 stars pays cash (quests.py), also the ones already won
+    if save["version"] == "0.06a":
+        quests.back_pay(save)
+        save["version"] = "0.07a"
+        print("   > migrated to 0.07a")
+
+    # 0.07a -> 0.08a
+    #if save["version"] == "0.07a":
+    #    save["version"] = "0.08a"
+    #    print("   > migrated to 0.08a")
 
     return True

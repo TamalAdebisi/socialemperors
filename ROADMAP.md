@@ -111,7 +111,7 @@ Facebook-only, the iPhone gift box, paid packs whose buttons are hidden).
 - [x] The daily bonus (`daily_bonus.py`): the server decides the day and
       pays the game's own prize for it, instead of trusting the client
 - [ ] Tournaments (needs a small tournament service)
-- [ ] An automated test for every command (236 tests so far)
+- [ ] An automated test for every command (244 tests so far)
 
 ### Cash
 
@@ -135,12 +135,17 @@ numbers, because the server writes them into the game config.
       day (`bank.py`). The game's own trade the other way (5 cash for 2,500
       gold) stays. Together with the daily bonus, it is the "daily" source of
       cash, instead of a new town hall feature
+- [x] Islands: 5 cash the first time a quest island is won on three stars,
+      the hardest difficulty (`quests.py`): 165 over the 33 islands.
+      The game has no window for it, so the island window's *Choose
+      difficulty* says so, and the cash shows once the player is home. Saves
+      from before (version 0.07a) get it for the islands they had already
+      won on three stars, once
 - [ ] The welcome-back bonus: the game config has it (a new player back on
       their 2nd and 3rd day opens a chest: 2,500 gold, a unit or 5 cash), but
       the game client we use has it switched off inside the game file, and
       nothing the server or the page sends can switch it on. It needs a small
       change to the client (one setting), so it waits for that
-- [ ] A little cash the first time an island is won with three stars
 - [ ] Tournament prizes, once tournaments exist
 - [ ] Known gap: the server still believes the experience and battle gold
       the game reports, so a determined cheater could fake levels, and with
