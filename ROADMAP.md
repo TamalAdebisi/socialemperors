@@ -272,7 +272,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
 - [ ] **Beta 1, the town builder** (the rest of step 3): the menus as a
       rail and dock (the owner's pick, done: the shop, storage, army,
-      neighbours and battle windows, the glove, messages at the top); units walking; villagers at work (trees, rocks, workers into
+      neighbours and battle windows, the glove, messages at the top); units walking
+      (done: tap a unit, then the ground); villagers at work (trees, rocks, workers into
       buildings); training and population; land and cash; missions and
       bonuses; neighbours; sound and speed; then a full run-through against
       the Flash game. Players can use the new client for everything but

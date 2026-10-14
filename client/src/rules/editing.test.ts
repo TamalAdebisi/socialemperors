@@ -7,7 +7,7 @@ import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
-    flying: false, cost: 30, costType: "w", facings: 2, production: null,
+    flying: false, velocity: 0, cost: 30, costType: "w", facings: 2, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
 }
 

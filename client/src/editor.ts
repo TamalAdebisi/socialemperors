@@ -20,6 +20,7 @@ import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { TownView } from "./view/townView.ts";
+import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -60,8 +61,10 @@ export class TownEditor {
   private building: PlacedItem | null = null;
   /** Where it comes from: storage (one, then done), or null for the shop (as many as they like). */
   private fromStorage: Stored | null = null;
-  /** Messages for the middle of the screen: the first shows, the others wait their turn. */
+  /** Messages for the top of the screen: the first shows, the others wait their turn. */
   private sayQueue: string[] = [];
+  /** Where the save has each unit that's walked, until the server hears where it stopped. */
+  private readonly savedAt = new Map<PlacedItem, Point>();
 
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
@@ -258,6 +261,11 @@ export class TownEditor {
       return;
     }
     const placed = this.view.itemAt(at);
+    // A unit of theirs selected, and the ground tapped: it walks there.
+    if (!placed && this.selected && canWalk(this.town, this.selected)) {
+      this.walkTo(this.selected, this.tileAt(at));
+      return;
+    }
     const state = placed ? workState(placed, this.clock()) : null;
     if (placed && state?.status === "ready") {
       this.collect(placed);
@@ -317,8 +325,42 @@ export class TownEditor {
           return "No workers inside (put villagers in from the classic game)";
         }
     }
+    if (canWalk(this.town, placed)) {
+      return "Tap the ground where it should go";
+    }
     const why = choices(this.town, placed).why;
     return why ? why[0].toUpperCase() + why.slice(1) : "";
+  }
+
+  /** Send a unit walking to a tile, round what's in the way, as the Flash client does. */
+  private walkTo(unit: PlacedItem, tile: Point): void {
+    const from = this.view.headingFor(unit);
+    const path = findPath(walkGrid(this.town), from, tile, unit.item.flying);
+    if (path === null) {
+      this.say(`${unit.item.name} can't get there.`);
+      return;
+    }
+    if (!this.savedAt.has(unit)) {
+      this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
+    }
+    this.view.walk(unit, path, (next) => {
+      // Something built in the way since it set off: it stops before it.
+      if (!unit.item.flying && !isWalkable(walkGrid(this.town), next.x, next.y)) {
+        return false;
+      }
+      unit.tx = next.x;
+      unit.ty = next.y;
+      return true;
+    }, () => this.unitStopped(unit));
+  }
+
+  /** A unit stopped walking: the server hears where, as the Flash client tells it. */
+  private unitStopped(unit: PlacedItem): void {
+    const from = this.savedAt.get(unit);
+    if (from && (from.x !== unit.tx || from.y !== unit.ty)) {
+      this.send([unitMoved(this.town, unit, from)]);
+      this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
+    }
   }
 
   private collect(placed: PlacedItem): void {
