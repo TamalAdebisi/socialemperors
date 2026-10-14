@@ -9,6 +9,7 @@ import json
 import os
 import re
 import tempfile
+import time
 import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
@@ -459,7 +460,7 @@ class ServerTest(unittest.TestCase):
             fields["csrf"] = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
             web.post(path, data=fields)
 
-        name = f"t{os.getpid()}{id(self)}"
+        name = f"t{time.time_ns() % 10**15}"  # usernames are 3 to 20 characters
         send_form("/register", username=name, password=name + "-password")
         send_form("/new", PLAYER="ruffle")
         game = web.get("/ruffle.html").get_data(as_text=True)
