@@ -20,6 +20,7 @@ from get_game_config import get_game_config, get_xp_from_level
 from version import migrate_loaded_save
 
 TOWN = 0
+ISLANDS = get_game_config()["globals"]["ISLE_ORDER"]
 
 
 class ConfigTest(unittest.TestCase):
@@ -51,6 +52,10 @@ class ConfigTest(unittest.TestCase):
     def test_the_reload_text(self):
         texts = {t["id"]: t["text"] for t in get_game_config()["localization_strings"] if isinstance(t, dict)}
         self.assertEqual(texts[1430], "Updating your empire")
+
+    def test_the_island_window_tells_of_the_3_star_prize(self):
+        texts = {t["id"]: t["text"] for t in get_game_config()["localization_strings"] if isinstance(t, dict)}
+        self.assertEqual(texts[498], "Choose difficulty (first 3 stars: 5 cash)")
 
 
 class LevelsTest(unittest.TestCase):
@@ -152,6 +157,51 @@ class BackPayTest(unittest.TestCase):
         do_command(pid, "rt_level_up", [12])
         do_command(pid, "rt_level_up", [13])
         self.assertEqual(village["playerInfo"]["cash"], 2)
+
+
+class IslandBackPayTest(unittest.TestCase):
+    """Saves from before the 3 star prize get it for the islands already won on 3 stars, once."""
+
+    @classmethod
+    def setUpClass(cls):
+        sessions.load_saved_villages()
+
+    def older_save(self, ranks):
+        with open(os.path.join(VILLAGES_DIR, "initial.json")) as f:
+            save = json.load(f)
+        save["version"] = "0.06a"
+        save["playerInfo"]["cash"] = 3
+        save["privateState"]["questsRank"] = ranks
+        return save
+
+    def test_the_islands_already_won_on_3_stars(self):
+        save = self.older_save({ISLANDS[0]: 3, ISLANDS[1]: 2, ISLANDS[2]: 3, "999999999": 3})
+        self.assertTrue(migrate_loaded_save(save))
+        self.assertEqual(save["playerInfo"]["cash"], 3 + 5 + 5)  # not the 2 star one, nor one that isn't an island
+        self.assertFalse(migrate_loaded_save(save))  # once
+        self.assertEqual(save["playerInfo"]["cash"], 13)
+
+    def test_older_saves_with_a_list_of_ranks(self):
+        save = self.older_save([])
+        self.assertTrue(migrate_loaded_save(save))
+        self.assertEqual(save["playerInfo"]["cash"], 3)
+
+    def test_a_strange_rank_does_not_stop_the_server(self):
+        save = self.older_save({ISLANDS[0]: None, ISLANDS[1]: "3", ISLANDS[2]: "three"})
+        self.assertTrue(migrate_loaded_save(save))
+        self.assertEqual(save["playerInfo"]["cash"], 3 + 5)
+
+    def test_then_only_new_islands_pay(self):
+        save = self.older_save({ISLANDS[0]: 3, ISLANDS[1]: 2})
+        migrate_loaded_save(save)
+        pid = sessions.new_village(owner_id=None)
+        village = sessions.session(pid)
+        village["privateState"]["questsRank"] = save["privateState"]["questsRank"]
+        village["playerInfo"]["cash"] = 0
+        for island in ISLANDS[:2]:
+            result = {"map": TOWN, "resources": {}, "units": [], "win": 1, "quest_id": island, "difficulty": 3}
+            do_command(pid, "end_quest", [json.dumps(result)])
+        self.assertEqual(village["playerInfo"]["cash"], 5)  # only the island that had 2 stars
 
 
 if __name__ == "__main__":

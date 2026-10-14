@@ -15,6 +15,7 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 import sessions
 from command import do_command
 from get_game_config import get_game_config
+from quests import get_quest_map
 
 ISLE_ORDER = get_game_config()["globals"]["ISLE_ORDER"]
 FIRST, SECOND, THIRD = ISLE_ORDER[0], ISLE_ORDER[1], ISLE_ORDER[2]
@@ -77,6 +78,31 @@ class QuestsTest(unittest.TestCase):
         self.play(FIRST, difficulty=3)
         self.play(FIRST, difficulty=2)  # a lower difficulty never takes stars away
         self.assertEqual(self.pState["questsRank"], {FIRST: 3})
+
+    def test_the_first_win_on_3_stars_pays_cash(self):
+        self.save["playerInfo"]["cash"] = 0
+        self.play(FIRST, difficulty=1)
+        self.play(FIRST, difficulty=2)
+        self.play(FIRST, win=False, difficulty=3)
+        self.assertEqual(self.save["playerInfo"]["cash"], 0)
+        self.play(FIRST, difficulty=3)
+        self.assertEqual(self.save["playerInfo"]["cash"], 5)
+        self.play(FIRST, difficulty=3)  # once an island
+        self.assertEqual(self.save["playerInfo"]["cash"], 5)
+        self.play(GOLEM_ISLAND, difficulty=3, item_rewards={str(GOLEM): 1})  # every island, boss islands too
+        self.assertEqual(self.save["playerInfo"]["cash"], 10)
+
+    def test_only_real_islands_pay(self):
+        self.save["playerInfo"]["cash"] = 0
+        for quest_id in ("999999999", "100000/../../" + FIRST, "survival"):
+            self.play(quest_id, difficulty=3)
+        self.assertEqual(self.save["playerInfo"]["cash"], 0)
+
+    def test_island_maps(self):
+        self.assertEqual(get_quest_map(FIRST)[1], 200)
+        self.assertEqual(get_quest_map(int(FIRST))[0]["playerInfo"]["pid"], FIRST)
+        for quest_id in ("999999999", "100000/../../" + FIRST, "../initial", ""):
+            self.assertEqual(get_quest_map(quest_id), ("", 404))
 
     def test_four_hour_wait_starts_with_the_attack(self):
         before = int(time.time())
