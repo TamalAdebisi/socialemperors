@@ -8,9 +8,9 @@ import "./ui/style.css";
 import { Application, Container } from "pixi.js";
 
 import { TownEditor } from "./editor.ts";
-import { ISLANDS, playQuest } from "./questPlay.ts";
-import { armyOf } from "./rules/quest.ts";
-import { IslandsWindow } from "./ui/islands.ts";
+import islandData from "./rules/islands.json" with { type: "json" };
+import { armyOf, type Island } from "./rules/quest.ts";
+import { IslandsWindow } from "./ui/islandMap.ts";
 import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
@@ -53,6 +53,8 @@ async function start(): Promise<void> {
   // ?quest=<id>: a quest island, played here (questPlay.ts).
   const quest = new URLSearchParams(location.search).get("quest");
   if (quest) {
+    // The battle's code is loaded only for an island.
+    const { playQuest } = await import("./questPlay.ts");
     await playQuest(settings, server, quest);
     return;
   }
@@ -129,7 +131,7 @@ async function start(): Promise<void> {
     const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE }];
     const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
     const islands = new IslandsWindow({
-      islands: ISLANDS, items,
+      islands: islandData.islands as unknown as Island[], items,
       unlockedIndex: () => Number((info.privateState as Record<string, unknown> | undefined)?.unlockedQuestIndex ?? 0),
       stars: () => ((info.privateState as Record<string, unknown> | undefined)?.questsRank ?? {}) as Record<string, number>,
       lastAttacked: () => {
@@ -139,7 +141,7 @@ async function start(): Promise<void> {
       level: () => town.level,
       armySize: () => armyOf(town).reduce((sum, [, n]) => sum + n, 0),
       clock,
-      picture: (item, canvas) => void drawThumbnail(art, item, canvas),
+      pageUrl: (page) => `${settings.assetsUrl}/images_new/quests_manager_img_${page}.jpg`,
       questUrl: (quest) => `/client.html?quest=${quest}`,
       classicUrl: settings.classicUrl,
     });

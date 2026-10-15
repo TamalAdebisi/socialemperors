@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the island map
+
+- **The Quests window is the game's own island map,** in the panel on the
+  right (a sheet on phones), scrolling sideways through its seven pages,
+  rather than a list. On a wide screen this one panel is wider than the
+  others (a whole page of the map, up to 740 pixels), so the islands'
+  names can be read; on a phone a page is 560 pixels wide and scrolls
+  within the sheet. It opens on the furthest island reached.
+- **Tapping a locked or resting island says why** under the map (the
+  original showed an alert window).
+- **The team picker is part of the start window,** not a window of its
+  own: the 20 places, then your units to tap; the god islands' rule and
+  the "fewer than 20?" question are said in the window.
+
 ## 15 October 2026: Beta 2, battles and the first islands
 
 - **Quests are played in the new client** from the Quests button: the

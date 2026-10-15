@@ -1513,26 +1513,185 @@ body {
   margin-left: 14px;
 }
 
-/* The islands window: a picture of each island, its stars, Sail. */
-.island-picture {
-  width: 72px;
-  height: 52px;
-  flex: none;
+/* The island map (ui/islandMap.ts): the game's seven pages side by side,
+   a page the panel's width (at least 560 pixels, so the names stay
+   readable), scrolled sideways. Sizes are shares of a page (--page, set by
+   the window), so the ribbons scale with the map. */
+.islands .panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.island-picture.missing {
-  visibility: hidden;
+.island-holder {
+  position: relative;
 }
 
-.island.locked .island-picture {
-  filter: grayscale(1) opacity(0.6);
+.island-sea {
+  --page: 560px;
+  width: 100%;
+  height: calc(var(--page) * 562 / 723);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: #4fb1e8;
+}
+
+.island-sea::-webkit-scrollbar {
+  display: none;
+}
+
+.island-strip {
+  position: relative;
+  width: calc(var(--page) * 7);
+  height: 100%;
+}
+
+.island-page {
+  position: absolute;
+  top: 0;
+  width: calc(var(--page) * 1);
+  height: 100%;
+  scroll-snap-align: start;
+  user-select: none;
+}
+
+.island-button {
+  position: absolute;
+  width: 0;
+  height: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.island-name {
+  position: absolute;
+  left: calc(var(--page) * -0.105);
+  top: calc(var(--page) * -0.039);
+  width: calc(var(--page) * 0.21);
+  height: calc(var(--page) * 0.037);
+  display: grid;
+  place-items: center;
+  background: url("./art/island-ribbon.webp") center / 100% 100% no-repeat;
+  font: 900 calc(var(--page) * 0.019)/1 var(--round);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.island-lock {
+  position: absolute;
+  left: calc(var(--page) * -0.054);
+  top: calc(var(--page) * -0.197);
+  width: calc(var(--page) * 0.109);
+}
+
+.island-enter {
+  position: absolute;
+  left: calc(var(--page) * -0.102);
+  top: calc(var(--page) * -0.112);
+  width: calc(var(--page) * 0.196);
+}
+
+.island-button:hover .island-enter,
+.island-button:focus-visible .island-enter {
+  filter: brightness(1.12);
 }
 
 .island-stars {
-  display: flex;
-  gap: 2px;
+  position: absolute;
+  left: calc(var(--page) * -0.07);
+  top: calc(var(--page) * 0.002);
+  width: calc(var(--page) * 0.13);
 }
 
-.island-stars .icon {
-  height: 18px;
+.island-button.locked .island-name {
+  filter: grayscale(0.4);
+}
+
+.island-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.island-arrow img {
+  width: 28px;
+}
+
+.island-arrow.prev {
+  left: 4px;
+}
+
+.island-arrow.next {
+  right: 4px;
+}
+
+.island-said {
+  margin: 0;
+  min-height: 1.3em;
+  font: 700 14px var(--round);
+  text-align: center;
+}
+
+/* On a wide screen the island map's panel is wider than the others: a whole page of the map. */
+@media (min-width: 721px) and (not ((orientation: portrait) and (max-width: 1000px))) {
+  .panel.islands {
+    width: min(740px, calc(100vw - var(--rail-w) - 64px));
+  }
+}
+
+/* The team picker (questPlay.ts): the 20 places, then the units to pick from. */
+.quest-team {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest-team li {
+  aspect-ratio: 1;
+  border: 2px dashed var(--parchment-edge);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.quest-team .quest-pick img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.quest-pick {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.quest-pick:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.quest-problem {
+  min-height: 1.3em;
+  margin: 8px 0 0;
+  color: #b3261e;
+  font-weight: 800;
 }
