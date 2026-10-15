@@ -118,8 +118,10 @@ them can be found and reversed. The big, agreed decisions are in
   client (which showed a princess instead to players who said they were
   women; the server doesn't keep that, so it's always the king). The other
   neighbours keep their letter portraits.
-- **Visiting shows your own numbers** in the top bar, as the Flash client
-  did, with "Visiting <name>" beside them.
+- **Visiting shows your own numbers** in the top bar, with "Visiting
+  <name>" beside them. *Corrected 15 October 2026:* this said the Flash
+  client did the same; it didn't. It showed the neighbour's name, level and
+  resources. To be fixed (PARITY.md).
 - **The cart asks with a bar** at the bottom (Let it in / No thanks) rather
   than the Flash client's window; tapping a waiting cart asks again.
 - **A server fix:** letting a cart in used to lose its help on the server,
