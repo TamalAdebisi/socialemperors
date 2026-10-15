@@ -10077,5 +10077,1198 @@
    },
    "passive": "Normal attack: two golden projectiles (the second from a second mouth, a moment later)."
   }
+ ],
+ "beats": [
+  {
+   "ids": [
+    794,
+    795,
+    799,
+    801,
+    802,
+    803,
+    805,
+    806,
+    807,
+    809,
+    810,
+    811,
+    812,
+    815,
+    816,
+    820,
+    821,
+    827,
+    830
+   ],
+   "name": "Necro base (all Necro units and the Spectrum Dragon)",
+   "class": "NecroDelegate",
+   "status": "partial",
+   "notes": "Not registered itself: the base of the 19 Necro classes (ids are theirs; none overrides the kill hook). No beat moves. When one of them kills an enemy UNIT (not a building), by any damage credited to it, 3 in 10 a skeleton rises on the victim's tile on the killer's side: 808, 797 or 818, equal odds; summoned; it dies by itself after 15 s (450 frames). Already in the table as `risers` (same numbers). Small differences: the original also lets a summoned victim rise (the engine skips summoned victims); the original's skeleton dies at the end (no graveyard either way, it is summoned) where ours fades. The Necro Rhino 817 is not on this base.",
+   "needs": [
+    "risers: let a summoned victim raise a skeleton too (the original doesn't check)."
+   ]
+  },
+  {
+   "ids": [
+    1357,
+    1358,
+    1359
+   ],
+   "name": "Dome base (Protection Dome, Tower Enhancer)",
+   "class": "DomeDelegate",
+   "status": "none",
+   "notes": "A building; the base of DomeProtectionDelegate (1357, 1358) and DomeTowerEnhancer (1359), not registered itself. Looks only: the dome glows; selected, its range is drawn as a ground ring and a half see-through dome; hovered (not selected), the ground ring only. Nothing for battles.",
+   "needs": []
+  },
+  {
+   "ids": [
+    369
+   ],
+   "name": "Oil Tower",
+   "class": "OilTowerDelegate",
+   "status": "none",
+   "notes": "A tower. Every beat (interval 70) no shot: fire on a fixed row of 7 tiles beside it chosen by its rotation (0: x-3..x+3 at y+1; 1: x+1, y-3..y+3; 2: x-3..x+3 at y-1; 3: x-1, y-3..y+3), whatever its target. 15 frames later the enemy unit on each of those tiles starts burning 5 a second for 5 s (not if already burning). Buildings untouched. No Move kind places tiles by the tower's rotation.",
+   "needs": [
+    "towerRow: each beat instead of the shot, 7 tiles in a row 1 tile out on the tower's facing side (offsets -3..+3 along it, by rotation 0..3); 15 frames later each enemy unit on them burns 5 per second for 5 ticks unless already burning."
+   ]
+  },
+  {
+   "ids": [
+    1282
+   ],
+   "name": "Phoenix Blue Egg",
+   "class": "PhoenixBlueEggDelegate",
+   "status": "none",
+   "notes": "An egg (life 250). 5 s (150 frames) after it appears, if alive, the Blue Phoenix 775 hatches on its tile, on the egg's side, with a quarter of its life, fading in over 1 s; that bird won't lay another egg. The egg then shows broken, can't be killed, and is removed 3 s later. Destroyed before hatching: removed at once and 775 goes to the graveyard (the client sends the graveyard command).",
+   "needs": [
+    "hatch: egg 1282 hatches 775 on its tile, same side, life = 775's life / 4, 150 frames after it is laid if still alive; the bird can't lay again; the egg becomes unkillable and vanishes 90 frames later. Killed first: removed, and 775 to the graveyard as the Flash client does."
+   ]
+  },
+  {
+   "ids": [
+    429
+   ],
+   "name": "Water Tower",
+   "class": "WaterTowerDelegate",
+   "status": "none",
+   "notes": "A tower. Every beat (interval 40) no shot: a wave from the side it faces (rotation 0: +y, 1: +x, 2: -y, 3: -x), 5 tiles wide (-2..+2), 7 rows deep, first row 15 frames after the beat then a row every 15 frames. Each enemy unit on a struck tile is thrown 5 tiles away from the tower and takes the tower's config attack (3, not boosted). Buildings untouched; waves overlap.",
+   "needs": [
+    "towerWave: each beat instead of the shot, rows 1..7 out on the tower's facing side, 5 wide, a row every 15 frames from 15 frames after the beat; each enemy unit on a struck tile is thrown 5 from the tower and hurt by the tower's config attack."
+   ]
+  },
+  {
+   "ids": [
+    686
+   ],
+   "name": "Infernal Kamikaze",
+   "class": "HellKamikazeDelegate",
+   "status": "full",
+   "notes": "Blows up on its beat like the troll kamikaze 575: the engine now does this for 686 by itself, no rule needed. In the original only 575s caught in the blast go off too; another 686 nearby just takes the 500 (check the engine's chain does the same: its set includes 686).",
+   "needs": []
+  },
+  {
+   "ids": [
+    687,
+    817
+   ],
+   "name": "Rhino Rider (Infernal) and Necro Rhino",
+   "class": "HellRhinoDelegate",
+   "status": "full",
+   "notes": "Same as RinoceronteDelegate: each tile it walks onto, the nearest enemy within 1 tile straight-line, if a unit under 4 population, is thrown 5 tiles, no damage. The training building it names (1212) is never read. Plain hits ordinary.",
+   "needs": []
+  },
+  {
+   "ids": [
+    601,
+    640
+   ],
+   "name": "Rhino Rider (troll and human)",
+   "class": "RinoceronteDelegate",
+   "status": "full",
+   "notes": "No beat moves. Each tile it enters while walking: the nearest enemy element with dx^2+dy^2 <= 1 (own tile or the 4 beside it; armed things sort before unarmed ones); if that is a unit of population under 4 (and can be thrown: not giant, boss, enlarged or helpless) it is thrown 5 tiles from the rhino, no damage; if it is a building, nothing. Every tile: the random test meant to thin it out can't fail.",
+   "needs": []
+  },
+  {
+   "ids": [
+    822,
+    823,
+    824
+   ],
+   "name": "Dragon Rider I to III",
+   "class": "DragonRiderDelegate",
+   "status": "full",
+   "notes": "Four plain beats, then the 5th is a sweep instead of the hit, at once: every enemy within 2 tiles straight-line (at most 20, nearest first, not on its own tile) takes half its attack - buildings and villagers too (`all`) - and units are thrown 3. If it had no target, the first thing hit becomes it. Not helpless; its count goes on during the clip (its class doesn't check for 'busy').",
+   "needs": []
+  },
+  {
+   "ids": [
+    769
+   ],
+   "name": "Dark Punky Draggy",
+   "class": "PunkyDraggyDelegate",
+   "status": "full",
+   "notes": "Fireball shots (projectile 9, 10-frame delay). Each beat a 1-in-5 draw also calls 10 meteors on tiles in the square of 2 each way round its target (original: square, middle tiles likelier, ours a circle), each 20 to 30 frames later, its attack to the enemy on that tile (unit or building). The plain fireball still flies. Special animation held 2 s.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2114
+   ],
+   "name": "Atlas Titan",
+   "class": "AtlasTitanDelegate",
+   "status": "full",
+   "notes": "Near = within 2 tiles (the original measures tiles each way, footprint to footprint; the engine measures straight-line). Two counts, near beats and far beats apart: each special on the 5th, 15th, 25th... beat of its own kind. Plain beats near and far: a catapult fireball (projectile 100) 15 frames after the beat. Near special (helpless): six bursts at frames 55..80, 5 apart; each, fighting units within 8 (max 10) take its attack and are thrown 5. In the original a thrown unit stays where it was for its 1-s flight, so it takes all six; folded here as six hits with no throw, then the throw. Far special (helpless): a planet (projectile 129) thrown at frame 31; where it lands, fighting units within 2 (max 5) take 1.5 x attack, thrown 8 (add the planet's flight time; not in the code). When it dies, 69 frames later one more burst (radius 8, max 10, its attack, thrown 5).",
+   "needs": []
+  },
+  {
+   "ids": [
+    2153
+   ],
+   "name": "Tiny Fire God",
+   "class": "TinyFireGodDelegate",
+   "status": "partial",
+   "notes": "One count over all beats, a 31-beat cycle: specials on beats 7, 13, 19, 25, 31. Plain hits land straight on the target at any distance (by hand). Beat 7 slash (helpless): at frame 40, round each of 7 points (own tile and 6 ahead by its facing) every fighting enemy unit within 4 (max 10 per point) takes its attack and a small hop, and burns 5 a second for 8 s (once: a burning unit isn't set again). A unit near several points is hit once per point. The burn is left out of the ghosts here because ghosts' burn would stack per point (see needs). Original slip: facing down, the line is its own tile then the tile below six times. Beat 13 giant fireball (helpless): shot at frame 61 (projectile 121); fighting units within 5 of where it lands (max 10) take 3 x attack, thrown 8; add the flight time. Beat 19 whirlwind (not helpless, no beats for 5 s = busy 150): hits at frames 12 and 17 of each loop of its clip: fighting units within 5 (max 5), its attack, thrown 5. The two hits 5 frames apart catch a thrown unit twice (it flies 1 s), folded as factor 2 per loop; 'every 30' stands in for the clip length. Beat 25: three Vulcano Minions 2076, only if it has at most 3 alive (all or none); otherwise nothing that beat. Beat 31 (helpless): 17 pulses, frames 35..115: fighting units within 5 (max 10) take its attack and burn 5 a second for 8 s; no throw.",
+   "needs": [
+    "Slash burn once per unit: each unit the slash hits burns 5 per second for 8 ticks unless already burning (ghosts' burn stacks per point).",
+    "Line direction by facing, folded to the 4 axis ways (ghosts' 'ahead' follows the target and can go diagonal).",
+    "Whirlwind clip length: frames 12 and 17 of each loop of 2153's animation 8; read it from the sprite sheet to set 'every'."
+   ]
+  },
+  {
+   "ids": [
+    2155
+   ],
+   "name": "Tiny Water God",
+   "class": "TinyWaterGodDelegate",
+   "status": "partial",
+   "notes": "Same 31-beat cycle; plain hits straight on the target at any distance. Beat 7 ground smash (helpless): at frame 23, the fire god's 7-point line (same 'down' slip); round each point fighting units within 4 (max 10 per point) take its attack; thrown 7 from the god. Folded as all the hits first (a unit near k points takes k hits, as in the original where it stays put during its flight), then one throw (ours from the point, the original's from the god). Beat 13 grab (helpless): fighting enemy units within 2 (own tile too, nearest first) of max life 500 or less, up to 3, grabbed at frames 24, 32, 40, become helpless and their picture goes into its hand. The class never calls the step that kills them (the big Water God's class does), so they stay helpless and unseen but alive and hittable for the rest of the battle; the list is never emptied, so at most 3 per god per battle; an empty list means nothing at all that beat. Written as a web for good (108000 frames, no damage). Beat 19 whirlwind (not helpless, busy 150): frame 16 of each loop, fighting units within its reach + 1 = 4 (max 10), half its attack, thrown 6; 'every 30' stands in for the clip length. Beat 25: three Water Minions 2084, all or none, only with at most 3 alive. Beat 31 (helpless): 20 pulses 5 frames apart (frames 35..130), fighting units within 7 (max 10) take 1.5 x attack, thrown 8; a unit caught stays put through its 1-s flight and takes 6 pulses (9 x attack) before it lands out of reach: folded as one 9 x hit with the throw every 30 frames (3 times).",
+   "needs": [
+    "Grab: units held for good should also be hidden; at most 3 per god per battle (the list is never emptied, so later grabs re-take the same ones); only fighting units (the web takes villagers too); grabbed one by one at frames 24, 32, 40. The web's 0-damage burn would also stop them burning from anything else. Judgment call for the owner: the original never kills them (a slip); copying it leaves invisible frozen units on the field.",
+    "Line direction by facing, folded to the 4 axis ways; the smash throws away from the god, not from the point.",
+    "Whirlwind clip length: frame 16 of each loop of 2155's animation 6; from the sprite sheet."
+   ]
+  },
+  {
+   "ids": [
+    772
+   ],
+   "name": "Hidros Titan",
+   "class": "TitanHydrosDelegate",
+   "status": "partial",
+   "notes": "Near = within 1 tile (each way in the original): plain hits by hand, not counted. Within reach (2..7) beats are counted from 1: beats 1, 6, 11...: six water balls (projectile 54) from alternate hands, each a full hit, at frames 2 and 8 of each loop of the clip until a once-a-second check sees 6 or more ('every 6' stands in; 6 then clip length - 6). Beats 9, 17, 25, 33, 49...: if no whirlpools are out, 3 Whirlpools 728 (not four) at frame 13, drawn half size, ALWAYS on the player's side, for 20 s (600 frames); while they're out that beat is a beam instead. Other far beats: a freezing beam (projectile 35, 35 frames after the beat, 1 s long): the target, unless already frozen, is helpless 5 s losing half its attack a second (23.5 for attack 47; written as a web), and the beam's own hit lands. Walking on a beam beat: nothing, not counted.",
+   "needs": [
+    "Summons on the player's side: the whirlpools always join the player's side, even for an enemy titan.",
+    "While its whirlpools are out the hurricane beat falls through to the beam (ours: spawn does nothing and the beat is spent).",
+    "Ball spacing: frames 2 and 8 of each loop of 772's animation 7; clip length from the sprite sheet. The web's damage is fixed (half of attack 47)."
+   ]
+  },
+  {
+   "ids": [
+    757
+   ],
+   "name": "Lythos Titan",
+   "class": "TitanLythosDelegate",
+   "status": "partial",
+   "notes": "One roll a beat: 1, 2, 3 each 1 in 9 (shared draw); else a plain hit by hand at reach 3. While a move is under way it doesn't roll and its beats are plain hits. 1: boulder rain at frame 20: 25 boulders on tiles in the square of 3 each way round its target, 20 to 23 frames later each, 10 x its attack to the enemy on that tile (unit or building; the code really passes 10). 2: whirlwind held 4 s: once a second (4 times), every enemy unit within 2 (villagers too; not on its own tile; max 20) is thrown 3 and takes attack / 2.2. `all` also takes buildings, which the original doesn't. 3: at frame 42, 3 Lythos Minions 763 near a point 2 tiles to its side, a third size, ALWAYS on the player's side, attacking its target, removed 5 s later; only when none of the last ones are left. Slip: if 3 comes up while they're still out, nothing spawns and it never rolls again that battle.",
+   "needs": [
+    "No specials while one is under way (stone rain until frame 20, whirlwind 4 s, minions until frame 42): those beats are plain hits, not rolls.",
+    "Summons on the player's side: the minions always join the player's side.",
+    "Area pick of enemy units only (villagers yes, buildings no) for the whirlwind: `all` adds buildings.",
+    "Slip (judgment call): rolling minions while they are out stops all its specials for the rest of the battle."
+   ]
+  },
+  {
+   "ids": [
+    755
+   ],
+   "name": "Pyros Titan",
+   "class": "TitanPyrosDelegate",
+   "status": "partial",
+   "notes": "Near = within 2 tiles (each way in the original). Its near count never starts over, so each near special comes once per titan per battle ('every 1000000'); other near beats are plain hits by hand. Near beat 4 stomp at frame 20: enemy units within 10 (villagers too, no buildings; max 10) take half its attack, thrown 4. Near beat 8 magma, at once: enemy units within 3 of its target (max 10) burn 6 a tick for 6 ticks 30 ms apart (the code's ms, so about 36 at once), not if already burning: written as 6 hits of 6 over 6 frames. Near beat 12 explosion, 16 frames later: the 5 x 5 square round itself (radius sqrt 8 is exactly that square): the enemy on each tile (unit or building) takes 1.5 x attack; units also burn 0.2 x attack a second for 5 s (9.4 for attack 47) and are thrown 4. Far beats (3..6), never counted: two giant fire shots (projectile 23) at frames 18 and 29, each a full hit. It dies: one more stomp (half its attack, thrown 4, max 10 within 10) plus 3 points 3 times 30 ms apart (folded as 3 hits of 3 before the throw).",
+   "needs": [
+    "Area pick of enemy units only (villagers yes, buildings no) for the stomp, the magma and the death stomp: ours take fighting units only, `all` would add buildings.",
+    "Magma skips units already burning; ours hits them anyway. The explosion's burn is 0.2 x its attack now (written for attack 47)."
+   ]
+  },
+  {
+   "ids": [
+    762
+   ],
+   "name": "Stratos Titan",
+   "class": "TitanStratosDelegate",
+   "status": "partial",
+   "notes": "Every beat counted. Near = within 2 (each way in the original). Near: every 12th beat it swallows up to 2 enemy units within its reach (7, nearest first; not bosses, not helpless, under 500 life when they appeared); they go helpless and unseen at once and die at frame 35. None: a plain hit. Other near beats: plain hits by hand. Far (3..7): every 4th beat, if no tornado time is left, one Tornado 617 at frame 11 on a free tile near it, ALWAYS on the player's side, for 10 s (also gone when the titan dies); else a swallow, which does nothing with nobody to take (it never hurts from afar). Note: the 'otherwise' hit is decided 34 frames late here; in the original the fallback hit is at once.",
+   "needs": [
+    "Summons on the player's side: the tornado always joins the player's side; it also goes when the titan dies.",
+    "Tornado block: the rule waits out the full 10 s even if the tornado died sooner, and a blocked beat falls through to the far swallow (ours: spawn does nothing and the beat is spent)."
+   ]
+  },
+  {
+   "ids": [
+    831
+   ],
+   "name": "Mad Balrog",
+   "class": "MadBalrogDelegate",
+   "status": "full",
+   "notes": "Plain hits land straight on the target at any distance (no shot). Near = within 2 (each way in the original); only near beats counted, a 13-beat cycle: 7th a smash (helpless) at frame 22: fighting units within 2 (max 10, not its own tile) take its attack, thrown 4; 13th a fire-meteor rain (helpless) at frame 16: one meteor on every tile of the 7 x 7 square round its target, 7 to 47 frames later each, its attack to the enemy on that tile (unit or building). When it dies it smashes once more, at once.",
+   "needs": []
+  },
+  {
+   "ids": [
+    754
+   ],
+   "name": "Cerberus",
+   "class": "CerberusDelegate",
+   "status": "partial",
+   "notes": "Near = within 2 tiles each way (the original takes the larger of the x and y gaps; near 2.83 on our straight line gives the same 5 x 5 square). Only near beats count toward the stomp, and the count is tested before it goes up, so the 1st, 6th, 11th near beat is the stomp: at frame 16 of animation 6 (33 frames) every enemy unit within 5 tiles (circle, at most 20) takes attack / 2.2 and is thrown 3. Other near beats are three bites at 8, 16 and 25 frames, full attack each: the first at its target, the second at the nearest other enemy within 2 (blast with skipTarget, max 1), the third at the nearest one other than the second's (in practice its target again, as here). Far beats: three fireballs (projectile 9) in one instant at 13 frames, spread over different units. It never makes a plain hit. Small differences: the original switches its target to whatever it bit or shot last; on a far beat whose target is a helpless unit it first switches to one that isn't (skipping the beat if none); its stomp also picks unarmed units. Drawn 1.6 times bigger.",
+   "needs": [
+    "Second bite fallback: when there is no other enemy unit within 2 tiles, the second bite lands on its target too (ours finds nobody and skips it), so a lone enemy takes three bites, not two."
+   ]
+  },
+  {
+   "ids": [
+    748
+   ],
+   "name": "Cyclops",
+   "class": "CiclopeDelegate",
+   "status": "full",
+   "notes": "No counter: one roll per near beat (within 1 tile each way; near 1.42 on our straight line is the same 3 x 3 square): 4 in 10 a spin, the shared whirlwind at frame 9 (enemy units within 3, at most 20, 0.45 x attack, thrown 1; busy till frame 26), else a hit by hand at full attack. From afar its plain eye laser (projectile 44, a 0.7 s beam) 5 frames after the beat; rule 3 only gives it its animation and timing. The original's whirlwind also picks unarmed units (never buildings). Its sheet has no animation 8: the 26-frame clip the spin needs is the 7th; check which picture to show.",
+   "needs": []
+  },
+  {
+   "ids": [
+    792
+   ],
+   "name": "Giant Cyclops",
+   "class": "CyclopsDelegate",
+   "status": "full",
+   "notes": "Every beat in reach (2) counts. Near = within 1 tile each way (1.42). Near beats: a slap at frame 5 (full attack, thrown 2). Once 8 beats are counted, the next near beat is the grab (sticky): animation 6 (35 frames); at frame 5 it takes the nearest enemy unit within 2 (circle) with item life 350 or less, not helpless, not a boss (not necessarily its target) and eats it at frame 16. If nobody fits the beat is lost, and the count restarts anyway. Far beats (2 tiles): its plain laser (projectile 44) after 8 frames with animation 7. Slip in the original, left out here: a slap on a building errors and does no damage.",
+   "needs": []
+  },
+  {
+   "ids": [
+    861
+   ],
+   "name": "Sphinx",
+   "class": "EsfingeDelegate",
+   "status": "full",
+   "notes": "Its 'within 2' test equals its reach, so every beat counts, in a cycle of 9: the 5th a sonic boom (animation 7, 26 frames; at frame 18 its target takes its full attack, a unit is thrown 3), the 9th a tail strike (animation 6, 39 frames, so the next beat is lost; at frame 21 full attack and poison of attack / 2 = 23 a tick (attack 46), 5 ticks 3 s apart). Helpless during both. Other beats a plain hit by hand. The map's 'every 4th / every 8th' is off by one.",
+   "needs": []
+  },
+  {
+   "ids": [
+    780
+   ],
+   "name": "Harpy",
+   "class": "HarpyDelegate",
+   "status": "partial",
+   "notes": "Every beat counts. Far = 3 tiles or more each way (near 2.83 is the 5 x 5 square): a fireball (projectile 9, full attack) at frame 9 of animation 6. Near: plain hits by hand; on the 8th, 16th... beat (if near) the grab: the nearest enemy unit within 6 tiles (its reach minus 1, circle) with item life 350 or less, not helpless, not a boss; carried off hidden, dead at frame 67 of animation 7 (67 frames). Our swallow takes it out at once, like the original takes it out of the fight at once. Nobody to grab: a plain hit (otherwise). If the 8th beat is far, the grab waits for the 16th.",
+   "needs": [
+    "Helpless and busy only when the grab succeeds: the harpy is helpless with no beats for 67 frames while it carries a victim, but not when the beat falls back to a plain hit (so busy/helpless are left off here)."
+   ]
+  },
+  {
+   "ids": [
+    789
+   ],
+   "name": "Hercules",
+   "class": "HerculesDelegate",
+   "status": "partial",
+   "notes": "Every beat counts. 5th, 15th...: a smash at frame 20 of animation 7 (36 frames): the 10 nearest fighting enemy units within 4 (circle, not its own tile) take 1.5 x attack and are thrown 4. 10th, 20th...: a grab of the nearest enemy unit within its reach of 2 with item life 350 or less, not helpless, not a boss; held hidden, dead at the last frame of animation 6 (43 frames). Nobody to grab: a plain hit (otherwise). Other beats: plain hits by hand.",
+   "needs": [
+    "Helpless and busy only when the grab succeeds: Hercules is helpless with no beats for 43 frames while holding a victim, but not when the beat falls back to a plain hit."
+   ]
+  },
+  {
+   "ids": [
+    749
+   ],
+   "name": "Medusa",
+   "class": "MedusaDelegate",
+   "status": "partial",
+   "notes": "No counter, one roll per beat. Near (within 1 tile each way, 1.42): 4 in 10 a tail sweep (shared whirlwind at frame 16 of animation 8, 26 frames: enemy units within 3, at most 20, 0.45 x attack, thrown 1), else a hand hit at full attack. Far (2 to 9): half the time the stone gaze (animation 6; a beam, projectile 46, after 11 frames; the target turns to stone, helpless 3 s = 90 frames, then the beam does its full attack), else a snake shot (projectile 45, full attack) at 16 frames. The original's stone has no boss check and looks grey, not frozen.",
+   "needs": [
+    "Condition: the stone gaze is only drawn when its target isn't already stone (any Medusa's stone counts); a stoned target always gets the snake shot. A per-rule 'if: targetNotStill' (or a freeze that falls back to another move) would do it."
+   ]
+  },
+  {
+   "ids": [
+    752
+   ],
+   "name": "Minotaur",
+   "class": "MinotaurDelegate",
+   "status": "full",
+   "notes": "Every 4th beat, if its target is a unit, a horn toss: animation 6 (21 frames); at frame 8 the target is thrown 5 tiles and takes no damage. Against a building the 4th beat is a plain hit; the original restarts its count either way, which our every-4 count matches. Other beats plain hits by hand.",
+   "needs": []
+  },
+  {
+   "ids": [
+    775
+   ],
+   "name": "Blue Phoenix",
+   "class": "PhoenixBlueDelegate",
+   "status": "partial",
+   "notes": "Every beat counts; every 8th is the volley: its attack is a third (48 -> 16) while it lasts; from frame 5 of animation 6, 10 rounds 12 frames apart, each round one shot (projectile 56) at each of the 5 nearest enemy units in reach (9), a spread volley of 5 per round. No beats until the last round is done (busy 125). Every shot that lands on a unit sets it burning for a third of its attack then: 16 a tick on plain shots, 5 during the volley, 5 ticks a second apart, not again while burning. Drawn 1.5 times bigger. No heal.",
+   "needs": [
+    "Spread without repeats: a round shoots only as many shots as there are enemy units in reach (ours repeats the last one to make up 5), and a round that finds nobody ends the volley (ours falls back to its target, perhaps a building).",
+    "On its first death: at frame 35 of its death animation it leaves the field and 200 ms later a Blue Phoenix Egg (1282) appears on the nearest free tile, with the egg's own hatching (PhoenixBlueEggDelegate / PhoenixEggDelegate). A death spawn of 1282 could place it, but the egg's hatching isn't in the engine."
+   ]
+  },
+  {
+   "ids": [
+    744
+   ],
+   "name": "The Phoenix",
+   "class": "PhoenixDelegate",
+   "status": "full",
+   "notes": "Every beat counts; the 5-rule comes first (beat 55 is a volley). Volley: attack halved while it lasts; from frame 13 of animation 6, 10 shots (projectile 43) 12 frames apart, each at the nearest enemy unit in reach (ours: its target), ending early if none; no beats till it's done (busy 133). Heal: from frame 4 of animation 7, 50 life to itself, then each second, 5 times, stopping early once full (busy 154 is the longest it can take). Plain shots burn the unit hit for 47 / 3 = 15 a tick (fractions dropped), 5 ticks a second apart, not stacking; volley shots burn for 7. Drawn 1.5 times bigger. No egg. Slip in the original: the volley looks for units on the computer's side whoever owns the phoenix, so a defending phoenix shoots its own side.",
+   "needs": []
+  },
+  {
+   "ids": [
+    856
+   ],
+   "name": "Green Phoenix",
+   "class": "PhoenixGreenDelegate",
+   "status": "full",
+   "notes": "Every beat counts; every 11th is a whirlwind that starts at once: 5 sweeps 12 frames apart, done at 60 frames (busy 60). Each sweep hits the one enemy on each tile of the 5 x 5 square round it (radius 2.83 is that square), buildings included (all), with attack / 1.4, units thrown 3. On its death, once, at frame 35 of the death animation, the same square takes 2 x its attack, units thrown 6 and glowing yellow 4 s (only a look). Plain shots (projectile 85) burn the unit hit for 50 / 3 = 16 a tick, 5 ticks. A building counts only if its anchor tile is in the square. Drawn 1.5 times bigger. No egg, no volley, no heal.",
+   "needs": []
+  },
+  {
+   "ids": [
+    867
+   ],
+   "name": "Horus Herald",
+   "class": "HorusDelegate",
+   "status": "full",
+   "notes": "Every beat counts (cycle of 5). On the 5th, if its target is within 2 tiles each way: a spin, helpless with no beats for 2 s (60 frames), animation 6 (31 frames, looping); each pass of frame 22 (at 22 and 53) the 10 nearest fighting enemy units within 2 (circle, not its own tile) take its full attack and are thrown 4. Otherwise (and on the 5th beat from afar) its plain spear (projectile 87), 250 ms after the swing.",
+   "needs": []
+  },
+  {
+   "ids": [
+    869
+   ],
+   "name": "Horus Gryphon",
+   "class": "HorusGryphonDelegate",
+   "status": "full",
+   "notes": "Every beat counts (cycle of 8). 4th of each 8, if its target is within 2 tiles each way: a smash at frame 50 of animation 7 (80 frames), helpless: the 10 nearest fighting enemy units within 3 take its full attack, thrown 3. 8th of each 8, if its target is farther: 6 s in the air, helpless; each pass of frame 30 of animation 6 (50 frames, looping: at 30, 80, 130; a 4th at 180 races the landing) an energy ball (projectile 70, full attack) at the nearest enemy, chosen afresh each time (ours: its target), if within reach 8; then it lands (13 more frames). Other beats: its plain spear (projectile 87) 250 ms after the swing.",
+   "needs": []
+  },
+  {
+   "ids": [
+    860
+   ],
+   "name": "Ramses II",
+   "class": "RamsesDelegate",
+   "status": "full",
+   "notes": "Every beat counts. 8th, 16th...: a blade sweep at frame 11 of animation 7 (23 frames): the 10 nearest enemies of any kind within 3 tiles (circle, not its own tile; buildings by their anchor tile) take its full attack, units thrown 2. 4th, 12th...: a blade blow at frame 9 of animation 6 (19 frames), 2 x attack on its target. Other beats plain hits by hand (reach 2).",
+   "needs": []
+  },
+  {
+   "ids": [
+    884
+   ],
+   "name": "Tuthankamon",
+   "class": "TutankamonDelegate",
+   "status": "full",
+   "notes": "Two counts: near beats (within 2 tiles each way) toward the ring, far beats toward the balls. 5th near beat: a ring of fire, helpless with no beats for 90 frames (animation 6): at frames 55, 60, 65, 70 the 10 nearest fighting enemy units within 2 take half its attack, are thrown 4 and then burn 5 a tick for 5 ticks. Thrown units count as helpless in the air and the original stops a ring at the first one it meets, so only the first ring lands on ordinary units (one blast here). A unit that can't be thrown (boss, giant, grown) takes all four rings in the original, and the original errors out right after hurting it, sparing the units after it. 6th far beat: helpless, animation 7; from frame 41 an energy ball (projectile 70) every 200 ms for 3 s at its target within reach 6, half its attack each (14 by the timer; 12 to 15 on a real Flash player); no beats till 131. Other beats: its plain electric beam (projectile 24), 13 frames after the swing, up close too.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2138
+   ],
+   "name": "Predator Lizard",
+   "class": "BlackLizardDelegate",
+   "status": "partial",
+   "notes": "Two counts, near (within 2 tiles each way) and far, each a cycle of 5. 5th far beat: if its target is a living unit in reach (9) with maximum life 500 or less, the tongue (animation 7, 113 frames, helpless): a tongue (projectile 136, no damage) grabs it about 23 frames in, and it dies when the clip ends, held helpless till then; ours kills it at the grab. Otherwise that beat is its plain acid spit (otherwise). The original has no boss check here. 5th near beat: a smash, helpless with no beats for 69 frames; at frame 35 the 5 nearest fighting enemy units within 5 (circle, its own tile included) take its full attack and are thrown 5; a unit already in the air takes nothing. Other beats: the acid spit (its plain shot), 15 frames after the swing.",
+   "needs": [
+    "Helpless and busy only when the tongue catches something: the lizard is helpless with no beats for about 113 frames while it eats, but not when the beat falls back to a spit (so busy/helpless are left off the tongue rule)."
+   ]
+  },
+  {
+   "ids": [
+    2035
+   ],
+   "name": "Burning Tiger",
+   "class": "BurningTigerDelegate",
+   "status": "full",
+   "notes": "Every beat counts (cycle of 10). Plain beats: full attack by hand, and a unit hit is always thrown 1 tile. 5th of each 10: helpless 5 s in animation 6 (40 frames, looping); each pass of frame 23 (23, 63, 103, 143) a fireball (projectile 100, full attack) at its target if alive and within reach 2, setting it burning 5 a tick for 5 ticks; then frames 27 to 40 and a new target (busy 163). 10th of each 10: a smash, helpless, animation 7 (59 frames): at frames 40 and 45 the 10 nearest fighting enemy units within 3 that aren't helpless take half its attack, are thrown 4 and burn 5 a tick for 5 ticks after a 1 s flame. Thrown units are in the air at 45, so one blast; units that can't be thrown (bosses, giants) take both hits in the original.",
+   "needs": []
+  },
+  {
+   "ids": [
+    709
+   ],
+   "name": "Colossal Cobra",
+   "class": "CobraDelegate",
+   "status": "full",
+   "notes": "No beat counting. It is the Giant Viper's behaviour (SnakeDelegate): its eating is on a timer (every 360 frames, for 200), exactly like the Giant Viper's existing auto entry (ids 653, 668): add 709 there.  With no rules here, its beats still fall through to that auto entry, and the engine reads 'hits' for it. Every spit (projectile 21, 6 frames after the swing) that lands on a unit poisons it for attack / 2 = 14 a tick (attack 28), 3 ticks 3 s apart, not if already poisoned. The poison has no owner in the original.",
+   "needs": []
+  },
+  {
+   "ids": [
+    871
+   ],
+   "name": "Cobra Rider",
+   "class": "CobraRiderDelegate",
+   "status": "full",
+   "notes": "A 9-beat cycle, every beat counted. Beat 5: eats its target (unit, no boss, not helpless, item life 500 or less): grabbed at frame 10 of SPECIAL1 (63 frames, the Cobra helpless), dead at the clip's end; if it can't be eaten, a plain hit instead. Beat 9: a 3 s spin (SPECIAL2, a 14-frame clip looping) striking on its frames 4, 8, 12 each loop: 19 strikes of half its attack at the fighting enemies within 2 tiles (10 at most), thrown 4, poisoned once (5 every 3 s, 5 ticks). In the original a thrown unit keeps its tile for its 1 s flight and is struck again (not thrown again), so a unit takes about 7 strikes per throw; folded here into 3 strikes of 3.5 x attack, 32 frames apart (frames 3, 35, 67). Approximations: when the eat falls back to a plain hit, the original hits at once and isn't busy; ours hits 9 frames later and is busy 63 frames.",
+   "needs": []
+  },
+  {
+   "ids": [
+    732
+   ],
+   "name": "Frankenstein",
+   "class": "FrankensteinDelegate",
+   "status": "partial",
+   "notes": "No beat counter. Near is 1 tile each way in the original (the larger of the x and y gaps); 1.5 in our straight-line test gives the same 8 tiles. Touching: a direct hit, and on half the beats (one roll) a knock-down. From 2 tiles to its reach (7): a screw rain in SPECIAL1 every 750 ms (first 750 ms after the beat), 6 times: 5 points to each of the 10 nearest enemies (buildings too) within 9 tiles. The screw pictures do nothing.",
+   "needs": [
+    "rainStops: the rain ends early (and the busy time with it) when a later beat would find the target touching or beyond its reach, when Frankenstein starts walking or dies, or when a tick finds no enemy within 9 tiles. Ours always runs all 6 ticks and is busy 135 frames."
+   ]
+  },
+  {
+   "ids": [
+    746
+   ],
+   "name": "Pumpkin Monster",
+   "class": "PumpkinMonsterDelegate",
+   "status": "partial",
+   "notes": "Frankenstein's class with magma blobs in place of screws (a look only). Reach 7 too, so the rain reaches 9 tiles, and it is a fixed 5 a tick whatever its attack.",
+   "needs": [
+    "rainStops: as Frankenstein's."
+   ]
+  },
+  {
+   "ids": [
+    745
+   ],
+   "name": "Godzilla",
+   "class": "GodzillaDelegate",
+   "status": "partial",
+   "notes": "Never a plain hit. Within 2 tiles each way (2.9 in our straight-line test gives the same square) it counts near beats: the 8th, 16th... a big stamp (frame 17 of SPECIAL1): 30 nearest enemy units within 10 tiles, whole-point 1.2 x attack, thrown 6. Other near beats a small stamp at frame 17 of its 50-frame attack clip: 10 nearest within 3, half attack, thrown 2 (meant 1 in 10, but a slip always throws). The stamps also pick villagers; ours pick fighting units only. Beyond 2 tiles, within reach 5: fire breath (SPECIAL2, 64 frames) at frame 19. Each move keeps it busy till its clip ends; it stops one if it starts walking.",
+   "needs": [
+    "breath: from its own tile along its facing (straight grid directions 8 tiles, grid diagonals 5, own tile counted), at each tile the enemy units within 1 tile (the tile and its 4 side neighbours, 30 at most) are listed and the lists joined with repeats, so a unit beside the line can be hit 2 or 3 times. Each entry: its full attack, and burning 8 a second for 3 s (not reset if already burning). A 'line' kind 3 tiles wide with burn and repeats would do it."
+   ]
+  },
+  {
+   "ids": [
+    2145
+   ],
+   "name": "Ice Golem",
+   "class": "IceGolemDelegate",
+   "status": "full",
+   "notes": "The cycle is 11 beats (counter from 0, tested before adding): 6th the freezing beam (frame 12 of SPECIAL1, 68 frames, helpless), 11th the turning (frame 45 of SPECIAL2, 79 frames, helpless), others its direct hit. Freeze in the original: its own tile and 3 tiles ahead along its facing, around each the fighting enemy units within 3 tiles (10 per tile), frozen 5 s and losing 20 a second, 5 times; facing down a slip makes the 3 tiles ahead all the same tile. Ours: two webs of radius 3, round itself and round its target (which stands 1-2 tiles ahead), a close cover of that shape. Turning: the original takes the 3 nearest fighting units within 6 and then keeps those with max life 500 or less; ours filters first, then takes the 3 nearest. They come back after 15 s. Two turnings within 15 s: the original's first timer sends both groups back early; ours keeps each group its full 15 s. Our helpless lasts 45 frames, the original's 68 / 79 (busy covers the beats).",
+   "needs": []
+  },
+  {
+   "ids": [
+    717,
+    741
+   ],
+   "name": "King Kong / Snowy Kong",
+   "class": "KongDelegate",
+   "status": "partial",
+   "notes": "The original runs its moves on a frame clock, not a count: 105 frames with a target, then grab or heal in turn, and 105 more from the end of each. At its interval of 30, beats 4 and 8 of a cycle of 8 (no beats counted while busy) land within a few frames of that: grab at about 90 frames in, the heal 210 frames after the grab's start, as in the original. Grab: SPECIAL3, the 2 nearest enemy units within 6 tiles with item life 350 or less (no boss, not helpless), taken at once and dead at frame 104. Heal: +100 at once, SPECIAL2, 75 frames. Kong is helpless during either. Within 2 tiles each way: a direct hit of 1.5 x attack; further, a normal banana shot (projectile 37, 10 frames after the beat) in SPECIAL1.",
+   "needs": [
+    "grabBothOrNone: the grab happens only if exactly 2 such units are found; with 0 or 1 nothing is taken and it isn't busy (the turn is still used). Ours takes 1 if only 1 is found, and stays busy 105 frames either way."
+   ]
+  },
+  {
+   "ids": [
+    770
+   ],
+   "name": "Giant Mammoth",
+   "class": "MamutDelegate",
+   "status": "partial",
+   "notes": "Never plain damage. A 5-beat cycle of near beats (within 2 each way; its reach is 2, so all beats): 3rd a spin (frame 20 of SPECIAL1), 5th a charge, others throw the target 5 tiles at frame 10 and don't hurt it. Spin: the 5 x 5 square round it, one target per tile, buildings and villagers too (2.83 in our circle test is exactly that square): 1.5 x attack, units thrown 4. Slip in the original: its busy flag is never set, so beats go on during the spin and charge (no busy here on purpose).",
+   "needs": [
+    "charge: speed doubled, a red glow; it runs 5 tiles along its facing (facings 1..8: (0,-5), (+5,-5), (+5,-5), (+5,+5), (0,+5), (-5,-5), (-5,0), (-5,+5)) and then back to its start: one trip out and one back. On each tile it enters, the nearest enemy (unit or building) within 1 tile; if a unit, 1.5 x attack and thrown 5. After 5 s it gives up (speed and look back, no more hits). The new 'step' field would do the hits if it could be switched on only for the charge (radius 1, factor 1.5, push 5, any population)."
+   ]
+  },
+  {
+   "ids": [
+    2053
+   ],
+   "name": "Metal T-Rex",
+   "class": "MetalTRexDelegate",
+   "status": "full",
+   "notes": "Within 2 each way: claws at frame 17 (its attack, thrown 1; none if the target has gone beyond 2), every 4th near beat a claw smash: five strikes 5 frames apart (frames 25-45) at the 8 nearest fighting enemy units within 3 (not on its tile) that can be thrown: half attack, thrown 6. A thrown unit keeps its tile during its 1 s flight in the original, so all five strikes land: folded into one blast of 2.5 x attack. Units that can't be thrown aren't hurt (ours hurts them). Further: a large fireball (projectile 113) at frame 15 of SPECIAL1. It is helpless during each clip.",
+   "needs": []
+  },
+  {
+   "ids": [
+    776
+   ],
+   "name": "Atomic Godzilla",
+   "class": "NuclearGodzillaDelegate",
+   "status": "full",
+   "notes": "13-beat cycle (the count wraps from 13 to 0): 3rd a ground smash (frame 22 of SPECIAL1), 6th a radiation burst (frame 30 of SPECIAL2), others its direct hit. Both hit the 5 x 5 square round it, one target per tile, buildings and villagers too: 1.25 x and 1.5 x attack, units thrown 4. The burst's glow is a look only. It can't move until each clip ends plus 250 ms (43 and 113 frames). As it dies, at frame 30 of its dying clip: one more burst, 1.5 x, thrown 6. Near is 3 each way in the original; with its reach of 2 every beat is near, so 3.61 is safe.",
+   "needs": []
+  },
+  {
+   "ids": [
+    742
+   ],
+   "name": "Tiger Spider",
+   "class": "SpiderDelegate",
+   "status": "partial",
+   "notes": "Near = touching (1 each way; 1.5 here). Near count from 0, tested before adding: the spin (SPECIAL3) on near beats 1, 6, 11...; the blow (SPECIAL1) on 9, 17, 25, 33, 49 (spin first when both). Each is three sweeps: at frame 19 (spin) or 13 (blow), then two more on its own 1-second clock, so the gaps wander up to a second. A sweep: the 20 nearest enemy units within 3 (villagers too in the original), freed if helpless, thrown 3 (spin) or 1 (blow), whole-point attack / 2.2 or 1.3 x attack. Other near beats: a direct hit. From 3 tiles to reach 7: a web beam (projectile 42, beam 0.5 s) that lands as a normal shot and then webs: helpless 120 frames, 1 point every 500 ms (2 a second).",
+   "needs": [
+    "approach: at exactly 2 tiles it doesn't attack but walks onto its target (ours webs at 2 too).",
+    "webRetarget: if its target is already helpless it first picks another not-helpless enemy within reach (none: no attack); after webbing it drops the target so it picks a new one. Ours webs only targets not yet helpless but keeps the same target."
+   ]
+  },
+  {
+   "ids": [
+    2059
+   ],
+   "name": "Sword Lion Warrior",
+   "class": "SwordLionDelegate",
+   "status": "full",
+   "notes": "12-beat cycle. 6th: four smashes (SPECIAL1, frames 27, 47, 68, 88) at the 3 nearest fighting enemy units within 3 that can be thrown: 2 x attack, thrown 5. A thrown unit keeps its tile for its 1 s flight, so smashes 1+2 and 3+4 hit the same units: folded into two of 4 x attack, 41 frames apart. 12th: a thunderbolt storm (SPECIAL2) at frame 20 round its target, but only if the target is still within reach then (the map has this backwards). 20 bolts, one every 3 frames for 2 s, 0.5 x attack each to whatever stands on the tile: every other bolt picks a random tile of the 7 x 7 square, the others are aimed at a nearby enemy unit in reach (switching the lion's own target each time, never the same twice running). Ours: 10 random bolts (circle) plus 10 spread shots at units in reach. The storm's 'target still in reach at frame 20' test is left out: beats only come with the target in reach, so it rarely matters.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2042
+   ],
+   "name": "Vulcano Golem",
+   "class": "VulcanoGolemDelegate",
+   "status": "full",
+   "notes": "Plain beats (and every beat beyond 3 tiles, which our 'near' count leaves uncounted and plain) throw a fireball (projectile 100) 15 frames after the beat, if still in its attack clip. Near beats (3 each way; 3.61 here: misses the far corners, takes nothing beyond 3) count an 8-cycle. 4th: four fist smashes 5 frames apart round the tile 2 ahead along its facing, the 5 nearest fighting enemy units within 2 that can be thrown, its attack, thrown 3; all four land during the flight, so folded into one strike of 4 x attack. 8th: four flame bursts 10 frames apart (frames 15-45), each the 5 nearest fighting enemy units within 3 not already burning: its attack and burning 5 a second for 5 s. Since a hit unit burns, each burst reaches 5 new ones: folded into one burst at the 20 nearest. Units already burning from elsewhere are skipped by the original; ours hits them (without setting them burning again).",
+   "needs": []
+  },
+  {
+   "ids": [
+    731
+   ],
+   "name": "Black Witch",
+   "class": "WitchDelegate",
+   "status": "none",
+   "notes": "Plain beats: a lightning shot (projectile 8, 11 frames after the beat). Her move runs on a 5 s clock started at a beat; the first beat after it runs out is the spell. At her interval of 20 that is beat 9, then every 10th (the spell's beam keeps her busy about 38 frames and the clock restarts at the next beat), which the rule's timing copies.",
+   "needs": [
+    "frog: an electricity beam (projectile 24, 8 frames after the beat, 1 s). As it starts, if the target is a unit and no frog of hers is out, the target leaves the fight for 120 frames: unseen, helpless, counted dead so nothing targets it, on no side; then it comes back on its own side with the life it had. That beam does no damage and she drops her target. Otherwise (a building, or a frog already out) the beam hits like a plain shot."
+   ]
+  },
+  {
+   "ids": [
+    830
+   ],
+   "name": "Spectrum Dragon",
+   "class": "DragonKingDelegate",
+   "status": "full",
+   "notes": "The counter wraps from 4 to 0, so the special is the 3rd beat of each 4 (3, 7, 11...). SPECIAL2 (40 frames, helpless): seven small necro fireballs (projectile 80), frames 16 to 40, each a full shot at its target. Plain: a necro beam (projectile 73). The skeleton rising is in the table's risers (830 is listed).",
+   "needs": []
+  },
+  {
+   "ids": [
+    807
+   ],
+   "name": "Necro Abomination",
+   "class": "NecroAbominationDelegate",
+   "status": "partial",
+   "notes": "Leap on beats 10, 19, 28...; sword stroke on 5, 9, 13... (leap first on 37). Leap (SPECIAL2, 36 frames, helpless; frame 21): the 20 nearest enemy units within 4, thrown 5, attack / 2.2. Sword (SPECIAL1, frame 20): the enemy units within 1 of its own tile and within 1 of the next tile ahead (30 each), thrown 3, 1.5 x attack. Both pick villagers too in the original. Plain beats: its hit at frame 7. Skeleton rising: in the table's risers (807 listed).",
+   "needs": [
+    "swordTwice: the original joins the two lists with repeats, so a unit within 1 of both tiles (usually its target, standing on the tile ahead when it faces straight) is hit twice, 3 x attack in all; ours throws it at the first point and the second misses it."
+   ]
+  },
+  {
+   "ids": [
+    815
+   ],
+   "name": "Necro Dark Lord",
+   "class": "NecroBigSwordDelegate",
+   "status": "full",
+   "notes": "One roll a beat: under 0.5 plain, 0.5-0.75 a blow (SPECIAL1, frame 9: target thrown 3, its attack), above 0.75 a sweep (SPECIAL2, frame 11: the 20 nearest enemy units within its reach of 2, villagers too, thrown 3, 0.45 x attack). Its plain attack is a shot (reach 2, no hand-to-hand flag). Its clips are shorter than its interval, so no busy. Skeleton rising: in the table's risers (815 listed).",
+   "needs": []
+  },
+  {
+   "ids": [
+    821
+   ],
+   "name": "Necro Ghost",
+   "class": "NecroGhostDelegate",
+   "status": "full",
+   "notes": "Every 6th beat takes souls (SPECIAL1, 38 frames; frame 7): the 20 nearest fighting enemy units within 5 (not on its tile), half attack, survivors knocked down. Other beats: an electricity beam (projectile 24, 9 frames after the beat) that, besides the plain shot, holds a unit target helpless for interval x 0.4 x 1.2 frames = 17 frames: our freeze stands in (it isn't ice in the original). Skeleton rising: in the table's risers (821 listed).",
+   "needs": []
+  },
+  {
+   "ids": [
+    812
+   ],
+   "name": "Necro Gryphon Knight",
+   "class": "NecroGryphonKnightDelegate",
+   "status": "full",
+   "notes": "12th beat: a bubble (SPECIAL2), helpless 3 s; it appears at frame 17 and bursts 16 frames later: the 10 nearest fighting enemy units within 2 of the knight (not its tile), 1.5 x attack, thrown 4. Other 4th beats: four energy balls (projectile 70, its attack each) in SPECIAL1, helpless until the 4th. Unclear: a ball goes each time the clip shows frame 27 and it jumps to 37 after the 4th, so the clip must loop back to 27 on its own; 10 frames apart is our guess, and so is busy 70 (to the clip's end after the jump). Our helpless lasts 45 frames (or the volley's 66); busy covers the rest, and it has no reason to walk meanwhile. Plain beats are hand to hand at reach 2. Skeleton rising: in the table's risers (812 listed).",
+   "needs": []
+  },
+  {
+   "ids": [
+    801
+   ],
+   "name": "Necro Harvester",
+   "class": "NecroHarvesterDelegate",
+   "status": "full",
+   "notes": "Every beat counts. 8th, 16th...: green necro beam (projectile 73, one full hit) at its target, which also fights on its side for 10 s (turn). The original turns only units that started the battle under 500 life (its canBeConverted), hence maxLife 499 on the item life; it turns the target as the beam is fired and the beam's damage still lands on it. It stands helpless until the beam ends. Other 4th beats: a blow at frame 7, 2 x attack, thrown 2 (a building just takes the damage). Otherwise a hand hit (reach 2). Skeletons from kills: already in the table's risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    806
+   ],
+   "name": "Necro King",
+   "class": "NecroKingDelegate",
+   "status": "full",
+   "notes": "No counter: one roll a beat, in list order (the engine's shared draw matches it: near, rain under 0.25 and blow from 0.25 to 0.49; far, blow under 0.24). Near = target 1 or 2 tiles off, tiles each way (max of dx, dy); near 2.9 in a straight line gives the same 5 x 5 square. Rain: 30 bolts, half its attack each, landing 33..73 frames after the beat; the original's tiles fill a 7 x 7 square (edge rows half as likely, repeats allowed), ours a circle of 3. Blow at frame 22: target thrown 3 and takes its attack. Else a hand hit at frame 8 (reach 3). It has no busy test, so nothing is skipped. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    803
+   ],
+   "name": "Necro Multi-arms",
+   "class": "NecroMultiArmsDelegate",
+   "status": "full",
+   "notes": "The whirlwind is beat 1, 8, 15... Five turns about a second apart (the first on the beat; the others on an always-running 1-s timer, so the second comes 0-1 s later): every enemy unit within 2 tiles, nearest 20, thrown 3, then attack / 2.2. The original takes any unit (villagers and unarmed ones too) but no buildings; `all` would add buildings, so I left it off (fighting units only). Its reach is 10 during the whirl so it stands; beats meanwhile are skipped (busy). Plain: hand hit at frame 9, reach 2. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    794
+   ],
+   "name": "Necro Paladin",
+   "class": "NecroPaladinDelegate",
+   "status": "full",
+   "notes": "8th beat: whirlwind of 12 turns, one per loop of its 29-frame special-2 clip, at frame 18: the nearest 4 enemy fighting units within its reach (3) take its attack, thrown 3. Beats during it are skipped (busy 18 + 348). Beat 4 of each 8: heals itself 150 at once. Plain: hand hit, reach 3. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    810
+   ],
+   "name": "Necro Priest",
+   "class": "NecroPriestDelegate",
+   "status": "full",
+   "notes": "Every beat counts; every 8th heals: from frame 19, three heals about a second apart (on an always-running 1-s timer, so the gaps jitter) of 100 to every unit of its side within 3 tiles, itself included, any unit; beats meanwhile are skipped. Plain beats: target 1 tile off (tiles each way; near 1.5 straight-line gives the same 3 x 3) -> hand hit at frame 8; 2 tiles or more -> necro beam (projectile 73), one full hit. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    827
+   ],
+   "name": "Evil Scorpion",
+   "class": "NecroScorpionDelegate",
+   "status": "full",
+   "notes": "Only beats with the target within 2 tiles (tiles each way; 2.9 straight-line = the 5 x 5 square) count and do anything special; its counter runs 0..6, a 7-beat cycle: 4th near beat a sting, 7th a spin. Sting at frame 10: its attack; a unit is also poisoned (24 = half its attack per tick, 5 ticks, 3 s apart) and thrown 2. Spin: 9 s; at frame 15 of each loop of its 22-frame clip, whatever enemy unit or building stands on each tile of the 5 x 5 square takes its attack, units thrown 4: about 12 strikes (all: true). Beats meanwhile are skipped. In the original a thrown unit keeps its tile until it lands, so the next strike can catch it once more; ours moves it at once. Far beats: the original does nothing; ours hits plainly (rare at reach 2). Slip not copied: its plain hits on a building throw an error in the original (it treats the target as a unit), so there it never damages buildings and its count stops; I'd treat that as a crash, not a rule. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    805
+   ],
+   "name": "Necro Shark Monster",
+   "class": "NecroSharkDelegate",
+   "status": "partial",
+   "notes": "12th beats: a ray at frame 35 of its 62-frame clip poisons the nearest 20 enemy fighting units within 3 tiles (20 a tick, 2 ticks, 3 s apart; no damage at once); beats during the clip are skipped. Other 4th beats: scissors at frame 11: the nearest 10 enemy fighting units within its reach (2) that are in front of it take its attack, thrown 2. Plain: hand hit, reach 2. Skeletons: in risers.",
+   "needs": [
+    "front only (scissors): keep only enemies in front of it. The original takes the 8-way screen direction from the shark to each enemy and drops the three directions opposite the way it faces, so 5 of 8 directions count (a little over a half-circle in front). Without it, ours also hits those behind."
+   ]
+  },
+  {
+   "ids": [
+    811
+   ],
+   "name": "Necro Winged Warrior",
+   "class": "NecroWingedWarriorDelegate",
+   "status": "partial",
+   "notes": "Every beat counts. 8th beats with the target within 4 tiles: a necro rain that does NO damage (in the original the rain's particle setup ends with no hit frame, so its drops never strike and never fade); the plain hit that beat is lost. fx 'necro_rain' = magic particle type 44. Otherwise: target within 2 tiles (tiles each way; 2.9 straight-line) -> hand hit; 3 or more -> two necro axes (projectile 67) at frame 15, each a full hit. Skeletons: in risers.",
+   "needs": [
+    "the rain only within 4 tiles (tiles each way): a second distance besides `near`. Ours plays it on every 8th beat; from 5 to 7 tiles the original throws its axes instead.",
+    "second axe's target: the first axe always goes to its target; the second to the nearest enemy (unit or building) within 4 tiles of the TARGET, else the target again. `spread` picks the nearest fighting units to the warrior instead, so it's close but not the same."
+   ]
+  },
+  {
+   "ids": [
+    816
+   ],
+   "name": "Necro Worm",
+   "class": "NecroWormDelegate",
+   "status": "full",
+   "notes": "Every beat counts. On a 6th beat with the target within 2 tiles (tiles each way): it grabs the nearest enemy unit within its reach minus 1 (6, straight line) of 350 item life or less, no boss, not helpless; holds it and kills it at frame 26 (10 x its life in damage). Nothing to grab: an ordinary spit that beat (otherwise). Plain: spit (projectile 76), 5 frames after the swing. Skeletons: in risers.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2010
+   ],
+   "name": "Imperial Elf Axe",
+   "class": "ElfAxeDelegate",
+   "status": "full",
+   "notes": "8th beat: whirlwind of 12 turns, one per loop of its special clip at frame 10: the nearest 4 enemy fighting units within 3 tiles (fixed 3, though its reach is 2) take its attack, thrown 3. Beats meanwhile are skipped. The 17-frame loop is from our sheet, which has no special-1 group of its own (the clip seems to fall back on its last 17-frame group), so 'every' is uncertain. Plain: hand hit, reach 2.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2021
+   ],
+   "name": "Elven Crossbow",
+   "class": "ElfCrossbowDelegate",
+   "status": "full",
+   "notes": "Every 6th beat: a super bolt (projectile 104) at frame 10 at its target: the bolt's own hit plus 4 x attack on landing, 5 x in all; helpless during the clip. Every other beat: three bolts (projectile 103) at frame 10, 3 frames apart, each a full hit, each at the nearest enemy fighting unit in reach not yet shot this beat, then the last again (spread); with only buildings in reach all three go to its target. The original also keeps the last unit picked as its target from then on (a small difference). No shot beyond its reach (13).",
+   "needs": []
+  },
+  {
+   "ids": [
+    2022
+   ],
+   "name": "Elven Eagle Rider",
+   "class": "ElfEagleRiderDelegate",
+   "status": "full",
+   "notes": "Plain beats, near or far: two golden lasers (projectile 31) at frame 10, each a full hit. Its counter (1..12) moves only with the target 1 tile away (tiles each way; 1.5 straight-line = the 3 x 3), hence 'split'. 6th near beat: grabs the nearest 2 enemy units within 2 tiles of 350 item life or less (no boss, not helpless), kills them at the end of its ~110-frame clip; none: nothing at all that beat (no otherwise, as in the original). 12th near beat: wing strikes at frames 70, 75 and 80, 2 x attack each, thrown 4, on the nearest 4 enemy fighting units within 2; the original moves thrown units only on landing so the same 4 take all three: one blast of 6 x. Beats during both clips are skipped.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2011
+   ],
+   "name": "Imperial Elf Gryphon",
+   "class": "ElfGryphonDelegate",
+   "status": "full",
+   "notes": "Counter 1..16 moves only with the target within 2 tiles (tiles each way; 2.9). 8th: frozen rain at frame 18: a drop on each of the 25 tiles round its target, half its attack to whatever enemy stands there, landing 25..60 frames later; 1.5 s after, the nearest 10 enemy fighting units within 3 tiles of the gryphon are frozen 6 s, no damage. The special lasts 3 s plus the clip's end. 16th: crystal balls (projectile 60), one per loop of its 50-frame clip at frame 30, for 5 s: 3 balls, a full hit each. Helpless and no beats during both. Far beats: the original does nothing; ours hits plainly (rare at reach 2). Plain: hand hit, reach 2.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2009
+   ],
+   "name": "Imperial Elf Knight",
+   "class": "ElfKnightDelegate",
+   "status": "full",
+   "notes": "Shoots (projectile ELF_KNIGHT) at frame 10. Counter 1..8 moves only with the target within 2 tiles (tiles each way; 2.9). 4th near beat: horse kick at frame 17: a unit with 350 life or less NOW is killed outright, else it takes 350; thrown 4 either way. Against a building the original's kick does nothing; ours skips the rule (if targetUnit) and shoots plainly. 8th near beat: energy burst at frame 20: the nearest 10 enemy fighting units within its reach (7), not already helpless, thrown 1 tile, no damage. Helpless during both.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2007
+   ],
+   "name": "Elf Priest",
+   "class": "ElfPriestDelegate",
+   "status": "partial",
+   "notes": "Shoots fireballs (projectile 39) at frame 10, near or far. Its counter runs 0..8, a 9-beat cycle, moving only with the target within 2 tiles (tiles each way; 2.9): near beat 5, 14... the bubble; 9, 18... the heal. Bubble: at frame 20 plus 16, enemy units within 5 tiles, item life 350 or less, convertible, not helpless, no boss, nearest first, fight on its side for 15 s. Slip not copied: the original always hands them back to the computer's side, so a computer priest's converts would never return. Heal at frame 20: 150 to each of the nearest 5 fighting units of its side within 8, not itself, hurt or not (ours: hurt ones, itself included); with no such unit there the original shoots instead.",
+   "needs": [
+    "at most 3 converts at once: the bubble takes 3 minus its converts still alive (the original counts down only when one dies, so its count can drift). Ours takes up to 3 each time.",
+    "heal fallback: when no fighting unit of its side is within 8, the beat is a plain shot instead of the heal."
+   ]
+  },
+  {
+   "ids": [
+    2008
+   ],
+   "name": "Reptile Knight",
+   "class": "ElfRaptorDelegate",
+   "status": "full",
+   "notes": "Spits napalm (projectile 10) at frame 13, near or far. Counter 1..8 moves only with the target within 2 tiles (tiles each way; 2.9). 4th near beat: fire breath checked at frames 15, 20, 25, 30, 35 on the nearest 5 enemy fighting units within 4 that aren't helpless: half its attack, thrown 2, burning 5 a second for 5 s once landed. A thrown unit is helpless in the air, so later checks skip it: one hit each, one blast. Slip: an unthrowable unit (boss, giant, grown) makes the original's check stop with an error. 8th near beat: at frame 8 its target is held if a unit of 500 item life or less, no boss, not helpless, and dies at the end of the ~52-frame clip; else nothing that beat. No beats during either clip.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2019
+   ],
+   "name": "Red Bull Rider",
+   "class": "ElfRedBullRiderDelegate",
+   "status": "full",
+   "notes": "Counter 1..12 on every beat, no distance test. Plain: hand hit, its attack, a unit target thrown 2. 6th: grabs the nearest enemy unit within 2 of 350 item life or less (no boss, not helpless), kills it at the end of its ~100-frame clip; none: nothing that beat. 12th: smash at frames 60, 65, 70, a quarter of its attack each, thrown 3, on the nearest 10 enemy fighting units within 2 that can be thrown; they keep their tile until they land, so one blast of 0.75. It picks a new target after both. Our table lists 2019 with no moves today.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2056
+   ],
+   "name": "Black Lizard Rider",
+   "class": "MonsterOrcRiderDelegate",
+   "status": "partial",
+   "notes": "Every beat counts; the 12-test comes first (beat 24 swallows). 12th: it takes the nearest enemy (unit or building) within its reach (3); only if that is a unit does the clip play, and at frame 16 it dies (2 x its item life in damage) if its item life is 500 or less and no boss. A building or nothing: the beat is lost. Ours picks the nearest qualifying unit instead (close enough). 8th: dizzy wave at frame 33: the nearest 10 enemy fighting units within 6 tiles thrown 5, no damage, then dizzy (see needs). Plain: hand hit, reach 3.",
+   "needs": [
+    "dizzy after the throw: each unit thrown by the wave, on landing (1 s later), stands helpless and idle for 6 s (180 frames) with stars over its head; one already dizzy gets no new stars. `web` can't do it: it skips units already helpless, and a thrown unit is helpless while it flies."
+   ]
+  },
+  {
+   "ids": [
+    2074
+   ],
+   "name": "Orc Battering Ram",
+   "class": "OrcBatteringRam",
+   "status": "full",
+   "notes": "One counter over all beats. 5th beat against a building: special 1 (helpless), frame 28, the building takes 3 x attack. Every beat against a unit (the 5th too): on frame 18 of its swing, up to 5 fighting units within 2 tiles of the target's tile (the target itself if it is a fighting unit) take a quarter of its attack (125), each thrown 3 on its own coin (50%). Other beats against buildings are plain hits. The map was wrong: the 5th beat against units is the same splash, not 'thrown 8' (that branch only runs if the target turns from a building to a unit mid-swing).",
+   "needs": []
+  },
+  {
+   "ids": [
+    2029
+   ],
+   "name": "Boar Axe Rider",
+   "class": "OrcBoarRiderDelegate",
+   "status": "full",
+   "notes": "Every 5th beat: special 1 (helpless); frame 20, up to 3 fighting units within 2 tiles of the target's tile (target included) take its attack and are thrown 2. Other beats plain, by hand at reach 2.",
+   "needs": []
+  },
+  {
+   "ids": [
+    887
+   ],
+   "name": "Orc Dragon",
+   "class": "OrcDragonDelegate",
+   "status": "full",
+   "notes": "Near and far beats count apart; the 8th of each is special. Far: special 2 for 4 s (busy 120, not helpless): on frames 12, 16, 20, 24, 28 of each loop a light ball (projectile 25) at the target, 0.4 x attack. Loop length assumed 30 frames: 20 balls. Near: special 1 (helpless): the smash runs on frames 16, 20, 24, 28, but each unit hit is thrown and so skipped on the later frames: folded into one blast on frame 16 (up to 10 within 2, its attack, thrown 2). Small loss: giants and bosses, which can't be thrown, take all four in the original. Plain hits: a light beam (projectile 26), 13 frames after the swing.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2061
+   ],
+   "name": "Dual Axe Orc",
+   "class": "OrcDualAxeDelegate",
+   "status": "full",
+   "notes": "5th beat: special 2 (helpless), frame 20: a target unit with max life 500 or less dies at once; a bigger one takes 3 x attack and is thrown 4. Against a building the original plays the special and does nothing; ours (rule skipped by 'if') gives a plain hit, a small difference. 10th beat: special 1 (helpless), six axes on frames 36 to 65, each at the 3 fighting units nearest it within 2 tiles. A thrown unit keeps its tile until it lands 30 frames later and isn't spared, so the same 3 take all six: folded into one blast of 6 x attack on frame 36, thrown 5.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2046
+   ],
+   "name": "TNT Orc",
+   "class": "OrcKamikaze",
+   "status": "full",
+   "notes": "Every beat it lobs a barrel (projectile 114, speed 15) 12 frames after the swing instead of a plain hit. Where it lands, the 2 fighting units nearest within 2 tiles take its attack and are thrown 1; a building target also takes its attack. It never blows itself up. The barrel's flight time is left out: the blast lands 12 frames after the beat.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2054
+   ],
+   "name": "Priest Orc",
+   "class": "OrcPriestDelegate",
+   "status": "partial",
+   "notes": "Heal counter on every beat: 6th, if hurt, special 1 (helpless), frame 20, heals itself 4 x attack; at full life that beat is plain. Smash counter on near beats: 5th, special 2 (helpless), frame 25: up to 10 fighting units within 3 tiles take half its attack and are shocked (helpless, 5 a second, up to 5 s); frames 30 and 35 skip shocked units, so folded into one. The shock is a web with no life limit. If both fall on one beat the smash wins (listed first). Plain hits: energy balls 8 frames after the swing.",
+   "needs": [
+    "The shock ends early, at the first 1-second tick when the priest is not in its plain attack animation (walking, idle, dead or still in a special). Ours always runs the full 5 s."
+   ]
+  },
+  {
+   "ids": [
+    2047,
+    2060,
+    2072,
+    2112
+   ],
+   "name": "Big Basher Orc, Brutal Slasher, Evil Demons",
+   "class": "OrcSlasherDelegate",
+   "status": "full",
+   "notes": "8th: special 1 for 6 s (busy 180, not helpless): on frame 30 of each loop, up to 10 fighting units within 3 tiles take its attack, thrown 3. Loop assumed 30 frames: 6 hits. 16th: special 2 (helpless), frame 30: the target (building too) takes 3 x attack; up to 5 fighting units within 2 tiles of it, not the target, take half its attack and are thrown 3.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2030
+   ],
+   "name": "Orc Spear Warrior",
+   "class": "OrcSpearWarriorDelegate",
+   "status": "full",
+   "notes": "Mod 9 over all beats. 3rd and 6th against a unit: the lance flies as usual and on frame 19 the target is poisoned (its attack, 38, every 3 s, twice). 9th, only when adjacent: special 2 (not helpless, no beats till done): on frame 15 of each loop, 12 times, the 4 fighting units nearest it within its reach (8) take its attack, thrown 3. Loop assumed 30 frames (busy 375). 9th from afar: a plain lance. Plain lance: projectile 105, 12 frames after the swing.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2031
+   ],
+   "name": "Spider Orc Rider",
+   "class": "OrcSpiderRiderDelegate",
+   "status": "full",
+   "notes": "Near and far beats count apart. Near 6th: special 1 (helpless), frame 28: up to 5 fighting units within 4 tiles take its attack; those of max life 500 or less are webbed (helpless 5 s, 5 a second). Far 4th: special 2 (helpless), frame 17: a web shot (projectile 42) at the target: its attack, and webbed if a unit of 500 or less (flight time left out). Other beats: two cannonballs (projectile 3) 30 frames after the swing, each a full hit.",
+   "needs": []
+  },
+  {
+   "ids": [
+    881
+   ],
+   "name": "Turkish Axeman",
+   "class": "TurkishAxeDelegate",
+   "status": "full",
+   "notes": "4th: special 1 (helpless), frame 19: target takes 1.5 x attack; a unit is thrown 4. 8th: special 2 (helpless), a ring of fire on frames 25, 30, 35, 40, 45: up to 10 fighting units within 2 tiles take half its attack, thrown 4, set burning 5 a second for 5 s (once). Thrown units keep their tile till they land, so the same units take all five: folded into one blast of 2.5 x on frame 25.",
+   "needs": []
+  },
+  {
+   "ids": [
+    880
+   ],
+   "name": "Turkish Swordsman",
+   "class": "TurkishSwordDelegate",
+   "status": "full",
+   "notes": "11 beats. 6th: special 1 (not helpless, no beats till the damage): on frame 59, 20 swords fall round its target (a picture only), and 18 frames later the 5 fighting units nearest it within 7 tiles take its attack. 10th: special 2 (helpless), frame 23, heals itself 500 even at full life.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2066
+   ],
+   "name": "2-Head Orc",
+   "class": "TwoHeadedOrc",
+   "status": "partial",
+   "notes": "5th: special 2 (helpless), fireballs (projectile 100) on frames 40, 51, 62, 73, each a full hit if within reach. 10th: special 1 (helpless), frame 45: a ray (projectile 102) for 35 frames, then 3 x attack in all (2 x from the class, 1 x from the ray). Plain beats, by hand at reach 5: on frame 20 the target takes its attack and up to 2 other fighting units within 2 tiles of it take a quarter (the hop is only a picture).",
+   "needs": [
+    "Before each special it takes the nearest enemy (from its own tile) as its new target; ours keeps its current one."
+   ]
+  },
+  {
+   "ids": [
+    2125
+   ],
+   "name": "Lion Soul Gladiator",
+   "class": "BigWarriorGladiatorDelegate",
+   "status": "full",
+   "notes": "8th: special 1 (helpless), frame 31: the spirit lion strikes its tile and 4 ahead; round each point up to 10 fighting units within 4 take 1.2 x attack (once per point, so up to 5 times). 16th: special 2 (helpless), 6 ticks 15 frames apart from frame 16: up to 6 fighting units within 8 tiles take 1.4 x attack, thrown 5.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2143
+   ],
+   "name": "Blade Gladiator",
+   "class": "BladeGladiatorDelegate",
+   "status": "full",
+   "notes": "5th: special 1 (helpless), frame 45: its tile and 3 ahead, round each up to 10 fighting units within 2 take 1.5 x, thrown 5. 10th: special 2 (helpless), frame 25: a target unit of max life 500 or less is thrown 12 and dies on landing; a bigger one takes 1.5 x, thrown 5. Against a building the original does nothing on that beat; ours gives a plain hit (the 'if' skips the rule). The original also spares a small unit that can't be thrown (already helpless, giant): ours still kills it.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2135
+   ],
+   "name": "4-Weapons Gladiator",
+   "class": "FourWeaponGladiatorDelegate",
+   "status": "full",
+   "notes": "5th: special 1 (helpless), frame 37: a target unit of max life over 500 takes 2 x, thrown 2; 500 or less is thrown 10 and dies on landing. Nothing against a building in the original (ours: plain hit). 10th: special 2 (helpless), frame 91: up to 10 fighting units within 6 tiles take its attack, thrown 10. Its class sits in the buildings folder.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2126
+   ],
+   "name": "Bull Gladiator",
+   "class": "BullGladiatorDelegate",
+   "status": "partial",
+   "notes": "Near and far count apart, 7 each (the map said 6). Far 7th: a charge along its facing (dash and back, 0.5 s each way, a picture) striking its tile and the 9 ahead, round each point up to 10 fighting units within 5. Near 7th: special 2 (not helpless, busy 150) for 4 s from 1 s after the beat: 8 ticks 15 frames apart, up to 10 fighting units within 5 take its attack, thrown 5. Every other beat it throws a trident (projectile 135), standing helpless 1 s, the trident leaving at its end; our helpless lasts at least 45 frames.",
+   "needs": [
+    "Charge kill: of the units struck, the first with max life under 500 is thrown 12 and dies on landing; until one is found each struck unit takes a flat 500 points (not its attack), afterwards its attack; all others thrown 5. The rule's ghosts gives its attack to all, thrown 5.",
+    "No free tile ahead to charge to: the original does nothing at all on that beat."
+   ]
+  },
+  {
+   "ids": [
+    2108
+   ],
+   "name": "Demolisher Gladiator",
+   "class": "DemolisherDelegate",
+   "status": "partial",
+   "notes": "8th: special 1 (helpless), frame 49: its tile and 8 ahead; round each up to 10 fighting units within 4 take 1.2 x, thrown 5, then knocked down on landing. 16th: special 2 (helpless), 5 ticks 15 frames apart from frame 22: up to 6 fighting units within 8 take 1.4 x, thrown 5.",
+   "needs": [
+    "Thrown and then knocked down on landing (population under 4, no boss, not enlarged): ghosts can throw or nothing, not both."
+   ]
+  },
+  {
+   "ids": [
+    2150
+   ],
+   "name": "Devil Gladiator",
+   "class": "DevilGladiatorDelegate",
+   "status": "partial",
+   "notes": "One count over all beats, a cycle of 13: beat 7 a weapon smash, beat 13 a whirlwind, other beats a plain blow by hand for its attack (even at its reach of 4). Smash (special 1, frame 13, not helpless): 4 hits in all, nearest first, from points along the way it faces (its own tile, then 4 ahead), radius 4 around each. The first unit hit with max life under 500 is thrown 8 tiles and dies as it lands; the others take 1.2 x attack, not thrown. Ours: the target is killed if it is that small, otherwise it takes 1.2 x, and the 3 nearest others within 4 take 1.2 x. Whirlwind (special 2, helpless): the original pulses 4 times, 0.75 s apart, from about frame 24 (24, 46, 68, 90): its attack to up to 5 throwable fighting units within 5, thrown 5. A thrown unit stays on its tile in the air for 1 s, so it is hit by the next pulse too. Folded here into 2 pulses (24, 68) of 2 x attack. Its onAttack has no busy check, so beats during the smash still hit and count. Original slip: when it faces down, its line walk repeats the same tile instead of stepping on.",
+   "needs": [
+    "Smash kill: the original kills the first SMALL unit among its 4 hits (max life under 500), which may be a neighbour rather than the target. Ours kills only the target. Small difference."
+   ]
+  },
+  {
+   "ids": [
+    2136
+   ],
+   "name": "Centaur Gladiator",
+   "class": "GladiatorCentaur",
+   "status": "partial",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. Near and far beats each have their own count. Far: 5th far beat a net, 10th a super trident, then the count restarts. Near: every 5th near beat a smash. Plain beats: a trident (projectile 138) 15 frames after the swing, dropped if the swing is cut short. Net (special 2, helpless, frame 32): if the target is a unit with max life under 500; a net (projectile 137, no damage) holds it helpless 5 s. The original makes it helpless before calling its knock-down, so no knock-down plays: a web with no damage fits. Super trident (special 1, helpless, frame 35; projectile 138, speed 45, no damage of its own): the target is thrown 6 tiles and takes 1.5 x attack when it lands. Smash (special 3, helpless, frame 62): its attack to up to 5 throwable fighting units within 8, thrown 5. Shot flight times are not modelled (the moves land at the frame).",
+   "needs": [
+    "Net: on the 5th far beat, a target with max life of 500 or more (or a building) gets a plain trident in the original. Ours: nothing that beat for a big unit, and a plain hit for a building (the `if` fails).",
+    "Super trident: a target that can't be thrown (boss, giant, enlarged, helpless) takes no damage in the original. Ours still hurts it."
+   ]
+  },
+  {
+   "ids": [
+    2116
+   ],
+   "name": "Mace Gladiator",
+   "class": "GladiatorMaceDelegate",
+   "status": "full",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. Only near beats count. Every 5th near beat a ground smash instead of the throw (special 1, helpless, frame 35): 1.2 x attack to up to 10 throwable fighting units within 6, thrown 5. Every other beat, near or far, throws its mace (projectile 130) 12 frames after the swing, dropped if the swing is cut short.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2107
+   ],
+   "name": "Knight Gladiator",
+   "class": "RiderGladiatorDelegate",
+   "status": "full",
+   "notes": "One count, a cycle of 16: beat 8 special 1, beat 16 special 2, other beats a plain blow by hand. Special 1 (helpless, frame 27): 1.2 x attack to the 6 nearest fighting units within 8, nobody thrown (even units in the air are hit). Special 2 (helpless, frame 3): 1.4 x attack to the 6 nearest throwable ones within 8, thrown 5.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2106
+   ],
+   "name": "Spearman Gladiator",
+   "class": "SpearGladiatorDelegate",
+   "status": "full",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. Only near beats count. The count starts at 0, so the first whirlwind is on the 6th near beat, then every 5th (11th, 16th...). It needs a unit target; against a building that beat is a plain spear and the chance is lost (the next is 5 near beats later), which the non-sticky `if` gives exactly. Whirlwind (special 1, not helpless, but no beats until it ends, about 110 frames): the original pulses 6 times, 0.5 s apart, from frame 35 (35, 50, 65, 80, 95, 110): half its attack to up to 5 throwable fighting units within 4, thrown 5. A thrown unit stays in the air on its tile for 1 s, so it takes 2 (sometimes 3) pulses. Folded here into 3 pulses (35, 65, 95) of its full attack. Plain beats: a spear (projectile 128) 16 frames after the swing, dropped if the swing is cut short.",
+   "needs": []
+  },
+  {
+   "ids": [
+    2105
+   ],
+   "name": "Sword Gladiator",
+   "class": "SwordGladiatorDelegate",
+   "status": "full",
+   "notes": "Every 8th beat (special 1, helpless, frame 23): 1.2 x attack to the 3 nearest throwable fighting units within 3, thrown 5. Other beats a plain blow by hand.",
+   "needs": []
+  },
+  {
+   "ids": [
+    879
+   ],
+   "name": "Anubis God",
+   "class": "AnubisDelegate",
+   "status": "partial",
+   "notes": "It counts every beat it isn't busy for (beats during its specials are dropped, not counted). Near = target within 5 by the original's larger-of-|dx|-and-|dy| measure. Our engine's straight line of 5 misses the corners. 8th beats: the bubble if near and fewer than 4 of its converts are alive. Otherwise, and on the other 4th beats, a jump if near. Far beats and the rest: its plain shot (golden dragon projectile 31, 12 frames delay). Jump (special 1, not helpless, frame 19): half its attack, rounded down, to up to 10 fighting units within 5, thrown 3. Bubble (special 2, helpless about 112 frames): see needs. Turn doesn't fit: the original replaces the units for good, and they then die of the poison.",
+   "needs": [
+    "Convert bubble (area curse): about 38 frames after the beat (the bubble at frame 22, its strike 16 frames later), up to (4 - converts alive) enemy units within 5 of Anubis, nearest first. Each must have item life 350 or less, not be a boss or helpless, and be convertible. Each is removed (counted as killed) and replaced on its tile by a Mini Anubis (878, life 200) on Anubis's side, helpless 1 s while it fades in, and poisoned for good with Anubis's FULL attack every 3 s (so it dies at about 15 s). The curse kind does this for one target with half poison: an area version with a cap of 4 alive would cover it.",
+    "Fall-through: when the bubble can't play (4 converts alive), the jump plays on that 8th beat if near."
+   ]
+  },
+  {
+   "ids": [
+    2073,
+    2120
+   ],
+   "name": "Death Warrior",
+   "class": "DeathWarriorDelegate",
+   "status": "full",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. Near: the count starts at 0 and restarts at 1, so the first sword slash is on the 9th near beat, then every 8th (17th, 25th...). Other near beats: a blow by hand for its attack. Far: EVERY far beat is the red beam (special 2, helpless, frame 25), not counted. It fires only if the target is still within 3 x its reach. The beam (projectile 120, lasting 1 s) hurts when it ends: 1.2 x attack from the class, plus the shot's own attack if it ends near the target, 2.2 x in all. Slash (special 1, helpless, frame 29): 0.75 x attack to up to 5 throwable fighting units within 2 of the target's tile (the target at the beat), thrown 4. The original throws them away from the Death Warrior, not from the centre. A near-beat beam branch in the code can never be reached.",
+   "needs": []
+  },
+  {
+   "ids": [
+    829
+   ],
+   "name": "Punisher Knight",
+   "class": "PunisherKnightDelegate",
+   "status": "partial",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. A count from 0 to 10 then back to 0: a cycle of 11 beats, special 1 on beat 6, special 2 on beat 11. Its reach is 2, so every beat is near. Plain beats: a blow by hand. Neither special is helpless, and its onAttack has no busy check, so beats during them still hit and count. Special 1 (frame 8): the 3 x 3 square centred on the tile next to it in the way it faces (8 ways). Whatever enemy stands on each tile (units, buildings, villagers; one a tile) takes 1.5 x attack, and units are knocked down. Ours: the 3 x 3 square round its target (radius 1.5), which is the same square when the target is next to it. Special 2 (frame 40): the 5 x 5 square round it (radius 2.83), the same 'anything on the tile' pick: its attack, units thrown 4.",
+   "needs": [
+    "Front square when the target is 2 tiles away: the original's square is centred on the tile next to the Punisher, one nearer than the target. Ours centres it on the target."
+   ]
+  },
+  {
+   "ids": [
+    2055
+   ],
+   "name": "Soul Eater",
+   "class": "SoulEaterDelegate",
+   "status": "partial",
+   "notes": "'Near' is the original's distance: the larger of |dx| and |dy| (closest footprint tiles). Our engine measures a straight line, and 2.83 (the square root of 8) picks exactly the same tiles as 'within 2 each way', so near is 2.83. Near and far beats each have their own count. Every 6th far beat a purple beam (special 2, helpless 1 s, frame 20). It fires only if the target is still within its reach: a 0.55 s beam (projectile 116) that hurts when it ends, 2 x attack from the class plus the shot's own 1 x, 3 x in all. Every 6th near beat a smash (special 1, helpless, frame 31): half its attack to up to 10 throwable fighting units within 3, not on its own tile, thrown 5. Other beats: a purple energy ball (projectile 115) 23 frames after the swing, dropped if the swing is cut short. Growth: see needs (the grow kind is a short boost that also enlarges, so it doesn't fit).",
+   "needs": [
+    "Souls and growth: a soul is each enemy unit killed by its ball, and each enemy unit that dies later, by anyone's hand, after being hit by its smash or picked for its beam; each unit counts once. From 60% size and attack 50: after 2 souls attack 55 and 70%, after 3 more 65 and 85%, after 3 more 75 and full size. The soul count restarts at each step; the 3rd step may need 4 souls because of rounding. The new attack is for good, with no other change."
+   ]
+  },
+  {
+   "ids": [
+    625,
+    728
+   ],
+   "name": "Hurricane / Whirlpool",
+   "class": "HurricaneDelegate",
+   "status": "partial",
+   "notes": "Each beat, besides its own plain hit: up to 8 enemies within 3 (anything targetable takes a place, but only units with population under 6 are touched) are thrown 2 and take its item's attack from the config, rounded down: 1 for the Hurricane, 5 for the Whirlpool. The original also touches villagers and unarmed units; buildings only take a place. Each tile it steps onto: see needs (the step field throws only the nearest and can't knock down). The Hurricane's step damage, attack / 3 rounded down, is 0.",
+   "needs": [
+    "On each tile it steps onto: up to 8 enemies within 3; each unit with population under 6 (not a boss, not already helpless) is knocked down and takes its item attack / 3, rounded down (0 for 625, 1 for 728). The knock-down here allows population up to 5, not 3. The step field would need a 'max' and a 'stun' option."
+   ]
+  },
+  {
+   "ids": [
+    2110
+   ],
+   "name": "Souls Whirlwind",
+   "class": "InfraworldSoulWhirlwindDelegate",
+   "status": "partial",
+   "notes": "It never strikes on its beats. Its life: the Soul Colossus makes it unkillable when it calls it, and the class fades it at 12 s (1 s fade) and kills it. So the Colossus's spawn should use frames 360 (it fades without dying in our engine, which is fine). Its pulses come from timers, not beats: see needs. A thrown unit lands just as the next pulse comes (both 1 s), so no repeat hits to fold.",
+   "needs": [
+    "Timed aura from birth: every 30 frames, from frame 30 to 330 (11 pulses; 12 if the timers tie), half its attack to up to 10 fighting units within 4, not on its own tile, thrown 3.",
+    "Can't die before it fades (life never below 1), set by its summoner."
+   ]
+  },
+  {
+   "ids": [
+    2083,
+    2147,
+    2154
+   ],
+   "name": "Evil Crows / Minion / Sand Storm Whirlwind",
+   "class": "MinionWhirlwindDelegate",
+   "status": "partial",
+   "notes": "Its own beats are plain blows by hand, at any reach. It can't die (life stops at 1). Its pulses come from a timer, not beats. 1 s after it appears, if it isn't moving, it walks once to the nearest enemy unit within 9 (not a building, not helpless); the class never looks again. The pulses stop only when its summoner resets it. The map is wrong on one point: it heads for an enemy once, not all the time.",
+   "needs": [
+    "Can't die: life never below 1.",
+    "Timed aura from birth: every 22.5 frames (first at 22.5), its attack to up to 5 throwable fighting units within 3, thrown 4. A thrown unit stays in the air on its tile for 1 s and takes the next pulse too: fold into 2 x attack every 45 frames.",
+    "One seek at 30 frames: walk to the nearest enemy unit within 9 (no buildings, not helpless)."
+   ]
+  },
+  {
+   "ids": [
+    2128
+   ],
+   "name": "Queen Beast Spawn",
+   "class": "MotherMonsterMinionDelegate",
+   "status": "partial",
+   "notes": "The Soul Eater's class, changed: no shots, no distance test, every beat counts. Plain beats: a blow by hand. From the 8th beat (once it has grown once), every 4th beat is an eat instead (special 1, helpless, frame 25). If the target is an enemy unit with item life 500 or less, not a boss and not helpless, it is held inside it and killed when the clip ends. If not, that beat does nothing: no otherwise. The map is wrong: it grows every 4th beat, not every beat.",
+   "needs": [
+    "Growth by beats: at the end of beats 4, 8 and 12 its attack becomes 45, 55, 65 for good (the config attack is 40), and it grows to 70%, 85% and 100% from 60%. The grow kind is a short boost that also enlarges, so it doesn't fit."
+   ]
+  },
+  {
+   "ids": [
+    2104
+   ],
+   "name": "Tornado Heaven",
+   "class": "RaysWhirlwindDelegate",
+   "status": "partial",
+   "notes": "Its own beats are plain blows by hand (reach 5). It can't die (life stops at 1). Its strikes come every frame, not on beats. Slip in the original: a thrown unit stays on its tile in the air for 1 s, so it takes the full attack every frame in flight, about 30 times. A boss or giant can't be thrown: it is hit every frame while within 3, and the missing landing signal likely raises an error that skips the rest of that frame's list. Judgment call for the owner: keep it or tame it.",
+   "needs": [
+    "Can't die: life never below 1.",
+    "Every-frame aura: its attack to up to 5 throwable fighting units within 3, thrown 4. Folded for our engine (thrown units move at once): about 30 x attack once per throw. Units that can't be thrown are hit every frame while within 3.",
+    "Shock on landing: 30 damage 5 times, every 3 frames. It stops if the whirlwind isn't in its attack clip, and doesn't start on a unit already shocked."
+   ]
+  },
+  {
+   "ids": [
+    617
+   ],
+   "name": "Tornado",
+   "class": "TornadoDelegate",
+   "status": "partial",
+   "notes": "Its beats are its plain hit. On each tile it steps onto: up to 5 enemies within 3 (anything targetable takes a place); units with population under 6 are thrown 5 and take its item attack / 3, rounded down. Its attack is 1, so that is 0: factor 0. The step field takes only the nearest one.",
+   "needs": [
+    "Step: up to 5 enemies within 3, not only the nearest (step would need a 'max')."
+   ]
+  }
  ]
 }

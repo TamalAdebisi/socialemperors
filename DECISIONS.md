@@ -16,6 +16,47 @@ them can be found and reversed. The big, agreed decisions are in
 - **The bulldozer's hover shows the popup too,** as the original's does
   (its highlight is the same one), with the ground outlined in white.
 
+## 15 October 2026: attacking players, the server's checks
+
+- **A fourth attack in 6 hours is recorded but pays nothing,** rather
+  than being refused: the Flash client's own checks happen in places the
+  server can't see (the neighbour bar and Revenge don't count), so a
+  refusal could break an attack the classic game allowed.
+- **The defender still loses nothing** when attacked (no units, no
+  gold), as `pvp.py` already chose; what Social Point's server did isn't
+  known. They earn a tenth of each attacker their town killed, as before,
+  now in the town that was attacked.
+- **Honour comes from the armies, not the report,** so an empty report
+  earns 1, the least any battle gives.
+
+## 15 October 2026: the special units' counted beats
+
+- **As the original played, slips included, where a player would have
+  seen them:** Godzilla's small stamp throws every time (its code meant
+  1 time in 10).
+- **One slip not copied:** in the original, the Lythos Titan stopped
+  making specials for the rest of a battle if it rolled its minions while
+  they were still out. Here it rolls again next time.
+- **The Tiny Water God's grab holds its victims for a while** (a web),
+  rather than leaving them helpless and unseen on the field for good, as
+  a slip in the original did.
+- **Two more slips not copied:** the Evil Scorpion's plain hits on a
+  building stopped the original's count (they hurt the building here),
+  and the Elf Priest handed its converts back to the computer's side even
+  when it was the player's.
+- **Not built yet, so not decided yet:** Tornado Heaven, which in the
+  original hit a thrown unit about 30 times while it flew. This and the
+  other missing parts are listed per unit in
+  `client/src/rules/specials.json` ("beats").
+- **"Up close" is measured as the original measures it,** by the larger
+  of the two tile gaps (a diagonal 2 tiles off counts as 2).
+- **Hits the original repeated on a unit in the air are folded into
+  one:** the original moved a thrown unit only when it landed, so a
+  quick series of strikes kept finding it; ours moves it at once. Where
+  that mattered, the readers wrote the total as one hit (the Eagle
+  Rider's wing, the Red Bull's smash).
+- **Burning hurts once a second,** as the original's "5 a second for 5
+  seconds" reads.
 ## 15 October 2026: construction
 
 - **Units bought from the shop stand in scaffolding too,** the 1x1 one, for
