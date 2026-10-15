@@ -55,6 +55,8 @@ export class Lessons {
   private running = true;
   /** When the camera last went to a target Arthur covered. */
   private uncovered = 0;
+  /** Where a unit half hidden behind something can still be tapped, found again twice a second (`tappable`). */
+  private spotted: { unit: PlacedItem; at: Point; until: number } | null = null;
   /** Where the arrow points now (the browser tests tap there, as a player would). */
   pointing: Point | null = null;
 
@@ -215,12 +217,49 @@ export class Lessons {
     }
     // A building or a tree: the middle of its picture, where a tap finds it (a unit: its body, as the map point has it).
     const placed = this.thing(target);
-    const box = placed && !placed.item.isUnit ? this.parts.view.screenBox(placed) : null;
+    if (placed?.item.isUnit) {
+      return this.tappable(placed);
+    }
+    const box = placed ? this.parts.view.screenBox(placed) : null;
     if (box && box.width > 0) {
       return { x: box.x + box.width / 2, y: box.y + box.height * 0.6 };
     }
     const at = this.mapPoint(target);
     return at ? this.parts.screenOf(at) : null;
+  }
+
+  /**
+   * A unit's body on the screen; or, when something stands in front of it
+   * there (a villager just trained comes out toward the map's far corner,
+   * which can be behind the harbour's sails), the part of it nearest its
+   * body that a tap still finds, so the arrow points where a tap works.
+   */
+  private tappable(unit: PlacedItem): Point {
+    const body = this.parts.screenOf(this.middle(unit));
+    const { view } = this.parts;
+    if (view.itemAt(body) === unit) {
+      this.spotted = null;
+      return body;
+    }
+    const now = performance.now();
+    if (this.spotted?.unit === unit && now < this.spotted.until) {
+      return this.spotted.at;
+    }
+    const box = view.screenBox(unit);
+    let best: Point | null = null;
+    if (box && box.width > 0) {
+      const step = Math.max(3, Math.min(box.width, box.height) / 8);
+      for (let y = box.y + step / 2; y < box.y + box.height; y += step) {
+        for (let x = box.x + step / 2; x < box.x + box.width; x += step) {
+          const near = (p: Point) => (p.x - body.x) ** 2 + (p.y - body.y) ** 2;
+          if ((!best || near({ x, y }) < near(best)) && view.itemAt({ x, y }) === unit) {
+            best = { x, y };
+          }
+        }
+      }
+    }
+    this.spotted = { unit, at: best ?? body, until: now + 500 };
+    return this.spotted.at;
   }
 
   private screenOfFirstTree(): Point | null {

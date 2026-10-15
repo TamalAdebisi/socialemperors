@@ -10,7 +10,7 @@ import { choices, fits, isTheirs, move, refund, sell, store, turn } from "./rule
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
 import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
-import { buy, describe, obstacle, priceOf, unlock, type Obstacle } from "./rules/shop.ts";
+import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
@@ -73,7 +73,7 @@ export interface EditorParts {
   /** A building's own window, if it has one (the Wizardry Academy's spells): its button on the card. */
   windowOf?: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
   /** Told when the town goes up a level (the welcome-back chest shows from level 4). */
-  levelled?: () => void;
+  levelled?: (level: number) => void;
 }
 
 export class TownEditor {
@@ -93,7 +93,7 @@ export class TownEditor {
   private readonly doings: Doings;
   private readonly sound: (effect: Effect) => void;
   private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
-  private readonly levelled: () => void;
+  private readonly levelled: (level: number) => void;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -288,18 +288,6 @@ export class TownEditor {
     this.openShop(STORAGE);
   }
 
-  /** Open a building early, for cash, from the shop. */
-  unlock(item: ItemInfo): void {
-    const done = unlock(this.town, item);
-    if (typeof done === "string") {
-      this.say(done);
-      return;
-    }
-    this.send([done]);
-    this.hud.update(this.town);
-    this.say(`${item.name} is open to you now.`);
-  }
-
   /** What's in storage, as the storage window shows it, with what each card's buttons do. */
   storageCards(): StorageCard[] {
     const people = population(this.town, this.items);
@@ -404,7 +392,7 @@ export class TownEditor {
     }
     this.send([done.command]);
     this.sound("place");
-    this.doings.placedStored = true;
+    this.doings.placedFromStorage();
     void this.view.redraw(done.placed);
     if (this.town.xp > xpBefore) {
       this.view.rise(done.placed, [{ text: `+${this.town.xp - xpBefore} XP`, colour: RESOURCE_COLOURS.xp }]);
@@ -650,7 +638,7 @@ export class TownEditor {
       this.clearLine(units[0]);
       return this.walkTo(units[0], tile);
     }
-    const grid = walkGrid(this.town);
+    const grid = walkGrid(this.town, true);
     if (!isWalkable(grid, tile.x, tile.y)) {
       this.say("They can't get there.");
       return false;
@@ -810,12 +798,14 @@ export class TownEditor {
     const back = refund(placed.item);
     // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
     const shut = !placed.open;
+    // Nor can a building training a unit be moved or stored until it's done, as there.
+    const free = shut && !this.training.has(placed);
     this.bar.show({
       name: placed.item.name,
       detail: this.detail(placed),
-      move: can.move && shut ? () => this.startMove(placed) : null,
+      move: can.move && free ? () => this.startMove(placed) : null,
       turn: can.turn && shut ? () => this.turn(placed) : null,
-      store: can.store && shut ? () => this.store(placed) : null,
+      store: can.store && free ? () => this.store(placed) : null,
       sell: can.sell && shut ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
@@ -1054,8 +1044,7 @@ export class TownEditor {
     // A unit standing in a building (a gate shut on it) walks out across it.
     const under = tilesUnder(this.town, from);
     this.view.walk(unit, path, (next) => {
-      // Something built in the way since it set off: it stops before it. (Its path may cross
-      // unbought land when it's on its way back to its own: only buildings count here.)
+      // Something built in the way since it set off: it stops before it.
       if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isWalkable(walkGrid(this.town, true), next.x, next.y)) {
         return false;
       }
@@ -1370,6 +1359,9 @@ export class TownEditor {
     this.view.rise(building, lines);
     this.levelUp();
     this.hud.update(this.town);
+    if (this.selected === building) {
+      this.select(building);  // its card: no Move or Store while it trains
+    }
     this.refresh();
     setTimeout(() => this.refresh(), TRAINING_MS + 50);
   }
@@ -1493,7 +1485,7 @@ export class TownEditor {
       this.sound("level-up");
       const prizes = reached.filter((r) => r.prize).map((r) => `${r.prize!.amount} ${r.prize!.resource}`);
       this.say(`Level ${last.level}: ${last.name}!${prizes.length ? ` You get ${prizes.join(", ")}.` : ""}`);
-      this.levelled();
+      reached.forEach((r) => this.levelled(r.level));
     }
   }
 
@@ -1520,7 +1512,14 @@ export class TownEditor {
     this.refresh();
   }
 
+  /**
+   * Move tapped: as in the Flash client, lifting a building lets everybody
+   * inside out and stops its work (a mill or mine forgets its working time),
+   * and that stays so if the move is cancelled.
+   */
   private startMove(placed: PlacedItem): void {
+    this.emptyOut(placed);
+    this.refresh();
     this.moving = placed;
     this.movingFacing = placed.orientation;
     this.view.setGhost(placed, true);

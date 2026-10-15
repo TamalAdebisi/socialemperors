@@ -350,8 +350,8 @@ things only until the page is reloaded).
   time their staff empties. As far as read, our server writes no staff
   list when one is built: the list appears with the first helper, the
   first `finish_si` or a friend's offer (`helps.py`), so a new Summit or
-  Allied Market gets its free helpers only from then on. *Ours: missing
-  (sends nothing; the new client doesn't read `si` at all).*
+  Allied Market gets its free helpers only from then on. *Ours: the same
+  since "Town rules from the map of the original", `client/src/rules/social.ts`.*
 - The harbour and the zeppelin tower are staffed for free on opening,
   with 20 `buy_si_help` and a `finish_si`. *Ours: built
   (`client/src/rules/dock.ts`); not re-checked here.*
@@ -471,6 +471,7 @@ Most serious first.
    helpers free at the Summit and the Allied Markets (`buy_si_help`, free)
    as the town loads, once the save holds a staff list for them; ours
    sends nothing (`client/src/main.ts` has no such step). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 
 **Looks or feels different**
 

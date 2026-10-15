@@ -16,7 +16,7 @@ import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels } from "./rules/levels.ts";
-import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
+import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
@@ -44,7 +44,8 @@ import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
-import { givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
+import { freeHelpers } from "./rules/social.ts";
+import { GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -136,7 +137,8 @@ async function start(): Promise<void> {
     // a villager for a town with none (rules/cleanup.ts; not before Arthur's lessons are
     // taken or skipped); animals off the player's land are wild (rules/animals.ts); then
     // trees, rocks and a few animals grow back (rules/nature.ts).
-    const opening = [...cleanUp(town).commands];
+    // As the Flash client opens a town: the tidy-up, and a free helper at a social building that waits for some.
+    const opening = [...cleanUp(town).commands, ...freeHelpers(town)];
     // Arthur's lessons (lessons.ts): carried on after a reload, from what the save and this browser say.
     const lessonsKey = `se-lessons-${settings.userId}`;
     const lessonsHere = rememberedLessons(lessonsKey);
@@ -151,9 +153,15 @@ async function start(): Promise<void> {
       today: ((info.privateState as Record<string, unknown> | undefined)?.arrayAnimals ?? {}) as Record<string, number>,
       perDay: Number(config.globals?.ANIMALS_PER_DAY) || 20,
     };
-    for (const command of growBack(town, items, clock(), { animals }).commands) {
-      commands.add(command.cmd, ...command.args);
-    }
+    // Trees, rocks and wild animals grow back (rules/nature.ts) once the camp of the moment is
+    // up, as in the Flash client: a camp that clears the wild ring doesn't take what just grew.
+    const grow = () => {
+      const { commands: grown, added } = growBack(town, items, clock(), { animals });
+      for (const command of grown) {
+        commands.add(command.cmd, ...command.args);
+      }
+      added.forEach((placed) => void view.redraw(placed));
+    };
     const shop = new ShopWindow({
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
@@ -162,7 +170,6 @@ async function start(): Promise<void> {
       picture: (item, canvas) => drawThumbnail(art, item, canvas),
       choose: (item) => editor.startBuilding(item),
       storage: () => editor.storageCards(),
-      unlock: { price: unlockPrice, run: (item) => editor.unlock(item) },
     });
     // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
     const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE }];
@@ -183,8 +190,7 @@ async function start(): Promise<void> {
       classicUrl: settings.classicUrl,
       // For the goals: the map seen at all ("Check the map"), and from the menus ("Sail in another way").
       opened: (how) => {
-        doings.islandsOpened = true;
-        doings.islandsFromMenu ||= how === "menu";
+        doings.openedIslands(how === "menu");
       },
     });
     const world = new WorldWindows(settings.classicUrl, islands);
@@ -236,6 +242,8 @@ async function start(): Promise<void> {
     doings.helpedBuildings = visits.helped;
     // The bonuses (made once the town's goals are, below) hear of a level up.
     let bonuses: BonusDesk | undefined;
+    // The goals, while they run (from level 35 they stop, as in the Flash client).
+    let goalKeeper: GoalKeeper | undefined;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -258,7 +266,19 @@ async function start(): Promise<void> {
         }
         return graves.windowOf(placed);
       },
-      levelled: () => bonuses?.levelled() });
+      levelled: (level) => {
+        bonuses?.levelled();
+        if (level === GOALS_END_LEVEL) {
+          // Level 35, as the Flash client marks it: the goals stop, and a Wizardry Academy is given.
+          goalKeeper?.stop();
+          const academy = levelThirtyFive(town, items);
+          if (academy) {
+            academy.commands.forEach((command) => commands.add(command.cmd, ...command.args));
+            void view.redraw(academy.placed);
+            editor.tell("Your goals are done! A Wizardry Academy is yours: learn spells there for your battles.");
+          }
+        }
+      } });
     hud.offerCollectAll(() => editor.collectAll());
     hud.offerSquareTool(() => editor.takeSquareTool());
     hud.offerTools((tool) => editor.chooseTool(tool));
@@ -275,6 +295,7 @@ async function start(): Promise<void> {
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+        grow();
         // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
         // client does (rules/dock.ts): after the camp, as a new town's prisoner holds the harbour back.
         for (const { placed, commands: sent } of givenOnOpening(town, items)) {
@@ -357,7 +378,7 @@ async function start(): Promise<void> {
     const privateState = info.privateState ?? {};
     // Goals only in a human town below level 35, as in the Flash client.
     if (goalsRun(town)) {
-      new GoalKeeper({
+      goalKeeper = new GoalKeeper({
         town, doings, items,
         goals: readGoals((config.missions ?? []) as never, goalNeeds.goals as unknown as Record<string, Need>),
         done: privateState.completedMissions ?? [],
@@ -385,7 +406,7 @@ async function start(): Promise<void> {
         editor.refresh();
       },
       dailyCollected: (day) => {
-        doings.dailyBonusDay = day;
+        doings.dailyBonus(day);
       },
     });
   } else {

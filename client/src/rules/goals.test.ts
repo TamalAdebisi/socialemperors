@@ -123,3 +123,29 @@ test("island goals: by the stars the save keeps; the map seen, and from the menu
   assert.deepEqual(progress(t, goals.get(81)!, doings, 0, ITEMS), { done: 1, of: 1 });
   assert.deepEqual(progress(t, goals.get(85)!, doings, 0, ITEMS), { done: 0, of: 1 }, "not from a harbour's button");
 });
+
+test("doings count only while a goal of their kind is open, as in the Flash client; collecting always", () => {
+  const doings = new Doings();
+  doings.listen(["collect-kind"]);
+  doings.workTime(MILL, 480);
+  doings.moved(FARM);
+  doings.spend("c", 5);
+  doings.collected(FARM);
+  assert.equal(doings.workTimeKind.size, 0);
+  assert.equal(doings.movedKind.size, 0);
+  assert.equal(doings.spent.size, 0);
+  assert.equal(doings.collectedKind.get(122), 1);
+  doings.listen(["work-time-kind"]);
+  doings.workTime(MILL, 480);
+  doings.workTime(MILL, 60);
+  assert.equal(doings.workTimeKind.get(121), 60, "the last choice, not the longest");
+});
+
+test("goal 18: the nearest 20 of the player's units within a circle of 3 tiles round the town hall", () => {
+  const hall = placed(item({ id: 26, subcategory: 135, width: 4, height: 4 }), 52, 52);
+  const goal = { id: 18, title: "", description: "", reward: 1, need: ["near-hall", [71, 2]] as Need };
+  const near = (tx: number, ty: number) => placed(VILLAGER, tx, ty);
+  assert.deepEqual(progress(town([hall, near(55, 52), near(52, 49)]), goal, new Doings(), 0, ITEMS), { done: 1, of: 1 });
+  // A corner of the old 7 by 7 square (3 and 3 away: further than 3) doesn't count.
+  assert.deepEqual(progress(town([hall, near(55, 52), near(55, 55)]), goal, new Doings(), 0, ITEMS), { done: 0, of: 1 });
+});

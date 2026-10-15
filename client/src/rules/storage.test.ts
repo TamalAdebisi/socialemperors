@@ -41,6 +41,18 @@ test("what can be done with a stored thing", () => {
   assert.equal(storageChoices(t, stored(MILL)).why, "You have one");  // one mill per town, as in the shop
 });
 
+test("a unit from storage obeys its kind's limit, inside buildings too; the Mummy is let through", () => {
+  const hero = itemInfo(config({ id: "602", name: "Hero", type: "u", subcat_functional: "77", units_limit: "1", population: "1" }));
+  const mummy = itemInfo(config({ id: "615", name: "Mummy", type: "u", subcat_functional: "78", units_limit: "1", population: "1" }));
+  const t = town([[602, 1], [615, 1]]);
+  const stored = (item: ItemInfo) => ({ item, gift: false, count: 1 });
+  assert.equal(storageChoices(t, stored(hero), 5).place, true);
+  t.items.push({ item: TOWER, tx: 50, ty: 50, orientation: 0, unitsInside: 1, units: [602], startedAt: 0, workTime: 0 });
+  assert.deepEqual(storageChoices(t, stored(hero), 5), { place: false, sell: true, why: "That's as many Hero as a town can have" });
+  t.items.push({ item: mummy, tx: 45, ty: 45, orientation: 0, unitsInside: 0, startedAt: 0, workTime: 0 });
+  assert.equal(storageChoices(t, stored(mummy), 5).place, true);
+});
+
 test("selling from storage gives a twentieth back; nothing for cash things or the Dock", () => {
   assert.deepEqual(storageRefund(TOWER), { resource: "stone", amount: 6 });
   assert.equal(storageRefund(FLAG), null);

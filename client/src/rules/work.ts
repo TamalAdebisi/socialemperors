@@ -12,7 +12,7 @@ import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { gridFor, isWalkable, reachable, walkGrid } from "./walking.ts";
+import { gridFor, isWalkable, reachable } from "./walking.ts";
 
 export const SUBCAT = {
   villager: 71, siege: 81,
@@ -63,7 +63,7 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
     return true;
   }
   if (isAnimal(unit)) {
-    return canLiveIn(unit, target);
+    return canLiveIn(unit, target, building.units ?? []);
   }
   return unit.subcategory === SUBCAT.villager && WORKPLACES.has(target.subcategory) && target.id !== SACRIFICE_ALTAR;
 }
@@ -281,20 +281,26 @@ export function letAllOut(town: Town, building: PlacedItem, items: Map<number, I
   return out;
 }
 
-/** The free walkable tile nearest a building's corner, in rings outwards. */
+/**
+ * Where a unit comes out by a building (trained, let out) or is put by the
+ * town hall: ring by ring round the building's tile, the first ring with a
+ * free tile, and on it the one nearest the far corner of the map, anywhere
+ * on the map, as in the Flash client. (A unit put off the bought land walks
+ * back when it's sent: rules/walking.ts.)
+ */
 export function freeTileNear(town: Town, building: PlacedItem): Point | null {
-  const grid = walkGrid(town);
   const taken = takenTiles(town);
+  // Past the map's last corner: the tile nearest it is the furthest down the map.
+  const corner = 2 * MAP_TILES;
+  const away = (p: Point) => (p.x - corner) ** 2 + (p.y - corner) ** 2;
   for (let ring = 1; ring < MAP_TILES; ring++) {
     let best: Point | null = null;
     for (let x = building.tx - ring; x <= building.tx + ring; x++) {
       for (let y = building.ty - ring; y <= building.ty + ring; y++) {
         const edge = Math.max(Math.abs(x - building.tx), Math.abs(y - building.ty)) === ring;
-        if (edge && isWalkable(grid, x, y) && !taken.has(`${x},${y}`)) {
-          const d = (x - building.tx) ** 2 + (y - building.ty) ** 2;
-          if (!best || d < (best.x - building.tx) ** 2 + (best.y - building.ty) ** 2) {
-            best = { x, y };
-          }
+        const inMap = x >= 0 && y >= 0 && x < MAP_TILES && y < MAP_TILES;
+        if (edge && inMap && !taken.has(`${x},${y}`) && (!best || away({ x, y }) < away(best))) {
+          best = { x, y };
         }
       }
     }

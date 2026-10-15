@@ -2,9 +2,11 @@
 // notes, our words; CLIENT.md, "The living map"). Each time the player
 // opens their town, the game counts the trees, stone rocks and gold rocks
 // on the map, and where there are too few it adds clumps of them, and
-// single trees, in the wild ring round the island and on the player's land;
-// then a few wild animals (rules/animals.ts). They're "bought" for nothing,
-// so the server keeps them. No drawing here.
+// single trees, in the wild ring round the island and on the land not yet
+// bought, never aimed at the player's own (a clump can spill onto it); then
+// a few wild animals (rules/animals.ts). The player's villagers walk out to
+// them. They're "bought" for nothing, so the server keeps them. No drawing
+// here.
 
 import type { Command } from "../net/commands.ts";
 import { animalsToAdd } from "./animals.ts";
@@ -49,7 +51,7 @@ export function growBack(town: Town, items: Map<number, ItemInfo>, now: number,
   const count = (kind: Kind) => town.items.filter((placed) => kind.counts.includes(placed.item.id)).length;
   const counted = new Map([GOLD, STONE, TREES].map((kind) => [kind, count(kind)]));
   const taken = takenTiles(town);
-  const blocks = wildAndOwnBlocks(town);
+  const blocks = wildBlocks(town);
   const added: PlacedItem[] = [];
   const add = (id: number, at: Point | null) => {
     const item = items.get(id);
@@ -92,12 +94,12 @@ export function growBack(town: Town, items: Map<number, ItemInfo>, now: number,
   };
 }
 
-/** The blocks things grow in: the wild ring round the island, and the land the player bought. */
-function wildAndOwnBlocks(town: Town): Point[] {
+/** The blocks things grow in: the wild ring round the island, and the middle blocks the player hasn't bought. */
+function wildBlocks(town: Town): Point[] {
   const blocks: Point[] = [];
   for (let gy = 0; gy < BLOCKS; gy++) {
     for (let gx = 0; gx < BLOCKS; gx++) {
-      if (isOuterBlock(gx, gy) || town.expansions.has(gx + BLOCKS * gy + 1)) {
+      if (isOuterBlock(gx, gy) || !town.expansions.has(gx + BLOCKS * gy + 1)) {
         blocks.push({ x: gx, y: gy });
       }
     }
