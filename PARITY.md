@@ -108,9 +108,9 @@ dock"), so these come with a mockup first.
 - [ ] **Level-up window:** the new level, its prize, and up to 4 buildings
       that just became available. Ours is a short message that can be lost
       when several are waiting. M
-- [ ] **Messages from the server at start** ("Bob helped your farm", "a
-      gift is waiting") are shown once, then cleared. Ours ignores them,
-      so they pile up for the classic game. S
+- [x] **Messages from the server at start** ("Bob helped your farm", "a
+      gift is waiting") are shown once, then cleared. Ours ignored them,
+      so they piled up for the classic game. S
 - [ ] **Shop:** what each item gives or houses (and a trained unit's
       numbers), shown on hover or tap; a confirmation before opening a
       building early for cash; the tabs' own pictures; "new" badges. M
