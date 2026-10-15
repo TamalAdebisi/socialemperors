@@ -347,6 +347,12 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] Checked against the Flash client's code: four read-throughs, and
         the rules they found wrong fixed ([PARITY.md](PARITY.md#beta-2-battles-and-quests))
+  - [x] The special units' moves on counted beats (about a hundred units,
+        read from the original by class; the map of the original found
+        them missing) ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] Those units' rarer parts still missing (moves as they die, timed
+        summons that switch sides, effects on each tile walked, growing):
+        listed per unit in `client/src/rules/specials.json`, "beats"
   - [ ] Checked side by side against the Flash game, and played by the
         owner
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
