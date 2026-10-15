@@ -84,6 +84,8 @@ const TOWN_HALL_1 = 26;
 const ICE_TOWER = 384;
 /** The kamikaze blows up instead of hitting: 500 to itself and to everything in the 5 x 5 tiles around. */
 const KAMIKAZE = 575;
+/** The kamikazes that blow up on their beat: the troll one and the Infernal Kamikaze (only the first sets others off). */
+const KAMIKAZES = new Set([KAMIKAZE, 686]);
 /**
  * The monk turns an enemy unit within 10 tiles to its side, instead of
  * hitting: one at a time (24 seconds apart), 4 in all, and none with 500
@@ -333,6 +335,8 @@ export class Battle {
   readonly onPlainHit: ((by: Fighter, target: Fighter) => void)[] = [];
   /** Something died, after the battle has dealt with it (the undead army raises skeletons). */
   readonly onKilled: ((fighter: Fighter, by: Fighter | null) => void)[] = [];
+  /** A unit has walked onto a new tile (the rhinos push what they meet). */
+  readonly onEnterTile: ((unit: Fighter) => void)[] = [];
   /** Units that hit by hand although they reach further: no shot, the hit lands at once. */
   readonly handToHand = new Set(RANGED_MELEE);
 
@@ -469,7 +473,7 @@ export class Battle {
 
   private stepUnit(unit: Fighter, frame: number): void {
     if (unit.expiresAt !== undefined && frame >= unit.expiresAt) {
-      this.kill(unit, null);
+      this.fade(unit);
       return;
     }
     if (unit.burn && frame >= unit.burn.next) {
@@ -686,7 +690,7 @@ export class Battle {
               }
             });
           }
-        } else if (unit.item.id === KAMIKAZE) {
+        } else if (KAMIKAZES.has(unit.item.id)) {
           this.explode(unit);
         } else {
           this.hurt(target, unit.attack * elementFactor(unit, target), unit);
@@ -1403,12 +1407,18 @@ export class Battle {
     const longest = Math.max(Math.abs(dx), Math.abs(dy));
     unit.at = longest <= speed ? to : { x: unit.at.x + (dx * speed) / longest, y: unit.at.y + (dy * speed) / longest };
     const under = tileUnder(unit.at);
+    const was = { x: unit.tx, y: unit.ty };
     unit.tx = under.x;
     unit.ty = under.y;
     if (unit.at.x === to.x && unit.at.y === to.y) {
       unit.tx = unit.next.x;
       unit.ty = unit.next.y;
       this.nextTile(unit);
+    }
+    if (unit.tx !== was.x || unit.ty !== was.y) {
+      for (const listen of this.onEnterTile) {
+        listen(unit);
+      }
     }
   }
 }

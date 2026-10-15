@@ -28,18 +28,18 @@ The index, by area:
 | --- | ---: | ---: | ---: | ---: |
 | [index/core.md](index/core.md): the game's core (loading, the save, the start) | 42 | 19 | 12 | 7 |
 | [index/engine.md](index/engine.md): the map engine, units, attacks, magic | 183 | 107 | 65 | 2 |
-| [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 83 | 253 | 10 |
+| [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 125 | 215 | 6 |
 | [index/windows.md](index/windows.md): the windows | 136 | 29 | 11 | 68 |
 | [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 30 | 15 | 24 |
 | [index/quests.md](index/quests.md): quests and battles | 99 | 65 | 10 | 16 |
 | [index/art-and-libraries.md](index/art-and-libraries.md): picture holders, others' libraries | 597 | 2 | 0 | 0 |
-| **All** | **1,505** | **335** | **366** | **127** |
+| **All** | **1,505** | **377** | **328** | **123** |
 
 The rest are picture holders (508), other people's libraries (79), parts
 we don't need (89: Facebook, the iPhone app, payments, adverts, Social
 Point's tools) and one handled by the server alone. So of the 829
-classes that hold the game's own behaviour, about 40% are built in the
-new client, 44% partly and 15% not yet. "Partly" is mostly the special
+classes that hold the game's own behaviour, about 45% are built in the
+new client, 40% partly and 15% not yet. "Partly" is mostly the special
 buildings and units, whose plain fighting works but whose own moves
 often don't yet.
 

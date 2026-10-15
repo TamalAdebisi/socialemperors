@@ -17,22 +17,29 @@ import { unitPoint, type Point } from "./geometry.ts";
 export type Around = "self" | "target";
 
 export type Move =
-  | { kind: "volley"; shots: number; every: number; factor: number; projectile: number | null }
+  | { kind: "volley"; shots: number; every: number; factor: number; projectile: number | null;
+    /** Each shot at another enemy unit in reach, the nearest not yet shot (then the last again). */
+    spread?: boolean; burn?: Burning }
   | { kind: "storm"; count: number; radius: number; factor: number; minDelay: number; maxDelay: number; around: Around; fx: string | null;
     /** Thor's: instead of `count` random tiles, each tile of the square has this chance of a bolt. */
     chance?: number }
   | { kind: "whirl"; radius: number; max: number; factor: number; every: number; duration: number; around: Around; push: number; stun: boolean;
-    poison: { damage: number; ticks: number } | null; fx: string | null }
+    poison: { damage: number; ticks: number } | null; fx: string | null } & AreaOptions
   | { kind: "blast"; radius: number; max: number; factor: number; around: Around; push: number; stun: boolean; fx: string | null; skipCross?: boolean }
+    & AreaOptions
   | { kind: "line"; length: number; factor: number; push: number; stun: boolean; fx: string | null }
   | { kind: "diagonal"; factor: number }
   | { kind: "hit"; factor: number; push: number; stun: boolean; fx: string | null }
   | { kind: "heal"; who: "self" | "allies" | "target"; radius: number; max: number; amount: number; factor: number }
   /** maxAlive 0: no limit (the bosses' small yetis and golems). */
   | { kind: "spawn"; minion: number; count: number; maxAlive: number; egg: boolean;
+    /** All of them or none, when the "at most" leaves no room for all. */
+    allOrNothing?: boolean;
     /** It lasts this many frames, then is gone. */
     frames?: number }
-  | { kind: "swallow"; radius: number; max: number; around: Around; maxLife: number }
+  | { kind: "swallow"; radius: number; max: number; around: Around; maxLife: number;
+    /** Nothing to swallow: this instead (a plain hit). */
+    otherwise?: Move }
   | { kind: "freeze"; radius: number; max: number; frames: number; around: Around }
   | { kind: "poison"; radius: number; max: number; damage: number; ticks: number; around: Around }
   | { kind: "grow"; frames: number; attack: number; speed: number }
@@ -76,11 +83,19 @@ export type Move =
    * dies as it lands. Anything else: `otherwise`, if given.
    */
   | { kind: "kill"; maxLife: number; current?: boolean; push: number; otherwise: Move | null }
+  /** Enemy units around (of at most `maxLife`, no boss) fight on its side for `frames`, then go back. */
+  | { kind: "turn"; radius: number; max: number; around: Around; maxLife: number; frames: number }
   /** Caught in a web: helpless for `frames`, losing `damage` a second; only units of at most `maxLife`. */
   | { kind: "web"; radius: number; max: number; around: Around; frames: number; damage: number; maxLife: number }
   /** Only a picture on its target (the Red Wizard's fire rain, which never hurt). */
   | { kind: "show"; fx: string }
   | { kind: "other"; note: string };
+
+/** Burning: `damage` a second, `ticks` times. */
+export interface Burning { damage: number; ticks: number }
+
+/** What an area move may do besides: hit buildings and unarmed units too, burn, spare its target, throw on a chance. */
+export interface AreaOptions { all?: boolean; burn?: Burning; skipTarget?: boolean; pushChance?: number }
 
 /** `animations`: each move its own (the bosses' three), else `animation` for all. */
 export interface AutoEntry {
@@ -111,6 +126,8 @@ export interface BeatRule {
   animation: number | null;
   /** It stands still while the move plays. */
   helpless?: boolean;
+  /** No beats for this many frames after (its long clip plays): neither counted nor hit. */
+  busy?: number;
   /** Once the count has reached `from`, the next beat that fits plays it, and the count starts again. */
   sticky?: boolean;
   /** Only against a building, only against a unit, or only when it's hurt. */
@@ -130,7 +147,7 @@ export interface HitExtras {
 /** The undead army: an enemy unit it kills may rise as one of `minions` on its side, for `frames`. */
 export interface Risers { ids: number[]; chance: number; minions: number[]; frames: number }
 
-/** A unit's counted moves: the first rule that matches a beat plays. `near`: tiles that count as up close. */
+/** A unit's counted moves: the first rule that matches a beat plays. `near`: tiles that count as up close (the larger gap). */
 export interface BeatEntry {
   ids: number[];
   name: string;
@@ -139,6 +156,10 @@ export interface BeatEntry {
   counts: "all" | "near" | "far" | "split";
   rules: BeatRule[];
   hits: HitExtras | null;
+  /** A move as it dies, this many frames after. */
+  death?: { after: number; move: Move };
+  /** As it walks onto a tile: the nearest enemy within `radius`, if a unit under `maxPopulation`, hurt and thrown. */
+  step?: { radius: number; factor: number; push: number; maxPopulation: number };
 }
 
 export interface SpecialsTable { auto: AutoEntry[]; units: UnitEntry[]; beats?: BeatEntry[]; risers?: Risers }
@@ -187,6 +208,8 @@ interface State {
   hits?: number;
   /** Beats counted for a unit's counted moves: all of them, those up close, those far off. */
   beats?: { all: number; near: number; far: number };
+  /** No counted beats before this frame. */
+  beatBusyUntil?: number;
 }
 
 export class Specials {
@@ -227,7 +250,11 @@ export class Specials {
     }
     this.risers = table.risers ?? null;
     battle.onPlainHit.push((by, target) => this.plainHitExtras(by, target));
-    battle.onKilled.push((dead, by) => this.rise(dead, by));
+    battle.onKilled.push((dead, by) => {
+      this.rise(dead, by);
+      this.dying(dead);
+    });
+    battle.onEnterTile.push((unit) => this.stepped(unit));
     battle.onBeat = (unit, target) => this.beat(unit, target);
     battle.onDealt = (by, amount, healing) => this.dealt(by, amount, healing);
   }
@@ -336,11 +363,15 @@ export class Specials {
 
   /** A beat of a unit with counted moves: counted, then the first rule that matches plays. */
   private countedBeat(unit: Fighter, target: Fighter, entry: BeatEntry): boolean {
-    const near = entry.near !== null && Math.hypot(target.tx - unit.tx, target.ty - unit.ty) <= entry.near;
+    // Up close as the original measures it: the larger of the two tile gaps.
+    const near = entry.near !== null && Math.max(Math.abs(target.tx - unit.tx), Math.abs(target.ty - unit.ty)) <= entry.near;
     if (entry.counts !== "all" && entry.counts !== "split" && (entry.counts === "near") !== near) {
       return false;
     }
     const state = this.state(unit);
+    if (this.battle.frame < (state.beatBusyUntil ?? 0)) {
+      return true;  // busy with a long move: no beat at all
+    }
     const counts = state.beats ?? { all: 0, near: 0, far: 0 };
     state.beats = counts;
     counts.all++;
@@ -377,6 +408,9 @@ export class Specials {
       }
       if (rule.sticky) {
         counts[which] = 0;
+      }
+      if (rule.busy) {
+        state.beatBusyUntil = this.battle.frame + rule.busy;
       }
       this.play(unit, rule.move, target);
       return rule.replace;
@@ -417,6 +451,34 @@ export class Specials {
     }
     if (extras.push > 0 && (extras.pushChance >= 1 || this.random() < extras.pushChance)) {
       this.battle.knock(target, { x: by.tx, y: by.ty }, extras.push);
+    }
+  }
+
+  /** A unit with a move as it dies plays it a moment after (it isn't there to stand any more). */
+  private dying(dead: Fighter): void {
+    const death = this.counted.get(dead.item.id)?.death;
+    if (!death) {
+      return;
+    }
+    // Played by a stand-in where it fell: the move's own delays would stop for the dead.
+    const stand: Fighter = { ...dead, dead: false };
+    this.battle.after(death.after, () => this.play(stand, death.move, null));
+  }
+
+  /** A unit that pushes what it meets as it walks (the rhinos). */
+  private stepped(unit: Fighter): void {
+    const step = this.counted.get(unit.item.id)?.step;
+    if (!step || unit.dead) {
+      return;
+    }
+    const o = this.battle.within({ x: unit.tx, y: unit.ty }, step.radius, 1, (f) => this.isEnemy(unit, f))[0];
+    if (o && o.isUnit && o.item.population < step.maxPopulation && o.item.subcategory !== SUBCAT.boss) {
+      if (step.factor > 0) {
+        this.battle.hurt(o, this.amount(unit, step.factor), unit);
+      }
+      if (!o.dead && step.push > 0) {
+        this.battle.knock(o, { x: unit.tx, y: unit.ty }, step.push);
+      }
     }
   }
 
@@ -601,6 +663,22 @@ export class Specials {
     }
   }
 
+  /** An area move's hit on one: hurt, thrown (maybe on a chance), set burning. */
+  private areaStrike(f: Fighter, o: Fighter, move: { factor: number; push: number; stun: boolean } & AreaOptions, centre: Point): void {
+    const thrown = move.pushChance === undefined || this.random() < move.pushChance;
+    this.strike(f, o, move.factor, thrown ? move.push : 0, move.stun, centre);
+    if (move.burn) {
+      this.burnLater(o, move.burn);
+    }
+  }
+
+  /** Set burning, unless it burns already (a unit, no boss). */
+  private burnLater(o: Fighter, burn: Burning): void {
+    if (o.isUnit && !o.dead && !o.burn && o.item.subcategory !== SUBCAT.boss) {
+      o.burn = { damage: burn.damage, left: burn.ticks, next: this.battle.frame + BURN_EVERY };
+    }
+  }
+
   /** Hurt an enemy, and throw it or knock it down. */
   private strike(f: Fighter, o: Fighter, factor: number, push: number, stun: boolean, from: Point): void {
     this.battle.hurt(o, this.amount(f, factor), f);
@@ -634,17 +712,32 @@ export class Specials {
     // no buildings, no villagers, nothing without an attack. Moves on a single tile hit anything.
     const fighters = (centre: Point, radius: number, max: number, which: (o: Fighter) => boolean = () => true) =>
       enemies(centre, radius, max, (o) => fighting(o) && which(o));
+    // An area move: fighting units only, unless it hits everything (buildings and unarmed units too); its target spared if it says so.
+    const area = (centre: Point, radius: number, max: number, options: AreaOptions, which: (o: Fighter) => boolean = () => true) =>
+      (options.all ? enemies : fighters)(centre, radius, max, (o) => (!options.skipTarget || o !== target) && which(o));
     switch (move.kind) {
-      case "volley":
+      case "volley": {
+        const shot = new Set<Fighter>();
+        let last: Fighter | null = null;
         for (let i = 0; i < move.shots; i++) {
           battle.after(i * move.every, () => {
-            const at = target && !target.dead ? target : this.targetOf(f);
+            let at = target && !target.dead ? target : this.targetOf(f);
+            if (move.spread) {
+              // Each at another enemy unit in reach, nearest first; when all have been shot, the last again.
+              at = enemies(self(), f.range, 30, (o) => o.isUnit && fighting(o) && !shot.has(o))[0] ?? (last && !last.dead ? last : at);
+            }
             if (at && !f.dead) {
+              shot.add(at);
+              last = at;
               battle.shootAt(f, at, move.projectile, this.amount(f, move.factor));
+              if (move.burn) {
+                this.burnLater(at, move.burn);
+              }
             }
           });
         }
         break;
+      }
       case "storm": {
         const centre = centreOf(move.around);
         const tiles: (Point | null)[] = [];
@@ -684,8 +777,8 @@ export class Specials {
               return;
             }
             const centre = centreOf(move.around);
-            for (const o of fighters(centre, move.radius, move.max)) {
-              this.strike(f, o, move.factor, move.push, move.stun, centre);
+            for (const o of area(centre, move.radius, move.max, move)) {
+              this.areaStrike(f, o, move, centre);
               if (move.poison && o.isUnit && !o.dead && !o.poison && !poisoned.has(o)) {
                 poisoned.add(o);
                 o.poison = { damage: move.poison.damage, left: move.poison.ticks, next: battle.frame + 90 };
@@ -700,8 +793,8 @@ export class Specials {
         this.show(move.fx, centre);
         // The bosses' pound leaves out the row and column it stands on.
         const off = (o: Fighter) => !move.skipCross || (o.tx !== centre.x && o.ty !== centre.y);
-        for (const o of fighters(centre, move.radius, move.max, off)) {
-          this.strike(f, o, move.factor, move.push, move.stun, centre);
+        for (const o of area(centre, move.radius, move.max, move, off)) {
+          this.areaStrike(f, o, move, centre);
         }
         break;
       }
@@ -753,6 +846,9 @@ export class Specials {
         if (!item) {
           break;
         }
+        if (move.allOrNothing && move.maxAlive > 0 && this.minions(f).length + move.count > move.maxAlive) {
+          break;
+        }
         for (let i = 0; i < move.count; i++) {
           if (move.maxAlive > 0 && this.minions(f).length >= move.maxAlive) {
             break;
@@ -785,10 +881,31 @@ export class Specials {
         }
         break;
       }
-      case "swallow":
-        for (const o of enemies(centreOf(move.around), move.radius, move.max,
-          (o) => o.isUnit && o.item.subcategory !== SUBCAT.boss && (move.maxLife <= 0 || o.maxLife <= move.maxLife))) {
+      case "swallow": {
+        const prey = enemies(centreOf(move.around), move.radius, move.max,
+          (o) => o.isUnit && o.item.subcategory !== SUBCAT.boss && (move.maxLife <= 0 || o.maxLife <= move.maxLife));
+        for (const o of prey) {
           battle.swallow(o);
+        }
+        if (prey.length === 0 && move.otherwise) {
+          this.play(f, move.otherwise, target);
+        }
+        break;
+      }
+      case "turn":
+        for (const o of enemies(centreOf(move.around), move.radius, move.max,
+          (o) => o.isUnit && !o.giant && o.item.subcategory !== SUBCAT.boss && o.item.life <= move.maxLife && !battle.isStilled(o))) {
+          const side = o.side;
+          o.side = f.side;
+          o.target = null;
+          o.attacking = false;
+          battle.after(move.frames, () => {
+            if (!o.dead && o.side === f.side) {
+              o.side = side;
+              o.target = null;
+              o.attacking = false;
+            }
+          });
         }
         break;
       case "freeze":

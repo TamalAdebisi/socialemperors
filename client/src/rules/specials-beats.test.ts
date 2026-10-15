@@ -115,8 +115,8 @@ test("the undead army: an enemy unit it kills may rise as a skeleton on its side
   const before = count();
   b.kill(add(VILLAGER, 72, 72, ENEMY), knight);
   assert.equal(count(), before, "only the undead raise them");
-  run(451);
-  assert.ok(risen.dead, "gone after 15 seconds");
+  run(470);
+  assert.ok(risen.fadingSince !== undefined || !b.fighters.includes(risen), "faded away after 15 seconds, as summons do");
 });
 
 test("plain hits that burn: the Phoenix sets its target burning, a second at a time", () => {
@@ -150,4 +150,87 @@ test("new moves: a small unit killed outright, a big one hit instead; a web hold
   run(160);
   assert.ok(caught.life < life, "hurt each second");
   assert.ok(!big.burn, "too big for the web");
+});
+
+test("areas: everything or fighting units only, the target spared, burning; a volley spread over several", () => {
+  const { b, specials, run, add } = setUp();
+  const unit = add(KNIGHT, 50, 50, SELF, { condition: "passive" });
+  const target = add(SPEARMAN, 51, 50, ENEMY, { condition: "passive" });
+  const villager = add(VILLAGER, 50, 51, ENEMY, { condition: "passive" });
+  const blast = { kind: "blast", radius: 2, max: 10, factor: 0.5, around: "self", push: 0, stun: false, fx: null } as const;
+  const lives = () => [target.life, villager.life];
+  let before = lives();
+  specials.play(unit, blast, target);
+  assert.ok(target.life < before[0] && villager.life === before[1], "fighting units only");
+  before = lives();
+  specials.play(unit, { ...blast, all: true, skipTarget: true, burn: { damage: 5, ticks: 3 } }, target);
+  assert.ok(target.life === before[0] && villager.life < before[1], "everything but the target");
+  assert.ok(villager.burn, "burning");
+  const others = [add(SPEARMAN, 52, 50, ENEMY, { condition: "passive" }), add(SPEARMAN, 52, 51, ENEMY, { condition: "passive" })];
+  unit.range = 5;
+  const shotAt = new Set<Fighter>();
+  b.onLanded.push((shot) => shotAt.add(shot.target));
+  specials.play(unit, { kind: "volley", shots: 3, every: 2, factor: 1, projectile: null, spread: true }, target);
+  run(60);
+  assert.ok(others.every((o) => shotAt.has(o)) && shotAt.has(target), "each shot at another");
+});
+
+test("nothing to swallow: a plain hit instead; units turned to its side for a while; all or none summoned", () => {
+  const { b, specials, run, add } = setUp();
+  const unit = add(KNIGHT, 50, 50, SELF, { condition: "passive" });
+  const big = add(KNIGHT, 51, 50, ENEMY, { condition: "passive" });
+  big.maxLife = big.life = 5000;
+  specials.play(unit, { kind: "swallow", radius: 2, max: 1, around: "target", maxLife: 500,
+    otherwise: { kind: "hit", factor: 1, push: 0, stun: false, fx: null } }, big);
+  assert.ok(!big.dead && big.life < 5000, "hit instead");
+  const small = add(SPEARMAN, 52, 52, ENEMY, { condition: "passive" });
+  specials.play(unit, { kind: "turn", radius: 4, max: 3, around: "self", maxLife: 500, frames: 300 }, small);
+  assert.equal(small.side, SELF, "on its side");
+  run(301);
+  assert.equal(small.side, ENEMY, "and back");
+  const spawn = { kind: "spawn", minion: SPEARMAN, count: 3, maxAlive: 4, egg: false, allOrNothing: true, frames: 90 } as const;
+  specials.play(unit, spawn, null);
+  run(30);
+  const mine = () => b.fighters.filter((f) => f.summoned && f.side === SELF && f.item.id === SPEARMAN && !f.dead && f.fadingSince === undefined).length;
+  assert.equal(mine(), 3);
+  specials.play(unit, spawn, null);
+  run(30);
+  assert.equal(mine(), 3, "no room for three more: none");
+  run(60);
+  assert.equal(mine(), 0, "they last 3 seconds");
+});
+
+test("a move as it dies; a push on each tile walked; no beats while busy; the Infernal Kamikaze blows up", () => {
+  const entry: BeatEntry = {
+    ids: [KNIGHT], name: "test", near: null, counts: "all", hits: null,
+    rules: [{ every: 2, at: 0, when: "any", chance: 1, replace: true, animation: null, busy: 100, move: { kind: "show", fx: "a" } }],
+    death: { after: 10, move: { kind: "blast", radius: 3, max: 10, factor: 1, around: "self", push: 0, stun: false, fx: null } },
+    step: { radius: 1.5, factor: 0, push: 5, maxPopulation: 4 },
+  };
+  const { b, specials, run, add } = setUp(1, only(entry));
+  const unit = add(KNIGHT, 50, 50, SELF, { condition: "passive" });
+  const near = add(SPEARMAN, 52, 50, ENEMY, { condition: "passive" });
+  const fire = (specials as unknown as { beat: (u: Fighter, t: Fighter) => boolean }).beat.bind(specials);
+  assert.equal(fire(unit, near), false);
+  assert.equal(fire(unit, near), true, "the move");
+  assert.equal(fire(unit, near), true, "busy: no beat");
+  run(101);
+  assert.equal(fire(unit, near), false, "beats again");
+  const life = near.life;
+  b.kill(unit, null);
+  run(12);
+  assert.ok(near.life < life, "hurt as it died");
+  const { b: b2, run: run2, add: add2 } = setUp(2, only(entry));
+  const walker = add2(KNIGHT, 40, 40, SELF, { condition: "passive" });
+  const inWay = add2(SPEARMAN, 42, 40, ENEMY, { condition: "passive" });
+  const at = { x: inWay.tx, y: inWay.ty };
+  b2.walk(walker, { x: 41, y: 40 });
+  run2(60);
+  assert.ok(inWay.tx !== at.x || inWay.ty !== at.y, "pushed as it walked up");
+  const { b: b3, run: run3, add: add3 } = setUp(3);
+  const kamikaze = add3(686, 50, 50, SELF, { condition: "aggressive" });
+  add3(KNIGHT, 51, 50, ENEMY, { condition: "passive" });
+  run3(200);
+  assert.ok(kamikaze.dead, "blew up");
+  assert.ok(b3.fighters.length >= 0);
 });

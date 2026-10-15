@@ -12,12 +12,19 @@ them can be found and reversed. The big, agreed decisions are in
 - **One slip not copied:** in the original, the Lythos Titan stopped
   making specials for the rest of a battle if it rolled its minions while
   they were still out. Here it rolls again next time.
-- **Not built yet, so not decided yet:** the Tiny Water God's grab (in
-  the original its victims stay helpless and unseen for good, never
-  dying; the plan is to let them die, as its code meant), and Tornado
-  Heaven, which in the original hit a thrown unit about 30 times while it
-  flew. These and the other missing parts are listed per unit in
+- **The Tiny Water God's grab holds its victims for a while** (a web),
+  rather than leaving them helpless and unseen on the field for good, as
+  a slip in the original did.
+- **Two more slips not copied:** the Evil Scorpion's plain hits on a
+  building stopped the original's count (they hurt the building here),
+  and the Elf Priest handed its converts back to the computer's side even
+  when it was the player's.
+- **Not built yet, so not decided yet:** Tornado Heaven, which in the
+  original hit a thrown unit about 30 times while it flew. This and the
+  other missing parts are listed per unit in
   `client/src/rules/specials.json` ("beats").
+- **"Up close" is measured as the original measures it,** by the larger
+  of the two tile gaps (a diagonal 2 tiles off counts as 2).
 - **Hits the original repeated on a unit in the air are folded into
   one:** the original moved a thrown unit only when it landed, so a
   quick series of strikes kept finding it; ours moves it at once. Where

@@ -1508,11 +1508,17 @@ few kinds with its numbers; our notes in words are in
   of 1 in 9 each beat, only when the target is up close, or only against
   a building. Some keep a count for near and far beats apart, or start
   one beat later. Many also add something to every plain hit: burning
-  (a second at a time), poison, a throw, or the hit lands by hand. Two
-  more kinds of move came with them: a small unit killed outright (thrown
-  and dying as it lands), and a web that holds a unit and hurts it each
-  second. The undead army raises skeletons: an enemy unit it kills has 3
-  chances in 10 of rising as a skeleton on its side for 15 seconds. The
+  (a second at a time), poison, a throw, or the hit lands by hand. Some
+  stand busy while a long move plays (no beats meanwhile), play a last
+  move as they die, or push what they meet on each tile they walk onto
+  (the rhinos). Area moves can hit buildings and villagers too, spare the
+  target (a splash round it), burn, or throw on a coin; a volley can go
+  to several enemies; a swallow that finds nobody hits instead. New kinds
+  of move came with them: a small unit killed outright (thrown and dying
+  as it lands), a web that holds a unit and hurts it each second, and
+  enemy units turned to its side for a while. The undead army raises
+  skeletons: an enemy unit it kills has 3 chances in 10 of rising as a
+  skeleton on its side for 15 seconds; summons that run out fade. The
   table is `beats` in `rules/specials-table.json`; each unit's notes,
   including what is still missing, are `beats` in `rules/specials.json`
   (`rules/specials-beats.test.ts` plays every one).
