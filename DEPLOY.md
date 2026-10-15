@@ -368,7 +368,7 @@ create schema game authorization se_game;
 create schema staging authorization se_staging;
 ```
 
-### 6.2 Give the two logins passwords (done)
+### 6.2 Give the two logins passwords
 
 The logins start switched off, with no password. You set the passwords
 yourself, so they never pass through anyone else.
@@ -402,7 +402,7 @@ backup is kept for 6 days).
    players are disconnected for those few minutes, and their progress is
    saved first.
 
-### 6.4 Connect the servers to Supabase (done, 15 October 2026)
+### 6.4 Connect the servers to Supabase
 
 > **Done on 15 October 2026:** staging copied its 23 accounts; the live
 > server started empty.
