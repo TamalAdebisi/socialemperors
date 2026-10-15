@@ -89,7 +89,11 @@ export default async function group({ newPlayer }) {
   // On a phone: the square tool's button above the dock, then a box round the villagers at the trees.
   const phone = await player.onPhone();
   await phone.page.locator(".square-tool").click();
-  const spots = near.map(([, x, y]) => phone.screenOf(x, y, 27));
+  // Where the phone has them now: they may have moved on from the tiles the save had a moment ago.
+  const here = await phone.page.evaluate(([id, tx, ty]) => window.seHome.parts.town.items
+    .filter((p) => p.item.id === id && Math.max(Math.abs(p.tx - tx), Math.abs(p.ty - ty)) <= 4)
+    .map((p) => [p.tx, p.ty]), [VILLAGER, ...TREE]);
+  const spots = (here.length >= 2 ? here : near.map(([, x, y]) => [x, y])).map(([x, y]) => phone.screenOf(x, y, 27));
   const xs = spots.map((p) => p.x), ys = spots.map((p) => p.y);
   const onScreen = (x) => Math.min(Math.max(x, 5), 385);  // a press off the edge misses the map
   await phone.page.mouse.move(onScreen(Math.min(...xs) - 30), Math.min(...ys) - 60);

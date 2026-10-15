@@ -7,7 +7,7 @@
 // What's sold, and what can be done with what's stored, is up to the rules.
 
 import type { ItemInfo } from "../rules/config.ts";
-import { describe, priceOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
+import { describe, priceOf, tabsOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
 import { resourceIcon } from "./icons.ts";
 import { Panel } from "./panel.ts";
 
@@ -91,6 +91,14 @@ export class ShopWindow {
     this.render();
     this.panel.open();
     this.panel.element.querySelector<HTMLButtonElement>(".shop-categories [aria-pressed=true]")?.focus({ preventScroll: true });
+  }
+
+  /** Open at the category that sells an item (Arthur's lessons point at it there). */
+  showItem(item: ItemInfo): void {
+    const category = this.parts.categories.find((c) => tabsOf(item, c.id).length > 0);
+    if (category) {
+      this.open(category.id);
+    }
   }
 
   /** The menu's Build or Storage pressed: open there, or put the window away if it's already showing that. */

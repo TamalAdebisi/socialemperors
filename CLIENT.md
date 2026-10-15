@@ -1118,24 +1118,53 @@ pictures; the bucket keeps them a day in the browser's cache.
 
 ### Arthur's lessons
 
-Built with Beta 1's launch preparation. The Flash client gives Arthur's
-lessons (its tutorial: the town hall, a villager, a tree, a farm, a house,
-a knight and a first battle) in a player's first town while
-`playerInfo.completed_tutorial` is 0, and reports each lesson reached
-(`complete_tutorial`, the lesson; the last is 15). They're built around a
-new town's layout, so they're best taken before playing on.
+Built with "The switch". The Flash client gives Arthur's lessons (its
+tutorial) in a player's first town while `playerInfo.completed_tutorial`
+is 0. The new client now gives them too, the same way: 32 steps, each
+reported to the server as it's reached (`complete_tutorial`, the step), so
+both clients agree on how far a player got.
 
-The new client has no lessons of its own yet (they come with "The
-switch"). A player who hasn't started them is asked at the bottom: **Take
-the lessons** opens the classic game on the same empire, where they start;
-**Skip them** sends the Flash client's report of the last lesson, as if
-they were done. It asks on each visit until answered. Skipping matters
-beyond the lessons: the world map only picks rivals who are past them.
-Code: `rules/lessons.ts` (with tests), `TownEditor.offerLessons`.
+- **The first half (steps 0 to 14)** is Arthur's own words from the game's
+  text: train a villager, walk it, cut a tree, build House I, send a knight
+  at a troll. **The second half (15 to 31)** walks through the first
+  goals: a farm, a villager to work it, its food collected, three marked
+  trees cut. The original showed no words there, only the arrow; ours adds
+  a line or two (DECISIONS.md).
+- **On screen** (`ui/lessons.ts`): Arthur and his speech bubble at the
+  right, the game's yellow arrow on what to tap, the screen dimmed around
+  it, red markers over the trees to cut and their count. All the game's
+  own pictures (`tools/art/export_ui.py`, the `tutor-*` entries). The
+  camera goes to each thing on the map, and again if it walks under
+  Arthur; an open goals window is closed by the player before going on.
+- **What moves a step on** is in `rules/lessons.ts` (with tests): the
+  town editor tells the lessons what the player did (`TownEditor.emit`:
+  selected, training, walk, harvest, felled, shop, placed...), and each
+  step says which of those it waits for. Buildings go where the original
+  puts them if that's free, otherwise the nearest spot that fits.
+- **A reload** carries on from the start of the lesson it was in
+  (`resumeAt`). The step is kept in the save and, for step 15, in the
+  browser too: 15 alone is also what skipping sends, so it only means
+  "under way" where this browser says so.
+- **At the end** the town is given the dragon nest (1233) for free, with
+  its first egg 7 of 10 steps along and no wait (the server's
+  `next_step` as a gift), and the window "FREE DRAGGY!!" offers three
+  draggies; the one chosen is placed for free. Then a reminder that the
+  nest gives more, and the arrow on it. Code: `lessons.ts` (the steps on
+  screen and the gifts), `ui/draggy.ts` (the two windows).
+- **Asked first.** A new player is asked at the bottom: **Take the
+  lessons** starts them; **Skip them** sends the report of step 15, as
+  the Flash client does when its first half is over. (The Classic game
+  link at the top opens the Flash game instead, where they start the
+  same way.) Skipping gives no
+  nest and no draggy. It asks on each visit until answered. While the
+  lessons run, the camps' story window and the first villager's welcome
+  wait.
 
-The run-through (`e2e/tests/classic.mjs`) plays a new empire a little in
-the new client, takes the lessons, and checks that the classic game opens
-it and draws the farm the new client built; another player skips them.
+Tests: `e2e/tests/lessons.mjs` plays all 32 steps by following the arrow,
+reloads part way, chooses the green draggy and checks the save (every step
+reported, the nest, the draggy, the egg's steps); `e2e/tests/classic.mjs`
+opens the lessons in the classic game instead; `tests/test_commands.py`
+checks the gift steps on the server.
 
 ### Step 4: battles
 

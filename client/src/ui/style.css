@@ -2198,6 +2198,246 @@ body {
   height: auto;
 }
 
+/* ---- Arthur's lessons (ui/lessons.ts) ------------------------------------ */
+/* Arthur and his bubble at the right, the game's arrow on what to tap, the
+   screen dimmed around it (a ring's shadow), never in the way of a tap. */
+.lesson {
+  position: fixed;
+  top: 112px;
+  right: 12px;
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  pointer-events: none;
+}
+
+.lesson[hidden] {
+  display: none;
+}
+
+/* A window open on the right (the shop, the goals): Arthur stands left of it; on a phone it's a sheet below, so he stays. */
+@media (min-width: 721px) and (not ((orientation: portrait) and (max-width: 1000px))) {
+  .panel-open .lesson {
+    right: calc(var(--panel-w) + 12px);
+  }
+}
+
+.lesson-bubble {
+  position: relative;
+  width: min(330px, 62vw);
+  min-height: 150px;
+  padding: 18px 22px 64px;
+  background: center / 100% 100% no-repeat;
+  pointer-events: auto;
+}
+
+.lesson-title {
+  margin: 0 0 6px;
+  color: #6f9a86;
+  font: 900 20px var(--round);
+  text-align: center;
+}
+
+.lesson-text {
+  margin: 0;
+  color: #24452f;
+  font: 700 14px/1.35 var(--round);
+  white-space: pre-line;
+}
+
+.lesson-foot {
+  position: absolute;
+  right: 22px;
+  bottom: 52px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lesson-page {
+  color: #333;
+  font: 700 11px var(--round);
+}
+
+.lesson-next {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.lesson-next img {
+  width: 104px;
+  height: auto;
+}
+
+.lesson-arthur {
+  width: clamp(80px, 13vw, 150px);
+  height: auto;
+  margin-left: -18px;
+}
+
+.lesson-arrow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 901;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  transition: transform 0.4s ease-out;
+}
+
+.lesson-arrow img {
+  position: absolute;
+  top: -29px;
+  right: 6px;
+  width: 80px;
+  height: auto;
+  animation: lesson-bob 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes lesson-bob {
+  from { transform: translateX(-14px); }
+  to { transform: translateX(0); }
+}
+
+.lesson-hole {
+  position: fixed;
+  top: -75px;
+  left: -75px;
+  z-index: 899;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 200vmax rgb(0 0 0 / 45%);
+  pointer-events: none;
+  transition: transform 0.4s ease-out;
+}
+
+.lesson-hole.all {
+  width: 0;
+  height: 0;
+  transform: translate(50vw, 50vh);
+}
+
+.lesson-marker {
+  position: fixed;
+  top: -60px;
+  left: -16px;
+  z-index: 901;
+  width: 32px;
+  height: auto;
+  pointer-events: none;
+  animation: lesson-drop 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes lesson-drop {
+  from { margin-top: -8px; }
+  to { margin-top: 0; }
+}
+
+.lesson-count {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  z-index: 900;
+  transform: translateX(-50%);
+  color: #e0161b;
+  font: 900 22px var(--round);
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff;
+  pointer-events: none;
+}
+
+/* The free draggy (ui/draggy.ts): the game's parchment, title band and frames. */
+.draggy-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 950;
+  width: min(560px, 94vw);
+  padding: 14px 26px 26px;
+  transform: translate(-50%, -50%);
+  background: center / 100% 100% no-repeat;
+  text-align: center;
+}
+
+.draggy-window.reminder {
+  width: min(380px, 90vw);
+}
+
+.draggy-band {
+  margin: -6px auto 8px;
+  padding: 6px 0 8px;
+  width: 80%;
+  background: center / 100% 100% no-repeat;
+  color: #222;
+  font: 900 18px var(--round);
+}
+
+.draggy-header {
+  margin: 4px 0;
+  color: #222;
+  font: 900 20px var(--round);
+}
+
+.draggy-line {
+  margin: 4px 0 10px;
+  color: #222;
+  font: 800 14px var(--round);
+  white-space: pre-line;
+}
+
+.draggy-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.draggy-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.draggy-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 9px;
+  width: 96px;
+  background: top / 100% auto no-repeat;
+}
+
+.draggy-slot img {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+}
+
+.draggy-slot figcaption {
+  margin-top: 10px;
+  color: #222;
+  font: 900 12px var(--round);
+}
+
+.draggy-ok {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.draggy-ok img {
+  width: 110px;
+  height: auto;
+}
+
 /* ---- Special moves (ui/specialButtons.ts) ---------------------------------- */
 /* A special unit's buttons, bottom middle, as on the Flash client's
    portrait panel: the game's pictures, the seconds left, the LIMIT bar. */

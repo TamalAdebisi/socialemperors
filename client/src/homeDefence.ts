@@ -65,6 +65,8 @@ export interface DefenceParts {
   /** The game's clock (the server's time, seconds), and the save's troll camp (homeCamps.ts). */
   clock: () => number;
   camp: { id: number; last: number; vars?: Record<string, unknown> };
+  /** Arthur's lessons are on: camps keep their story to themselves. */
+  quiet?: () => boolean;
   /** One of the player's units fell and is counted in the graveyard (heroes too), for the windows. */
   buried?: (id: number) => void;
   random?: () => number;
@@ -103,6 +105,7 @@ export class HomeDefence {
       engage: (units, target) => this.engage(units, target),
       fighterOf: (placed) => this.fight?.fighterOf(placed) ?? null,
       battle: () => this.fight?.battle ?? null,
+      quiet: parts.quiet,
     });
     this.camps.arrive();
     (window as unknown as Record<string, unknown>).seHome = this;
@@ -116,6 +119,7 @@ export class HomeDefence {
       this.fight = new Fight(this.parts, this.random, (line) => this.lines.get(line) ?? "", () => this.kills++);
     }
     this.fight.order(units, target);
+    this.parts.editor.emit({ kind: "attack" });
   }
 
   /** The raids still to come (for the browser tests). */
@@ -422,6 +426,9 @@ class Fight {
   /** Something fell: the raids count it, the server hears, the raider pays. */
   private died(fighter: Fighter): void {
     const { town, commands, items } = this.parts;
+    if (fighter.isUnit && fighter.attack > 0) {
+      this.parts.editor.emit({ kind: "death" });  // Arthur's first fight ends on the first one to fall
+    }
     for (const raid of this.raids) {
       raid.fell(fighter);
     }

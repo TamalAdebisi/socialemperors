@@ -325,12 +325,16 @@ def accept_collect_help(save: dict, x, y, town_id: int, item_id, helper) -> str:
     return f"{helper}'s help took {seconds // 60} minutes off {name(item_id)}."
 
 
-def dragon_step(save: dict) -> str:
+def dragon_step(save: dict, gift: bool = False) -> str:
     """"next_step": the dragon one step on. The game sends the same for a
     friend's step, which leaves the wait as it is, as for its own, which
-    starts the wait again."""
+    starts the wait again. The seven steps Arthur's lessons give at their
+    end come as the text "0" (the nest window's as the number 0): no wait,
+    as the Flash client showed them."""
     pState = save["privateState"]
     pState["stepNumber"] = int(pState.get("stepNumber") or 0) + 1
+    if gift:
+        return f"Dragon step {pState['stepNumber']}, the lessons' gift."
     owed = int(pState.get("dragonHelpSteps") or 0)
     if owed > 0:
         pState["dragonHelpSteps"] = owed - 1

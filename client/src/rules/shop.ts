@@ -37,7 +37,7 @@ function soldTo(item: ItemInfo, race: string): boolean {
 }
 
 /** The tabs an item shows under in a category (none: not in it). */
-function tabsOf(item: ItemInfo, category: number): number[] {
+export function tabsOf(item: ItemInfo, category: number): number[] {
   if (category !== NEW.category) {
     return item.category === category ? [item.shopTab] : [];
   }

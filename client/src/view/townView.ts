@@ -304,6 +304,16 @@ export class TownView {
     return { missing: [...missing] };
   }
 
+  /** Where a thing's picture is on the screen (its box), or null when it isn't drawn. */
+  screenBox(placed: PlacedItem): { x: number; y: number; width: number; height: number } | null {
+    const slot = this.slots.get(placed);
+    if (!slot || slot.destroyed) {
+      return null;
+    }
+    const box = slot.getBounds();
+    return { x: box.x, y: box.y, width: box.width, height: box.height };
+  }
+
   /** The thing whose picture is under a point of the screen, the one in front. */
   itemAt(screen: Point): PlacedItem | null {
     // A sign over a building first: it stands in front of everything on the map.
