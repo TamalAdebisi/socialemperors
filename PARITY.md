@@ -145,13 +145,61 @@ dock"), so these come with a mockup first.
 - **The Daily News window**: left out. It showed Social Point's news,
   offers for cash and a few tips; there's no news to show now.
 
+## Found by the map of the original (15 October 2026)
+
+Rules that change the save, found by reading the whole client
+([docs/original/](docs/original/README.md)) and checked by a second
+reader. Each links to its rule book, which has the details and our file.
+The rule books list more that only look or feel different.
+
+- [ ] **Opening buildings early** is switched off in the original: the
+      "Level N" tag on a shop card does nothing. Ours sells it for cash.
+      ([progress](docs/original/rules/progress.md#differences)) S
+- [ ] **Reaching level 35** stops goals at once and places a free Wizardry
+      Academy near the middle; ours keeps goals until the next load and
+      gives no academy. ([progress](docs/original/rules/progress.md#differences)) S
+- [ ] **Goals count doings only while a goal of that kind is open;** ours
+      from the page's opening, so goals can finish and pay sooner. Goal 18
+      (units near the town hall) is a 3-tile circle, nearest 20, not ours
+      7 by 7; the working-time goals keep the last time chosen, not the
+      longest. ([progress](docs/original/rules/progress.md#differences)) M
+- [ ] **Moving a building** lets everybody inside out and resets its
+      working time, even if the move is cancelled. ([town](docs/original/rules/town.md#differences)) S
+- [ ] **A unit placed from storage** obeys its kind's limit, as training
+      does. ([town](docs/original/rules/town.md#differences)) S
+- [ ] **Where new units come out** (trained, let out, from the nursery):
+      the first free ring, on the tile nearest the far corner. ([town](docs/original/rules/town.md#differences)) S
+- [ ] **What grows back** grows in the wild ring and on land not yet
+      bought, never aimed at the player's land; and after the camp is put
+      up, not before. ([town](docs/original/rules/town.md#differences)) S
+- [ ] **The free villager** comes when none is on the map or working
+      inside farms, mills, mines, trees or rocks (refuges don't count).
+      ([town](docs/original/rules/town.md#differences)) S
+- [ ] **The Nursery** only takes an animal of the kind already inside.
+      ([town](docs/original/rules/town.md#differences)) S
+- [ ] **The free harbour and zeppelin tower** aren't given when one waits
+      in storage or the gift box; one still waiting for its crew gets 20
+      helpers. ([town](docs/original/rules/town.md#differences)) S
+- [ ] **Social buildings get a free helper** as the town opens, when their
+      list is empty and they have 3 or more places (or one helper and 7 or
+      more). ([neighbours](docs/original/rules/neighbours.md#differences)) S
+- [ ] **Collection pieces** now and then drop from trees and rocks in a
+      human town (`add_collectable`). ([no button](docs/original/no-button.md)) M
+- Kept as decided before (DECISIONS.md, "the rules the original plays
+  by"): a farm collected without enough wood is kept, where the original
+  destroyed it; the worker bonus counts the workers inside now, where the
+  original kept the count from the first harvest until a reload.
+
 ## Already the same
 
 Levels and their prizes; harvests, working times and their sizes; hurry;
-training and its prices; room for people; land and its prices; opening
-buildings early; the bank; goal checking and paying; the daily bonus,
-Monday and welcome-back chests' prizes; helping neighbours and the donkey
-carts; Arthur. These were checked against the original line by line.
+training and its prices; room for people; land and its prices; the bank;
+goal checking and paying; the daily bonus, Monday and welcome-back
+chests' prizes; helping neighbours and the donkey carts; Arthur. These
+were checked against the original line by line. *Corrected 15 October
+2026:* this list also had "opening buildings early"; the map of the
+original found it is switched off in the original (above). Goal checking
+has differences too (above).
 
 ## Beta 2: battles and quests
 
@@ -211,7 +259,7 @@ in [DECISIONS.md](DECISIONS.md).
       in town. Units in a refuge sail with the army in the original. M
 - [ ] **Domes:** the Protection Dome halves hits within 9 tiles; the Tower
       Enhancer doubles nearby towers' rate (shop, levels 42 and 47). M
-- [ ] **The Wall Door** can be opened and shut by its owner in the
+- [x] **The Wall Door** can be opened and shut by its owner in the
       original. M
 - [ ] **Squads:** units sent together re-form round a walking target, and
       archers step back from closer than 3 tiles. M

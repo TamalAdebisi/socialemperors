@@ -94,6 +94,10 @@ save. Set `PYTHON` to a Python that has `requirements.txt` installed.
   `tools/art/export_ui.py` into `client/src/ui/art/`.
 - **Docs:** README.md (index), ROADMAP.md, CLIENT.md, DEPLOY.md,
   MULTIPLAYER.md, FLASH.md, DECISIONS.md.
+- **The map of the original:** `docs/original/`, what every part of the
+  Flash client does and how far the new client has got. Look a feature up
+  there before building it (its rule book, and the rules with no button),
+  and update its status when it's built.
 
 ## Style
 
