@@ -7,7 +7,8 @@
 import assert from "node:assert/strict";
 
 // A field of 2 x 2 tiles ending at (55, 56), in the open in the middle of the screen.
-const FARM = [10, 55, 56], VILLAGER = 500, SPOT = [56, 58], AWAY = [46, 57];
+// The villager waits out of the picture, so its looking about doesn't count as the field moving.
+const FARM = [10, 55, 56], VILLAGER = 500, SPOT = [52, 58], AWAY = [46, 57];
 
 export default async function looks({ newPlayer }) {
   const player = await newPlayer();

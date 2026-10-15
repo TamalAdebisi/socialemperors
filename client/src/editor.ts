@@ -1246,6 +1246,19 @@ export class TownEditor {
    * are in the classic game for now, on this same empire; or they can be
    * skipped, as if finished. Asked again on each visit until answered.
    */
+  /**
+   * The server's message for the player as the town opens (a neighbour helped,
+   * a gift came: a line each), as the Flash client shows it: once, until OK,
+   * which tells the server it's read (`clear_message`). Then `next`.
+   */
+  showServerMessage(message: string, next: () => void): void {
+    this.bar.prompt(message, [{ label: "OK", run: () => {
+      this.bar.hide();
+      this.send([{ cmd: "clear_message", args: [] }]);
+      next();
+    } }]);
+  }
+
   offerLessons(classicUrl: string): void {
     this.bar.prompt("Arthur teaches the first steps: a villager, a farm, a house, a knight and a first battle. "
       + "His lessons are in the classic game for now.", [
