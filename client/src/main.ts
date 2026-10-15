@@ -225,10 +225,19 @@ async function start(): Promise<void> {
     afterDrawing = () => {
       defend();
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
-      if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
-        editor.offerLessons(settings.classicUrl);
+      const then = () => {
+        if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
+          editor.offerLessons(settings.classicUrl);
+        } else {
+          editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+        }
+      };
+      // Before them, the server's message, if it has one (neighbours' help, gifts).
+      const message = String((info.privateState as Record<string, unknown> | undefined)?.message ?? "").trim();
+      if (message) {
+        editor.showServerMessage(message, then);
       } else {
-        editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+        then();
       }
     };
     const [cashForGold, goldForCash] = [Number(config.globals?.EXCHANGE_CASH) || 5, Number(config.globals?.EXCHANGE_GOLD) || 2500];

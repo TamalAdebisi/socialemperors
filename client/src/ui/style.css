@@ -626,6 +626,8 @@ body {
 .actions.asking .actions-name {
   font-size: 15px;
   font-weight: 800;
+  /* A message from the server can have several lines (two neighbours helped). */
+  white-space: pre-line;
 }
 
 /* The info panel's buttons: the game's tile, its name under it. */
