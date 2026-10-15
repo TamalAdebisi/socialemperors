@@ -33,6 +33,10 @@ export const ICONS = {
   "music-off": new URL("./art/music-off.webp", import.meta.url).href,
   "sound-on": new URL("./art/sound-on.webp", import.meta.url).href,
   "sound-off": new URL("./art/sound-off.webp", import.meta.url).href,
+  // What a selected unit can do to what's under it: chop, mine, go inside.
+  axe: new URL("./art/axe.webp", import.meta.url).href,
+  pick: new URL("./art/pick.webp", import.meta.url).href,
+  inside: new URL("./art/inside.webp", import.meta.url).href,
   gifts: new URL("./art/gifts.webp", import.meta.url).href,
   // The selected thing's buttons, as on its info panel.
   move: new URL("./art/move.webp", import.meta.url).href,
@@ -66,3 +70,13 @@ export function iconImage(name: IconName, label = ""): HTMLImageElement {
   image.draggable = false;
   return image;
 }
+
+/**
+ * The Flash client's mouse pointers for a selected unit, as CSS cursors: the
+ * picture, then its hot spot (the pixel that points) from the top left.
+ */
+export const CURSORS = {
+  axe: `url("${new URL("./art/cursor-axe.png", import.meta.url).href}") 4 4, pointer`,
+  pick: `url("${new URL("./art/cursor-pick.png", import.meta.url).href}") 4 4, pointer`,
+  inside: `url("${new URL("./art/cursor-inside.png", import.meta.url).href}") 1 12, pointer`,
+};

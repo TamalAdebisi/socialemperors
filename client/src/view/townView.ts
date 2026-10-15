@@ -193,6 +193,11 @@ export class TownView {
     this.markers.set(placed, sign, this.topOf(placed));
   }
 
+  /** One of the game's pictures popping up over a thing for a moment. */
+  pop(placed: PlacedItem, url: string): void {
+    this.markers.pop(this.topOf(placed) ?? buildingPoint(placed.tx, placed.ty), url);
+  }
+
   /** Numbers rising from a thing: what collecting it gave. */
   rise(placed: PlacedItem, lines: { text: string; colour: number }[]): void {
     this.markers.rise(this.topOf(placed) ?? buildingPoint(placed.tx, placed.ty), lines);

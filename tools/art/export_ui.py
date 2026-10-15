@@ -6,8 +6,8 @@ Flash file, for the windows and bars in HTML (CLIENT.md, "The look").
 
 draws each picture listed below with tools/art/RenderSymbols.java at three
 times its size in the game (sharp on phones), trims the empty space around
-it and writes client/src/ui/art/<name>.webp, where the client's build finds
-it. Run it again after changing the list. Needs what tools/ffdec.sh needs (a
+it and writes client/src/ui/art/<name>.webp (the mouse pointers as small
+PNGs), where the client's build finds it. Run it again after changing the list. Needs what tools/ffdec.sh needs (a
 Java JDK) and Pillow.
 
 One picture isn't the game's: food is a carrot of our own (food.svg, drawn
@@ -88,7 +88,22 @@ PICTURES = {
     "music-off": ("GuiMC/options_panel/bmo", 0),
     "sound-on": ("GuiMC/options_panel/bs", 0),
     "sound-off": ("GuiMC/options_panel/bso", 0),
+    # The pointers' pictures (CURSORS below), full size: on phones, which have
+    # no pointer, they show briefly over what a unit was sent to work.
+    "axe": ("CursorMC", 11),
+    "pick": ("CursorMC", 4),
+    "inside": ("CursorMC", 10),
 }
+
+# The mouse pointers a selected unit shows over what it can work or go into
+# (the game's CursorMC, one frame each). Pointers must be small pictures, so
+# these are PNGs at most 32 px across: client/src/ui/art/<name>.png.
+CURSORS = {
+    "cursor-axe": ("CursorMC", 11),     # a tree to chop
+    "cursor-pick": ("CursorMC", 4),     # a rock or gold to mine
+    "cursor-inside": ("CursorMC", 10),  # a building to go into
+}
+CURSOR_SIZE = 32
 
 
 def ffdec_classpath():
@@ -117,7 +132,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     folder = tempfile.mkdtemp(prefix="se-ui-")
     try:
-        render(sorted({path for path, *_ in PICTURES.values()}), folder)
+        render(sorted({path for path, *_ in [*PICTURES.values(), *CURSORS.values()]}), folder)
         for name, (path, frame, *size) in PICTURES.items():
             drawn = os.path.join(folder, f"{path.replace('/', '.')}-{frame}.png")
             with Image.open(drawn) as image:
@@ -125,6 +140,13 @@ def main():
             longest = size[0] if size else LONGEST
             picture.thumbnail((longest, longest), Image.LANCZOS)
             picture.save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)
+            print(f"{name}: {picture.width}x{picture.height}")
+        for name, (path, frame) in CURSORS.items():
+            drawn = os.path.join(folder, f"{path.replace('/', '.')}-{frame}.png")
+            with Image.open(drawn) as image:
+                picture = trimmed(image.convert("RGBA"))
+            picture.thumbnail((CURSOR_SIZE, CURSOR_SIZE), Image.LANCZOS)
+            picture.save(os.path.join(OUT, f"{name}.png"), optimize=True)
             print(f"{name}: {picture.width}x{picture.height}")
     finally:
         shutil.rmtree(folder, ignore_errors=True)

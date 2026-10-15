@@ -112,6 +112,16 @@ And where it wasn't a bug, the original stands:
   items to one hour, which silently lost the biggest ones). An item stopped
   by the limit now says so in the log.
 
+## 15 October 2026: the selected unit's pointers
+
+- **On a computer, the original's pointers:** with a unit selected, the
+  mouse pointer becomes the game's axe over a tree, pickaxe over a rock,
+  and red arrow over a building it can go into, as in the Flash client.
+- **On a phone (your pick):** there's no pointer, so the same picture pops
+  up for a second over the tree, rock or building the unit was sent to.
+  The other idea, an axe over every tree as soon as a villager is
+  selected, would clutter a big town.
+
 ## 14 October 2026: Beta 1, launch preparation
 
 - **Arthur's lessons are offered, not forced:** a new player in the new
