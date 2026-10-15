@@ -3,15 +3,21 @@
 // four corners of the map (rules/scripted-camps.json): keys guarded by
 // enemy units, a chest, sometimes a wave or a boss. Once a key's guards are
 // beaten it lights up; one tap takes it. When the story says, the chest
-// lights up; one tap opens it: the level's reward and the next camp.
+// lights up; one tap opens it: the level's reward, the camp's prizes and
+// the next camp.
 //
-// The old engine (camps 7 and 13) saves nothing of its own: how far a camp
-// has got is read from the pieces still standing, as in the original.
+// Two engines, as in the original. The old one (camps 7 and 13) saves
+// nothing of its own: how far a camp has got is read from the pieces still
+// standing. The new one (14 to 29) saves its progress with `set_quest_var`
+// (started, the keys taken, the bosses beaten), and each time the town
+// opens it clears the corners and puts back what isn't done: the guards
+// of the keys left come back whole, and so does the boss.
 //
 // Commands, as the Flash client's: a free `buy` for each piece, `sell` ...
 // "CLEAN_<camp>" for what the border loses, `collect_new` for a key, `sell`
 // ... "ATRZO" for its scenery and "COLQS" for the key itself, `sell` ...
-// "TREAS" and `collect_treasure` for the chest.
+// "TREAS" and `collect_treasure` for the chest, `store_add_items` for a
+// prize that goes to storage.
 
 import type { CampParts, Camps } from "./homeCamps.ts";
 import { borderTrolls, campReward, nextCamp, onBorder } from "./rules/camps.ts";
@@ -19,14 +25,32 @@ import {
   SCRIPTED_TIPS, guardsBox, oldCampState, scriptedCamp, tilePieces, type ScriptedCamp, type ScriptedTile,
 } from "./rules/scripted.ts";
 import type { PlacedItem } from "./rules/town.ts";
+import { freeTileNear } from "./rules/work.ts";
 import { notice } from "./ui/notice.ts";
 
-/** A key and what goes with it: its guards (captured when the camp is read), its scenery. */
+const TOWN_HALL = 135;
+
+/** A key and what goes with it: its tile, its guards (captured when the camp is read), its scenery. */
 interface Group {
+  tile: ScriptedTile;
   key: PlacedItem;
   guards: PlacedItem[];
   scenery: PlacedItem[];
   lit: boolean;
+  /** The new engine never lights a key that had no guards when it was read. */
+  never: boolean;
+}
+
+/** The new engine's saved progress. */
+interface Progress {
+  spawned: boolean;
+  activators: string[];
+  boss: number[];
+}
+
+/** Whether a tile is in one of the map's corners, where the scripted camps stand. */
+export function inCorner(x: number, y: number): boolean {
+  return onBorder(x, y) && (x < 20 || x >= 80) && (y < 20 || y >= 80);
 }
 
 export class ScriptedCamps {
@@ -39,9 +63,13 @@ export class ScriptedCamps {
   private groups: Group[] = [];
   private chest: PlacedItem | null = null;
   private chestLit = false;
-  /** The wave (or bosses) that must fall before the chest opens. */
+  /** The wave or the bosses that must fall first; a boss's place among the boss tiles' bosses. */
   private enders: PlacedItem[] = [];
   private endersDue = false;
+  private bossIndex = new Map<PlacedItem, number>();
+  private progress: Progress = { spawned: false, activators: [], boss: [] };
+  /** Where a camp with no chest gives its prizes: the last key taken (or the camp's own spot). */
+  private prizeSpot: { x: number; y: number } | null = null;
 
   constructor(parts: CampParts, camps: Camps, random: () => number) {
     this.parts = parts;
@@ -57,30 +85,109 @@ export class ScriptedCamps {
     }
     this.id = id;
     this.camp = camp;
-    const town = this.parts.town;
-    const chests = town.items.filter((p) => p.item.id === camp.chest).length;
-    const keys = town.items.filter((p) => p.item.id === camp.activator).length;
-    const total = camp.tiles.filter((t) => t.pieces.some((p) => p[4] === "key")).length;
-    const state = oldCampState(chests, keys, total);
-    if (state === "none" || state === "error") {
-      // Nothing yet (or a muddle): the camp is put up afresh, with its window.
-      this.spawn(id, camp);
+    if (camp.engine === "new") {
+      this.arriveNew(id, camp);
+    } else {
+      this.arriveOld(id, camp);
     }
-    this.readBack(camp);
     this.watch();
   }
 
-  /** The border cleared, every tile put down, trolls about the border, and the camp's window. */
-  private spawn(id: number, camp: ScriptedCamp): void {
-    const { town } = this.parts;
-    this.camps.clearBorder(id);
-    for (const tile of camp.tiles) {
-      this.place(tile);
+  private keyTiles(camp: ScriptedCamp): ScriptedTile[] {
+    return camp.tiles.filter((t) => t.pieces.some((p) => p[4] === "key"));
+  }
+
+  // --- The old engine ---------------------------------------------------
+
+  private arriveOld(id: number, camp: ScriptedCamp): void {
+    const town = this.parts.town;
+    const chests = town.items.filter((p) => p.item.id === camp.chest).length;
+    const keys = town.items.filter((p) => p.item.id === camp.activator).length;
+    const state = oldCampState(chests, keys, this.keyTiles(camp).length);
+    if (state === "none" || state === "error") {
+      // Nothing yet (or a muddle): the camp is put up afresh, with its window.
+      this.camps.clearBorder(id);
+      for (const tile of camp.tiles) {
+        this.place(tile);
+      }
+      this.borderTrolls();
+      this.window(id, camp);
     }
+    this.readBack(camp);
+    if (this.groups.length === 0 && this.chest) {
+      this.keysDone(camp, false);
+    }
+  }
+
+  // --- The new engine ---------------------------------------------------
+
+  private arriveNew(id: number, camp: ScriptedCamp): void {
+    const { town, commands } = this.parts;
+    const vars = this.parts.camp.vars ?? {};
+    const fresh = vars.spawned !== true;
+    this.progress = {
+      spawned: true,
+      activators: fresh ? [] : (Array.isArray(vars.activators) ? vars.activators.map(String) : []),
+      boss: fresh ? [] : (Array.isArray(vars.boss) ? vars.boss.map(Number) : []),
+    };
+    if (fresh) {
+      this.camps.clearBorder(id);
+      commands.add("set_quest_var", town.id, "spawned", "true");
+      this.parts.camp.vars = { spawned: true };
+      this.helpers(camp);
+    }
+    // Every time: the corners cleared, and what isn't done put back.
+    this.camps.clearBorder(id, inCorner);
+    for (const tile of camp.tiles) {
+      if (!tile.key || !this.progress.activators.includes(tile.key)) {
+        this.place(tile);
+      }
+    }
+    const keys = this.keyTiles(camp).length;
+    if (fresh) {
+      this.borderTrolls();
+      this.window(id, camp);
+    }
+    this.readBack(camp);
+    if (this.progress.activators.length > keys) {
+      // More keys saved than the camp has: it's over.
+      this.finish(camp, null);
+      return;
+    }
+    if (this.progress.activators.length >= keys) {
+      this.keysDone(camp, true);
+    }
+  }
+
+  /** The camp's helpers, the player's, by the town hall (DECISIONS.md, "Scripted camps"). */
+  private helpers(camp: ScriptedCamp): void {
+    const { town } = this.parts;
+    const hall = town.items.find((p) => p.item.subcategory === TOWN_HALL && this.camps.sideOf(p) === "self");
+    for (const id of camp.helpers) {
+      const tile = hall ? freeTileNear(town, hall) : null;
+      if (tile) {
+        this.camps.put({ id, x: tile.x, y: tile.y, unit: true });
+      }
+    }
+  }
+
+  private save(key: "activators" | "boss", value: unknown): void {
+    const { town, commands } = this.parts;
+    commands.add("set_quest_var", town.id, key, JSON.stringify(value));
+    this.parts.camp.vars = { ...(this.parts.camp.vars ?? {}), [key]: value };
+  }
+
+  // --- Both -------------------------------------------------------------
+
+  private borderTrolls(): void {
+    const { town } = this.parts;
     for (const troll of borderTrolls(this.camps.enemiesLeft(), town.level, town.race, this.random, this.camps.ground())) {
       this.camps.put(troll);
     }
-    const picture = camp.pictures[town.race === "t" ? 1 : 0] ?? camp.pictures[0];
+  }
+
+  private window(id: number, camp: ScriptedCamp): void {
+    const picture = camp.pictures[this.parts.town.race === "t" ? 1 : 0] ?? camp.pictures[0];
     notice(this.camps.title(id, camp.popup[0]), this.parts.line(camp.popup[1]), picture ? this.parts.pictureUrl(picture) : null);
   }
 
@@ -97,7 +204,7 @@ export class ScriptedCamps {
     return placed;
   }
 
-  /** Each key with the enemy units standing in its box now (they must all fall), its scenery; the chest; the enders. */
+  /** Each key with the enemy units standing in its box now (they must all fall), its scenery; the chest. */
   private readBack(camp: ScriptedCamp): void {
     const town = this.parts.town;
     const at = (id: number, x: number, y: number) => town.items.find((p) => p.item.id === id && p.tx === x && p.ty === y) ?? null;
@@ -111,35 +218,69 @@ export class ScriptedCamps {
       const inBox = guardsBox({ x: key.tx, y: key.ty });
       const guards = town.items.filter((p) => p.item.isUnit && this.camps.sideOf(p) === "enemy" && inBox(p.tx, p.ty));
       const scenery = tile.pieces.filter((p) => p[4] === "scenery").map(([id, x, y]) => at(id, x, y)).filter((p): p is PlacedItem => p !== null);
-      this.groups.push({ key, guards, scenery, lit: false });
+      this.groups.push({ tile, key, guards, scenery, lit: false, never: camp.engine === "new" && guards.length === 0 });
     }
-    this.chest = town.items.find((p) => p.item.id === camp.chest) ?? null;
+    this.chest = camp.chest === null ? null : town.items.find((p) => p.item.id === camp.chest) ?? null;
     this.chestLit = false;
     this.enders = [];
     this.endersDue = false;
-    if (this.groups.length === 0 && this.chest) {
-      this.allKeysTaken(camp, false);
+    this.bossIndex.clear();
+  }
+
+  /** Every key taken: the wave or the boss comes, or the chest lights up (or, with no chest, the camp ends). */
+  private keysDone(camp: ScriptedCamp, live: boolean): void {
+    if (!camp.bossStage) {
+      if (camp.chest === null) {
+        this.finish(camp, null);
+      } else {
+        this.chestLit = true;
+      }
+      return;
+    }
+    const town = this.parts.town;
+    if (live) {
+      // The boss tiles put down: in the new engine, all but the bosses already beaten.
+      let index = 0;
+      for (const tile of camp.bossTiles) {
+        const fresh: ScriptedTile = { ...tile, pieces: tile.pieces.filter(([id]) => {
+          const boss = this.isBossId(id);
+          const keep = !boss || !this.progress.boss.includes(index);
+          if (boss) {
+            index++;
+          }
+          return keep;
+        }) };
+        this.place(fresh);
+      }
+    }
+    // The bosses: the units standing at the boss tiles of the undead's or the bosses' kind.
+    const spots = camp.bossTiles.flatMap((t) => t.pieces.filter(([id]) => this.isBossId(id)).map(([, x, y]) => `${x},${y}`));
+    this.enders = [];
+    spots.forEach((spot, i) => {
+      const unit = town.items.find((p) => p.item.isUnit && `${p.tx},${p.ty}` === spot && (p.item.race === "e" || p.item.subcategory === 84 || p.item.subcategory === 85));
+      if (unit) {
+        this.enders.push(unit);
+        this.bossIndex.set(unit, i);
+      }
+    });
+    this.endersDue = true;
+    if (this.enders.length === 0) {
+      this.bossesDone(camp);
     }
   }
 
-  /** Every key taken: the wave comes (camp 13), or the chest lights up. */
-  private allKeysTaken(camp: ScriptedCamp, live: boolean): void {
-    const town = this.parts.town;
-    if (!camp.bossStage) {
-      this.chestLit = true;
-      return;
-    }
-    if (live) {
-      for (const tile of camp.bossTiles) {
-        this.enders.push(...this.place(tile));
-      }
+  private isBossId(id: number): boolean {
+    const item = this.parts.items.get(id);
+    return Boolean(item?.isUnit && (item.race === "e" || item.subcategory === 84 || item.subcategory === 85));
+  }
+
+  private bossesDone(camp: ScriptedCamp): void {
+    this.endersDue = false;
+    if (camp.chest === null) {
+      this.finish(camp, null);
     } else {
-      // Read back: the units standing where the wave came, of the undead or bosses' kind.
-      const spots = new Set(camp.bossTiles.flatMap((t) => t.pieces.map(([, x, y]) => `${x},${y}`)));
-      this.enders = town.items.filter((p) => p.item.isUnit && spots.has(`${p.tx},${p.ty}`)
-        && (p.item.race === "e" || p.item.subcategory === 85));
+      this.chestLit = true;
     }
-    this.endersDue = true;
   }
 
   /** Every second, and after a fight: keys whose guards are all gone light up; the chest when its turn comes. */
@@ -150,16 +291,25 @@ export class ScriptedCamps {
     }
     const standing = new Set(this.parts.town.items);
     for (const group of this.groups) {
-      if (!group.lit && group.guards.every((g) => !standing.has(g))) {
+      if (!group.lit && !group.never && group.guards.every((g) => !standing.has(g))) {
         group.lit = true;
       }
       this.parts.view.sign(group.key, group.lit ? { kind: "ready", resource: "gold" } : null);
     }
-    if (this.endersDue && this.enders.every((u) => !standing.has(u))) {
-      this.endersDue = false;
-      this.chestLit = true;
+    if (this.endersDue) {
+      const fallen = this.enders.filter((u) => !standing.has(u));
+      if (camp.engine === "new") {
+        const beaten = fallen.map((u) => this.bossIndex.get(u)!).filter((i) => !this.progress.boss.includes(i));
+        if (beaten.length) {
+          this.progress.boss.push(...beaten);
+          this.save("boss", this.progress.boss);
+        }
+      }
+      if (fallen.length === this.enders.length) {
+        this.bossesDone(camp);
+      }
     }
-    if (this.chest) {
+    if (this.chest && this.camp) {
       this.parts.view.sign(this.chest, this.chestLit ? { kind: "ready", resource: "gold" } : null);
     }
   }
@@ -197,7 +347,7 @@ export class ScriptedCamps {
     this.parts.editor.tell(`${tip ? `${this.parts.line(tip)} ` : ""}${text}`);
   }
 
-  /** A lit key taken: what it pays, its scenery and itself gone; the last brings the wave or lights the chest. */
+  /** A lit key taken: what it pays, its scenery and itself gone; the last brings what comes next. */
   private take(camp: ScriptedCamp, group: Group): void {
     const { town, commands, view, editor } = this.parts;
     const key = group.key;
@@ -214,6 +364,12 @@ export class ScriptedCamps {
         view.remove(piece);
       }
     }
+    this.prizeSpot = { x: key.tx, y: key.ty };
+    if (camp.engine === "new" && group.tile.key) {
+      // Saved before anything that might end the camp (DECISIONS.md, "Scripted camps").
+      this.progress.activators.push(group.tile.key);
+      this.save("activators", this.progress.activators);
+    }
     commands.add("sell", key.tx, key.ty, key.item.id, town.id, 1, "COLQS");
     town.items.splice(town.items.indexOf(key), 1);
     view.remove(key);
@@ -223,19 +379,25 @@ export class ScriptedCamps {
       editor.tell(`+${key.item.collectXp} XP`);
     }
     if (this.groups.length === 0) {
-      this.allKeysTaken(camp, true);
+      this.keysDone(camp, true);
     }
     void commands.flush();
     this.watch();
   }
 
-  /** The chest opened: the level's reward, the end window, the next camp in 4 hours. */
+  /** The chest opened: it goes, and the camp is done. */
   private open(camp: ScriptedCamp, chest: PlacedItem): void {
-    const { town, commands, view, editor, clock } = this.parts;
-    const id = this.id!;
+    const { town, commands, view } = this.parts;
     commands.add("sell", chest.tx, chest.ty, chest.item.id, town.id, 0, "TREAS");
     town.items.splice(town.items.indexOf(chest), 1);
     view.remove(chest);
+    this.finish(camp, { x: chest.tx, y: chest.ty });
+  }
+
+  /** The camp done: the level's reward, the end window, the camp's prizes, the next camp in 4 hours. */
+  private finish(camp: ScriptedCamp, at: { x: number; y: number } | null): void {
+    const { town, commands, editor, clock } = this.parts;
+    const id = this.id!;
     const prize = campReward(town.level);
     town.gold += prize.gold;
     town.xp += prize.xp;
@@ -243,9 +405,13 @@ export class ScriptedCamps {
     commands.add("collect_treasure", prize.gold, prize.xp, next, 0, 0, town.id);
     this.parts.camp.id = next;
     this.parts.camp.last = clock();
+    this.parts.camp.vars = {};
+    const spot = at ?? (camp.treasurePosOverride ? { x: camp.treasurePosOverride[0], y: camp.treasurePosOverride[1] } : this.prizeSpot);
+    this.prizes(camp, camp.rewardsGoToStorage ? null : spot);
     this.camp = null;
     this.id = null;
     this.chest = null;
+    this.groups = [];
     void commands.flush();
     editor.gained();
     editor.tell(`+${prize.gold} gold, +${prize.xp} XP`);
@@ -253,7 +419,29 @@ export class ScriptedCamps {
       () => notice(this.parts.line(531), this.parts.line(532), this.parts.pictureUrl(town.race === "t" ? "alert_troll_camp.jpg" : "alert_human_camp.jpg")));
   }
 
-  /** Whether a thing is part of the camp being played (for the browser tests). */
+  /** The camp's prizes: units beside the spot, the player's; buildings (or anything with no spot) to storage. */
+  private prizes(camp: ScriptedCamp, spot: { x: number; y: number } | null): void {
+    const { town, items, commands } = this.parts;
+    const ground = this.camps.ground();
+    for (const id of camp.prizes) {
+      const item = items.get(id);
+      if (!item) {
+        continue;
+      }
+      if (item.isUnit && spot) {
+        const tile = nearestFree(ground, spot.x - 1, spot.y - 1);
+        if (tile) {
+          ground.take(tile.x, tile.y, 1, 1);
+          this.camps.put({ id, x: tile.x, y: tile.y, unit: true });
+          continue;
+        }
+      }
+      commands.add("store_add_items", JSON.stringify([id]));
+      town.store.set(id, (town.store.get(id) ?? 0) + 1);
+    }
+  }
+
+  /** The camp being played (for the browser tests). */
   get playing(): number | null {
     return this.id;
   }
@@ -263,12 +451,28 @@ export class ScriptedCamps {
     return this.groups.map((g) => ({ key: g.key, lit: g.lit, guards: g.guards.filter((u) => this.parts.town.items.includes(u)).length }));
   }
 
+  /** The bosses (or the wave) still to beat (for the browser tests). */
+  get bosses(): PlacedItem[] {
+    return this.endersDue ? this.enders.filter((u) => this.parts.town.items.includes(u)) : [];
+  }
+
   get chestOpen(): boolean {
     return this.chestLit;
   }
 }
 
-/** Whether a tile is in one of the map's corners, where the scripted camps stand. */
-export function inCorner(x: number, y: number): boolean {
-  return onBorder(x, y) && (x < 20 || x >= 80) && (y < 20 || y >= 80);
+/** The free tile nearest a tile, ring by ring. */
+function nearestFree(ground: { free: (x: number, y: number) => boolean }, x: number, y: number): { x: number; y: number } | null {
+  for (let ring = 0; ring < 10; ring++) {
+    for (let dx = -ring; dx <= ring; dx++) {
+      for (let dy = -ring; dy <= ring; dy++) {
+        const tx = x + dx;
+        const ty = y + dy;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) === ring && tx >= 0 && ty >= 0 && tx < 100 && ty < 100 && ground.free(tx, ty)) {
+          return { x: tx, y: ty };
+        }
+      }
+    }
+  }
+  return null;
 }

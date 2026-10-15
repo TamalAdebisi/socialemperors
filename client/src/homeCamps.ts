@@ -36,8 +36,8 @@ export interface CampParts {
   editor: TownEditor;
   /** The game's clock (the server's time, seconds). */
   clock: () => number;
-  /** The save's camp: which comes next, and when the last chest was opened. */
-  camp: { id: number; last: number };
+  /** The save's camp: which comes next, when the last chest was opened, and a scripted camp's saved progress. */
+  camp: { id: number; last: number; vars?: Record<string, unknown> };
   /** The game's words by localisation id, and where the windows' pictures are. */
   line: (id: number) => string;
   pictureUrl: (name: string) => string;

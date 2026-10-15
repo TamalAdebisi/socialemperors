@@ -62,7 +62,7 @@ export interface DefenceParts {
   editor: TownEditor;
   /** The game's clock (the server's time, seconds), and the save's troll camp (homeCamps.ts). */
   clock: () => number;
-  camp: { id: number; last: number };
+  camp: { id: number; last: number; vars?: Record<string, unknown> };
   random?: () => number;
 }
 
