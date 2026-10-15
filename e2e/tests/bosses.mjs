@@ -54,7 +54,7 @@ export default async function bosses({ newPlayer }) {
   const at = await player.page.evaluate(() => window.seQuest.screenOf(window.seQuest.quest.boss.keys[0]));
   await player.click(at);
   await player.wait(500);
-  assert.match(await player.page.locator(".quest-hud").textContent(), /3 keys to collect/);
+  await hud(player, /3 keys to collect/);
   const one = await state(player);
   assert.equal(one.penguins, 3, "three penguins join");
   assert.equal(one.gateStill, 1, "the gate's picture steps on");
@@ -66,7 +66,7 @@ export default async function bosses({ newPlayer }) {
     for (const key of [...quest.boss.keys]) if (key) quest.collect(key);
   });
   await player.wait(500);
-  assert.match(await player.page.locator(".quest-hud").textContent(), /Beat the boss!/);
+  await hud(player, /Beat the boss!/);
   assert.ok((await state(player)).gateWalkable, "the gate is gone");
 
   // The yeti falls: won.
@@ -82,6 +82,12 @@ export default async function bosses({ newPlayer }) {
   assert.equal(info.privateState.questsRank[ARCTIC], 1, "one star won");
   // The server keeps gifts counted by item id.
   assert.ok(Number(info.privateState.gifts?.[PRIZE] ?? 0) >= 1, "the island's prize: a Powerful Knight");
+}
+
+/** The counter says it (it's redrawn on the next screen frame, which a busy computer can be slow to draw). */
+async function hud(player, text) {
+  await player.page.waitForFunction((source) => new RegExp(source).test(document.querySelector(".quest-hud")?.textContent ?? ""),
+    text.source, { timeout: 10_000 });
 }
 
 /** The gate, the yeti and the player's side, as the battle has them. */

@@ -15,6 +15,7 @@ import {
   BUILT_HERE, borderTrolls, campDue, campOfChest, campReward, campTexts, correctCamp, freedUnits, isChest, nextCamp, onBorder,
   planCamp, sideAtHome, type CampPiece, type Ground,
 } from "./rules/camps.ts";
+import type { Battle, Fighter } from "./rules/battle.ts";
 import type { ItemInfo } from "./rules/config.ts";
 import { takenTiles } from "./rules/editing.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
@@ -43,6 +44,9 @@ export interface CampParts {
   pictureUrl: (name: string) => string;
   /** Units sent at an enemy: the town becomes a battlefield. */
   engage: (units: PlacedItem[], target: PlacedItem) => void;
+  /** During a fight: the fighter standing for a thing of the town, and the battle. */
+  fighterOf?: (placed: PlacedItem) => Fighter | null;
+  battle?: () => Battle | null;
   random?: () => number;
 }
 
@@ -63,7 +67,7 @@ export class Camps {
 
   /** Whose a thing in town is (the side the original gives it on load). */
   sideOf(placed: PlacedItem): "self" | "enemy" | "nobody" {
-    return sideAtHome(this.parts.town.race, placed.item, placed.tx, placed.ty);
+    return placed.nobodys ? "nobody" : sideAtHome(this.parts.town.race, placed.item, placed.tx, placed.ty);
   }
 
   /** The enemy units left anywhere in town. */

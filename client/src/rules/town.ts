@@ -86,6 +86,12 @@ export interface PlacedItem {
   ruined?: boolean;
   /** An animal in the wild, nobody's until one of the player's units comes near (rules/animals.ts). Not saved. */
   wild?: boolean;
+  /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
+  steps?: number;
+  /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */
+  nobodys?: boolean;
+  /** A scripted camp's boss's own rules in a fight (rules/battle.ts): it gets away, can't be hurt yet, is drawn bigger. Not saved. */
+  boss?: { flee?: { below: number; line: number | null }; invulnerable?: boolean; scale?: number };
 }
 
 export interface Town {
