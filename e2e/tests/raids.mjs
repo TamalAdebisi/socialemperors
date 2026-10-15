@@ -27,6 +27,11 @@ export default async function raids({ newPlayer }) {
   assert.match(await player.bar(), /under attack/, "building waits");
   const room = async () => Number((await player.page.locator(".hud").textContent()).match(/\d+\/(\d+)/)[1]);
   const roomBefore = await room();
+  // The villager must live to repair later: bandits go for units too.
+  await player.page.evaluate(() => {
+    const villager = window.seHome.fighting.battle.fighters.find((f) => f.item.id === 500);
+    villager.life = villager.maxLife = 100000;
+  });
   // A house burnt out (as if the bandits got there first).
   await player.page.evaluate(([x, y]) => {
     const fight = window.seHome.fighting;
