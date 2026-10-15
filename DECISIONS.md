@@ -84,6 +84,14 @@ them can be found and reversed. The big, agreed decisions are in
   that chased the player's units stay where they stopped until the next
   visit, when they're back where the save has them (as in the original).
 
+## 15 October 2026: what farms and ranches show
+
+- **Only buildings laid out like a farm or a ranch** pick their picture by
+  what's going on. The original does it for every ranch, but the Training
+  Stables' picture is a long animation of its own (318 pictures), and
+  stopping it on one would show nonsense; it plays as it is.
+- **A farm with nobody named inside** (an old save) shows the man at work.
+
 ## 15 October 2026: wild animals
 
 - **Caught animals walk in from the wild.** The original's paths go

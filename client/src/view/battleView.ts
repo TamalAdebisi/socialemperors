@@ -431,7 +431,7 @@ export class BattleView {
     } else if (fighter.isUnit) {
       drawn.slot.addChild(unitSprite(art, fighter.facing, pose, fighter.at, pose === "MUERTE"));
     } else {
-      const sprite = buildingSprite(art, asPlaced(fighter), this.skin, fighter.still);
+      const sprite = buildingSprite(art, asPlaced(fighter), this.skin, false, fighter.still);
       drawn.slot.addChild(sprite);
       // Losing life: the game's flames over it.
       const stage = fireStage(fighter.life, fighter.maxLife);

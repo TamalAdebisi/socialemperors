@@ -25,6 +25,7 @@ import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
+import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
 
@@ -56,6 +57,11 @@ export class TownView {
   private readonly outlineFill = new ColorMatrixFilter();
   /** Trees and rocks in a villager's line: they're outlined. */
   private readonly lined = new Set<PlacedItem>();
+  /** Buildings whose harvest is ready, and the look each farm and ranch was drawn with (view/looks.ts). */
+  private readonly ready = new Set<PlacedItem>();
+  private readonly looks = new Map<PlacedItem, string>();
+  /** Whether the town is being drawn yet (build): before, there's nothing to draw again. */
+  private built = false;
   /** Signs over buildings: ready to collect, asleep... */
   private readonly markers = new Markers();
   /** A building being bought, drawn see-through where it would go. */
@@ -243,6 +249,7 @@ export class TownView {
   /** Draw everything; `progress` hears how many of the town's pictures are ready. */
   async build(progress: (done: number, total: number) => void): Promise<{ missing: string[] }> {
     const missing = new Set<string>();
+    this.built = true;
     const jobs: Promise<void>[] = [this.buildGround(missing)];
 
     // Back to front. Array.sort keeps the save's order for equal depths.
@@ -284,6 +291,11 @@ export class TownView {
 
   /** Draw a thing again (it moved or turned), and put it back in order. */
   async redraw(placed: PlacedItem): Promise<void> {
+    if (!this.built) {
+      // Asked before the town is drawn (the editor's first look): build() draws it as it is then.
+      // Drawing it now too left a second picture behind that nothing kept track of.
+      return;
+    }
     let slot = this.slots.get(placed);
     if (!slot) {
       slot = new Container();
@@ -301,6 +313,8 @@ export class TownView {
   /** Take a thing off the map (sold, stored). */
   remove(placed: PlacedItem): void {
     this.lined.delete(placed);
+    this.ready.delete(placed);
+    this.looks.delete(placed);
     this.walkers.delete(placed);
     this.poses.delete(placed);
     this.facing.delete(placed);
@@ -325,6 +339,24 @@ export class TownView {
     const slot = placed ? this.slots.get(placed) : undefined;
     if (slot) {
       slot.filters = [this.glow];
+    }
+  }
+
+  /**
+   * Told whether a building's harvest is ready, as the editor looks each
+   * second: a farm or ranch is drawn again when who's inside it or its
+   * harvest has changed, to show what fits (view/looks.ts).
+   */
+  showState(placed: PlacedItem, ready: boolean): void {
+    if (ready) {
+      this.ready.add(placed);
+    } else {
+      this.ready.delete(placed);
+    }
+    const look = lookKey(placed, ready);
+    if (look !== null && this.looks.get(placed) !== look) {
+      this.looks.set(placed, look);
+      void this.redraw(placed);
     }
   }
 
@@ -412,7 +444,7 @@ export class TownView {
       const walk = this.walkers.get(placed);
       slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
     } else {
-      const sprite = buildingSprite(art, placed, this.town.skin);
+      const sprite = buildingSprite(art, placed, this.town.skin, this.ready.has(placed));
       slot.addChild(sprite);
       // Burning since a raid (homeDefence.ts): the game's flames over it.
       const stage = placed.health === undefined ? 0 : fireStage(placed.health, placed.item.life);
@@ -477,7 +509,7 @@ function pictureOf(slot: Container): Container | undefined {
   return slot.children.find((child) => child.label !== OUTLINE);
 }
 
-export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, still?: number): Container {
+export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {
   // Its frame is the way it faces; past the last, the game shows the last.
   const facing = Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
@@ -487,6 +519,11 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, s
     textures = [textures[Math.min(skin, textures.length - 1)]];
   } else if (still !== undefined && textures.length > 1) {
     textures = [textures[Math.min(still, textures.length - 1)]];
+  }
+  // A farm or ranch: only the pictures that fit who's inside and its harvest.
+  const look = lookOf(placed, textures.length, ready);
+  if (look) {
+    textures = look.map((i) => textures[i]);
   }
   const sprite = animated(textures, art.fps);
   const bounds = art.boundsOf(name);
