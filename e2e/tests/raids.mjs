@@ -45,6 +45,7 @@ export default async function raids({ newPlayer }) {
   const heard = await player.page.evaluate(() => {
     const { fighting: fight, parts } = window.seHome;
     const building = fight.battle.fighters.find((f) => f.side === 1 && !f.isUnit && !f.dead && f.life > 200);
+    window.seCentre = { ...parts.camera.centre };
     parts.camera.lookAt({ x: -20000, y: 20000 });
     fight.battle.hurt(building, 80, fight.raids[0].fighters[0]);
     return { track: parts.sound.currentTrack };
@@ -54,6 +55,8 @@ export default async function raids({ newPlayer }) {
   await player.page.locator(".attack-alert button").click();
   await player.wait(500);
   await player.shot("after-alert");
+  // The camera back where the test's taps expect it.
+  await player.page.evaluate(() => window.seHome.parts.camera.lookAt(window.seCentre));
 
   // The knights at the bandits, until the raid is over.
   let killed = 0;
