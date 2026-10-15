@@ -60,7 +60,9 @@ export default async function collect({ newPlayer }) {
   assert.ok(startedAfterSetup(FARM) >= 88, "the farm started again when collected the second time");
   assert.ok(startedAfterSetup(RANCH) >= 88, "the ranch started again when collected");
   assert.deepEqual(itemAt(after, RANCH[0], RANCH.slice(1))?.[6] ?? [], [], "its harvest used up the sheep, for good");
-  assert.ok(!after.items.some((i) => i[0] === SHEEP), "and it isn't back on the map");
+  // (The town's wild sheep stay in their corner: lib.mjs, FULL_WILD.)
+  const onTheirLand = (i) => i[1] >= 40 && i[1] < 60 && i[2] >= 40 && i[2] < 60;
+  assert.ok(!after.items.some((i) => i[0] === SHEEP && onTheirLand(i)), "and it isn't back on the map");
   assert.ok(startedAfterSetup(MINE) >= 0, "the mine started when its time was chosen");
   assert.ok(after.xp > before.xp, `collecting gives experience: ${before.xp} -> ${after.xp}`);
   assert.ok(after.food > before.food, `the farm and ranch give food: ${before.food} -> ${after.food}`);
