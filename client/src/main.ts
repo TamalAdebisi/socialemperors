@@ -357,15 +357,32 @@ async function start(): Promise<void> {
     document.body.classList.add("visiting");
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     let quiet: ReturnType<typeof setTimeout> | undefined;
+    const show = (text: string) => {
+      showMessage(text);
+      clearTimeout(quiet);
+      quiet = setTimeout(() => showMessage(""), 3000);
+    };
+    // What's said before the town is drawn waits for it: a big town takes
+    // more than the message's 3 seconds to draw, and the hint went unseen.
+    let held: string | undefined;
+    let drawn = false;
     const visitor = new Visit({
       neighbour: visit, view, hud, commands, clock,
       assists: mine?.privateState?.neighborAssists,
       say: (text) => {
-        showMessage(text);
-        clearTimeout(quiet);
-        quiet = setTimeout(() => showMessage(""), 3000);
+        if (drawn) {
+          show(text);
+        } else {
+          held = text;
+        }
       },
     });
+    afterDrawing = () => {
+      drawn = true;
+      if (held !== undefined) {
+        show(held);
+      }
+    };
     commands.start();  // after the visit's own leaving, so the help goes with the last send
     camera.onTap = (at) => visitor.tap(at);
   }
