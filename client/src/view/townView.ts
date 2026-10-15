@@ -454,13 +454,14 @@ export class TownView {
       const walk = this.walkers.get(placed);
       slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
     } else {
-      const sprite = buildingSprite(art, placed, this.town.skin, this.ready.has(placed));
+      const sprite = buildingSprite(art, placed, this.town.skin, this.ready.has(placed), placed.steps);
       slot.addChild(sprite);
       // Burning since a raid (homeDefence.ts): the game's flames over it.
       const stage = placed.health === undefined ? 0 : fireStage(placed.health, placed.item.life);
       if (stage > 0) {
         const fire = await fireSprite(stage);
-        if (!slot.destroyed) {
+        // Redrawn meanwhile (a newer picture took this one's place): the newer one has its own flames.
+        if (!slot.destroyed && !sprite.destroyed) {
           fire.position.copyFrom(sprite.position);
           slot.addChild(fire);
         }
@@ -561,6 +562,10 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, r
   if (isTree(placed.item) && textures.length > 1) {
     // A tree's frames are its looks for each island skin (snow on ice...).
     textures = [textures[Math.min(skin, textures.length - 1)]];
+  } else if (still !== undefined && art.has("steps/0")) {
+    // A chest that fills up as its camp goes: the picture with this many steps.
+    const steps = art.animation("steps/0") ?? [];
+    textures = [steps[Math.min(still, steps.length - 1)]];
   } else if (still !== undefined && textures.length > 1) {
     textures = [textures[Math.min(still, textures.length - 1)]];
   }

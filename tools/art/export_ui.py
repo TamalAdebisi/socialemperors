@@ -108,6 +108,7 @@ CURSORS = {
     "cursor-axe": ("CursorMC", 11),     # a tree to chop
     "cursor-pick": ("CursorMC", 4),     # a rock or gold to mine
     "cursor-inside": ("CursorMC", 10),  # a building to go into
+    "cursor-repair": ("CursorMC", 5),   # a burning building to repair (villagers)
 }
 CURSOR_SIZE = 32
 

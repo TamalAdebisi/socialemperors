@@ -55,8 +55,8 @@ export interface ScriptedCamp {
 
 const CAMPS = (data as unknown as { camps: Record<string, ScriptedCamp> }).camps;
 
-/** Scripted camps played in this client so far. */
-const PLAYED = new Set([7, 13, 15, 17, 19, 21, 22, 26, 27, 28, 29]);
+/** Scripted camps played in this client: every one a player can reach. */
+const PLAYED = new Set([7, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]);
 
 export function scriptedCamp(id: number): ScriptedCamp | null {
   return CAMPS[String(id)] ?? null;

@@ -79,6 +79,8 @@ const KAMIKAZE = 575;
  * life or more, no boss, boss guard or eagle.
  */
 const MONK = 569;
+/** A boss getting away: 2 seconds, then 1.5 to fade. */
+const FLEE_FRAMES = 105;
 /** The golden dragons fire twice a beat, the second shot half a second later. */
 const DOUBLE_SHOT = new Set([739]);
 const SECOND_SHOT = 15;
@@ -163,6 +165,13 @@ export interface Fighter {
   invulnerable?: boolean;
   /** Drawn this many times its size. */
   scale?: number;
+  /**
+   * A camp's boss that gets away instead of dying (the Chinese dragon,
+   * Neptune): below this share of its life it can't be hurt, says its line,
+   * and is gone (counted as beaten) a few seconds later.
+   */
+  flee?: { below: number; line: number | null } | null;
+  fleeing?: boolean;
   /** A shield of its own (rules/specials.ts): until when, and the share of each hit it still takes. */
   guard?: { until: number; taken: number } | null;
   /** Can't be picked as a target until this frame. */
@@ -746,6 +755,31 @@ export class Battle {
     }
   }
 
+  /** Heard when a boss gets away (it says its line). */
+  readonly onFlee: ((fighter: Fighter) => void)[] = [];
+
+  /** A boss getting away: it can't be hurt any more, stops, and falls (beaten) 3.5 seconds later. */
+  private getAway(fighter: Fighter): void {
+    fighter.life = Math.max(1, fighter.life);
+    if (fighter.fleeing) {
+      return;
+    }
+    fighter.fleeing = true;
+    fighter.invulnerable = true;
+    fighter.target = null;
+    fighter.attacking = false;
+    fighter.path = [];
+    fighter.stilledUntil = this.frame + FLEE_FRAMES;
+    for (const listen of this.onFlee) {
+      listen(fighter);
+    }
+    this.after(FLEE_FRAMES, () => {
+      fighter.invulnerable = false;
+      fighter.flee = null;
+      this.kill(fighter, null);
+    });
+  }
+
   /** Take something off the field without a death. */
   remove(fighter: Fighter): void {
     const at = this.fighters.indexOf(fighter);
@@ -862,6 +896,10 @@ export class Battle {
     }
     for (const listen of this.onHurt) {
       listen(target, damage, by);
+    }
+    if (target.flee && target.life < target.maxLife * target.flee.below) {
+      this.getAway(target);
+      return;
     }
     if (target.life <= 0) {
       this.kill(target, by);

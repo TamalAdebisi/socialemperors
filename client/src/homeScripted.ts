@@ -29,6 +29,17 @@ import { freeTileNear } from "./rules/work.ts";
 import { notice } from "./ui/notice.ts";
 
 const TOWN_HALL = 135;
+/** The camps whose village starts half burnt, once a session (the Chinese dragon's). */
+const BURNT = 23;
+const burntThisSession = new Set<number>();
+/** A boss that gets away below a tenth of its life. */
+const FLEE_BELOW = 0.1;
+
+/** A door that opens when its wave has fallen (Neptune's pen, the Ent's). */
+interface Door {
+  door: PlacedItem;
+  wave: PlacedItem[];
+}
 
 /** A key and what goes with it: its tile, its guards (captured when the camp is read), its scenery. */
 interface Group {
@@ -70,6 +81,7 @@ export class ScriptedCamps {
   private progress: Progress = { spawned: false, activators: [], boss: [] };
   /** Where a camp with no chest gives its prizes: the last key taken (or the camp's own spot). */
   private prizeSpot: { x: number; y: number } | null = null;
+  private doors: Door[] = [];
 
   constructor(parts: CampParts, camps: Camps, random: () => number) {
     this.parts = parts;
@@ -164,6 +176,10 @@ export class ScriptedCamps {
     const { town } = this.parts;
     const hall = town.items.find((p) => p.item.subcategory === TOWN_HALL && this.camps.sideOf(p) === "self");
     for (const id of camp.helpers) {
+      const race = this.parts.items.get(id)?.race;
+      if (race !== town.race && race !== "a") {
+        continue;  // a troll town isn't sent human helpers (DECISIONS.md, "Scripted camps")
+      }
       const tile = hall ? freeTileNear(town, hall) : null;
       if (tile) {
         this.camps.put({ id, x: tile.x, y: tile.y, unit: true });
@@ -225,6 +241,55 @@ export class ScriptedCamps {
     this.enders = [];
     this.endersDue = false;
     this.bossIndex.clear();
+    // Tiles whose buildings are nobody's (the festivals), and the pens of the camps with doors.
+    for (const tile of camp.tiles) {
+      if (tile.side === "neutral" || camp.doors) {
+        for (const [id, x, y, , role] of tile.pieces) {
+          const piece = role === "unit" ? null : at(id, x, y);
+          if (piece && !piece.item.isUnit) {
+            piece.nobodys = true;
+          }
+        }
+      }
+    }
+    this.showSteps(camp);
+    if (this.id === BURNT && !burntThisSession.has(BURNT)) {
+      // The Chinese village starts half burnt (once a session, as in the original: it isn't saved).
+      burntThisSession.add(BURNT);
+      for (const tile of camp.tiles) {
+        for (const [id, x, y, , role] of tile.pieces) {
+          const piece = role === "key" || role === "chest" ? null : at(id, x, y);
+          if (piece && !piece.item.isUnit && piece.item.life > 0) {
+            piece.health = piece.item.life - (Math.floor(piece.item.life / 2) + 1);
+            void this.parts.view.redraw(piece);
+          }
+        }
+      }
+    }
+    // The doors, each with the wave that opens it: the units of its kind standing now.
+    this.doors = [];
+    (camp.doors ?? []).forEach((def, i) => {
+      const door = at(def.id, def.at[0], def.at[1]);
+      if (!door) {
+        return;
+      }
+      if (door.orientation === 0 && (i === 0 || camp.doors!.length === 1)) {
+        // Turned to face the pen's way, as the original turns it.
+        door.orientation = 1;
+        void this.parts.view.redraw(door);
+      }
+      const kinds = def.opensWhenDead.ids ?? [def.opensWhenDead.id!];
+      const wave = town.items.filter((p) => p.item.isUnit && kinds.includes(p.item.id) && this.camps.sideOf(p) === "enemy");
+      this.doors.push({ door, wave });
+    });
+  }
+
+  /** A chest that fills up as the camp goes: one more step for each key taken. */
+  private showSteps(camp: ScriptedCamp): void {
+    if (camp.steps && this.chest) {
+      this.chest.steps = camp.engine === "new" ? this.progress.activators.length : 0;
+      void this.parts.view.redraw(this.chest);
+    }
   }
 
   /** Every key taken: the wave or the boss comes, or the chest lights up (or, with no chest, the camp ends). */
@@ -261,11 +326,53 @@ export class ScriptedCamps {
       if (unit) {
         this.enders.push(unit);
         this.bossIndex.set(unit, i);
+        this.bossRules(camp, unit);
       }
     });
     this.endersDue = true;
     if (this.enders.length === 0) {
       this.bossesDone(camp);
+    }
+  }
+
+  /** A boss's own rules: the dragon and Neptune get away; the Ent can't be hurt while its door stands. */
+  private bossRules(camp: ScriptedCamp, unit: PlacedItem): void {
+    if (unit.item.id !== camp.boss) {
+      return;
+    }
+    if (this.id === 23) {
+      unit.boss = { flee: { below: FLEE_BELOW, line: camp.bossSay ?? null } };
+    } else if (this.id === 24) {
+      unit.boss = { flee: { below: FLEE_BELOW, line: null }, scale: 1.2 };
+    } else if (this.id === 25) {
+      unit.boss = { invulnerable: this.doors.length > 0 };
+    }
+  }
+
+  /** A wave fallen: its door goes (`sell` ... "ACTIV"); the Ent's going makes the Ent mortal. */
+  private openDoor(door: Door): void {
+    const { town, commands, view } = this.parts;
+    this.doors.splice(this.doors.indexOf(door), 1);
+    const placed = door.door;
+    if (town.items.includes(placed)) {
+      commands.add("sell", placed.tx, placed.ty, placed.item.id, town.id, 1, "ACTIV");
+      town.items.splice(town.items.indexOf(placed), 1);
+      view.remove(placed);
+      const fighter = this.parts.fighterOf?.(placed);
+      if (fighter) {
+        this.parts.battle?.()?.remove(fighter);
+      }
+    }
+    if (this.doors.length === 0) {
+      for (const boss of this.enders) {
+        if (boss.boss?.invulnerable) {
+          boss.boss.invulnerable = false;
+          const fighter = this.parts.fighterOf?.(boss);
+          if (fighter) {
+            fighter.invulnerable = false;
+          }
+        }
+      }
     }
   }
 
@@ -290,6 +397,11 @@ export class ScriptedCamps {
       return;
     }
     const standing = new Set(this.parts.town.items);
+    for (const door of [...this.doors]) {
+      if (door.wave.every((u) => !standing.has(u))) {
+        this.openDoor(door);
+      }
+    }
     for (const group of this.groups) {
       if (!group.lit && !group.never && group.guards.every((g) => !standing.has(g))) {
         group.lit = true;
@@ -378,6 +490,7 @@ export class ScriptedCamps {
     if (key.item.collectXp) {
       editor.tell(`+${key.item.collectXp} XP`);
     }
+    this.showSteps(camp);
     if (this.groups.length === 0) {
       this.keysDone(camp, true);
     }

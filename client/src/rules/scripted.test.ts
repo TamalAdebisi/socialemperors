@@ -34,7 +34,7 @@ test("the skeleton statue: humans and trolls; three statues, a wave of five, the
   const statue = scriptedCamp(13)!;
   assert.ok(scriptedHere(13, "h") && scriptedHere(13, "t"));
   assert.ok(scriptedHere(7, "h") && !scriptedHere(7, "t"));
-  assert.ok(!scriptedHere(14, "h"), "not yet played here");
+  assert.ok(scriptedHere(14, "t") && !scriptedHere(15, "t"), "trolls get 13 and 14");
   assert.equal(statue.bossTiles[0].pieces.length, 5);
   assert.deepEqual(statue.bossTiles[0].pieces.map(([id, x, y]) => [id, x, y]), [[558, 92, 90], [559, 92, 89], [558, 92, 88], [559, 92, 87], [558, 92, 86]]);
   assert.ok(statue.keepIds);

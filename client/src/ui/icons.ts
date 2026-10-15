@@ -84,4 +84,5 @@ export const CURSORS = {
   axe: `url("${new URL("./art/cursor-axe.png", import.meta.url).href}") 4 4, pointer`,
   pick: `url("${new URL("./art/cursor-pick.png", import.meta.url).href}") 4 4, pointer`,
   inside: `url("${new URL("./art/cursor-inside.png", import.meta.url).href}") 1 12, pointer`,
+  repair: `url("${new URL("./art/cursor-repair.png", import.meta.url).href}") 4 4, pointer`,
 };

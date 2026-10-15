@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, scripted camps (part 3)
+
+- **A festival's steps show in order:** two keys taken show the first two
+  steps, whichever keys they were. The original showed the step of each
+  key taken (the second and third, say).
+- **An opened festival goes, like any chest.** The original left it
+  standing, still, until the town was opened again.
+- **A troll town isn't given the fireworks camp's human helpers** (they
+  would stand as enemies after a reload). Its prize, the Dragon Statue,
+  still goes to storage, as in the original.
+- **No camera flights:** when the dragon or Neptune gets away, or a door
+  opens, the camera stays where the player put it.
+
 ## 15 October 2026: the server's message as the town opens
 
 - **It shows in the bar at the bottom, with OK,** where the new client asks

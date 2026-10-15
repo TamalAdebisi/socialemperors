@@ -17,7 +17,9 @@ Phaser both load:
               the empty space was trimmed ("spriteSourceSize", "sourceSize"),
               and the "anchor": the point the game positions the item by, as
               a fraction of the canvas
-  animations  "<label>/<n>": the pictures to show, one per frame at meta.fps.
+  animations  "<label>/<n>": the pictures to show, one per frame at meta.fps;
+              "steps/0" for a chest that fills up as its camp goes (one
+              picture per step shown, from none).
               <label> is the animation's name in the game files (QUIETO idle,
               ANDAR walk, ATAQUE attack, MUERTE death, PICAR work, and special
               moves), or "frame" when there are no labels. <n> counts the
@@ -71,7 +73,7 @@ def load(render_dir):
     together took more memory than the export machines have."""
     with open(os.path.join(render_dir, "manifest.json"), encoding="utf-8") as f:
         manifest = json.load(f)
-    count = 1 + max(n for frame in manifest["frames"] for n in frame["images"])
+    count = 1 + max(n for images in [*(frame["images"] for frame in manifest["frames"]), manifest.get("steps", [])] for n in images)
     return manifest, [os.path.join(render_dir, f"img_{n}.png") for n in range(count)]
 
 
@@ -198,6 +200,9 @@ def animations(manifest):
         if frame["labels"]:
             label, start = frame["labels"][0], f
         result[f"{label}/{f - start}"] = frame["images"]
+    if manifest.get("steps"):
+        # A chest that fills up as its camp goes: its first frame with no step, then one more each.
+        result["steps/0"] = manifest["steps"]
     return result
 
 
@@ -255,7 +260,7 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
         manifest = {**manifest, "frames": decimate(manifest["frames"], step)}
         warnings.append(f"too many pictures for {max_pages} sheets: each held {step} frames (meta.step)")
     # Only the pictures the animations still show are packed; each keeps its number.
-    used = sorted({n for frame in manifest["frames"] for n in frame["images"]})
+    used = sorted({n for frame in manifest["frames"] for n in frame["images"]} | set(manifest.get("steps", [])))
     # The canvas in stored pixels, and the anchor as a fraction of it, which
     # PixiJS turns back into the origin exactly.
     source_w, source_h = canvas_w // shrink, canvas_h // shrink
