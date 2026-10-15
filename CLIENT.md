@@ -288,7 +288,9 @@ shows another player's town, as visiting a neighbour does, to look at only.
 - Drawn as often as the screen shows a new picture (60 or 120 times a
   second; Flash drew 24 or 30), and sharp on high-resolution screens.
 - Drag to move, with a glide after letting go; wheel or pinch to zoom,
-  smoothly, around the pointer; arrow keys; full screen; phones and tablets.
+  smoothly, around the pointer; the arrow keys, as in the Flash client
+  (letters are the menus' shortcuts: with WASD too, S, A and W did both);
+  full screen; phones and tablets.
 - A bar in HTML with the player's name, level, resources and cash, and a way
   back to the classic game.
 
@@ -352,7 +354,10 @@ the server.
   tile.
 - Something fits where all its tiles are on bought land (the save's
   expansions) and none is taken by a building or a standing unit.
-- Turning goes round the item's ways of facing (its art's frames).
+- Turning goes round the item's ways of facing (its art's frames). Space
+  turns a building while it's being placed or moved, as in the Flash
+  client: it's bought, placed or moved facing that way (cancelling a move
+  turns it back). The server keeps the facing a `move` sends (it didn't).
 - Selling gives back a twentieth of the price, in what it was bought with,
   rounded down; nothing for things bought with cash.
 - Whose things are: an item's `race` in the config says. The player's own
@@ -732,9 +737,9 @@ the Flash client sometimes drops from a harvest.
 
 ### The living map
 
-Trees, rocks and wild animals grow back each time the player opens their
-town, as in the Flash client, so wood, stone and gold don't run out; wild
-animals are caught by coming near them. Code: `rules/nature.ts` and
+Each time the player opens their town, it's tidied up, and trees, rocks
+and wild animals grow back, as in the Flash client, so wood, stone and gold
+don't run out; wild animals are caught by coming near them. Code: `rules/nature.ts` and
 `rules/animals.ts` (with tests), called from `main.ts` before the town is
 drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 `animals.mjs`.
@@ -780,9 +785,22 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 - A caught animal is the player's: select it and tap one of its ranches (or
   the hatchery) to send it in. Tapping a wild animal with a unit selected
   sends the unit beside it, and so catches it.
+- Tidying, first of all (`rules/cleanup.ts`): a save can have things on
+  top of each other (a bug, an old game). Buildings take their tiles first,
+  the town hall before all, then the units, in the save's order. One of the
+  player's people's buildings that finds a tile taken, or stands off the
+  map, goes to storage (`store_item_frombug`); anyone else's off the map is
+  removed for nothing (`sell`, "OUTOB"); anyone else's on a taken tile
+  stays. A unit on a tile something else has (but a farm or a gate) steps to
+  the nearest free tile (`move`, "Colisio #1"...), and so does the second of
+  two units on one tile. Terrain (paths) takes no tile, as when placing.
+- A town with no villager, on the map or inside a building, gets one, a man
+  or a woman by chance, on a free tile near the middle (54, 54), bought for
+  nothing. Not before Arthur's lessons are taken or skipped, as the Flash
+  client doesn't during its tutorial. Test: `e2e/tests/tidy.mjs`.
 - The browser tests give each new town enough trees, rocks and animals
   first, in the wild corners at the top, so none grow on the land a test
-  uses (`e2e/lib.mjs`, `FULL_WILD`).
+  uses, and a villager far off (`e2e/lib.mjs`, `FULL_WILD`).
 
 ### Training and population
 

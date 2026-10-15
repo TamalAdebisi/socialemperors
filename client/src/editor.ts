@@ -93,6 +93,10 @@ export class TownEditor {
   private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
   private moving: PlacedItem | null = null;
+  /** The way the thing being moved faced before (Space turns it; cancelling turns it back). */
+  private movingFacing = 0;
+  /** The tile the thing being placed or moved was last shown on. */
+  private shownAt: Point | null = null;
   /** What was chosen in the shop or storage, while the player places it: see-through, not on the map yet. */
   private building: PlacedItem | null = null;
   /** A raid has the town (homeDefence.ts): no editing until it's over. */
@@ -136,6 +140,11 @@ export class TownEditor {
     this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
+      if (e.key === " " && (this.building || this.moving)) {
+        e.preventDefault();  // not the page scrolling
+        this.turnWhilePlacing();
+        return;
+      }
       if (e.key === "Escape") {
         if (this.building) {
           this.stopBuilding();
@@ -298,6 +307,7 @@ export class TownEditor {
 
   private previewBuilding(tile: Point): void {
     const building = this.building!;
+    this.shownAt = tile;
     building.tx = tile.x;
     building.ty = tile.y;
     this.view.moveGhost(tile);
@@ -310,7 +320,7 @@ export class TownEditor {
       return;
     }
     const item = this.building!.item;
-    const bought = buy(this.town, item, tile.x, tile.y, this.clock());
+    const bought = buy(this.town, item, tile.x, tile.y, this.clock(), this.building!.orientation);
     if (typeof bought === "string") {
       this.previewBuilding(tile);
       this.say(bought);
@@ -340,7 +350,8 @@ export class TownEditor {
   private placeFromStorage(stored: Stored, tile: Point): void {
     const xpBefore = this.town.xp;
     const people = population(this.town, this.items);
-    const done = placeStored(this.town, stored, tile.x, tile.y, this.clock(), this.levels, people.max - people.current);
+    const done = placeStored(this.town, stored, tile.x, tile.y, this.clock(), this.levels, people.max - people.current,
+      this.building!.orientation);
     if (typeof done === "string") {
       this.previewBuilding(tile);
       this.say(done);
@@ -1119,11 +1130,13 @@ export class TownEditor {
 
   private startMove(placed: PlacedItem): void {
     this.moving = placed;
+    this.movingFacing = placed.orientation;
     this.view.setGhost(placed, true);
     this.bar.prompt(`Tap where ${placed.item.name} goes`, [{ label: "Cancel", run: () => this.cancelMove() }]);
   }
 
   private preview(placed: PlacedItem, tile: Point): void {
+    this.shownAt = tile;
     const spot = { ...placed, tx: tile.x, ty: tile.y };
     this.view.showFootprint(spot, fits(this.town, spot, placed));
     this.view.offset(placed, tile);
@@ -1143,7 +1156,32 @@ export class TownEditor {
 
   private cancelMove(): void {
     if (this.moving) {
+      this.moving.orientation = this.movingFacing;  // turned with Space meanwhile: back as it was
       this.endMove(this.moving);
+    }
+  }
+
+  /**
+   * Space while placing or moving a building turns it to face its next way,
+   * as in the Flash client; it's bought, placed or moved facing that way.
+   */
+  private turnWhilePlacing(): void {
+    const thing = this.building ?? this.moving!;
+    if (thing.item.isUnit || thing.item.facings < 2) {
+      return;
+    }
+    thing.orientation = (thing.orientation + 1) % thing.item.facings;
+    const at = this.shownAt ?? { x: thing.tx, y: thing.ty };
+    if (this.building) {
+      this.view.showGhost(this.building);
+      this.previewBuilding(at);
+    } else {
+      const moving = this.moving!;
+      void this.view.redraw(moving).then(() => {
+        if (this.moving === moving) {
+          this.preview(moving, at);
+        }
+      });
     }
   }
 

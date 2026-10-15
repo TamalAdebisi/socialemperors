@@ -137,6 +137,8 @@ def do_command(USERID, cmd, args, previous=None):
             if item[0] == id and item[1] == ix and item[2] == iy:
                 item[1] = newx
                 item[2] = newy
+                if len(item) > 3:
+                    item[3] = frame  # the way it faces now: a building turned while moved, a unit's direction
                 break
     
     elif cmd == Constant.CMD_COLLECT:

@@ -48,6 +48,28 @@ them can be found and reversed. The big, agreed decisions are in
   attack!"): the original's were drawn into its picture. Its button keeps
   the game's own word, Help.
 
+## 15 October 2026: the keyboard
+
+- **The arrow keys move the map; WASD doesn't any more.** Both were our
+  extras clashing (S, A and W also open Storage, Army and the World map);
+  the original moved the map with the arrow keys only, and its letters were
+  developer keys.
+- **Space turns a building while it's placed or moved,** as in the
+  original; elsewhere Space does nothing yet (the original's square tool
+  for picking several units comes with "Selecting several units").
+
+## 15 October 2026: tidying a town as it opens
+
+- **Paths and other terrain take no tile** when tidying, as when placing
+  here, so nothing built over a path is put away.
+- **A building's footprint is the same whichever way it faces,** as when
+  placing here; the original turned it for this check only.
+- **The villager for a town with none** comes once Arthur's lessons are
+  taken or skipped (the original waited for its tutorial to end).
+- **The browser tests start each town with a villager** far off in the
+  wild corner, so none appears near the middle where tests tap; one test
+  checks the villager comes.
+
 ## 15 October 2026: Beta 2, the Rockdriller and the dragons
 
 - **Kept from the original:** the Rockdriller goes back to 25,000 life when

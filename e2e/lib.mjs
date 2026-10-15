@@ -13,7 +13,8 @@ export const PHONE = { width: 390, height: 844 };
  * wild corners at the top of the map: with them, none grow on the player's
  * land when the town opens, where they'd stand in a test's way (or be
  * caught by a unit and walk off). A few trees and rocks can be cut before
- * more grow.
+ * more grow. And a villager (a woman: the tests' own are men), far off,
+ * so the game doesn't give the town one near the middle (rules/cleanup.ts).
  */
 const FULL_WILD = [
   ...Array.from({ length: 200 }, (_, i) => [19, i % 20, Math.floor(i / 20), "b"]),
@@ -21,6 +22,7 @@ const FULL_WILD = [
   ...Array.from({ length: 24 }, (_, i) => [69, 80 + (i % 20), 2 + Math.floor(i / 20), "b"]),
   // Sheep, cows and horses, apart from the trees.
   ...[505, 504, 571].flatMap((id, row) => Array.from({ length: 7 }, (_, i) => [id, 2 * i, 12 + 2 * row, "u"])),
+  [501, 30, 5, "u"],
 ].map(([id, x, y, type]) => ({ cmd: "buy", args: [id, x, y, 0, 0, 1, 1, type] }));
 
 /**

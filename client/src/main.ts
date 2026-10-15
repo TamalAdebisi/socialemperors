@@ -21,6 +21,7 @@ import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { lessonsNotStarted } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
+import { cleanUp, oneVillager } from "./rules/cleanup.ts";
 import { growBack } from "./rules/nature.ts";
 import { Doings, goalsRun, readGoals, type Need } from "./rules/goals.ts";
 import { readBonusConfig } from "./rules/bonuses.ts";
@@ -125,8 +126,17 @@ async function start(): Promise<void> {
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
-    // Animals off the player's land are wild (rules/animals.ts); then trees, rocks and a few
-    // animals grow back, as each time the town opens in the Flash client (rules/nature.ts).
+    // As the town opens, as in the Flash client: things on top of each other sorted out, and
+    // a villager for a town with none (rules/cleanup.ts; not before Arthur's lessons are
+    // taken or skipped); animals off the player's land are wild (rules/animals.ts); then
+    // trees, rocks and a few animals grow back (rules/nature.ts).
+    const opening = [...cleanUp(town).commands];
+    if (!lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
+      opening.push(...(oneVillager(town, items, clock())?.commands ?? []));
+    }
+    for (const command of opening) {
+      commands.add(command.cmd, ...command.args);
+    }
     markWild(town);
     const animals = {
       today: ((info.privateState as Record<string, unknown> | undefined)?.arrayAnimals ?? {}) as Record<string, number>,

@@ -20,7 +20,9 @@ export default async function cash({ newPlayer }) {
     { cmd: "activate", args: [...MINE_AT, 0, MINE, 4] },
   ]);
   await player.reload();
-  const before = await player.saved({ waitForBatch: false });
+  // After the first batch: a goal done as the town opens (two villagers, with the one
+  // lib.mjs gives every test town) pays its gold then.
+  const before = await player.saved();
   const cashBefore = Number(await player.page.locator('[data-n="cash"]').textContent());
   assert.ok(cashBefore >= 40, `the prizes gave cash: ${cashBefore}`);
 
