@@ -58,8 +58,10 @@ export class TownView {
   private readonly town: Town;
   /** Each thing on the map and the container its picture is drawn in. */
   private readonly slots = new Map<PlacedItem, Container>();
-  /** The thing selected: marked as the game marks it (view/selected.ts). */
-  private highlighted: PlacedItem | null = null;
+  /** What's selected (one thing, or several units): marked as the game marks it (view/selected.ts). */
+  private readonly highlighted = new Set<PlacedItem>();
+  /** The box being dragged out to select units, over everything. */
+  private readonly box = new Graphics();
   private readonly outlineFill = new ColorMatrixFilter();
   /** Trees and rocks in a villager's line: they're outlined. */
   private readonly lined = new Set<PlacedItem>();
@@ -86,7 +88,7 @@ export class TownView {
     this.town = town;
     void loadSelected();
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
-    this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer);
+    this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer, this.box);
     this.ghostLayer.alpha = 0.7;
   }
 
@@ -184,6 +186,26 @@ export class TownView {
 
   isWalking(placed: PlacedItem): boolean {
     return this.walkers.has(placed);
+  }
+
+  /** Stop every walk on the last tile it reached, without hearing that they arrived (a raid takes over the town): the units that were walking. */
+  stopWalks(): PlacedItem[] {
+    const walking = [...this.walkers.keys()];
+    this.walkers.clear();
+    walking.forEach((placed) => void this.redrawUnit(placed));
+    return walking;
+  }
+
+  /** The tiles units are walking to, the ends of their paths ("x,y"), but `except`'s own. */
+  destinations(except?: PlacedItem): Set<string> {
+    const tiles = new Set<string>();
+    for (const [placed, walk] of this.walkers) {
+      const end = walk.path.at(-1) ?? walk.next;
+      if (placed !== except && end) {
+        tiles.add(`${end.x},${end.y}`);
+      }
+    }
+    return tiles;
   }
 
   private nextTile(placed: PlacedItem, walk: Walk): void {
@@ -320,8 +342,8 @@ export class TownView {
     await this.draw(placed, slot);
     this.sort();
     this.markers.moveTo(placed, this.topOf(placed));
-    if (this.highlighted === placed) {
-      this.highlight(placed);
+    if (this.highlighted.has(placed)) {
+      this.mark(placed);
     }
   }
 
@@ -340,25 +362,54 @@ export class TownView {
       this.slots.delete(placed);
     }
     this.markers.remove(placed);
-    if (this.highlighted === placed) {
-      this.highlighted = null;
+    this.highlighted.delete(placed);
+  }
+
+  /**
+   * Mark what's selected as the Flash client does (one thing, several
+   * units, or nothing): a ring under a unit or the outline of a building's
+   * ground, its life bar over it (view/selected.ts).
+   */
+  highlight(selected: PlacedItem | PlacedItem[] | null): void {
+    for (const placed of this.highlighted) {
+      const slot = this.slots.get(placed);
+      if (slot) {
+        unmarkSelected(slot);
+      }
+    }
+    this.highlighted.clear();
+    for (const placed of selected === null ? [] : Array.isArray(selected) ? selected : [selected]) {
+      this.highlighted.add(placed);
+      this.mark(placed);
+    }
+  }
+
+  /** The box being dragged out to select units, between two points of the map; null takes it away. */
+  showBox(from: Point | null, to?: Point): void {
+    this.box.clear();
+    if (from && to) {
+      // As the Flash client draws it: a thin white line, the inside faintly white.
+      this.box.rect(Math.min(from.x, to.x), Math.min(from.y, to.y), Math.abs(to.x - from.x), Math.abs(to.y - from.y))
+        .fill({ color: 0xffffff, alpha: 0.1 })
+        .stroke({ color: 0xffffff, width: 2 });
     }
   }
 
   /**
-   * Mark the thing selected as the Flash client does, or none: a ring
-   * under a unit or the outline of a building's ground, its life bar over
-   * it (view/selected.ts).
+   * The units whose pictures touch a box on the screen (their pictures'
+   * boxes, as the Flash client tests them), in the town's order.
    */
-  highlight(placed: PlacedItem | null): void {
-    const before = this.highlighted && this.slots.get(this.highlighted);
-    if (before) {
-      unmarkSelected(before);
-    }
-    this.highlighted = placed;
-    if (placed) {
-      this.mark(placed);
-    }
+  unitsIn(a: Point, b: Point): PlacedItem[] {
+    const left = Math.min(a.x, b.x), right = Math.max(a.x, b.x), top = Math.min(a.y, b.y), bottom = Math.max(a.y, b.y);
+    return this.town.items.filter((placed) => {
+      const slot = placed.item.isUnit ? this.slots.get(placed) : undefined;
+      const picture = slot && pictureOf(slot);
+      if (!picture || !slot.visible) {
+        return false;
+      }
+      const bounds = picture.getBounds();
+      return bounds.width > 0 && bounds.x < right && bounds.x + bounds.width > left && bounds.y < bottom && bounds.y + bounds.height > top;
+    });
   }
 
   private mark(placed: PlacedItem): void {
@@ -370,7 +421,7 @@ export class TownView {
     if (!markSelected(slot, placed, picture, this.walkers.get(placed)?.at)) {
       // The marks' pictures are still on their way: mark it when they're here, if it's still the one.
       void loadSelected().then(() => {
-        if (this.highlighted === placed && !slot.destroyed) {
+        if (this.highlighted.has(placed) && !slot.destroyed) {
           markSelected(slot, placed, picture, this.walkers.get(placed)?.at);
         }
       });
@@ -509,7 +560,7 @@ export class TownView {
     const sprite = unitSprite(art, this.facing.get(placed) ?? 5, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty));
     slot.removeChildren().forEach((child) => child.destroy());
     slot.addChild(sprite);
-    if (this.highlighted === placed) {
+    if (this.highlighted.has(placed)) {
       this.mark(placed);
     }
   }
@@ -583,8 +634,10 @@ function pictureOf(slot: Container): Container | undefined {
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {
-  // Its frame is the way it faces; past the last, the game shows the last.
-  const facing = Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
+  // Its frame is the way it faces; past the last, the game shows the last. An open wall gate
+  // shows the frames after its closed ones (two on), as in the Flash client.
+  const facing = placed.open && art.has(`frame/${placed.orientation + 2}`) ? placed.orientation + 2
+    : Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
   let textures = art.animation(name) ?? [];
   if (isTree(placed.item) && textures.length > 1) {

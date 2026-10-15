@@ -12,7 +12,7 @@ import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { findPath, gridFor, isWalkable, walkGrid } from "./walking.ts";
+import { gridFor, isWalkable, reachable, walkGrid } from "./walking.ts";
 
 export const SUBCAT = {
   villager: 71, siege: 81,
@@ -72,25 +72,28 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
  * Where a unit stands to work a thing or go into it: a free tile in the
  * rings around the thing's tile (the corner the save names), the first ring
  * with any, the one nearest the unit; it must be reachable. Null when there's none.
+ * `avoid`: tiles ("x,y") others sent with it have taken, so a group spreads out.
  */
-export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem): Point | null {
+export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem, avoid: Set<string> = new Set()): Point | null {
   const grid = gridFor(town, unit);
   const taken = takenTiles(town, unit);
+  // Where it can get to, worked out once (and only if there's a free tile to look at).
+  let canReach: ((tile: Point) => boolean) | null = null;
   for (let ring = 1; ring <= NEAR; ring++) {
     const around: Point[] = [];
     for (let x = target.tx - ring; x <= target.tx + ring; x++) {
       for (let y = target.ty - ring; y <= target.ty + ring; y++) {
         const edge = Math.max(Math.abs(x - target.tx), Math.abs(y - target.ty)) === ring;
-        if (edge && isWalkable(grid, x, y) && !taken.has(`${x},${y}`)) {
+        if (edge && isWalkable(grid, x, y) && !taken.has(`${x},${y}`) && !avoid.has(`${x},${y}`)) {
           around.push({ x, y });
         }
       }
     }
     around.sort((a, b) => distance2(a, unit) - distance2(b, unit));
-    for (const tile of around) {
-      if (findPath(grid, { x: unit.tx, y: unit.ty }, tile, unit.item.flying) !== null) {
-        return tile;
-      }
+    canReach ??= reachable(town, unit, { x: unit.tx, y: unit.ty });
+    const tile = around.find((t) => canReach!(t));
+    if (tile) {
+      return tile;
     }
   }
   return null;

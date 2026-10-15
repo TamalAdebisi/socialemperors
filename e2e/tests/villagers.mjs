@@ -46,9 +46,9 @@ export default async function villagers({ newPlayer }) {
   await player.said(/Villager I has 3 lined up already/);
   assert.match(await player.bar(), /^Tree/);
 
-  // All three are cut, one after another; the fourth stays.
+  // All three are cut, one after another (up to a minute on a slow machine); the fourth stays.
   let saved;
-  for (let tries = 0; tries < 8; tries++) {
+  for (let tries = 0; tries < 14; tries++) {
     saved = await player.saved();
     if (TREES.slice(0, 3).every((tile) => !has(saved, TREE, tile))) break;
   }

@@ -18,6 +18,10 @@ export const ICONS = {
   build: new URL("./art/build.webp", import.meta.url).href,
   storage: new URL("./art/storage.webp", import.meta.url).href,
   "fast-collect": new URL("./art/fast-collect.webp", import.meta.url).href,
+  pointer: new URL("./art/pointer.webp", import.meta.url).href,
+  "pointer-cancel": new URL("./art/pointer-cancel.webp", import.meta.url).href,
+  "square-tool": new URL("./art/square-tool.webp", import.meta.url).href,
+  "square-tool-space": new URL("./art/square-tool-space.webp", import.meta.url).href,
   // The menus' other buttons: the game bar's own, and its villager for the neighbours.
   units: new URL("./art/units.webp", import.meta.url).href,
   quests: new URL("./art/quests.webp", import.meta.url).href,
@@ -64,6 +68,8 @@ export const ICONS = {
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
   "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  "open-gate": new URL("./art/open-gate.webp", import.meta.url).href,
+  "close-gate": new URL("./art/close-gate.webp", import.meta.url).href,
   // Pausing: the options panel's button, the game's GAME PAUSED and its RESUME.
   pause: new URL("./art/pause.webp", import.meta.url).href,
   "game-paused": new URL("./art/game-paused.webp", import.meta.url).href,
@@ -89,10 +95,14 @@ export function iconImage(name: IconName, label = ""): HTMLImageElement {
 }
 
 /**
- * The Flash client's mouse pointers for a selected unit, as CSS cursors: the
- * picture, then its hot spot (the pixel that points) from the top left.
+ * The Flash client's mouse pointers for a selected unit (and the square
+ * tool), as CSS cursors: the picture, then its hot spot (the pixel that
+ * points) from the top left.
  */
 export const CURSORS = {
+  square: `url("${new URL("./art/cursor-square.png", import.meta.url).href}") 13 9, crosshair`,
+  remove: `url("${new URL("./art/cursor-remove.png", import.meta.url).href}") 16 13, crosshair`,
+  collect: `url("${new URL("./art/cursor-collect.png", import.meta.url).href}") 16 13, pointer`,
   axe: `url("${new URL("./art/cursor-axe.png", import.meta.url).href}") 4 4, pointer`,
   pick: `url("${new URL("./art/cursor-pick.png", import.meta.url).href}") 4 4, pointer`,
   inside: `url("${new URL("./art/cursor-inside.png", import.meta.url).href}") 1 12, pointer`,

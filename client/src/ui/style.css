@@ -354,7 +354,7 @@ body {
 
 /* While a panel is open, what sits on the right moves left of it. */
 .panel-open .hud-buttons,
-.panel-open .collect-all {
+.panel-open .corner {
   margin-right: calc(var(--panel-w) + 12px);
 }
 
@@ -469,12 +469,101 @@ body {
   visibility: hidden;
 }
 
-/* ---- The glove: collect everything ready ---------------------------------- */
-.collect-all {
+/* ---- The bottom right corner: the square tool and the glove ---------------- */
+.corner {
   position: fixed;
   z-index: 1;
   right: max(var(--edge), env(safe-area-inset-right));
   bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.tools {
+  position: relative;
+}
+
+.pointer-tool,
+.square-tool {
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  transition: transform 0.12s;
+}
+
+.pointer-tool img,
+.square-tool img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.pointer-tool:hover,
+.square-tool:hover {
+  transform: translateY(-3px) scale(1.06);
+}
+
+/* On: lit in gold, like an open menu's button. */
+.pointer-tool.lit,
+.square-tool.lit {
+  filter: drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 3px #ffd23f);
+}
+
+/* The pointer's tools: a column above its button, on parchment. */
+.tool-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: var(--parchment);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.tool-menu[hidden] {
+  display: none;
+}
+
+.tool-menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: var(--round);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-menu button:hover {
+  background: rgba(255, 210, 63, 0.35);
+}
+
+.tool-menu img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+/* The glove: collect everything ready. */
+.collect-all {
+  position: relative;
   padding: 0;
   border: 0;
   background: none;
@@ -610,6 +699,58 @@ body {
   display: block;
   width: 28px;
   height: 28px;
+}
+
+/* Several units selected: their portraits, ten to a row, as on the Flash client's panel. */
+.actions-group {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.portrait {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid var(--wood);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e8dcc0;
+  cursor: pointer;
+}
+
+.portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.portrait img.missing {
+  visibility: hidden;
+}
+
+/* The game glows a portrait white under the mouse. */
+.portrait:hover {
+  box-shadow: 0 0 0 2px #fff, 0 0 6px 2px #fff;
+}
+
+/* Its life bar: green, red for what it has lost. */
+.portrait-life {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  height: 5px;
+  border: 1px solid #000;
+  background: #cc0000;
+}
+
+.portrait-life span {
+  display: block;
+  height: 100%;
+  background: #009933;
 }
 
 /* Asking something: the question, then the choices. */
@@ -1049,10 +1190,10 @@ body {
     height: 30px;
   }
   .panel-open .hud-buttons,
-  .panel-open .collect-all {
+  .panel-open .corner {
     margin-right: 0;
   }
-  .panel-open .collect-all {
+  .panel-open .corner {
     display: none;
   }
   .panel-open .actions {
@@ -1076,12 +1217,17 @@ body {
     justify-content: space-around;
   }
 
-  .collect-all {
+  .corner {
     bottom: calc(var(--dock-h) + 10px);
   }
   .collect-all img {
     width: 52px;
     height: 52px;
+  }
+  .pointer-tool img,
+  .square-tool img {
+    width: 46px;
+    height: 46px;
   }
 
   .message,

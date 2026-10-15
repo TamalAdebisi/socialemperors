@@ -11,6 +11,7 @@ import type { PlacedItem, Town } from "./town.ts";
 
 const TERRAIN = 6;
 const SUBCAT_FARM = 122;
+const SUBCAT_GATE = 222;
 
 /** The Flash client's frame rate: a unit's `velocity` is in pixels per frame of it. */
 export const FLASH_FPS = 30;
@@ -19,9 +20,9 @@ export const FLASH_FPS = 30;
 export type WalkGrid = Uint8Array;
 
 /**
- * Bought land is walkable, except under buildings. Fields (farms) can be
- * walked over, and units don't stand in each other's way. `anywhere`: the
- * whole map but under buildings, as the Flash client's paths go.
+ * Bought land is walkable, except under buildings. Fields (farms) and open
+ * wall gates can be walked over, and units don't stand in each other's way.
+ * `anywhere`: the whole map but under buildings, as the Flash client's paths go.
  */
 export function walkGrid(town: Town, anywhere = false): WalkGrid {
   const grid = new Uint8Array(MAP_TILES * MAP_TILES);
@@ -31,7 +32,8 @@ export function walkGrid(town: Town, anywhere = false): WalkGrid {
     }
   }
   for (const placed of town.items) {
-    if (placed.item.isUnit || placed.item.category === TERRAIN || placed.item.subcategory === SUBCAT_FARM) {
+    if (placed.item.isUnit || placed.item.category === TERRAIN || placed.item.subcategory === SUBCAT_FARM
+        || (placed.item.subcategory === SUBCAT_GATE && placed.open)) {
       continue;
     }
     for (const [x, y] of footprintTiles(placed)) {
@@ -58,6 +60,88 @@ function inMap(x: number, y: number): boolean {
 
 export function isWalkable(grid: WalkGrid, x: number, y: number): boolean {
   return inMap(x, y) && grid[y * MAP_TILES + x] === 1;
+}
+
+/**
+ * The ground a unit standing at `from` walks on. Its own (gridFor), unless
+ * it stands off it: left on the wild ring after a fight at a troll camp,
+ * freed from one, or under a gate shut on it. Then it may cross the whole
+ * map to get back, other buildings still in the way (it walks out of one it
+ * stands in); where it's sent must be on its ground all the same (unitPath,
+ * reachable).
+ */
+function groundFrom(town: Town, unit: PlacedItem, from: Point): { grid: WalkGrid; ground: WalkGrid } {
+  const grid = gridFor(town, unit);
+  if (isWalkable(grid, from.x, from.y) || !inMap(from.x, from.y)) {
+    return { grid, ground: grid };
+  }
+  const ground = walkGrid(town, true);
+  ground[from.y * MAP_TILES + from.x] = 1;
+  for (const key of tilesUnder(town, from)) {
+    const [x, y] = key.split(",").map(Number);
+    ground[y * MAP_TILES + x] = 1;
+  }
+  return { grid, ground };
+}
+
+/** The tiles ("x,y") of the buildings standing on a tile: a unit there may walk out across them. */
+export function tilesUnder(town: Town, at: Point): Set<string> {
+  const tiles = new Set<string>();
+  for (const placed of town.items) {
+    const footprint = placed.item.isUnit ? [] : footprintTiles(placed);
+    if (footprint.some(([x, y]) => x === at.x && y === at.y)) {
+      footprint.filter(([x, y]) => inMap(x, y)).forEach(([x, y]) => tiles.add(`${x},${y}`));
+    }
+  }
+  return tiles;
+}
+
+/** A unit's way from one tile to another (findPath), back onto its ground if it stands off it. */
+export function unitPath(town: Town, unit: PlacedItem, from: Point, to: Point): Point[] | null {
+  if (unit.item.flying) {
+    return findPath(gridFor(town, unit), from, to, true);
+  }
+  const { grid, ground } = groundFrom(town, unit, from);
+  return isWalkable(grid, to.x, to.y) ? findPath(ground, from, to) : null;
+}
+
+/**
+ * Every tile a unit standing at `from` can walk to, found at once (by
+ * spreading out from it with the path finder's steps): for choosing among
+ * many tiles without a path search for each.
+ */
+export function reachable(town: Town, unit: PlacedItem, from: Point): (tile: Point) => boolean {
+  if (unit.item.flying) {
+    return (tile) => inMap(tile.x, tile.y);
+  }
+  const { grid, ground } = groundFrom(town, unit, from);
+  const seen = new Uint8Array(MAP_TILES * MAP_TILES);
+  if (inMap(from.x, from.y) && isWalkable(ground, from.x, from.y)) {
+    const queue = [from.y * MAP_TILES + from.x];
+    seen[queue[0]] = 1;
+    while (queue.length > 0) {
+      const at = queue.pop()!;
+      const cx = at % MAP_TILES;
+      const cy = (at - cx) / MAP_TILES;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = cx + dx;
+          const ny = cy + dy;
+          if ((dx === 0 && dy === 0) || !isWalkable(ground, nx, ny) || seen[ny * MAP_TILES + nx]) {
+            continue;
+          }
+          // As findPath: no squeezing diagonally between two corners.
+          if (dx !== 0 && dy !== 0 && (!isWalkable(ground, cx + dx, cy) || !isWalkable(ground, cx, cy + dy))) {
+            continue;
+          }
+          seen[ny * MAP_TILES + nx] = 1;
+          queue.push(ny * MAP_TILES + nx);
+        }
+      }
+    }
+  }
+  return (tile) => isWalkable(grid, tile.x, tile.y) && seen[tile.y * MAP_TILES + tile.x] === 1
+    || (tile.x === from.x && tile.y === from.y);
 }
 
 /**

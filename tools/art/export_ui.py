@@ -47,6 +47,10 @@ PICTURES = {
     "remove": ("GuiMC/bgBar/bulldozer", 0),
     "fast-collect": ("GuiMC/bgBar/recolectaRapido", 0),
     "pointer": ("GuiMC/bgBar/normalMouse", 0),
+    "pointer-cancel": ("GuiMC/bgBar/normalMouse", 1),  # a tool on: back to the pointer
+    # The square tool, for selecting units with a box; with the mouse over it, it names its key.
+    "square-tool": ("GuiMC/bgBar/herramientaCuadrado", 0),
+    "square-tool-space": ("GuiMC/bgBar/herramientaCuadrado", 1),
     "my-town": ("GuiMC/bgBar/returnHome", 0),
     "my-world": ("GuiMC/bgBar/returnHome", 2),
     "quests": ("GuiMC/bgBar/iconMenuWorld/questButton", 0),
@@ -89,6 +93,9 @@ PICTURES = {
     "open-graveyard": ("EP_Graveyard_MC/btnAbrir", 0),
     "open-harbour": ("EP_Harbour_MC/btnAbrir", 0),
     "open-zeppelin": ("EP_Zeppelin_MC/btnAbrir", 0),
+    # The wall gate's card: open it (units pass), close it.
+    "open-gate": ("EP_Wall_MC/btnAbrir", 0),
+    "close-gate": ("EP_Wall_MC/btnAbrir", 1),
     # Pausing: the options panel's pause button, the words GAME PAUSED (the picture's second layer) and RESUME.
     "pause": ("GuiMC/options_panel/bp", 0),
     "game-paused": ("GamePausedMC@1", 0, 1040),
@@ -120,6 +127,9 @@ CURSORS = {
     "cursor-pick": ("CursorMC", 4),     # a rock or gold to mine
     "cursor-inside": ("CursorMC", 10),  # a building to go into
     "cursor-repair": ("CursorMC", 5),   # a burning building to repair (villagers)
+    "cursor-square": ("CursorMC", 13),  # the square tool on: the next drag draws a box
+    "cursor-remove": ("CursorMC", 8),   # the bulldozer on
+    "cursor-collect": ("CursorMC", 6),  # the glove on
 }
 CURSOR_SIZE = 32
 
