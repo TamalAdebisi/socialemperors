@@ -1,0 +1,123 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+
+import { Battle, ENEMY, SELF, seededRandom } from "./battle.ts";
+import type { ItemInfo } from "./config.ts";
+import { MAP_TILES } from "./geometry.ts";
+import { Raid, enemyIds, planRaids } from "./raids.ts";
+
+function item(fields: Partial<ItemInfo> = {}): ItemInfo {
+  return { id: 510, name: "Swordsman", isUnit: true, art: "x", width: 1, height: 1, category: 0, subcategory: 78,
+    flying: false, velocity: 6, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 1,
+    unitsLimit: 0, cashCost: 0, cost: 100, costType: "g", facings: 1, production: null,
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
+    life: 60, attack: 30, defense: 0, attackRange: 1, attackInterval: 20, size: 1, elevation: 1, groups: "", ...fields };
+}
+
+const ITEMS = new Map<number, ItemInfo>();
+for (const id of [509, 510, 513, 516, 517, 520, 525, 526, 527, 528, 529, 530, 531, 547, 601, 597, 603, 541, 585, 586, 501, 581]) {
+  ITEMS.set(id, item({ id, name: `Unit ${id}` }));
+}
+const HOUSE = item({ id: 1, name: "House", isUnit: false, subcategory: 111, width: 2, height: 2, life: 120, attack: 0, velocity: 0 });
+const VILLAGER = item({ id: 500, name: "Villager", subcategory: 71, attack: 0, life: 30 });
+
+function battle(): Battle {
+  return new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(4), home: true });
+}
+
+const quiet = { say: () => {} };
+
+test("who raids: trolls on a human town by level, humans on a troll town", () => {
+  assert.deepEqual(enemyIds(3, "h"), [525]);
+  assert.deepEqual(enemyIds(20, "h"), [525, 526, 527, 530, 531, 528, 529]);
+  assert.deepEqual(enemyIds(6, "t"), [509, 516, 512, 510, 517, 513]);
+});
+
+test("bands from level 10 at 7 minutes, 15 at 14, 20 at 21, from an edge; a human town's bands are smaller", () => {
+  assert.deepEqual(planRaids(9, "h", seededRandom(1)), []);
+  const plans = planRaids(20, "h", seededRandom(1)).filter((p) => p.kind === "bandits");
+  assert.deepEqual(plans.map((p) => p.startsAt / 1800), [7, 14, 21]);
+  assert.ok(plans.every((p) => p.units.length === 5));
+  assert.ok(plans.every((p) => [0, 99].includes(p.spawn.x) || [0, 99].includes(p.spawn.y)));
+  assert.equal(planRaids(20, "t", seededRandom(1)).filter((p) => p.kind === "bandits")[0].units.length, 10);
+});
+
+test("a siege 1 visit in 10, of the level's kind only", () => {
+  const kinds = (level: number) => {
+    const seen = new Set<string>();
+    for (let seed = 0; seed < 300; seed++) {
+      for (const plan of planRaids(level, "h", seededRandom(seed))) {
+        seen.add(plan.kind);
+      }
+    }
+    return [...seen].sort();
+  };
+  assert.deepEqual(kinds(27), ["bandits", "siege"]);
+  assert.deepEqual(kinds(32), ["bandits", "stampede"]);
+  assert.deepEqual(kinds(40), ["army", "bandits"]);
+  let sieges = 0;
+  for (let seed = 0; seed < 2000; seed++) {
+    sieges += planRaids(27, "h", seededRandom(seed)).some((p) => p.kind === "siege") ? 1 : 0;
+  }
+  assert.ok(sieges > 140 && sieges < 260, `about 1 in 10 (${sieges} of 2000)`);
+  const siege = planRaids(27, "h", () => 0.05).find((p) => p.kind === "siege")!;
+  assert.equal(siege.units.length, 26, "20 soldiers, 5 engines, a captain");
+});
+
+test("a band attacks the player's buildings and units, and leaves at its spawn once both quotas are met", () => {
+  const b = battle();
+  const raid = new Raid(b, { kind: "bandits", startsAt: 0, spawn: { x: 50, y: 99 },
+    units: [525, 525, 525].map((id) => ({ id, x: 50, y: 99, squad: "band" as const })) }, ITEMS, 12, "h", quiet);
+  assert.equal(raid.fighters.length, 3);
+  const houses = [b.add(HOUSE, 50, 80, SELF), b.add(HOUSE, 54, 80, SELF), b.add(HOUSE, 58, 80, SELF), b.add(HOUSE, 62, 80, SELF)];
+  const people = [0, 1, 2, 3].map((i) => b.add(VILLAGER, 46 + i, 76, SELF));
+  for (const p of people) {
+    p.condition = "passive";
+  }
+  // The battle tells the raid what fell, as it falls.
+  b.onDeath = (f) => raid.fell(f);
+  for (let i = 0; i < 30 * 240 && !raid.done; i++) {
+    b.step();
+    raid.step();
+  }
+  assert.ok(raid.burnt >= 3 && raid.killed >= 3, `quotas of 3 at level 12 (${raid.burnt} burnt, ${raid.killed} killed)`);
+  assert.ok(raid.done, "gone");
+  assert.ok(houses.every((h) => b.fighters.includes(h)), "at home burnt houses stay");
+  assert.ok(houses.some((h) => h.ruined));
+});
+
+test("at home a burnt-out building comes back once repaired in full", () => {
+  const b = battle();
+  const house = b.add(HOUSE, 50, 50, SELF);
+  b.hurt(house, 1000, null);
+  assert.ok(house.dead && house.ruined && b.fighters.includes(house));
+  b.repair(house, 25);
+  assert.ok(house.dead, "not until whole");
+  for (let i = 0; i < 10; i++) {
+    b.repair(house, 25);
+  }
+  assert.ok(!house.dead && !house.ruined && house.life === house.maxLife);
+  // An enemy's building still falls.
+  const theirs = b.add(HOUSE, 60, 60, ENEMY);
+  b.hurt(theirs, 1000, null);
+  assert.ok(!b.fighters.includes(theirs));
+});
+
+test("the siege: a minute's wait, then the engines go for the building nearest", () => {
+  const b = battle();
+  const said: number[] = [];
+  const raid = new Raid(b, planRaids(27, "h", () => 0.05).find((p) => p.kind === "siege")!, ITEMS, 27, "h",
+    { say: (_f, line) => said.push(line) });
+  const near = b.add(HOUSE, 50, 85, SELF);
+  b.add(HOUSE, 50, 40, SELF);
+  for (let i = 0; i < 1800; i++) {
+    b.step();
+    raid.step();
+  }
+  assert.ok(said.includes(592) || said.includes(594), "the captain calls to get ready");
+  b.step();
+  raid.step();
+  assert.ok(said.includes(582), "Siege engines! Attack!");
+  const engines = raid.fighters.filter((f) => f.item.id === 520);
+  assert.ok(engines.every((e) => e.target === near));
+});

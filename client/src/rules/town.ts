@@ -73,6 +73,14 @@ export interface PlacedItem {
   startedAt: number | null;
   /** The working time chosen for a mill or mine (1 to 4), or 0 for none (rules/production.ts). */
   workTime: number;
+  /**
+   * A building hurt in a raid: its life now (rules/raids.ts), until
+   * villagers repair it; undefined when whole. Never saved, as in the
+   * Flash client: reopening the town finds it whole again.
+   */
+  health?: number;
+  /** Burnt out in a raid: no room for people (but the town hall's) until it's repaired in full. */
+  ruined?: boolean;
 }
 
 export interface Town {

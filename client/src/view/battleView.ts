@@ -9,6 +9,7 @@ import type { ItemInfo } from "../rules/config.ts";
 import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitFacing, unitPoint, type Point } from "../rules/geometry.ts";
 import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
+import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { Markers } from "./markers.ts";
 import { animated, buildingSprite, unitSprite, type Pose } from "./townView.ts";
@@ -70,6 +71,8 @@ export class BattleView {
   /** The spell marker while aiming, and what it lights up. */
   private readonly marker = new Sprite();
   private lit = new Set<Fighter>();
+  /** The island's look for trees (snow on ice...): the town's at home. */
+  skin = 0;
   /** The units the player has picked, outlined on the ground. */
   selected = new Set<Fighter>();
   private hovered: Fighter | null = null;
@@ -265,9 +268,12 @@ export class BattleView {
       }
       case "died": {
         const f = event.fighter;
-        if (!f.isUnit) {
+        if (!f.isUnit && !f.ruined) {
           this.remove(f);
           break;
+        }
+        if (!f.isUnit) {
+          break;  // burnt out at home: it stays, in flames
         }
         this.sound(WOMEN.has(f.item.id) ? "die-woman"
           : f.item.race === "t" || f.item.subcategory === 84 ? "die-troll"
@@ -381,7 +387,8 @@ export class BattleView {
 
   /** What picture a fighter shows: its pose and way, or a special move's animation. */
   private keyOf(fighter: Fighter, pose: Pose, special: number): string {
-    return !fighter.isUnit ? `b ${fighter.facing}` : special ? `s${special} ${fighter.facing}` : `${pose} ${fighter.facing}`;
+    return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)}`
+      : special ? `s${special} ${fighter.facing}` : `${pose} ${fighter.facing}`;
   }
 
   /** The special animation a unit is playing (rules/specials.ts), or 0. */
@@ -411,7 +418,17 @@ export class BattleView {
     } else if (fighter.isUnit) {
       drawn.slot.addChild(unitSprite(art, fighter.facing, pose, fighter.at, pose === "MUERTE"));
     } else {
-      drawn.slot.addChild(buildingSprite(art, asPlaced(fighter), 0));
+      const sprite = buildingSprite(art, asPlaced(fighter), this.skin);
+      drawn.slot.addChild(sprite);
+      // Losing life: the game's flames over it.
+      const stage = fireStage(fighter.life, fighter.maxLife);
+      if (stage > 0) {
+        const fire = await fireSprite(stage);
+        if (!drawn.slot.destroyed && drawn.key === this.keyOf(fighter, pose, special)) {
+          fire.position.copyFrom(sprite.position);
+          drawn.slot.addChild(fire);
+        }
+      }
     }
   }
 
@@ -479,7 +496,7 @@ export class BattleView {
     const slots = [...this.drawn].sort(([, a], [, b]) => b.slot.zIndex - a.slot.zIndex);
     for (const [fighter, drawn] of slots) {
       const picture = drawn.slot.children[0];
-      if (!fighter.dead && picture && isOpaqueAt(picture, screen)) {
+      if ((!fighter.dead || fighter.ruined) && picture && isOpaqueAt(picture, screen)) {
         return fighter;
       }
     }

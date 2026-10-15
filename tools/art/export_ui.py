@@ -106,6 +106,19 @@ CURSORS = {
 CURSOR_SIZE = 32
 
 
+# Pictures drawn on the map rather than in windows: kept whole (not trimmed),
+# with the point the game places them by, in client/src/view/art/ and its
+# anchors.json. Our name: (the picture, which frame).
+MAP_PICTURES = {
+    # A building's fire as it loses life: below 100%, 67%, 34%, and burnt out.
+    "fire-1": ("FireMC", 0),
+    "fire-2": ("FireMC", 1),
+    "fire-3": ("FireMC", 2),
+    "fire-4": ("FireMC", 3),
+}
+MAP_OUT = os.path.join(ROOT, "client", "src", "view", "art")
+
+
 def ffdec_classpath():
     """FFDec's jars, built by tools/ffdec.sh."""
     script = os.path.join(ROOT, "tools", "ffdec.sh")
@@ -148,9 +161,30 @@ def main():
             picture.thumbnail((CURSOR_SIZE, CURSOR_SIZE), Image.LANCZOS)
             picture.save(os.path.join(OUT, f"{name}.png"), optimize=True)
             print(f"{name}: {picture.width}x{picture.height}")
+        export_map_pictures(folder)
     finally:
         shutil.rmtree(folder, ignore_errors=True)
     return 0
+
+
+def export_map_pictures(folder):
+    """The map's pictures, whole, and where each one's point is (a share of its size)."""
+    import json
+    os.makedirs(MAP_OUT, exist_ok=True)
+    render(sorted({path for path, _ in MAP_PICTURES.values()}), folder)
+    anchors = {}
+    for name, (path, frame) in MAP_PICTURES.items():
+        stem = path.replace("/", ".")
+        with open(os.path.join(folder, f"{stem}.json")) as f:
+            origin = json.load(f)["origin"]
+        with Image.open(os.path.join(folder, f"{stem}-{frame}.png")) as image:
+            picture = image.convert("RGBA")
+        picture.save(os.path.join(MAP_OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)
+        anchors[name] = {"x": round(origin["x"] / picture.width, 4), "y": round(origin["y"] / picture.height, 4), "scale": SCALE}
+        print(f"{name}: {picture.width}x{picture.height}")
+    with open(os.path.join(MAP_OUT, "anchors.json"), "w") as f:
+        json.dump(anchors, f, indent=1)
+        f.write("\n")
 
 
 if __name__ == "__main__":

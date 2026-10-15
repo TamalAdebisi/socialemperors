@@ -139,6 +139,8 @@ export interface Fighter {
   sinkingSince?: number;
   /** A summoned unit whose time is up, fading since this frame. */
   fadingSince?: number;
+  /** At home: a building of the player's burnt out at 0 life (it counts as dead until repaired in full). */
+  ruined?: boolean;
   /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
   limit?: number;
   limitMax?: number;
@@ -208,6 +210,12 @@ export interface BattleOptions {
   random?: () => number;
   /** Told of each death, before units look for new targets (the quest counts and pays). */
   onDeath?: (fighter: Fighter, by: Fighter | null) => void;
+  /**
+   * The player's own town: their buildings are never destroyed there. At
+   * 0 life one burns out and stays (`ruined`): it can't be hit, doesn't
+   * shoot, and stays out of the fight until villagers repair it in full.
+   */
+  home?: boolean;
 }
 
 export class Battle {
@@ -216,14 +224,17 @@ export class Battle {
   readonly shots: Shot[] = [];
   /** What happened since the view last looked: it takes them with takeEvents(). */
   private events: BattleEvent[] = [];
-  private readonly random: () => number;
-  private readonly onDeath: (fighter: Fighter, by: Fighter | null) => void;
+  /** The battle's chance: everything random in it comes from here (rules/raids.ts too). */
+  readonly random: () => number;
+  /** Told of each death, before units look for new targets (the quest counts and pays; a raid counts). */
+  onDeath: (fighter: Fighter, by: Fighter | null) => void;
   /** Ground the battle can walk on, without buildings. */
   private readonly ground: WalkGrid;
   /** The same with the standing buildings' footprints taken out. */
   private grid: WalkGrid;
   private gridStale = true;
   private nextKey = 1;
+  private readonly home: boolean;
   /** Things due on a later frame (a kamikaze set off by another, a spell's effects). */
   private later: { frame: number; run: () => void }[] = [];
   private shields: Shield[] = [];
@@ -241,6 +252,7 @@ export class Battle {
     this.grid = options.ground;
     this.random = options.random ?? Math.random;
     this.onDeath = options.onDeath ?? (() => {});
+    this.home = options.home ?? false;
   }
 
   /** Put an item on the field: a unit on its tile, a building on its footprint. */
@@ -800,6 +812,23 @@ export class Battle {
   }
 
   /**
+   * A villager's repair at home: life back to a building, and a burnt-out
+   * one back in the fight once it's whole again.
+   */
+  repair(building: Fighter, amount: number): void {
+    if (building.isUnit || building.life >= building.maxLife) {
+      return;
+    }
+    building.life = Math.min(building.maxLife, building.life + amount);
+    this.events.push({ kind: "hit", fighter: building, amount, crit: false, heal: true });
+    if (building.ruined && building.life >= building.maxLife) {
+      building.ruined = false;
+      building.dead = false;
+      building.diedAt = -1;
+    }
+  }
+
+  /**
    * Thrown: a unit flies about half of `tiles` away from a point, to the
    * nearest free tile there, and lies helpless for a second. Giants,
    * bosses and the already helpless stay put.
@@ -879,7 +908,10 @@ export class Battle {
     fighter.next = null;
     fighter.target = null;
     fighter.attacking = false;
-    if (!fighter.isUnit) {
+    if (!fighter.isUnit && this.home && fighter.side === SELF) {
+      // At home it burns out and stays where it is.
+      fighter.ruined = true;
+    } else if (!fighter.isUnit) {
       // A building is gone at once (the view takes it away); its ground is free.
       this.fighters.splice(this.fighters.indexOf(fighter), 1);
       this.gridStale = true;
@@ -1036,7 +1068,7 @@ export class Battle {
     if (this.gridStale) {
       const grid = new Uint8Array(this.ground);
       for (const f of this.fighters) {
-        if (f.isUnit || f.dead || f.item.elevation === 0 || f.item.subcategory === SUBCAT.farm) {
+        if (f.isUnit || (f.dead && !f.ruined) || f.item.elevation === 0 || f.item.subcategory === SUBCAT.farm) {
           continue;
         }
         for (let x = f.tx - f.item.width + 1; x <= f.tx; x++) {

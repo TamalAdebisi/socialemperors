@@ -4,6 +4,31 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, defending the town (raids)
+
+- **Raiders pay what they showed.** The original showed 5 gold and some
+  experience for each raider killed at home, but never told the server,
+  so it was lost on the next visit. Now the server pays it when it hears
+  the `kill` (the Flash client sends it too, so both clients get it), up
+  to 300 raiders a day so it can't be farmed without end.
+- **Building waits while raiders are in town.** The original let the
+  player keep building during a raid; here the town becomes a
+  battlefield until it's over. The stampede and the army never retreat
+  (as in the original), so they have to be beaten.
+- **Bandits appear when they attack.** In the original they stood at the
+  map's edge from the moment the town opened, fighting anything that
+  came within reach, and set off after 7 minutes; here they arrive at the
+  edge then. They're rarely seen out there either way.
+- **Kept from the original:** the village siege (levels 25 to 29) comes
+  in the player's own race (humans besiege a human town); the stampede
+  and the army never retreat; nothing about raids or burning is saved.
+- **Retreating raiders leave from beside their edge tile,** not only
+  from the exact tile, so they don't queue up there one by one.
+- **Select all leaves villagers out** (they have an attack, but they're
+  workers, and they should be able to repair).
+- **No clickable gold and experience tokens:** what a raider pays rises
+  from it and is counted at once.
+
 ## 15 October 2026: Beta 2, special moves
 
 - **Each move is one of a few kinds** (a volley, a storm of hits, a
