@@ -317,6 +317,9 @@ async function start(): Promise<void> {
     camera.onTap = (at) => visitor.tap(at);
   }
   const { missing } = await view.build((done, total) => showStatus(`Drawing your town… ${Math.round((100 * done) / total)}%`));
+  if (visit === undefined) {
+    void view.showLandForSale();  // the player's own land for sale, as in the Flash client
+  }
   if (missing.length) {
     console.warn("No art yet for:", missing);
     showStatus(`Some pictures aren't available yet (${missing.length}); they show as outlines.`);
