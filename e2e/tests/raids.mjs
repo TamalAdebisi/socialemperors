@@ -18,7 +18,9 @@ export default async function raids({ newPlayer }) {
   await player.page.waitForFunction(() => window.seHome, null, { timeout: 30_000 });
   const plans = await player.page.evaluate(() => window.seHome.waiting.map((p) => ({ kind: p.kind, at: p.startsAt, n: p.units.length })));
   assert.deepEqual(plans, [{ kind: "bandits", at: 7 * 60 * 30, n: 3 }], "level 12: one band of 3, at 7 minutes");
-  const before = await player.saved({ waitForBatch: false });
+  // After the first batch: the goal for two villagers (with the one lib.mjs gives every
+  // test town) is done as the town opens, and pays its 10 gold then.
+  const before = await player.saved();
 
   // The band comes now.
   await player.page.evaluate(() => window.seHome.hurry());
