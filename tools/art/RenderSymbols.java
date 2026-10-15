@@ -60,15 +60,16 @@ public class RenderSymbols {
         System.setProperty("java.awt.headless", "true");
         File out = new File(args[0]);
         double scale = Double.parseDouble(args[1]);
-        SWF swf = read(args[2]);
+        SWF swf;
+        try (InputStream is = new BufferedInputStream(new FileInputStream(args[2]))) {
+            swf = new SWF(is, false);
+        }
         out.mkdirs();
         int failed = 0;
         for (int i = 3; i < args.length; i++) {
             String name = args[i];
             try {
-                // One layer alone is drawn by taking the others out of the picture: from a copy of
-                // the file read again, so the next name still finds them.
-                int frames = render(name.matches(".*@[1-9][0-9]*(\\*[0-9]+)?") ? read(args[2]) : swf, name, scale, out);
+                int frames = render(swf, name, scale, out);
                 System.out.printf("ok %s: %d frame(s)%n", name, frames);
             } catch (Exception e) {
                 failed++;
@@ -78,10 +79,102 @@ public class RenderSymbols {
         System.exit(failed == 0 ? 0 : 1);
     }
 
-    static SWF read(String file) throws Exception {
-        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-            return new SWF(is, false);
+    /** A picture by class, or a part of one by the path of its instance names. */
+    static Timelined find(SWF swf, String path) {
+        String[] names = path.split("/");
+        CharacterTag character = swf.getCharacterByClass(names[0]);
+        for (int i = 1; i < names.length && character instanceof Timelined; i++) {
+            character = part((Timelined) character, names[i]);
         }
+        if (!(character instanceof Timelined)) {
+            throw new IllegalArgumentException("no picture called " + path);
+        }
+        return (Timelined) character;
+    }
+
+    /** The picture placed under this instance name, in any frame. */
+    static CharacterTag part(Timelined parent, String instanceName) {
+        for (Frame frame : parent.getTimeline().getFrames()) {
+            for (DepthState layer : frame.layers.values()) {
+                if (instanceName.equals(layer.instanceName)) {
+                    return layer.getCharacter();
+                }
+            }
+        }
+        return null;
+    }
+
+    static int render(SWF swf, String path, double scale, File out) throws Exception {
+        String name = path.replace('/', '.');
+        // "<name>*n": n moments of it playing, a frame apart, its parts' own animations running
+        // too (each frame else shows them still, at their first frame). Its timeline stops at its last frame.
+        int star = path.lastIndexOf('*');
+        int moments = star > 0 ? Integer.parseInt(path.substring(star + 1)) : 0;
+        if (star > 0) {
+            path = path.substring(0, star);
+        }
+        int at = path.lastIndexOf('@');
+        int only = at > 0 ? Integer.parseInt(path.substring(at + 1)) : 0;
+        Timeline timeline = find(swf, at > 0 ? path.substring(0, at) : path).getTimeline();
+        if (only == 0) {
+            return render(timeline, path, name, scale, out, moments);
+        }
+        // Keep only the chosen layer in every frame, and put the others back
+        // after: another picture of the run may want them.
+        List<java.util.TreeMap<Integer, DepthState>> all = new java.util.ArrayList<>();
+        for (Frame frame : timeline.getFrames()) {
+            all.add(new java.util.TreeMap<>(frame.layers));
+            Integer keep = new java.util.ArrayList<>(frame.layers.keySet()).get(only - 1);
+            frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
+        }
+        try {
+            return render(timeline, path, name, scale, out, moments);
+        } finally {
+            for (int f = 0; f < all.size(); f++) {
+                timeline.getFrames().get(f).layers.putAll(all.get(f));
+            }
+        }
+    }
+
+    static int render(Timeline timeline, String path, String name, double scale, File out, int moments) throws Exception {
+        RECT bounds = timeline.getDisplayRectWithFilters();
+        int pad = PAD * TWIPS;
+        RECT rect = new RECT(
+                Math.floorDiv(bounds.Xmin, TWIPS) * TWIPS - pad,
+                Math.floorDiv(bounds.Xmax + TWIPS - 1, TWIPS) * TWIPS + pad,
+                Math.floorDiv(bounds.Ymin, TWIPS) * TWIPS - pad,
+                Math.floorDiv(bounds.Ymax + TWIPS - 1, TWIPS) * TWIPS + pad);
+        int aaScale = Configuration.useMsaaForExport.get() ? Configuration.msaaGridForExport.get() : 1;
+
+        List<Frame> frames = timeline.getFrames();
+        StringBuilder labels = new StringBuilder();
+        StringBuilder sizes = new StringBuilder();
+        int count = moments > 0 ? moments : frames.size();
+        for (int f = 0; f < count; f++) {
+            int shown = Math.min(f, frames.size() - 1);
+            Frame frame = frames.get(shown);
+            // Each frame as the game shows it after gotoAndStop: its children at their first frame.
+            // Playing, the children are f frames on.
+            for (DepthState layer : frame.layers.values()) {
+                layer.time = 0;
+            }
+            int time = moments > 0 ? f : 0;
+            BufferedImage image = RenderSwf.straightAlpha(SWF.frameToImageGet(timeline, shown, time, null, 0, rect,
+                    new Matrix(), null, null, scale, true, aaScale).getBufferedImage());
+            ImageIO.write(image, "png", new File(out, name + "-" + f + ".png"));
+            labels.append(f > 0 ? ", " : "").append(RenderSwf.jsonStrings(frame.labels));
+            sizes.append(f > 0 ? ", " : "").append(box(boundsAt(timeline, shown, time)));
+        }
+        String manifest = "{\n"
+                + "  \"name\": " + RenderSwf.jsonString(path) + ",\n"
+                + "  \"scale\": " + scale + ",\n"
+                + "  \"origin\": {\"x\": " + Math.round(-rect.Xmin * scale / TWIPS)
+                + ", \"y\": " + Math.round(-rect.Ymin * scale / TWIPS) + "},\n"
+                + "  \"labels\": [" + labels + "],\n"
+                + "  \"bounds\": [" + sizes + "]\n"
+                + "}\n";
+        Files.writeString(new File(out, name + ".json").toPath(), manifest, StandardCharsets.UTF_8);
+        return count;
     }
 
     /**
@@ -128,87 +221,5 @@ public class RenderSymbols {
         }
         return String.format(java.util.Locale.ROOT, "{\"x\": %.2f, \"y\": %.2f, \"w\": %.2f, \"h\": %.2f}",
                 box[0] / TWIPS, box[1] / TWIPS, (box[2] - box[0]) / TWIPS, (box[3] - box[1]) / TWIPS);
-    }
-
-    /** A picture by class, or a part of one by the path of its instance names. */
-    static Timelined find(SWF swf, String path) {
-        String[] names = path.split("/");
-        CharacterTag character = swf.getCharacterByClass(names[0]);
-        for (int i = 1; i < names.length && character instanceof Timelined; i++) {
-            character = part((Timelined) character, names[i]);
-        }
-        if (!(character instanceof Timelined)) {
-            throw new IllegalArgumentException("no picture called " + path);
-        }
-        return (Timelined) character;
-    }
-
-    /** The picture placed under this instance name, in any frame. */
-    static CharacterTag part(Timelined parent, String instanceName) {
-        for (Frame frame : parent.getTimeline().getFrames()) {
-            for (DepthState layer : frame.layers.values()) {
-                if (instanceName.equals(layer.instanceName)) {
-                    return layer.getCharacter();
-                }
-            }
-        }
-        return null;
-    }
-
-    static int render(SWF swf, String path, double scale, File out) throws Exception {
-        String name = path.replace('/', '.');
-        // "<name>*n": n moments of it playing, a frame apart, its parts' own animations running
-        // too (each frame else shows them still, at their first frame). Its timeline stops at its last frame.
-        int star = path.lastIndexOf('*');
-        int moments = star > 0 ? Integer.parseInt(path.substring(star + 1)) : 0;
-        if (star > 0) {
-            path = path.substring(0, star);
-        }
-        int at = path.lastIndexOf('@');
-        int only = at > 0 ? Integer.parseInt(path.substring(at + 1)) : 0;
-        Timeline timeline = find(swf, at > 0 ? path.substring(0, at) : path).getTimeline();
-        if (only > 0) {
-            // Keep only the chosen layer in every frame.
-            for (Frame frame : timeline.getFrames()) {
-                Integer keep = new java.util.ArrayList<>(frame.layers.keySet()).get(only - 1);
-                frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
-            }
-        }
-        RECT bounds = timeline.getDisplayRectWithFilters();
-        int pad = PAD * TWIPS;
-        RECT rect = new RECT(
-                Math.floorDiv(bounds.Xmin, TWIPS) * TWIPS - pad,
-                Math.floorDiv(bounds.Xmax + TWIPS - 1, TWIPS) * TWIPS + pad,
-                Math.floorDiv(bounds.Ymin, TWIPS) * TWIPS - pad,
-                Math.floorDiv(bounds.Ymax + TWIPS - 1, TWIPS) * TWIPS + pad);
-        int aaScale = Configuration.useMsaaForExport.get() ? Configuration.msaaGridForExport.get() : 1;
-
-        List<Frame> frames = timeline.getFrames();
-        StringBuilder labels = new StringBuilder();
-        StringBuilder sizes = new StringBuilder();
-        int count = moments > 0 ? moments : frames.size();
-        for (int f = 0; f < count; f++) {
-            Frame frame = frames.get(Math.min(f, frames.size() - 1));
-            // Each frame as the game shows it after gotoAndStop: its children at their first frame.
-            // Playing, the children are f frames on.
-            for (DepthState layer : frame.layers.values()) {
-                layer.time = 0;
-            }
-            BufferedImage image = RenderSwf.straightAlpha(SWF.frameToImageGet(timeline, Math.min(f, frames.size() - 1),
-                    moments > 0 ? f : 0, null, 0, rect, new Matrix(), null, null, scale, true, aaScale).getBufferedImage());
-            ImageIO.write(image, "png", new File(out, name + "-" + f + ".png"));
-            labels.append(f > 0 ? ", " : "").append(RenderSwf.jsonStrings(frame.labels));
-            sizes.append(f > 0 ? ", " : "").append(box(boundsAt(timeline, Math.min(f, frames.size() - 1), moments > 0 ? f : 0)));
-        }
-        String manifest = "{\n"
-                + "  \"name\": " + RenderSwf.jsonString(path) + ",\n"
-                + "  \"scale\": " + scale + ",\n"
-                + "  \"origin\": {\"x\": " + Math.round(-rect.Xmin * scale / TWIPS)
-                + ", \"y\": " + Math.round(-rect.Ymin * scale / TWIPS) + "},\n"
-                + "  \"labels\": [" + labels + "],\n"
-                + "  \"bounds\": [" + sizes + "]\n"
-                + "}\n";
-        Files.writeString(new File(out, name + ".json").toPath(), manifest, StandardCharsets.UTF_8);
-        return count;
     }
 }

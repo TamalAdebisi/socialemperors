@@ -109,6 +109,21 @@ PICTURES = {
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),
+    # The nests' window (its parchment and title band are the draggy window's): the parts
+    # without their words, which the client writes. The arrows between the six dragons are one picture.
+    "nest-button": ("PopupDragonsMC/actionButton@1", 0, 480),
+    "nest-marker": ("PopupDragonsMC/indicatorDragon@1", 0),
+    "nest-speed-up": ("PopupDragonsMC/temporizador/getnowButton@1", 0, 420),
+    "nest-timer": ("PopupDragonsMC/temporizador@1", 0, 480),
+    "nest-hire": ("PopupDragonsMC/mcHire/hireButton@1", 0, 420),
+    "nest-hire-box": ("PopupDragonsMC/mcHire@1", 0, 480),
+    "nest-bar": ("PopupDragonsMC/progressbar@1", 0, 900),
+    "nest-bar-fill": ("PopupDragonsMC/progressbar/statusbar", 0, 900),
+    "nest-lock": ("PopupDragonsMC/lock0", 0),
+    "nest-frame": ("PopupDragonsMC/marcoThumb", 0, 240),
+    "nest-help": ("PopupDragonsMC/help", 0),
+    "nest-arrows": ("PopupDragonsMC@18", 0, 1240),
+    "nest-pay": ("PopupInactiveNestMC/btnPayGold/mcColor", 0, 420),
     # Pausing: the options panel's pause button, the words GAME PAUSED (the picture's second layer) and RESUME.
     "pause": ("GuiMC/options_panel/bp", 0),
     "game-paused": ("GamePausedMC@1", 0, 1040),
@@ -270,7 +285,6 @@ def export_map_pictures(folder):
     with open(os.path.join(MAP_OUT, "anchors.json"), "w") as f:
         json.dump(anchors, f, indent=1)
         f.write("\n")
-
 
 
 def export_scaffolds(folder):

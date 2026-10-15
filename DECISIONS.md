@@ -20,6 +20,21 @@ them can be found and reversed. The big, agreed decisions are in
   something of its kind is built. The troll town's scaffolds wait for the
   troll town.
 
+## 15 October 2026: the nests' window
+
+- **The nest's window opens in the panel,** like every window in the new
+  client (the layout the owner picked), with the original window's parts
+  stacked down it rather than its wide parchment popup.
+- **Hire friends lists the friends here,** as the classic page's Ask
+  friends window does; the original sent a Facebook request.
+- **Friends' help is a short "Congratulations!!" with OK,** not the
+  original's list of the friends' pictures.
+- **The monster nest's window has no line under its button.** The
+  original never filled it in for monsters (only the dragons have "Press
+  take care every 6 hours...").
+- **The step pictures live in the client** (1.7 MB, ten strips, each
+  loaded only when its nest is opened), so they don't wait for an upload
+  to the bucket.
 ## 15 October 2026: progress as the original keeps it
 
 - **No more opening buildings early.** The original has a price for it
