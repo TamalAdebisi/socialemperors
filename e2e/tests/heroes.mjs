@@ -14,7 +14,7 @@ export default async function heroes({ newPlayer }) {
   for (let i = 0; i < 2; i++) army.push({ cmd: "buy", args: [FIRE_GOD, 44 + 2 * i, 48, 0, 0, 0, 1] });
   for (let i = 0; i < 20; i++) army.push({ cmd: "buy", args: [KNIGHT, 44 + (i % 10), 44 + Math.floor(i / 10), 0, 0, 0, 1] });
   // The island before it won, as the Flash client reports a win: the Hero Isle opens.
-  const before = { map: 0, resources: { g: 0, x: 0 }, units: [], win: 1, duration: 60, voluntary_end: 0, quest_id: 100000014, difficulty: 1 };
+  const before = { map: 0, resources: { g: 0, x: 0 }, units: [], win: 1, duration: 60, voluntary_end: 0, quest_id: 100000019, difficulty: 1 };
   await player.send([{ cmd: "rt_level_up", args: [30] }, ...army, { cmd: "end_quest", args: [JSON.stringify(before)] }]);
   await player.page.goto(`${player.base}/client.html?quest=${HERO_ISLE}`);
   await player.page.waitForSelector(".quest-window", { timeout: 60_000 });

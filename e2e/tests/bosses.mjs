@@ -80,7 +80,8 @@ export default async function bosses({ newPlayer }) {
   const info = await (await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
   assert.equal(info.privateState.questsRank[ARCTIC], 1, "one star won");
-  assert.ok(JSON.stringify(info.privateState.gifts ?? {}).includes(String(PRIZE)), `the island's prize: ${JSON.stringify(info.privateState.gifts)}`);
+  // The server keeps gifts counted by item id.
+  assert.ok(Number(info.privateState.gifts?.[PRIZE] ?? 0) >= 1, "the island's prize: a Powerful Knight");
 }
 
 /** The gate, the yeti and the player's side, as the battle has them. */

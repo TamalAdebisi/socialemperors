@@ -45,6 +45,8 @@ export default async function dragons({ newPlayer }) {
   // The Nest Isle.
   await player.press("Back home");
   await player.page.waitForURL(/islands=1/);
+  await player.loaded();
+  await player.wait(1500);
   await sail(player, NEST);
   await player.page.evaluate(() => {
     const { battle } = window.seQuest;
@@ -75,7 +77,8 @@ async function look(player, path) {
     const thing = path.split(/[.[\]]/).filter(Boolean).reduce((at, key) => at[key], window.seQuest.quest);
     window.seQuest.lookAt({ x: thing.tx, y: thing.ty });
   }, path);
-  await player.wait(1500);
+  // The big dragons' pictures take a while to come.
+  await player.wait(5000);
 }
 
 async function won_(player) {
