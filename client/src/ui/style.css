@@ -480,6 +480,11 @@ body {
   gap: 12px;
 }
 
+.tools {
+  position: relative;
+}
+
+.pointer-tool,
 .square-tool {
   padding: 0;
   border: 0;
@@ -490,6 +495,7 @@ body {
   transition: transform 0.12s;
 }
 
+.pointer-tool img,
 .square-tool img {
   display: block;
   width: 56px;
@@ -497,13 +503,62 @@ body {
   object-fit: contain;
 }
 
+.pointer-tool:hover,
 .square-tool:hover {
   transform: translateY(-3px) scale(1.06);
 }
 
 /* On: lit in gold, like an open menu's button. */
+.pointer-tool.lit,
 .square-tool.lit {
   filter: drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 3px #ffd23f);
+}
+
+/* The pointer's tools: a column above its button, on parchment. */
+.tool-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: var(--parchment);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.tool-menu[hidden] {
+  display: none;
+}
+
+.tool-menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: var(--round);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tool-menu button:hover {
+  background: rgba(255, 210, 63, 0.35);
+}
+
+.tool-menu img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
 }
 
 /* The glove: collect everything ready. */
@@ -1169,6 +1224,7 @@ body {
     width: 52px;
     height: 52px;
   }
+  .pointer-tool img,
   .square-tool img {
     width: 46px;
     height: 46px;

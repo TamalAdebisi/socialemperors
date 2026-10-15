@@ -2,8 +2,10 @@
 // rail and dock"): the level with a bar to the next, and the resources as
 // dark pills with the game's own icons (short numbers on a phone: 12.4k);
 // the way back to the classic game and full screen; and in the bottom
-// right corner, the square tool (selecting units with a box) and the
-// fast-collect glove, which collects every ready building at once.
+// right corner, as on the Flash client's bar, the pointer with its tools
+// (the bulldozer and the fast-collect glove), the square tool (selecting
+// units with a box), and Collect all, which collects every ready building
+// at once.
 // Messages slide in at the top, not over the middle of the town.
 
 import type { Level } from "../rules/levels.ts";
@@ -36,6 +38,9 @@ export interface HudActions {
   pause?: { button(): HTMLButtonElement };
 }
 
+/** The pointer's tools, as on the Flash client's bar: the pointer itself, the bulldozer, the glove. */
+export type Tool = "pointer" | "remove" | "collect";
+
 export interface Hud {
   /** Show the town's numbers again (after a sale...). */
   update(town: Town): void;
@@ -43,6 +48,10 @@ export interface Hud {
   offerCollectAll(run: () => void): void;
   /** Offer the square tool (its button; Space is the editor's). */
   offerSquareTool(run: () => void): void;
+  /** Offer the pointer's tools: its button opens a menu of them, or, with one on, puts it down. */
+  offerTools(choose: (tool: Tool) => void): void;
+  /** Show which tool is on: the pointer's button reads Cancel while the bulldozer or the glove is. */
+  tool(tool: Tool): void;
   /** Light the square tool's button while it's on. */
   squareTool(on: boolean): void;
   /** How many buildings are ready: the glove shows when there are any, with the count. */
@@ -163,10 +172,25 @@ export function showHud(town: Town, actions: HudActions): Hud {
   });
   document.body.appendChild(bar);
 
-  // The bottom right corner, as on the Flash client's bar: the square tool, then the glove.
+  // The bottom right corner, as on the Flash client's bar: the pointer, the square tool, then the glove.
   const corner = document.createElement("div");
   corner.className = "corner";
   document.body.appendChild(corner);
+  // The pointer: its button opens a menu of tools above it, as the Flash client's did.
+  const tools = document.createElement("div");
+  tools.className = "tools";
+  tools.hidden = true;
+  tools.innerHTML = `
+    <div class="tool-menu" role="menu" hidden>
+      <button type="button" role="menuitem" data-tool="pointer"><img src="${ICONS.pointer}" alt=""><span>Pointer</span></button>
+      <button type="button" role="menuitem" data-tool="remove"><img src="${ICONS.remove}" alt=""><span>Remove</span></button>
+      <button type="button" role="menuitem" data-tool="collect"><img src="${ICONS["fast-collect"]}" alt=""><span>Fast collect</span></button>
+    </div>
+    <button type="button" class="pointer-tool" aria-label="Tools" title="Tools: the pointer, Remove, Fast collect"><img src="${ICONS.pointer}" alt=""></button>`;
+  corner.appendChild(tools);
+  const menu = tools.querySelector<HTMLElement>(".tool-menu")!;
+  const pointer = tools.querySelector<HTMLButtonElement>(".pointer-tool")!;
+  let toolOn: Tool = "pointer";
   const square = document.createElement("button");
   square.type = "button";
   square.className = "square-tool";
@@ -211,6 +235,41 @@ export function showHud(town: Town, actions: HudActions): Hud {
     },
     squareTool(on) {
       square.classList.toggle("lit", on);
+    },
+    offerTools(choose) {
+      tools.hidden = false;
+      pointer.addEventListener("click", () => {
+        if (toolOn !== "pointer") {
+          choose("pointer");  // Cancel: back to the pointer
+        } else {
+          menu.hidden = !menu.hidden;
+        }
+      });
+      menu.addEventListener("click", (e) => {
+        const item = (e.target as HTMLElement).closest<HTMLElement>("[data-tool]");
+        if (item) {
+          menu.hidden = true;
+          choose(item.dataset.tool as Tool);
+        }
+      });
+      // A press anywhere else (the map moved, say) closes the menu, as in the Flash client.
+      document.addEventListener("pointerdown", (e) => {
+        if (!tools.contains(e.target as Node)) {
+          menu.hidden = true;
+        }
+      });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          menu.hidden = true;
+        }
+      });
+    },
+    tool(tool) {
+      toolOn = tool;
+      const cancel = tool !== "pointer";
+      pointer.querySelector("img")!.src = cancel ? ICONS["pointer-cancel"] : ICONS.pointer;
+      pointer.setAttribute("aria-label", cancel ? "Cancel: back to the pointer" : "Tools");
+      pointer.classList.toggle("lit", cancel);
     },
     offerBank(open) {
       for (const key of ["gold", "cash"]) {

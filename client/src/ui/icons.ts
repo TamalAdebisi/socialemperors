@@ -18,6 +18,8 @@ export const ICONS = {
   build: new URL("./art/build.webp", import.meta.url).href,
   storage: new URL("./art/storage.webp", import.meta.url).href,
   "fast-collect": new URL("./art/fast-collect.webp", import.meta.url).href,
+  pointer: new URL("./art/pointer.webp", import.meta.url).href,
+  "pointer-cancel": new URL("./art/pointer-cancel.webp", import.meta.url).href,
   "square-tool": new URL("./art/square-tool.webp", import.meta.url).href,
   "square-tool-space": new URL("./art/square-tool-space.webp", import.meta.url).href,
   // The menus' other buttons: the game bar's own, and its villager for the neighbours.
@@ -99,6 +101,8 @@ export function iconImage(name: IconName, label = ""): HTMLImageElement {
  */
 export const CURSORS = {
   square: `url("${new URL("./art/cursor-square.png", import.meta.url).href}") 13 9, crosshair`,
+  remove: `url("${new URL("./art/cursor-remove.png", import.meta.url).href}") 16 13, crosshair`,
+  collect: `url("${new URL("./art/cursor-collect.png", import.meta.url).href}") 16 13, pointer`,
   axe: `url("${new URL("./art/cursor-axe.png", import.meta.url).href}") 4 4, pointer`,
   pick: `url("${new URL("./art/cursor-pick.png", import.meta.url).href}") 4 4, pointer`,
   inside: `url("${new URL("./art/cursor-inside.png", import.meta.url).href}") 1 12, pointer`,

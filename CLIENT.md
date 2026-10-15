@@ -721,6 +721,32 @@ the portraits in `ui/actions.ts`, and the square tool's button in
 - The server hears each unit's own commands, as when it's sent alone; there
   is no command for a group.
 
+### The pointer's tools
+
+Built with selecting several units, at the owner's request. Code:
+`ui/hud.ts` (the button and its menu) and `TownEditor.chooseTool`,
+`bulldoze` and `sweep`. Test: `e2e/tests/tools.mjs`.
+
+**How they work**, read from the Flash client (our notes, our words):
+
+- The pointer's button sits in the bottom right corner, before the square
+  tool. It opens a menu above it: Pointer, Remove (the bulldozer) and Fast
+  collect (the glove). Pressing the map closes the menu.
+- With a tool on, the button reads CANCEL (the game's picture) and puts it
+  down; so does Escape, and taking up the square tool. Taking up a tool
+  clears the selection.
+- **Remove:** the bulldozer's pointer. Tapping a thing removes it, if its
+  card would offer Sell or Remove: never the town hall, units, trees or
+  other people's things, but gold and stone rocks on the player's land.
+  Something that cost nothing goes at once; anything else asks first, with
+  what it gives back. It stays on for the next one, and a drag still moves
+  the map. The server hears `sell` as from the card.
+- **Fast collect:** the glove's pointer. A ready building it passes over is
+  collected; nothing is selected. On a phone, which has no pointer to move
+  without pressing, dragging a finger sweeps it.
+- **Collect all** (our own) stays beside them, collecting everything ready
+  at once.
+
 ### Villagers at work
 
 Built (Beta 1's third slice). With a villager selected, tap a tree, a stone
