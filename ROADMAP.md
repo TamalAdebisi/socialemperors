@@ -304,8 +304,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         window, the troll, civilization, hardcore and god islands played
         here with their stars, prizes and losses, and the battle sounds
         ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] The island map's pictures and the team picker for the last
-        islands
+  - [x] The island map: the game's own painted map, its ribbons, stars,
+        padlocks and Enter Now; the team of 20 for the last islands
   - [ ] Spells and the heroes' special moves
   - [ ] Defending the town (troll camps, bandits, sieges)
   - [ ] The boss islands and the Hero Isle

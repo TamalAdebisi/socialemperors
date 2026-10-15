@@ -20,16 +20,18 @@ export default async function quest({ newPlayer }) {
   await player.reload();
   const before = await player.saved({ waitForBatch: false });
 
-  // The Quests window: the first island open, the second locked.
+  // The Quests window: the game's island map, the first island open, the second locked.
   await player.menu("Quests");
-  await player.wait(800);
+  await player.wait(1500);
   await player.shot("islands");
-  const rows = player.page.locator(".islands .row");
-  assert.equal(await rows.count(), 28);
-  assert.match(await rows.nth(0).textContent(), /Mysterious Isle/);
-  assert.equal(await rows.nth(0).locator("a", { hasText: "Sail" }).count(), 1);
-  assert.equal(await rows.nth(1).locator("a", { hasText: "Sail" }).count(), 0, "the next island is locked");
-  await rows.nth(0).locator("a", { hasText: "Sail" }).click();
+  const islands = player.page.locator(".islands .island-button");
+  assert.equal(await islands.count(), 28);
+  assert.match(await islands.nth(0).textContent(), /Mysterious Isle/);
+  assert.match(await islands.nth(0).getAttribute("href"), /quest=100000006/, "the first island can be sailed to");
+  assert.equal(await islands.nth(1).locator(".island-lock").count(), 1, "the next island is locked");
+  await islands.nth(1).locator(".island-name").click();
+  assert.match(await player.page.locator(".island-said").textContent(), /Win the island before it/);
+  await islands.nth(0).locator(".island-enter").click();
 
   // The start window: the army, one star (the others locked), Start battle.
   await player.page.waitForSelector(".quest-window", { timeout: 60_000 });
@@ -102,14 +104,23 @@ export default async function quest({ newPlayer }) {
   const lost = Number(await player.page.evaluate(() => window.seQuest.quest.lost().reduce((n, [, c]) => n + c, 0)));
   assert.equal(units(after), units(before) - lost, `the ${lost} units lost for good are gone`);
 
-  // Home: the islands again, the next open, this one resting.
+  // Home: the island map again, the next island open, this one resting with its star.
   await player.press("Back home");
   await player.page.waitForURL(/islands=1/);
   await player.loaded();
-  const home = player.page.locator(".islands .row");
-  assert.match(await home.nth(0).textContent(), /Resting/);
-  assert.equal(await home.nth(1).locator("a", { hasText: "Sail" }).count(), 1, "the next island can be sailed to");
+  const home = player.page.locator(".islands .island-button");
+  assert.match(await home.nth(0).getAttribute("aria-label"), /rests/);
+  assert.match(await home.nth(0).locator(".island-stars").getAttribute("alt"), /^1 of 3 stars/);
+  assert.match(await home.nth(1).getAttribute("href"), /quest=100000007/, "the next island can be sailed to");
   await player.shot("home");
+
+  // On a phone: World, then Quests, opens the map as a sheet above the dock.
+  const phone = await player.onPhone();
+  await phone.menu("World");
+  await phone.page.locator(".panel:not([hidden]) .row", { hasText: "Quests" }).locator("a").click();
+  await phone.wait(1500);
+  assert.equal(await phone.page.locator(".islands .island-button").count(), 28);
+  await phone.shot("phone-islands");
 }
 
 /** Where the enemy unit (or building) nearest the army is on screen, or null. */

@@ -6,7 +6,7 @@ import { Battle, ENEMY, NEUTRAL, SELF, seededRandom } from "./battle.ts";
 import { itemsById, type GameConfig } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
 import islandData from "./islands.json" with { type: "json" };
-import { Quest, armyOf, difficulties, islandGround, islandLock, type Island } from "./quest.ts";
+import { Quest, armyOf, difficulties, islandGround, islandLock, lastTeam, teamArmy, teamChoices, teamProblem, teamSlots, type Island } from "./quest.ts";
 import type { PlacedItem, SaveItem, Town } from "./town.ts";
 
 const root = new URL("../../../", import.meta.url);
@@ -150,4 +150,24 @@ test("Wild Isle lends its kamikazes and fire cannons; Emergent Isle its houses a
   assert.equal(wild.battle.fighters.filter((f) => f.item.id === 575 && f.side === SELF).length, 40);
   const emergent = start(100000012, 1, [[510, 1]]);
   assert.ok(emergent.battle.fighters.filter((f) => [3, 4, 36].includes(f.item.id)).every((f) => f.side === SELF));
+});
+
+test("the last islands take a team of 20: each kind up to its limit, gods needed on the god islands", () => {
+  const god3 = islands.find((i) => i.quest === 100000092)!;
+  const hardcore7 = islands.find((i) => i.quest === 100000047)!;
+  assert.ok(god3.team && hardcore7.team);
+  const limited = [...items.values()].find((i) => i.isUnit && i.unitsLimit > 0)!;
+  assert.deepEqual(teamChoices([[510, 30], [limited.id, limited.unitsLimit + 3]], items), [[510, 30], [limited.id, limited.unitsLimit]]);
+  // The last team, kept to what's left; 20 places.
+  assert.deepEqual(lastTeam([510, 510, 510, 0, 999], [[510, 2]]), [510, 510]);
+  assert.equal(teamSlots([510, 510]).length, 20);
+  assert.deepEqual(teamSlots([510]).slice(0, 2), [510, 0]);
+  assert.deepEqual(teamArmy([510, 516, 510]), [[510, 2], [516, 1]]);
+  // Nobody picked; no gods on a god island; enough gods.
+  assert.match(teamProblem([], hardcore7, items)!, /Pick/);
+  assert.equal(teamProblem([510], hardcore7, items), null);
+  assert.match(teamProblem([510], god3, items)!, /at least 5 gods/);
+  const gods = [...items.values()].filter((i) => i.isUnit && (i.groups === "god" || i.groups === "colossus")).map((i) => i.id);
+  assert.ok(gods.length >= 1);
+  assert.equal(teamProblem(Array(5).fill(gods[0]), god3, items), null);
 });
