@@ -64,6 +64,17 @@ export const ICONS = {
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
   "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  // Arthur's lessons, and the free draggy at their end.
+  "tutor-arthur": new URL("./art/tutor-arthur.webp", import.meta.url).href,
+  "tutor-arrow": new URL("./art/tutor-arrow.webp", import.meta.url).href,
+  "tutor-bubble": new URL("./art/tutor-bubble.webp", import.meta.url).href,
+  "tutor-next": new URL("./art/tutor-next.webp", import.meta.url).href,
+  "tutor-marker": new URL("./art/tutor-marker.webp", import.meta.url).href,
+  "draggy-window": new URL("./art/draggy-window.webp", import.meta.url).href,
+  "draggy-title": new URL("./art/draggy-title.webp", import.meta.url).href,
+  "draggy-frame": new URL("./art/draggy-frame.webp", import.meta.url).href,
+  "reminder-ok": new URL("./art/reminder-ok.webp", import.meta.url).href,
+  "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,
   // Pausing: the options panel's button, the game's GAME PAUSED and its RESUME.
   pause: new URL("./art/pause.webp", import.meta.url).href,
   "game-paused": new URL("./art/game-paused.webp", import.meta.url).href,

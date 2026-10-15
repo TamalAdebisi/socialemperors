@@ -349,6 +349,10 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with
       the Flash game one tap away for a while.
+  - [x] Arthur's lessons in the new client, all 32 steps, ending with the
+        dragon nest and the choice of a draggy
+        ([CLIENT.md](CLIENT.md#arthurs-lessons))
+  - [ ] The dragon nest's own window: raising its dragons
 
 ## How we add a missing feature
 

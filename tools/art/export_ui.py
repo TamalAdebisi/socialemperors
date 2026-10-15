@@ -30,8 +30,9 @@ SCALE = 3
 LONGEST = 160
 
 # Our name: (the picture in the game's file, which frame[, its longest side
-# if not LONGEST]). A picture is a class, or a part of one by the names the
-# game's code gives it, or "<class>@n" for its n-th layer alone.
+# if not LONGEST[, "top": only what's above its first empty row]]). A
+# picture is a class, or a part of one by the names the game's code gives
+# it, or "<class>@n" for its n-th layer alone.
 PICTURES = {
     # The resource icons: one picture, a frame for each resource.
     "cash": ("IconResourcesMC", 0),
@@ -89,6 +90,18 @@ PICTURES = {
     "open-graveyard": ("EP_Graveyard_MC/btnAbrir", 0),
     "open-harbour": ("EP_Harbour_MC/btnAbrir", 0),
     "open-zeppelin": ("EP_Zeppelin_MC/btnAbrir", 0),
+    # Arthur's lessons: Arthur, his arrow, his speech bubble and its Next, the marker over a tree to cut.
+    "tutor-arthur": ("GameShowHostMC", 0, 600),
+    "tutor-arrow": ("ArrowMC@3", 0, 240),
+    "tutor-bubble": ("TutorialPopupMC@1", 0, 900),
+    "tutor-next": ("TutorialPopupMC/noBtn", 0, 300),
+    "tutor-marker": ("IconTutorialMC", 0, 120),
+    # The free draggy at the lessons' end: its window, title band and frames; the nest's reminder's OK; the nest's Enter.
+    "draggy-window": ("SelectYourDragonPopUpMC@1", 0, 1200),
+    "draggy-title": ("SelectYourDragonPopUpMC@2", 0, 900),
+    "draggy-frame": ("SelectYourDragonPopUpMC@8", 0, 300, "top"),  # without the placeholder name below it
+    "reminder-ok": ("SelectYourDragonReminderNestPopupMC@5", 0, 300),
+    "open-nest": ("EP_DragonNest_MC/btnAbrir", 0),
     # Pausing: the options panel's pause button, the words GAME PAUSED (the picture's second layer) and RESUME.
     "pause": ("GuiMC/options_panel/bp", 0),
     "game-paused": ("GamePausedMC@1", 0, 1040),
@@ -160,6 +173,15 @@ def render(paths, folder):
                     "RenderSymbols", folder, str(SCALE), GAME, *paths], check=True)
 
 
+def top_part(image):
+    """The picture down to its first empty row (a frame without the placeholder text under it)."""
+    alpha = image.getchannel("A")
+    for y in range(image.height):
+        if alpha.crop((0, y, image.width, y + 1)).getbbox() is None:
+            return image.crop((0, 0, image.width, y))
+    return image
+
+
 def trimmed(image):
     """The picture without the empty space around it."""
     box = image.getchannel("A").getbbox()
@@ -175,6 +197,8 @@ def main():
             drawn = os.path.join(folder, f"{path.replace('/', '.')}-{frame}.png")
             with Image.open(drawn) as image:
                 picture = trimmed(image.convert("RGBA"))
+            if size[1:] == ["top"]:
+                picture = top_part(picture)
             longest = size[0] if size else LONGEST
             picture.thumbnail((longest, longest), Image.LANCZOS)
             picture.save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)

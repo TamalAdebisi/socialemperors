@@ -364,8 +364,8 @@ def do_command(USERID, cmd, args, previous=None):
         pState["timeStampTakeCare"] = -1 # remove timer if any
 
     elif cmd == Constant.CMD_NEXT_DRAGON_STEP:
-        unknown = args[0]
-        print(helps.dragon_step(save))  # its own step, or a friend's (helps.py)
+        # Its own step, or a friend's (helps.py); the text "0" is one of the lessons' seven gift steps.
+        print(helps.dragon_step(save, gift=isinstance(args[0], str) if args else False))
 
     elif cmd == Constant.CMD_CLEAR_DRAGON_HIRES:
         print(helps.finish_dragon_help(save, args[0] if args else "[]"))

@@ -4,6 +4,34 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Arthur's lessons in the new client
+
+- **Skipping the lessons gives no nest and no draggy**, as in the
+  original, where they came only at the end. The question at the bottom
+  says so before the player chooses.
+- **Our own words in the second half.** The original's goals part (the
+  farm, the villager into it, three trees) showed only an arrow; Arthur
+  says a line at each step here, so a player knows what's wanted.
+- **The wood is the player's as the tree falls**, so the step "pick up
+  the wood" passes by itself: the new client has no wood token to tap.
+- **Buildings go where they fit.** The original asked for the house and
+  the farm on set tiles; if something stands there (a villager, say), the
+  arrow shows the nearest free spot instead.
+- **Nothing is frozen.** The original stopped other units during the
+  lessons; here the town goes on as usual, and the camera follows the
+  arrow (again if what it points at walks under Arthur).
+- **The goals window is closed by the player** before the next step, with
+  the arrow on its close button, so they get to read it.
+- **The nest's gift steps have no wait.** The server now takes the seven
+  free steps of the first egg without starting the care timer, as the
+  original's gift did.
+- **A reload carries on** from the start of the lesson it was in; the
+  browser remembers "under way at step 15", because 15 alone is also what
+  skipping sends.
+- **Quiet while learning:** the camps' story window and the first
+  villager's welcome wait until the lessons are over. The original's "new
+  town" window is left out: the question at the bottom does its job.
+
 ## 15 October 2026: Beta 2 checked against the original, the town and the islands
 
 - **Island goals count the stars the save keeps.** The original counted
