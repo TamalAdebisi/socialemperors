@@ -27,6 +27,14 @@ Calls made on the way:
   closes, much as the original's counts reset when the game reloaded.
 - **Messages go below the top bar while visiting** on a computer, so they
   don't cover the neighbour's name and the help rays.
+- **Villagers by town hall,** calls on the way: a tree tapped when the
+  villager's line is full is selected, as in the original, and a message
+  says how many it has lined up (the original said nothing); the selected
+  villager's card says how many it can line up (the original showed it only
+  in the barracks' unit details); a villager whose next tree another
+  villager finished while it walked goes on to the one after, rather than
+  standing still; tapping the tree a villager is already at doesn't start
+  its work over; if a town somehow has two town halls, the better counts.
 - **Kept as they were, written down now:** a farm harvested without enough
   wood is kept and says so (the original destroyed it); the bonus for extra
   workers uses the workers inside now (the original took the count at a
