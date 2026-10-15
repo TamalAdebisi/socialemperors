@@ -107,7 +107,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       view.rise(fighter, [{ text: `+${paid.gold}`, colour: 0xf2c14e }, ...(paid.xp ? [{ text: `+${paid.xp} XP`, colour: 0x7fb2ff }] : [])]);
     }
   } });
-  quest = new Quest({ island, battle, items, layout: map.map.items, random });
+  quest = new Quest({ island, battle, items, layout: map.map.items, level: town.level, random });
   // Special moves (rules/specials.ts): the heroes' by themselves, the special units' on buttons.
   const specials = new Specials(battle, specialsTable as unknown as SpecialsTable, items, random);
   const view = new BattleView(art, battle, (effect) => sound.play(effect));
@@ -138,6 +138,10 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     return;
   }
   quest.begin(difficulty, army);
+  if (quest.boss) {
+    // As the original: the camera goes to show a path opening, a dragon falling.
+    quest.boss.onLook = (tile) => camera.lookAt(unitPoint(tile.x, tile.y));
+  }
   const missing = await view.load((done, total) => showStatus(`The army lands… ${Math.round((100 * done) / total)}%`));
   showStatus(missing.length ? `Some pictures aren't available yet (${missing.length}); they show as outlines.` : "");
   if (missing.length) {
@@ -151,12 +155,13 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   const controls = new BattleControls({
     battle, view, camera, world, items, town, config, privateState, settings, commands, sound, specials, random,
     tapFirst: (tapped) => {
-      if (finished || !tapped || tapped !== quest!.chest || !tapped.collectable) {
+      if (finished || !quest!.canCollect(tapped)) {
         return finished;
       }
-      quest!.collect(tapped);
+      const chest = tapped === quest!.chest;
+      quest!.collect(tapped!);
       sound.play("collect");
-      showMessage("The treasure is yours!");
+      showMessage(chest ? "The treasure is yours!" : quest!.remaining > 0 ? `${tapped!.item.name}: ${quest!.remaining} to go` : "The way is open!");
       setTimeout(() => showMessage(""), 2500);
       return true;
     },
@@ -206,6 +211,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       while (owed >= step) {
         owed -= step;
         battle.step();
+        quest!.step();
         specials.step();
       }
       if (quest!.isOver()) {
@@ -508,6 +514,8 @@ class QuestBar {
     const n = this.quest.remaining;
     const what = this.island.win === "townhall" ? (n === 1 ? "town hall" : "town halls")
       : this.island.kind === "trolls" ? (n === 1 ? "troll" : "trolls") : (n === 1 ? "enemy" : "enemies");
-    this.left.textContent = this.quest.chest?.collectable ? "Open the treasure!" : `${n} ${what} left`;
+    // A boss island counts its keys (power gems...) to collect; once they're in, the boss.
+    const boss = this.quest.boss;
+    this.left.textContent = this.quest.chest?.collectable ? "Open the treasure!" : boss ? boss.goal() : `${n} ${what} left`;
   }
 }

@@ -225,3 +225,40 @@ test("a kamikaze blows up: 500 to itself and to all within 2 tiles, and sets off
   assert.ok(second.dead, "the other went off too");
   assert.ok(far.dead, "caught by the second");
 });
+
+const MONK = item({ id: 569, name: "Monk", subcategory: 72, life: 50, attack: 10, attackRange: 7, attackInterval: 60 });
+const THOR = item({ id: 556, name: "Thor", life: 500, attack: 0, velocity: 0 });
+
+test("a monk turns a unit within 10 tiles to its side, 24 seconds apart, 4 at most; not one of 500 life", () => {
+  const b = battle(3);
+  const turned: [Fighter, number][] = [];
+  b.onConvert = (unit) => turned.push([unit, unit.side]);
+  const monk = b.add(MONK, 50, 50, SELF);
+  b.add(THOR, 52, 50, ENEMY, { condition: "passive" });
+  // Trolls that don't fight back, so all five live to be turned.
+  const trolls = [0, 1, 2, 3, 4].map((i) => b.add({ ...TROLL, velocity: 0, attack: 0 }, 54, 48 + i, ENEMY, { condition: "passive" }));
+  run(b, 200, () => turned.length > 0);
+  assert.equal(turned.length, 1);
+  const [first, side] = turned[0];
+  assert.ok(trolls.includes(first), "a troll, not Thor");
+  assert.equal(side, ENEMY, "told while still the enemy's");
+  assert.equal(first.side, SELF);
+  assert.ok(first.converted);
+  assert.equal(monk.conversions, 1);
+  const at = b.frame;
+  run(b, 700);
+  assert.equal(turned.length, 1, "not before 24 seconds");
+  run(b, 4000);
+  assert.equal(turned.length, 4, "4 at most");
+  assert.ok(turned.every(([t]) => t.side === SELF && t.item.id === 525));
+  assert.equal(trolls.filter((t) => t.side === ENEMY).length, 1);
+  assert.ok(b.frame - at > 3 * 720);
+});
+
+test("without anyone listening (at home) a monk turns nobody", () => {
+  const b = battle(3);
+  b.add(MONK, 50, 50, SELF);
+  const troll = b.add({ ...TROLL, velocity: 0 }, 53, 50, ENEMY, { condition: "passive" });
+  run(b, 600);
+  assert.equal(troll.side, ENEMY);
+});

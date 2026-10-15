@@ -146,3 +146,15 @@ test("thrown: a unit lands about half the distance away and lies helpless; giant
   b.knock(giant, { x: 38, y: 40 }, 4);
   assert.equal(giant.tx, 40);
 });
+
+test("the game's own table leaves the monk to the battle: with special moves on, monks still turn units", async () => {
+  const { default: table } = await import("./specials-table.json", { with: { type: "json" } });
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(2) });
+  let turned = 0;
+  b.onConvert = () => turned++;
+  const specials = new Specials(b, table as unknown as SpecialsTable, ITEMS, seededRandom(3));
+  b.add(item({ id: 569, name: "Monk", subcategory: 72, life: 50, attack: 10, attackRange: 7, attackInterval: 60 }), 50, 50, SELF);
+  for (let i = 0; i < 3; i++) b.add(item({ ...TROLL, life: 100, velocity: 0, attack: 0 }), 54, 48 + i, ENEMY, { condition: "passive" });
+  run(b, specials, 1000);
+  assert.ok(turned >= 1, `turned ${turned}`);
+});

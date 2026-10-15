@@ -73,6 +73,21 @@ const TOWN_HALL_1 = 26;
 const ICE_TOWER = 384;
 /** The kamikaze blows up instead of hitting: 500 to itself and to everything in the 5 x 5 tiles around. */
 const KAMIKAZE = 575;
+/**
+ * The monk turns an enemy unit within 10 tiles to its side, instead of
+ * hitting: one at a time (24 seconds apart), 4 in all, and none with 500
+ * life or more, no boss, boss guard or eagle.
+ */
+const MONK = 569;
+/** The golden dragons fire twice a beat, the second shot half a second later. */
+const DOUBLE_SHOT = new Set([739]);
+const SECOND_SHOT = 15;
+/** The bosses' small golems and yetis have their own life, whatever the config says (the boss mind sets it). */
+const LIFE_OF = new Map([[537, 100], [544, 120]]);
+const CONVERT_RANGE = 10;
+const CONVERT_LIMIT = 4;
+const CONVERT_EVERY = 720;
+const CONVERT_MAX_LIFE = 500;
 const BLAST = 500;
 
 export interface Fighter {
@@ -139,6 +154,14 @@ export interface Fighter {
   sinkingSince?: number;
   /** A summoned unit whose time is up, fading since this frame. */
   fadingSince?: number;
+  /** A boss in a rage (the Rockdriller after 5 minutes): drawn redder. */
+  enraged?: boolean;
+  /** How far it looks for enemies (10 tiles if not set). */
+  aggro?: number;
+  /** Hits don't hurt it (the Dangerous Isle's black dragon): only its island's own wounds do. */
+  invulnerable?: boolean;
+  /** Drawn this many times its size. */
+  scale?: number;
   /** At home: a building of the player's burnt out at 0 life (it counts as dead until repaired in full). */
   ruined?: boolean;
   /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
@@ -148,6 +171,15 @@ export interface Fighter {
   special?: { animation: number; until: number } | null;
   /** Too big to be thrown or knocked down (giants, gods, the biggest dragons). */
   giant?: boolean;
+  /** A door opened (the Hero Isle's): units walk through it. */
+  open?: boolean;
+  /** A building held on one picture of its animation (a boss island's gate and gems), from 0. */
+  still?: number;
+  /** Turned to the other side by a monk (and back again, if a monk turns it twice). */
+  converted?: boolean;
+  /** A monk: how many it has turned, and the frame it can turn the next. */
+  conversions?: number;
+  convertReadyAt?: number;
   /** Which 2x Speed and 2x Range casts it carries: a newer cast takes over from an older one. */
   boosts?: { speed?: number; range?: number };
 }
@@ -158,6 +190,7 @@ export type BattleEvent =
   | { kind: "landed"; shot: Shot }
   | { kind: "died"; fighter: Fighter; by: Fighter | null }
   | { kind: "gone"; fighter: Fighter }
+  | { kind: "converted"; fighter: Fighter; by: Fighter }
   | { kind: "effect"; effect: Effect };
 
 /**
@@ -246,6 +279,20 @@ export class Battle {
    */
   onBeat: (unit: Fighter, target: Fighter) => boolean = () => false;
   onDealt: (by: Fighter, amount: number, healing: boolean) => void = () => {};
+  /**
+   * Told when a monk turns a unit, while it's still on its old side (a
+   * quest counts it as fallen there). Monks only turn units when someone
+   * listens: on the islands, not at home yet.
+   */
+  onConvert: ((unit: Fighter, by: Fighter) => void) | null = null;
+  /**
+   * The bosses with a mind of their own (rules/bossMinds.ts): the battle
+   * moves them and fires their shots, but leaves the choosing to them.
+   * They hear every hit, and every shot that lands.
+   */
+  readonly ownMind = new WeakSet<Fighter>();
+  readonly onHurt: ((target: Fighter, damage: number, by: Fighter | null) => void)[] = [];
+  readonly onLanded: ((shot: Shot, hit: boolean) => void)[] = [];
 
   constructor(options: BattleOptions) {
     this.ground = options.ground;
@@ -270,6 +317,10 @@ export class Battle {
       home: { x: tx, y: ty },
       ...extra,
     };
+    const life = LIFE_OF.get(item.id);
+    if (life !== undefined && extra.life === undefined) {
+      fighter.life = fighter.maxLife = life;
+    }
     this.fighters.push(fighter);
     if (!fighter.isUnit) {
       this.gridStale = true;
@@ -387,7 +438,7 @@ export class Battle {
     if (this.isStilled(unit)) {
       return;
     }
-    if (frame % THINK_EVERY === 0) {
+    if (frame % THINK_EVERY === 0 && !this.ownMind.has(unit)) {
       this.tidy(unit);
       this.think(unit);
     }
@@ -432,7 +483,10 @@ export class Battle {
       }
     }
     if ((unit.condition === "aggressive" || unit.condition === "defensive") && !unit.target && !unit.forced && !HEALERS.has(unit.item.id)) {
-      const target = this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, AGGRO_RANGE);
+      // A monk looks only for units it can turn.
+      const target = unit.item.id === MONK
+        ? (this.canConvert(unit) ? this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, CONVERT_RANGE, (f) => this.convertible(f)) : null)
+        : this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, unit.aggro ?? AGGRO_RANGE);
       if (target) {
         this.attack(unit, target);
       }
@@ -467,6 +521,35 @@ export class Battle {
     } else if (!this.isMoving(unit) && !unit.attacking) {
       this.chase(unit, unit.target);
     }
+  }
+
+  /** Whether a monk can turn a unit now: someone listens, it has turned fewer than 4, and its last turning is over. */
+  private canConvert(monk: Fighter): boolean {
+    return this.onConvert !== null && (monk.conversions ?? 0) < CONVERT_LIMIT && this.frame >= (monk.convertReadyAt ?? 0);
+  }
+
+  /** Units a monk can turn: under 500 life, and no boss, boss guard, eagle or giant. */
+  private convertible(f: Fighter): boolean {
+    const sub = f.item.subcategory;
+    return f.isUnit && !f.dead && f.item.life < CONVERT_MAX_LIFE && !f.giant
+      && sub !== SUBCAT.boss && sub !== SUBCAT.bossAdd && sub !== SUBCAT.eagle;
+  }
+
+  /** A monk turns a unit to its side: it forgets its fight and looks for a new one. */
+  private convert(monk: Fighter, unit: Fighter): void {
+    monk.conversions = (monk.conversions ?? 0) + 1;
+    monk.convertReadyAt = this.frame + CONVERT_EVERY;
+    monk.target = null;
+    monk.attacking = false;
+    monk.special = { animation: 6, until: this.frame + 60 };
+    this.onConvert?.(unit, monk);
+    unit.side = monk.side;
+    unit.converted = !unit.converted;
+    unit.condition = "aggressive";
+    unit.target = null;
+    unit.attacking = false;
+    unit.forced = false;
+    this.events.push({ kind: "converted", fighter: unit, by: monk });
   }
 
   /** Go and fight something (the Flash client's IA_Attack). */
@@ -525,10 +608,22 @@ export class Battle {
           // A special move instead of the hit.
         } else if (healer) {
           this.heal(target, unit.attack, unit);
+        } else if (unit.item.id === MONK) {
+          if (this.canConvert(unit) && this.convertible(target)) {
+            this.convert(unit, target);
+          }
         } else if (unit.item.subcategory === SUBCAT.cleric) {
-          // Other clerics (the engineer, the monk) have work of their own, not done here yet.
+          // The engineer has work of its own (repairing siege units), not done here yet.
         } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
           this.shoot(unit, target);
+          if (DOUBLE_SHOT.has(unit.item.id)) {
+            // A second shot from its second mouth.
+            this.after(SECOND_SHOT, () => {
+              if (!unit.dead && !target.dead) {
+                this.shootAt(unit, target);
+              }
+            });
+          }
         } else if (unit.item.id === KAMIKAZE) {
           this.explode(unit);
         } else {
@@ -710,14 +805,18 @@ export class Battle {
       return;
     }
     const where = pointOf(target);
-    if (Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS) {
+    const hit = Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS;
+    if (hit) {
       this.hurt(target, shot.damage ?? shot.by.attack, shot.by);
+    }
+    for (const listen of this.onLanded) {
+      listen(shot, hit);
     }
   }
 
   /** Damage, as the Flash client works it out (CLIENT.md, "Battles"). */
-  hurt(target: Fighter, attack: number, by: Fighter | null): void {
-    if (target.dead || !attack) {
+  hurt(target: Fighter, attack: number, by: Fighter | null, force = false): void {
+    if (target.dead || !attack || (target.invulnerable && !force)) {
       return;
     }
     let amount = attack;
@@ -743,6 +842,9 @@ export class Battle {
     if (by) {
       this.onDealt(by, damage, false);
     }
+    for (const listen of this.onHurt) {
+      listen(target, damage, by);
+    }
     if (target.life <= 0) {
       this.kill(target, by);
       return;
@@ -750,7 +852,7 @@ export class Battle {
     if (!by) {
       return;
     }
-    if (target.isUnit) {
+    if (target.isUnit && !this.ownMind.has(target)) {
       this.beingAttacked(target, by);
     } else if (target.attack > 0 && (!target.target || target.target.attack === 0)) {
       target.target = by;
@@ -1068,7 +1170,7 @@ export class Battle {
     if (this.gridStale) {
       const grid = new Uint8Array(this.ground);
       for (const f of this.fighters) {
-        if (f.isUnit || (f.dead && !f.ruined) || f.item.elevation === 0 || f.item.subcategory === SUBCAT.farm) {
+        if (f.isUnit || (f.dead && !f.ruined) || f.open || f.item.elevation === 0 || f.item.subcategory === SUBCAT.farm) {
           continue;
         }
         for (let x = f.tx - f.item.width + 1; x <= f.tx; x++) {
@@ -1083,6 +1185,19 @@ export class Battle {
       this.gridStale = false;
     }
     return this.grid;
+  }
+
+  /**
+   * A door opens: its picture moves two on (a door's pictures are its two
+   * closed facings, then the same two open) and units walk through it.
+   */
+  openDoor(door: Fighter): void {
+    if (door.open) {
+      return;
+    }
+    door.open = true;
+    door.facing += 2;
+    this.gridStale = true;
   }
 
   /** Start a unit walking to a tile; false when there's no way. */

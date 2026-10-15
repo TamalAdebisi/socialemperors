@@ -328,9 +328,54 @@
      1
     ],
     "secondBossAt3": true,
-    "secondBossNear": "boss tile + (0, 3)",
     "penguin": 546,
-    "penguinsPerKey": 3
+    "penguinsPerKey": 3,
+    "lifeByLevel": [
+     [
+      0,
+      3000
+     ],
+     [
+      8,
+      4500
+     ],
+     [
+      9,
+      6500
+     ],
+     [
+      10,
+      8000
+     ],
+     [
+      15,
+      9500
+     ],
+     [
+      20,
+      12000
+     ]
+    ],
+    "secondBossOffset": [
+     0,
+     3
+    ],
+    "secondBossFrom": "boss",
+    "penguinOffsets": [
+     [
+      1,
+      1
+     ],
+     [
+      -2,
+      1
+     ],
+     [
+      1,
+      -2
+     ]
+    ],
+    "doorSteps": true
    },
    "neutral": [
     411,
@@ -613,7 +658,38 @@
      1
     ],
     "secondBossAt3": true,
-    "secondBossNear": "altar tile + (3, 0)"
+    "lifeByLevel": [
+     [
+      0,
+      6000
+     ],
+     [
+      8,
+      9000
+     ],
+     [
+      9,
+      13000
+     ],
+     [
+      10,
+      16000
+     ],
+     [
+      15,
+      1900
+     ],
+     [
+      20,
+      24000
+     ]
+    ],
+    "appearsAtDoor": true,
+    "secondBossOffset": [
+     3,
+     0
+    ],
+    "secondBossFrom": "door"
    },
    "neutral": [
     411,
@@ -1268,7 +1344,16 @@
      1
     ],
     "secondBossAt3": true,
-    "secondBossNear": "boss tile + (3, 0)"
+    "lifeBase": 25000,
+    "groupRaces": [
+     "t",
+     "e"
+    ],
+    "secondBossOffset": [
+     3,
+     0
+    ],
+    "secondBossFrom": "boss"
    },
    "neutral": [
     411,

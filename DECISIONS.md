@@ -15,6 +15,85 @@ them can be found and reversed. The big, agreed decisions are in
 - **The browser tests start each town with a villager** far off in the
   wild corner, so none appears near the middle where tests tap; one test
   checks the villager comes.
+## 15 October 2026: Beta 2, the Rockdriller and the dragons
+
+- **Kept from the original:** the Rockdriller goes back to 25,000 life when
+  it gives up, whatever the stars (at 2 and 3 stars that's half its life).
+- **The Crimson Scale's bombing runs follow the path finder,** so they're
+  straight lines only where the arena is open, as in the original.
+- **Its eggs hatch where they land without a flight on screen;** the
+  original drew the egg flying.
+- **The Dangerous Isle's sea isn't turned black.** The original darkened
+  the background there; here the island looks like the others.
+- **Each hit on the Rockdriller counts towards its grudge,** and the
+  grudge list forgets the fallen at once (the original kept dead
+  attackers on the list unless they were at the top).
+
+## 15 October 2026: Beta 2, the Yeti and the Golem
+
+- **The Stone Golem's life at levels 15 to 19 stays the original's 1,900**
+  (3,800 at 2 and 3 stars), though it was surely meant to be 19,000. That's
+  how those levels played it.
+- **A lit key is collected the moment it's tapped.** The original filled
+  a short bar first (two thirds of a second).
+- **The last key's penguins count like the others:** they keep the battle
+  going and aren't lost. The original forgot them, so it could call the
+  battle lost while they still stood. Penguins that fall are never taken
+  from the player's own.
+- **The bosses think like the other fighters.** The original gave them a
+  mind of their own that differs in small ways: it picked a new target a
+  little later, and looked around only every two seconds.
+- **The yeti's and golem's moves are close, not exact:** the rain of
+  stones falls around its target (the original's fell in a square ahead
+  of the boss), and the small yetis appear around it (the original's at
+  four corners 3 tiles off).
+
+## 15 October 2026: Beta 2, Hero Isle
+
+- **Kept from the original:** an enemy that stands in none of the
+  island's seven parts (the nine by the landing, and every copy at 2 and 3
+  stars) counts against the first part, so its door can open before its
+  own heroes are all dead.
+- **Monks now turn units on every island** (4 each, 24 seconds apart, none
+  with 500 life or more, no boss): an enemy turned counts as beaten and
+  pays; one of the player's turned counts as lost. At home they don't
+  turn anyone yet.
+- **An enemy a monk turned that then falls isn't reported as the
+  player's loss.** The original reported it, so the server took one of the
+  player's own units of that kind (their own Warrior Princess, say).
+- **An enemy counts towards the win once,** even if monks turn it back
+  and forth. The original could count it twice and pay the win's bonus
+  twice.
+
+## 15 October 2026: Beta 2, troll camps
+
+- **Ten of the thirty camps are built in the new client:** those the
+  original lays out by its own code. The other twenty are scripted
+  stories (with their own steps and bosses); while one is due, the new
+  client leaves it to the classic game, which puts it up in the same
+  empire. If the classic game has put one up, the new client leaves its
+  chest alone too: those chests open by their story, not when the
+  enemies are gone.
+- **The server ignores a raid's progress sent before the raid has
+  started.** Three scripted camps (the Atlantis treasure, the demon
+  portals, the corrupted wizards) send their last progress just after
+  their chest; kept, it made the next camp finish by itself on a reload,
+  for free. This fixes it for the classic game too.
+- **A chest at level 26 pays like level 27** (750 gold, 100 experience).
+  The original's table skipped level 26, so its chest paid nothing.
+- **Kept from the original:** a camp still standing is put up afresh,
+  somewhere else, each time the game opens (its window shows again); the
+  border is cleared for it, trees included; every enemy unit on the map
+  must be beaten before the chest opens, the border's trolls included.
+- **A fight with a camp starts when units are sent at it.** In the
+  original, camp and border trolls also attacked anything that strayed
+  within 10 tiles; here walking near them doesn't start a fight.
+- **Each enemy unit killed at home pays 5 gold**, camp and border trolls
+  too, kept by the server (the original showed it and never saved it), on
+  top of the experience the server already gave for them.
+- **A fight with no raid ends after 5 seconds without fighting;** enemies
+  that chased the player's units stay where they stopped until the next
+  visit, when they're back where the save has them (as in the original).
 
 ## 15 October 2026: what farms and ranches show
 

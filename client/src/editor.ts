@@ -97,6 +97,12 @@ export class TownEditor {
   private building: PlacedItem | null = null;
   /** A raid has the town (homeDefence.ts): no editing until it's over. */
   private paused = false;
+  /**
+   * A thing tapped, before the editor looks at it (homeCamps.ts: a camp's
+   * chest, an enemy to attack): true when it was taken care of. `unit` is
+   * the unit selected, if any.
+   */
+  onTapItem: (placed: PlacedItem, unit: PlacedItem | null) => boolean = () => false;
   /** Villagers repairing a burning building, and their repair's clock. */
   private readonly repairing = new Map<PlacedItem, { building: PlacedItem; timer: ReturnType<typeof setInterval> }>();
   /** Where it comes from: storage (one, then done), or null for the shop (as many as they like). */
@@ -381,6 +387,9 @@ export class TownEditor {
     }
     if (placed?.item.id === CART) {
       return;  // a cart on its round: only the client has it, so it can't be sent anywhere
+    }
+    if (placed && this.onTapItem(placed, this.selected && canWalk(this.town, this.selected) ? this.selected : null)) {
+      return;
     }
     // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;

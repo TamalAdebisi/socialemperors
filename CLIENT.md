@@ -1107,8 +1107,52 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
 - **Winning:** the troll islands light their treasure chest once every
   enemy unit is dead, and opening it wins; the civilization islands are won
   with their town hall; the hardcore and god islands by killing every
-  enemy unit. The boss islands and the Hero Isle open the classic game for
-  now (their keys and doors come with the bosses' slice). All the
+  enemy unit. The Hero Isle too: its heroes wait in seven parts walled
+  off by doors (`doorZones` in `rules/islands.json`), and a part's door
+  opens (its open picture; units walk through) once that part's last enemy
+  is dead. As in the original, an enemy in no part (the nine by the
+  landing, and every 2 and 3 star copy) counts against the first part, so
+  its door can open before its own heroes are all dead.
+- **Boss islands** (`rules/bosses.ts`, and `rules/bossMinds.ts` for the
+  bosses that choose for themselves). On the Arctic, Desert and Mineral
+  Isles the island lends a few units; its guards stand in four groups
+  (by the nearest of four points, or by quarter of the map), and a
+  group's key (a power gem on the Desert Isle) lights up once its last
+  guard is dead. One tap collects a lit key (no unit has to go there).
+  The fourth takes away the gate (or altar), and the boss comes out (or
+  appears in its place). Its life comes from the player's level, doubled
+  at 2 and 3 stars; at 3 stars there are two. Only the guards pay; the
+  win pays the island's prize for its stars, and the island's reward
+  unit. On the Arctic Isle each key brings three penguins to the player's
+  side, and the gate's picture steps on for each of the first three. The
+  bosses' three special moves take turns: a ground pound that throws
+  units back, a rain of stones, and four small yetis (golems) at a time.
+  - The Mineral Isle's guards are its trolls and undead, their huts too;
+    the human fort and the Ravager Trolls fight but pay nothing. The
+    fourth brazier brings the Rockdriller (20,000 life, 50,000 at 2 and 3
+    stars). It holds a grudge against whoever hurts it most and shoots
+    from 20 tiles. Once it has fought, it burrows and comes up in turns of
+    15 seconds; burrowed it wanders, can still be hit, and sends up a
+    Sanddriller. Its shots leave slime for 40 seconds, which kills a
+    Sanddriller standing in it. After 5 minutes it rages: up for good,
+    100 every 5 frames, drawn redder. If everyone it could go for is more
+    than 20 tiles off, it goes home to the middle at 25,000 life.
+  - On the Nest Isle the egg is broken first; rocks close the way back,
+    then the Crimson Scale comes (life, attack and speed by the stars). It
+    fights for 20 seconds, then flies one bombing run a star along the
+    arena, setting fires that kill whatever stands in them, lands and lays
+    two eggs a star that hatch draggies, and fights again.
+  - On the Dangerous Isle two golden dragons (two shots a beat, and a
+    quake) guard a path closed by two rocks, which go once both are dead.
+    The black dragon can't be hurt: each of the eight eggs broken wounds
+    it, and hitting an egg calls it onto whoever hit it. The eighth egg
+    kills it and wins. Nothing on the Nest and Dangerous Isles pays but
+    the prize.
+  Monks (either side's) turn a unit within 10 tiles to their side instead
+  of hitting: 4 each, 24 seconds apart, none with 500 life or more, no
+  boss; a turned unit shows lighter, and a monk that has turned its 4
+  redder. An enemy turned counts as beaten (it pays); one of the player's
+  turned counts as lost. All the
   player's units dead, or leaving (the home button), loses. The results
   come 3 seconds after the end (7 after the chest).
 - **What it pays:** each enemy half the price of a fighter bought with gold
@@ -1279,9 +1323,49 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   by the server (`raiders.py`, up to 300 a day). When the raid is over the
   units stay where the fight left them (`move`, as after a walk).
 
-**Not yet** (Beta 2's next slices): the troll camps with their chest
-every 4 hours and the trolls on the border, the boss islands and the Hero
-Isle, the rarer special moves (shape-shifting, flying, ghosts, shields
+**Troll camps**, the same way. Code: `rules/camps.ts` (with tests),
+`rules/camps.json` (the layouts, as data in our own schema),
+`homeCamps.ts`, and `ui/notice.ts` for the camp's window.
+
+- **When:** 4 hours after the last chest was opened
+  (`map.timestampLastTreasure`; a new town gets its first camp at once).
+  Which camp is `map.idCurrentTreasure` (0 to 29), each chest moving it
+  on; a camp the player's race doesn't get moves on as in the original
+  (and the server hears `collect_treasure` with nothing to give).
+- **The ten camps built here** are those the original lays out by its own
+  code: the princess's village, the archers, the kidnapped units, the
+  treasure village, the prisoners, the rebel troll, Prince Arthur and the
+  three "Kaspar" camps. Three are 15 x 15 walled squares with things
+  placed at random inside, by level; seven are 20 x 20 layouts drawn in
+  the original, whose walls, towers, houses and soldiers become the enemy
+  race's own for the player's level. The other twenty are scripted
+  stories, put up by the classic game for now.
+- **Putting one up:** the border ring is cleared (`sell` ... `CLEAN_<camp>`
+  for what was there; the player's units there walk to the town hall),
+  every piece goes on the map with a free `buy`, as the Flash client saves
+  them, and trolls are topped up about the border (a few clusters, fewer
+  the more enemies there are). The camp's window tells its story in the
+  game's words, with its picture. As in the original, a camp still
+  standing is put up afresh, somewhere else, each time the game opens.
+- **Whose things are:** as the original decides when the town loads: by
+  race (the other race's are enemies), and on the border every building
+  is an enemy but chests, fields, nature and scenery.
+- **Beating it:** a unit selected, tap an enemy: the town becomes a
+  battlefield as in a raid, and it's over once nobody has fought for 5
+  seconds. Each enemy unit killed pays 5 gold and its experience (kept by
+  the server); `kill` (x, y, id, town, "u" or "b") removes it from the
+  save.
+- **The chest** (or prison) lights up once no enemy unit is left anywhere
+  on the map, the border's trolls and any raiders included; until then a
+  tap says how many are left. Tapping it open: `sell` ... "TREAS", then
+  `collect_treasure` (gold, experience, the next camp): 250 gold and 50
+  experience up to level 5, rising by 100 and 10 every five levels to 750
+  and 100 from level 26. A prison frees its prisoners beside it (a free
+  `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
+  healers... The next camp comes 4 hours later.
+
+**Not yet** (Beta 2's next slices): the twenty scripted camps, monks at
+home, the rarer special moves (shape-shifting, flying, ghosts, shields
 and the like: their buttons don't show yet), collection pieces dropped by
 enemies, the battle music and the "under attack" alert at home, and the
 original's repair pointer.

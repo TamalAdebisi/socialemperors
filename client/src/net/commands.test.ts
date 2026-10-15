@@ -109,3 +109,24 @@ test("flush sends what's waiting now, trying a failed batch again, and says whet
   down.commands.add("expand", 12, "gold", 0);
   assert.equal(await down.commands.flush(), false);
 });
+
+test("a big batch goes without keepalive, which browsers refuse over 64 KB", async () => {
+  const seen: boolean[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (_url: string, init: RequestInit) => {
+    seen.push(Boolean(init.keepalive));
+    return { ok: true, status: 200 } as Response;
+  }) as typeof fetch;
+  try {
+    const commands = new CommandSender(settings, { clock: () => 1700000000.7 });
+    commands.add("move", 52, 52, 26, 50, 50, 0, 0, "MouseUsed");
+    await commands.tick();
+    for (let i = 0; i < 2000; i++) {
+      commands.add("sell", 10 + (i % 80), 10 + Math.floor(i / 80), 19, 0, 1, "CLEAN_0");
+    }
+    await commands.tick();
+    assert.deepEqual(seen, [true, false]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

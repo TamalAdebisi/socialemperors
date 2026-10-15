@@ -61,10 +61,19 @@ def reward(save: dict, town_id: int, mission_id) -> str:
     return f"Mission {mission_id} rewarded with {gold} gold."
 
 
+# A raid's progress, kept only once the raid has started ("spawned").
+PROGRESS_KEYS = ("activators", "boss", "treasure")
+
+
 def set_quest_var(save: dict, town_id: int, key: str, value: str) -> str:
     map = save["maps"][town_id]
     if not isinstance(map.get("currentQuestVars"), dict):
         map["currentQuestVars"] = {}
+    # A few raids send their last progress just after their chest's
+    # collect_treasure. Kept, it would count against the next raid, which
+    # would then finish by itself on a reload.
+    if key in PROGRESS_KEYS and not map["currentQuestVars"].get("spawned"):
+        return f"Raid {key} ignored: no raid under way."
     map["currentQuestVars"][key] = json.loads(value)
     return f"Raid {key} = {value}."
 
