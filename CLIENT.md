@@ -1469,6 +1469,32 @@ with tests) and `ui/graveyard.ts` (the three windows).
 - **Not yet:** the Blue Phoenix's egg (it would hatch the phoenix again
   if it lasts five seconds); a phoenix that falls goes to the graveyard.
 
+**The harbour and the zeppelin**, the same way. Code: `rules/dock.ts`
+(with tests).
+
+- **Given:** each time a human town opens, a harbour it hasn't got (on the
+  map or in storage) is put down for free on the player's land nearest
+  tile (59, 59), unless the Prisoner Princess still waits in the town;
+  from level 30 the zeppelin tower too. A new one is staffed at once by 20
+  free helpers and opened (`buy` free, `buy_si_help` 20 times,
+  `finish_si`), and the message at the top says so. Troll towns get
+  neither.
+- **Open:** the harbour's card opens the island map at its first page,
+  the zeppelin tower's at its third (with no army, a line says why not).
+  Neither is needed to sail: the Quests button opens the map without
+  them, as in the original.
+- **Drawn open:** the harbour's picture, like other social buildings'
+  (the Church, the second mill...), has two frames: open, and in
+  scaffolding while it waits for its staff. They're drawn open, as the
+  server opens them for good; they used to flicker between the two.
+
+**Pausing**, the same way. Code: `ui/pause.ts`. The game stops when the
+page loses the player (another window, another tab), or from the pause
+button by the music and sound buttons, at home and on an island. A
+dark curtain and the game's GAME PAUSED say so; RESUME, or any key let go,
+starts it again. While paused nothing moves (the drawing's clock stops);
+work and training go on, as they're the server's clock.
+
 **Not yet:** monks turning units at home, and the collection pieces
 dropped by enemies (they come with the collections, in the last stop).
 

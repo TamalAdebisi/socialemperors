@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the harbour, the zeppelin and pausing
+
+- **The new client gives the harbour and the zeppelin tower,** as the
+  Flash client does when the town opens, rather than the server. So a
+  town played only here gets them too.
+- **They're placed where they fit whole.** The original checked a 3 by 3
+  space for these 4 by 4 buildings, so they could overlap something.
+- **"Dock operative!" is a line at the top,** not a window with a
+  picture, so it doesn't stand in front of the camp's window as the town
+  opens.
+- **Pausing pauses whatever is open.** The original didn't pause on
+  losing focus while one of its windows was open; ours don't stop the
+  town beside them, so the game pauses anyway.
+
 ## 15 October 2026: Beta 2, the graveyards
 
 - **A list, not pages of six.** The Graveyard's units and the heroes show

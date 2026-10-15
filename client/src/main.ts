@@ -42,7 +42,9 @@ import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
+import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
+import { givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -51,6 +53,8 @@ import { TownView } from "./view/townView.ts";
 
 /** The building where spells are learnt. */
 const WIZARDRY_ACADEMY = 416;
+/** The harbours and zeppelin towers (human and troll), and the island map's page each opens. */
+const DOCKS = new Map([[HARBOUR, 1], [343, 1], [ZEPPELIN_TOWER, 3], [344, 3]]);
 
 /** Arthur's portrait in the Neighbours window: the game's own king. */
 const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
@@ -115,7 +119,7 @@ async function start(): Promise<void> {
   const sound = new Sound(settings.assetsUrl, town.race);
   // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
   const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
-    population: (t) => population(t, items, increase), sound });
+    population: (t) => population(t, items, increase), sound, pause: new Pause(app.ticker) });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -145,6 +149,11 @@ async function start(): Promise<void> {
       perDay: Number(config.globals?.ANIMALS_PER_DAY) || 20,
     };
     for (const command of growBack(town, items, clock(), { animals }).commands) {
+      commands.add(command.cmd, ...command.args);
+    }
+    // The harbour (and from level 30 the zeppelin tower), given and opened as the Flash client does (rules/dock.ts).
+    const given = givenOnOpening(town, items);
+    for (const command of given.flatMap((g) => g.commands)) {
       commands.add(command.cmd, ...command.args);
     }
     const shop = new ShopWindow({
@@ -224,7 +233,23 @@ async function start(): Promise<void> {
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
-      windowOf: (placed) => (placed.item.id === WIZARDRY_ACADEMY ? { label: "Spells", run: () => spells.open() } : graves.windowOf(placed)) });
+      windowOf: (placed) => {
+        if (placed.item.id === WIZARDRY_ACADEMY) {
+          return { label: "Spells", run: () => spells.open() };
+        }
+        // The harbour opens the island map at its first page, the zeppelin tower at its third, as in the original.
+        const page = DOCKS.get(placed.item.id);
+        if (page) {
+          return { label: page === 1 ? "Let's sail" : "Let's fly", icon: page === 1 ? "open-harbour" : "open-zeppelin", run: () => {
+            if (armyOf(town).length === 0) {
+              editor.tell(page === 1 ? "You don't have any troop to set sail!" : "You don't have any troop to fly!");
+            } else {
+              islands.open(page);
+            }
+          } };
+        }
+        return graves.windowOf(placed);
+      } });
     hud.offerCollectAll(() => editor.collectAll());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
@@ -243,6 +268,10 @@ async function start(): Promise<void> {
     };
     afterDrawing = () => {
       defend();
+      for (const { placed } of given) {
+        editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
+          : "Zeppelin operative! Click in the Zeppelin Tower to fly through the Ancient Sea!");
+      }
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
       const then = () => {
         if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {

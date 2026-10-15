@@ -362,16 +362,11 @@ export class Graveyards {
     this.altar = new AltarWindow(parts);
   }
 
-  /** The selected building's Open button, or null. */
-  windowOf(placed: PlacedItem): { label: string; run: () => void } | null {
-    switch (placed.item.id) {
-      case GRAVEYARD_BUILDING:
-        return { label: "Open", run: () => this.graveyard.open(placed) };
-      case HEROES_GRAVE_BUILDING:
-        return { label: "Open", run: () => this.heroes.open(placed) };
-      case ALTAR_BUILDING:
-        return { label: "Open", run: () => this.altar.open(placed) };
-    }
-    return null;
+  /** The selected building's button for its window (the original cards' "Get units"), or null. */
+  windowOf(placed: PlacedItem): { label: string; run: () => void; icon: IconName } | null {
+    const window = placed.item.id === GRAVEYARD_BUILDING ? this.graveyard
+      : placed.item.id === HEROES_GRAVE_BUILDING ? this.heroes
+        : placed.item.id === ALTAR_BUILDING ? this.altar : null;
+    return window && { label: "Get units", icon: "open-graveyard", run: () => window.open(placed) };
   }
 }

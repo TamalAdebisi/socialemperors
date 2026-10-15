@@ -524,6 +524,10 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, r
     textures = [steps[Math.min(still, steps.length - 1)]];
   } else if (still !== undefined && textures.length > 1) {
     textures = [textures[Math.min(still, textures.length - 1)]];
+  } else if (placed.item.social && textures.length === 2) {
+    // A social building's two frames are open and waiting for its staff (scaffolding), not an animation.
+    // The server opens it for good (social.py), so it shows open.
+    textures = [textures[0]];
   }
   // A farm or ranch: only the pictures that fit who's inside and its harvest.
   const look = lookOf(placed, textures.length, ready);

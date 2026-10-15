@@ -2014,6 +2014,44 @@ body {
   margin-top: 10px;
 }
 
+/* Pausing (ui/pause.ts): the original's black curtain at about two
+   thirds, its GAME PAUSED and RESUME in the middle, above everything. */
+.pause-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgb(0 0 0 / 66%);
+}
+
+.pause-words {
+  width: min(520px, 86vw);
+  height: auto;
+}
+
+.pause-resume {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform: scale(0.9);
+  transition: transform 0.1s;
+}
+
+.pause-resume:hover,
+.pause-resume:focus-visible {
+  transform: scale(1);
+}
+
+.pause-resume img {
+  width: min(220px, 50vw);
+  height: auto;
+}
+
 /* ---- Special moves (ui/specialButtons.ts) ---------------------------------- */
 /* A special unit's buttons, bottom middle, as on the Flash client's
    portrait panel: the game's pictures, the seconds left, the LIMIT bar. */

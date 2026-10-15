@@ -339,6 +339,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] The graveyards and the Altar of Heroes: units and heroes brought
         back for potions, food and gold, or cash; heroes bought
         ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [x] The harbour and zeppelin tower given as the original gives them,
+        with their Open buttons, and pausing
+        ([CLIENT.md](CLIENT.md#step-4-battles))
   - [ ] Checked side by side against the Flash game, and played by the
         owner
 - [ ] **The switch** (steps 5 and 6): battles against players, the long

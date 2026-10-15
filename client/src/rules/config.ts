@@ -133,6 +133,8 @@ export interface ItemInfo {
   costType: string;
   /** Units: how many potions bring it back from the graveyard. */
   potion?: number;
+  /** A social building (the config's social_items: staffed by friends or helpers, like the harbour). */
+  social?: boolean;
   /** How many ways it can face: turning it goes round these. */
   facings: number;
   /** What it produces and how, or null when it doesn't (rules/production.ts). */
@@ -210,9 +212,14 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
 /** The config's items by id. */
 export function itemsById(config: GameConfig): Map<number, ItemInfo> {
   const chosenTime = new Set((config.globals?.COLLECT_VARIABLE_IDS ?? []).map(Number));
+  const social = new Set(((config.social_items ?? []) as { id: number | string }[]).map((s) => Number(s.id)));
   const items = new Map<number, ItemInfo>();
   for (const item of config.items) {
-    items.set(Number(item.id), itemInfo(item, chosenTime));
+    const info = itemInfo(item, chosenTime);
+    if (social.has(info.id)) {
+      info.social = true;
+    }
+    items.set(info.id, info);
   }
   return items;
 }

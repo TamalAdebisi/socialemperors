@@ -24,7 +24,7 @@ import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, gridFor, isWalkable, unitMoved } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
-import { CURSORS, ICONS } from "./ui/icons.ts";
+import { CURSORS, ICONS, type IconName } from "./ui/icons.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
 import { skipLessons } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
@@ -67,7 +67,7 @@ export interface EditorParts {
   /** The game's sound effects. */
   sound?: (effect: Effect) => void;
   /** A building's own window, if it has one (the Wizardry Academy's spells): its button on the card. */
-  windowOf?: (placed: PlacedItem) => { label: string; run: () => void } | null;
+  windowOf?: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
 }
 
 export class TownEditor {
@@ -86,7 +86,7 @@ export class TownEditor {
   private readonly land: { prices: LandPrice[]; neighbours: number };
   private readonly doings: Doings;
   private readonly sound: (effect: Effect) => void;
-  private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void } | null;
+  private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */

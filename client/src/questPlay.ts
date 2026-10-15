@@ -24,6 +24,7 @@ import { readTown } from "./rules/town.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
 import { showMessage, showStatus } from "./ui/hud.ts";
+import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
@@ -178,6 +179,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       }
     },
   });
+  bar.add(new Pause(app.ticker).button("hud-sound"));
   controls.onSelect = () => bar.update();
   let speed = 1;
   let owed = 0;
@@ -453,6 +455,7 @@ class QuestBar {
   private readonly left = document.createElement("span");
   private readonly speedButton = document.createElement("button");
   private readonly selectButton = document.createElement("button");
+  private buttons!: HTMLElement;
   private readonly island: Island;
   private readonly quest: Quest;
   private readonly actions: { selectAll: () => void; speed: () => number; leave: () => void };
@@ -499,6 +502,7 @@ class QuestBar {
     home.append(iconImage("my-town", "Go home"));
     home.addEventListener("click", () => actions.leave());
     buttons.append(this.selectButton, this.speedButton, home);
+    this.buttons = buttons;
     bar.append(numbers, buttons);
     document.body.append(bar);
     this.update();
@@ -506,6 +510,11 @@ class QuestBar {
 
   selectAll(): void {
     this.actions.selectAll();
+  }
+
+  /** Another button, first in the row (the pause button). */
+  add(button: HTMLElement): void {
+    this.buttons.prepend(button);
   }
 
   update(): void {
