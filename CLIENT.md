@@ -1122,10 +1122,59 @@ few kinds with its numbers; our notes in words are in
   seconds. Giants, bosses and big units (4 population or more) stand.
 - No command is sent for any of this, as in the Flash client.
 
-**Not yet** (Beta 2's next slices): the boss islands and the Hero Isle,
-the rarer special moves (shape-shifting, flying, ghosts, shields and the
-like: their buttons don't show yet), collection pieces dropped by
-enemies, defending the town, and spells cast at home against raids.
+**Defending the town**, the same way. Code: `rules/raids.ts` (what comes
+and how it behaves, with tests), `homeDefence.ts` (the town as a
+battlefield, loaded from level 10 only), `battleControls.ts` (the
+player's hands in any battle, shared with the islands), `view/fire.ts`
+(the game's flames, `FireMC`, exported by `tools/art/export_ui.py`), and
+`raiders.py` on the server.
+
+- **What comes,** rolled afresh each time the town opens, and never
+  saved, as in the original: from level 10 a band of bandits that attacks
+  after 7 minutes, from 15 a second at 14 minutes, from 20 a third at 21.
+  A band is a quarter of the level in units (half for a troll town),
+  picked from the enemy race's soldiers for the level, and comes from a
+  random edge of the map. From level 25 there's 1 chance in 10 of a siege
+  of the level's kind: the village siege (25 to 29: 20 soldiers, 5
+  engines and a captain, from the bottom of the map), the stampede (30 to
+  34: 6 big mounts and a captain) or the army (35 and up: 30 from the left
+  edge, while one of the town's villagers runs in crying for help).
+- **How they fight:** a band goes for the nearest building or unit of the
+  player's, at random between the two, until it has burnt out 2 buildings
+  and killed 2 units (3 from level 11, 4 from 16), then walks back to its
+  edge and leaves. A siege waits a minute, its captain riding up and down
+  calling out (the game's own lines, from the config), then sends its
+  engines at the nearest building, its first squad 5 seconds later, its
+  second squad and the captain 15 seconds after that, and retreats 2
+  minutes later. The stampede and the army never retreat.
+- **The town as a battlefield:** when a raid comes, everything in town
+  becomes a fighter (the player's units and buildings, with nature and
+  scenery as nobody's), drawn by the battle's view over the town's ground.
+  Building, moving and collecting wait until it's over (a line at the
+  bottom says so); the player commands as on an island, with Select all
+  (villagers stay out of it), the spell book and the special buttons.
+  Towers, castles and town halls (from Town Hall II) shoot by themselves.
+- **Burning:** at home the player's buildings are never destroyed. They
+  burn as they lose life (the game's flames, in 4 stages), and at 0 they
+  burn out: out of the fight, giving no room for people (the town hall
+  still does), with their workers thrown out (`pop_unit`), until
+  villagers repair them in full. A villager selected, tap a burning
+  building: it walks over and puts back 25 life every 2 seconds. Nothing
+  about burning is saved, as in the original: reopening the town finds it
+  whole.
+- **The server hears** what the Flash client tells it: `sell` (x, y,
+  unit, town, 1, "KILL", 1 or 0 for villagers and heroes) for each of the
+  player's units killed, and `kill` (x, y, unit, town, "u") for each
+  raider killed. Each raider killed pays 5 gold and its experience, saved
+  by the server (`raiders.py`, up to 300 a day). When the raid is over the
+  units stay where the fight left them (`move`, as after a walk).
+
+**Not yet** (Beta 2's next slices): the troll camps with their chest
+every 4 hours and the trolls on the border, the boss islands and the Hero
+Isle, the rarer special moves (shape-shifting, flying, ghosts, shields
+and the like: their buttons don't show yet), collection pieces dropped by
+enemies, the battle music and the "under attack" alert at home, and the
+original's repair pointer.
 
 ### Making the art look better
 

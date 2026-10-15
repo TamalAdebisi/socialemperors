@@ -29,6 +29,7 @@ import assists
 import helps
 import pvp
 import radar
+import raiders
 import tournaments
 import towns
 import tutorial
@@ -189,6 +190,9 @@ def do_command(USERID, cmd, args, previous=None):
                 apply_collect_xp(map, id)
                 map["items"].remove(item)
                 break
+        else:
+            # Not in the save: a raider the client sent at the town.
+            print("  Raider:", raiders.killed(map, id, type))
     
     elif cmd == Constant.CMD_COMPLETE_MISSION:
         mission_id = args[0]

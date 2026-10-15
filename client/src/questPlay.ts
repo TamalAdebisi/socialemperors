@@ -7,25 +7,23 @@
 
 import { Application, Container } from "pixi.js";
 
+import { BattleControls } from "./battleControls.ts";
 import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
-import { Battle, ENEMY, FPS, SELF, type Fighter } from "./rules/battle.ts";
+import { Battle, FPS, type Fighter } from "./rules/battle.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
-import { mapArea, tileUnder, unitPoint, type Point } from "./rules/geometry.ts";
+import { mapArea, unitPoint, type Point } from "./rules/geometry.ts";
 import islandData from "./rules/islands.json" with { type: "json" };
 import {
   MIN_LEVEL_QUESTS, Quest, TEAM_SLOTS, armyOf, difficulties, islandGround, islandLock, lastTeam, playedHere, teamArmy,
   teamChoices, teamProblem, teamSlots, type Island,
 } from "./rules/quest.ts";
-import { areaOf, castSpell, magicOpen, marked, rankOf, spend, type SpellInfo } from "./rules/magic.ts";
 import { Specials, type SpecialsTable } from "./rules/specials.ts";
 import specialsTable from "./rules/specials-table.json" with { type: "json" };
 import { readTown } from "./rules/town.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
 import { showMessage, showStatus } from "./ui/hud.ts";
-import { SpecialButtons } from "./ui/specialButtons.ts";
-import { SpellBook, magicParts } from "./ui/spells.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
@@ -149,8 +147,22 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   void commands.flush();
   const started = performance.now();
 
+  // The player's hands (battleControls.ts): picking units, orders, spells, special moves; the chest first.
+  const controls = new BattleControls({
+    battle, view, camera, world, items, town, config, privateState, settings, commands, sound, specials, random,
+    tapFirst: (tapped) => {
+      if (finished || !tapped || tapped !== quest!.chest || !tapped.collectable) {
+        return finished;
+      }
+      quest!.collect(tapped);
+      sound.play("collect");
+      showMessage("The treasure is yours!");
+      setTimeout(() => showMessage(""), 2500);
+      return true;
+    },
+  });
   const bar = new QuestBar(island, quest, {
-    selectAll: () => select(battle.fighters.filter((f) => f.side === SELF && f.isUnit && !f.dead)),
+    selectAll: () => controls.selectAll(),
     speed: () => {
       speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
       return speed;
@@ -161,50 +173,14 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       }
     },
   });
+  controls.onSelect = () => bar.update();
   let speed = 1;
   let owed = 0;
   let finished = false;
-
-  // Spells (ui/spells.ts): the book at the bottom left, for those who have magic.
-  const parts = magicParts(config, privateState, town, settings.assetsUrl, (cmd, ...args) => {
-    commands.add(cmd, ...args);
-    void commands.flush();
-  }, () => {});
-  const magic = parts.state;
-  let aimAt: Point | null = null;
-  let hovering = false;
-  const book = magicOpen(town.race, town.level) ? new SpellBook(parts, (spell) => {
-    aimAt = null;
-    if (spell) {
-      select([]);
-    } else {
-      view.aim(null);
-    }
-  }) : null;
-  const aimOver = (tile: Point) => {
-    const spell = book?.isAiming;
-    if (!spell) {
-      return;
-    }
-    aimAt = tile;
-    // The marker shows the spell's area at its rank now (the cast itself may reach the next).
-    const rank = rankOf(Number(magic.casts[String(spell.id)] ?? 0));
-    view.aim({ tile, area: areaOf(spell, rank), lit: marked(battle, spell, rank, tile) });
-  };
-  const cast = (spell: SpellInfo, tile: Point) => {
-    const rank = spend(spell, magic);
-    castSpell(battle, spell, rank, tile, { items, random });
-    // As the Flash client: the spell's name and its mana rise from the tile, and the server hears at once.
-    view.riseAt(unitPoint(tile.x, tile.y), [{ text: spell.name, colour: 0xff5a4a }, { text: `-${spell.mana}`, colour: 0x5ec8ff }]);
-    commands.add("use_magic", spell.id);
-    void commands.flush();
-    sound.play("place");
-    book!.cast();
-  };
   // For the browser tests (e2e/tests/quest.mjs): where things are on screen, to tap them as a player would.
   (window as unknown as Record<string, unknown>).seQuest = {
-    battle, quest, view, magic, specials,
-    select: (units: Fighter[]) => select(units),
+    battle, quest, view, magic: controls.magic, specials,
+    select: (units: Fighter[]) => controls.select(units),
     lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)),
     tileScreen: (tile: Point) => {
       const p = world.toGlobal(unitPoint(tile.x, tile.y));
@@ -215,88 +191,12 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       return { x: p.x, y: p.y };
     },
   };
-
-  const moves = new SpecialButtons(specials, (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`, (text) => {
-    showMessage(text);
-    setTimeout(() => showMessage(""), 2000);
-  });
-  const select = (units: Fighter[]) => {
-    view.selected = new Set(units);
-    moves.select(units);
-    bar.update();
-  };
   const askLeave = () => {
     finalWindow("Leave the island? The battle will be lost, and the units who fell stay lost.", [
       { label: "Stay and fight", run: () => {} },
       { label: "Leave", danger: true, run: () => quest!.leave() },
     ], true);
   };
-
-  camera.onTap = (at) => {
-    if (finished) {
-      return;
-    }
-    const aiming = book?.isAiming;
-    if (aiming) {
-      const tile = tileUnder(camera.toMap(at));
-      // With a mouse the marker follows it, so a click casts; on a touch
-      // screen the first tap shows where it would fall, a second there casts.
-      if (hovering || (aimAt && aimAt.x === tile.x && aimAt.y === tile.y)) {
-        cast(aiming, tile);
-      } else {
-        aimOver(tile);
-      }
-      return;
-    }
-    const tapped = view.fighterAt(at);
-    if (tapped && tapped === quest!.chest && tapped.collectable) {
-      quest!.collect(tapped);
-      sound.play("collect");
-      showMessage("The treasure is yours!");
-      setTimeout(() => showMessage(""), 2500);
-      return;
-    }
-    if (tapped && tapped.side === SELF && tapped.isUnit) {
-      // A unit of the player's: it alone, or added to (or taken from) the others with Shift.
-      const shift = (window.event as KeyboardEvent | undefined)?.shiftKey;
-      const now = new Set(shift ? view.selected : []);
-      if (shift && now.has(tapped)) {
-        now.delete(tapped);
-      } else {
-        now.add(tapped);
-      }
-      select([...now]);
-      sound.play("click");
-      return;
-    }
-    const chosen = [...view.selected].filter((f) => !f.dead);
-    if (chosen.length === 0) {
-      return;
-    }
-    if (tapped && tapped.side === ENEMY) {
-      battle.attackWith(chosen, tapped);
-    } else {
-      battle.moveTo(chosen, tileUnder(camera.toMap(at)));
-    }
-    sound.play("place");
-  };
-  camera.onHover = (at) => {
-    hovering = true;
-    if (book?.isAiming) {
-      aimOver(tileUnder(camera.toMap(at)));
-      view.hover(null);
-      return;
-    }
-    view.hover(view.fighterAt(at));
-  };
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      select([]);
-    } else if (e.key === " " || e.key.toLowerCase() === "a") {
-      e.preventDefault();
-      bar.selectAll();
-    }
-  });
 
   app.ticker.add((ticker) => {
     if (!finished) {
@@ -310,15 +210,13 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       }
       if (quest!.isOver()) {
         finished = true;
-        moves.select([]);
-        book?.stopAiming();
-        book?.hide();
+        controls.stop();
         quest!.settle();
         void results(quest!, (performance.now() - started) / 1000);
       }
     }
     bar.update();
-    moves.update();
+    controls.update();
   });
 
   async function results(run: Quest, seconds: number): Promise<void> {
