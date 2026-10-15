@@ -88,6 +88,11 @@ Not to rewrite: 11,700 lines of libraries (animation, JSON, encryption) and
 The long tails stand out: 115 special units, 350 special items and about 100
 windows, each to be looked at one by one.
 
+All of it is now mapped, class by class, in
+[docs/original/](docs/original/README.md): what each part does in our own
+words and how far the new client has got, with rule books for running a
+town and the rules that run with no button.
+
 ### The art
 
 Measured by reading the frames, pictures and animation labels in every Flash
