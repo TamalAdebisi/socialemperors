@@ -15,6 +15,7 @@ them can be found and reversed. The big, agreed decisions are in
 - **The browser tests start each town with a villager** far off in the
   wild corner, so none appears near the middle where tests tap; one test
   checks the villager comes.
+
 ## 15 October 2026: Beta 2, the Rockdriller and the dragons
 
 - **Kept from the original:** the Rockdriller goes back to 25,000 life when
