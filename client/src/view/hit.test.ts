@@ -29,3 +29,9 @@ test("an untrimmed picture is its frame", () => {
   const whole = { x: 0, y: 0, width: 40, height: 30 };
   assert.deepEqual(sheetPixel({ x: 0, y: 0 }, { x: 0, y: 0 }, whole, null, { ...whole, x: 8, y: 8 }), { x: 8, y: 8 });
 });
+
+test("a sheet stored at half size finds its pixel at half the place", () => {
+  // The same picture, its numbers in the game's pixels as PixiJS gives them;
+  // the sheet holds it at half size, so (320, 215) is (160, 107) there.
+  assert.deepEqual(sheetPixel({ x: -10, y: -20 }, anchor, orig, trim, frame, 0.5), { x: 160, y: 107 });
+});

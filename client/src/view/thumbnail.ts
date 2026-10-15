@@ -26,5 +26,7 @@ export async function drawThumbnail(art: ArtLibrary, item: ItemInfo, canvas: HTM
   const w = frame.width * scale;
   const h = frame.height * scale;
   context.imageSmoothingQuality = "high";
-  context.drawImage(source, frame.x, frame.y, frame.width, frame.height, (width - w) / 2, (height - h) / 2, w, h);
+  // A sheet stored at half size (the biggest gods) has half the pixels.
+  const r = texture.source.resolution;
+  context.drawImage(source, frame.x * r, frame.y * r, frame.width * r, frame.height * r, (width - w) / 2, (height - h) / 2, w, h);
 }

@@ -4,6 +4,24 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the last sprite sheets
+
+- **The biggest pictures are stored at half size** (a quarter for the
+  largest), and drawn back at full size. A picture bigger than 4,096
+  pixels can't be loaded on most phones; at the game's usual zoom the
+  difference hardly shows.
+- **A budget of 4 sheet pages per item.** The chained water god (a giant
+  animated decoration) would have needed 48 pages, more memory than a
+  phone's graphics chip has. It is now stored at a quarter size and its
+  animation shows each picture for 2 frames instead of 1 (15 a second
+  instead of 30): a little softer and choppier, but it loads. Only items
+  over the budget change; the 1,575 sheets already made stay as they are.
+- **A stray part far away is cut off.** The medieval slayer has a part
+  placed 15 million pixels from it (invisible in the game); the sheet keeps
+  the 4,096 pixels around the slayer.
+- **The projectiles and effects are exported too** (one small sheet per
+  projectile), since battles need them; still the game's own pictures.
+
 ## 14 October 2026: the art export
 
 - **11 sprite sheets wait for Beta 2.** The export made 1,575 of 1,587; the

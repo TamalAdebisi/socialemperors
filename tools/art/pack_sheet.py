@@ -33,6 +33,17 @@ Phaser both load:
 A picture shown for several frames in a row is listed that many times, so an
 animation plays at a steady meta.fps.
 
+A picture bigger than a whole sheet even alone (the biggest gods and
+dragons, up to 6,479 pixels wide) can't be stored at the game's size: the
+item's pictures are then stored at half size (a quarter if need be) and
+meta.scale says so ("0.5"). PixiJS reads it and draws them at full size,
+and every number in the JSON but meta.bounds is in the smaller pixels.
+
+An item may take at most MAX_PAGES pages. One that would take more (the
+chained water god: 394 pictures of nearly 4,000 x 2,500) is stored smaller
+and, if that isn't enough, its animations hold each picture for 2 or 3
+frames instead of 1 (meta.step says how many), until it fits.
+
 Pictures that don't fit in one 4096 x 4096 image (big bosses, the ground)
 go on more pages: <item>-1.webp and <item>-1.json (frames only), and so on,
 listed in the first JSON's meta.related_multi_packs as TexturePacker does.
@@ -47,6 +58,7 @@ import sys
 from PIL import Image
 
 PADDING = 2           # empty pixels around each picture, so neighbours don't bleed in when scaled
+MAX_PAGES = 4         # the most sheet pages an item may take: each is up to 64 MB in a graphics chip
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
 WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
@@ -72,15 +84,66 @@ class Sheet:
     """One page of a sprite sheet, drawn only when it is written (image()),
     so a many-page item never has more than one page in memory."""
 
-    def __init__(self, size):
+    def __init__(self, size, shrink=1):
         self.size = size
+        self.shrink = shrink  # 2: pictures are stored at half size
         self.pictures = []  # (path, trimmed box on its canvas, place on the page)
 
     def image(self):
         sheet = Image.new("RGBA", self.size, (0, 0, 0, 0))
         for path, (bx, by, w, h), place in self.pictures:
-            sheet.paste(open_rgba(path).crop((bx, by, bx + w, by + h)), place)
+            picture = open_rgba(path).crop((bx, by, bx + w, by + h))
+            if self.shrink > 1:
+                picture = picture.resize((w // self.shrink, h // self.shrink), Image.Resampling.LANCZOS)
+            sheet.paste(picture, place)
         return sheet
+
+
+def shrink_for(boxes, max_size=MAX_SIZE):
+    """1 when every picture fits on a sheet at the game's size; else 2, 4...:
+    how many times smaller they must be stored."""
+    biggest = max((max(w, h) for _, _, w, h in boxes), default=0)
+    shrink = 1
+    while biggest / shrink + PADDING > max_size:
+        shrink *= 2
+    return shrink
+
+
+# What to try, in order, for an item over MAX_PAGES: (how many times smaller,
+# how many frames each picture is held). Smaller first, then choppier.
+PLANS = [(1, 1), (2, 1), (2, 2), (2, 3), (4, 2), (4, 3), (4, 4), (4, 6), (8, 6), (8, 12)]
+
+
+def decimate(frames, step):
+    """Each animation shows only every step-th picture, each held step frames."""
+    if step == 1:
+        return frames
+    return [{**frame, "images": [images[i - i % step] for i in range(len(images))]}
+            for frame in frames for images in [frame["images"]]]
+
+
+def plan(frames, boxes, max_size=MAX_SIZE, max_pages=MAX_PAGES):
+    """(shrink, step) for an item: the first of PLANS whose pictures fit in
+    max_pages pages, guessing a tenth more than their area for the gaps."""
+    biggest = shrink_for(boxes, max_size)
+    for shrink, step in PLANS:
+        if shrink < biggest:
+            continue
+        used = {n for frame in decimate(frames, step) for n in frame["images"]}
+        area = sum((boxes[n][2] // shrink + PADDING) * (boxes[n][3] // shrink + PADDING) for n in used)
+        if area * 1.1 <= max_pages * max_size * max_size:
+            return shrink, step
+    return PLANS[-1]
+
+
+def widen(box, shrink, canvas_w, canvas_h):
+    """A trimmed box grown to whole multiples of `shrink`, so its place and
+    size are exact once shrunk (the canvas is padded, so there's room)."""
+    bx, by, w, h = box
+    x0, y0 = bx - bx % shrink, by - by % shrink
+    x1 = min(canvas_w - canvas_w % shrink, -(-(bx + w) // shrink) * shrink)
+    y1 = min(canvas_h - canvas_h % shrink, -(-(by + h) // shrink) * shrink)
+    return x0, y0, max(shrink, x1 - x0), max(shrink, y1 - y0)
 
 
 def trim(image):
@@ -148,11 +211,27 @@ def page_name(item, page):
     return item if page == 0 else f"{item}-{page}"
 
 
-def build(render_dir, max_size=MAX_SIZE):
-    """The sheets (Sheet: call image() for the picture) and their JSON data,
-    one per page, from RenderSwf's output, and any warnings."""
+def split_frames(render_dir, prefix):
+    """A library clip whose frames are different things (the projectiles:
+    frame n is projectile type n) as one item per frame, "<prefix>_<n>"
+    counting from 1, so a battle loads only the projectiles it shows.
+    Yields (manifest, picture paths) for each, to give build()."""
     manifest, paths = load(render_dir)
-    item = manifest["swf"][:-len(".swf")]
+    for f, frame in enumerate(manifest["frames"]):
+        used = sorted(set(frame["images"]))
+        renumber = {n: i for i, n in enumerate(used)}
+        yield ({**manifest, "name": f"{prefix}_{f + 1}",
+                "frames": [{**frame, "labels": [], "images": [renumber[n] for n in frame["images"]]}]},
+               [paths[n] for n in used])
+
+
+def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
+    """The sheets (Sheet: call image() for the picture) and their JSON data,
+    one per page, from RenderSwf's output (or `loaded`: a manifest and its
+    pictures from split_frames), and any warnings."""
+    manifest, paths = loaded or load(render_dir)
+    # The item's name: the file's, or the class drawn from a library file.
+    item = manifest.get("name") or manifest["swf"][:-len(".swf")]
     canvas_w, canvas_h = manifest["canvas"]["w"], manifest["canvas"]["h"]
     origin = manifest["origin"]
 
@@ -168,18 +247,33 @@ def build(render_dir, max_size=MAX_SIZE):
             warnings.append(f"picture {n} touches the edge of its canvas and may be cut off")
         boxes.append(box)
 
-    positions, sizes = pack([(w, h) for _, _, w, h in boxes], max_size)
-    sheets = [Sheet(size) for size in sizes]
+    shrink, step = plan(manifest["frames"], boxes, max_size, max_pages)
+    if shrink > 1:
+        boxes = [widen(box, shrink, canvas_w, canvas_h) for box in boxes]
+        warnings.append(f"pictures too big for {max_pages} sheets, stored at 1/{shrink} size (meta.scale)")
+    if step > 1:
+        manifest = {**manifest, "frames": decimate(manifest["frames"], step)}
+        warnings.append(f"too many pictures for {max_pages} sheets: each held {step} frames (meta.step)")
+    # Only the pictures the animations still show are packed; each keeps its number.
+    used = sorted({n for frame in manifest["frames"] for n in frame["images"]})
+    # The canvas in stored pixels, and the anchor as a fraction of it, which
+    # PixiJS turns back into the origin exactly.
+    source_w, source_h = canvas_w // shrink, canvas_h // shrink
+    anchor = {"x": round(origin["x"] / shrink / source_w, 6), "y": round(origin["y"] / shrink / source_h, 6)}
+
+    positions, sizes = pack([(boxes[n][2] // shrink, boxes[n][3] // shrink) for n in used], max_size)
+    sheets = [Sheet(size, shrink) for size in sizes]
     pages = [{"frames": {}, "meta": {}} for _ in sizes]
-    for n, (path, (bx, by, w, h), (page, x, y)) in enumerate(zip(paths, boxes, positions)):
+    for n, (page, x, y) in zip(used, positions):
+        path, (bx, by, w, h) = paths[n], boxes[n]
         sheets[page].pictures.append((path, (bx, by, w, h), (x, y)))
         pages[page]["frames"][f"{item}/{n}"] = {
-            "frame": {"x": x, "y": y, "w": w, "h": h},
+            "frame": {"x": x, "y": y, "w": w // shrink, "h": h // shrink},
             "rotated": False,
             "trimmed": True,
-            "spriteSourceSize": {"x": bx, "y": by, "w": w, "h": h},
-            "sourceSize": {"w": canvas_w, "h": canvas_h},
-            "anchor": {"x": round(origin["x"] / canvas_w, 6), "y": round(origin["y"] / canvas_h, 6)},
+            "spriteSourceSize": {"x": bx // shrink, "y": by // shrink, "w": w // shrink, "h": h // shrink},
+            "sourceSize": {"w": source_w, "h": source_h},
+            "anchor": anchor,
         }
     for page, (data, (w, h)) in enumerate(zip(pages, sizes)):
         data["meta"] = {
@@ -188,7 +282,7 @@ def build(render_dir, max_size=MAX_SIZE):
             "image": f"{page_name(item, page)}.webp",
             "format": "RGBA8888",
             "size": {"w": w, "h": h},
-            "scale": "1",
+            "scale": str(1 / shrink) if shrink > 1 else "1",
         }
 
     first = pages[0]
@@ -196,6 +290,7 @@ def build(render_dir, max_size=MAX_SIZE):
                            for name, numbers in animations(manifest).items()}
     first["meta"].update({
         "fps": manifest["fps"],
+        "step": step,
         "origin": origin,
         "bounds": bounds(manifest),
         "source": manifest["swf"],
@@ -231,11 +326,19 @@ def main(argv=None):
                         help="a folder RenderSwf.java wrote (manifest.json, img_<n>.png)")
     parser.add_argument("--out", required=True, help="where to write <item>.webp and <item>.json")
     parser.add_argument("--quality", type=int, default=WEBP_QUALITY, help="WebP quality, 0 to 100")
+    parser.add_argument("--split-frames", metavar="PREFIX",
+                        help="make one item of each frame, <PREFIX>_1, _2... (a library clip like the projectiles)")
     args = parser.parse_args(argv)
     failed = 0
+    jobs = []
     for render_dir in args.render_dirs:
+        if args.split_frames:
+            jobs += [(render_dir, loaded) for loaded in split_frames(render_dir, args.split_frames)]
+        else:
+            jobs.append((render_dir, None))
+    for render_dir, loaded in jobs:
         try:
-            sheets, pages, warnings = build(render_dir)
+            sheets, pages, warnings = build(render_dir, loaded=loaded)
         except (ValueError, OSError) as e:
             print(f"FAIL {os.path.basename(os.path.normpath(render_dir))}: {e}")
             failed += 1

@@ -122,6 +122,40 @@ class PackSheetTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             pack_sheet.pack([(5000, 10)])
 
+    def test_an_item_too_big_for_a_sheet_is_stored_at_half_size(self):
+        # Picture 2 is 30 pixels wide: too wide for a 24-pixel sheet.
+        sheets, pages, warnings = pack_sheet.build(self.folder, max_size=24)
+        self.assertIn("pictures too big for 4 sheets, stored at 1/2 size (meta.scale)", warnings)
+        meta = pages[0]["meta"]
+        self.assertEqual(meta["scale"], "0.5")
+        frames = {name: frame for page in pages for name, frame in page["frames"].items()}
+        attack = frames["99_test_unit/2"]  # drawn at (5, 1), 30 x 24: widened to (4, 0), 32 x 26
+        self.assertEqual(attack["spriteSourceSize"], {"x": 2, "y": 0, "w": 16, "h": 13})
+        self.assertEqual(attack["frame"]["w"], 16)
+        self.assertEqual(attack["sourceSize"], {"w": 20, "h": 15})
+        # PixiJS sizes the canvas as sourceSize / scale: the anchor lands on the origin.
+        self.assertAlmostEqual(attack["anchor"]["x"] * 20 / 0.5, ORIGIN["x"], places=3)
+        self.assertAlmostEqual(attack["anchor"]["y"] * 15 / 0.5, ORIGIN["y"], places=3)
+        self.assertEqual(meta["bounds"]["QUIETO/0"], {"x": -20, "y": -25, "w": 40, "h": 30})  # the game's pixels
+        # The picture itself is half size, still red.
+        sheet = sheets[[n for n, page in enumerate(pages) if "99_test_unit/2" in page["frames"]][0]].image()
+        f = attack["frame"]
+        self.assertEqual(sheet.getpixel((f["x"] + 8, f["y"] + 6)), (255, 0, 0, 255))
+
+    def test_an_item_over_its_pages_is_stored_smaller_then_choppier(self):
+        # Room for very little: one 20 x 20 page.
+        self.assertEqual(pack_sheet.plan([{"images": [0, 1, 2, 3]}], [(0, 0, 8, 8)] * 4, max_size=20, max_pages=1), (2, 1))
+        self.assertEqual(pack_sheet.plan([{"images": [0, 1, 2, 3]}], [(0, 0, 16, 16)] * 4, max_size=20, max_pages=1), (2, 2))
+        # Held 2 frames each: pictures 1, 2, 3, 4 become 1, 1, 3, 3.
+        self.assertEqual(pack_sheet.decimate([{"images": [1, 2, 3, 4]}], 2), [{"images": [1, 1, 3, 3]}])
+        sheets, pages, warnings = pack_sheet.build(self.folder, max_size=24, max_pages=1)
+        meta = pages[0]["meta"]
+        self.assertGreater(meta["step"], 1)
+        self.assertEqual(len(pages), 1)
+        self.assertEqual(len(pages[0]["animations"]["ATAQUE/0"]), 3, "the animation keeps its length")
+        names = {name for page in pages for name in page["frames"]}
+        self.assertTrue(all(f in names for frames in pages[0]["animations"].values() for f in frames))
+
     def test_pictures_that_dont_fit_go_on_more_pages(self):
         # Two 3000 x 3000 pictures can't share a 4096 x 4096 sheet.
         positions, pages = pack_sheet.pack([(3000, 3000), (3000, 3000), (10, 10)])
@@ -161,6 +195,19 @@ class PackSheetTest(unittest.TestCase):
         self.assertEqual(len([f for f in files if f.endswith(".webp")]), len(pages))
         # The first page's JSON is finished after everything else.
         self.assertEqual(finished[-1], "99_test_unit.json")
+
+    def test_a_library_clip_is_split_into_one_item_per_frame(self):
+        # The test item's five frames, as if each were a projectile.
+        items = list(pack_sheet.split_frames(self.folder, "projectile"))
+        self.assertEqual([manifest["name"] for manifest, _ in items],
+                         ["projectile_1", "projectile_2", "projectile_3", "projectile_4", "projectile_5"])
+        # The third frame showed pictures 2, 2, 3: now its own 0, 0, 1.
+        manifest, paths = items[2]
+        self.assertEqual(manifest["frames"][0]["images"], [0, 0, 1])
+        self.assertEqual([os.path.basename(p) for p in paths], ["img_2.png", "img_3.png"])
+        _, pages, _ = pack_sheet.build(self.folder, loaded=items[2])
+        self.assertEqual(pages[0]["animations"], {"frame/0": ["projectile_3/0", "projectile_3/0", "projectile_3/1"]})
+        self.assertEqual(pages[0]["meta"]["image"], "projectile_3.webp")
 
     def test_writes_webp_and_json(self):
         out = tempfile.mkdtemp(prefix="se-art-out-")

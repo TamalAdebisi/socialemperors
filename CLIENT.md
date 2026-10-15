@@ -235,33 +235,41 @@ one 1,750 x 1,854 sheet of 0.58 MB (the Flash file is 0.94 MB).
 Found on the way: `1410_bahamut_heart.swf`, the Bahamut Heart, is an empty
 file in the repository, so neither client can draw it.
 
-**Made: 1,575 of the 1,587** (October 2026). The other 11 are among the
-biggest dragons, gods and bosses, and each needs a change before it can be
-made:
+**Made: 1,575 of the 1,587** (October 2026), and the last 11 (Beta 2's first
+slice) with three changes, each found on one of them:
 
-- **A picture bigger than a sheet** (4,096 pixels each way, the most phones'
-  graphics chips accept), at the game's own size: `2085_elemental_water_god`,
-  `3035_chained_water_god` and `3057_chained_watergc` (6,097 x 4,018),
-  `2354_abyssAncientDragon` and `2356_abyssAncientDragonRider`
-  (6,479 x 4,278), `2338_cerberusAncientDragonRider` (4,266 x 2,069). The
-  likely fix: store these at half size, with `meta.scale` set so PixiJS
-  draws them at full size, checking the client lines them up and hit-tests
-  them right.
-- **Still drawing after the two hours an item gets:** `2167_genesisIceGod`,
-  `2299_coreAncientDragon`, `2301_coreAncientDragonRider`,
-  `2336_cerberusAncientDragon`. The slowest that finished took 1 hour 53
-  minutes. A longer limit fits in GitHub's 6 hours per machine; drawing an
-  item's frames in parallel would be faster.
-- **The renderer stops with an error:** `2099_medieval_slayer`
-  (`NegativeArraySizeException`: some picture's size is too large to count,
-  probably a stray shape far outside the rest).
+- **Too big for a sheet.** Some pictures are bigger than a whole sheet
+  (4,096 pixels each way, the most phones' graphics chips accept), like the
+  water gods and the abyss dragons (up to 6,479 x 4,278). The packer then
+  stores the item's pictures at half size (a quarter if need be) and says
+  so in `meta.scale`; PixiJS reads it and draws them at full size, and the
+  client's tap test and thumbnails allow for it.
+- **Too many pictures.** An item may take at most 4 sheet pages (each up to
+  64 MB in a graphics chip). The chained water god, a 4 x 4 decoration
+  whose 13-second animation is 394 pictures of nearly 4,000 x 2,500 pixels,
+  would have taken 48 pages. Over the budget, the packer stores pictures
+  smaller first, then holds each picture for 2 or 3 frames
+  (`meta.step`), until the item fits: the god is 5.4 MB at a quarter size,
+  each picture held 2 frames.
+- **Too slow, or a crash.** The biggest dragons and gods have up to 5,500
+  pictures to draw on canvases of millions of pixels: hours on one
+  processor core. With fewer items than cores left, `RenderSwf` now draws
+  an item's frames on several threads at once (each thread with its own
+  copy of the file), pixel for pixel the same, and an item gets 4 hours
+  instead of 2. The medieval slayer crashed because a part of it is placed
+  15 million pixels away; a canvas that big is now cut to 4,096 pixels
+  around the item, where it really is.
 
-They are on the list for Beta 2, where bosses and the top dragons matter.
+The projectiles and effects are made the same way: `assets/fx/` (blasts,
+beams, the spells' pictures) as items of their own, and the projectiles
+from one clip in the game's library (`05122012_projectiles.swf`,
+`ProyectilMC`), whose frame n is projectile n: each becomes a small sheet,
+`projectile_<n>` (the arrow is 400 bytes), so a battle loads only the
+shots it shows.
 
-Still to do for the art: the effects in `assets/fx/` (mostly vector
-drawings, which can be drawn sharper than the original), the sounds inside
-the Flash files, and the scaffolding pictures for buildings under
-construction (in `assets/swf/120608_dynamic.swf`).
+Still to do for the art: the sounds inside the Flash files, and the
+scaffolding pictures for buildings under construction (in
+`assets/swf/120608_dynamic.swf`).
 
 ### Step 2: look at your town
 
