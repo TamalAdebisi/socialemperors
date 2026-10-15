@@ -97,6 +97,8 @@ PICTURES = {
     "inside": ("CursorMC", 10),
     # Over a wild animal just caught, for a few seconds.
     "caught": ("IconoCapturadoMC", 0),
+    # On each block of land for sale; the game writes "FOR SALE" and "Click to Buy" on it.
+    "for-sale": ("btnBuyExpandTileMC", 0, 240),
 }
 
 # The mouse pointers a selected unit shows over what it can work or go into

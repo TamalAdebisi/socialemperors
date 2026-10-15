@@ -1,7 +1,8 @@
 // Small things (CLIENT.md, "Step 3"): a ready farm's bubble, tapped where
 // only grass is behind it, collects the farm, as in the Flash client (the
-// bubble was part of its building); and a house sold shows its refund
-// rising (looked at in the screenshot).
+// bubble was part of its building); a house sold shows its refund rising;
+// and the land below, for sale, has its sign, and tapping there offers it
+// (the last two looked at in the screenshots).
 
 import assert from "node:assert/strict";
 
@@ -33,4 +34,13 @@ export default async function bubble({ newPlayer }) {
   await player.press("Sell");  // confirmed
   await player.wait(300);
   await player.shot("sold");
+
+  // The land below the middle: its sign, half a screen down.
+  await player.page.keyboard.down("ArrowDown");
+  await player.wait(500);
+  await player.page.keyboard.up("ArrowDown");
+  await player.wait(500);
+  await player.shot("for-sale");
+  await player.click({ x: 640, y: 420 });
+  assert.match(await player.bar(), /^Land for sale/, "tapping it offers it");
 }

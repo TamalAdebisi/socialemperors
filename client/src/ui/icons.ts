@@ -40,6 +40,8 @@ export const ICONS = {
   inside: new URL("./art/inside.webp", import.meta.url).href,
   // Over a wild animal just caught.
   caught: new URL("./art/caught.webp", import.meta.url).href,
+  // On each block of land that can be bought, on the map.
+  "for-sale": new URL("./art/for-sale.webp", import.meta.url).href,
   gifts: new URL("./art/gifts.webp", import.meta.url).href,
   // The selected thing's buttons, as on its info panel.
   move: new URL("./art/move.webp", import.meta.url).href,

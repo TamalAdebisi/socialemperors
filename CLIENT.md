@@ -852,6 +852,10 @@ for 2 cash; and the bank, from the + on the gold and cash pills. Code:
   config's `expansion_prices` row for how many blocks are open (the first
   4,000 gold or 20 cash). Paying in gold needs that row's number of
   neighbours (every neighbour counts but "Best Empire"); cash doesn't.
+- Each closed block in the middle has the game's "for sale" sign in its
+  middle (`btnBuyExpandTileMC`, exported by `tools/art/export_ui.py`), in
+  the player's own town only, as in the Flash client; tapping a block that
+  doesn't touch theirs does nothing.
   `expand` (block, "gold" or "cash", town).
 - Opening a building early: a building the shop shows but whose level
   isn't reached costs a third of that level in cash, rounded up (House IV,
