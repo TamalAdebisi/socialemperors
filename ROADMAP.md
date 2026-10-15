@@ -273,12 +273,13 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
 - [ ] **Beta 1, the town builder** (the rest of step 3), built 14 October
       2026, now closing the gaps a side-by-side check against the Flash game
-      found ([PARITY.md](PARITY.md)): the menus as a rail and dock (the owner's pick: the shop,
+      found ([PARITY.md](PARITY.md); the rules it got wrong are fixed, and
+      trees and rocks grow back): the menus as a rail and dock (the owner's pick: the shop,
       storage, army, neighbours and battle windows, the glove, messages at
       the top); units walking; villagers at work (trees, rocks, workers into
       buildings and out again); training and population; land and cash
       (land, opening early, hurrying, the bank); missions and bonuses
-      (goals, the daily bonus, Monday's and welcome-back chests); neighbours
+      (goals, the daily bonus, Monday's chest); neighbours
       (visiting and helping, Arthur, the donkey carts); sound and speed (the
       town's music and sounds, compressed downloads); and a run-through
       against the Flash game (`e2e/tests/classic.mjs`: an empire played in

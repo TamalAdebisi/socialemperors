@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: trees and rocks grow back
+
+- **As the original, quirks too:** the fourth kind of stone and of gold
+  rock isn't counted, so a town with many of them still gets more; a clump
+  near a block's edge can spill onto land not bought yet.
+- **Towns played only in the new client get their forest on the next
+  open,** about 270 trees and a few dozen rocks for a new town, all at
+  once, as the Flash client did on a town's first opening.
+- **The browser tests start each town with enough trees and rocks,** in
+  the wild corners at the top, so none grow where a test taps; one test
+  (`nature.mjs`) lets them grow.
+
 ## 15 October 2026: the rules the original plays by
 
 The parity check found rules the new client got wrong; these are fixed.
