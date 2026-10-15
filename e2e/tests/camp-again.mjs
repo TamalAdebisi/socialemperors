@@ -34,18 +34,19 @@ export default async function campAgain({ newPlayer }) {
     }
   }, troll.at);
   await player.page.waitForFunction(() => !window.seHome.fighting, null, { timeout: 60_000 });
-  const moved = await player.page.evaluate((id) => window.seHome.parts.town.items.filter((p) => p.item.id === id && p.serverAt).length, troll.id);
+  const moved = await player.page.evaluate((at) => window.seHome.parts.town.items.filter((p) => p.serverAt
+    && p.serverAt.x === at[0] && p.serverAt.y === at[1] && p.tx !== at[0]).length, troll.at);
   assert.equal(moved, 1, "drawn where the fight left it, saved where it was");
 
   // The second fight: it falls.
-  await player.page.evaluate((id) => {
+  await player.page.evaluate((at) => {
     const { parts } = window.seHome;
     const knight = parts.town.items.find((p) => p.item.id === 514);
-    const t = parts.town.items.find((p) => p.item.id === id && p.serverAt);
+    const t = parts.town.items.find((p) => p.serverAt && p.serverAt.x === at[0] && p.serverAt.y === at[1] && p.tx !== at[0]);
     window.seHome.engage([knight], t);
     const fight = window.seHome.fighting;
     fight.battle.kill(fight.fighterOf(t), null);
-  }, troll.id);
+  }, troll.at);
   await player.wait(500);
   const saved = await player.saved();
   assert.ok(!saved.items.some((i) => i[0] === troll.id && i[1] === troll.at[0] && i[2] === troll.at[1]), "gone from the save");
