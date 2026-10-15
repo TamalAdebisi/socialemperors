@@ -699,6 +699,14 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
   first comes in (a mine whose time is chosen waits for the choice).
   `push_unit` (where the save had the unit, its item, the building's
   place, town).
+- What a farm or ranch shows (`view/looks.ts`): its picture in the game's
+  file holds every state one after another, and the game shows the one that
+  fits. A farm's 45: the empty field; the man at work (2 to 21, played in a
+  loop) or the woman (22 to 43), whichever villager is inside; ripe crops
+  with the man (44) or the woman (45) when it's ready. A ranch's: as many
+  animals as are inside (1 for none). Buildings whose pictures are laid out
+  otherwise, such as the Training Stables' long animation, play as they
+  are. Test: `e2e/tests/looks.mjs`.
 - Let out: the last unit in comes out on the nearest free tile around the
   building (`pop_unit`: the building's place, town, item, the tile, 0).
   The last one out ends the building's work; a mill or mine whose time is
