@@ -88,6 +88,8 @@ PICTURES = {
     "music-off": ("GuiMC/options_panel/bmo", 0),
     "sound-on": ("GuiMC/options_panel/bs", 0),
     "sound-off": ("GuiMC/options_panel/bso", 0),
+    # Visiting a neighbour: one of the rays that count the helps left.
+    "help-ray": ("GuiMC/parteArribaGui/rayoNeighbour_01", 0),
     # The pointers' pictures (CURSORS below), full size: on phones, which have
     # no pointer, they show briefly over what a unit was sent to work.
     "axe": ("CursorMC", 11),

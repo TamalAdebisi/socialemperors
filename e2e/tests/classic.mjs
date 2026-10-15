@@ -1,7 +1,7 @@
 // The new client and the classic game play the same empire (CLAUDE.md, rule
 // 5), and Arthur's lessons (CLIENT.md, "Arthur's lessons"). A new player is
 // asked about the lessons; plays a little in the new client first (a farm
-// from the shop, a unit walked somewhere, the daily bonus), is asked again
+// from the shop, a unit walked somewhere), is asked again
 // on reloading, then takes the lessons: the classic game, Ruffle, opens the
 // same empire and asks for the farm's picture, so it found the farm the new
 // client built. No server errors on the way. Another player skips them: the
@@ -17,9 +17,6 @@ export default async function classic({ newPlayer }) {
   assert.match(await player.bar(), /^Arthur teaches the first steps/);
 
   // In the new client.
-  await page.keyboard.press("Escape");
-  await player.press("Daily bonus");
-  await player.press("Collect");
   await page.keyboard.press("Escape");
   await player.menu("Build");
   await player.press("Resources");

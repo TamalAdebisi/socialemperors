@@ -1,8 +1,9 @@
-// The daily bonus, Monday's chest and the welcome-back chest, as the Flash
-// client offers them (our notes, our words; CLIENT.md, "Missions and
-// bonuses"). The server decides what each pays (daily_bonus.py,
-// monday_bonus.py, comeback_bonus.py) from the same config; this decides
-// when to offer them and draws the prize the client shows. No drawing here.
+// The daily bonus and Monday's chest, as the Flash client offers them (our
+// notes, our words; CLIENT.md, "Missions and bonuses"). The server decides
+// what each pays (daily_bonus.py, monday_bonus.py) from the same config;
+// this decides when to offer them and draws the prize the client shows. No
+// drawing here. (The Flash client also had a welcome-back chest, switched
+// off in the game as it was built: it never showed, so it isn't here.)
 
 import type { Command } from "../net/commands.ts";
 import type { Town } from "./town.ts";
@@ -10,9 +11,8 @@ import type { Town } from "./town.ts";
 const DAY = 24 * 3600;
 /** The daily bonus's five days, then they start again. */
 export const DAILY_DAYS = 5;
-/** The welcome-back chests: on the 2nd and 3rd day after the empire was made, from level 4. */
-const WELCOME_BACK_DAYS = [1, 2];
-const WELCOME_BACK_LEVEL = 4;
+/** The daily bonus is offered from this level, in a human town. */
+const DAILY_BONUS_LEVEL = 5;
 
 export interface Prize {
   /** g gold, c cash, hero or u a unit (into storage). */
@@ -24,10 +24,9 @@ export interface Prize {
 export interface BonusConfig {
   daily: Prize[];
   dailyHeroes: number[];
-  /** Monday's three chests (and the welcome-back chest's): gold, a unit, cash. */
+  /** Monday's three chests: gold, a unit, cash. */
   monday: Prize[];
   mondayUnits: number[];
-  welcomeBackUnits: number[];
 }
 
 export function readBonusConfig(globals: Record<string, unknown> | undefined): BonusConfig {
@@ -39,7 +38,6 @@ export function readBonusConfig(globals: Record<string, unknown> | undefined): B
     dailyHeroes: list(globals?.DAILY_BONUS_CONFIG_HEROES),
     monday: prizes(globals?.MONDAY_BONUS_REWARDS, "value"),
     mondayUnits: list(globals?.MONDAY_BONUS_UNITS),
-    welcomeBackUnits: list(globals?.COMEBACK_BONUS_UNITS),
   };
 }
 
@@ -49,7 +47,11 @@ export interface BonusState {
   bonusNextId?: number;
   timestampLastBonus?: number;
   timeStampMondayBonus?: number;
-  comebackBonusCollected?: number[];
+}
+
+/** Whether the daily bonus is offered at all: from level 5, in a human town, as in the Flash client. */
+export function dailyBonusOffered(town: Town): boolean {
+  return town.level >= DAILY_BONUS_LEVEL && town.race === "h";
 }
 
 /**
@@ -101,7 +103,7 @@ export function mondayChest(state: BonusState, now: number): "ready" | "collecte
   return today.getDay() === 0 ? "soon" : null;
 }
 
-/** Open a chest (Monday's, or a welcome-back one): one of its prizes, by chance. */
+/** Open one of Monday's chests: one of its prizes, by chance. */
 export function openChest(town: Town, config: BonusConfig, units: number[], random = Math.random): { prize: Prize; unit: number } {
   const prize = config.monday[Math.floor(random() * config.monday.length)] ?? { type: "g", amount: 0 };
   let unit = 0;
@@ -122,18 +124,3 @@ export function collectMonday(town: Town, state: BonusState, config: BonusConfig
   return { prize, unit, command: { cmd: "weekly_reward", args: [prize.type, prize.type === "u" ? unit : prize.amount] } };
 }
 
-/** The welcome-back chest on offer today (1 or 2), or null: `days` since the empire was made (the page says). */
-export function welcomeBackDay(town: Town, state: BonusState, days: number): number | null {
-  if (town.level < WELCOME_BACK_LEVEL || !WELCOME_BACK_DAYS.includes(days)) {
-    return null;
-  }
-  return (state.comebackBonusCollected ?? []).includes(days) ? null : days;
-}
-
-export function collectWelcomeBack(town: Town, state: BonusState, config: BonusConfig, day: number, random = Math.random): { prize: Prize; unit: number; command: Command } {
-  // The day's own unit when the chest holds one.
-  const unitOfDay = config.welcomeBackUnits[day - 1];
-  const { prize, unit } = openChest(town, config, unitOfDay ? [unitOfDay] : [], random);
-  state.comebackBonusCollected = [...(state.comebackBonusCollected ?? []), day];
-  return { prize, unit, command: { cmd: "comeback_reward", args: [prize.type, prize.type === "u" ? unit : prize.amount, day] } };
-}

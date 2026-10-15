@@ -4,6 +4,43 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the rules the original plays by
+
+The parity check found rules the new client got wrong; these are fixed.
+Calls made on the way:
+
+- **Your calls:** the troll town and the market come into Beta 1; the
+  Daily News window stays out (it showed Social Point's news and offers).
+- **No welcome-back chest.** The Flash client has one, but it is switched
+  off inside the game as it was built, by a setting nothing turns on, so
+  players never saw it. The new client had offered it, giving prizes the
+  game didn't: removed. (The server still knows the chest's command.)
+- **No skipping goals for cash,** for the same reason: the original's Pay
+  button was switched off.
+- **The Sacrifice Altar lets nobody in** from the new client for now,
+  rather than taking a villager in to work it as a mine. It stays a
+  classic-game building until its window is built.
+- **A ranch's used-up animal** shows as "−1 Sheep" rising with the
+  harvest, until the game's flying-sheep animation is exported.
+- **Visits count for the goals back home** through the browser tab's own
+  storage, since a visit is a page of its own here; it resets when the tab
+  closes, much as the original's counts reset when the game reloaded.
+- **Messages go below the top bar while visiting** on a computer, so they
+  don't cover the neighbour's name and the help rays.
+- **Villagers by town hall,** calls on the way: a tree tapped when the
+  villager's line is full is selected, as in the original, and a message
+  says how many it has lined up (the original said nothing); the selected
+  villager's card says how many it can line up (the original showed it only
+  in the barracks' unit details); a villager whose next tree another
+  villager finished while it walked goes on to the one after, rather than
+  standing still; tapping the tree a villager is already at doesn't start
+  its work over; if a town somehow has two town halls, the better counts.
+- **Kept as they were, written down now:** a farm harvested without enough
+  wood is kept and says so (the original destroyed it); the bonus for extra
+  workers uses the workers inside now (the original took the count at a
+  building's first collect after the game loaded, and kept it until a
+  reload, a quirk not copied).
+
 ## 15 October 2026: Beta 2, defending the town (raids)
 
 - **Raiders pay what they showed.** The original showed 5 gold and some

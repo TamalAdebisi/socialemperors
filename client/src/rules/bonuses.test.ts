@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { collectDaily, collectMonday, collectWelcomeBack, dailyBonusDay, mondayChest, readBonusConfig, welcomeBackDay } from "./bonuses.ts";
+import { collectDaily, collectMonday, dailyBonusDay, dailyBonusOffered, mondayChest, readBonusConfig } from "./bonuses.ts";
 import type { Town } from "./town.ts";
 
 const CONFIG = readBonusConfig({
@@ -9,7 +9,6 @@ const CONFIG = readBonusConfig({
   DAILY_BONUS_CONFIG_HEROES: [555, 554, 534],
   MONDAY_BONUS_REWARDS: [{ type: "g", value: 2500 }, { type: "u", value: 0 }, { type: "c", value: 10 }],
   MONDAY_BONUS_UNITS: [784, 699, 761],
-  COMEBACK_BONUS_UNITS: [701, 702],
 });
 const DAY = 86400;
 
@@ -53,11 +52,8 @@ test("Monday's chest: on Mondays, once; previewed on Sundays", () => {
   assert.deepEqual(collectMonday(t, {}, CONFIG, monday, () => 0.9).command.args, ["c", 10]);
 });
 
-test("the welcome-back chest: days 1 and 2, from level 4, once each; the day's own unit", () => {
-  assert.equal(welcomeBackDay(town(), {}, 1), 1);
-  assert.equal(welcomeBackDay(town(), {}, 0), null);
-  assert.equal(welcomeBackDay(town(3), {}, 2), null, "below level 4");
-  assert.equal(welcomeBackDay(town(), { comebackBonusCollected: [2] }, 2), null);
-  const opened = collectWelcomeBack(town(), {}, CONFIG, 2, () => 0.5);
-  assert.deepEqual(opened.command, { cmd: "comeback_reward", args: ["u", 702, 2] });
+test("the daily bonus is offered from level 5, in a human town", () => {
+  assert.equal(dailyBonusOffered(town(5)), true);
+  assert.equal(dailyBonusOffered(town(4)), false);
+  assert.equal(dailyBonusOffered({ ...town(20), race: "t" }), false, "not in a troll town");
 });

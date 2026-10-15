@@ -20,7 +20,7 @@ import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { lessonsNotStarted } from "./rules/lessons.ts";
-import { Doings, readGoals, type Need } from "./rules/goals.ts";
+import { Doings, goalsRun, readGoals, type Need } from "./rules/goals.ts";
 import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
 import { GoalKeeper } from "./goals.ts";
@@ -32,7 +32,7 @@ import { ArmyWindow } from "./ui/army.ts";
 import { BankWindow } from "./ui/bank.ts";
 import { showHud, showMessage, showStatus } from "./ui/hud.ts";
 import { Sound } from "./sound.ts";
-import { Visit } from "./visit.ts";
+import { Visit, visitsSoFar } from "./visit.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
@@ -68,7 +68,7 @@ async function start(): Promise<void> {
   // ?visit=<player id> shows another player's town, as visiting a neighbour does.
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
   showStatus(visit ? "Loading their town…" : "Loading your town…");
-  // Visiting, the player's own town too: its numbers stay in the top bar.
+  // Visiting, the player's own save too: who they helped lately (helping is once a day per neighbour).
   const [config, info, mine] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit }),
     visit === undefined ? null : server.playerInfo()]);
   // The game's clock: the server's time when the town arrived, plus the time since.
@@ -108,10 +108,10 @@ async function start(): Promise<void> {
 
   const levels = readLevels(config.levels);
   const increase = Number(config.globals?.POPULATION_INCREASE) || 10;
-  const own = mine ? readTown(mine, items) : town;
   // The music of the town shown (the trolls' for a troll town), and the game's sound effects.
   const sound = new Sound(settings.assetsUrl, town.race);
-  const hud = showHud(own, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
+  // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
+  const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
     population: (t) => population(t, items, increase), sound });
 
   const art = new ArtLibrary(settings.artUrl);
@@ -176,6 +176,10 @@ async function start(): Promise<void> {
         void commands.flush();  // as the Flash client: at once
       }, () => hud.update(town)));
     const doings = new Doings();
+    // What visits to neighbours did in this tab counts for the goals here.
+    const visits = visitsSoFar();
+    doings.lastVisited = visits.last;
+    doings.helpedBuildings = visits.helped;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -236,23 +240,24 @@ async function start(): Promise<void> {
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;
     const privateState = info.privateState ?? {};
-    new GoalKeeper({
-      town, doings, items,
-      goals: readGoals((config.missions ?? []) as never, goalNeeds.goals as unknown as Record<string, Need>),
-      done: privateState.completedMissions ?? [],
-      paid: privateState.rewardedMissions ?? [],
-      skipPrice: Number(config.globals?.PRICE_COMPLETE_GOAL) || 2,
-      send: (cmd, ...args) => commands.add(cmd, ...args),
-      people: () => population(town, items, increase).current,
-      zoom: () => camera.scale,
-      say: (text) => editor.tell(text),
-      changed: () => hud.update(town),
-    });
+    // Goals only in a human town below level 35, as in the Flash client.
+    if (goalsRun(town)) {
+      new GoalKeeper({
+        town, doings, items,
+        goals: readGoals((config.missions ?? []) as never, goalNeeds.goals as unknown as Record<string, Need>),
+        done: privateState.completedMissions ?? [],
+        paid: privateState.rewardedMissions ?? [],
+        send: (cmd, ...args) => commands.add(cmd, ...args),
+        people: () => population(town, items, increase).current,
+        zoom: () => camera.scale,
+        say: (text) => editor.tell(text),
+        changed: () => hud.update(town),
+      });
+    }
     new BonusDesk({
       town, items, thumbnail,
       state: privateState,
       config: readBonusConfig(config.globals),
-      days: settings.days ?? 1000,
       clock,
       send: (cmd, ...args) => {
         commands.add(cmd, ...args);
@@ -272,7 +277,7 @@ async function start(): Promise<void> {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     let quiet: ReturnType<typeof setTimeout> | undefined;
     const visitor = new Visit({
-      neighbour: visit, view, own, hud, commands, clock,
+      neighbour: visit, view, hud, commands, clock,
       assists: mine?.privateState?.neighborAssists,
       say: (text) => {
         showMessage(text);

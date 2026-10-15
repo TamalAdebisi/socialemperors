@@ -117,3 +117,42 @@ test("hurrying: 2 cash finishes a working mill, mine or wonder and collects it; 
   assert.equal(canHurry(placed(WONDER, { startedAt: 1000 }), 1000 + 21600), false, "ready already: just collect");
   assert.match(hurry({ ...town(), cash: 1 }, placed(WONDER), 2000) as string, /Not enough cash/);
 });
+
+test("a ranch's harvest uses up its first animal, for good; the last gone, it stops", () => {
+  const SHEEP = 505;
+  const ranch = placed(RANCH, { unitsInside: 2, units: [SHEEP, SHEEP], startedAt: 1000 });
+  const t = town();
+  const done = collect(t, ranch, 1000 + 90);
+  assert.ok(typeof done !== "string");
+  assert.equal(done.usedUp, SHEEP);
+  assert.deepEqual(done.commands.map((c) => c.cmd), ["collect_new", "pop_unit"]);
+  assert.deepEqual(done.commands[1].args, [50, 50, 0, SHEEP], "no tile: it doesn't come out");
+  assert.equal(done.commands[0].args[4], 2, "the harvest counts both sheep");
+  assert.deepEqual([ranch.unitsInside, ranch.units], [1, [SHEEP]]);
+  // The last sheep goes with the next harvest, and the ranch stops.
+  assert.ok(typeof collect(t, ranch, 1000 + 180) !== "string");
+  assert.equal(ranch.unitsInside, 0);
+  assert.equal(workState(ranch, 1000 + 999)?.status, "idle");
+});
+
+test("the Nursery keeps its animals", () => {
+  const nursery = placed(config({ id: "226", name: "Nursery", subcat_functional: "123", unit_capacity: "3",
+    activation: "60", collect: "10", collect_type: "f" }), { unitsInside: 1, units: [505] });
+  const done = collect(town(), nursery, 1000 + 60);
+  assert.ok(typeof done !== "string");
+  assert.equal(done.usedUp, undefined);
+  assert.equal(nursery.unitsInside, 1);
+});
+
+test("the Cash Wonder works on its own: 1 cash a day; it can't be hurried", () => {
+  const CASH_WONDER = config({ id: "1299", name: "Cash Wonder", subcat_functional: "139", category_id: "12",
+    activation: "86400", collect: "1", collect_type: "c", collect_xp: "1" });
+  assert.equal(productionOf(CASH_WONDER, CHOSEN)?.kind, "always");
+  const t = town();
+  const wonder = placed(CASH_WONDER, { unitsInside: 0, startedAt: 1000 });
+  assert.equal(canHurry(wonder, 2000), false);
+  assert.equal(workState(wonder, 1000 + 86399)?.status, "working");
+  const done = collect(t, wonder, 1000 + 86400);
+  assert.ok(typeof done !== "string");
+  assert.deepEqual([t.cash, t.xp], [1, 1]);
+});
