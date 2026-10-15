@@ -20,7 +20,7 @@ changes the save, not just the look.
 - [x] **A ranch's harvest uses up an animal.** Each collect takes one
       animal out for good (`pop_unit` with no tile); an empty ranch stops.
       Ours keeps them, so a ranch gives food forever. S
-- [ ] **Villagers by town hall.** Speed 3 with no town hall, 5 with I or
+- [x] **Villagers by town hall.** Speed 3 with no town hall, 5 with I or
       II, 6 with III or IV (+2 with the Academy); renamed Villager I to
       IV; a queue of trees or rocks of 3/5/7/9/10 (+2 with the Academy),
       the queued ones glowing. Ours walk at 3 (about 40% slower) and have

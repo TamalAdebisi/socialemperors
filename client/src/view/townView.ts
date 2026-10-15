@@ -29,6 +29,15 @@ import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/wal
 
 /** How often the screen draws, which Pixi counts animation speed in. */
 const TICKER_FPS = 60;
+/**
+ * A tree or rock a villager has lined up glows pale yellow round its edge,
+ * as in the Flash client: copies of its picture a little way out on every
+ * side, filled with the colour, behind it.
+ */
+const OUTLINE = "outline";
+const OUTLINE_STEPS = [[-2, 0], [2, 0], [0, -2], [0, 2], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]];
+/** The colour (0xffffb0), as a colour matrix: red, green and blue set, the picture's own alpha kept. */
+const OUTLINE_MATRIX = [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xb0 / 255, 0, 0, 0, 1, 0];
 
 export class TownView {
   readonly root = new Container();
@@ -43,6 +52,9 @@ export class TownView {
   private readonly slots = new Map<PlacedItem, Container>();
   private readonly glow = new ColorMatrixFilter();
   private highlighted: PlacedItem | null = null;
+  private readonly outlineFill = new ColorMatrixFilter();
+  /** Trees and rocks in a villager's line: they're outlined. */
+  private readonly lined = new Set<PlacedItem>();
   /** Signs over buildings: ready to collect, asleep... */
   private readonly markers = new Markers();
   /** A building being bought, drawn see-through where it would go. */
@@ -60,6 +72,7 @@ export class TownView {
     this.items = items;
     this.town = town;
     this.glow.brightness(1.25, false);
+    this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
     this.root.addChild(this.ground, this.marks, this.things, this.ghostLayer, this.markers.layer);
     this.ghostLayer.alpha = 0.7;
   }
@@ -175,7 +188,10 @@ export class TownView {
     }
     const target = unitPoint(walk.next.x, walk.next.y);
     walk.at = stepTowards(walk.at, target, placed.item.velocity, ms);
-    this.slots.get(placed)?.children[0]?.position.set(walk.at.x, walk.at.y);
+    const slot = this.slots.get(placed);
+    if (slot) {
+      pictureOf(slot)?.position.set(walk.at.x, walk.at.y);
+    }
     this.markers.moveTo(placed, this.topOf(placed));
     if (walk.at.x === target.x && walk.at.y === target.y) {
       const tile = walk.next;
@@ -243,7 +259,7 @@ export class TownView {
     const slots = this.things.children;
     for (let i = slots.length - 1; i >= 0; i--) {
       const slot = slots[i];
-      const picture = slot.children[0];
+      const picture = pictureOf(slot);
       if (picture && isOpaqueAt(picture, screen)) {
         for (const [placed, s] of this.slots) {
           if (s === slot) {
@@ -273,6 +289,7 @@ export class TownView {
 
   /** Take a thing off the map (sold, stored). */
   remove(placed: PlacedItem): void {
+    this.lined.delete(placed);
     this.walkers.delete(placed);
     this.poses.delete(placed);
     this.facing.delete(placed);
@@ -298,6 +315,37 @@ export class TownView {
     if (slot) {
       slot.filters = [this.glow];
     }
+  }
+
+  /** Outline a tree or rock a villager has lined up, or stop. */
+  lineUp(placed: PlacedItem, on: boolean): void {
+    if (on) {
+      this.lined.add(placed);
+    } else {
+      this.lined.delete(placed);
+    }
+    const slot = this.slots.get(placed);
+    if (slot) {
+      this.outline(slot, on);
+    }
+  }
+
+  private outline(slot: Container, on: boolean): void {
+    slot.getChildByLabel(OUTLINE)?.destroy({ children: true });
+    const picture = pictureOf(slot);
+    if (!on || !(picture instanceof Sprite)) {
+      return;
+    }
+    const halo = new Container({ label: OUTLINE });
+    for (const [dx, dy] of OUTLINE_STEPS) {
+      const copy = new Sprite(picture.texture);
+      copy.anchor.copyFrom(picture.anchor);
+      copy.scale.copyFrom(picture.scale);
+      copy.position.set(picture.x + dx, picture.y + dy);
+      halo.addChild(copy);
+    }
+    halo.filters = [this.outlineFill];
+    slot.addChildAt(halo, 0);
   }
 
   /** See-through while being moved. */
@@ -354,6 +402,9 @@ export class TownView {
       slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
     } else {
       slot.addChild(buildingSprite(art, placed, this.town.skin));
+      if (this.lined.has(placed)) {
+        this.outline(slot, true);
+      }
     }
     return true;
   }
@@ -398,6 +449,11 @@ export class TownView {
       this.ground.addChild(sprite);
     }
   }
+}
+
+/** A thing's picture in its slot: not its outline. */
+function pictureOf(slot: Container): Container | undefined {
+  return slot.children.find((child) => child.label !== OUTLINE);
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Container {

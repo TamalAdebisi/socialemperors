@@ -648,8 +648,9 @@ following a unit home, and a mark on the ground where a unit is going.
 Built (Beta 1's third slice). With a villager selected, tap a tree, a stone
 or gold rock, or a mill, mine or farm; with any unit, a refuge. It walks
 there and works it, or goes inside. A building with units inside offers
-Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
-`goInto` and `letOne`.
+Let out. Code: `rules/work.ts` and `rules/villagers.ts` (the rules, with
+tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
+`e2e/tests/work.mjs` and `villagers.mjs`.
 
 **How it works**, read from the Flash client (our notes, our words):
 
@@ -671,9 +672,25 @@ Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
 - A rock leaves one growing back (`buy` of item 81 for stone, 80 for gold).
   After its `activation` (3 hours) it's sold ("REGEN") and a new rock of
   one of the four kinds, by chance, is bought in its place.
-- Then the villager goes on to the next tree or rock of the same kind that
-  touches the one done (or touches those, and so on), nearest first,
-  skipping any another villager is at, until there are none.
+- A line of trees and rocks: each one tapped with a villager selected
+  joins the end of its line and glows pale yellow round its edge (tapped
+  again, it moves to the end). The villager sets off for it if it's the
+  only one in line or the villager isn't busy; otherwise it waits its turn.
+  When one is done the villager goes to the next in line that's still there
+  and nobody else is at. The line holds 3 with no town hall, 5, 7, 9 and 10
+  with Town Hall I to IV, 2 more with the Academy (the Troll Coliseum in a
+  troll town). A tree tapped when the line is full is selected instead, as
+  in the Flash client. Sent anywhere else (the ground, a building), the
+  villager forgets its line. Code: `rules/villagers.ts`.
+- The line done, the villager goes on to the next tree or rock of the same
+  kind that touches the last one (or touches those, and so on), nearest
+  first, skipping any another villager is at, until there are none. Tapping
+  a tree meanwhile starts a new line.
+- Villagers grow with the town hall: they walk at 3 (the config's speed)
+  with none, 5 with Town Hall I or II and 6 with III or IV, 2 faster with
+  the Academy; and they're called Villager I to IV (Peasant in a troll
+  town) after it. The Flash client changes its own copy of the items, and so
+  do we, so the barracks offers "Villager III" too.
 - Into buildings: villagers into mills, mines and farms; any unit into a
   refuge, siege engines too; only the player's own, with room. (Not the
   Sacrifice Altar, a mine by its kind: in the classic game for now.) The unit
