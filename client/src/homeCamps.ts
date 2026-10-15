@@ -22,6 +22,8 @@ import { unitMoved } from "./rules/walking.ts";
 import { freeTileNear } from "./rules/work.ts";
 import type { TownEditor } from "./editor.ts";
 import { notice } from "./ui/notice.ts";
+import { ScriptedCamps } from "./homeScripted.ts";
+import { scriptedHere } from "./rules/scripted.ts";
 import type { TownView } from "./view/townView.ts";
 
 const TOWN_HALL = 135;
@@ -49,10 +51,13 @@ export class Camps {
   private readonly random: () => number;
   private ready = false;
   private shown: PlacedItem | null = null;
+  /** The scripted camps (homeScripted.ts): stories with keys, waves and bosses. */
+  readonly scripted: ScriptedCamps;
 
   constructor(parts: CampParts) {
     this.parts = parts;
     this.random = parts.random ?? Math.random;
+    this.scripted = new ScriptedCamps(parts, this, this.random);
     parts.editor.onTapItem = (placed, unit) => this.tap(placed, unit);
   }
 
@@ -91,19 +96,22 @@ export class Camps {
       commands.add("collect_treasure", 0, 0, id, 0, 0, town.id);
       camp.id = id;
     }
+    if (scriptedHere(id, town.race)) {
+      this.scripted.arrive(id);
+      return;
+    }
     if (!BUILT_HERE.has(id)) {
-      return;  // a story camp: the classic game puts it up
+      return;  // a story camp not yet played here: the classic game puts it up
     }
     this.spawn(id);
   }
 
-  /** The border cleared, the camp put up, trolls about the border, and the camp's window. */
-  private spawn(id: number): void {
-    const { town, items, commands, view } = this.parts;
-    // The border is cleared: the player's units there walk home, the rest goes.
+  /** The border cleared for a camp: the player's units there walk home, the rest goes. */
+  clearBorder(id: number, where: (x: number, y: number) => boolean = onBorder): void {
+    const { town, commands, view } = this.parts;
     const hall = town.items.find((p) => p.item.subcategory === TOWN_HALL && this.sideOf(p) === "self");
     for (const placed of [...town.items]) {
-      if (!onBorder(placed.tx, placed.ty)) {
+      if (!where(placed.tx, placed.ty)) {
         continue;
       }
       if (placed.item.isUnit && this.sideOf(placed) === "self") {
@@ -122,6 +130,12 @@ export class Camps {
       town.items.splice(town.items.indexOf(placed), 1);
       view.remove(placed);
     }
+  }
+
+  /** The border cleared, the camp put up, trolls about the border, and the camp's window. */
+  private spawn(id: number): void {
+    const { town, items } = this.parts;
+    this.clearBorder(id);
     const ground = this.ground();
     const size = (pieceId: number): [number, number] => {
       const item = items.get(pieceId);
@@ -145,12 +159,12 @@ export class Camps {
   }
 
   /** "Quest 4 : The treasure village", as the game titles a camp's window. */
-  private title(id: number, title: number): string {
+  title(id: number, title: number): string {
     return `${this.parts.line(1044).replace("#0#", String(id + 1))} : ${this.parts.line(title)}`;
   }
 
   /** A piece on the map, saved with a free buy as the Flash client saves it. */
-  private put(piece: CampPiece): PlacedItem | null {
+  put(piece: CampPiece): PlacedItem | null {
     const { town, items, commands, view } = this.parts;
     const item = items.get(piece.id);
     if (!item) {
@@ -164,7 +178,7 @@ export class Camps {
   }
 
   /** The map's taken tiles, for putting pieces on free ones. */
-  private ground(): Ground {
+  ground(): Ground {
     const taken = takenTiles(this.parts.town);
     return {
       free: (x, y) => !taken.has(`${x},${y}`),
@@ -180,6 +194,7 @@ export class Camps {
 
   /** Every second: the chest lights up once no enemy unit is left. */
   watch(): void {
+    this.scripted.watch();
     const chest = this.chest();
     this.ready = chest !== null && this.enemiesLeft() === 0;
     if (this.shown && this.shown !== chest) {
@@ -193,6 +208,9 @@ export class Camps {
 
   /** A tap: the chest, or an enemy with a unit of the player's selected. */
   private tap(placed: PlacedItem, unit: PlacedItem | null): boolean {
+    if (this.scripted.tap(placed)) {
+      return true;
+    }
     if (isChest(placed.item) && placed === this.chest()) {
       this.watch();
       if (this.ready) {

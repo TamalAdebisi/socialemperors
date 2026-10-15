@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, scripted camps (part 1)
+
+- **Camp 13 reloaded in its last stage keeps the chest shut** until the
+  wave of skeletons has fallen. The original opened it at once on a
+  reload, wave or not.
+- **The camera doesn't fly to the chest** when the camp's window closes,
+  as the original's did; the chest lights up when its turn comes.
+- **A camp found in a muddle** (its chest gone with keys left) is put up
+  afresh. The original cleared the border and ended it.
+- **Left out, as in the original:** camp 7's food prize (always 0) and
+  camp 13's two prize skeletons (never given).
+
 ## 15 October 2026: Beta 2, the rarer special moves
 
 - **Ghost copies aren't drawn:** the Red Hot dragon's and the Ether

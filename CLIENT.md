@@ -1373,7 +1373,30 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   under attack!" shows for 5 seconds, and its Help button takes the
   camera there.
 
-**Not yet** (Beta 2's next slices): the twenty scripted camps, monks at
+**Scripted camps**, the same way. Code: `rules/scripted.ts` (the rules,
+with tests), `rules/scripted-camps.json` (every piece of the eighteen
+camps players reach, our own notes on the original's tables) and
+`homeScripted.ts` (playing them in the town).
+
+- **Which:** twenty of the thirty camps are stories. They stand in the
+  map's four corners, always in the same places. Camps 9 and 11 are never
+  reached by any player, as in the original. Played here so far: camp 7
+  (the burning mill) and camp 13 (the skeleton statue); the others are put
+  up by the classic game for now, in the same empire.
+- **How:** each key (a well, a statue) is guarded by the enemy units
+  standing within 7 tiles of it when the camp is read (border trolls
+  there too). When they've all fallen it lights up; one tap takes it: it
+  pays its experience (`collect_new`), and it and its scenery go (`sell`
+  ... "COLQS" and "ATRZO"). The last key lights the chest (the mill), or
+  brings a wave of five skeletons (the statue), whose fall lights it.
+  Unlike the ten camps built by code, these chests don't wait for every
+  enemy on the map to fall. Opening one pays the level's reward and the
+  next camp comes in 4 hours.
+- **Reloading:** camps 7 and 13 save nothing of their own: how far one
+  has got is read from the pieces still standing (keys left, the chest,
+  the wave), as in the original.
+
+**Not yet** (Beta 2's next slices): sixteen of the scripted camps, monks at
 home, collection pieces dropped by enemies (they come with the
 collections), and the original's repair pointer.
 

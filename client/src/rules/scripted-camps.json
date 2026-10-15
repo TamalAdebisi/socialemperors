@@ -1,0 +1,1845 @@
+{
+ "_about": "The scripted troll camps at home (ids 7, 13 to 29), as data: our own notes on the Flash client (numbers and ids only; CLIENT.md, 'Scripted camps'). Each tile: its key (the new engine saves the keys of tiles whose activator was taken), its corner, the side its buildings take ('neutral' or null), and its pieces as [item id (0: a random enemy soldier for the level), x, y, side, role] at their anchors. 'bossTiles' come after the activators (or at once when there are none). Text ids are localisation ids: popup = start title, start text, end title, end text.",
+ "camps": {
+  "7": {
+   "engine": "old",
+   "races": ["h"],
+   "activator": 210,
+   "chest": 211,
+   "popup": [723, 765, 972, 973],
+   "pictures": ["quest_mill.jpg", "molinollamaspopup.jpg"],
+   "helpers": [],
+   "prizes": [],
+   "messenger": null,
+   "bossStage": false,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": false,
+   "tiles": [
+    {
+     "key": null,
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [114, 11, 13, "e", "other"],
+      [0, 12, 11, "e", "unit"],
+      [210, 11, 11, "n", "key"],
+      [0, 9, 11, "e", "unit"],
+      [0, 11, 9, "e", "unit"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [114, 11, 93, "e", "other"],
+      [0, 12, 91, "e", "unit"],
+      [210, 11, 91, "n", "key"],
+      [0, 9, 91, "e", "unit"],
+      [0, 11, 89, "e", "unit"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [114, 91, 93, "e", "other"],
+      [0, 92, 91, "e", "unit"],
+      [210, 91, 91, "n", "key"],
+      [0, 89, 91, "e", "unit"],
+      [0, 91, 89, "e", "unit"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [104, 91, 15, "e", "other"],
+      [104, 88, 15, "e", "other"],
+      [9, 94, 14, "n", "other"],
+      [9, 92, 14, "n", "other"],
+      [9, 88, 14, "n", "other"],
+      [9, 86, 14, "n", "other"],
+      [9, 94, 12, "n", "other"],
+      [9, 92, 12, "n", "other"],
+      [9, 88, 12, "n", "other"],
+      [9, 86, 12, "n", "other"],
+      [9, 94, 10, "n", "other"],
+      [9, 92, 10, "n", "other"],
+      [211, 90, 10, "n", "chest"],
+      [9, 88, 10, "n", "other"],
+      [9, 86, 10, "n", "other"],
+      [9, 94, 8, "n", "other"],
+      [9, 92, 8, "n", "other"],
+      [9, 90, 8, "n", "other"],
+      [9, 88, 8, "n", "other"],
+      [9, 86, 8, "n", "other"],
+      [9, 94, 6, "n", "other"],
+      [9, 92, 6, "n", "other"],
+      [9, 90, 6, "n", "other"],
+      [9, 88, 6, "n", "other"],
+      [9, 86, 6, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [],
+   "mission": 175
+  },
+  "13": {
+   "engine": "old",
+   "races": ["h", "t"],
+   "activator": 258,
+   "chest": 259,
+   "popup": [729, 771, 984, 985],
+   "pictures": ["quest_undead.jpg", "estatuaesqueletopopup.jpg"],
+   "helpers": [],
+   "prizes": [],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": null,
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [907, 7, 10, "n", "scenery"],
+      [558, 8, 9, "e", "unit"],
+      [559, 7, 9, "e", "unit"],
+      [558, 8, 8, "e", "unit"],
+      [559, 7, 8, "e", "unit"],
+      [558, 8, 7, "e", "unit"],
+      [559, 7, 7, "e", "unit"],
+      [258, 5, 7, "n", "key"],
+      [558, 8, 6, "e", "unit"],
+      [559, 7, 6, "e", "unit"],
+      [907, 7, 4, "n", "scenery"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [907, 7, 90, "n", "scenery"],
+      [558, 8, 89, "e", "unit"],
+      [559, 7, 89, "e", "unit"],
+      [558, 8, 88, "e", "unit"],
+      [559, 7, 88, "e", "unit"],
+      [558, 8, 87, "e", "unit"],
+      [559, 7, 87, "e", "unit"],
+      [258, 5, 87, "n", "key"],
+      [558, 8, 86, "e", "unit"],
+      [559, 7, 86, "e", "unit"],
+      [907, 7, 84, "n", "scenery"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [907, 87, 10, "n", "scenery"],
+      [558, 88, 9, "e", "unit"],
+      [559, 87, 9, "e", "unit"],
+      [558, 88, 8, "e", "unit"],
+      [559, 87, 8, "e", "unit"],
+      [558, 88, 7, "e", "unit"],
+      [559, 87, 7, "e", "unit"],
+      [258, 85, 7, "n", "key"],
+      [558, 88, 6, "e", "unit"],
+      [559, 87, 6, "e", "unit"],
+      [907, 87, 4, "n", "scenery"]
+     ]
+    },
+    {
+     "key": null,
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [68, 91, 91, "e", "other"],
+      [913, 90, 91, "n", "scenery"],
+      [913, 89, 91, "n", "scenery"],
+      [913, 88, 91, "n", "scenery"],
+      [913, 87, 91, "n", "scenery"],
+      [913, 86, 91, "n", "scenery"],
+      [68, 85, 91, "e", "other"],
+      [913, 85, 90, "n", "scenery"],
+      [913, 85, 89, "n", "scenery"],
+      [259, 88, 89, "n", "chest"],
+      [913, 85, 88, "n", "scenery"],
+      [913, 85, 87, "n", "scenery"],
+      [913, 85, 86, "n", "scenery"],
+      [68, 91, 85, "e", "other"],
+      [913, 90, 85, "n", "scenery"],
+      [913, 89, 85, "n", "scenery"],
+      [913, 88, 85, "n", "scenery"],
+      [913, 87, 85, "n", "scenery"],
+      [913, 86, 85, "n", "scenery"],
+      [68, 85, 85, "e", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [558, 92, 90, "e", "unit"],
+      [559, 92, 89, "e", "unit"],
+      [558, 92, 88, "e", "unit"],
+      [559, 92, 87, "e", "unit"],
+      [558, 92, 86, "e", "unit"]
+     ]
+    }
+   ],
+   "mission": 224
+  },
+  "14": {
+   "engine": "new",
+   "races": ["h", "t"],
+   "activator": 488,
+   "chest": 487,
+   "popup": [948, 949, 954, 956],
+   "pictures": ["quest_chinos_fuegos.jpg", "fuegoschinos.jpg"],
+   "helpers": [577, 577],
+   "prizes": [120],
+   "messenger": 952,
+   "bossStage": false,
+   "steps": true,
+   "finalAnimation": true,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [857, 6, 95, "e", "unit"],
+      [488, 5, 95, "n", "key"],
+      [858, 8, 94, "e", "unit"],
+      [114, 7, 94, "e", "other"],
+      [857, 8, 93, "e", "unit"],
+      [859, 6, 93, "e", "unit"],
+      [134, 3, 93, "e", "other"],
+      [857, 5, 92, "e", "unit"],
+      [858, 6, 91, "e", "unit"],
+      [858, 3, 90, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [857, 94, 93, "e", "unit"],
+      [858, 96, 90, "e", "unit"],
+      [857, 91, 90, "e", "unit"],
+      [488, 96, 89, "n", "key"],
+      [858, 93, 89, "e", "unit"],
+      [858, 96, 86, "e", "unit"],
+      [859, 96, 85, "e", "unit"],
+      [857, 91, 85, "e", "unit"],
+      [288, 98, 84, "e", "other"],
+      [307, 96, 84, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [858, 8, 10, "e", "unit"],
+      [857, 4, 10, "e", "unit"],
+      [857, 9, 9, "e", "unit"],
+      [858, 3, 8, "e", "unit"],
+      [858, 11, 7, "e", "unit"],
+      [859, 7, 7, "e", "unit"],
+      [857, 11, 6, "e", "unit"],
+      [134, 7, 6, "e", "other"],
+      [488, 5, 6, "n", "key"]
+     ]
+    },
+    {
+     "key": "fireworks",
+     "origin": [80, 0],
+     "side": "PLAYER_NEUTRAL",
+     "pieces": [
+      [103, 86, 13, "n", "other"],
+      [66, 85, 13, "n", "other"],
+      [242, 84, 13, "n", "other"],
+      [66, 84, 12, "n", "other"],
+      [487, 89, 11, "n", "chest"],
+      [103, 84, 11, "n", "other"],
+      [66, 84, 10, "n", "other"],
+      [66, 84, 9, "n", "other"],
+      [103, 91, 8, "n", "other"],
+      [103, 84, 8, "n", "other"],
+      [66, 91, 7, "n", "other"],
+      [66, 84, 7, "n", "other"],
+      [242, 91, 6, "n", "other"],
+      [66, 90, 6, "n", "other"],
+      [103, 89, 6, "n", "other"],
+      [66, 88, 6, "n", "other"],
+      [66, 87, 6, "n", "other"],
+      [103, 86, 6, "n", "other"],
+      [66, 85, 6, "n", "other"],
+      [242, 84, 6, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "15": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": 489,
+   "popup": [920, 923, 924, 925],
+   "pictures": ["quest_egypt_golem.jpg", "golemdorado.jpg"],
+   "helpers": [613, 613],
+   "prizes": [612],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "golemCamp",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [394, 17, 97, "e", "other"],
+      [394, 16, 97, "e", "other"],
+      [394, 15, 97, "e", "other"],
+      [394, 14, 97, "e", "other"],
+      [394, 13, 97, "e", "other"],
+      [394, 12, 97, "e", "other"],
+      [394, 7, 97, "e", "other"],
+      [394, 6, 97, "e", "other"],
+      [394, 5, 97, "e", "other"],
+      [394, 4, 97, "e", "other"],
+      [394, 3, 97, "e", "other"],
+      [394, 2, 97, "e", "other"],
+      [394, 17, 96, "e", "other"],
+      [394, 12, 96, "e", "other"],
+      [394, 7, 96, "e", "other"],
+      [394, 2, 96, "e", "other"],
+      [394, 17, 95, "e", "other"],
+      [664, 12, 95, "e", "unit"],
+      [664, 7, 95, "e", "unit"],
+      [394, 2, 95, "e", "other"],
+      [394, 17, 94, "e", "other"],
+      [664, 12, 94, "e", "unit"],
+      [664, 7, 94, "e", "unit"],
+      [394, 2, 94, "e", "other"],
+      [394, 17, 93, "e", "other"],
+      [394, 2, 93, "e", "other"],
+      [394, 17, 92, "e", "other"],
+      [394, 16, 92, "e", "other"],
+      [664, 15, 92, "e", "unit"],
+      [664, 14, 92, "e", "unit"],
+      [664, 5, 92, "e", "unit"],
+      [664, 4, 92, "e", "unit"],
+      [394, 3, 92, "e", "other"],
+      [394, 2, 92, "e", "other"],
+      [489, 10, 90, "n", "chest"],
+      [394, 17, 87, "e", "other"],
+      [394, 16, 87, "e", "other"],
+      [664, 15, 87, "e", "unit"],
+      [664, 14, 87, "e", "unit"],
+      [664, 5, 87, "e", "unit"],
+      [664, 4, 87, "e", "unit"],
+      [394, 3, 87, "e", "other"],
+      [394, 2, 87, "e", "other"],
+      [394, 17, 86, "e", "other"],
+      [394, 2, 86, "e", "other"],
+      [394, 17, 85, "e", "other"],
+      [664, 12, 85, "e", "unit"],
+      [664, 7, 85, "e", "unit"],
+      [394, 2, 85, "e", "other"],
+      [394, 17, 84, "e", "other"],
+      [664, 12, 84, "e", "unit"],
+      [664, 7, 84, "e", "unit"],
+      [394, 2, 84, "e", "other"],
+      [394, 17, 83, "e", "other"],
+      [394, 12, 83, "e", "other"],
+      [394, 7, 83, "e", "other"],
+      [394, 2, 83, "e", "other"],
+      [394, 17, 82, "e", "other"],
+      [394, 16, 82, "e", "other"],
+      [394, 15, 82, "e", "other"],
+      [394, 14, 82, "e", "other"],
+      [394, 13, 82, "e", "other"],
+      [394, 12, 82, "e", "other"],
+      [394, 7, 82, "e", "other"],
+      [394, 6, 82, "e", "other"],
+      [394, 5, 82, "e", "other"],
+      [394, 4, 82, "e", "other"],
+      [394, 3, 82, "e", "other"],
+      [394, 2, 82, "e", "other"],
+      [68, 14, 94, "e", "other"],
+      [68, 4, 94, "e", "other"],
+      [68, 14, 84, "e", "other"],
+      [68, 5, 85, "e", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [665, 12, 89, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 665
+  },
+  "16": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 491,
+   "chest": 490,
+   "popup": [950, 951, 955, 957],
+   "pictures": ["quest_vikingos_cerveza.jpg", null],
+   "helpers": [606],
+   "prizes": [382],
+   "messenger": 953,
+   "bossStage": false,
+   "steps": true,
+   "finalAnimation": true,
+   "keepIds": false,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [291, 11, 92, "e", "other"],
+      [375, 10, 92, "e", "other"],
+      [0, 7, 92, "e", "unit"],
+      [0, 6, 92, "e", "unit"],
+      [375, 11, 91, "e", "other"],
+      [377, 10, 91, "n", "other"],
+      [0, 6, 90, "e", "unit"],
+      [0, 5, 90, "e", "unit"],
+      [491, 8, 89, "n", "key"],
+      [377, 6, 89, "n", "other"],
+      [0, 12, 88, "e", "unit"],
+      [0, 9, 87, "e", "unit"],
+      [377, 8, 87, "n", "other"],
+      [377, 6, 87, "n", "other"],
+      [0, 9, 86, "e", "unit"],
+      [375, 4, 86, "e", "other"],
+      [375, 5, 85, "e", "other"],
+      [291, 3, 84, "e", "other"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [0, 90, 91, "e", "unit"],
+      [0, 88, 91, "e", "unit"],
+      [0, 92, 89, "e", "unit"],
+      [491, 90, 89, "n", "key"],
+      [383, 88, 89, "e", "other"],
+      [0, 86, 89, "e", "unit"],
+      [0, 92, 88, "e", "unit"],
+      [0, 92, 87, "e", "unit"],
+      [377, 91, 87, "n", "other"],
+      [377, 89, 87, "n", "other"],
+      [377, 87, 87, "n", "other"],
+      [0, 92, 86, "e", "unit"],
+      [291, 92, 85, "e", "other"],
+      [375, 91, 85, "e", "other"],
+      [375, 90, 85, "e", "other"],
+      [375, 89, 85, "e", "other"],
+      [375, 88, 85, "e", "other"],
+      [375, 87, 85, "e", "other"],
+      [375, 86, 85, "e", "other"],
+      [291, 85, 85, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [128, 6, 14, "e", "other"],
+      [0, 11, 13, "e", "unit"],
+      [0, 9, 13, "e", "unit"],
+      [0, 8, 13, "e", "unit"],
+      [0, 7, 13, "e", "unit"],
+      [375, 6, 13, "e", "other"],
+      [491, 10, 12, "n", "key"],
+      [377, 8, 12, "n", "other"],
+      [375, 6, 12, "e", "other"],
+      [0, 11, 11, "e", "unit"],
+      [375, 6, 11, "e", "other"],
+      [0, 11, 10, "e", "unit"],
+      [377, 10, 10, "n", "other"],
+      [377, 8, 10, "n", "other"],
+      [375, 6, 10, "e", "other"],
+      [0, 11, 9, "e", "unit"],
+      [375, 6, 9, "e", "other"],
+      [128, 12, 8, "e", "other"],
+      [375, 11, 8, "e", "other"],
+      [375, 10, 8, "e", "other"],
+      [375, 9, 8, "e", "other"],
+      [375, 8, 8, "e", "other"],
+      [375, 7, 8, "e", "other"],
+      [375, 6, 8, "e", "other"]
+     ]
+    },
+    {
+     "key": "vikingFeast",
+     "origin": [80, 0],
+     "side": "PLAYER_NEUTRAL",
+     "pieces": [
+      [914, 93, 12, "n", "scenery"],
+      [380, 91, 12, "n", "other"],
+      [380, 87, 12, "n", "other"],
+      [914, 86, 12, "n", "scenery"],
+      [375, 91, 11, "n", "other"],
+      [375, 87, 11, "n", "other"],
+      [291, 95, 10, "n", "other"],
+      [375, 94, 10, "n", "other"],
+      [375, 93, 10, "n", "other"],
+      [375, 92, 10, "n", "other"],
+      [375, 91, 10, "n", "other"],
+      [375, 87, 10, "n", "other"],
+      [375, 86, 10, "n", "other"],
+      [375, 85, 10, "n", "other"],
+      [375, 84, 10, "n", "other"],
+      [291, 83, 10, "n", "other"],
+      [375, 95, 9, "n", "other"],
+      [377, 87, 9, "n", "other"],
+      [377, 85, 9, "n", "other"],
+      [375, 83, 9, "n", "other"],
+      [375, 95, 8, "n", "other"],
+      [375, 83, 8, "n", "other"],
+      [375, 95, 7, "n", "other"],
+      [490, 91, 7, "n", "chest"],
+      [377, 87, 7, "n", "other"],
+      [377, 85, 7, "n", "other"],
+      [375, 83, 7, "n", "other"],
+      [375, 95, 6, "n", "other"],
+      [375, 83, 6, "n", "other"],
+      [375, 95, 5, "n", "other"],
+      [378, 87, 5, "n", "other"],
+      [377, 85, 5, "n", "other"],
+      [375, 83, 5, "n", "other"],
+      [375, 95, 4, "n", "other"],
+      [375, 83, 4, "n", "other"],
+      [375, 95, 3, "n", "other"],
+      [375, 94, 3, "n", "other"],
+      [375, 93, 3, "n", "other"],
+      [375, 92, 3, "n", "other"],
+      [375, 91, 3, "n", "other"],
+      [375, 90, 3, "n", "other"],
+      [375, 89, 3, "n", "other"],
+      [375, 88, 3, "n", "other"],
+      [375, 87, 3, "n", "other"],
+      [375, 86, 3, "n", "other"],
+      [375, 85, 3, "n", "other"],
+      [375, 84, 3, "n", "other"],
+      [375, 83, 3, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "17": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": 492,
+   "popup": [931, 934, 935, 936],
+   "pictures": ["quest_yeti_negro.jpg", null],
+   "helpers": [606, 606],
+   "prizes": [607, 607, 607],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [80, 0],
+     "side": "PLAYER_NEUTRAL",
+     "pieces": [
+      [942, 93, 17, "n", "scenery"],
+      [918, 98, 16, "n", "scenery"],
+      [666, 94, 16, "e", "unit"],
+      [666, 90, 16, "e", "unit"],
+      [914, 89, 15, "n", "scenery"],
+      [943, 84, 15, "n", "scenery"],
+      [666, 90, 14, "e", "unit"],
+      [666, 94, 12, "e", "unit"],
+      [492, 91, 12, "n", "chest"],
+      [666, 96, 11, "e", "unit"],
+      [666, 87, 11, "e", "unit"],
+      [942, 86, 11, "n", "scenery"],
+      [942, 97, 10, "n", "scenery"],
+      [666, 94, 10, "e", "unit"],
+      [914, 93, 9, "n", "scenery"],
+      [914, 85, 9, "n", "scenery"],
+      [666, 88, 8, "e", "unit"],
+      [666, 93, 7, "e", "unit"],
+      [918, 90, 6, "n", "scenery"],
+      [943, 86, 5, "n", "scenery"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [667, 93, 11, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 667
+  },
+  "18": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 494,
+   "chest": 493,
+   "popup": [990, 991, 992, 993],
+   "pictures": ["quest_altar_azteca.jpg", null],
+   "helpers": [],
+   "prizes": [280],
+   "messenger": null,
+   "bossStage": false,
+   "steps": true,
+   "finalAnimation": true,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [272, 10, 92, "n", "other"],
+      [685, 8, 92, "e", "unit"],
+      [685, 7, 92, "e", "unit"],
+      [272, 6, 92, "n", "other"],
+      [685, 8, 91, "e", "unit"],
+      [685, 7, 91, "e", "unit"],
+      [272, 10, 90, "n", "other"],
+      [494, 8, 90, "n", "key"],
+      [272, 6, 90, "n", "other"],
+      [272, 10, 88, "n", "other"],
+      [267, 8, 88, "e", "other"],
+      [272, 6, 88, "n", "other"],
+      [274, 9, 86, "e", "other"],
+      [685, 8, 86, "e", "unit"],
+      [685, 7, 86, "e", "unit"],
+      [685, 6, 86, "e", "unit"],
+      [685, 5, 86, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [685, 8, 12, "e", "unit"],
+      [685, 7, 12, "e", "unit"],
+      [685, 10, 11, "e", "unit"],
+      [269, 5, 11, "e", "other"],
+      [494, 9, 10, "n", "key"],
+      [272, 7, 10, "n", "other"],
+      [685, 11, 9, "e", "unit"],
+      [269, 5, 9, "e", "other"],
+      [685, 11, 8, "e", "unit"],
+      [272, 9, 8, "n", "other"],
+      [267, 7, 8, "e", "other"],
+      [269, 5, 7, "e", "other"],
+      [269, 10, 6, "e", "other"],
+      [269, 8, 6, "e", "other"],
+      [269, 6, 6, "e", "other"],
+      [270, 5, 6, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [272, 90, 12, "n", "other"],
+      [685, 88, 12, "e", "unit"],
+      [685, 87, 12, "e", "unit"],
+      [272, 86, 12, "n", "other"],
+      [685, 88, 11, "e", "unit"],
+      [685, 87, 11, "e", "unit"],
+      [272, 90, 10, "n", "other"],
+      [494, 88, 10, "n", "key"],
+      [272, 86, 10, "n", "other"],
+      [272, 90, 8, "n", "other"],
+      [267, 88, 8, "e", "other"],
+      [272, 86, 8, "n", "other"],
+      [274, 89, 6, "e", "other"],
+      [685, 88, 6, "e", "unit"],
+      [685, 87, 6, "e", "unit"],
+      [685, 86, 6, "e", "unit"],
+      [685, 85, 6, "e", "unit"]
+     ]
+    },
+    {
+     "key": "4",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [272, 95, 98, "n", "other"],
+      [282, 93, 98, "e", "other"],
+      [272, 91, 98, "n", "other"],
+      [685, 94, 96, "e", "unit"],
+      [272, 93, 96, "n", "other"],
+      [272, 98, 95, "n", "other"],
+      [270, 88, 95, "e", "other"],
+      [685, 96, 94, "e", "unit"],
+      [282, 98, 93, "e", "other"],
+      [272, 96, 93, "n", "other"],
+      [493, 93, 93, "n", "chest"],
+      [272, 87, 93, "n", "other"],
+      [685, 88, 92, "e", "unit"],
+      [272, 98, 91, "n", "other"],
+      [272, 89, 91, "n", "other"],
+      [282, 87, 91, "e", "other"],
+      [272, 85, 91, "n", "other"],
+      [272, 91, 89, "n", "other"],
+      [272, 87, 89, "n", "other"],
+      [270, 95, 88, "e", "other"],
+      [685, 92, 88, "e", "unit"],
+      [272, 93, 87, "n", "other"],
+      [282, 91, 87, "e", "other"],
+      [272, 89, 87, "n", "other"],
+      [272, 91, 85, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "19": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": 495,
+   "popup": [942, 945, 946, 947],
+   "pictures": ["quest_vibora.jpg", null],
+   "helpers": [],
+   "prizes": [418],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": false,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [114, 5, 16, "e", "other"],
+      [288, 14, 15, "e", "other"],
+      [114, 9, 15, "e", "other"],
+      [905, 10, 14, "n", "scenery"],
+      [904, 5, 14, "n", "scenery"],
+      [905, 15, 13, "n", "scenery"],
+      [114, 10, 13, "e", "other"],
+      [288, 7, 13, "e", "other"],
+      [114, 16, 12, "e", "other"],
+      [253, 6, 11, "e", "other"],
+      [495, 10, 10, "n", "chest"],
+      [114, 3, 10, "e", "other"],
+      [114, 13, 9, "e", "other"],
+      [114, 7, 9, "e", "other"],
+      [253, 14, 8, "e", "other"],
+      [905, 4, 8, "n", "scenery"],
+      [288, 10, 7, "e", "other"],
+      [905, 12, 6, "n", "scenery"],
+      [114, 5, 6, "e", "other"],
+      [114, 13, 5, "e", "other"],
+      [904, 6, 5, "n", "scenery"],
+      [904, 9, 4, "n", "scenery"],
+      [905, 6, 3, "n", "scenery"],
+      [288, 4, 3, "e", "other"],
+      [114, 11, 2, "e", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [668, 12, 10, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 668
+  },
+  "20": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 496,
+   "chest": 497,
+   "popup": [994, 995, 996, 997],
+   "pictures": ["quest_arbolvida.jpg", null],
+   "helpers": [627, 627, 627, 627],
+   "prizes": [627, 627, 627],
+   "messenger": 998,
+   "bossStage": false,
+   "steps": true,
+   "finalAnimation": true,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [475, 11, 15, "n", "other"],
+      [677, 13, 13, "e", "unit"],
+      [673, 9, 13, "e", "unit"],
+      [475, 16, 12, "n", "other"],
+      [474, 10, 11, "e", "other"],
+      [475, 6, 11, "n", "other"],
+      [675, 12, 10, "e", "unit"],
+      [496, 11, 10, "n", "key"],
+      [675, 12, 9, "e", "unit"],
+      [675, 8, 9, "e", "unit"],
+      [673, 6, 9, "e", "unit"],
+      [676, 14, 8, "e", "unit"],
+      [675, 8, 8, "e", "unit"],
+      [474, 10, 7, "e", "other"],
+      [475, 13, 6, "n", "other"],
+      [475, 7, 6, "n", "other"],
+      [677, 10, 5, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [473, 91, 12, "e", "other"],
+      [677, 90, 12, "e", "unit"],
+      [473, 89, 12, "e", "other"],
+      [677, 88, 12, "e", "unit"],
+      [473, 87, 12, "e", "other"],
+      [677, 86, 12, "e", "unit"],
+      [473, 85, 12, "e", "other"],
+      [475, 94, 11, "n", "other"],
+      [496, 89, 10, "n", "key"],
+      [474, 92, 9, "e", "other"],
+      [473, 91, 9, "e", "other"],
+      [473, 85, 9, "e", "other"],
+      [474, 84, 9, "e", "other"],
+      [475, 94, 8, "n", "other"],
+      [473, 91, 6, "e", "other"],
+      [675, 90, 6, "e", "unit"],
+      [473, 89, 6, "e", "other"],
+      [675, 88, 6, "e", "unit"],
+      [473, 87, 6, "e", "other"],
+      [675, 86, 6, "e", "unit"],
+      [473, 85, 6, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [473, 93, 95, "e", "other"],
+      [473, 92, 95, "e", "other"],
+      [473, 91, 95, "e", "other"],
+      [473, 90, 95, "e", "other"],
+      [473, 89, 95, "e", "other"],
+      [473, 88, 95, "e", "other"],
+      [473, 87, 95, "e", "other"],
+      [473, 86, 95, "e", "other"],
+      [473, 93, 94, "e", "other"],
+      [674, 92, 94, "e", "unit"],
+      [674, 88, 94, "e", "unit"],
+      [474, 87, 94, "e", "other"],
+      [473, 86, 94, "e", "other"],
+      [473, 93, 93, "e", "other"],
+      [473, 93, 92, "e", "other"],
+      [496, 90, 92, "n", "key"],
+      [676, 86, 92, "e", "unit"],
+      [473, 93, 91, "e", "other"],
+      [676, 86, 91, "e", "unit"],
+      [473, 93, 90, "e", "other"],
+      [676, 86, 90, "e", "unit"],
+      [473, 93, 89, "e", "other"],
+      [674, 91, 89, "e", "unit"],
+      [674, 88, 89, "e", "unit"],
+      [474, 87, 89, "e", "other"],
+      [473, 86, 89, "e", "other"],
+      [473, 93, 88, "e", "other"],
+      [473, 92, 88, "e", "other"],
+      [473, 91, 88, "e", "other"],
+      [473, 90, 88, "e", "other"],
+      [473, 89, 88, "e", "other"],
+      [473, 88, 88, "e", "other"],
+      [473, 87, 88, "e", "other"]
+     ]
+    },
+    {
+     "key": "tree",
+     "origin": [0, 80],
+     "side": "PLAYER_NEUTRAL",
+     "pieces": [
+      [446, 8, 97, "n", "other"],
+      [446, 7, 97, "n", "other"],
+      [446, 6, 97, "n", "other"],
+      [446, 5, 97, "n", "other"],
+      [446, 4, 97, "n", "other"],
+      [446, 3, 97, "n", "other"],
+      [446, 2, 97, "n", "other"],
+      [446, 2, 96, "n", "other"],
+      [446, 2, 95, "n", "other"],
+      [441, 13, 94, "n", "other"],
+      [497, 7, 94, "n", "chest"],
+      [446, 2, 94, "n", "other"],
+      [446, 2, 93, "n", "other"],
+      [446, 2, 92, "n", "other"],
+      [446, 2, 91, "n", "other"],
+      [450, 6, 89, "n", "other"],
+      [450, 9, 88, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "21": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 498,
+   "chest": 499,
+   "popup": [986, 987, 988, 989],
+   "pictures": ["quest_egypt_sarcofago.jpg", null],
+   "helpers": [614],
+   "prizes": [],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [670, 12, 92, "e", "unit"],
+      [670, 8, 92, "e", "unit"],
+      [498, 11, 91, "n", "key"],
+      [670, 12, 88, "e", "unit"],
+      [670, 8, 88, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [670, 92, 92, "e", "unit"],
+      [670, 88, 92, "e", "unit"],
+      [498, 91, 91, "n", "key"],
+      [670, 92, 88, "e", "unit"],
+      [670, 88, 88, "e", "unit"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [670, 92, 12, "e", "unit"],
+      [670, 88, 12, "e", "unit"],
+      [498, 91, 11, "n", "key"],
+      [670, 92, 8, "e", "unit"],
+      [670, 88, 8, "e", "unit"]
+     ]
+    },
+    {
+     "key": "bosstemple",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [670, 13, 13, "e", "unit"],
+      [670, 12, 13, "e", "unit"],
+      [670, 11, 13, "e", "unit"],
+      [670, 8, 13, "e", "unit"],
+      [670, 7, 13, "e", "unit"],
+      [670, 6, 13, "e", "unit"],
+      [670, 13, 12, "e", "unit"],
+      [670, 12, 12, "e", "unit"],
+      [670, 11, 12, "e", "unit"],
+      [670, 8, 12, "e", "unit"],
+      [670, 7, 12, "e", "unit"],
+      [670, 6, 12, "e", "unit"],
+      [400, 12, 10, "e", "other"],
+      [499, 10, 10, "n", "chest"],
+      [400, 6, 10, "e", "other"],
+      [400, 12, 8, "e", "other"],
+      [400, 6, 8, "e", "other"],
+      [407, 10, 7, "e", "other"],
+      [529, 19, 1, "e", "unit"],
+      [531, 19, 0, "e", "unit"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [669, 10, 11, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 669
+  },
+  "22": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 1201,
+   "chest": 1200,
+   "popup": [1030, 1031, 1032, 1033],
+   "pictures": ["quest_rockdriller.jpg", null],
+   "helpers": [578, 578, 578, 578],
+   "prizes": [578, 578],
+   "messenger": null,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [288, 13, 15, "e", "other"],
+      [697, 10, 14, "e", "unit"],
+      [697, 14, 12, "e", "unit"],
+      [907, 9, 11, "n", "scenery"],
+      [697, 7, 11, "e", "unit"],
+      [1201, 10, 10, "n", "key"],
+      [907, 12, 9, "n", "scenery"],
+      [288, 11, 8, "e", "other"],
+      [288, 4, 8, "e", "other"],
+      [697, 12, 7, "e", "unit"],
+      [697, 7, 6, "e", "unit"],
+      [907, 8, 5, "n", "scenery"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [288, 93, 15, "e", "other"],
+      [697, 90, 14, "e", "unit"],
+      [697, 94, 12, "e", "unit"],
+      [907, 89, 11, "n", "scenery"],
+      [697, 87, 11, "e", "unit"],
+      [1201, 90, 10, "n", "key"],
+      [907, 92, 9, "n", "scenery"],
+      [288, 91, 8, "e", "other"],
+      [288, 84, 8, "e", "other"],
+      [697, 92, 7, "e", "unit"],
+      [697, 87, 6, "e", "unit"],
+      [907, 88, 5, "n", "scenery"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [288, 13, 95, "e", "other"],
+      [697, 10, 94, "e", "unit"],
+      [697, 14, 92, "e", "unit"],
+      [907, 9, 91, "n", "scenery"],
+      [697, 7, 91, "e", "unit"],
+      [1201, 10, 90, "n", "key"],
+      [907, 12, 89, "n", "scenery"],
+      [288, 11, 88, "e", "other"],
+      [288, 4, 88, "e", "other"],
+      [697, 12, 87, "e", "unit"],
+      [697, 7, 86, "e", "unit"],
+      [907, 8, 85, "n", "scenery"]
+     ]
+    },
+    {
+     "key": "treasure",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [907, 94, 96, "n", "scenery"],
+      [288, 85, 94, "e", "other"],
+      [1200, 91, 91, "n", "chest"],
+      [907, 94, 90, "n", "scenery"],
+      [907, 84, 87, "n", "scenery"],
+      [288, 92, 86, "e", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [696, 92, 93, "e", "boss"]
+     ]
+    }
+   ],
+   "boss": 696
+  },
+  "23": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 1203,
+   "chest": 1202,
+   "popup": [999, 1000, 1001, 1002],
+   "pictures": ["quest_chinos_dragones.jpg", null],
+   "helpers": [577, 577, 577],
+   "prizes": [577, 577],
+   "messenger": 1003,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [103, 11, 96, "e", "other"],
+      [103, 9, 96, "e", "other"],
+      [103, 7, 96, "e", "other"],
+      [245, 10, 95, "n", "other"],
+      [245, 8, 95, "n", "other"],
+      [240, 6, 95, "e", "other"],
+      [253, 4, 95, "e", "other"],
+      [245, 10, 93, "n", "other"],
+      [245, 8, 93, "n", "other"],
+      [245, 6, 93, "n", "other"],
+      [103, 4, 93, "e", "other"],
+      [1203, 9, 91, "n", "key"],
+      [245, 8, 91, "n", "other"],
+      [245, 6, 91, "n", "other"],
+      [103, 4, 91, "e", "other"],
+      [672, 10, 90, "e", "unit"],
+      [103, 4, 89, "e", "other"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [1203, 96, 96, "n", "key"],
+      [672, 94, 96, "e", "unit"],
+      [245, 96, 95, "n", "other"],
+      [245, 94, 95, "n", "other"],
+      [245, 92, 95, "n", "other"],
+      [245, 96, 93, "n", "other"],
+      [245, 94, 93, "n", "other"],
+      [245, 92, 93, "n", "other"],
+      [240, 96, 91, "e", "other"],
+      [103, 94, 91, "e", "other"],
+      [103, 93, 91, "e", "other"],
+      [103, 92, 91, "e", "other"],
+      [103, 91, 91, "e", "other"],
+      [242, 97, 89, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [1203, 5, 10, "n", "key"],
+      [245, 8, 9, "n", "other"],
+      [103, 6, 9, "e", "other"],
+      [103, 3, 9, "e", "other"],
+      [245, 2, 9, "n", "other"],
+      [103, 6, 8, "e", "other"],
+      [672, 4, 8, "e", "unit"],
+      [103, 3, 8, "e", "other"],
+      [245, 8, 7, "n", "other"],
+      [103, 6, 7, "e", "other"],
+      [103, 3, 7, "e", "other"],
+      [245, 2, 7, "n", "other"],
+      [103, 6, 6, "e", "other"],
+      [103, 3, 6, "e", "other"],
+      [245, 8, 5, "n", "other"],
+      [240, 5, 5, "e", "other"],
+      [245, 2, 5, "n", "other"]
+     ]
+    },
+    {
+     "key": "4",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [945, 95, 14, "n", "scenery"],
+      [945, 84, 14, "n", "scenery"],
+      [946, 94, 12, "n", "scenery"],
+      [946, 82, 12, "n", "scenery"],
+      [946, 94, 10, "n", "scenery"],
+      [946, 84, 10, "n", "scenery"],
+      [1202, 90, 9, "n", "chest"],
+      [946, 94, 8, "n", "scenery"],
+      [946, 84, 8, "n", "scenery"],
+      [946, 94, 6, "n", "scenery"],
+      [946, 84, 6, "n", "scenery"],
+      [114, 91, 5, "e", "other"],
+      [114, 85, 5, "e", "other"],
+      [946, 93, 4, "n", "scenery"],
+      [114, 87, 4, "e", "other"],
+      [946, 85, 4, "n", "scenery"],
+      [946, 91, 3, "n", "scenery"],
+      [946, 89, 3, "n", "scenery"],
+      [946, 87, 3, "n", "scenery"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [671, 90, 14, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 671,
+   "bossSay": 1004
+  },
+  "24": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": 1204,
+   "popup": [1005, 1006, 1007, 1008],
+   "pictures": ["quest_cleopatra.jpg", null],
+   "helpers": [613, 613],
+   "prizes": [613, 613],
+   "messenger": 1009,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "rapto",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [679, 11, 17, "e", "unit"],
+      [679, 9, 17, "e", "unit"],
+      [679, 7, 17, "e", "unit"],
+      [679, 5, 17, "e", "unit"],
+      [679, 3, 17, "e", "unit"],
+      [37, 8, 15, "n", "door"],
+      [425, 14, 14, "n", "other"],
+      [425, 13, 14, "n", "other"],
+      [425, 12, 14, "n", "other"],
+      [425, 11, 14, "n", "other"],
+      [425, 10, 14, "n", "other"],
+      [425, 9, 14, "n", "other"],
+      [425, 5, 14, "n", "other"],
+      [425, 4, 14, "n", "other"],
+      [425, 3, 14, "n", "other"],
+      [425, 2, 14, "n", "other"],
+      [425, 1, 14, "n", "other"],
+      [425, 0, 14, "n", "other"],
+      [425, 14, 13, "n", "other"],
+      [425, 0, 13, "n", "other"],
+      [425, 14, 12, "n", "other"],
+      [425, 0, 12, "n", "other"],
+      [425, 14, 11, "n", "other"],
+      [425, 0, 11, "n", "other"],
+      [425, 14, 10, "n", "other"],
+      [680, 11, 10, "e", "unit"],
+      [425, 9, 10, "n", "other"],
+      [425, 8, 10, "n", "other"],
+      [425, 7, 10, "n", "other"],
+      [425, 6, 10, "n", "other"],
+      [425, 5, 10, "n", "other"],
+      [425, 4, 10, "n", "other"],
+      [425, 3, 10, "n", "other"],
+      [425, 2, 10, "n", "other"],
+      [425, 1, 10, "n", "other"],
+      [425, 0, 10, "n", "other"],
+      [425, 14, 9, "n", "other"],
+      [680, 11, 9, "e", "unit"],
+      [425, 9, 9, "n", "other"],
+      [425, 0, 9, "n", "other"],
+      [425, 14, 8, "n", "other"],
+      [680, 11, 8, "e", "unit"],
+      [425, 9, 8, "n", "other"],
+      [425, 0, 8, "n", "other"],
+      [425, 14, 7, "n", "other"],
+      [680, 11, 7, "e", "unit"],
+      [37, 10, 7, "n", "door"],
+      [425, 0, 7, "n", "other"],
+      [425, 14, 6, "n", "other"],
+      [680, 11, 6, "e", "unit"],
+      [425, 0, 6, "n", "other"],
+      [425, 14, 5, "n", "other"],
+      [680, 11, 5, "e", "unit"],
+      [425, 0, 5, "n", "other"],
+      [425, 14, 4, "n", "other"],
+      [680, 11, 4, "e", "unit"],
+      [425, 9, 4, "n", "other"],
+      [1204, 4, 4, "n", "chest"],
+      [425, 0, 4, "n", "other"],
+      [425, 14, 3, "n", "other"],
+      [680, 11, 3, "e", "unit"],
+      [425, 9, 3, "n", "other"],
+      [425, 0, 3, "n", "other"],
+      [425, 14, 2, "n", "other"],
+      [680, 11, 2, "e", "unit"],
+      [425, 9, 2, "n", "other"],
+      [425, 0, 2, "n", "other"],
+      [425, 14, 1, "n", "other"],
+      [680, 11, 1, "e", "unit"],
+      [425, 9, 1, "n", "other"],
+      [425, 0, 1, "n", "other"],
+      [425, 14, 0, "n", "other"],
+      [425, 13, 0, "n", "other"],
+      [425, 12, 0, "n", "other"],
+      [425, 11, 0, "n", "other"],
+      [425, 10, 0, "n", "other"],
+      [425, 9, 0, "n", "other"],
+      [425, 8, 0, "n", "other"],
+      [425, 7, 0, "n", "other"],
+      [425, 6, 0, "n", "other"],
+      [425, 5, 0, "n", "other"],
+      [425, 4, 0, "n", "other"],
+      [425, 3, 0, "n", "other"],
+      [425, 2, 0, "n", "other"],
+      [425, 1, 0, "n", "other"],
+      [425, 0, 0, "n", "other"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [678, 3, 6, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 678,
+   "doors": [
+    {
+     "at": [8, 15],
+     "id": 37,
+     "opensWhenDead": {
+      "id": 679,
+      "count": 5
+     }
+    },
+    {
+     "at": [10, 7],
+     "id": 37,
+     "opensWhenDead": {
+      "id": 680,
+      "count": 10
+     }
+    }
+   ]
+  },
+  "25": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": null,
+   "popup": [1010, 1011, 1012, 1013],
+   "pictures": ["quest_ent.jpg", null],
+   "helpers": [628],
+   "prizes": [628, 628],
+   "messenger": 1014,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "ent",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [473, 17, 97, "n", "other"],
+      [473, 16, 97, "n", "other"],
+      [473, 15, 97, "n", "other"],
+      [473, 14, 97, "n", "other"],
+      [473, 13, 97, "n", "other"],
+      [473, 12, 97, "n", "other"],
+      [473, 11, 97, "n", "other"],
+      [473, 10, 97, "n", "other"],
+      [473, 9, 97, "n", "other"],
+      [473, 8, 97, "n", "other"],
+      [473, 7, 97, "n", "other"],
+      [473, 6, 97, "n", "other"],
+      [473, 5, 97, "n", "other"],
+      [473, 4, 97, "n", "other"],
+      [473, 17, 96, "n", "other"],
+      [475, 6, 96, "n", "other"],
+      [473, 4, 96, "n", "other"],
+      [473, 17, 95, "n", "other"],
+      [473, 4, 95, "n", "other"],
+      [473, 17, 94, "n", "other"],
+      [473, 4, 94, "n", "other"],
+      [473, 17, 93, "n", "other"],
+      [473, 4, 93, "n", "other"],
+      [473, 17, 92, "n", "other"],
+      [473, 4, 92, "n", "other"],
+      [473, 17, 91, "n", "other"],
+      [473, 4, 91, "n", "other"],
+      [473, 17, 90, "n", "other"],
+      [473, 4, 90, "n", "other"],
+      [473, 17, 89, "n", "other"],
+      [473, 4, 89, "n", "other"],
+      [473, 17, 88, "n", "other"],
+      [475, 16, 88, "n", "other"],
+      [475, 6, 88, "n", "other"],
+      [473, 4, 88, "n", "other"],
+      [473, 17, 87, "n", "other"],
+      [37, 11, 87, "n", "door"],
+      [473, 4, 87, "n", "other"],
+      [473, 17, 86, "n", "other"],
+      [473, 16, 86, "n", "other"],
+      [473, 15, 86, "n", "other"],
+      [473, 14, 86, "n", "other"],
+      [473, 13, 86, "n", "other"],
+      [473, 12, 86, "n", "other"],
+      [473, 8, 86, "n", "other"],
+      [473, 7, 86, "n", "other"],
+      [473, 6, 86, "n", "other"],
+      [473, 5, 86, "n", "other"],
+      [473, 4, 86, "n", "other"],
+      [677, 12, 84, "e", "unit"],
+      [676, 11, 84, "e", "unit"],
+      [675, 10, 84, "e", "unit"],
+      [675, 9, 84, "e", "unit"],
+      [676, 8, 84, "e", "unit"],
+      [677, 7, 84, "e", "unit"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [681, 10, 92, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 681,
+   "doors": [
+    {
+     "at": [11, 87],
+     "id": 37,
+     "opensWhenDead": {
+      "ids": [675, 676, 677],
+      "count": 6,
+      "note": "every enemy unit on the map with these ids at load"
+     }
+    }
+   ],
+   "treasurePosOverride": [10, 90]
+  },
+  "26": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 1206,
+   "chest": null,
+   "popup": [1015, 1016, 1017, 1018],
+   "pictures": ["quest_atlantes_tesoro.jpg", null],
+   "helpers": [],
+   "prizes": [274],
+   "messenger": null,
+   "bossStage": false,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [688, 7, 12, "e", "unit"],
+      [688, 5, 12, "e", "unit"],
+      [425, 9, 11, "e", "other"],
+      [425, 3, 11, "e", "other"],
+      [427, 6, 10, "n", "other"],
+      [689, 9, 9, "e", "unit"],
+      [689, 3, 9, "e", "unit"],
+      [425, 9, 8, "e", "other"],
+      [680, 7, 8, "e", "unit"],
+      [1206, 6, 8, "n", "key"],
+      [680, 4, 8, "e", "unit"],
+      [425, 3, 8, "e", "other"],
+      [689, 9, 6, "e", "unit"],
+      [689, 3, 6, "e", "unit"],
+      [425, 9, 5, "e", "other"],
+      [425, 3, 5, "e", "other"],
+      [425, 6, 3, "e", "other"],
+      [425, 5, 3, "e", "other"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [688, 87, 12, "e", "unit"],
+      [688, 85, 12, "e", "unit"],
+      [425, 89, 11, "e", "other"],
+      [425, 83, 11, "e", "other"],
+      [427, 86, 10, "n", "other"],
+      [689, 89, 9, "e", "unit"],
+      [689, 83, 9, "e", "unit"],
+      [425, 89, 8, "e", "other"],
+      [680, 87, 8, "e", "unit"],
+      [1206, 86, 8, "n", "key"],
+      [680, 84, 8, "e", "unit"],
+      [425, 83, 8, "e", "other"],
+      [689, 89, 6, "e", "unit"],
+      [689, 83, 6, "e", "unit"],
+      [425, 89, 5, "e", "other"],
+      [425, 83, 5, "e", "other"],
+      [425, 86, 3, "e", "other"],
+      [425, 85, 3, "e", "other"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [688, 7, 92, "e", "unit"],
+      [688, 5, 92, "e", "unit"],
+      [425, 9, 91, "e", "other"],
+      [425, 3, 91, "e", "other"],
+      [427, 6, 90, "n", "other"],
+      [689, 9, 89, "e", "unit"],
+      [689, 3, 89, "e", "unit"],
+      [425, 9, 88, "e", "other"],
+      [680, 7, 88, "e", "unit"],
+      [1206, 6, 88, "n", "key"],
+      [680, 4, 88, "e", "unit"],
+      [425, 3, 88, "e", "other"],
+      [689, 9, 86, "e", "unit"],
+      [689, 3, 86, "e", "unit"],
+      [425, 9, 85, "e", "other"],
+      [425, 3, 85, "e", "other"],
+      [425, 6, 83, "e", "other"],
+      [425, 5, 83, "e", "other"]
+     ]
+    },
+    {
+     "key": "4",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [688, 87, 92, "e", "unit"],
+      [688, 85, 92, "e", "unit"],
+      [425, 89, 91, "e", "other"],
+      [425, 83, 91, "e", "other"],
+      [427, 86, 90, "n", "other"],
+      [689, 89, 89, "e", "unit"],
+      [689, 83, 89, "e", "unit"],
+      [425, 89, 88, "e", "other"],
+      [680, 87, 88, "e", "unit"],
+      [1206, 86, 88, "n", "key"],
+      [680, 84, 88, "e", "unit"],
+      [425, 83, 88, "e", "other"],
+      [689, 89, 86, "e", "unit"],
+      [689, 83, 86, "e", "unit"],
+      [425, 89, 85, "e", "other"],
+      [425, 83, 85, "e", "other"],
+      [425, 86, 83, "e", "other"],
+      [425, 85, 83, "e", "other"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "27": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": null,
+   "chest": null,
+   "popup": [1020, 1021, 1022, 1023],
+   "pictures": ["quest_balrog.jpg", null],
+   "helpers": [644, 644, 646],
+   "prizes": [644],
+   "messenger": 1024,
+   "bossStage": true,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": false,
+   "tiles": [
+    {
+     "key": "balrogHQ",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [114, 85, 90, "e", "other"],
+      [288, 97, 89, "e", "other"],
+      [473, 84, 89, "e", "other"],
+      [473, 84, 88, "e", "other"],
+      [947, 97, 87, "n", "scenery"],
+      [948, 83, 87, "n", "scenery"],
+      [114, 93, 86, "e", "other"],
+      [288, 85, 85, "e", "other"],
+      [946, 95, 84, "n", "scenery"],
+      [946, 83, 84, "n", "scenery"],
+      [946, 93, 83, "n", "scenery"],
+      [946, 91, 83, "n", "scenery"],
+      [945, 89, 83, "n", "scenery"],
+      [946, 87, 83, "n", "scenery"],
+      [946, 85, 83, "n", "scenery"]
+     ]
+    }
+   ],
+   "bossTiles": [
+    {
+     "key": null,
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [682, 90, 90, "e", "unit"]
+     ]
+    }
+   ],
+   "boss": 682,
+   "rewardsGoToStorage": true
+  },
+  "28": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 1209,
+   "chest": null,
+   "popup": [1035, 1036, 1037, 1038],
+   "pictures": ["quest_portales.jpg", null],
+   "helpers": [],
+   "prizes": [701, 701],
+   "messenger": null,
+   "bossStage": false,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [673, 10, 15, "e", "unit"],
+      [480, 14, 14, "e", "other"],
+      [480, 6, 14, "e", "other"],
+      [676, 13, 13, "e", "unit"],
+      [675, 6, 13, "e", "unit"],
+      [1209, 11, 11, "n", "key"],
+      [674, 14, 9, "e", "unit"],
+      [675, 5, 9, "e", "unit"],
+      [480, 13, 6, "e", "other"],
+      [480, 6, 6, "e", "other"],
+      [677, 5, 6, "e", "unit"],
+      [675, 9, 5, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [673, 90, 15, "e", "unit"],
+      [480, 94, 14, "e", "other"],
+      [480, 86, 14, "e", "other"],
+      [676, 93, 13, "e", "unit"],
+      [675, 86, 13, "e", "unit"],
+      [1209, 91, 11, "n", "key"],
+      [674, 94, 9, "e", "unit"],
+      [675, 85, 9, "e", "unit"],
+      [480, 93, 6, "e", "other"],
+      [480, 86, 6, "e", "other"],
+      [677, 85, 6, "e", "unit"],
+      [675, 89, 5, "e", "unit"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [673, 10, 95, "e", "unit"],
+      [480, 14, 94, "e", "other"],
+      [480, 6, 94, "e", "other"],
+      [676, 13, 93, "e", "unit"],
+      [675, 6, 93, "e", "unit"],
+      [1209, 11, 91, "n", "key"],
+      [674, 14, 89, "e", "unit"],
+      [675, 5, 89, "e", "unit"],
+      [480, 13, 86, "e", "other"],
+      [480, 6, 86, "e", "other"],
+      [677, 5, 86, "e", "unit"],
+      [675, 9, 85, "e", "unit"]
+     ]
+    },
+    {
+     "key": "4",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [673, 90, 95, "e", "unit"],
+      [480, 94, 94, "e", "other"],
+      [480, 86, 94, "e", "other"],
+      [676, 93, 93, "e", "unit"],
+      [675, 86, 93, "e", "unit"],
+      [1209, 91, 91, "n", "key"],
+      [674, 94, 89, "e", "unit"],
+      [675, 85, 89, "e", "unit"],
+      [480, 93, 86, "e", "other"],
+      [480, 86, 86, "e", "other"],
+      [677, 85, 86, "e", "unit"],
+      [675, 89, 85, "e", "unit"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  },
+  "29": {
+   "engine": "new",
+   "races": ["h"],
+   "activator": 1213,
+   "chest": null,
+   "popup": [1025, 1026, 1027, 1028],
+   "pictures": ["quest_magos.jpg", null],
+   "helpers": [],
+   "prizes": [652],
+   "messenger": null,
+   "bossStage": false,
+   "steps": false,
+   "finalAnimation": false,
+   "keepIds": true,
+   "tiles": [
+    {
+     "key": "1",
+     "origin": [0, 0],
+     "side": null,
+     "pieces": [
+      [693, 11, 13, "e", "unit"],
+      [692, 10, 13, "e", "unit"],
+      [107, 7, 12, "e", "other"],
+      [690, 6, 11, "e", "unit"],
+      [691, 13, 10, "e", "unit"],
+      [1213, 9, 9, "n", "key"],
+      [68, 4, 7, "e", "other"],
+      [690, 11, 6, "e", "unit"],
+      [691, 4, 6, "e", "unit"],
+      [107, 10, 5, "e", "other"],
+      [693, 7, 4, "e", "unit"],
+      [692, 6, 4, "e", "unit"]
+     ]
+    },
+    {
+     "key": "2",
+     "origin": [80, 0],
+     "side": null,
+     "pieces": [
+      [693, 91, 13, "e", "unit"],
+      [692, 90, 13, "e", "unit"],
+      [107, 87, 12, "e", "other"],
+      [690, 86, 11, "e", "unit"],
+      [691, 93, 10, "e", "unit"],
+      [1213, 89, 9, "n", "key"],
+      [68, 84, 7, "e", "other"],
+      [690, 91, 6, "e", "unit"],
+      [691, 84, 6, "e", "unit"],
+      [107, 90, 5, "e", "other"],
+      [693, 87, 4, "e", "unit"],
+      [692, 86, 4, "e", "unit"]
+     ]
+    },
+    {
+     "key": "3",
+     "origin": [0, 80],
+     "side": null,
+     "pieces": [
+      [693, 11, 93, "e", "unit"],
+      [692, 10, 93, "e", "unit"],
+      [107, 7, 92, "e", "other"],
+      [690, 6, 91, "e", "unit"],
+      [691, 13, 90, "e", "unit"],
+      [1213, 9, 89, "n", "key"],
+      [68, 4, 87, "e", "other"],
+      [690, 11, 86, "e", "unit"],
+      [691, 4, 86, "e", "unit"],
+      [107, 10, 85, "e", "other"],
+      [693, 7, 84, "e", "unit"],
+      [692, 6, 84, "e", "unit"]
+     ]
+    },
+    {
+     "key": "4",
+     "origin": [80, 80],
+     "side": null,
+     "pieces": [
+      [693, 91, 93, "e", "unit"],
+      [692, 90, 93, "e", "unit"],
+      [107, 87, 92, "e", "other"],
+      [690, 86, 91, "e", "unit"],
+      [691, 93, 90, "e", "unit"],
+      [1213, 89, 89, "n", "key"],
+      [68, 84, 87, "e", "other"],
+      [690, 91, 86, "e", "unit"],
+      [691, 84, 86, "e", "unit"],
+      [107, 90, 85, "e", "other"],
+      [693, 87, 84, "e", "unit"],
+      [692, 86, 84, "e", "unit"]
+     ]
+    }
+   ],
+   "bossTiles": []
+  }
+ }
+}
