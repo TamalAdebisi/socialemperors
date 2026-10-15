@@ -18,5 +18,50 @@
   "x": 0.5152,
   "y": 0.9554,
   "scale": 3
+ },
+ "selected-unit": {
+  "x": 0.5,
+  "y": 1.2,
+  "scale": 3
+ },
+ "selected-1x1": {
+  "x": 0.5,
+  "y": 0.8649,
+  "scale": 3
+ },
+ "selected-2x2": {
+  "x": 0.5,
+  "y": 0.9147,
+  "scale": 3
+ },
+ "selected-3x3": {
+  "x": 0.5,
+  "y": 0.9399,
+  "scale": 3
+ },
+ "selected-4x4": {
+  "x": 0.5,
+  "y": 0.9496,
+  "scale": 3
+ },
+ "selected-5x5": {
+  "x": 0.5,
+  "y": 0.9592,
+  "scale": 3
+ },
+ "selected-6x6": {
+  "x": 0.5,
+  "y": 0.9624,
+  "scale": 3
+ },
+ "life-bar": {
+  "x": 0.0353,
+  "y": 0.25,
+  "scale": 3
+ },
+ "life-bar-green": {
+  "x": 0.0353,
+  "y": 0.25,
+  "scale": 3
  }
 }

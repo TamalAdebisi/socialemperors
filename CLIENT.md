@@ -334,7 +334,11 @@ the first time; see "Sound and speed".)
 Built so far: **the shop and building**, **storage**, **move, turn, store
 and sell**, and **collecting from buildings**, with levels. Tap (or click) a building
 to select it; a bar at the bottom shows its name and what can be done with it.
-Selling asks first and says what it gives back. While moving, the footprint
+What's selected is marked as in the Flash client, with its own pictures: a
+unit stands on a golden ring (that walks with it), a building's ground gets
+a golden outline of its size (1x1 to 6x6), and a small life bar shows over
+either, green, red for what a raid took (`view/selected.ts`, test
+`e2e/tests/selected.mjs`). Selling asks first and says what it gives back. While moving, the footprint
 under the pointer shows green where it fits and red where it doesn't; tap
 the new place, or Cancel (Escape). Tapping picks the picture actually under
 the finger, not its box, so a tree in front of a house doesn't steal the tap.

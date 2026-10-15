@@ -244,6 +244,26 @@ export class Player {
     await this.wait(300);
   }
 
+  /**
+   * The screen's colours in a box ({ x, y, width, height }), as [r, g, b]
+   * for each pixel: a screenshot, read back by the page (no picture library here).
+   */
+  async pixels(box) {
+    const png = await this.page.screenshot({ clip: box });
+    const data = await this.page.evaluate(async (base64) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${base64}`;
+      await image.decode();
+      const canvas = new OffscreenCanvas(image.width, image.height);
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0);
+      return Array.from(context.getImageData(0, 0, image.width, image.height).data);
+    }, png.toString("base64"));
+    const pixels = [];
+    for (let i = 0; i < data.length; i += 4) pixels.push([data[i], data[i + 1], data[i + 2]]);
+    return pixels;
+  }
+
   /** The action bar's text, or "" when it's hidden. */
   async bar() {
     const bar = this.page.locator(".actions");
