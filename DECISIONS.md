@@ -4,6 +4,13 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: what's selected is marked
+
+- **The glow is gone:** a selected thing is marked only as in the Flash
+  client, a golden ring or outline under it and its life bar over it (the
+  owner asked for the original's look). This reverses "Selected units
+  glow", further down.
+
 ## 15 October 2026: Beta 2, scripted camps (part 3)
 
 - **A festival's steps show in order:** two keys taken show the first two
