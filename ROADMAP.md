@@ -342,6 +342,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] The harbour and zeppelin tower given as the original gives them,
         with their Open buttons, and pausing
         ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [x] Checked against the Flash client's code: four read-throughs, and
+        the rules they found wrong fixed ([PARITY.md](PARITY.md#beta-2-battles-and-quests))
   - [ ] Checked side by side against the Flash game, and played by the
         owner
 - [ ] **The switch** (steps 5 and 6): battles against players, the long

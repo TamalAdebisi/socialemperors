@@ -36,6 +36,12 @@ const THROWN_FRAMES = 30;
 const POISON_EVERY = 90;
 /** An enlarged unit's hits. */
 const ENLARGED_HIT = 1.5;
+/** The Attack Booster Wizard (2052): every second, up to 10 units within 10 tiles, for 2 seconds. */
+const ATTACK_BOOSTER = 2052;
+const BOOST_EVERY = 30;
+const BOOST_RANGE = 10;
+const BOOST_MOST = 10;
+const BOOST_FRAMES = 60;
 /** A shot hurts its target only if the target is within 100 pixels of where it lands. */
 const BLAST_PIXELS = 100;
 /** A wandering defender goes home past 20 tiles (across plus down). */
@@ -89,7 +95,6 @@ const DOUBLE_SHOT = new Set([739]);
 const SECOND_SHOT = 15;
 /** The bosses' small golems and yetis have their own life, whatever the config says (the boss mind sets it). */
 const LIFE_OF = new Map([[537, 100], [544, 120]]);
-const CONVERT_RANGE = 10;
 const CONVERT_LIMIT = 4;
 const CONVERT_EVERY = 720;
 const CONVERT_MAX_LIFE = 500;
@@ -153,6 +158,8 @@ export interface Fighter {
   poison?: { damage: number; left: number; next: number } | null;
   /** Grown big (from frame `grewAt`), hitting half again as hard, until this frame. */
   enlargedUntil?: number;
+  /** Cheered by an Attack Booster Wizard: hits half again until this frame. */
+  boostedUntil?: number;
   grewAt?: number;
   /** Grown by a move of its own (bigger, not stronger by the spell's half), until this frame. */
   grownUntil?: number;
@@ -362,6 +369,9 @@ export class Battle {
   step(): void {
     this.frame++;
     const frame = this.frame;
+    if (frame % BOOST_EVERY === 0) {
+      this.boost();
+    }
     for (const fighter of [...this.fighters]) {
       if (fighter.dead) {
         if (frame - fighter.diedAt >= DEAD_FRAMES && fighter.isUnit) {
@@ -506,10 +516,9 @@ export class Battle {
       }
     }
     if ((unit.condition === "aggressive" || unit.condition === "defensive") && !unit.target && !unit.forced && !HEALERS.has(unit.item.id)) {
-      // A monk looks only for units it can turn.
-      const target = unit.item.id === MONK
-        ? (this.canConvert(unit) ? this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, CONVERT_RANGE, (f) => this.convertible(f)) : null)
-        : this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, unit.aggro ?? AGGRO_RANGE);
+      // A monk goes for the nearest enemy like anyone, and stands at its reach; it turns it on
+      // its beat only if it can (as in the original: it wanders into fights even when it can't).
+      const target = this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, unit.aggro ?? AGGRO_RANGE);
       if (target) {
         this.attack(unit, target);
       }
@@ -652,7 +661,7 @@ export class Battle {
         } else if (unit.item.id === KAMIKAZE) {
           this.explode(unit);
         } else {
-          this.hurt(target, unit.attack, unit);
+          this.hurt(target, unit.attack * elementFactor(unit, target), unit);
         }
       }
       return;
@@ -689,6 +698,17 @@ export class Battle {
     if (!shoots) {
       return;
     }
+    // The Dragon Killer Fortress turns to the nearest dragon in its range first, as in the original.
+    if (sub === SUBCAT.dragonKiller) {
+      const dragon = this.nearestEnemy(building, { x: building.tx, y: building.ty }, building.range,
+        (f) => f.isUnit && f.item.groups.split(" ").includes("dragon"));
+      if (dragon) {
+        building.target = dragon;
+        building.struckAt = frame;
+        this.shoot(building, dragon);
+        return;
+      }
+    }
     // It keeps a target only while it's within half its range.
     if (building.target && (building.target.dead || distance(building, building.target) > building.range / 2)) {
       building.target = null;
@@ -697,12 +717,25 @@ export class Battle {
       building.target = null;
     }
     if (!building.target) {
+      // The Ice Tower shoots units only, and not frozen ones.
       building.target = this.nearestEnemy(building, { x: building.tx, y: building.ty }, building.range,
-        building.item.id === ICE_TOWER ? (f) => !this.isFrozen(f) : undefined);
+        building.item.id === ICE_TOWER ? (f) => f.isUnit && !this.isFrozen(f) : undefined);
     }
     if (building.target) {
       building.struckAt = frame;
       this.shoot(building, building.target);
+    }
+  }
+
+  /** Each Attack Booster Wizard cheers up to 10 units of its side within 10 tiles: their hits half again, for 2 seconds. */
+  private boost(): void {
+    for (const wizard of this.fighters) {
+      if (wizard.item.id !== ATTACK_BOOSTER || wizard.dead) {
+        continue;
+      }
+      for (const f of this.within({ x: wizard.tx, y: wizard.ty }, BOOST_RANGE, BOOST_MOST, (o) => o.isUnit && o.side === wizard.side && o !== wizard)) {
+        f.boostedUntil = this.frame + BOOST_FRAMES;
+      }
     }
   }
 
@@ -859,7 +892,7 @@ export class Battle {
     const where = pointOf(target);
     const hit = Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS;
     if (hit) {
-      this.hurt(target, shot.damage ?? shot.by.attack, shot.by);
+      this.hurt(target, shot.damage ?? shot.by.attack * elementFactor(shot.by, target), shot.by);
     }
     for (const listen of this.onLanded) {
       listen(shot, hit);
@@ -872,8 +905,8 @@ export class Battle {
       return;
     }
     let amount = attack;
-    // Grown by Age of Colossus: half again.
-    if (by && this.isEnlarged(by)) {
+    // Grown by Age of Colossus, or cheered by an Attack Booster Wizard: half again.
+    if (by && (this.isEnlarged(by) || this.frame < (by.boostedUntil ?? 0))) {
       amount *= ENLARGED_HIT;
     }
     // Siege engines do half to units; units do a quarter more to siege engines.
@@ -1338,6 +1371,14 @@ export class Battle {
 }
 
 /** How a unit behaves on its own, by what it is (the Flash client's per-unit mind). */
+/** The late elemental units (kinds 92 to 96): each beats one other, hitting it 1.35 times as hard. */
+const ELEMENT_BEATS = new Map([[92, 93], [93, 95], [94, 92], [95, 96], [96, 94]]);
+const ELEMENT_FACTOR = 1.35;
+
+function elementFactor(by: Fighter, target: Fighter): number {
+  return ELEMENT_BEATS.get(by.item.subcategory) === target.item.subcategory ? ELEMENT_FACTOR : 1;
+}
+
 /** A boss or a boss's add (the golems and yetis round a boss, the dragon bosses). */
 function isBossKind(f: Fighter): boolean {
   return f.item.subcategory === SUBCAT.boss || f.item.subcategory === SUBCAT.bossAdd;
