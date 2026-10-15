@@ -317,7 +317,7 @@ class WorldMapPagesTest(unittest.TestCase):
         self.assertEqual(reply.get_json()["pid"], BUILT_IN_NEIGHBOUR)
         mine = self.web.get(f"{self.dynamic}/get_public_player_info.php",
                             query_string={"USERID": self.pid, "user_key": self.key}).get_json()
-        self.assertEqual((mine["attacks_won"], mine["honor_points"]), (1, 3))
+        self.assertEqual((mine["attacks_won"], mine["honor_points"]), (1, 1))  # honour worked out from the armies: none here, 1
         self.assertNotIn("privateState", mine)
         self.assertEqual(self.web.get(f"{self.dynamic}/get_public_player_info.php",
                                       query_string=dict(asked, user_key="forged")).status_code, 403)

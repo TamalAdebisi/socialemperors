@@ -6,6 +6,7 @@ Run from the repository folder:  python -m unittest discover tests
 """
 
 import json
+import math
 import os
 import tempfile
 import unittest
@@ -25,6 +26,9 @@ SUMMIT = 234         # 9 allies at 3 cash
 ALLIED_MARKET = 266  # 8 helpers at 2 cash; 125 for each, plus 125
 ROUND_TABLE = 389
 SWORDSMAN = 507      # costs 150 gold: worth 75 gold when killed
+TOWN_HALL = 26
+HOUSE = 1
+ODIN_STATUE = 366
 BUILT_IN_NEIGHBOUR = "100000030"  # villages/Arthur30.json: Arthur, a village that ships with the game
 
 
@@ -206,14 +210,14 @@ class AttackTest(unittest.TestCase):
         for x in range(3):
             self.me.build(SWORDSMAN, 30 + x, 30)
 
-    def report(self, win, gold=0, xp=0, honor=0, killed=0, recovered=0, victim=None):
+    def report(self, win, gold=0, xp=0, honor=0, killed=0, recovered=0, victim=None, victim_units=None):
         return json.dumps({
             "attacker": {"name": "Me", "level": 5, "user_id": self.me.pid, "world_id": 0, "map": TOWN, "race": "h"},
             "victim": victim or {"user_id": self.enemy.pid, "name": "Enemy", "level": 5, "map": "0", "race": "h"},
             "resources": {"g": gold, "x": xp},
             "resources_victim": {"g": 0},
             "attacker_units": [[SWORDSMAN, 3, killed, recovered]],
-            "victim_units": [],
+            "victim_units": victim_units if victim_units is not None else [[TOWN_HALL, 1, 1, 0], [SWORDSMAN, 300, 300, 0]],
             "win": win, "duration": 60, "voluntary_end": 0, "townhall_gold": 500, "honor": honor,
         })
 
@@ -226,7 +230,7 @@ class AttackTest(unittest.TestCase):
         self.assertEqual((self.me.map["coins"], self.me.map["xp"]), (gold + 20000, xp + 40))  # at most 20000 gold
         self.assertEqual(self.swordsmen(), 2)
         self.assertEqual(self.me.pState["deadHeroes"], {str(SWORDSMAN): 1})
-        self.assertEqual((self.me.pState["attacksWon"], self.me.pState["honor"]), (1, 4))
+        self.assertEqual((self.me.pState["attacksWon"], self.me.pState["honor"]), (1, 10))  # worked out again
         sent = self.me.pState["attacksSent"][-1]
         self.assertEqual((sent["victim_id"], sent["description"]["win"]), (self.enemy.pid, 1))
 
@@ -243,6 +247,61 @@ class AttackTest(unittest.TestCase):
         self.assertEqual(self.enemy.map["coins"], coins + 3 * 8)  # a tenth of 75 gold each, rounded up
         self.assertEqual(self.me.pState["attacksLost"], 1)
         self.assertEqual(self.swordsmen(), 0)
+
+    def test_the_pay_is_what_the_kills_are_worth(self):
+        # The enemy's town hall (its level x 100) and two swordsmen (75 each, a twentieth of that in XP, rounded up).
+        level = int(self.enemy.map.get("level", 1))
+        gold, xp = self.me.map["coins"], self.me.map["xp"]
+        killed = [[TOWN_HALL, 1, 1, 0], [SWORDSMAN, 4, 2, 0]]
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 9999, 9999, 10, victim_units=killed)))
+        self.assertEqual(self.me.map["coins"], gold + level * 100 + 150)
+        most_xp = math.ceil(level * 100 / 20) + 2 * 4 + len(self.enemy.map["items"])
+        self.assertEqual(self.me.map["xp"], xp + most_xp)
+
+    def test_a_win_with_nothing_worth_gold_pays_25(self):
+        gold = self.me.map["coins"]
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 500, victim_units=[[HOUSE, 1, 1, 0]])))
+        self.assertEqual(self.me.map["coins"], gold + 25)
+
+    def test_honour_is_worked_out_again(self):
+        # The defender lost all it had (a town hall: 1,000 gold, worth 10), the attacker nothing: 10.
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 0, 0, 3, victim_units=[[TOWN_HALL, 1, 1, 0]])))
+        self.assertEqual(self.me.pState["honor"], 10)
+        # Lost two swordsmen (150 gold each, worth 1.5 each) against a town hall and no kills: still at least 1.
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(0, 0, 0, 9, killed=2,
+                                                                                     victim_units=[[TOWN_HALL, 1, 0, 0]])))
+        self.assertEqual(self.me.pState["honor"], 11)
+
+    def test_the_attackers_share_of_losses_by_level(self):
+        # From level 16, half the fallen come home: of three killed, at least one is lost, whatever the report says.
+        self.me.map["level"] = 16
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(0, killed=3, recovered=3)))
+        self.assertEqual(self.swordsmen(), 2)
+
+    def test_a_fourth_attack_in_six_hours_pays_nothing(self):
+        gold = self.me.map["coins"]
+        for _ in range(3):
+            self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 100)))
+        paid = self.me.map["coins"]
+        self.assertGreater(paid, gold)
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 100)))
+        self.assertEqual(self.me.map["coins"], paid, "recorded, but no pay")
+        self.me.build(ODIN_STATUE, 40, 40)
+        self.me.pState["attacksSent"] = self.me.pState["attacksSent"][:3]
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(1, 100)))
+        self.assertGreater(self.me.map["coins"], paid, "the Odin Statue gives one more")
+
+    def test_the_defender_is_paid_in_the_town_attacked_and_histories_are_kept_short(self):
+        self.enemy.save["maps"].append(json.loads(json.dumps(self.enemy.map)))
+        second = self.enemy.save["maps"][1]
+        coins = (self.enemy.map["coins"], second["coins"])
+        victim = {"user_id": self.enemy.pid, "name": "Enemy", "level": 5, "map": 1, "race": "h"}
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(0, killed=3, victim=victim)))
+        self.assertEqual((self.enemy.map["coins"], second["coins"]), (coins[0], coins[1] + 3 * 8))
+        self.enemy.pState["attacksReceived"] = [{"time": 0, "attacker_id": "x"}] * 40
+        self.me.pState["attacksSent"] = [{"time": 0, "victim_id": "x"}] * 40
+        self.me.batch(("attack_player", self.enemy.pid), ("end_attack", self.report(0, killed=3, victim=victim)))
+        self.assertEqual((len(self.me.pState["attacksSent"]), len(self.enemy.pState["attacksReceived"])), (20, 20))
 
     def test_an_enemy_without_a_town_hall(self):
         gold = self.me.map["coins"]
