@@ -97,7 +97,7 @@ dock"), so these come with a mockup first.
 - [x] **Construction:** a new building stands in scaffolding for 10
       seconds, with a bar and its sounds, and can't be used meanwhile. M
 - [x] **Turning while placing** (Space). S
-- [ ] **On phones, seeing where a building will go** before it's bought. S
+- [x] **On phones, seeing where a building will go** before it's bought. S
 - [x] **Clean-up on load:** overlapping buildings go to storage, units on
       a taken tile step aside, a town with no villager gets one. S
 - [x] **Tapping the ready bubble collects;** the refund rises as a number
@@ -111,7 +111,7 @@ dock"), so these come with a mockup first.
 
 ## Windows and messages
 
-- [ ] **Level-up window:** the new level, its prize, and up to 4 buildings
+- [x] **Level-up window:** the new level, its prize, and up to 4 buildings
       that just became available. Ours is a short message that can be lost
       when several are waiting. M
 - [x] **Messages from the server at start** ("Bob helped your farm", "a

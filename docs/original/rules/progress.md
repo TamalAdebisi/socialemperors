@@ -63,9 +63,10 @@ second.
   after each gain.*
 - It goes up one level per check. The level-up window's two buttons both
   check again on closing, so several levels gained at once come as one
-  window after another, each paying its prize as it opens. *Ours:
-  different: all levels at once, one message naming the last level and
-  every prize (`rules/levels.ts`, `editor.ts`). Same totals.*
+  window after another, each paying its prize as it opens. *Ours: one
+  window after another too (`client/src/ui/levelUp.ts`); the prizes are
+  all paid as the levels are reached, not as each window opens
+  (`rules/levels.ts`). Same totals.*
 - A level up sends `rt_level_up` (the new level) at once. *Ours: same
   (`rules/levels.ts`).*
 - On opening the home town from level 5, the game sends `rt_publish_score`
@@ -104,13 +105,13 @@ second.
   up to four buildings that open at this level: those whose `min_level`
   is exactly the new level, of type building, sold in some store and of
   the town's own race. A level-up sound plays. Its two buttons (share and
-  skip) both just close it here. *Ours: different: a short message with
-  the name and prizes, and the sound; no buildings list (PARITY.md lists
-  the window as to do).*
+  skip) both just close it here. *Same: `client/src/ui/levelUp.ts`, `client/src/rules/levels.ts` (`unlockedAt`), with one button, OK.*
+  *Fixed since "The level-up window".*
 - Opening it closes the other window of its sort if one is open (the
   market, for one), and redraws the open shop's cards for the new level
-  rather than closing the shop; message windows stay. *Ours: different:
-  our message doesn't close anything.*
+  rather than closing the shop; message windows stay. *Ours: the shop
+  redraws its cards (`client/src/editor.ts`, `levelUp`); there's no market
+  window yet to close.*
 - At home, every level up rolls the raids again as if the town had just
   opened: from level 25 one chance in 10 of a siege, stampede or army by
   level band, and the bandit bands from levels 10, 15 and 20 (the details
@@ -625,6 +626,7 @@ so.
     level with its name, prize, up to four new buildings and the mana;
     it closes a market-type window and redraws the shop. Ours a message
     (`client/src/editor.ts`). (checked twice)
+    *Fixed since "The level-up window".*
 13. **Mana per level on screen** (looks different). The original adds 2
     on screen from level 36 at once; ours only when the Academy's window
     next lists an unlearnt spell or a spell is learnt, or after a reload
@@ -642,6 +644,7 @@ so.
     windows' details skimmed)
 17. **Several level ups** (looks different). One window each in the
     original, one message in ours; same prizes. (checked twice)
+    *Fixed since "The level-up window".*
 18. **The shop's cards** (looks different). Eight a page, "new" and
     "limited" badges, a hover card; ours a list without them
     (`client/src/ui/shop.ts`). (checked twice)

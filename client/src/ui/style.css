@@ -2438,6 +2438,109 @@ body {
   height: auto;
 }
 
+/* The level-up window (ui/levelUp.ts): the game's parchment in its wooden
+   frame and title band, laid out as the Flash client's, its colours too. */
+.level-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 950;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(460px, 94vw);
+  min-height: min(490px, 90vh);
+  padding: 18px 34px 30px;
+  transform: translate(-50%, -50%);
+  background: center / 100% 100% no-repeat;
+  text-align: center;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
+}
+
+.level-band {
+  margin: 0 0 6px;
+  padding: 8px 0 12px;
+  width: 80%;
+  background: center / 100% 100% no-repeat;
+  color: #0e443a;
+  font: 900 30px var(--round);
+  letter-spacing: 0.02em;
+}
+
+.level-rank {
+  margin: 0 0 14px;
+  color: #6fa084;
+  font: 900 18px var(--round);
+}
+
+.level-header {
+  margin: 0 0 8px;
+  color: #000;
+  font: 800 16px var(--round);
+}
+
+.level-unlocked {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.level-unlocked figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  width: 86px;
+}
+
+.level-unlocked figcaption {
+  min-height: 2.4em;
+  color: #222;
+  font: 900 12px/1.2 var(--round);
+}
+
+.level-unlocked img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.level-reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: auto 0 14px;
+  color: #669999;
+  font: 900 16px var(--round);
+}
+
+.level-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.level-amount b {
+  color: #000;
+  font-size: 22px;
+}
+
+.level-amount img {
+  width: 32px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.level-ok {
+  min-width: 120px;
+}
+
 /* ---- Special moves (ui/specialButtons.ts) ---------------------------------- */
 /* A special unit's buttons, bottom middle, as on the Flash client's
    portrait panel: the game's pictures, the seconds left, the LIMIT bar. */

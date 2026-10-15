@@ -4,6 +4,22 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: placing on a phone
+
+- **A tap shows where it would go; a tap on it puts it there.** The Flash
+  client never ran on phones: a mouse showed the building under the
+  pointer before a click bought it. On a phone the first tap now does
+  what the pointer did, and the prompt says "then tap it again". Moving a
+  building works the same. A mouse still buys with one click.
+
+## 15 October 2026: the level-up window
+
+- **One button, OK.** The original's window had Share (posting to
+  Facebook) and Skip, and both only closed it here; Facebook is gone.
+- **The prizes are paid as the levels are reached,** then the windows
+  follow one by one; the original paid each as its window opened. The
+  totals and the save are the same.
+
 ## 15 October 2026: hovering and the collecting bar
 
 - **The popup over what the mouse is on is drawn over the town.** The Flash

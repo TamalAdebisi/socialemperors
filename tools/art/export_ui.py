@@ -106,6 +106,9 @@ PICTURES = {
     "draggy-frame": ("SelectYourDragonPopUpMC@8", 0, 300, "top"),  # without the placeholder name below it
     "reminder-ok": ("SelectYourDragonReminderNestPopupMC@5", 0, 300),
     "open-nest": ("EP_DragonNest_MC/btnAbrir", 0),
+    # The level-up window: its parchment in a wooden frame, and its title band.
+    "level-window": ("PopupLevelMC@1", 0, 1200),
+    "level-band": ("PopupLevelMC@2", 0, 900),
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),

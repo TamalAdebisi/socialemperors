@@ -76,6 +76,9 @@ export const ICONS = {
   "tutor-marker": new URL("./art/tutor-marker.webp", import.meta.url).href,
   "draggy-window": new URL("./art/draggy-window.webp", import.meta.url).href,
   "draggy-title": new URL("./art/draggy-title.webp", import.meta.url).href,
+  // The level-up window: its parchment in a wooden frame, and its title band.
+  "level-window": new URL("./art/level-window.webp", import.meta.url).href,
+  "level-band": new URL("./art/level-band.webp", import.meta.url).href,
   "draggy-frame": new URL("./art/draggy-frame.webp", import.meta.url).href,
   "reminder-ok": new URL("./art/reminder-ok.webp", import.meta.url).href,
   "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,

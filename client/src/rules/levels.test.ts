@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { levelUps, readLevels } from "./levels.ts";
+import { itemInfo, type ConfigItem } from "./config.ts";
+import { levelUps, readLevels, unlockedAt } from "./levels.ts";
 import type { Town } from "./town.ts";
 
 // The start of the game config's table.
@@ -42,4 +43,18 @@ test("enough for several: one at a time, each paid", () => {
 test("the last level is the last", () => {
   const t = town(4, 10_000);
   assert.deepEqual(levelUps(t, LEVELS).reached, []);
+});
+
+test("the level-up window's new buildings: first sold at that level, in the shop, the town's people's, four at most", () => {
+  const item = (id: number, fields: Partial<ConfigItem>) => itemInfo({
+    id: String(id), name: `Item ${id}`, type: "b", img_name: "x", width: "2", height: "2", category_id: "1",
+    subcat_functional: "111", race: "h", min_level: "7", in_store: "1", ...fields,
+  } as ConfigItem);
+  const items = [
+    item(1, {}), item(2, { min_level: "8" }), item(3, { type: "u" }), item(4, { in_store: "0" }),
+    item(5, { race: "t" }), item(6, {}), item(7, {}), item(8, {}), item(9, {}),
+  ];
+  assert.deepEqual(unlockedAt(items, 7, "h").map((i) => i.id), [1, 6, 7, 8]);
+  assert.deepEqual(unlockedAt(items, 7, "t").map((i) => i.id), [5]);
+  assert.deepEqual(unlockedAt(items, 9, "h"), []);
 });

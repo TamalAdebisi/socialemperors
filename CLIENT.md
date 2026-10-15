@@ -428,6 +428,15 @@ producing building shows when it will be ready.
   table, the town goes up one level at a time, each paying its prize, and
   sends `rt_level_up` with the new level (the server pays the same prize
   into the save).
+- **The level-up window** (`ui/levelUp.ts`, test `e2e/tests/levelup.mjs`),
+  as the Flash client's: one for each level reached, one after another,
+  with the level-up sound; the game's parchment in its wooden frame and its
+  title band, "LEVEL 7!", "You've reached Cadet rank", "You can now buy:"
+  and up to four buildings first sold at that level for the town's people
+  (the game's thumbnails, `rules/levels.ts`, `unlockedAt`), and "Level
+  reward:" with the prize (and from level 36 "+2" mana). An open shop
+  redraws its cards for the new level. The original's Share and Skip both
+  only closed it; ours has OK (DECISIONS.md).
 - Not the same as the Flash client: a farm collected without enough wood is
   left as it is, with a message; the Flash client lets it go to waste.
 
@@ -440,6 +449,9 @@ experience, and what stops buying it ("From level 11", "You have one",
 "Not enough wood").
 Choosing one closes the window and the building follows the pointer,
 see-through, with its footprint green or red; each tap buys one, until Done.
+On a phone there's no pointer to follow, so a tap shows it there and a tap
+on it then buys it (a tap elsewhere shows it there instead); moving a
+building works the same way (test `e2e/tests/phone-place.mjs`).
 
 **How the shop works**, read from the Flash client (our notes, our words):
 

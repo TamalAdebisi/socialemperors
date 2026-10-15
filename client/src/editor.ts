@@ -6,9 +6,9 @@
 
 import type { Command, CommandSender } from "./net/commands.ts";
 import type { ItemInfo } from "./rules/config.ts";
-import { choices, fits, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
+import { choices, fits, footprintSize, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
-import { levelUps, type Level } from "./rules/levels.ts";
+import { levelUps, type Level, type LevelUp } from "./rules/levels.ts";
 import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
@@ -78,6 +78,8 @@ export interface EditorParts {
   windowOf?: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
   /** Told when the town goes up a level (the welcome-back chest shows from level 4). */
   levelled?: (level: number) => void;
+  /** The level-up window (ui/levelUp.ts) for levels just reached; without it, a short message. */
+  showLevels?: (reached: LevelUp[]) => void;
 }
 
 export class TownEditor {
@@ -98,6 +100,7 @@ export class TownEditor {
   private readonly sound: (effect: Effect) => void;
   private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
   private readonly levelled: (level: number) => void;
+  private readonly showLevels: ((reached: LevelUp[]) => void) | null;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -160,6 +163,7 @@ export class TownEditor {
     this.waiting = parts.waiting ?? (() => {});
     this.windowOf = parts.windowOf ?? (() => null);
     this.levelled = parts.levelled ?? (() => {});
+    this.showLevels = parts.showLevels ?? null;
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -342,13 +346,23 @@ export class TownEditor {
     this.view.showGhost(this.building);
     this.previewBuilding(centre);
     if (fromStorage) {
-      this.bar.prompt(`Tap where ${item.name} goes`, [{ label: "Cancel", run: () => this.stopBuilding() }]);
+      this.bar.prompt(`Tap where ${item.name} goes${tapAgain()}`, [{ label: "Cancel", run: () => this.stopBuilding() }]);
     } else {
       this.emit({ kind: "choose", item });
       const price = priceOf(item);
-      this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)`,
+      this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)${tapAgain()}`,
         [{ label: "Done", run: () => this.stopBuilding() }]);
     }
+  }
+
+  /** Whether a tile is under a building shown where it would go (on a touch screen, a tap there places it). */
+  private onShown(tile: Point, thing: PlacedItem): boolean {
+    const at = this.shownAt;
+    if (!at) {
+      return false;
+    }
+    const [w, h] = thing.item.isUnit ? [1, 1] : footprintSize(thing);
+    return tile.x <= at.x && tile.x > at.x - w && tile.y <= at.y && tile.y > at.y - h;
   }
 
   private previewBuilding(tile: Point): void {
@@ -456,12 +470,24 @@ export class TownEditor {
     if (this.paused) {
       return;
     }
+    // A finger can't hover to show where a building would go: its first tap shows it there,
+    // see-through, and a tap on it then puts it there (a tap elsewhere shows it there instead).
     if (this.building) {
-      this.placeBuilding(this.tileAt(at));
+      const tile = this.tileAt(at);
+      if (touch && !this.onShown(tile, this.building)) {
+        this.previewBuilding(tile);
+        return;
+      }
+      this.placeBuilding(tile);
       return;
     }
     if (this.moving) {
-      this.place(this.moving, this.tileAt(at));
+      const tile = this.tileAt(at);
+      if (touch && !this.onShown(tile, this.moving)) {
+        this.preview(this.moving, tile);
+        return;
+      }
+      this.place(this.moving, tile);
       return;
     }
     const placed = this.view.itemAt(at);
@@ -1584,9 +1610,15 @@ export class TownEditor {
     this.send(commands);
     const last = reached.at(-1);
     if (last) {
-      this.sound("level-up");
-      const prizes = reached.filter((r) => r.prize).map((r) => `${r.prize!.amount} ${r.prize!.resource}`);
-      this.say(`Level ${last.level}: ${last.name}!${prizes.length ? ` You get ${prizes.join(", ")}.` : ""}`);
+      if (this.showLevels) {
+        this.showLevels(reached);  // a window for each, with its sound
+      } else {
+        this.sound("level-up");
+        const prizes = reached.filter((r) => r.prize).map((r) => `${r.prize!.amount} ${r.prize!.resource}`);
+        this.say(`Level ${last.level}: ${last.name}!${prizes.length ? ` You get ${prizes.join(", ")}.` : ""}`);
+      }
+      // The shop's cards for the new level, as the Flash client redraws them.
+      this.shop.refresh();
       reached.forEach((r) => this.levelled(r.level));
     }
   }
@@ -1624,8 +1656,9 @@ export class TownEditor {
     this.refresh();
     this.moving = placed;
     this.movingFacing = placed.orientation;
+    this.shownAt = null;  // nowhere new yet: a finger's first tap shows it there
     this.view.setGhost(placed, true);
-    this.bar.prompt(`Tap where ${placed.item.name} goes`, [{ label: "Cancel", run: () => this.cancelMove() }]);
+    this.bar.prompt(`Tap where ${placed.item.name} goes${tapAgain()}`, [{ label: "Cancel", run: () => this.cancelMove() }]);
   }
 
   private preview(placed: PlacedItem, tile: Point): void {
@@ -1854,6 +1887,11 @@ export class TownEditor {
       this.sayNext();
     }, SAY_MS);
   }
+}
+
+/** On a touch screen, how placing works there: a tap shows it, a tap on it puts it there (TownEditor.tap). */
+function tapAgain(): string {
+  return window.matchMedia?.("(pointer: coarse)").matches ? ", then tap it again" : "";
 }
 
 /** Why placing stopped after the last one: "Not enough wood for another Farm Land." */

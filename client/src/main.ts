@@ -15,7 +15,8 @@ import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
-import { readLevels } from "./rules/levels.ts";
+import { readLevels, unlockedAt } from "./rules/levels.ts";
+import { LevelUpWindows } from "./ui/levelUp.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
@@ -247,8 +248,20 @@ async function start(): Promise<void> {
     let bonuses: BonusDesk | undefined;
     // The goals, while they run (from level 35 they stop, as in the Flash client).
     let goalKeeper: GoalKeeper | undefined;
+    // The level-up window, the game's words in it; from level 36 each level gives mana too.
+    const line = (id: number, fallback: string) => lines.get(id) ?? fallback;
+    const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
+    const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
+    const levelWindows = new LevelUpWindows(
+      { title: line(467, "LEVEL #0#!"), rank: line(468, "You've reached #0# rank"), canBuy: line(469, "You can now buy:"), reward: line(470, "Level reward:") },
+      (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      () => sound.play("level-up"));
+    (window as unknown as Record<string, unknown>).seLevels = levelWindows;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
+      showLevels: (reached) => levelWindows.show(reached.map((r) => ({
+        ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0,
+      }))),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
