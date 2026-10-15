@@ -78,22 +78,24 @@ mkdir -p "$CLASSES" "$OUT/sheets"
 javac -nowarn -cp "$FFDEC_CP" -d "$CLASSES" "$ROOT/tools/art/RenderSwf.java" 2>&1 | grep -v "^Note:" || true
 rm -rf "$OUT"/render.* "$OUT"/sheets/*.tmp  # left by an export that was stopped
 
-# What's still to make, smallest file first (then by name, so every machine
-# lists it the same way): most items take a second, so most sheets are ready
-# early, and the big animated bosses (minutes each) come last.
+# Every item, smallest file first (then by name, so every machine lists it
+# the same way): most items take a second, so most sheets are ready early,
+# and the big animated bosses (minutes each) come last.
+mapfile -t ordered < <(for swf in "${files[@]}"; do printf '%s\t%s\n' "$(wc -c < "${swf%#*}")" "$swf"; done \
+    | sort -t $'\t' -k1,1n -k2 | cut -f2-)
+# This machine's share: every n-th item of that whole list, so the big ones
+# are shared out too, of those still missing. Counted in the whole list, not
+# in the missing ones: the machines start minutes apart and see different
+# sheets already made, so counting the missing ones let items fall between
+# two machines' shares.
 missing=()
-for swf in "${files[@]}"; do
-    [ -f "$(sheet_of "$swf")" ] || missing+=("$swf")
-done
-if [ ${#missing[@]} -gt 0 ]; then
-    mapfile -t missing < <(for swf in "${missing[@]}"; do printf '%s\t%s\n' "$(wc -c < "${swf%#*}")" "$swf"; done \
-        | sort -t $'\t' -k1,1n -k2 | cut -f2-)
-fi
-# This machine's share: every n-th of that list, so the big ones are shared out too.
 todo=()
-for i in "${!missing[@]}"; do
+for i in "${!ordered[@]}"; do
+    swf="${ordered[$i]}"
+    [ -f "$(sheet_of "$swf")" ] && continue
+    missing+=("$swf")
     if [ $((i % shards)) -eq $((shard - 1)) ]; then
-        todo+=("${missing[$i]}")
+        todo+=("$swf")
     fi
 done
 # Cores left over when there are fewer items than JOBS go to drawing each
