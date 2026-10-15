@@ -1119,9 +1119,47 @@ nothing.
   - *Instant Limit:* fills the LIMIT bar of the player's special units in
     the middle (the bar comes with the heroes' slice).
 
+**Special moves**, the same way. Code: `rules/specials.ts` (the
+machinery, with tests), `rules/specials-table.json` (each move as one of a
+few kinds with its numbers; our notes in words are in
+`rules/specials.json`, which the game doesn't load) and
+`ui/specialButtons.ts` (the buttons).
+
+- **By themselves:** the heroes and some other units (the elephants,
+  level 5 soldiers, draggies, the Juggernaut...) have moves that come
+  while they fight: after a while fighting (its own number of frames), the
+  unit plays its special animation, and its attack beats in that time do
+  the move instead of a hit (the Warrior Princess's whirlwind hits the four
+  diagonal tiles, the Valkyrie heals her side around her, Willy Wallace's
+  war cry makes his soldiers hit faster...). Some take turns between
+  several moves. Enemy units do this too.
+- **Buttons:** with one special unit selected (dragons, gods, colossi,
+  titans...), its moves show at the bottom as the game's own pictures
+  (`buildingthumbs/<name>.jpg`). A move starts on the unit's next whole
+  second and plays its special animation; then every button waits the
+  unit's cooldown (25 seconds, 24 for a few). Some need an enemy in reach;
+  eggs and minions stop at 3 alive (or the unit's own number). The moves
+  are of a few kinds: a volley of shots, a storm of hits around the
+  target, a whirlwind round the unit (hitting, throwing, poisoning), a
+  blast, a line of hits ahead, a single hit, healing, eggs and minions,
+  swallowing, freezing, poison, growing, a war cry.
+- **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
+  from the damage they deal (healers from the healing they do), at most
+  once a second, doubled beside a Limit Wizard of their side; full at
+  2,000 (500 for the Dragon Hunters). Full, the LIMIT button lights up:
+  50 lightning bolts at random enemies in reach, 50 healing beams on
+  their side's hurt, or a smash that hits and throws every enemy around,
+  or the unit's own. The bar starts empty each battle; the Instant Limit
+  spell fills it.
+- **Thrown and knocked down:** a thrown unit lands about half the distance
+  away and lies helpless for a second; a knocked-down one for 2.5
+  seconds. Giants, bosses and big units (4 population or more) stand.
+- No command is sent for any of this, as in the Flash client.
+
 **Not yet** (Beta 2's next slices): the boss islands and the Hero Isle,
-the heroes' special moves, collection pieces dropped by enemies,
-defending the town, and spells cast at home against raids.
+the rarer special moves (shape-shifting, flying, ghosts, shields and the
+like: their buttons don't show yet), collection pieces dropped by
+enemies, defending the town, and spells cast at home against raids.
 
 ### Making the art look better
 
