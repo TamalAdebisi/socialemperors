@@ -42,6 +42,16 @@ And where it wasn't a bug, the original stands:
 - **The island's ground no longer shows a thin blue line** where its
   blocks meet: each block is drawn a few pixels bigger from its middle.
 
+## 15 October 2026: the selected unit's pointers
+
+- **On a computer, the original's pointers:** with a unit selected, the
+  mouse pointer becomes the game's axe over a tree, pickaxe over a rock,
+  and red arrow over a building it can go into, as in the Flash client.
+- **On a phone (your pick):** there's no pointer, so the same picture pops
+  up for a second over the tree, rock or building the unit was sent to.
+  The other idea, an axe over every tree as soon as a villager is
+  selected, would clutter a big town.
+
 ## 15 October 2026: Beta 2, the island map
 
 - **The Quests window is the game's own island map,** in the panel on the
@@ -111,16 +121,6 @@ And where it wasn't a bug, the original stands:
 - **Each item gets its own drawing process and two hours** (it was five
   items to one hour, which silently lost the biggest ones). An item stopped
   by the limit now says so in the log.
-
-## 15 October 2026: the selected unit's pointers
-
-- **On a computer, the original's pointers:** with a unit selected, the
-  mouse pointer becomes the game's axe over a tree, pickaxe over a rock,
-  and red arrow over a building it can go into, as in the Flash client.
-- **On a phone (your pick):** there's no pointer, so the same picture pops
-  up for a second over the tree, rock or building the unit was sent to.
-  The other idea, an axe over every tree as soon as a villager is
-  selected, would clutter a big town.
 
 ## 14 October 2026: Beta 1, launch preparation
 
