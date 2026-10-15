@@ -77,11 +77,12 @@ dock"), so these come with a mockup first.
 
 ## The living map
 
-- [ ] **Trees, rocks and wild animals grow back** every time the town
-      opens: tree clusters and single trees, gold and stone rocks, sheep,
-      cows and (from level 11) horses, at most 20 of a kind a day. Ours
-      never adds any, so wood runs out in an empire played only here. The
-      server never resets the daily count: fix it at the same time. M
+- [x] **Trees and rocks grow back** every time the town opens: tree
+      clusters and single trees, gold and stone rocks. Ours never added
+      any, so wood ran out in an empire played only here. S
+- [ ] **Wild animals grow back** the same way: sheep, cows and (from level
+      11) horses, at most 20 of a kind a day. The server never resets the
+      daily count: fix it at the same time. S
 - [ ] **Wild animals** become yours when a unit comes near, then walk into
       a ranch of their kind (horses to the training stable). Three early
       goals need it. M

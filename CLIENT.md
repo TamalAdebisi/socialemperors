@@ -721,6 +721,40 @@ hatchery, the sacrifice altar and the dragon nest (in the classic game for
 now); villagers putting out fires after a battle; the collection pieces
 the Flash client sometimes drops from a harvest.
 
+### The living map
+
+Trees and rocks grow back each time the player opens their town, as in the
+Flash client, so wood, stone and gold don't run out. Code:
+`rules/nature.ts` (with tests), called from `main.ts` before the town is
+drawn. Test: `e2e/tests/nature.mjs`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- The game counts the trees, the stone rocks and the gold rocks on the map
+  (rocks growing back count; the fourth kind of stone and of gold doesn't,
+  a quirk kept).
+- It wants 3 clumps of gold, 3 of stone and 10 of trees. For each clump's
+  worth already there (6 rocks, 18 trees, the clump's average) it adds one
+  clump fewer. A clump is 5 or 6 rocks, or 16 to 19 trees, the size picked
+  once per kind each time.
+- A clump starts on a tile picked at random in one of the blocks of the
+  wild ring round the island or of the player's land; each of its trees or
+  rocks takes the free tile nearest it (the tile itself first, then the
+  first ring of tiles out with a free one). So a clump at a block's edge can
+  spill onto land not bought yet, as in the original.
+- Then single trees, until there are a hundred: each at a random tile, or
+  a free one up to 5 tiles from it, else not at all.
+- Each is "bought" for nothing (`buy`, the item, its tile, 0, town, 1, 1,
+  "b"), so the server keeps it. A new town gets about 270 trees and a few
+  dozen rocks the first time it opens.
+- The browser tests give each new town enough trees and rocks first, in the
+  wild corners at the top, so none grow on the land a test uses
+  (`e2e/lib.mjs`, `FULL_WILD`).
+
+**Not yet:** wild sheep, cows and horses (boars in a troll town), which grow
+back the same way up to 7 of each (horses from level 11), at most 20 a day,
+and become the player's when a unit comes near.
+
 ### Training and population
 
 Built (Beta 1's fourth slice). A building that trains a unit (the town hall

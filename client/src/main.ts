@@ -20,6 +20,7 @@ import { obstacle, readShop, shopItems, unlockPrice } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { lessonsNotStarted } from "./rules/lessons.ts";
+import { growBack } from "./rules/nature.ts";
 import { Doings, goalsRun, readGoals, type Need } from "./rules/goals.ts";
 import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
@@ -125,6 +126,10 @@ async function start(): Promise<void> {
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
+    // Trees and rocks grow back each time the town opens, as in the Flash client (rules/nature.ts).
+    for (const command of growBack(town, items, clock()).commands) {
+      commands.add(command.cmd, ...command.args);
+    }
     const shop = new ShopWindow({
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),

@@ -8,8 +8,24 @@ import { fileURLToPath } from "node:url";
 export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 
-/** A new account with a new town, open in the new client. Its own browser window, as its own visitor. */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false } = {}) {
+/**
+ * Enough trees and rocks for a town (rules/nature.ts), in the wild corners
+ * at the top of the map: with them, none grow on the player's land when the
+ * town opens, where they'd stand in a test's way. A few can be cut before
+ * more grow.
+ */
+const FULL_WILD = [
+  ...Array.from({ length: 200 }, (_, i) => [19, i % 20, Math.floor(i / 20)]),
+  ...Array.from({ length: 24 }, (_, i) => [73, 80 + (i % 20), Math.floor(i / 20)]),
+  ...Array.from({ length: 24 }, (_, i) => [69, 80 + (i % 20), 2 + Math.floor(i / 20)]),
+].map(([id, x, y]) => ({ cmd: "buy", args: [id, x, y, 0, 0, 1, 1, "b"] }));
+
+/**
+ * A new account with a new town, open in the new client. Its own browser
+ * window, as its own visitor. `wild`: let trees and rocks grow as for a new
+ * player, rather than starting with enough.
+ */
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false } = {}) {
   const context = await browser.newContext({
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
@@ -22,6 +38,10 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
+  if (!wild) {
+    await player.readSettings();
+    await player.send(FULL_WILD);
+  }
   await player.open();
   // A new player is asked about Arthur's lessons first; most tests skip them, as a player may.
   if (!lessons) {
@@ -86,6 +106,12 @@ export class Player {
   async csrf() {
     await this.page.goto(this.base + "/");
     return this.page.locator('input[name="csrf"]').first().getAttribute("value");
+  }
+
+  /** The page's settings (who the player is, where the server is), without opening the game. */
+  async readSettings() {
+    const html = await (await this.page.request.get(this.base + "/client.html")).text();
+    this.settings = JSON.parse(html.match(/<script id="se-settings" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   }
 
   /** The new client, once the town is drawn. */
