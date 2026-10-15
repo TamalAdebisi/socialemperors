@@ -17,6 +17,8 @@ const EFFECTS = {
   "level-up": new URL("./sound/level-up.mp3", import.meta.url).href,
   lumber: new URL("./sound/lumber.mp3", import.meta.url).href,  // a villager starts on a tree
   stone: new URL("./sound/stone.mp3", import.meta.url).href,  // ...or a rock
+  build: new URL("./sound/build.mp3", import.meta.url).href,  // hammering while something is built
+  built: new URL("./sound/built.mp3", import.meta.url).href,  // ...and done
   // Battles: a sword's hit (one of two), shots, and the four death cries.
   "sword-1": new URL("./sound/sword-1.mp3", import.meta.url).href,
   "sword-2": new URL("./sound/sword-2.mp3", import.meta.url).href,
@@ -31,8 +33,10 @@ const EFFECTS = {
 export type Effect = keyof typeof EFFECTS;
 
 /** How many of each effect may play at once, as in the Flash client. */
-const AT_ONCE: Record<Effect, number> = { click: 3, place: 3, collect: 3, ready: 3, "level-up": 3, lumber: 3, stone: 2,
+const AT_ONCE: Record<Effect, number> = { click: 3, place: 3, collect: 3, ready: 3, "level-up": 3, lumber: 3, stone: 2, build: 1, built: 2,
   "sword-1": 5, "sword-2": 5, arrow: 8, cannon: 3, ballista: 5, "die-man": 3, "die-woman": 3, "die-machine": 3, "die-troll": 3 };
+/** How many times an effect plays again after the first: the hammering, through the 10 seconds of building. */
+const REPEATS: Partial<Record<Effect, number>> = { build: 8 };
 const VOLUME = 0.25;
 const MUSIC_VOLUME = 0.25;
 const DELAY_MS = [50, 150];
@@ -146,7 +150,13 @@ export class Sound {
       gain.gain.value = VOLUME;
       source.connect(gain).connect(context.destination);
       source.onended = done;
-      source.start(context.currentTime + delay / 1000);
+      const at = context.currentTime + delay / 1000;
+      const repeats = REPEATS[effect] ?? 0;
+      source.loop = repeats > 0;
+      source.start(at);
+      if (repeats > 0) {
+        source.stop(at + buffer.duration * (repeats + 1));  // stop() may only follow start()
+      }
     });
   }
 

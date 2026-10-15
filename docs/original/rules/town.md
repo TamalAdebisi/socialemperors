@@ -183,13 +183,16 @@ of the original's searches measure from.
 
 - **Ten seconds of scaffolding.** A building just bought, placed from
   storage or upgraded stands in scaffolding for 10 seconds with a
-  percentage bar and building sounds. The scaffold's picture: the ranch
+  percentage bar and building sounds. So does a unit bought from the shop
+  (anything placed by buying is marked; from storage, only buildings),
+  in the 1x1 scaffold. The scaffold's picture: the ranch
   one for ranches (not the nursery), the field one for farms, the trolls'
   by width in a troll town, else by width 1, 2, 3 or 4. It isn't saved: a
-  reload shows the building finished. *Missing (PARITY.md, "Construction").*
+  reload shows the building finished. *Same: `client/src/rules/construction.ts`, `client/src/view/construction.ts` (CLIENT.md, "Construction"); the trolls' and upgrading's: missing with those parts.*
+  *Fixed since "Construction: scaffolding for 10 seconds".*
 - **Meanwhile** the building has no buttons, takes no units, can't be
   bulldozed, isn't lit when hovered, and a tower doesn't shoot. Its
-  production clock runs anyway. *Missing: ours can be used at once.*
+  production clock runs anyway. *Same, but hovering lights nothing up in ours anyway; a unit in scaffolding can't be sent (nothing in the original's code stops one walking off in it), `client/src/editor.ts`.*
 - **Switched off:** a longer build time with a 10-cash speed-up exists for
   items with a `build_time`, but no item in the config has one; and a
   tutorial shortening of the bar has no effect (it's applied after the
@@ -545,7 +548,7 @@ of the original's searches measure from.
 - **Placing sends** `place_gift` (a gift, which gives its `xp`; the
   Level-Up Statue gives exactly what's missing for the next level) or
   `place_stored_item` (no experience): item, x, y, facing, town. A
-  building placed gets the scaffold. *Same: `client/src/rules/storage.ts` (`placeStored`); the scaffold: missing.*
+  building placed gets the scaffold. *Same: `client/src/rules/storage.ts` (`placeStored`), the scaffold `client/src/editor.ts` (`startConstruction`).*
 - **Sell from storage:** a twentieth of the price (nothing for the Dock
   and the Zeppelin Tower), at once without asking; cash things ask, for
   0. `sell_gift` or `sell_stored_item` (item, town). *Same refund and commands: `client/src/rules/storage.ts` (`sellStored`); different: ours always asks.*
@@ -700,6 +703,7 @@ tree of the kind wasn't checked.
 28. Upgrading (and with it Town Hall II to IV). (checked twice)
 29. The 10-second scaffold, and the building being out of use meanwhile.
     (checked twice)
+    *Fixed since "Construction: scaffolding for 10 seconds".*
 30. The Training Stables turning footmen and archers into riders. (checked twice)
 31. The troll town: founding it and travelling there. (checked twice)
 32. The short collecting bar. (checked twice)

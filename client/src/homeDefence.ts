@@ -21,6 +21,7 @@ import type { CommandSender } from "./net/commands.ts";
 import type { PageSettings } from "./net/server.ts";
 import { Battle, ENEMY, FPS, NEUTRAL, SELF, SUBCAT, distance, type Fighter, type Side } from "./rules/battle.ts";
 import type { GameConfig, ItemInfo } from "./rules/config.ts";
+import { inConstruction } from "./rules/construction.ts";
 import { MAP_TILES } from "./rules/geometry.ts";
 import { sideAtHome } from "./rules/camps.ts";
 import { Camps } from "./homeCamps.ts";
@@ -237,6 +238,9 @@ class Fight {
           // Burnt out in an earlier raid and not yet repaired in full: still out of the fight.
           fighter.dead = true;
           fighter.ruined = true;
+        }
+        if (inConstruction(placed, Date.now())) {
+          fighter.attack = 0;  // a tower still in its scaffolding doesn't shoot (rules/construction.ts)
         }
       } else if (side === SELF && placed.item.attack === 0) {
         fighter.condition = "survive";
