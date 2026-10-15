@@ -4,6 +4,22 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the nests' window
+
+- **The nest's window opens in the panel,** like every window in the new
+  client (the layout the owner picked), with the original window's parts
+  stacked down it rather than its wide parchment popup.
+- **Hire friends lists the friends here,** as the classic page's Ask
+  friends window does; the original sent a Facebook request.
+- **Friends' help is a short "Congratulations!!" with OK,** not the
+  original's list of the friends' pictures.
+- **The monster nest's window has no line under its button.** The
+  original never filled it in for monsters (only the dragons have "Press
+  take care every 6 hours...").
+- **The step pictures live in the client** (1.7 MB, ten strips, each
+  loaded only when its nest is opened), so they don't wait for an upload
+  to the bucket.
+
 ## 15 October 2026: Arthur's lessons in the new client
 
 - **Skipping the lessons gives no nest and no draggy**, as in the

@@ -15,6 +15,7 @@ import {
   DRAGGIES, DRAGGY_NEAR, DRAGON_NEST, LAST_STEP, LIGHT_KNIGHT, MARKED_TREES, NEST_GIFT_STEPS, NEST_NEAR, STEPS, SUBCAT, TREES_TO_CUT,
   moves, pageOf, passes, stepReached, type LessonEvent, type Target,
 } from "./rules/lessons.ts";
+import { DRAGON_NEST as DRAGON_NEST_KIND, readNest, writeNest } from "./rules/nest.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import { chooseDraggy, nestReminder } from "./ui/draggy.ts";
 import { LessonsView } from "./ui/lessons.ts";
@@ -33,6 +34,8 @@ export interface LessonParts {
   screenOf: (map: Point) => Point;
   lookAt: (map: Point) => void;
   thumbnail: (item: ItemInfo) => string;
+  /** The save's privateState, where the nest's steps are kept (rules/nest.ts). */
+  privateState: Record<string, unknown>;
   /** Where this browser keeps the step it's at (to carry on after a reload); null forgets it. */
   remember: (step: number | null) => void;
   /** The lessons are over: what comes after (the goals, the carts...). */
@@ -321,6 +324,8 @@ export class Lessons {
         for (let i = 0; i < NEST_GIFT_STEPS; i++) {
           commands.add("next_step", "0");
         }
+        const egg = readNest(DRAGON_NEST_KIND, this.parts.privateState);
+        writeNest(DRAGON_NEST_KIND, this.parts.privateState, { ...egg, step: egg.step + NEST_GIFT_STEPS });
         void view.redraw(nest);
       }
     }

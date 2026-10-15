@@ -44,7 +44,10 @@ import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
-import { givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
+import { freeSpotNear, givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
+import { NESTS } from "./rules/nest.ts";
+import { NestWindow } from "./ui/nest.ts";
+import { AskFriends } from "./ui/askFriends.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -256,6 +259,11 @@ async function start(): Promise<void> {
             }
           } };
         }
+        // The dragon nest and the monster nest (ui/nest.ts): the original's Open button.
+        const kind = NESTS.find((n) => n.building === placed.item.id);
+        if (kind) {
+          return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
+        }
         return graves.windowOf(placed);
       },
       levelled: () => bonuses?.levelled() });
@@ -300,6 +308,7 @@ async function start(): Promise<void> {
             screenOf: (point) => mapLayer.toGlobal(point),
             lookAt: (point) => camera.lookAt(point),
             thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+            privateState: saved,
             remember: (step) => rememberLessons(lessonsKey, step),
             finished: () => {
               learning = false;
@@ -352,6 +361,36 @@ async function start(): Promise<void> {
       },
     });
     hud.offerBank(() => void bank.open());
+    // The nests' window. The grown one is the player's, free, on the nearest free tile to the nest, as in the original.
+    const nests = new NestWindow({
+      town, items, privateState: saved, globals: (config.globals ?? {}) as Record<string, unknown>,
+      line: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      picture: (name) => `${settings.assetsUrl}/images_new/${name}`,
+      clock,
+      send: (list) => {
+        for (const command of list) {
+          commands.add(command.cmd, ...command.args);
+        }
+        void commands.flush();  // as the Flash client: at once
+      },
+      place: (item, nest) => {
+        const spot = freeSpotNear(town, item, { x: nest.tx, y: nest.ty });
+        if (spot) {
+          const placed = { item, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
+          town.items.push(placed);
+          commands.add("buy", item.id, spot.x, spot.y, 0, town.id, 1, 1, "u");
+          editor.arrived(placed, []);
+          editor.tell(`${item.name} is yours!`);
+        }
+      },
+      changed: () => hud.update(town),
+      bank: (why) => {
+        editor.tell(why);
+        void bank.open();
+      },
+      askFriends: settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null,
+    });
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;
     const privateState = info.privateState ?? {};

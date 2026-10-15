@@ -2561,3 +2561,267 @@ body {
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
+
+/* ---- The nests (ui/nest.ts) ------------------------------------------------ */
+/* The original window's parts down the panel: the progress bar, this step's
+   picture, the button and the countdown, the row of dragons, Hire friends.
+   The game's pictures carry no words: ours are written on them. */
+.nest-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5a3a1c;
+  font: 900 15px var(--round);
+}
+
+.nest-bar {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  background: center / 100% 100% no-repeat;
+}
+
+.nest-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 8px;
+  background: left center / auto 100% no-repeat;
+  transition: width 0.6s ease-out;
+}
+
+.nest-help {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.nest-help img {
+  height: 30px;
+}
+
+.nest-picture {
+  width: 100%;
+  aspect-ratio: 500 / 280;
+  border-radius: 10px;
+  background: 0 0 / 1100% 100% no-repeat;
+  box-shadow: inset 0 0 0 2px rgba(90, 58, 28, 0.35);
+}
+
+.nest-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nest-button,
+.nest-speed-up,
+.nest-hire,
+.nest-pay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  background: center / 100% 100% no-repeat;
+  color: #fff;
+  font: 900 17px var(--round);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.nest-button {
+  width: 172px;
+  height: 44px;
+}
+
+.nest-button:disabled {
+  filter: grayscale(1);
+  opacity: 0.8;
+  cursor: default;
+}
+
+.nest-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 172px;
+  padding: 6px 0 0;
+  background: center top / 100% auto no-repeat;
+  color: #fff;
+  font: 900 13px var(--round);
+}
+
+.nest-time {
+  font-size: 22px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.nest-speed-up {
+  width: 150px;
+  height: 34px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.nest-speed-up .icon {
+  height: 18px;
+}
+
+.nest-info {
+  margin: 0;
+  color: var(--ink);
+  font: 800 13px var(--round);
+  text-align: center;
+  white-space: pre-line;
+}
+
+/* The six (or four), one after another, arrows between: the one in training framed and marked. */
+.nest-row {
+  display: grid;
+  grid-template-columns: repeat(var(--ones), 1fr);
+  gap: 3%;
+  margin: 0;
+  padding: 0 0 26px;
+  list-style: none;
+  background: 50% 26% / 70% auto no-repeat;
+}
+
+.nest-one {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #5cb8ea center / 100% 100% no-repeat;
+}
+
+.nest-one.training {
+  background-color: #5cb8ea;
+}
+
+.nest-one > img:first-child {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.nest-one.locked > img:first-child {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.nest-lock {
+  position: absolute;
+  inset: 12% 22%;
+  width: 56%;
+  height: 76%;
+  object-fit: contain;
+}
+
+.nest-marker {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  color: #5a3a1c;
+  font: 900 11px var(--round);
+  white-space: nowrap;
+}
+
+.nest-marker img {
+  height: 12px;
+}
+
+.nest-hire-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px 0;
+  background: center top / 100% 86% no-repeat;
+  text-align: center;
+}
+
+.nest-hire-box p {
+  margin: 0;
+  color: #111;
+  font: 900 14px var(--round);
+}
+
+.nest-hire {
+  width: 170px;
+  height: 38px;
+  font-size: 15px;
+}
+
+.nest-closed {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.nest-pay-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nest-pay {
+  flex-direction: row;
+  width: 170px;
+  height: 66px;
+  padding: 0 14px;
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.nest-pay .icon {
+  height: 22px;
+}
+
+.nest-help-text {
+  margin: 0;
+  color: var(--ink);
+  font: 700 13px/1.45 var(--round);
+  white-space: pre-line;
+}
+
+.nest-helped {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  font-family: var(--round);
+}
+
+/* Asking friends (ui/askFriends.ts). */
+.ask-status {
+  margin: 0;
+  font: 800 14px var(--round);
+}
+
+.ask-friends {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 700 14px var(--round);
+}
+
+.ask-friends label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ask-buttons {
+  display: flex;
+  gap: 8px;
+}

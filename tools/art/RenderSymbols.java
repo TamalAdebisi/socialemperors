@@ -103,13 +103,27 @@ public class RenderSymbols {
         int only = at > 0 ? Integer.parseInt(path.substring(at + 1)) : 0;
         Timeline timeline = find(swf, at > 0 ? path.substring(0, at) : path).getTimeline();
         String name = path.replace('/', '.');
-        if (only > 0) {
-            // Keep only the chosen layer in every frame.
-            for (Frame frame : timeline.getFrames()) {
-                Integer keep = new java.util.ArrayList<>(frame.layers.keySet()).get(only - 1);
-                frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
+        if (only == 0) {
+            return render(timeline, path, name, scale, out);
+        }
+        // Keep only the chosen layer in every frame, and put the others back
+        // after: another picture of the run may want them.
+        List<java.util.TreeMap<Integer, DepthState>> all = new java.util.ArrayList<>();
+        for (Frame frame : timeline.getFrames()) {
+            all.add(new java.util.TreeMap<>(frame.layers));
+            Integer keep = new java.util.ArrayList<>(frame.layers.keySet()).get(only - 1);
+            frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
+        }
+        try {
+            return render(timeline, path, name, scale, out);
+        } finally {
+            for (int f = 0; f < all.size(); f++) {
+                timeline.getFrames().get(f).layers.putAll(all.get(f));
             }
         }
+    }
+
+    static int render(Timeline timeline, String path, String name, double scale, File out) throws Exception {
         RECT bounds = timeline.getDisplayRectWithFilters();
         int pad = PAD * TWIPS;
         RECT rect = new RECT(
