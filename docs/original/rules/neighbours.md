@@ -227,8 +227,10 @@ things only until the page is reloaded).
   next to it. *Ours: different: one cart at a time, the next after the
   last is gone (`welcomeCarts`, `client/src/editor.ts`); no race check,
   but only the first town receives help, so the same in practice.
-  CLIENT.md says the cart stands "by the town hall": it is the map's
-  middle.*
+  CLIENT.md says the cart stands "by the town hall": in both clients it
+  starts at the map's middle (50, 50). CLIENT.md's "one after another" is
+  right about ours; it is the comment on `welcomeCarts` that calls that
+  the Flash client's way, and it isn't.*
 - Over each cart floats a bubble with the neighbour's name, picture, a
   "wants to help" line, Accept and a close button. *Ours: different: a
   bar at the bottom with Let it in and No thanks (a recorded decision);
@@ -345,7 +347,11 @@ things only until the page is reloaded).
   empty and it has 3 places or more, or when it has exactly one and 7
   places or more. One per load, so up to two over two loads. On our
   server that means the Summit and the Allied Markets, again after each
-  time their staff empties. *Ours: missing (sends nothing).*
+  time their staff empties. As far as read, our server writes no staff
+  list when one is built: the list appears with the first helper, the
+  first `finish_si` or a friend's offer (`helps.py`), so a new Summit or
+  Allied Market gets its free helpers only from then on. *Ours: missing
+  (sends nothing; the new client doesn't read `si` at all).*
 - The harbour and the zeppelin tower are staffed for free on opening,
   with 20 `buy_si_help` and a `finish_si`. *Ours: built
   (`client/src/rules/dock.ts`); not re-checked here.*
@@ -428,10 +434,13 @@ things only until the page is reloaded).
   with the princess still a prisoner and no allies, the princess's
   helpers; no window, it goes straight on to (9) the server's message.
   *Ours: different: no sequence; the daily bonus waits on its button (a
-  recorded decision), the harbour and zeppelin messages come first, then
-  the server's message, then Arthur's lessons or the carts
-  (`client/src/main.ts`). Darts, news and the potion offer are not built
-  (news left out by the owner).*
+  recorded decision). The server's message goes up in the bar first, then
+  Arthur's lessons or the carts after its OK. The harbour and zeppelin
+  lines don't come first, as an earlier reading said: they are given
+  once the town's defence code has loaded (`defend`, `client/src/main.ts`),
+  so their line shows at the top a moment after the message's bar is up.
+  Darts, news and the potion offer are not built (news left out by the
+  owner).*
 - Quirk: the potion offer's window doesn't call for the next one, so on
   a load where it shows, everything after it (darts, the harbour checks,
   the server's message) waits for the next load. Likewise after the
@@ -460,45 +469,52 @@ Most serious first.
 
 1. **Free social helpers on opening.** The original hires up to two
    helpers free at the Summit and the Allied Markets (`buy_si_help`, free)
-   as the town loads; ours sends nothing (`client/src/main.ts` has no such
-   step).
+   as the town loads, once the save holds a staff list for them; ours
+   sends nothing (`client/src/main.ts` has no such step). (checked twice)
 
 **Looks or feels different**
 
 2. **Carts come one at a time** in ours, all at once in the original
-   (`welcomeCarts`, `client/src/editor.ts`).
+   (`welcomeCarts`, `client/src/editor.ts`). (checked twice)
 3. **The carts' shares are added at once** in ours; the original drops
    pickups that wait for a tap. Same totals (`deliver`,
-   `client/src/rules/neighbours.ts`).
+   `client/src/rules/neighbours.ts`). (checked twice)
 4. **The cart's look**: a crate thrown at each building, the helper's
    picture over the cart, a farewell line and a fade in the original; a
-   walk and rising numbers in ours.
+   walk and rising numbers in ours. (checked twice)
 5. **The server's message and the carts wait for each other** in ours,
    before Arthur's lessons; in the original the message is the last
    start-up window and the carts are on the map at once (decided).
+   (checked twice)
 6. **No start-up sequence** in ours: the daily bonus waits on its button
-   (decided); darts and the potion offer don't exist yet.
+   (decided); darts and the potion offer don't exist yet. The original
+   opens the harbour and zeppelin before the server's message; ours puts
+   the message up first and their line a moment later. (checked twice)
 7. **Neighbours list**: not sorted by experience, no experience shown, no
-   help mark, no add slot (`client/src/ui/neighbours.ts`).
+   help mark, no add slot (`client/src/ui/neighbours.ts`). (checked twice)
 8. **A visit without help** blocks helping that neighbour for the rest of
-   the session in the original; ours doesn't.
+   the session in the original; ours doesn't. (checked twice)
 9. **Arthur** can be helped once a session in the original client, once a
-   day in ours (our server allows once a day either way).
+   day in ours (our server allows once a day either way). (checked twice)
 10. **Tapping when out of helps**: an alert each time in the original;
     silence (helped lately) or a line (5 used) in ours; ours also says a
     building was helped already, where the original just selects it.
-11. **No card for their buildings** on a visit in ours.
+    (checked twice)
+11. **No card for their buildings** on a visit in ours. (checked twice)
 12. **The music on a visit** follows the visited town in ours, the
-    player's town in the original.
+    player's town in the original. (checked twice)
 
 **Missing**
 
 13. **The request on arriving** (10 gold, 3 XP, `assist_neighbor`).
+    (checked twice)
 14. **Social buildings' windows**: staff places, cash helpers, the Summit's
     allies, the Allied Markets, the recruitment camp, the Great Church's
-    rounds, the Round Table.
+    rounds, the Round Table. (checked twice; the windows' numbers were
+    checked, their drawing only skimmed)
 15. **Friends' hurry help**: Ask friends, and their pictures over a
-    building taking an hour off (`hc`, `accept_collect_help`).
-16. **The dragon nest's friends' help** (with the nest).
-17. **Attack and Send gift** on a neighbour.
-18. **The "need allies?" window** five minutes in.
+    building taking an hour off (`hc`, `accept_collect_help`). (checked
+    twice)
+16. **The dragon nest's friends' help** (with the nest). (checked twice)
+17. **Attack and Send gift** on a neighbour. (checked twice)
+18. **The "need allies?" window** five minutes in. (checked twice)

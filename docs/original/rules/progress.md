@@ -94,8 +94,12 @@ second.
 - From level 36 (`START_LEVEL_MANA_REWARD`), each level adds 2 mana
   (`MANA_REWARD_PER_LEVEL`) to the player's count on screen, and the
   window shows "+2" mana. *Ours: different: the server pays it
-  (`levels.py`, `magic.py`) but the new client's mana count doesn't move
-  until the next load, and nothing shows it.*
+  (`levels.py`, `magic.py`), but the new client's mana count doesn't move
+  at the level up. It catches up later, when the Wizardry Academy's window
+  lists a spell not yet learnt or a spell is learnt (`magicParts`,
+  `ui/spells.ts`), and that window's first drawing still shows the old
+  number; with every spell learnt it waits for the next load. Nothing shows
+  the "+2".*
 - The window: "Level N", the level's name from the table, the prize, and
   up to four buildings that open at this level: those whose `min_level`
   is exactly the new level, of type building, sold in some store and of
@@ -103,8 +107,10 @@ second.
   skip) both just close it here. *Ours: different: a short message with
   the name and prizes, and the sound; no buildings list (PARITY.md lists
   the window as to do).*
-- Opening it closes any other window that was open (the shop, the market).
-  *Ours: different: our message doesn't close anything.*
+- Opening it closes the other window of its sort if one is open (the
+  market, for one), and redraws the open shop's cards for the new level
+  rather than closing the shop; message windows stay. *Ours: different:
+  our message doesn't close anything.*
 - At home, every level up rolls the raids again as if the town had just
   opened: from level 25 one chance in 10 of a siege, stampede or army by
   level band, and the bandit bands from levels 10, 15 and 20 (the details
@@ -115,8 +121,8 @@ second.
 - Reaching exactly level 35 at home, in any town's race: the goal box goes
   away and goals stop for the rest of the session; the spell box appears;
   a Wizardry Academy is placed free on the first free 3 by 3 spot near
-  tile (59, 59) (`buy` with the free flag), even if the town has one
-  already; a notice about the spell book shows. *Ours: missing: goals run
+  tile (59, 59) (`buy` with the free flag), when such a spot is found,
+  even if the town has one already; a notice about the spell book shows. *Ours: missing: goals run
   on until the next load (they are decided as the town opens) and no
   academy is given. The shop sells the academy instead.*
 - Closing the window at level 20 is meant to show the town button in the
@@ -158,11 +164,14 @@ second.
   up by id. When an id appears twice, the later entry wins. Our server's
   config adds a stand-in for goal 1 after the real one (`config/patch/
   missions_0_1.json`), so the classic game shows goal 1 as the stand-in's
-  title with 0 gold, and adds 0 gold on screen when it's paid, while our
-  server pays the real goal's 10. *Ours: different: the first entry wins,
-  so the new client shows and pays the real goal 1 (`readGoals`). CLIENT.md
-  says "the first counts", which is ours and the server's, not the Flash
-  client's.*
+  title with 0 gold, and adds 0 gold on screen when it's paid. Our server
+  looks goals up the same way (`get_game_config.py` keeps the later entry
+  too), so `reward_mission` for goal 1 pays 0 there as well. *Ours:
+  different: the first entry wins, so the new client shows the real goal 1
+  and adds its 10 gold on screen (`readGoals`), which the server never
+  pays: until the next load the gold shown is 10 more than the save's.
+  CLIENT.md says "the first counts", which is true of neither the Flash
+  client nor our server.*
 - Open goals: the first 15 places from 1 up, counting every goal not both
   done and paid. Goal 227 can be among them. *Ours: different: we stop at
   226 (`LAST_GOAL`), so goal 227 never shows.*
@@ -251,8 +260,13 @@ check counts the player's own things.
   if a shorter time is chosen within 2 seconds of the long one.*
 - **Cash spent** (goal 52): the sum of cash taken by the game's own
   spends (shop, hurry, mana, chests...) while the goal is open, at least
-  1. *Ours: different: any drop in the town's cash between checks, so
-  cash spent at the site's bank counts too (`goals.ts`).*
+  1. *Ours: the same spends count: any drop in the town's cash between
+  checks (`goals.ts`). The site's bank only ever adds cash (it trades
+  resources for cash, `bank.py`), so it doesn't count; its cash-for-gold
+  trade is the game's own and counts in both. Two small differences: ours
+  counts while the goal isn't open too (above), and a gain and a spend
+  within the same 2 seconds cancel out in ours, where the original counts
+  the spend.*
 - **Daily bonus** (goal 55): counted when the bonus window opens, as its
   day in the five (1 to 5); day 3 or later completes it. *Ours: counted
   on collecting; the same, since the window can't be left without
@@ -269,7 +283,9 @@ check counts the player's own things.
   (goal 38) and a window opened (goals 54, 68, 81) complete when the count
   is exactly the goal's 1. Doing it twice between two checks makes the
   count 2 and the goal can't complete until the game is reloaded. *Ours:
-  different: one or more completes it (`move-kind`, `islands-opened`).*
+  different: one or more completes goals 38 and 81 (`move-kind`,
+  `islands-opened`); goals 54 and 68 are marked "classic" in `goals.json`,
+  so the new client doesn't complete them at all.*
 - **Killing** kinds (19, 31, 76, 128, 143) reset their count to 0 when a
   goal of that kind completes, so "kill 5 more" means five more. One goal
   (151) counts destroyed buildings. *Ours: missing (battles; "classic").*
@@ -547,74 +563,90 @@ check counts the player's own things.
 ## Differences
 
 Most serious first: what changes the save, then what looks or feels
-different, then what is missing.
+different, then what is missing. Each was read again in the decompiled
+client and in our code by a second reader; "(checked twice)" marks those
+that held. Where the second reading only skimmed a part, the entry says
+so.
 
 1. **Opening buildings early** (changes the save). The original never
    lets a player do it; ours sells it on every locked shop card for a
    third of the level in cash (`client/src/ui/shop.ts`,
-   `client/src/rules/shop.ts`).
+   `client/src/rules/shop.ts`). (checked twice)
 2. **Reaching level 35** (changes the save). The original stops goals at
    once, adds the spell box and places a free Wizardry Academy near tile
-   (59, 59); ours keeps goals running until the next load and gives no
-   academy (`client/src/editor.ts`, `client/src/goals.ts`).
+   (59, 59) when it finds a free spot; ours keeps goals running until the
+   next load and gives no academy (`client/src/editor.ts`,
+   `client/src/goals.ts`). (checked twice)
 3. **Raids on a level up** (changes the save). The original rolls the
    raids again on each level up at home and puts an orc dragon on the
    border at levels 25, 30, 35...; ours plans raids only on opening
-   (`client/src/rules/raids.ts`, `client/src/homeDefence.ts`).
+   (`client/src/rules/raids.ts`, `client/src/homeDefence.ts`). (checked
+   twice)
 4. **When doings count for goals** (changes the save). The original counts
    most doings only while a goal of that kind is open; ours from the
    page's opening, and island goals from the save's stars, so goals can
    complete and pay sooner (`client/src/rules/goals.ts`,
    `client/src/goals.ts`; the island part is a recorded decision).
+   (checked twice)
 5. **Units near the town hall** (changes the save). Original: a 3-tile
    circle, nearest 20; ours: a 7 by 7 square (`nearHall`,
-   `client/src/rules/goals.ts`).
-6. **Cash spent** (changes the save). Ours counts any drop in cash,
-   including the site's bank; the original only the game's own spends
-   while goal 52 is open (`client/src/goals.ts`).
-7. **Working time** (changes the save, rarely). Original keeps the last
-   choice, ours the longest (`Doings.workTime`).
-8. **The reversed goal checks** (changes the save, rarely). Moving two
+   `client/src/rules/goals.ts`). (checked twice)
+6. **Working time** (changes the save, rarely). Original keeps the last
+   choice, ours the longest (`Doings.workTime`). (checked twice)
+7. **The reversed goal checks** (changes the save, rarely). Moving two
    walls or opening the island map twice between checks blocks goals 38
-   and 81 (and 54, 68) in the original for the session; ours completes
-   them.
-9. **Goal 1** (looks different). The classic game shows the server's
-   stand-in for goal 1 and adds 0 gold on screen while the server pays
-   10; ours shows and pays the real goal. A config patch issue on our
-   side (`config/patch/missions_0_1.json`), not the new client's.
-10. **Goal 227** (looks different). The original lists it for good, never
-    checked; ours never shows it (`LAST_GOAL`).
-11. **Goal 33** (looks different). It can't be completed anywhere, but
-    ours says it's played in the classic game.
-12. **Counts lost on reload** (feels different). An island trip reloads
+   and 81 in the original for the session; ours completes them. (Goals 54
+   and 68 have the same quirk in the original, but ours marks them
+   "classic" and doesn't complete them.) (checked twice)
+8. **Goal 1** (looks different). The classic game shows the server's
+   stand-in for goal 1 and adds 0 gold, and our server pays 0 too (it
+   also keeps the later entry). Ours shows the real goal and adds 10 gold
+   on screen that the save never gets, until the next load. A config
+   patch issue on our side (`config/patch/missions_0_1.json`). (checked
+   twice; the server's part corrected: it pays 0, not 10)
+9. **Goal 227** (looks different). The original lists it for good, never
+   checked; ours never shows it (`LAST_GOAL`). (checked twice)
+10. **Goal 33** (looks different). It can't be completed anywhere, but
+    ours says it's played in the classic game. (checked twice)
+11. **Counts lost on reload** (feels different). An island trip reloads
     our page, so session counts (collecting, letting out...) start again;
-    the original keeps them all session.
-13. **The level-up window** (looks different). Original: one window per
+    the original keeps them all session. (checked twice; the original's
+    side read where the goals' keeper is made, not every island path)
+12. **The level-up window** (looks different). Original: one window per
     level with its name, prize, up to four new buildings and the mana;
-    ours a message (`client/src/editor.ts`).
-14. **Mana per level on screen** (looks different). The original adds 2
-    on screen from level 36; ours only after a reload.
-15. **The daily bonus** (feels different, decided). Original opens itself
+    it closes a market-type window and redraws the shop. Ours a message
+    (`client/src/editor.ts`). (checked twice)
+13. **Mana per level on screen** (looks different). The original adds 2
+    on screen from level 36 at once; ours only when the Academy's window
+    next lists an unlearnt spell or a spell is learnt, or after a reload
+    (`client/src/ui/spells.ts`). (checked twice; "only after a reload"
+    corrected)
+14. **The daily bonus** (feels different, decided). Original opens itself
     and can't be closed without collecting; ours waits for a tap
-    (`client/src/bonuses.ts`).
-16. **Sunday's preview** (looks different). Original shows the three
-    prizes; ours a sentence (`client/src/bonuses.ts`).
-17. **The goal box and windows** (looks different, partly decided). Two
+    (`client/src/bonuses.ts`). (checked twice)
+15. **Sunday's preview** (looks different). Original shows the three
+    prizes; ours a sentence (`client/src/bonuses.ts`). (checked twice)
+16. **The goal box and windows** (looks different, partly decided). Two
     goals, a list of five, each goal's window with picture and help
     arrows, "new" badges, the host's cheer and "new mission"; ours one
-    card and one list (`client/src/ui/goals.ts`).
-18. **Several level ups** (looks different). One window each in the
-    original, one message in ours; same prizes.
-19. **The shop's cards** (looks different). Eight a page, "new" and
+    card and one list (`client/src/ui/goals.ts`). (checked twice; the
+    windows' details skimmed)
+17. **Several level ups** (looks different). One window each in the
+    original, one message in ours; same prizes. (checked twice)
+18. **The shop's cards** (looks different). Eight a page, "new" and
     "limited" badges, a hover card; ours a list without them
-    (`client/src/ui/shop.ts`).
-20. **The gold trade's door** (feels different, decided). The original
-    opens it when short of gold; ours from the + on the pills.
-21. **Island goals 131, 137, 144, 156** (missing). Marked "classic" in
-    `client/src/rules/goals.json` though the kind is built.
-22. **The market** (missing), with goals 51, 65, 66, 72.
-23. **The second town and travelling** (missing).
-24. **Renaming** (missing).
-25. **Level 5 and level 20 hints** (missing): the princess helper and the
-    town button.
-26. **`rt_publish_score` on opening** (missing, harmless).
+    (`client/src/ui/shop.ts`). (checked twice)
+19. **The gold trade's door** (feels different, decided). The original
+    opens it when short of gold; ours from the + on the pills. (checked
+    twice)
+20. **Island goals 131, 137, 144, 156** (missing). Marked "classic" in
+    `client/src/rules/goals.json` though the kind is built. (checked
+    twice)
+21. **The market** (missing), with goals 51, 65, 66, 72. (checked twice)
+22. **The second town and travelling** (missing). (checked twice; the
+    warnings below level 20 skimmed)
+23. **Renaming** (missing). (checked twice)
+24. **Level 5 and level 20 hints** (missing): the princess helper and the
+    town button. (checked twice; whether the level 20 one shows anything
+    is still not verified in the bar's art)
+25. **`rt_publish_score` on opening** (missing, harmless). (checked twice)

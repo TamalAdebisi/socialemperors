@@ -152,11 +152,11 @@ of the original's searches measure from.
   training, building). The building is lifted off the grid and follows
   the pointer; a tap on a free tile where it fits sends `move` (old x, old
   y, item, x, y, facing, town, "mouseUsed"). Cancelling puts it back.
-  *Same: `client/src/rules/editing.ts` (`move`); ours also lets a building in training move.*
+  *Same: `client/src/rules/editing.ts` (`move`); different: ours also lets a building in training move (and be stored), `client/src/editor.ts`.*
 - **Lifting a building empties it.** Every unit inside comes out beside
   it (`pop_unit` each) and, as with any building emptied, its work stops
-  and starts over at the next worker; a mill or mine with a working time
-  also forgets it (`activate`, 0). This happens even when the move is
+  and starts over at the next worker; a mill or mine on the working-time
+  list also sends `activate` 0, whether or not a time was chosen. This happens even when the move is
   cancelled. *Different: ours keeps the units inside and the work going (DECISIONS.md, "Moving a building keeps its units inside"), `client/src/editor.ts` (`startMove`).*
 - **Turning during a move** sends `move` with the old facing, then
   `orient` with the facing one step on. *Different: ours sends one `move` with the new facing (our server keeps it), `client/src/rules/editing.ts` (`move`).*
@@ -165,7 +165,7 @@ of the original's searches measure from.
 - **Store** is refused while moving or while a bar runs. Units inside come
   out first; then `store_item` (x, y, town, item) and it goes to the
   town's storage. Storing the Unit Warehouse also puts its units in
-  storage and sends `reset_warehouse`. *Same: `client/src/rules/editing.ts` (`store`), `client/src/editor.ts` (`emptyOut`); the warehouse: missing.*
+  storage and sends `reset_warehouse`. *Same: `client/src/rules/editing.ts` (`store`), `client/src/editor.ts` (`emptyOut`); different: ours lets a building in training be stored; the warehouse: missing.*
 - **Selling is a tool, not a button.** The bulldozer on the bottom bar is
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
@@ -304,7 +304,9 @@ of the original's searches measure from.
   unit is lost. *Same: `client/src/rules/training.ts` (`trained`), `client/src/editor.ts`.*
 - **Where units come out** (trained, let out, a nursery's copy): ring by
   ring round the building's named tile, the first ring with a free tile,
-  and on it the tile nearest the far corner; anywhere on the map. *Different: ours takes the tile nearest the building's corner, on owned land only, `client/src/rules/work.ts` (`freeTileNear`). CLIENT.md says "nearest", which isn't quite the original's choice.*
+  and on it the tile nearest the far corner; anywhere on the map (a
+  nursery's copy looks only 4 rings out, and with none it lands on the
+  nursery's own tile). *Different: ours takes the tile nearest the building's corner, on owned land only, `client/src/rules/work.ts` (`freeTileNear`). CLIENT.md says "nearest", which isn't quite the original's choice.*
 - **Training a villager centres the map on the building.** *Missing.*
 
 ## Villagers
@@ -333,7 +335,8 @@ of the original's searches measure from.
   tick, so one tick does it. *Same: `client/src/rules/work.ts` (`harvestSeconds`).*
 - **Done:** its `collect` (20 wood, 10 stone, 10 gold), gold times the
   level's multiplier (1 up to level 10, 2 to 15, 3 to 20, 4 to 25, then
-  5), 1 experience and now and then a collection piece; `collect_new` (x,
+  5), 1 experience and now and then a collection piece (never in a troll
+  town); `collect_new` (x,
   y, town, item, villagers, multiplier, 0) and `sell` (x, y, item, town,
   0, "HARV"). A stone or gold rock leaves a regrowing one (`buy` of 81 or
   80, facing 1); a tree goes. *Same: `client/src/rules/work.ts` (`harvested`); the collection piece: missing.*
@@ -377,8 +380,8 @@ of the original's searches measure from.
   tile changed, `move` (last tile sent, item, new tile, facing, town,
   "Unitat"). *Different: ours sends it as the unit stops (DECISIONS.md, units walking), `client/src/rules/walking.ts` (`unitMoved`).*
 - **Picking several:** the square tool (up to 20 of the player's units)
-  and a double tap within a second on a unit (up to 20 of its kind within
-  10 tiles). *Missing (PARITY.md, "Selecting several units").*
+  and a double tap within a second on a unit (up to 20 within 10 tiles of
+  the same sort: melee, ranged, siege, healers, workers and so on). *Missing (PARITY.md, "Selecting several units").*
 
 ## Units going into buildings
 
@@ -443,7 +446,8 @@ of the original's searches measure from.
 - **Single trees** until there are 100 (counted before the clumps): each
   at a random tile, or a random free tile on the first ring out with one,
   up to 5 out. With none, the original drops it on tile (0, 0) whatever is
-  there (a bug). *Same, without the bug: `client/src/rules/nature.ts` (`freeNear`).*
+  there (a bug; animals and lost things are placed the same way, so the
+  same goes for them). *Same, without the bug: `client/src/rules/nature.ts` (`freeNear`).*
 - **Each is bought for nothing:** `buy` (item, x, y, 0, town, 1, 1, type).
   *Same: `client/src/rules/nature.ts`.*
 - **Animals:** 7 sheep, 7 cows and, from level 11, 6 horses in a human
@@ -499,7 +503,7 @@ of the original's searches measure from.
 - **Social buildings** (the Summit, allies' markets, recruitment camps,
   the Great Church and others with a crew list): until staffed they show
   their second picture and tapping opens the staff window; at each
-  opening one with no helper and a crew of 3 or more gets one free
+  opening one with a worker cost, no helper and a crew of 3 or more gets one free
   helper, one with exactly one and a crew of 7 or more a second
   (`buy_si_help`, x, y, town, item, 1). *Missing (the classic game; ROADMAP).*
 - **The wall gate** opens and closes from its panel, so units can pass;
@@ -528,8 +532,10 @@ of the original's searches measure from.
   shared by the player's towns) and what the town put away (`map.store`).
   *Same: `client/src/rules/storage.ts`.*
 - **One card per item,** gifts and stored copies together, by name; the
-  card uses the first copy, a gift when there is one (so its experience
-  comes with it). The Bahamut Heart and special-collection pieces have no
+  card uses the first copy. Gifts go into the list before stored copies,
+  but the list is then sorted by name and Flash's sort doesn't promise to
+  keep that order, so whether a gift (and its experience) is used first
+  isn't certain. The Bahamut Heart and special-collection pieces have no
   buttons; the town hall has Use only. *Different: ours has separate cards for gifts and stored copies, `client/src/rules/storage.ts` (`storedItems`).*
 - **Use:** refused for another people's item (only the town's own,
   nobody's or anyone's); then placed like building, one at a time; a unit
@@ -566,112 +572,132 @@ of the original's searches measure from.
 Every rule above where the new client differs or lacks something, most
 serious first. "Recorded" means DECISIONS.md already has it as a call.
 
+**The second reading.** Each item below was read again on both sides,
+starting from the places named in it: the original's code and ours (and
+`command.py` for the `move` command). All 47 held up, so each is marked
+"(checked twice)"; a few gained a detail on the way, noted in the item and
+its rule. How deep: the code behind each claim was read through; the
+missing features (28 to 44) were checked only far enough to see that the
+original has them and our client doesn't, not in every detail. One quirk
+was seen but not followed up: when a villager's line runs out after a
+tree, the original sets that tree kind's `elevation` to 0, and tiles with
+elevation 0 count as places to stand (item 23); whether that touches every
+tree of the kind wasn't checked.
+
 **Changes the save**
 
 1. **Trees, rocks and animals grow on the player's land.** The original
    grows them in the wild ring and on middle blocks not yet bought. Ours
    uses the player's own blocks instead (`client/src/rules/nature.ts`).
-   CLIENT.md repeats the mistake.
+   CLIENT.md repeats the mistake. (checked twice)
 2. **Moving a building keeps its units inside.** The original lets them
-   all out (`pop_unit` each), stops its work and resets a working time
-   (`activate`, 0), even when the move is cancelled (`client/src/editor.ts`;
-   recorded).
+   all out (`pop_unit` each), stops its work and, for a mill or mine on the
+   working-time list, sends `activate` 0, even when the move is cancelled
+   (`client/src/editor.ts`; recorded). (checked twice)
 3. **A stored unit ignores its `units_limit`.** The original refuses it
-   (the Mummy and the Ent aside) (`client/src/rules/storage.ts`).
+   (the Mummy and the Ent aside) (`client/src/rules/storage.ts`). (checked twice)
 4. **A farm without wood is kept.** The original destroys it with `kill`
-   (`client/src/rules/production.ts`; recorded).
+   (`client/src/rules/production.ts`; recorded). (checked twice)
 5. **The worker count is live.** The original keeps the count from the
    first harvest of the session, and sends it (`client/src/rules/production.ts`;
-   recorded).
+   recorded). (checked twice)
 6. **What grows is cleared by the camp.** Ours grows before the camp clears
    the wild ring, the original after (`client/src/main.ts`, `client/src/homeCamps.ts`).
+   (checked twice)
 7. **Where units come out.** The original picks the free tile toward the
-   far corner, anywhere; ours the nearest, on owned land only
-   (`client/src/rules/work.ts`).
+   far corner, anywhere (a nursery's copy only 4 rings out); ours the
+   nearest, on owned land only (`client/src/rules/work.ts`). (checked twice)
 8. **A free villager when all shelter in a refuge.** The original counts
    only villagers on the map and in farms, mills, mines, trees and rocks
-   (`client/src/rules/cleanup.ts`).
+   (`client/src/rules/cleanup.ts`). (checked twice)
 9. **The nursery takes any animal.** The original wants the kind already
-   inside (`client/src/rules/animals.ts`).
+   inside (`client/src/rules/animals.ts`). (checked twice)
 10. **The harbour and zeppelin.** The original also looks in the gift box
     and staffs one still waiting; ours only the town's storage and a new
-    one (`client/src/rules/dock.ts`).
+    one (`client/src/rules/dock.ts`). (checked twice)
 
 **Looks or feels different**
 
 11. **Units stay on owned land.** In the original they can walk the whole
     map but under buildings (`client/src/rules/walking.ts`; recorded, but
-    CLIENT.md gives it as the original's rule).
+    CLIENT.md gives it as the original's rule). (checked twice)
 12. **Selling from a card.** The original sells only with the bulldozer
     tool, and doesn't ask for free things, for wonders and units bought
     with resources, or (in storage) for anything but cash things; ours
     always asks (`client/src/rules/editing.ts`, `client/src/ui/actions.ts`,
-    `client/src/rules/storage.ts`).
+    `client/src/rules/storage.ts`). (checked twice)
 13. **Placing over a taken tile.** The original hides the outline there
     and ends placing on a tap; ours shows red and stays (`client/src/editor.ts`).
+    (checked twice)
 14. **Space while placing** flips only the first two facings in the
     original; ours steps through all, and Space starts no square tool
-    (`client/src/editor.ts`).
+    (`client/src/editor.ts`). (checked twice)
 15. **A ready building tapped with a villager selected** is collected in
     the original; ours sends the villager in if there's room
-    (`client/src/editor.ts`).
-16. **Storage cards.** The original merges gifts and stored copies (the
-    gift used first) and its button counts both; ours keeps them apart and
-    counts gifts (`client/src/rules/storage.ts`, `client/src/main.ts`).
+    (`client/src/editor.ts`). (checked twice)
+16. **Storage cards.** The original merges gifts and stored copies and its
+    button counts both; ours keeps them apart and counts gifts
+    (`client/src/rules/storage.ts`, `client/src/main.ts`). (checked twice;
+    whether the original uses the gift first is unsure, see the rule)
 17. **Hurry** shows in the original whenever earnings show (and misfires
     on a sleeping mill); ours only while working (`client/src/rules/production.ts`).
+    (checked twice)
 18. **Working-time cards** in the original leave out the extra workers;
-    ours include them (`client/src/editor.ts`).
+    ours include them (`client/src/editor.ts`). (checked twice)
 19. **Letting out** any of six portraits in the original; ours the last in
-    (`client/src/rules/work.ts`; recorded).
+    (`client/src/rules/work.ts`; recorded). (checked twice)
 20. **Paths** are the shortest here; the original's can wander
-    (`client/src/rules/walking.ts`; recorded).
+    (`client/src/rules/walking.ts`; recorded). (checked twice)
 21. **Group moves and shared tiles.** The original spreads units over free
     tiles and steps units off shared tiles; ours sends one unit, onto any
-    tile (`client/src/editor.ts`).
+    tile (`client/src/editor.ts`). (checked twice)
 22. **The next tree** is picked by tiles across plus down in the original,
     busy ones included; ours by the larger of the two, skipping busy ones
-    (`client/src/rules/work.ts`).
+    (`client/src/rules/work.ts`). (checked twice)
 23. **Where a villager stands** may be a field in the original; ours skips
-    fields and checks the path (`client/src/rules/work.ts`).
+    fields and checks the path (`client/src/rules/work.ts`). (checked twice)
 24. **The glove** is a hover mode in the original, one press here
-    (`client/src/editor.ts`; recorded).
+    (`client/src/editor.ts`; recorded). (checked twice)
 25. **The land window** shows the gold button only with enough neighbours
-    in the original (`client/src/editor.ts`; recorded).
+    in the original (`client/src/editor.ts`; recorded). (checked twice)
 26. **Tap or drag:** 25 pixels in the original, 8 pixels and half a second
-    here (`client/src/view/camera.ts`).
-27. **A building in training** can be moved here; the original waits for
-    its bar (`client/src/editor.ts`).
+    here (`client/src/view/camera.ts`). (checked twice)
+27. **A building in training** can be moved or stored here; the original
+    waits for its bar (`client/src/editor.ts`). (checked twice)
 
 **Missing**
 
-28. Upgrading (and with it Town Hall II to IV).
+28. Upgrading (and with it Town Hall II to IV). (checked twice)
 29. The 10-second scaffold, and the building being out of use meanwhile.
-30. The Training Stables turning footmen and archers into riders.
-31. The troll town: founding it and travelling there.
-32. The short collecting bar.
-33. Friends' help on buildings (an hour off each).
-34. The Nursery's copies, the Sacrifice Altar, the Treasure Mine.
-35. The Unit Warehouse, and storing it.
-36. Social buildings' staff and their free helpers on opening.
-37. Lost things on each opening.
+    (checked twice)
+30. The Training Stables turning footmen and archers into riders. (checked twice)
+31. The troll town: founding it and travelling there. (checked twice)
+32. The short collecting bar. (checked twice)
+33. Friends' help on buildings (an hour off each). (checked twice)
+34. The Nursery's copies, the Sacrifice Altar, the Treasure Mine. (checked twice)
+35. The Unit Warehouse, and storing it. (checked twice)
+36. Social buildings' staff and their free helpers on opening. (checked twice)
+37. Lost things on each opening. (checked twice)
 38. Picking several units (square tool, double tap) and group moves.
-39. The next-harvest clock on the bar.
-40. Collection pieces from trees and rocks.
-41. The no-town-hall window.
-42. The wall gate opening.
-43. The map centring on a villager's training.
+    (checked twice)
+39. The next-harvest clock on the bar. (checked twice)
+40. Collection pieces from trees and rocks. (checked twice)
+41. The no-town-hall window. (checked twice)
+42. The wall gate opening. (checked twice)
+43. The map centring on a villager's training. (checked twice)
 44. The flying animal from a ranch (a rising line instead; recorded).
+    (checked twice)
 
 **Other**
 
 45. **Turning during a move** sends one `move` with the new facing here;
     the original sends `move` with the old facing then `orient`. Our
-    server keeps the facing, so the save ends the same.
+    server keeps the facing, so the save ends the same. (checked twice)
 46. **A unit's stop** reaches the server as it stops, not on the 6-second
-    timer (recorded): the same command, sooner.
-47. **The original's tile (0, 0) bug** (a single tree or a free villager
-    with no free tile near is dropped there) isn't copied.
+    timer (recorded): the same command, sooner. (checked twice)
+47. **The original's tile (0, 0) bug** (a single tree, an animal, a lost
+    thing or a free villager with no free tile near is dropped there)
+    isn't copied. (checked twice)
 
 ### Where CLIENT.md and our index are wrong
 

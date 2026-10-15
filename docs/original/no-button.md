@@ -156,7 +156,10 @@ another.
 23. **Social buildings get a free helper:** one with no helper and a crew
     of 3 or more, or one helper and a crew of 7 or more, whose helpers
     cost something, gets one (`buy_si_help` x, y, town, item, 1) and
-    glows. *Not yet.*
+    glows. Only a building whose save still holds a staff list (`si`)
+    counts: one still taking staff, or one of the six our server keeps a
+    staff for (`social.py`). *Not yet (ours gives helpers only to the
+    harbour and zeppelin, `client/src/rules/dock.ts`).*
 24. **Regrowing rocks whose 3 hours are up** are sold ("REGEN") and one
     of the four rocks of their kind bought free in their place. *Built:
     `regrow`, `client/src/rules/work.ts`.*
@@ -211,10 +214,16 @@ window to close before the next is looked at.
     not needed (no offer runs here); news: not yet (it's mostly offers;
     the owner's call).*
 36. **A tournament invitation,** when the page asks. *Not needed.*
-37. **Darts** (first start): a new darts round has begun since the last
+37. **Darts** (first start): the client looks for the current darts
+    round, the last one in the config's `darts_items` whose start date
+    has passed. If a new round has begun since the last
     (`darts_reset` with a new seed), or the day changed and balloons are
-    left (`darts_new_free`); either gives a free throw and asks whether to
-    play now. *Not yet (darts are in the classic game).*
+    left (`darts_new_free`), it gives a free throw and asks whether to
+    play now. On our server this never happens: the clock is today's, so
+    the current round is the config's last, from 9 September 2012, and
+    that one has no prizes. The client treats a round with no prizes as
+    no round, so it sends nothing and shows nothing. *Not needed: the
+    original does nothing here either (checked twice).*
 38. **The heavy siege's warning.** *Switched off (section 4).*
 39. **The camp's window,** readied at step 22. On the page's first start
     the news is still pending, so it always waits until here; later it
@@ -262,8 +271,10 @@ window to close before the next is looked at.
     each unit's mind runs:
     - **Looking about:** a standing unit has a 4% chance to turn to a tile
       beside it. *Built: `client/src/rules/walking.ts`.*
-    - **Saying a line:** one in five of those turns comes with a speech
-      bubble. *Not yet (CLIENT.md says so).*
+    - **Saying a line:** one in five of those turns tries a speech
+      bubble. Only cows, sheep and four kinds of troll have lines for
+      standing about, so the others stay quiet. *Not yet (CLIENT.md
+      says so).*
     - **Stepping off a shared tile:** an idle unit sharing its tile with
       something (not a field) walks to a free tile nearby. *Not yet
       ([town.md](rules/town.md)).*
@@ -302,8 +313,10 @@ window to close before the next is looked at.
     during play, the new camp comes then (rule 22). *Built: the camp comes
     (`watch`, `client/src/homeCamps.ts`); the countdown on the bar: not
     yet.*
-54. **The next building ready** counts down in the top bar, one second at
-    a time. *Not yet ([town.md](rules/town.md)).*
+54. **The next building ready** is counted down, one second at a time,
+    but never shown: the original makes this clock hidden and above the
+    top of the screen, and nothing ever shows it. *Not needed (checked
+    twice; [town.md](rules/town.md) lists it as missing).*
 55. **Bandits** come 7, 14 and 21 minutes after the town opened (or after
     the last level up, rule 58). *Built for the opening:
     `client/src/rules/raids.ts`.*
@@ -330,8 +343,11 @@ window to close before the next is looked at.
     near (59, 59) (`buy`, free; even if the town has one), and a notice
     about the spell book shows. *Not yet: our goals run on until the next
     load, and no academy is given ([progress.md](rules/progress.md)).*
-61. **From level 36,** each level adds 2 mana on screen. *Partly: the
-    server adds it (`magic.py`); our count moves on the next load.*
+61. **From level 36,** each level adds 2 mana on screen. *Built: the
+    server adds it (`magic.py`), and the new client adds the same during
+    the visit whenever the Academy window or a spell check looks at the
+    level (`magicParts`, `client/src/ui/spells.ts`). The window's mana
+    count can still show the old number until it next redraws.*
 62. **Reaching level 4** in the empire's first days shows the
     welcome-back chest (switched off in the original; on here, the
     owner's call). *Built: `client/src/bonuses.ts`.*
@@ -408,41 +424,52 @@ window to close before the next is looked at.
 ## What the new client lacks
 
 Most serious first. "Recorded" means DECISIONS.md already has it as a
-call.
+call. "(checked twice)" means a second reader went through the original's
+code and ours again and found the same. That second reading removed two
+claims: darts' start check (rule 37: the original does nothing on our
+server) and mana per level (rule 61: ours adds it during the visit too).
+It also took the next building's countdown off the top bar list (rule 54:
+the original never shows it).
 
 1. **Trees, rocks and animals grow on the player's land** (changes the
    save, rule 28). The original grows them in the wild ring and on middle
-   blocks not yet bought (`client/src/rules/nature.ts`).
+   blocks not yet bought (`client/src/rules/nature.ts`). (checked twice)
 2. **Reaching level 35** (changes the save, rule 60): no free Wizardry
    Academy, and goals keep running until the next load
-   (`client/src/editor.ts`, `client/src/goals.ts`).
+   (`client/src/editor.ts`, `client/src/goals.ts`). (checked twice)
 3. **A level up doesn't roll the raids again, and no orc dragon comes at
-   25, 30, 35...** (rules 58, 59; `client/src/homeDefence.ts`).
+   25, 30, 35...** (rules 58, 59; `client/src/homeDefence.ts`). (checked
+   twice)
 4. **The princess's allies** (changes the save, rules 42 and 63): 9 free
    knights on the second day or at level 5, and far enemies removed.
+   (checked twice)
 5. **Social buildings' free helpers on opening** (changes the save, rule
-   23).
+   23). (checked twice)
 6. **Collection pieces** from trees, rocks and enemies (changes the save,
-   rule 65).
+   rule 65). (checked twice)
 7. **The town is only live during a fight** (rule 46): towers, enemies'
    reach and the Healing Spring act at home only in a raid or after units
-   are sent at a camp (`client/src/homeDefence.ts`). Not read in depth.
+   are sent at a camp (`client/src/homeDefence.ts`). The second reading
+   confirmed that much; who shoots when, rule by rule, was still not
+   compared in depth. (checked twice)
 8. **Growth before the camp** (changes the save): ours grows before the
    camp clears the wild ring, the original after (rules 22 to 28;
-   `client/src/main.ts`, [town.md](rules/town.md)).
-9. **Darts' start check** (changes the save, rule 37): no new round or
-   daily free throw is given by the new client.
-10. **Lost things** on each opening (rule 19).
-11. **The no-town-hall window** (rule 40).
-12. **The top bar's clocks:** the next building ready, the camp's
-    countdown and the enemies left (rules 47, 53, 54).
-13. **Carts** come one after another, and in a troll town too (rule 32;
-    `client/src/editor.ts`).
-14. **Units' speech bubbles** and **stepping off shared tiles** (rule 46).
-15. **The start-up windows:** the daily bonus waits for a tap (recorded),
-    no news window, no gifts page on start (rules 33 to 35).
-16. **Mana per level** shows only after a reload (rule 61).
-17. **Commands go every 3 seconds,** not 6 (rule 50; CLIENT.md).
-18. **`rt_publish_score`** isn't sent (rule 33; harmless).
-19. **Attacks received while away** (rule 14) and the attack and spying
+   `client/src/main.ts`, [town.md](rules/town.md)). (checked twice)
+9. **Lost things** on each opening (rule 19). (checked twice)
+10. **The no-town-hall window** (rule 40). (checked twice)
+11. **The top bar's camp clock:** the camp's countdown and, once it has
+    run out, the enemies left (rules 47, 53). (checked twice)
+12. **Carts** come one after another, and in a troll town too (rule 32;
+    `client/src/editor.ts`). (checked twice)
+13. **Units' speech bubbles** (only cows, sheep and some trolls have lines
+    for standing about) and **stepping off shared tiles** (rule 46).
+    (checked twice)
+14. **The start-up windows:** the daily bonus waits for a tap (recorded),
+    no news window, no gifts page on start (rules 33 to 35). (checked
+    twice)
+15. **Commands go every 3 seconds,** not 6 (rule 50; CLIENT.md). (checked
+    twice)
+16. **`rt_publish_score`** isn't sent (rule 33; harmless). (checked twice)
+17. **Attacks received while away** (rule 14) and the attack and spying
     counters (rules 7, 45): with attacks on players, at the switch.
+    (checked twice)
