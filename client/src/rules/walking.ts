@@ -5,6 +5,7 @@
 
 import type { Command } from "../net/commands.ts";
 import { isAnimal } from "./animals.ts";
+import { inConstruction } from "./construction.ts";
 import { footprintTiles, isOpenLand } from "./editing.ts";
 import { MAP_TILES, TILE_HEIGHT, TILE_WIDTH, unitPoint, type Point } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
@@ -356,10 +357,10 @@ export function stepTowards(at: Point, to: Point, velocity: number, ms: number):
   return { x: at.x + (dx * reach) / longest, y: at.y + (dy * reach) / longest };
 }
 
-/** Whether a unit is the player's to send about: their people's, anyone's, or an animal they caught (rules/animals.ts). */
-export function canWalk(town: Town, placed: PlacedItem): boolean {
+/** Whether a unit is the player's to send about: their people's, anyone's, or an animal they caught (rules/animals.ts); not while it's being built. */
+export function canWalk(town: Town, placed: PlacedItem, now = Date.now()): boolean {
   const theirs = placed.item.race === town.race || placed.item.race === "a" || (isAnimal(placed.item) && !placed.wild);
-  return placed.item.isUnit && theirs && placed.item.velocity > 0;
+  return placed.item.isUnit && theirs && placed.item.velocity > 0 && !inConstruction(placed, now);
 }
 
 /**

@@ -45,6 +45,21 @@ them can be found and reversed. The big, agreed decisions are in
   Rider's wing, the Red Bull's smash).
 - **Burning hurts once a second,** as the original's "5 a second for 5
   seconds" reads.
+## 15 October 2026: construction
+
+- **Units bought from the shop stand in scaffolding too,** the 1x1 one, for
+  the same 10 seconds. The rule book said buildings; the Flash client's
+  code marks anything bought (a unit placed from storage comes as it is).
+  Meanwhile the unit can't be sent anywhere: nothing in the original's
+  code stops one walking off in its scaffolding, which we took for an
+  accident.
+- **The bar is drawn over the scaffolding,** at the same spot. The original
+  drew it on the ground, under the building, where a scaffold's front
+  posts can hide the percentage.
+- **The scaffolding sheets keep every other frame** (15 a second instead of
+  the game's 30), about a megabyte for all six, each fetched only when
+  something of its kind is built. The troll town's scaffolds wait for the
+  troll town.
 
 ## 15 October 2026: the nests' window
 

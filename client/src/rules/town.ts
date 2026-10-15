@@ -98,6 +98,12 @@ export interface PlacedItem {
   open?: boolean;
   /** A social building's helpers so far, when the save keeps its staff list (the item's `si`). */
   staff?: number;
+  /**
+   * Being built (rules/construction.ts): when its scaffolding comes down
+   * (milliseconds, Date.now()). Not saved, as in the Flash client: opened
+   * again, the town shows it finished.
+   */
+  builtAt?: number;
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */

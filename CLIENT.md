@@ -1128,7 +1128,9 @@ server.
 - **The switches:** the Flash client's own music and sound buttons, in the
   top bar; each is remembered in the browser. Both start on, as in the
   original.
-- The battle, quest and construction sounds wait for those parts.
+- Building: hammering through the 10 seconds of scaffolding (one at a
+  time, 9 times over), and a sound when it's done (see "Construction").
+- The battle and quest sounds wait for those parts.
 
 **Speed:** the server now sends text gzip-compressed (`compress.py`): the
 game's config, which every start needs before anything shows, goes from
@@ -1139,6 +1141,48 @@ has the client already gets a short "unchanged". Arthur's grown town (402
 things, 69 pictures) opens in under 3 seconds on our test machine once its
 art is cached, and in about 10 the first time, mostly downloading the
 pictures; the bucket keeps them a day in the browser's cache.
+
+### Construction
+
+Built (PARITY.md, "Construction"). Code: `rules/construction.ts`,
+`view/construction.ts`, the editor's `startConstruction`; the scaffolding
+sheets and the bar's pictures in `client/src/view/art/`, made by
+`tools/art/export_ui.py` from the game's library
+(`assets/swf/120608_dynamic.swf`, where the Flash client finds them too).
+Test: `e2e/tests/construction.mjs`.
+
+As the Flash client builds (our notes, our words):
+
+- **Ten seconds of scaffolding** for anything bought from the shop, units
+  included, and for a building placed from storage (a unit from storage
+  comes as it is). The game's own scaffolding: a farm's field being dug, a
+  ranch's fence going up (not the Nursery's), else one for the width, 1x1
+  to 4x4, with workers at work. It plays once, about 4½ seconds, and the
+  workers keep at it after. It stands where the building will, placed by
+  its box as it first appears, as the game places a building.
+- **The bar** at its foot fills with the percentage on it, the game's own
+  pictures; a 1x1 thing has the percentage alone, edged in white. It keeps
+  its size on the screen whatever the zoom, as the Flash client's.
+- **Meanwhile** it takes nobody in, its card has its name and "Being
+  built… 40%" but no buttons, the bulldozer and the glove pass it by, a
+  tower doesn't shoot in a raid, and a unit can't be sent anywhere. Its
+  work clock runs all the same.
+- **Sounds:** hammering, then a sound of its own when it's done (both the
+  game's).
+- **Not saved,** as in the original: the server has the building at once,
+  and opened again, the town shows it finished.
+- **Not built here:** the troll town's own scaffolding (with the troll
+  town), upgrading's (with upgrading), and the speed-up for 10 cash, which
+  the original only offers for items with a build time, and none has one.
+
+How the sheets are made: `RenderSymbols.java` draws a picture playing
+("Construction2x2*140": 140 frames, its workers' own animations running
+too) and measures each frame's box as Flash would; `export_ui.py` keeps
+every other frame (15 a second), stores each picture once and packs them
+with `pack_sheet.py`, the buildings' packer, so the client reads them like
+a building's sheet (`view/art.ts`, `bundledArt`). All six come to about a
+megabyte, most of it the ranch's fence, and each is fetched only when
+something of its kind is built.
 
 ### Arthur's lessons
 

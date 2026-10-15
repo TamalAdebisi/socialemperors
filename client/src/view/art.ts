@@ -142,15 +142,7 @@ export class ArtLibrary {
   private async load(name: string): Promise<ItemArt> {
     const first = await this.page(`${name}.json`);
     const others = await Promise.all((first.data.meta.related_multi_packs ?? []).map((file) => this.page(file)));
-    const textures: Record<string, Texture> = {};
-    for (const page of [first, ...others]) {
-      Object.assign(textures, page.sheet.textures);
-    }
-    const animations = new Map<string, Texture[]>();
-    for (const [animation, frames] of Object.entries(first.data.animations ?? {})) {
-      animations.set(animation, frames.map((frame) => textures[frame] ?? Texture.EMPTY));
-    }
-    return new ItemArt(name, first.data.meta.fps ?? 30, animations, first.data.meta.bounds ?? {});
+    return itemArt(name, first, others);
   }
 
   private async page(file: string): Promise<{ data: SheetJson; sheet: Spritesheet }> {
@@ -159,13 +151,42 @@ export class ArtLibrary {
       throw new Error(`${file}: ${response.status}`);
     }
     const data = (await response.json()) as SheetJson;
-    const texture = await Assets.load<Texture>({
-      src: `${this.base}/${data.meta.image}`,
-      // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
-      data: { autoGenerateMipmaps: true },
-    });
-    const sheet = new Spritesheet(texture, data);
-    await sheet.parse();
-    return { data, sheet };
+    return { data, sheet: await sheetOf(data, `${this.base}/${data.meta.image}`) };
   }
+}
+
+/**
+ * A sheet of one page that comes with the client (view/art/: the
+ * scaffolding), by the addresses the build gave its JSON and its picture.
+ */
+export async function bundledArt(name: string, json: string, image: string): Promise<ItemArt> {
+  const response = await fetch(json);
+  if (!response.ok) {
+    throw new Error(`${name}: ${response.status}`);
+  }
+  const data = (await response.json()) as SheetJson;
+  return itemArt(name, { data, sheet: await sheetOf(data, image) }, []);
+}
+
+async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
+  const texture = await Assets.load<Texture>({
+    src: image,
+    // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
+    data: { autoGenerateMipmaps: true },
+  });
+  const sheet = new Spritesheet(texture, data);
+  await sheet.parse();
+  return sheet;
+}
+
+function itemArt(name: string, first: { data: SheetJson; sheet: Spritesheet }, others: { sheet: Spritesheet }[]): ItemArt {
+  const textures: Record<string, Texture> = {};
+  for (const page of [first, ...others]) {
+    Object.assign(textures, page.sheet.textures);
+  }
+  const animations = new Map<string, Texture[]>();
+  for (const [animation, frames] of Object.entries(first.data.animations ?? {})) {
+    animations.set(animation, frames.map((frame) => textures[frame] ?? Texture.EMPTY));
+  }
+  return new ItemArt(name, first.data.meta.fps ?? 30, animations, first.data.meta.bounds ?? {});
 }

@@ -8,6 +8,7 @@
 import type { Command } from "../net/commands.ts";
 import { canLiveIn, isAnimal } from "./animals.ts";
 import type { ItemInfo } from "./config.ts";
+import { inConstruction } from "./construction.ts";
 import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
@@ -45,12 +46,13 @@ export function canHarvest(unit: ItemInfo, target: ItemInfo): boolean {
  * Whether a unit can go into a building: one of the player's, with room;
  * villagers into mills, mines and farms; animals into ranches of their kind
  * (rules/animals.ts); any unit into a refuge, siege engines too, as in the
- * Flash client; not into one burnt out in a raid. (The special buildings
- * such as the Sacrifice Altar come later.)
+ * Flash client; not into one burnt out in a raid, nor one still being
+ * built (`now`: milliseconds, rules/construction.ts). (The special
+ * buildings such as the Sacrifice Altar come later.)
  */
-export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): boolean {
+export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, now = Date.now()): boolean {
   const target = building.item;
-  if (target.isUnit || building.unitsInside >= target.capacity) {
+  if (target.isUnit || building.unitsInside >= target.capacity || inConstruction(building, now)) {
     return false;
   }
   if (building.ruined) {

@@ -6,6 +6,7 @@
 import { AnimatedSprite, Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
 import type { ItemInfo } from "../rules/config.ts";
+import { BUILD_MS, builtShare, inConstruction } from "../rules/construction.ts";
 import {
   IDLE_DIRECTIONS,
   TILE_HEIGHT,
@@ -23,6 +24,7 @@ import {
 import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
+import { PROGRESS, ProgressBar, loadProgress, scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
@@ -81,12 +83,15 @@ export class TownView {
   /** What a unit standing still is doing: working a tree (ATAQUE) or a rock (PICAR); standing (QUIETO) when it's not here. */
   private readonly poses = new Map<PlacedItem, Pose>();
   private lookAroundIn = LOOK_AROUND_MS;
+  /** The bars under things being built (view/construction.ts), filled as time goes. */
+  private readonly bars = new Map<PlacedItem, ProgressBar>();
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
     this.items = items;
     this.town = town;
     void loadSelected();
+    void loadProgress();
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
     this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer, this.box);
     this.ghostLayer.alpha = 0.7;
@@ -125,6 +130,11 @@ export class TownView {
   /** Move animations along: `ms` since the last frame, at the camera's zoom. */
   tick(ms: number, zoom: number): void {
     this.markers.tick(ms, zoom);
+    const now = Date.now();
+    for (const [placed, bar] of this.bars) {
+      bar.set(builtShare(placed, now));
+      bar.scale.set(1 / zoom);  // the same size on the screen, whatever the zoom, as the game's
+    }
     for (const [placed, walk] of this.walkers) {
       this.stepWalk(placed, walk, Math.min(ms, 100));
     }
@@ -132,7 +142,8 @@ export class TownView {
     if (this.lookAroundIn <= 0) {
       this.lookAroundIn += LOOK_AROUND_MS;
       for (const [placed, direction] of this.facing) {
-        const turned = this.walkers.has(placed) || this.poses.has(placed) ? null : lookAround(placed, direction);
+        const turned = this.walkers.has(placed) || this.poses.has(placed) || inConstruction(placed, Date.now()) ? null
+          : lookAround(placed, direction);
         if (turned !== null && turned !== direction) {
           this.facing.set(placed, turned);
           void this.redrawUnit(placed);
@@ -365,6 +376,7 @@ export class TownView {
     this.walkers.delete(placed);
     this.poses.delete(placed);
     this.facing.delete(placed);
+    this.bars.delete(placed);
     const slot = this.slots.get(placed);
     if (slot) {
       this.things.removeChild(slot);
@@ -526,6 +538,10 @@ export class TownView {
       return art !== null;  // taken away while its art loaded (a see-through building no longer wanted)
     }
     const offset = slot === this.ghost?.slot ? { x: slot.x, y: slot.y } : { x: 0, y: 0 };
+    if (inConstruction(placed, Date.now())) {
+      return this.drawScaffold(placed, slot).then(() => art !== null);
+    }
+    this.bars.delete(placed);
     slot.removeChildren().forEach((child) => child.destroy());
     slot.position.set(offset.x, offset.y);
     if (art === null) {
@@ -559,11 +575,35 @@ export class TownView {
     return true;
   }
 
+  /**
+   * Something being built: the scaffolding in its place, and the bar under
+   * it (view/construction.ts). It's drawn finished when the editor draws it
+   * again after its 10 seconds.
+   */
+  private async drawScaffold(placed: PlacedItem, slot: Container): Promise<void> {
+    const scaffold = await scaffoldArt(placed.item);
+    if (slot.destroyed) {
+      return;
+    }
+    slot.removeChildren().forEach((child) => child.destroy());
+    slot.position.set(0, 0);
+    const now = Date.now();
+    const point = placed.item.isUnit ? unitPoint(placed.tx, placed.ty) : buildingPoint(placed.tx, placed.ty);
+    slot.addChild(scaffold ? scaffoldSprite(scaffold, point, builtShare(placed, now) * BUILD_MS) : footprint(placed, 0xffffff));
+    const bar = new ProgressBar(point, placed.item.width <= 1);
+    bar.set(builtShare(placed, now));
+    slot.addChild(bar);
+    this.bars.set(placed, bar);
+    if (this.highlighted.has(placed)) {
+      this.mark(placed);
+    }
+  }
+
   /** Draw a unit again: facing another way, or walking, or standing still. */
   private async redrawUnit(placed: PlacedItem): Promise<void> {
     const slot = this.slots.get(placed);
     const art = await this.art.get(placed.item.art);
-    if (!slot || slot.destroyed || art === null) {
+    if (!slot || slot.destroyed || art === null || inConstruction(placed, Date.now())) {
       return;
     }
     const walk = this.walkers.get(placed);
@@ -640,7 +680,7 @@ export class TownView {
 
 /** A thing's picture in its slot: not its outline, nor its marks as selected. */
 function pictureOf(slot: Container): Container | undefined {
-  return slot.children.find((child) => child.label !== OUTLINE && child.label !== SELECTED && child.label !== LIFE);
+  return slot.children.find((child) => child.label !== OUTLINE && child.label !== SELECTED && child.label !== LIFE && child.label !== PROGRESS);
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {

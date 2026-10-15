@@ -178,8 +178,33 @@ MAP_PICTURES = {
     # And over it, its life bar: the back (red, edged in black), and the green on it.
     "life-bar": ("BarraVidaMC@0", 0),
     "life-bar-green": ("BarraVidaMC@1", 0),
+    # The bar under something being built: its back (white, edged in green), and the yellow
+    # that fills it from the left.
+    "progress-back": ("FauxBarMC@1", 0),
+    "progress-fill": ("FauxBarMC@3", 0),
 }
 MAP_OUT = os.path.join(ROOT, "client", "src", "view", "art")
+
+# The scaffolding something stands in for its first 10 seconds, from the
+# game's library (where the Flash client finds it too), as small sprite
+# sheets: the farm's field being dug, the ranch's fence going up, and for
+# the rest one for each width, workers at work. Our name: (the picture, how
+# many frames it plays before it stops, how many frames its workers take to
+# go round: they keep at it after). Each plays once, then its last
+# moments go round.
+LIBRARY = os.path.join(ROOT, "assets", "swf", "120608_dynamic.swf")
+SCAFFOLDS = {
+    "scaffold-1x1": ("Construction1x1", 137, 1),
+    "scaffold-2x2": ("Construction2x2", 140, 8),
+    "scaffold-3x3": ("Construction3x3", 128, 8),
+    "scaffold-4x4": ("Construction4x4", 136, 8),
+    "scaffold-farm": ("ConstructionGranja", 127, 1),
+    "scaffold-ranch": ("ConstructionRancho", 181, 1),
+}
+# Drawn at the game's size, like the buildings' sheets; every other frame of the game's 30
+# a second, which keeps the files small.
+SCAFFOLD_STEP = 2
+SCAFFOLD_FPS = 30 / SCAFFOLD_STEP
 
 
 def ffdec_classpath():
@@ -189,13 +214,13 @@ def ffdec_classpath():
                           check=True, capture_output=True, text=True).stdout
 
 
-def render(paths, folder):
+def render(paths, folder, scale=SCALE, swf=GAME):
     classpath = ffdec_classpath()
     classes = os.path.join(folder, "classes")
     sources = [os.path.join(ROOT, "tools", "art", name) for name in ("RenderSwf.java", "RenderSymbols.java")]
     subprocess.run(["javac", "-nowarn", "-cp", classpath, "-d", classes, *sources], check=True)
     subprocess.run(["java", "-Djava.awt.headless=true", "-cp", f"{classpath}{os.pathsep}{classes}",
-                    "RenderSymbols", folder, str(SCALE), GAME, *paths], check=True)
+                    "RenderSymbols", folder, str(scale), swf, *paths], check=True)
 
 
 def top_part(image):
@@ -236,6 +261,7 @@ def main():
             picture.save(os.path.join(OUT, f"{name}.png"), optimize=True)
             print(f"{name}: {picture.width}x{picture.height}")
         export_map_pictures(folder)
+        export_scaffolds(folder)
     finally:
         shutil.rmtree(folder, ignore_errors=True)
     return 0
@@ -259,6 +285,55 @@ def export_map_pictures(folder):
     with open(os.path.join(MAP_OUT, "anchors.json"), "w") as f:
         json.dump(anchors, f, indent=1)
         f.write("\n")
+
+
+def export_scaffolds(folder):
+    """Each scaffold as a sprite sheet (tools/art/pack_sheet.py's kind, which the
+    client reads like a building's): "build/0" plays once, "hold/0" goes round
+    after, and meta.bounds["build/0"] is its box as Flash measures it when it
+    appears, which the game places it by (bottom centre on the building's point)."""
+    import hashlib
+    import json
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import pack_sheet
+    drawn = os.path.join(folder, "scaffolds")
+    os.makedirs(drawn, exist_ok=True)
+    render([f"{path}*{frames}" for path, frames, _ in SCAFFOLDS.values()], drawn, scale=1, swf=LIBRARY)
+    for name, (path, frames, round_) in SCAFFOLDS.items():
+        stem = f"{path}*{frames}"
+        with open(os.path.join(drawn, f"{stem}.json")) as f:
+            made = json.load(f)
+        build = list(range(0, frames, SCAFFOLD_STEP))
+        hold = list(range(frames - round_, frames, SCAFFOLD_STEP)) if round_ > 1 else [frames - 1]
+        # The same picture twice is stored once.
+        pictures, numbers, seen = [], {}, {}
+        for frame in sorted(set(build + hold)):
+            picture = os.path.join(drawn, f"{stem}-{frame}.png")
+            with open(picture, "rb") as f:
+                digest = hashlib.sha1(f.read()).hexdigest()
+            if digest not in seen:
+                seen[digest] = len(pictures)
+                pictures.append(picture)
+            numbers[frame] = seen[digest]
+        with Image.open(pictures[0]) as first:
+            canvas = {"w": first.width, "h": first.height}
+        manifest = {
+            "name": name,
+            "swf": os.path.basename(LIBRARY),
+            "fps": SCAFFOLD_FPS,
+            "canvas": canvas,
+            "origin": made["origin"],
+            "frames": [
+                {"labels": ["build"], "images": [numbers[f] for f in build], "bounds": made["bounds"][0]},
+                {"labels": ["hold"], "images": [numbers[f] for f in hold]},
+            ],
+        }
+        sheets, pages, warnings = pack_sheet.build(None, loaded=(manifest, pictures))
+        for warning in warnings:
+            print(f"{name}: {warning}")
+        pack_sheet.write(sheets, pages, MAP_OUT)
+        size = os.path.getsize(os.path.join(MAP_OUT, f"{name}.webp"))
+        print(f"{name}: {len(pictures)} pictures, {pages[0]['meta']['size']['w']}x{pages[0]['meta']['size']['h']}, {size // 1024} KB")
 
 
 if __name__ == "__main__":

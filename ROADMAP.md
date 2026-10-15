@@ -281,7 +281,7 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       storage, army, neighbours and battle windows, the glove, messages at
       the top); units walking; villagers at work (trees, rocks, workers into
       buildings and out again); training and population; land and cash
-      (land, opening early, hurrying, the bank); missions and bonuses
+      (land, hurrying, the bank); missions and bonuses
       (goals, the daily bonus, Monday's chest); neighbours
       (visiting and helping, Arthur, the donkey carts); sound and speed (the
       town's music and sounds, compressed downloads); and a run-through
