@@ -200,12 +200,15 @@ async function start(): Promise<void> {
     const visits = visitsSoFar();
     doings.lastVisited = visits.last;
     doings.helpedBuildings = visits.helped;
+    // The bonuses (made once the town's goals are, below) hear of a level up.
+    let bonuses: BonusDesk | undefined;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
-      windowOf: (placed) => (placed.item.id === WIZARDRY_ACADEMY ? { label: "Spells", run: () => spells.open() } : null) });
+      windowOf: (placed) => (placed.item.id === WIZARDRY_ACADEMY ? { label: "Spells", run: () => spells.open() } : null),
+      levelled: () => bonuses?.levelled() });
     hud.offerCollectAll(() => editor.collectAll());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
@@ -282,10 +285,11 @@ async function start(): Promise<void> {
         changed: () => hud.update(town),
       });
     }
-    new BonusDesk({
+    bonuses = new BonusDesk({
       town, items, thumbnail,
       state: privateState,
       config: readBonusConfig(config.globals),
+      days: settings.days ?? 1000,
       clock,
       send: (cmd, ...args) => {
         commands.add(cmd, ...args);

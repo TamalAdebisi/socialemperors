@@ -1,10 +1,10 @@
 // The bonuses on offer (CLIENT.md, "Missions and bonuses"): the daily
-// bonus and Monday's chest, each a round button at
+// bonus, Monday's chest and the welcome-back chest, each a round button at
 // the top right while it's on offer, opening its window. The rules are in
 // rules/bonuses.ts; the server pays the same from the config.
 
 import {
-  DAILY_DAYS, collectDaily, collectMonday, dailyBonusDay, dailyBonusOffered, mondayChest,
+  DAILY_DAYS, collectDaily, collectMonday, collectWelcomeBack, dailyBonusDay, dailyBonusOffered, mondayChest, welcomeBackChest,
   type BonusConfig, type BonusState, type Prize,
 } from "./rules/bonuses.ts";
 import type { ItemInfo } from "./rules/config.ts";
@@ -19,6 +19,8 @@ export interface BonusDeskParts {
   state: BonusState;
   config: BonusConfig;
   items: Map<number, ItemInfo>;
+  /** Days since the empire was made, as the page says (the welcome-back chest). */
+  days: number;
   clock: () => number;
   send: (cmd: string, ...args: unknown[]) => void;
   say: (text: string) => void;
@@ -34,9 +36,14 @@ export class BonusDesk {
   private readonly offers: HTMLElement;
   private readonly daily = new Panel("daily", "Daily bonus", { className: "list-window bonus" });
   private readonly monday = new Panel("monday", "Monday's chest", { className: "list-window bonus" });
+  private readonly welcome = new Panel("welcome", "Welcome back!", { className: "list-window bonus" });
+
+  /** Whether the daily bonus is offered, decided as the town opens, as the Flash client does. */
+  private readonly dailyOffered: boolean;
 
   constructor(parts: BonusDeskParts) {
     this.parts = parts;
+    this.dailyOffered = dailyBonusOffered(parts.town);
     this.offers = document.createElement("nav");
     this.offers.className = "offers";
     this.offers.setAttribute("aria-label", "Bonuses");
@@ -44,17 +51,25 @@ export class BonusDesk {
     this.refresh();
   }
 
+  /** A level up: the welcome-back chest shows on reaching level 4, as in the Flash client. */
+  levelled(): void {
+    this.refresh();
+  }
+
   /** The buttons for what's on offer now. */
   refresh(): void {
-    const { state, clock, town } = this.parts;
+    const { state, clock, town, days } = this.parts;
     const now = clock();
     const buttons: HTMLButtonElement[] = [];
-    if (dailyBonusOffered(town) && dailyBonusDay(state, now) !== null) {
+    if (this.dailyOffered && dailyBonusDay(state, now) !== null) {
       buttons.push(this.offer("Daily bonus", ICONS["daily-bonus"], () => this.openDaily()));
     }
     const chest = mondayChest(state, now);
     if (chest === "ready" || chest === "soon") {
       buttons.push(this.offer("Monday's chest", ICONS.gifts, () => this.openMonday()));
+    }
+    if (welcomeBackChest(town, state, this.parts.config, days) !== null) {
+      buttons.push(this.offer("Welcome-back chest", ICONS["welcome-back"], () => this.openWelcome()));
     }
     this.offers.replaceChildren(...buttons);
   }
@@ -72,7 +87,7 @@ export class BonusDesk {
 
   private openDaily(): void {
     const day = dailyBonusDay(this.parts.state, this.parts.clock());
-    if (day === null || !dailyBonusOffered(this.parts.town)) {
+    if (day === null || !this.dailyOffered) {
       return;
     }
     const intro = this.note("Come back every day: each day's prize is bigger, and missing a day starts again from the first.");
@@ -113,6 +128,34 @@ export class BonusDesk {
     }
     this.monday.body.replaceChildren(intro, chests);
     this.monday.open();
+  }
+
+  /** As the Flash client's: three chests to pick from when one is ready, else what tomorrow's holds. */
+  private openWelcome(): void {
+    const { town, state, config, days, items } = this.parts;
+    const chest = welcomeBackChest(town, state, config, days);
+    if (chest === null) {
+      return;
+    }
+    const prizes = config.monday.map((prize) => prize.type === "u" ? `a ${items.get(chest.unit)?.name ?? "unit"}`
+      : `${numbers.format(prize.amount)} ${prize.type === "c" ? "cash" : "gold"}`);
+    const holds = prizes.length > 1 ? `${prizes.slice(0, -1).join(", ")} or ${prizes.at(-1)}` : prizes.join("");
+    const intro = this.note(chest.state === "ready" ? `Thanks for coming back! Pick a chest: each holds ${holds}.`
+      : `Come back tomorrow for a chest: it holds ${holds}.`);
+    const chests = document.createElement("div");
+    chests.className = "bonus-chests";
+    for (let i = 1; i <= 3; i++) {
+      const button = this.button(`Chest ${i}`, () => {
+        const done = collectWelcomeBack(town, state, config, chest.day);
+        this.parts.send(done.command.cmd, ...done.command.args);
+        this.won(this.welcome, done.prize, done.unit, "The chest");
+      });
+      button.disabled = chest.state !== "ready";
+      button.innerHTML = `<img src="${ICONS["welcome-back"]}" alt=""><span>Chest ${i}</span>`;
+      chests.append(button);
+    }
+    this.welcome.body.replaceChildren(intro, chests);
+    this.welcome.open();
   }
 
   /** Say what was won, in the window, and take its button away. */

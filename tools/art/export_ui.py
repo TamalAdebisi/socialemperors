@@ -65,6 +65,7 @@ PICTURES = {
     # The top bar.
     "add-cash": ("AddCashButton", 0),
     "daily-bonus": ("DailyButtonMC", 0),
+    "welcome-back": ("IconComeBack2nd3rdMC", 0),
     # The quest window's difficulty stars: won (or chosen) and not.
     "star-on": ("PopupLoadingQuestMC/star1", 1),
     "star-off": ("PopupLoadingQuestMC/star1", 0),
