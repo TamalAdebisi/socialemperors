@@ -34,6 +34,8 @@ const SINK_FRAMES = 15;
 const THROWN_FRAMES = 30;
 /** Poison bites every 3 seconds. */
 const POISON_EVERY = 90;
+/** Burning hurts once a second (the special units' fire). */
+export const BURN_EVERY = 30;
 /** An enlarged unit's hits. */
 const ENLARGED_HIT = 1.5;
 /** The Attack Booster Wizard (2052): every second, up to 10 units within 10 tiles, for 2 seconds. */
@@ -156,6 +158,10 @@ export interface Fighter {
   frozenUntil?: number;
   /** Poisoned: hurt by `damage` every 3 seconds, `left` more times, the next on frame `next`. */
   poison?: { damage: number; left: number; next: number } | null;
+  /** Burning: hurt by `damage` every second, `left` more times, the next on frame `next`. */
+  burn?: { damage: number; left: number; next: number } | null;
+  /** A summons that lasts a while: gone on this frame. */
+  expiresAt?: number;
   /** Grown big (from frame `grewAt`), hitting half again as hard, until this frame. */
   enlargedUntil?: number;
   /** Cheered by an Attack Booster Wizard: hits half again until this frame. */
@@ -323,6 +329,12 @@ export class Battle {
   readonly ownMind = new WeakSet<Fighter>();
   readonly onHurt: ((target: Fighter, damage: number, by: Fighter | null) => void)[] = [];
   readonly onLanded: ((shot: Shot, hit: boolean) => void)[] = [];
+  /** A plain hit (not a special move's) has landed: special units add to it (rules/specials.ts). */
+  readonly onPlainHit: ((by: Fighter, target: Fighter) => void)[] = [];
+  /** Something died, after the battle has dealt with it (the undead army raises skeletons). */
+  readonly onKilled: ((fighter: Fighter, by: Fighter | null) => void)[] = [];
+  /** Units that hit by hand although they reach further: no shot, the hit lands at once. */
+  readonly handToHand = new Set(RANGED_MELEE);
 
   constructor(options: BattleOptions) {
     this.ground = options.ground;
@@ -456,6 +468,22 @@ export class Battle {
   // --- Units ------------------------------------------------------------
 
   private stepUnit(unit: Fighter, frame: number): void {
+    if (unit.expiresAt !== undefined && frame >= unit.expiresAt) {
+      this.kill(unit, null);
+      return;
+    }
+    if (unit.burn && frame >= unit.burn.next) {
+      const burn = unit.burn;
+      burn.left--;
+      burn.next = frame + BURN_EVERY;
+      if (burn.left <= 0) {
+        unit.burn = null;
+      }
+      this.hurt(unit, burn.damage, null);
+      if (unit.dead) {
+        return;
+      }
+    }
     if (unit.poison && frame >= unit.poison.next) {
       const poison = unit.poison;
       poison.left--;
@@ -648,7 +676,7 @@ export class Battle {
           }
         } else if (unit.item.subcategory === SUBCAT.cleric) {
           // Any other cleric doesn't hit.
-        } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
+        } else if (unit.range > 1 && !this.handToHand.has(unit.item.id)) {
           this.shoot(unit, target);
           if (DOUBLE_SHOT.has(unit.item.id)) {
             // A second shot from its second mouth.
@@ -662,6 +690,7 @@ export class Battle {
           this.explode(unit);
         } else {
           this.hurt(target, unit.attack * elementFactor(unit, target), unit);
+          this.plainHit(unit, target);
         }
       }
       return;
@@ -893,9 +922,20 @@ export class Battle {
     const hit = Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS;
     if (hit) {
       this.hurt(target, shot.damage ?? shot.by.attack * elementFactor(shot.by, target), shot.by);
+      if (shot.damage === undefined) {
+        this.plainHit(shot.by, target);
+      }
     }
     for (const listen of this.onLanded) {
       listen(shot, hit);
+    }
+  }
+
+  private plainHit(by: Fighter, target: Fighter): void {
+    if (!target.dead) {
+      for (const listen of this.onPlainHit) {
+        listen(by, target);
+      }
     }
   }
 
@@ -1116,6 +1156,9 @@ export class Battle {
     }
     this.events.push({ kind: "died", fighter, by });
     this.onDeath(fighter, by);
+    for (const listen of this.onKilled) {
+      listen(fighter, by);
+    }
     // Whoever was after it looks around where it fell.
     for (const hunter of this.fighters) {
       if (hunter.target !== fighter) {

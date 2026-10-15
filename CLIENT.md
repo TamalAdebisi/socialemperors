@@ -1476,6 +1476,22 @@ few kinds with its numbers; our notes in words are in
   and behind; the werewolf's curse turns its target (one whose kind has
   under 500 life, no boss) into a werewolf on its side, poisoned for good;
   the Red Wizard's fire rain is only a picture, as in the original.
+- **Counted beats:** about a hundred special units (the titans, the
+  tiny gods, the myths, the undead army, the elves, orcs and gladiators,
+  the beasts...) count their attack beats, as each one's own class in the
+  original does, and on certain ones play a move instead of the plain
+  hit: every 5th beat a sweep, the 7th of every 13 a whirlwind, a draw
+  of 1 in 9 each beat, only when the target is up close, or only against
+  a building. Some keep a count for near and far beats apart, or start
+  one beat later. Many also add something to every plain hit: burning
+  (a second at a time), poison, a throw, or the hit lands by hand. Two
+  more kinds of move came with them: a small unit killed outright (thrown
+  and dying as it lands), and a web that holds a unit and hurts it each
+  second. The undead army raises skeletons: an enemy unit it kills has 3
+  chances in 10 of rising as a skeleton on its side for 15 seconds. The
+  table is `beats` in `rules/specials-table.json`; each unit's notes,
+  including what is still missing, are `beats` in `rules/specials.json`
+  (`rules/specials-beats.test.ts` plays every one).
 - **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
   from the damage they deal (healers from the healing they do), at most
   once a second, doubled beside a Limit Wizard of their side; full at

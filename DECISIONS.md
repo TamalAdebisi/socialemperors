@@ -4,6 +4,28 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the special units' counted beats
+
+- **As the original played, slips included, where a player would have
+  seen them:** Godzilla's small stamp throws every time (its code meant
+  1 time in 10).
+- **One slip not copied:** in the original, the Lythos Titan stopped
+  making specials for the rest of a battle if it rolled its minions while
+  they were still out. Here it rolls again next time.
+- **Not built yet, so not decided yet:** the Tiny Water God's grab (in
+  the original its victims stay helpless and unseen for good, never
+  dying; the plan is to let them die, as its code meant), and Tornado
+  Heaven, which in the original hit a thrown unit about 30 times while it
+  flew. These and the other missing parts are listed per unit in
+  `client/src/rules/specials.json` ("beats").
+- **Hits the original repeated on a unit in the air are folded into
+  one:** the original moved a thrown unit only when it landed, so a
+  quick series of strikes kept finding it; ours moves it at once. Where
+  that mattered, the readers wrote the total as one hit (the Eagle
+  Rider's wing, the Red Bull's smash).
+- **Burning hurts once a second,** as the original's "5 a second for 5
+  seconds" reads.
+
 ## 15 October 2026: the nests' window
 
 - **The nest's window opens in the panel,** like every window in the new

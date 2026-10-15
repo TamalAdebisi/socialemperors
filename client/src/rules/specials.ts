@@ -10,7 +10,7 @@
 // the unit's attack, or, when the factor is negative, that many points;
 // either way it goes through the normal damage formula.
 
-import { NEUTRAL, SUBCAT, type Battle, type Fighter } from "./battle.ts";
+import { BURN_EVERY, NEUTRAL, SUBCAT, type Battle, type Fighter } from "./battle.ts";
 import type { ItemInfo } from "./config.ts";
 import { unitPoint, type Point } from "./geometry.ts";
 
@@ -29,7 +29,9 @@ export type Move =
   | { kind: "hit"; factor: number; push: number; stun: boolean; fx: string | null }
   | { kind: "heal"; who: "self" | "allies" | "target"; radius: number; max: number; amount: number; factor: number }
   /** maxAlive 0: no limit (the bosses' small yetis and golems). */
-  | { kind: "spawn"; minion: number; count: number; maxAlive: number; egg: boolean }
+  | { kind: "spawn"; minion: number; count: number; maxAlive: number; egg: boolean;
+    /** It lasts this many frames, then is gone. */
+    frames?: number }
   | { kind: "swallow"; radius: number; max: number; around: Around; maxLife: number }
   | { kind: "freeze"; radius: number; max: number; frames: number; around: Around }
   | { kind: "poison"; radius: number; max: number; damage: number; ticks: number; around: Around }
@@ -68,6 +70,14 @@ export type Move =
    */
   | { kind: "ghosts"; points: [number, number][]; ahead: boolean; radius: number; max: number; factor: number; push: number;
     burn: { damage: number; ticks: number } | null; repeat: number; every: number; helpless: number }
+  /**
+   * A small unit killed outright: its target, if a unit (not a boss) with at
+   * most `maxLife` (its life now when `current`), is thrown `push` tiles and
+   * dies as it lands. Anything else: `otherwise`, if given.
+   */
+  | { kind: "kill"; maxLife: number; current?: boolean; push: number; otherwise: Move | null }
+  /** Caught in a web: helpless for `frames`, losing `damage` a second; only units of at most `maxLife`. */
+  | { kind: "web"; radius: number; max: number; around: Around; frames: number; damage: number; maxLife: number }
   /** Only a picture on its target (the Red Wizard's fire rain, which never hurt). */
   | { kind: "show"; fx: string }
   | { kind: "other"; note: string };
@@ -81,7 +91,57 @@ export interface AutoEntry {
 export interface Button { slot: number; name: string; picture: string; animation: number; needsTarget: boolean; move: Move }
 export interface Limit { max: number; fill: "damage" | "heal"; name: string; animation: number; move: Move }
 export interface UnitEntry { ids: number[]; name: string; cooldown: number; buttons: Button[]; limit: Limit | null; giant: boolean }
-export interface SpecialsTable { auto: AutoEntry[]; units: UnitEntry[] }
+/**
+ * A move on a counted attack beat, as the Flash client's special units
+ * count them: on beat n (from 1) when n % every === at, and the target is
+ * up close or far off if it says so, with this chance (the rules left to
+ * chance share one draw a beat). `replace`: the plain hit doesn't happen
+ * on that beat.
+ */
+export interface BeatRule {
+  every: number;
+  at: number;
+  /** The first time it plays, if not the every-th beat (then every `every` after). */
+  from?: number;
+  /** Which beats this rule counts, when the unit keeps a count for near and far apart. */
+  counts?: "all" | "near" | "far";
+  when: "any" | "near" | "far";
+  chance: number;
+  replace: boolean;
+  animation: number | null;
+  /** It stands still while the move plays. */
+  helpless?: boolean;
+  /** Once the count has reached `from`, the next beat that fits plays it, and the count starts again. */
+  sticky?: boolean;
+  /** Only against a building, only against a unit, or only when it's hurt. */
+  if?: "targetBuilding" | "targetUnit" | "selfHurt";
+  move: Move;
+}
+
+/** What every plain hit of a unit adds: burning or poison (damage a tick, ticks), a throw (on a chance). */
+export interface HitExtras {
+  burn: { damage: number; ticks: number } | null;
+  poison: { damage: number; ticks: number } | null;
+  push: number;
+  pushChance: number;
+  handToHand: boolean;
+}
+
+/** The undead army: an enemy unit it kills may rise as one of `minions` on its side, for `frames`. */
+export interface Risers { ids: number[]; chance: number; minions: number[]; frames: number }
+
+/** A unit's counted moves: the first rule that matches a beat plays. `near`: tiles that count as up close. */
+export interface BeatEntry {
+  ids: number[];
+  name: string;
+  near: number | null;
+  /** Which beats move the count on ("split": each rule says). */
+  counts: "all" | "near" | "far" | "split";
+  rules: BeatRule[];
+  hits: HitExtras | null;
+}
+
+export interface SpecialsTable { auto: AutoEntry[]; units: UnitEntry[]; beats?: BeatEntry[]; risers?: Risers }
 
 /** The LIMIT bar fills at most once a second, and twice as fast beside a Limit Wizard of its side. */
 const LIMIT_FILL_EVERY = 30;
@@ -125,6 +185,8 @@ interface State {
   duplicated: boolean;
   /** Ordinary hits so far (the albino werewolf's count). */
   hits?: number;
+  /** Beats counted for a unit's counted moves: all of them, those up close, those far off. */
+  beats?: { all: number; near: number; far: number };
 }
 
 export class Specials {
@@ -133,6 +195,8 @@ export class Specials {
   private readonly random: () => number;
   private readonly auto = new Map<number, AutoEntry>();
   private readonly units = new Map<number, UnitEntry>();
+  private readonly counted = new Map<number, BeatEntry>();
+  private readonly risers: Risers | null;
   private readonly states = new Map<Fighter, State>();
   /** Who laid or summoned each minion, for the "3 alive at most". */
   private readonly owners = new Map<Fighter, Fighter>();
@@ -153,6 +217,17 @@ export class Specials {
         this.units.set(id, entry);
       }
     }
+    for (const entry of table.beats ?? []) {
+      for (const id of entry.ids) {
+        this.counted.set(id, entry);
+        if (entry.hits?.handToHand) {
+          battle.handToHand.add(id);
+        }
+      }
+    }
+    this.risers = table.risers ?? null;
+    battle.onPlainHit.push((by, target) => this.plainHitExtras(by, target));
+    battle.onKilled.push((dead, by) => this.rise(dead, by));
     battle.onBeat = (unit, target) => this.beat(unit, target);
     battle.onDealt = (by, amount, healing) => this.dealt(by, amount, healing);
   }
@@ -239,6 +314,10 @@ export class Specials {
 
   /** An attack beat: inside an automatic move's window, the move instead of the hit. */
   private beat(unit: Fighter, target: Fighter): boolean {
+    const counted = this.counted.get(unit.item.id);
+    if (counted && counted.rules.length > 0) {
+      return this.countedBeat(unit, target, counted);
+    }
     const entry = this.auto.get(unit.item.id);
     if (!entry) {
       return this.plainBeat(unit, target);
@@ -253,6 +332,107 @@ export class Specials {
     }
     this.play(unit, move, target);
     return true;
+  }
+
+  /** A beat of a unit with counted moves: counted, then the first rule that matches plays. */
+  private countedBeat(unit: Fighter, target: Fighter, entry: BeatEntry): boolean {
+    const near = entry.near !== null && Math.hypot(target.tx - unit.tx, target.ty - unit.ty) <= entry.near;
+    if (entry.counts !== "all" && entry.counts !== "split" && (entry.counts === "near") !== near) {
+      return false;
+    }
+    const state = this.state(unit);
+    const counts = state.beats ?? { all: 0, near: 0, far: 0 };
+    state.beats = counts;
+    counts.all++;
+    counts[near ? "near" : "far"]++;
+    // One draw a beat, shared out among the rules left to chance, as the original rolls once ("1 in 10 this, 1 in 10 that").
+    let roll: number | null = null;
+    let share = 0;
+    for (const rule of entry.rules) {
+      const which = rule.counts ?? (entry.counts === "split" ? "all" : entry.counts);
+      if (which !== "all" && (which === "near") !== near) {
+        continue;
+      }
+      const n = counts[which];
+      const from = rule.from ?? (rule.at % rule.every || rule.every);
+      if (n < from || (!rule.sticky && (n - from) % rule.every !== 0) || (rule.when !== "any" && (rule.when === "near") !== near)) {
+        continue;
+      }
+      if ((rule.if === "targetBuilding" && target.isUnit) || (rule.if === "targetUnit" && !target.isUnit)
+        || (rule.if === "selfHurt" && unit.life >= unit.maxLife)) {
+        continue;
+      }
+      if (rule.chance < 1) {
+        roll ??= this.random();
+        share += rule.chance;
+        if (roll >= share) {
+          continue;
+        }
+      }
+      if (rule.animation !== null) {
+        unit.special = { animation: rule.animation, until: this.battle.frame + SHOW_AT_LEAST };
+      }
+      if (rule.helpless) {
+        this.battle.still(unit, Math.max(SHOW_AT_LEAST, this.length(rule.move)));
+      }
+      if (rule.sticky) {
+        counts[which] = 0;
+      }
+      this.play(unit, rule.move, target);
+      return rule.replace;
+    }
+    return false;
+  }
+
+  /** About how long a move takes to play out, in frames (for standing still meanwhile). */
+  private length(move: Move): number {
+    switch (move.kind) {
+      case "later":
+        return move.frames + this.length(move.move);
+      case "both":
+        return Math.max(0, ...move.moves.map((m) => this.length(m)));
+      case "volley":
+        return move.shots * move.every;
+      case "whirl":
+        return move.duration;
+      case "ghosts":
+        return move.repeat * move.every;
+      default:
+        return 0;
+    }
+  }
+
+  /** What a special unit's plain hit adds: burning, poison, a throw. */
+  private plainHitExtras(by: Fighter, target: Fighter): void {
+    const extras = this.counted.get(by.item.id)?.hits;
+    if (!extras || !target.isUnit || target.dead) {
+      return;
+    }
+    const frame = this.battle.frame;
+    if (extras.burn && !target.burn) {
+      target.burn = { damage: extras.burn.damage, left: extras.burn.ticks, next: frame + BURN_EVERY };
+    }
+    if (extras.poison && !target.poison && target.item.subcategory !== SUBCAT.boss) {
+      target.poison = { damage: extras.poison.damage, left: extras.poison.ticks, next: frame + 90 };
+    }
+    if (extras.push > 0 && (extras.pushChance >= 1 || this.random() < extras.pushChance)) {
+      this.battle.knock(target, { x: by.tx, y: by.ty }, extras.push);
+    }
+  }
+
+  /** One of the undead army killed an enemy unit: it may rise as a skeleton on their side, for a while. */
+  private rise(dead: Fighter, by: Fighter | null): void {
+    const risers = this.risers;
+    if (!risers || !by || !dead.isUnit || dead.summoned || dead.side === by.side || !risers.ids.includes(by.item.id)
+      || this.random() >= risers.chance) {
+      return;
+    }
+    const item = this.items.get(risers.minions[Math.floor(this.random() * risers.minions.length)]);
+    const tile = item && this.battle.freeTileNear({ x: dead.tx, y: dead.ty }, true);
+    if (item && tile) {
+      const skeleton = this.battle.add(item, tile.x, tile.y, by.side, { summoned: true });
+      skeleton.expiresAt = this.battle.frame + risers.frames;
+    }
   }
 
   /**
@@ -598,6 +778,9 @@ export class Specials {
             this.hatching.delete(egg);
             const minion = battle.add(item, tile.x, tile.y, f.side, { summoned: true });
             this.owners.set(minion, f);
+            if (move.frames) {
+              minion.expiresAt = battle.frame + move.frames;
+            }
           });
         }
         break;
@@ -809,6 +992,27 @@ export class Specials {
         }
         break;
       }
+      case "kill": {
+        const life = target && (move.current ? target.life : target.maxLife);
+        if (target && !target.dead && target.isUnit && target.item.subcategory !== SUBCAT.boss && life !== null && life <= move.maxLife) {
+          const victim = target;
+          if (move.push > 0) {
+            battle.knock(victim, self(), move.push);
+          }
+          // It dies as it lands.
+          battle.after(move.push > 0 ? 30 : 0, () => battle.kill(victim, f));
+        } else if (move.otherwise) {
+          this.play(f, move.otherwise, target);
+        }
+        break;
+      }
+      case "web":
+        for (const o of enemies(centreOf(move.around), move.radius, move.max,
+          (o) => o.isUnit && o.item.subcategory !== SUBCAT.boss && o.maxLife <= move.maxLife && !battle.isStilled(o))) {
+          battle.still(o, move.frames);
+          o.burn = { damage: move.damage, left: Math.max(1, Math.floor(move.frames / BURN_EVERY)), next: battle.frame + BURN_EVERY };
+        }
+        break;
       case "show":
         if (target) {
           this.show(move.fx, { x: target.tx, y: target.ty });
