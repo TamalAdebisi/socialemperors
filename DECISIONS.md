@@ -11,6 +11,50 @@ them can be found and reversed. The big, agreed decisions are in
 - **It comes before the carts and Arthur's lessons,** one after another,
   so one doesn't hide the other.
 
+## 15 October 2026: Beta 2, scripted camps (part 2)
+
+- **A camp's helpers stand by the town hall.** The original put them in
+  the map's top-left corner (its search for a spot came back empty), from
+  where they walked to the town hall.
+- **A camp's progress is saved before it ends.** Three camps (the
+  Atlantis treasure, the portals, the wizards) saved their last key after
+  ending in the original; the server now ignores that too (part 1).
+- **No messenger speech or camera flight** when a camp's window closes;
+  the original flew the camera to a helper who said a line, or to the
+  chest.
+- **Kept from the original:** each time the town opens, a newer camp's
+  corners are cleared and put back, its guards and boss whole again.
+
+## 15 October 2026: Beta 2, scripted camps (part 1)
+
+- **Camp 13 reloaded in its last stage keeps the chest shut** until the
+  wave of skeletons has fallen. The original opened it at once on a
+  reload, wave or not.
+- **The camera doesn't fly to the chest** when the camp's window closes,
+  as the original's did; the chest lights up when its turn comes.
+- **A camp found in a muddle** (its chest gone with keys left) is put up
+  afresh. The original cleared the border and ended it.
+- **Left out, as in the original:** camp 7's food prize (always 0) and
+  camp 13's two prize skeletons (never given).
+
+## 15 October 2026: Beta 2, the rarer special moves
+
+- **Ghost copies aren't drawn:** the Red Hot dragon's and the Ether
+  Messiah's copies strike where the original's flew, but no see-through
+  dragon flies there.
+- **The Ether Messiah's copies do their slash as six small hits** (5
+  each, once a second), as close as we could read the original's.
+- **Who can be cursed or turned goes by the unit's kind:** under 500 life
+  in the config, as the original decided when the unit was made.
+- **The cursed werewolf pays nothing and isn't counted,** like a summoned
+  unit; the unit it replaced counts as fallen.
+
+## 15 October 2026: Beta 2, battle music and the alert
+
+- **The "under attack" alert's words are ours** ("Your town is under
+  attack!"): the original's were drawn into its picture. Its button keeps
+  the game's own word, Help.
+
 ## 15 October 2026: the keyboard
 
 - **The arrow keys move the map; WASD doesn't any more.** Both were our

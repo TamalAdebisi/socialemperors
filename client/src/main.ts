@@ -216,7 +216,8 @@ async function start(): Promise<void> {
         const defence = new HomeDefence({
           town, items, config, privateState: info.privateState as Record<string, unknown> | undefined, settings, commands, sound,
           art, view, world: mapLayer, camera, editor, clock,
-          camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0 },
+          camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0,
+            vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
       });

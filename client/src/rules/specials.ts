@@ -37,6 +37,33 @@ export type Move =
   | { kind: "healBeams"; count: number; every: number; factor: number }
   | { kind: "smash"; max: number; factor: number }
   | { kind: "duplicate" }
+  /** For a while it takes only this share of each hit (0: none). */
+  | { kind: "guard"; frames: number; taken: number }
+  /** For a while nobody can pick it as a target. */
+  | { kind: "hide"; frames: number }
+  /** Enemy units around are drawn to it, and fight it, for a while. */
+  | { kind: "lure"; radius: number; max: number; frames: number }
+  /** Its target becomes one of these on its side, with this life, poisoned for good (half its attack every 3 s). */
+  | { kind: "curse"; into: number; life: number }
+  /** It becomes another unit for a while (null: a copy of its target), keeping its life or its share of life. */
+  | { kind: "become"; into: number | null; frames: number; keepShare: boolean }
+  /**
+   * Enemy units around float up helpless under a seal, hurt every `every`
+   * frames, and drop when it closes, hurt again and thrown. `killChance`:
+   * each small one (`killMaxLife` or less) may die instead; `shareDrop`:
+   * the drop's damage is shared among them.
+   */
+  | { kind: "lift"; radius: number; max: number; maxLife: number; frames: number; every: number; damage: number; drop: number; push: number;
+    selfStill: number; killChance?: number; killMaxLife?: number; shareDrop?: boolean }
+  /**
+   * Ghost copies of it strike at points around it (offsets in tiles, or
+   * ahead and behind it when `ahead`): each hits enemy units near the point,
+   * throws them, and may set them burning. It stands helpless meanwhile.
+   */
+  | { kind: "ghosts"; points: [number, number][]; ahead: boolean; radius: number; max: number; factor: number; push: number;
+    burn: { damage: number; ticks: number } | null; repeat: number; every: number; helpless: number }
+  /** Only a picture on its target (the Red Wizard's fire rain, which never hurt). */
+  | { kind: "show"; fx: string }
   | { kind: "other"; note: string };
 
 /** `animations`: each move its own (the bosses' three), else `animation` for all. */
@@ -118,9 +145,24 @@ export class Specials {
     battle.onDealt = (by, amount, healing) => this.dealt(by, amount, healing);
   }
 
-  /** A fighter's buttons, if it has any. */
+  /** A fighter's buttons, if it has any (its own, in another form too). */
   entryOf(f: Fighter): UnitEntry | null {
-    return f.isUnit ? this.units.get(f.item.id) ?? null : null;
+    return f.isUnit ? this.units.get((f.form?.base ?? f.item).id) ?? null : null;
+  }
+
+  /** It becomes another unit (or itself again): its look, attack, reach and speed; its life or its share of it. */
+  private become(f: Fighter, item: ItemInfo, keepShare: boolean): void {
+    if (keepShare) {
+      const share = f.life / f.maxLife;
+      f.maxLife = item.life;
+      f.life = Math.max(1, Math.round(share * item.life));
+    }
+    f.item = item;
+    f.attack = item.attack;
+    f.range = item.attackRange;
+    f.interval = item.attackInterval;
+    f.velocity = item.velocity;
+    f.flying = item.flying;
   }
 
   private state(f: Fighter): State {
@@ -150,6 +192,12 @@ export class Specials {
     for (const f of this.battle.fighters) {
       if (f.dead || !f.isUnit) {
         continue;
+      }
+      if (f.form && frame >= f.form.until) {
+        // Its time in another form is up.
+        const { base, keepShare } = f.form;
+        f.form = null;
+        this.become(f, base, keepShare);
       }
       if (this.entryOf(f)) {
         this.state(f);  // sets up its LIMIT bar and size
@@ -560,6 +608,115 @@ export class Specials {
         }
         break;
       }
+      case "guard":
+        f.guard = { until: battle.frame + move.frames, taken: move.taken };
+        break;
+      case "hide":
+        f.hiddenUntil = battle.frame + move.frames;
+        for (const o of battle.fighters) {
+          if (o.target === f && o.side !== f.side) {
+            o.target = null;
+            o.attacking = false;
+          }
+        }
+        break;
+      case "lure":
+        for (const o of enemies(self(), move.radius, move.max, (o) => o.isUnit)) {
+          battle.attackWith([o], f);
+          o.forced = true;
+          battle.after(move.frames, () => {
+            o.forced = false;
+          });
+        }
+        break;
+      case "curse": {
+        const item = this.items.get(move.into);
+        if (!target || target.dead || !target.isUnit || target.item.subcategory === SUBCAT.boss || target.item.life >= 500 || !item || f.cursed) {
+          break;
+        }
+        const at = { x: target.tx, y: target.ty };
+        battle.kill(target, f);
+        battle.remove(target);
+        const wolf = battle.add(item, at.x, at.y, f.side, { summoned: true, life: move.life, maxLife: move.life, cursed: true });
+        wolf.poison = { damage: Math.ceil(wolf.attack / 2), left: 1000, next: battle.frame + 90 };
+        break;
+      }
+      case "become": {
+        const into = move.into === null ? target?.item : this.items.get(move.into);
+        if (!into || !f.isUnit) {
+          break;
+        }
+        if (move.into === null && (!target || target.dead || !target.isUnit || target.item.subcategory === SUBCAT.boss)) {
+          break;
+        }
+        const base = f.form?.base ?? f.item;
+        this.become(f, into, move.keepShare);
+        f.form = { base, until: battle.frame + move.frames, keepShare: move.keepShare };
+        break;
+      }
+      case "lift": {
+        const lifted = enemies(self(), move.radius, move.max, (o) => o.isUnit && !o.giant && o.item.subcategory !== SUBCAT.boss
+          && o.maxLife <= move.maxLife);
+        if (move.selfStill > 0) {
+          battle.still(f, move.selfStill);
+        }
+        const until = battle.frame + move.frames;
+        const doomed = new Set(lifted.filter((o) => move.killChance && o.life <= (move.killMaxLife ?? 0) && this.random() < move.killChance));
+        for (const o of lifted) {
+          o.liftedUntil = until;
+          battle.still(o, move.frames);
+          for (let t = move.every; t < move.frames; t += move.every) {
+            battle.after(t, () => {
+              if (!doomed.has(o)) {
+                battle.hurt(o, move.damage, f);
+              }
+            });
+          }
+        }
+        battle.after(move.frames, () => {
+          const alive = lifted.filter((o) => !o.dead);
+          for (const o of alive) {
+            o.liftedUntil = 0;
+            if (doomed.has(o)) {
+              battle.kill(o, f);
+              continue;
+            }
+            const drop = this.amount(f, move.drop) / (move.shareDrop ? Math.max(alive.length, 1) : 1);
+            battle.hurt(o, drop, f);
+            if (!o.dead && move.push > 0) {
+              battle.knock(o, self(), move.push);
+            }
+          }
+        });
+        break;
+      }
+      case "ghosts": {
+        // Ahead: the offsets turned the way of its target.
+        const way = target ? { x: Math.sign(target.tx - f.tx) || 1, y: Math.sign(target.ty - f.ty) } : { x: 1, y: 0 };
+        const points = move.points.map(([a, b]) => (move.ahead ? { x: f.tx + way.x * a, y: f.ty + way.y * a + b } : { x: f.tx + a, y: f.ty + b }));
+        if (move.helpless > 0) {
+          battle.still(f, move.helpless);
+        }
+        for (let r = 0; r < move.repeat; r++) {
+          battle.after(r * move.every, () => {
+            for (const point of points) {
+              for (const o of enemies(point, move.radius, move.max, (o) => o.isUnit)) {
+                this.strike(f, o, move.factor, move.push, false, point);
+                for (let t = 1; move.burn && t <= move.burn.ticks; t++) {
+                  const burn = move.burn.damage;
+                  battle.after(t * 30, () => battle.hurt(o, burn, f));
+                }
+              }
+            }
+          });
+        }
+        break;
+      }
+      case "show":
+        if (target) {
+          this.show(move.fx, { x: target.tx, y: target.ty });
+        }
+        break;
       case "other":
         break;
     }
@@ -583,6 +740,10 @@ function lasting(move: Move): number {
       return move.count * move.every;
     case "line":
       return move.length * 5;
+    case "lift":
+      return move.frames;
+    case "ghosts":
+      return Math.max(move.helpless, move.repeat * move.every);
     default:
       return 0;
   }
