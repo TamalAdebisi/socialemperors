@@ -3,7 +3,7 @@
 // It shows changes (a thing moved, turned or gone) but doesn't make them:
 // rules/editing.ts does.
 
-import { AnimatedSprite, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { AnimatedSprite, Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
 import type { ItemInfo } from "../rules/config.ts";
 import {
@@ -28,6 +28,8 @@ import { isOpaqueAt } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
+import { BLOCKS, BLOCK_TILES, isOuterBlock } from "../rules/geometry.ts";
+import { ICONS } from "../ui/icons.ts";
 
 /** How often the screen draws, which Pixi counts animation speed in. */
 const TICKER_FPS = 60;
@@ -46,6 +48,9 @@ export class TownView {
   private readonly ground = new Container();
   /** Marks on the ground: a footprint being placed. */
   private readonly marks = new Container();
+  /** "For sale" signs on the land the player hasn't bought, in their own town (showLandForSale). */
+  private readonly landSigns = new Container();
+  private landForSale = false;
   private readonly things = new Container();
   private readonly art: ArtLibrary;
   private readonly items: Map<number, ItemInfo>;
@@ -80,7 +85,7 @@ export class TownView {
     this.town = town;
     this.glow.brightness(1.25, false);
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
-    this.root.addChild(this.ground, this.marks, this.things, this.ghostLayer, this.markers.layer);
+    this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer);
     this.ghostLayer.alpha = 0.7;
   }
 
@@ -274,6 +279,11 @@ export class TownView {
 
   /** The thing whose picture is under a point of the screen, the one in front. */
   itemAt(screen: Point): PlacedItem | null {
+    // A sign over a building first: it stands in front of everything on the map.
+    const signed = this.markers.signAt(screen);
+    if (signed) {
+      return signed;
+    }
     const slots = this.things.children;
     for (let i = slots.length - 1; i >= 0; i--) {
       const slot = slots[i];
@@ -481,6 +491,40 @@ export class TownView {
     const old = this.ground.removeChildren();
     await this.buildGround(new Set());
     old.forEach((child) => child.destroy());
+    if (this.landForSale) {
+      await this.drawLandSigns();
+    }
+  }
+
+  /**
+   * A "for sale" sign in the middle of each block of land the player hasn't
+   * bought (but the wild ring), as the Flash client shows them in the
+   * player's own town. Tapping the land offers it, if it touches theirs.
+   */
+  async showLandForSale(): Promise<void> {
+    this.landForSale = true;
+    await this.drawLandSigns();
+  }
+
+  private async drawLandSigns(): Promise<void> {
+    const texture = await Assets.load<Texture>(ICONS["for-sale"]).catch(() => null);
+    this.landSigns.removeChildren().forEach((child) => child.destroy());
+    if (!texture) {
+      return;
+    }
+    for (let gy = 0; gy < BLOCKS; gy++) {
+      for (let gx = 0; gx < BLOCKS; gx++) {
+        if (isOuterBlock(gx, gy) || this.town.expansions.has(gx + BLOCKS * gy + 1)) {
+          continue;
+        }
+        const sign = new Sprite(texture);
+        sign.anchor.set(0.5, 1);
+        sign.scale.set(1 / 3);  // drawn at three times the game's size (tools/art/export_ui.py)
+        const middle = unitPoint(gx * BLOCK_TILES + BLOCK_TILES / 2, gy * BLOCK_TILES + BLOCK_TILES / 2);
+        sign.position.set(middle.x, middle.y);
+        this.landSigns.addChild(sign);
+      }
+    }
   }
 
   private async buildGround(missing: Set<string>): Promise<void> {
