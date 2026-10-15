@@ -4,6 +4,13 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the server's message as the town opens
+
+- **It shows in the bar at the bottom, with OK,** where the new client asks
+  everything else, rather than in a window of the original's own look.
+- **It comes before the carts and Arthur's lessons,** one after another,
+  so one doesn't hide the other.
+
 ## 15 October 2026: Beta 2, scripted camps (part 2)
 
 - **A camp's helpers stand by the town hall.** The original put them in

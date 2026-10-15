@@ -954,6 +954,13 @@ neighbours, Arthur last; Visit opens their town. Code:
 - **A server fix:** the server used to drop the cart's help when told the
   cart was met, so the shares that followed found nothing. It now keeps
   them as "on the way" (`assistsOnTheWay`) until each is delivered.
+- **The server's message:** what friends did for the player while away (a
+  help request answered) and gifts taken on the Friends page wait in the
+  save as a message, a line each (`privateState.message`). As the town
+  opens, before the carts or Arthur's lessons, it shows in the bar with OK,
+  once: OK tells the server it's read (`clear_message`), as the Flash client
+  does. Before, the new client left it, and it waited for the classic game.
+  Test: `e2e/tests/messages.mjs`.
 
 **Not yet:** gifts and requests between neighbours, and adding neighbours
 from inside the game (the site's friends page does it).
