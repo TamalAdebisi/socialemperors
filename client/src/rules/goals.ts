@@ -10,7 +10,7 @@
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "./config.ts";
 import { isTheirs } from "./editing.ts";
-import type { Town } from "./town.ts";
+import type { PlacedItem, Town } from "./town.ts";
 
 /** How many goals are open at once. */
 export const OPEN_GOALS = 15;
@@ -110,16 +110,34 @@ export class Doings {
   /** The island map opened at all, and from the menus (not a harbour's button). */
   islandsOpened = false;
   islandsFromMenu = false;
+  /**
+   * The goal kinds listened for: the open goals' (GoalKeeper sets them before
+   * each check), or null for all. As in the Flash client, most doings count
+   * only while a goal of their kind is open; collecting, catching, letting
+   * out, zooming and a few others always count.
+   */
+  private listening: Set<string> | null = null;
+
+  listen(kinds: Iterable<string>): void {
+    this.listening = new Set(kinds);
+  }
+
+  private hears(...kinds: string[]): boolean {
+    return this.listening === null || kinds.some((kind) => this.listening!.has(kind));
+  }
 
   collected(item: ItemInfo): void {
     add(this.collectedKind, item.subcategory);
     add(this.collectedItem, item.id);
   }
 
-  /** A mill or mine set to work: the minutes chosen, the longest counting. */
+  /** A mill or mine set to work: the minutes chosen, the last choice counting, as in the Flash client. */
   workTime(item: ItemInfo, minutes: number): void {
-    this.workTimeKind.set(item.subcategory, Math.max(this.workTimeKind.get(item.subcategory) ?? 0, minutes));
-    this.workTimeItem.set(item.id, Math.max(this.workTimeItem.get(item.id) ?? 0, minutes));
+    if (!this.hears("work-time-kind", "work-time")) {
+      return;
+    }
+    this.workTimeKind.set(item.subcategory, minutes);
+    this.workTimeItem.set(item.id, minutes);
   }
 
   letOut(building: ItemInfo): void {
@@ -127,7 +145,9 @@ export class Doings {
   }
 
   moved(item: ItemInfo): void {
-    add(this.movedKind, item.subcategory);
+    if (this.hears("move-kind")) {
+      add(this.movedKind, item.subcategory);
+    }
   }
 
   captured(item: ItemInfo): void {
@@ -135,23 +155,53 @@ export class Doings {
   }
 
   stored(item: ItemInfo): void {
-    add(this.storedKind, item.subcategory);
+    if (this.hears("store-kind")) {
+      add(this.storedKind, item.subcategory);
+    }
   }
 
   pushedInto(unit: ItemInfo, building: ItemInfo): void {
+    if (!this.hears("push-kind")) {
+      return;
+    }
     const inner = this.pushed.get(building.subcategory) ?? new Map<number, number>();
     add(inner, unit.subcategory);
     this.pushed.set(building.subcategory, inner);
   }
 
   trained(unit: ItemInfo, building: ItemInfo): void {
+    if (!this.hears("train-at")) {
+      return;
+    }
     const inner = this.trainedAt.get(building.id) ?? new Map<number, number>();
     add(inner, unit.id);
     this.trainedAt.set(building.id, inner);
   }
 
+  /** Something placed from storage. */
+  placedFromStorage(): void {
+    if (this.hears("place-stored")) {
+      this.placedStored = true;
+    }
+  }
+
+  /** The daily bonus collected: its day of the five. */
+  dailyBonus(day: number): void {
+    if (this.hears("daily-bonus")) {
+      this.dailyBonusDay = day;
+    }
+  }
+
+  /** The island map opened (a window, counted only while its goal is open); from the menus counts always. */
+  openedIslands(fromMenu: boolean): void {
+    if (this.hears("islands-opened")) {
+      this.islandsOpened = true;
+    }
+    this.islandsFromMenu ||= fromMenu;
+  }
+
   spend(letter: string, amount: number): void {
-    if (amount > 0) {
+    if (amount > 0 && this.hears("spend")) {
       this.spent.set(letter, (this.spent.get(letter) ?? 0) + amount);
     }
   }
@@ -304,21 +354,33 @@ function wallsAlongTheFront(town: Town, wallId: number): number {
   return town.items.filter((p) => p.item.id === wallId && p.ty === row && p.tx >= 40 && p.tx <= 59).length;
 }
 
-/** Whether there are enough units of each kind within 3 tiles of the town hall's corner: [kind, how many, ...]. */
+/**
+ * Whether there are enough units of each kind near the town hall: [kind,
+ * how many, ...]. As the Flash client counts: the nearest 20 of the
+ * player's units on the map within a circle of 3 tiles round the hall's
+ * tile (its corner).
+ */
 function nearHall(town: Town, wanted: number[]): boolean {
   const hall = town.items.find((p) => p.item.subcategory === SUBCAT_TOWN_HALL);
   if (!hall) {
     return false;
   }
+  const away = (p: PlacedItem) => (p.tx - hall.tx) ** 2 + (p.ty - hall.ty) ** 2;
+  const nearest = town.items
+    .filter((p) => p.item.isUnit && isTheirs(town, p.item) && away(p) <= NEAR_HALL ** 2)
+    .sort((a, b) => away(a) - away(b))
+    .slice(0, NEAR_HALL_MOST);
   for (let i = 0; i < wanted.length; i += 2) {
-    const near = town.items.filter((p) => p.item.isUnit && p.item.subcategory === wanted[i] && isTheirs(town, p.item)
-      && Math.max(Math.abs(p.tx - hall.tx), Math.abs(p.ty - hall.ty)) <= 3).length;
-    if (near < wanted[i + 1]) {
+    if (nearest.filter((p) => p.item.subcategory === wanted[i]).length < wanted[i + 1]) {
       return false;
     }
   }
   return true;
 }
+
+/** Goal 18's circle round the town hall, in tiles, and how many of the nearest units it looks at. */
+const NEAR_HALL = 3;
+const NEAR_HALL_MOST = 20;
 
 /** A goal reached: the server hears it (skipped: paid for in cash). */
 export function completeGoal(goal: Goal, skipped: boolean): Command {

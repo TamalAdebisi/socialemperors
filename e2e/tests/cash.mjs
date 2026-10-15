@@ -1,6 +1,7 @@
 // Land and cash (CLIENT.md, "Land and cash"): a town at level 20 (the
 // level-up prizes give it cash) buys the block below the middle for cash,
-// opens House IV early, hurries a gold mine and trades at the bank. The
+// finds House IV can't be opened early (as in the Flash client, whose tag
+// for it did nothing), hurries a gold mine and trades at the bank. The
 // save has each.
 
 import assert from "node:assert/strict";
@@ -36,13 +37,12 @@ export default async function cash({ newPlayer }) {
   await player.wait(1500);
   await player.shot("land-bought");
 
-  // House IV opens at level 31: early, for 11 cash.
+  // House IV opens at level 31: grey till then, with no way to open it early.
   await player.menu("Build");
   await player.press("Houses");
   const house = player.page.locator(".shop-card.locked", { has: player.page.locator(".shop-name", { hasText: /^House IV$/ }) });
-  await house.getByRole("button", { name: "Unlock House IV for 11 cash" }).click();
-  await player.wait(300);
-  assert.equal(await player.card("House IV").locator(".shop-note.level").count(), 0, "House IV is for sale now");
+  assert.equal(await house.count(), 1, "House IV is locked");
+  assert.equal(await house.getByRole("button").count(), 0, "and offers nothing to open it early");
   await player.page.keyboard.press("Escape");
 
   // The gold mine works for 8 hours: 2 cash finish it, and its gold comes now.
@@ -57,8 +57,7 @@ export default async function cash({ newPlayer }) {
   const after = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
   const info = await after.json();
-  assert.equal(info.playerInfo.cash, cashBefore - 20 - 11 - 2, "20 for the land, 11 to open House IV, 2 to hurry");
-  assert.equal(info.privateState.unlockedEarlyBuildings["4"], true);
+  assert.equal(info.playerInfo.cash, cashBefore - 20 - 2, "20 for the land, 2 to hurry");
   assert.ok(itemAt(saved, MINE, MINE_AT)[4] > before.items.find((i) => i[0] === MINE)[4], "the mine starts over");
 
   // The bank, from the + on the cash pill: cash for gold, the game's own trade.

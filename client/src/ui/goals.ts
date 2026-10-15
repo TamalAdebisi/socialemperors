@@ -47,6 +47,14 @@ export class GoalsView {
     this.panel.open();
   }
 
+  /** Goals over for good (level 35): the box goes. */
+  remove(): void {
+    this.cards.remove();
+    if (this.panel.isOpen) {
+      this.panel.close();
+    }
+  }
+
   private card(row: GoalRow): HTMLLIElement {
     const li = document.createElement("li");
     const button = document.createElement("button");

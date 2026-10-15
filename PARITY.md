@@ -152,13 +152,13 @@ Rules that change the save, found by reading the whole client
 reader. Each links to its rule book, which has the details and our file.
 The rule books list more that only look or feel different.
 
-- [ ] **Opening buildings early** is switched off in the original: the
+- [x] **Opening buildings early** is switched off in the original: the
       "Level N" tag on a shop card does nothing. Ours sells it for cash.
       ([progress](docs/original/rules/progress.md#differences)) S
-- [ ] **Reaching level 35** stops goals at once and places a free Wizardry
+- [x] **Reaching level 35** stops goals at once and places a free Wizardry
       Academy near the middle; ours keeps goals until the next load and
       gives no academy. ([progress](docs/original/rules/progress.md#differences)) S
-- [ ] **Goals count doings only while a goal of that kind is open;** ours
+- [x] **Goals count doings only while a goal of that kind is open;** ours
       from the page's opening, so goals can finish and pay sooner. Goal 18
       (units near the town hall) is a 3-tile circle, nearest 20, not ours
       7 by 7; the working-time goals keep the last time chosen, not the

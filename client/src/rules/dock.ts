@@ -62,6 +62,27 @@ export function givenOnOpening(town: Town, items: Map<number, ItemInfo>): Given[
   return given;
 }
 
+/** The Wizardry Academy, given at level 35 (`levelThirtyFive`). */
+const WIZARDRY_ACADEMY = 416;
+export const GOALS_END_LEVEL = 35;
+
+/**
+ * Reaching level 35 at home, as the Flash client does it: a Wizardry
+ * Academy, free, on the first spot it fits near tile (59, 59), even if the
+ * town has one already; none when there's no spot. (The goals stop too:
+ * goals.ts.)
+ */
+export function levelThirtyFive(town: Town, items: Map<number, ItemInfo>): Given | null {
+  const item = items.get(WIZARDRY_ACADEMY);
+  const spot = item ? freeSpotNear(town, item, NEAR) : null;
+  if (!item || !spot) {
+    return null;
+  }
+  const placed: PlacedItem = { item, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
+  town.items.push(placed);
+  return { placed, commands: [{ cmd: "buy", args: [item.id, spot.x, spot.y, 0, town.id, 1, 1, "b"] }] };
+}
+
 /** The free spot for the item nearest a tile, on the player's land, ring by ring; null when there's none. */
 export function freeSpotNear(town: Town, item: ItemInfo, near: Point): Point | null {
   for (let ring = 0; ring < MAP_TILES; ring++) {

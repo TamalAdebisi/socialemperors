@@ -38,6 +38,7 @@ export class GoalKeeper {
   private readonly view: GoalsView;
   private readonly startZoom: number;
   private lastCash: number;
+  private timer: ReturnType<typeof setInterval> | undefined;
 
   constructor(parts: GoalKeeperParts) {
     this.parts = parts;
@@ -47,7 +48,7 @@ export class GoalKeeper {
     this.view = new GoalsView();
     this.startZoom = parts.zoom();
     this.lastCash = parts.town.cash;
-    setInterval(() => this.check(), CHECK_MS);
+    this.timer = setInterval(() => this.check(), CHECK_MS);
     this.check();
   }
 
@@ -63,6 +64,8 @@ export class GoalKeeper {
       this.doings.zoomed = true;
     }
     const open = openGoals(this.parts.goals, this.done, this.paid);
+    // From now to the next check, doings count only for the kinds of goals open and not done, as in the Flash client.
+    this.doings.listen(open.filter((goal) => !this.done.has(goal.id)).flatMap((goal) => goal.need ? [String(goal.need[0])] : []));
     for (const goal of open) {
       if (this.done.has(goal.id)) {
         continue;
@@ -81,6 +84,12 @@ export class GoalKeeper {
       this.parts.changed();
     }
     this.show();
+  }
+
+  /** Goals stop for the rest of the session (level 35 reached), as in the Flash client: the box goes. */
+  stop(): void {
+    clearInterval(this.timer);
+    this.view.remove();
   }
 
   private complete(goal: Goal): void {

@@ -19,6 +19,22 @@ them can be found and reversed. The big, agreed decisions are in
 - **The rules that change the save went to PARITY.md;** those that only
   look or feel different stay in the rule books for their slices.
 
+## 16 October 2026: progress as the original keeps it
+
+- **No more opening buildings early.** The original has a price for it
+  but never wired the shop's "Level N" tag to it, so players couldn't; ours
+  offered Unlock on every locked card. Unlocks already in a save still
+  count.
+- **Reaching level 35 stops the goals** and gives a free Wizardry Academy,
+  with a short message of ours ("Your goals are done!...") where the
+  original showed its notice about the spell book. **The spell box** that
+  takes the goals' place from level 35 is still missing (it's missing on
+  loading too).
+- **Goal doings count only while a goal of their kind is open,** the
+  working-time goals keep the last time chosen, and goal 18 counts the
+  nearest 20 units within a 3-tile circle, as in the original. Island goals
+  still read the stars from the save (a call kept from 15 October).
+
 ## 16 October 2026: units walk the whole map, trees grow in the wild
 
 - **Units walk anywhere on the map but under buildings, as in the

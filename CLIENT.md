@@ -442,8 +442,8 @@ see-through, with its footprint green or red; each tap buys one, until Done.
 
 - Humans are sold items whose `in_store` is 1 or 3, trolls 2 or 4. An item
   shows from its `store_level`, and can be bought from its `min_level`, or
-  sooner once unlocked with cash (the save's
-  `privateState.unlockedEarlyBuildings`).
+  sooner if the save has it unlocked (`privateState.unlockedEarlyBuildings`,
+  from the old site; nothing in the game unlocks one now).
 - Each category lists its items by `display_order`, the locked ones last;
   its tabs are the config's `categories` table, by `subcategory_id`. The
   New category has its own items, and the other categories' new ones
@@ -514,7 +514,7 @@ again, and checks the save after each. The train test trains villagers at
 a new town's hall until there's no room (6 of 11 people to 11 of 11), and
 checks the save has them and the food paid. The cash test takes a town to
 level 20 (its prizes give cash), buys land for cash after gold is refused,
-opens House IV early, hurries a gold mine and trades cash for gold at the
+finds House IV can't be opened early, hurries a gold mine and trades cash for gold at the
 bank, checking the save for each. The bonus test checks there's no daily
 bonus or welcome-back chest at level 1; at level 5, on the empire's first
 day, the chest's window says to come back tomorrow, its chests shut (one
@@ -957,8 +957,8 @@ windows are in the classic game for now.
 ### Land and cash
 
 Built (Beta 1's fifth slice). Tap land for sale to buy it, in gold or cash;
-open a building early from the shop for cash; finish a building's work now
-for 2 cash; and the bank, from the + on the gold and cash pills. Code:
+finish a building's work now for 2 cash; and the bank, from the + on the
+gold and cash pills. Code:
 `rules/land.ts`, `unlock` in `rules/shop.ts`, `hurry` in
 `rules/production.ts` (all with tests), `ui/bank.ts`.
 
@@ -974,10 +974,11 @@ for 2 cash; and the bank, from the + on the gold and cash pills. Code:
   the player's own town only, as in the Flash client; tapping a block that
   doesn't touch theirs does nothing.
   `expand` (block, "gold" or "cash", town).
-- Opening a building early: a building the shop shows but whose level
-  isn't reached costs a third of that level in cash, rounded up (House IV,
-  level 31: 11 cash); the shop sells it from then on. `unlock_building`
-  (its id, as text).
+- Opening a building early: the original has a price for it (a third of
+  the level in cash, rounded up; `unlock_building`), but nothing in it
+  opens that window: the "Level N" tag on a shop card does nothing. So
+  ours doesn't offer it either (it did, until the map of the original
+  showed this); unlocks already in a save still count.
 - Hurrying: 2 cash finishes a working mill, mine, bakery or a wonder that
   houses nobody, and collects it at once; the cash goes in `collect_new`'s
   last place. Farms and ranches can't be hurried.
@@ -996,7 +997,10 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 **How the goals work**, read from the Flash client (our notes, our words):
 
 - Goals run only in a human town below level 35, decided when the town
-  loads, as in the Flash client (from 35 the spells box takes their place).
+  loads, as in the Flash client (from 35 the spells box takes their place;
+  ours has none yet). Reaching level 35 at home stops them at once, and a
+  Wizardry Academy is placed for free near tile (59, 59), even if the town
+  has one (`levelThirtyFive` in `rules/dock.ts`).
 - The config's `missions` have each goal's title, text and gold ("#0#" in
   them is the host, Arthur); what each
   asks is in `goals.json`, by the goal's number (the Flash client looks it
@@ -1011,13 +1015,18 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - Some goals count the town as it is: things built (on the map and units
   inside buildings), units of a kind, units inside buildings of a kind,
   people, land, walls along the south edge, units near the town hall, the
-  Small Refuge's units. Others count what the player did since the page
-  opened, as the Flash client counts them: collecting (buildings, trees and
-  rocks), working times chosen, units let out, buildings moved and stored,
-  something placed from storage, units trained at a building, units sent
-  into buildings, cash spent, zooming, taking up the square tool, the daily
-  bonus's day, the neighbour visited last and the buildings helped on visits
-  (kept in the browser tab, so a visit counts back home).
+  Small Refuge's units. Units near the town hall: the nearest 20 of the
+  player's units within a circle of 3 tiles round its tile. Others count
+  what the player did since the page opened, as the Flash client counts
+  them: collecting (buildings, trees and rocks), units let out, animals
+  caught, zooming, taking up the square tool, the neighbour visited last
+  and the buildings helped on visits (kept in the browser tab, so a visit
+  counts back home) always; working times chosen (the last choice),
+  buildings moved and stored, something placed from storage, units trained
+  at a building, units sent into buildings, cash spent, the daily bonus's
+  day and the island map opened only while a goal of that kind is open and
+  not done, as there (before each check the game listens again for the
+  open goals' kinds only).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
