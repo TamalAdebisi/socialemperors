@@ -143,6 +143,21 @@ export class Markers {
   }
 
   /** Take away a building's sign (it was sold, stored...). */
+  /**
+   * The thing whose sign is under a screen point, the one in front: in the
+   * Flash client a sign is part of its building, so tapping the ready bubble
+   * collects, as tapping the building does.
+   */
+  signAt(screen: Point): PlacedItem | null {
+    let found: PlacedItem | null = null;
+    for (const [placed, { sign }] of this.signs) {
+      if (sign.visible && sign.getBounds().containsPoint(screen.x, screen.y)) {
+        found = placed;  // later signs are drawn over earlier ones
+      }
+    }
+    return found;
+  }
+
   remove(placed: PlacedItem): void {
     this.set(placed, null, null);
   }

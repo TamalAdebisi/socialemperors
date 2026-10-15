@@ -83,6 +83,16 @@ PICTURES = {
     # follows the mouse while aiming (its last frame, grown).
     "spell-book": ("PopupMagicMC/book@1", 0),
     "mana": ("IconResourcesMC", 16),
+    # The graveyard's potions (what brings a fallen unit back).
+    "potion": ("PopupGraveyardMC/iconPotions", 0),
+    # The cards' buttons for a building's window.
+    "open-graveyard": ("EP_Graveyard_MC/btnAbrir", 0),
+    "open-harbour": ("EP_Harbour_MC/btnAbrir", 0),
+    "open-zeppelin": ("EP_Zeppelin_MC/btnAbrir", 0),
+    # Pausing: the options panel's pause button, the words GAME PAUSED (the picture's second layer) and RESUME.
+    "pause": ("GuiMC/options_panel/bp", 0),
+    "game-paused": ("GamePausedMC@1", 0, 1040),
+    "resume": ("GamePausedMC/bpo", 0, 480),
     "spell-area": ("AOEMC", 4, 480),
     # The options panel: music and sound, on and off.
     "music-on": ("GuiMC/options_panel/bm", 0),
@@ -98,6 +108,8 @@ PICTURES = {
     "inside": ("CursorMC", 10),
     # Over a wild animal just caught, for a few seconds.
     "caught": ("IconoCapturadoMC", 0),
+    # On each block of land for sale; the game writes "FOR SALE" and "Click to Buy" on it.
+    "for-sale": ("btnBuyExpandTileMC", 0, 240),
 }
 
 # The mouse pointers a selected unit shows over what it can work or go into

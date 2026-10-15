@@ -99,10 +99,11 @@ dock"), so these come with a mockup first.
 - [ ] **On phones, seeing where a building will go** before it's bought. S
 - [x] **Clean-up on load:** overlapping buildings go to storage, units on
       a taken tile step aside, a town with no villager gets one. S
-- [ ] **Small things:** "for sale" signs on closed land; tapping the ready
-      bubble collects; the refund rises as a number when selling; a name
-      and time bar when hovering a building; a short "collecting" bar.
-      S each
+- [x] **Tapping the ready bubble collects;** the refund rises as a number
+      when selling. S
+- [x] **"For sale" signs** on closed land. S
+- [ ] **Small things:** a name and time bar when hovering a building; a
+      short "collecting" bar. S each
 - [x] **Keyboard:** S, A and W both moved the map and opened a window;
       the arrow keys move it now, as in the original. S
 
@@ -148,9 +149,10 @@ carts; Arthur. These were checked against the original line by line.
 
 ## Not for Beta 1
 
-**Beta 2:** health and fighting numbers in battle, defending the town
-(raids, sieges, the enemy camp), fire and repair, spells, heroes and their
-graveyard, the dock and zeppelin, pausing.
+**Beta 2 (now in the new client, still to check side by side):** health
+and fighting numbers in battle, defending the town (raids, sieges, the
+enemy camp), fire and repair, spells, heroes and their graveyard, the dock
+and zeppelin, pausing.
 
 **Later:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
