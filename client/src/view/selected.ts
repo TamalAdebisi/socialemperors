@@ -13,6 +13,7 @@ import anchors from "./art/anchors.json" with { type: "json" };
 /** The marks' labels in a thing's slot, to tell them from the thing's picture. */
 export const SELECTED = "selected";
 export const LIFE = "life";
+export const HOVER_LIFE = "hover-life";
 
 const UNIT = "selected-unit";
 const SIZES = [1, 2, 3, 4, 5, 6].map((n) => `selected-${n}x${n}`);
@@ -70,6 +71,7 @@ export function lifeShare(placed: PlacedItem): number {
  */
 export function markSelected(slot: Container, placed: PlacedItem, picture: Container, at?: Point): boolean {
   unmarkSelected(slot);
+  unmarkLife(slot);  // the mouse's, while it was over it
   const under = textures.get(selectedName(placed));
   const back = textures.get(BAR);
   const green = textures.get(GREEN);
@@ -82,15 +84,7 @@ export function markSelected(slot: Container, placed: PlacedItem, picture: Conta
   ring.position.set(p.x, p.y);
   slot.addChildAt(ring, 0);
 
-  const bar = new Container({ label: LIFE });
-  const backSprite = sprite(back, BAR, BAR_SCALE);
-  backSprite.anchor.x = 0;
-  const greenSprite = sprite(green, GREEN, BAR_SCALE);
-  greenSprite.anchor.x = 0;
-  greenSprite.scale.x *= lifeShare(placed);
-  bar.addChild(backSprite, greenSprite);
-  const stands = pointOf(placed, at);
-  bar.position.set(stands.x - backSprite.width / 2, stands.y - picture.getLocalBounds().height - BAR_ABOVE);
+  const bar = lifeBar(placed, picture, back, green, LIFE, at);
   slot.addChild(bar);
 
   // Neither is part of the thing's size (signs over it stay put) nor takes taps.
@@ -105,6 +99,41 @@ export function markSelected(slot: Container, placed: PlacedItem, picture: Conta
 export function unmarkSelected(slot: Container): void {
   slot.getChildByLabel(SELECTED)?.destroy();
   slot.getChildByLabel(LIFE)?.destroy({ children: true });
+}
+
+/**
+ * The life bar alone, over a thing the mouse is on, as the game shows it
+ * (its label: HOVER_LIFE); not when the thing is selected and has it already.
+ */
+export function markLife(slot: Container, placed: PlacedItem, picture: Container, at?: Point): void {
+  unmarkLife(slot);
+  const back = textures.get(BAR);
+  const green = textures.get(GREEN);
+  if (!back || !green || slot.getChildByLabel(LIFE)) {
+    return;
+  }
+  const bar = lifeBar(placed, picture, back, green, HOVER_LIFE, at);
+  bar.measurable = false;
+  bar.eventMode = "none";
+  slot.addChild(bar);
+}
+
+export function unmarkLife(slot: Container): void {
+  slot.getChildByLabel(HOVER_LIFE)?.destroy({ children: true });
+}
+
+/** The life bar: green for what it has, over red; above the picture's height, from where it stands, as the game measures. */
+function lifeBar(placed: PlacedItem, picture: Container, back: Texture, green: Texture, label: string, at?: Point): Container {
+  const bar = new Container({ label });
+  const backSprite = sprite(back, BAR, BAR_SCALE);
+  backSprite.anchor.x = 0;
+  const greenSprite = sprite(green, GREEN, BAR_SCALE);
+  greenSprite.anchor.x = 0;
+  greenSprite.scale.x *= lifeShare(placed);
+  bar.addChild(backSprite, greenSprite);
+  const stands = pointOf(placed, at);
+  bar.position.set(stands.x - backSprite.width / 2, stands.y - picture.getLocalBounds().height - BAR_ABOVE);
+  return bar;
 }
 
 function sprite(texture: Texture, name: string, size = 1): Sprite {
