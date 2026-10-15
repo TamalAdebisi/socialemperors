@@ -387,6 +387,9 @@ export class TownEditor {
   }
 
   private hover(at: Point): void {
+    if (this.building || this.moving) {
+      this.camera.setCursor("");  // a unit's pointer from before doesn't apply while placing
+    }
     if (this.building) {
       this.previewBuilding(this.tileAt(at));
     } else if (this.moving) {

@@ -102,14 +102,18 @@ export class Markers {
     this.layer.addChild(group);
     void texture(url).then((loaded) => {
       if (!loaded || group.destroyed) {
+        if (!group.destroyed) {
+          group.destroy();  // no picture, nothing to show
+        }
         return;
       }
       const icon = new Sprite(loaded);
       icon.anchor.set(0.5, 1);
       icon.scale.set(POP_SIZE / Math.max(loaded.width, loaded.height));
       group.addChild(icon);
+      // Its second starts once the picture is in: a slow first download mustn't use it up unseen.
+      this.rising.push({ text: group, age: 0, from: at.y, rise: POP_RISE, ms: POP_MS });
     });
-    this.rising.push({ text: group, age: 0, from: at.y, rise: POP_RISE, ms: POP_MS });
   }
 
   /** Move things along: `ms` since the last tick; `zoom` is the map's. */

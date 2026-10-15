@@ -40,6 +40,15 @@ export default async function pointers({ newPlayer }) {
     assert.match(cursor, /^url\(".+"\) \d+ \d+, pointer$/, name);
   }
   assert.equal(new Set([axe, pick, inside]).size, 3, "three different pointers");
+  // Building something with the axe showing: the usual pointer while placing.
+  assert.match(await pointer(tree), /^url/);
+  await player.menu("Build");
+  await player.press("Resources");
+  await player.card("Farm Land").click();
+  assert.equal(await pointer(rock), "", "placing a building: no axe or pickaxe");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await player.select(CUTTER, "Villager I");
   await page.keyboard.press("Escape");
   await page.mouse.move(cutter.x, cutter.y + 5);
   await player.wait(250);
