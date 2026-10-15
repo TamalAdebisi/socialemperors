@@ -591,6 +591,7 @@ tree of the kind wasn't checked.
    grows them in the wild ring and on middle blocks not yet bought. Ours
    uses the player's own blocks instead (`client/src/rules/nature.ts`).
    CLIENT.md repeats the mistake. (checked twice)
+   *Fixed since "Units walk the whole map, trees grow in the wild".*
 2. **Moving a building keeps its units inside.** The original lets them
    all out (`pop_unit` each), stops its work and, for a mill or mine on the
    working-time list, sends `activate` 0, even when the move is cancelled
@@ -607,6 +608,7 @@ tree of the kind wasn't checked.
 6. **What grows is cleared by the camp.** Ours grows before the camp clears
    the wild ring, the original after (`client/src/main.ts`, `client/src/homeCamps.ts`).
    (checked twice)
+   *Fixed since "Units walk the whole map, trees grow in the wild".*
 7. **Where units come out.** The original picks the free tile toward the
    far corner, anywhere (a nursery's copy only 4 rings out); ours the
    nearest, on owned land only (`client/src/rules/work.ts`). (checked twice)
@@ -632,6 +634,7 @@ tree of the kind wasn't checked.
     *Since "Unstick units, and open and shut wall gates":* a unit
     already off the land may cross land not bought to get back; the rest
     holds.
+    *Fixed since "Units walk the whole map, trees grow in the wild".*
 12. **Selling from a card.** The original sells only with the bulldozer
     tool, and doesn't ask for free things, for wonders and units bought
     with resources, or (in storage) for anything but cash things; ours

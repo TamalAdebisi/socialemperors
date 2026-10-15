@@ -644,9 +644,10 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 
 **How units walk**, read from the Flash client (our notes, our words):
 
-- Bought land can be walked on, except under buildings. Fields (farms)
-  can be walked over, and units don't stand in each other's way. Closed
-  land, the wild ring and the sea can't be reached.
+- The whole map can be walked on, the wild ring and land not yet bought
+  too, except under buildings (this client kept units on the bought land
+  until the map of the original showed otherwise). Fields (farms) and open
+  wall gates can be walked over, and units don't stand in each other's way.
 - A path goes tile by tile in 8 directions, but never squeezes diagonally
   between two corners. Flying units go in a straight line, over anything.
   A tile that has become a building since the unit set off stops it there.
@@ -669,11 +670,10 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 **Getting unstuck** (after the owner found villagers stuck; test
 `e2e/tests/stuck.mjs`):
 
-- A unit standing off the bought land (left on the wild ring after a fight
-  at a troll camp, or freed from one) walks back when sent: its way may
-  cross land that isn't bought, but where it's sent must be on the land. A
-  unit standing in a building (a gate shut on it) walks out across it.
-  (`unitPath` and `reachable` in `rules/walking.ts`.)
+- A unit standing in a building (a gate shut on it) walks out across it.
+  (`unitPath` and `reachable` in `rules/walking.ts`.) One left off the
+  bought land, after a fight at a troll camp, simply walks home: units
+  walk the whole map.
 - A unit stopped short by something built in its way, on its way to work,
   repair or go inside, sets off once more from where it stopped. It used to
   start working from wherever it had stopped.
@@ -856,8 +856,9 @@ the Flash client sometimes drops from a harvest.
 Each time the player opens their town, it's tidied up, and trees, rocks
 and wild animals grow back, as in the Flash client, so wood, stone and gold
 don't run out; wild animals are caught by coming near them. Code: `rules/nature.ts` and
-`rules/animals.ts` (with tests), called from `main.ts` before the town is
-drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
+`rules/animals.ts` (with tests), called from `main.ts` once the camp of the
+moment is up, as in the original (a camp that clears the wild ring first
+doesn't take what just grew); catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 `animals.mjs`.
 
 **How it works**, read from the Flash client (our notes, our words):
@@ -870,10 +871,11 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   clump fewer. A clump is 5 or 6 rocks, or 16 to 19 trees, the size picked
   once per kind each time.
 - A clump starts on a tile picked at random in one of the blocks of the
-  wild ring round the island or of the player's land; each of its trees or
-  rocks takes the free tile nearest it (the tile itself first, then the
-  first ring of tiles out with a free one). So a clump at a block's edge can
-  spill onto land not bought yet, as in the original.
+  wild ring round the island or of the middle land not bought yet, never
+  the player's own; each of its trees or rocks takes the free tile nearest
+  it (the tile itself first, then the first ring of tiles out with a free
+  one). So a clump at a block's edge can spill onto the player's land, as
+  in the original. Villagers walk out to them.
 - Then single trees, until there are a hundred: each at a random tile, or
   a free one up to 5 tiles from it, else not at all.
 - Each is "bought" for nothing (`buy`, the item, its tile, 0, town, 1, 1,
@@ -894,10 +896,9 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   for 5 seconds (the game's own picture, `IconoCapturadoMC`), the goals
   count it, and it walks to the nearest ranch of its kind and in (sheep
   ranches, cow ranches, the training stable for horses, boar ranches), as
-  workers go in (`push_unit`); with none, to beside the town hall. Animals
-  find their way anywhere but through buildings, as the original's paths
-  do, so one caught in the wild walks in; the player's units still go only
-  on their land.
+  workers go in (`push_unit`); with none, to beside the town hall. Units
+  and animals find their way anywhere but through buildings, as the
+  original's paths do, so one caught in the wild walks in.
 - A caught animal is the player's: select it and tap one of its ranches (or
   the hatchery) to send it in. Tapping a wild animal with a unit selected
   sends the unit beside it, and so catches it.

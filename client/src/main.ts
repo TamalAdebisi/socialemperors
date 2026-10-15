@@ -150,9 +150,15 @@ async function start(): Promise<void> {
       today: ((info.privateState as Record<string, unknown> | undefined)?.arrayAnimals ?? {}) as Record<string, number>,
       perDay: Number(config.globals?.ANIMALS_PER_DAY) || 20,
     };
-    for (const command of growBack(town, items, clock(), { animals }).commands) {
-      commands.add(command.cmd, ...command.args);
-    }
+    // Trees, rocks and wild animals grow back (rules/nature.ts) once the camp of the moment is
+    // up, as in the Flash client: a camp that clears the wild ring doesn't take what just grew.
+    const grow = () => {
+      const { commands: grown, added } = growBack(town, items, clock(), { animals });
+      for (const command of grown) {
+        commands.add(command.cmd, ...command.args);
+      }
+      added.forEach((placed) => void view.redraw(placed));
+    };
     const shop = new ShopWindow({
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
@@ -272,6 +278,7 @@ async function start(): Promise<void> {
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+        grow();
         // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
         // client does (rules/dock.ts): after the camp, as a new town's prisoner holds the harbour back.
         for (const { placed, commands: sent } of givenOnOpening(town, items)) {

@@ -44,13 +44,13 @@ test("a new town: three clumps of gold and of stone, ten of trees, and single tr
   assert.ok([15, 18].includes(of(GOLD)), `gold: ${of(GOLD)}`);
   assert.ok([15, 18].includes(of(STONE)), `stone: ${of(STONE)}`);
   assert.ok(of(TREES) >= 10 * 16 + 90 && of(TREES) <= 10 * 19 + 98, `trees: ${of(TREES)}`);
-  // One to a tile, on the map; mostly in the wild ring or on the player's
-  // land (a clump at a block's edge can spill over, as in the Flash client).
+  // One to a tile, on the map; in the wild ring or on land not yet bought, as in the Flash
+  // client, a few at most on the player's land (a clump at a block's edge can spill over).
   const tiles = new Set(t.items.map((p) => `${p.tx},${p.ty}`));
   assert.equal(tiles.size, t.items.length, "no two on one tile");
   assert.ok(added.every((p) => p.tx >= 0 && p.ty >= 0 && p.tx < 100 && p.ty < 100));
-  const inPlace = added.filter((p) => onWildRing(p.tx, p.ty) || expansionOf(p.tx, p.ty) === 13).length;
-  assert.ok(inPlace > 0.9 * added.length, `${inPlace} of ${added.length} in the ring or on their land`);
+  const theirs = added.filter((p) => !onWildRing(p.tx, p.ty) && expansionOf(p.tx, p.ty) === 13).length;
+  assert.ok(theirs < 0.05 * added.length, `${theirs} of ${added.length} on their land`);
   // Bought for nothing, as the Flash client tells the server.
   assert.equal(commands.length, added.length);
   assert.deepEqual(commands[0].args.slice(3), [0, 0, 1, 1, "b"]);

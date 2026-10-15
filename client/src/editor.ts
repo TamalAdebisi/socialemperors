@@ -631,7 +631,7 @@ export class TownEditor {
       this.clearLine(units[0]);
       return this.walkTo(units[0], tile);
     }
-    const grid = walkGrid(this.town);
+    const grid = walkGrid(this.town, true);
     if (!isWalkable(grid, tile.x, tile.y)) {
       this.say("They can't get there.");
       return false;
@@ -1027,8 +1027,7 @@ export class TownEditor {
     // A unit standing in a building (a gate shut on it) walks out across it.
     const under = tilesUnder(this.town, from);
     this.view.walk(unit, path, (next) => {
-      // Something built in the way since it set off: it stops before it. (Its path may cross
-      // unbought land when it's on its way back to its own: only buildings count here.)
+      // Something built in the way since it set off: it stops before it.
       if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isWalkable(walkGrid(this.town, true), next.x, next.y)) {
         return false;
       }

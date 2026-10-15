@@ -19,6 +19,21 @@ them can be found and reversed. The big, agreed decisions are in
 - **The rules that change the save went to PARITY.md;** those that only
   look or feel different stay in the rule books for their slices.
 
+## 16 October 2026: units walk the whole map, trees grow in the wild
+
+- **Units walk anywhere on the map but under buildings, as in the
+  original.** This client kept them on the bought land; the map of the
+  original showed its paths take the wild ring and land not yet bought
+  too. It reverses "the player's own units still go only on their land"
+  (wild animals, 15 October) and makes "A unit off the bought land may
+  cross land that isn't bought to get back" (villagers getting stuck)
+  simply true of every unit. Tapping land for sale with a unit selected
+  sends it there, as in the original; without one, the land is offered.
+- **Trees, rocks and animals grow in the wild ring and on land not yet
+  bought, never aimed at the player's own,** and after the camp is up.
+  Villagers walk out to them. A town's own land gets no new trees: as in
+  the original.
+
 ## 16 October 2026: town rules from the map of the original
 
 - **Moving a building now lets its units out, as in the Flash client.**

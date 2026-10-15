@@ -169,7 +169,7 @@ The rule books list more that only look or feel different.
       does. ([town](docs/original/rules/town.md#differences)) S
 - [x] **Where new units come out** (trained, let out, from the nursery):
       the first free ring, on the tile nearest the far corner. ([town](docs/original/rules/town.md#differences)) S
-- [ ] **What grows back** grows in the wild ring and on land not yet
+- [x] **What grows back** grows in the wild ring and on land not yet
       bought, never aimed at the player's land; and after the camp is put
       up, not before. ([town](docs/original/rules/town.md#differences)) S
 - [x] **The free villager** comes when none is on the map or working
