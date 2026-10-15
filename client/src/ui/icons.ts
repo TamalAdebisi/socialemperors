@@ -33,6 +33,7 @@ export const ICONS = {
   "music-off": new URL("./art/music-off.webp", import.meta.url).href,
   "sound-on": new URL("./art/sound-on.webp", import.meta.url).href,
   "sound-off": new URL("./art/sound-off.webp", import.meta.url).href,
+  "help-ray": new URL("./art/help-ray.webp", import.meta.url).href,
   // What a selected unit can do to what's under it: chop, mine, go inside.
   axe: new URL("./art/axe.webp", import.meta.url).href,
   pick: new URL("./art/pick.webp", import.meta.url).href,

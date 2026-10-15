@@ -391,12 +391,17 @@ producing building shows when it will be ready.
     5 minutes, 1, 4 or 8 hours for half, once, twice or three times the
     harvest (`activate` with 1 to 4). After each collect they go back to
     sleep (`activate` with 0) until the player picks again;
-  - on their own (wonders, the bakery, the restaurant, the temple): no
-    workers, round after round.
+  - on their own: anything else with a working time and no room for
+    workers (wonders, the bakery, the restaurant, the temple, the Cash
+    Wonder's 1 cash a day), round after round.
 - The harvest is the config's `collect`; each worker after the first adds a
   fifth, then the working time's share; all rounded down. Farms use up a
   third of their harvest in wood (rounded). The config's `collect_xp` comes
   with it.
+- A ranch's harvest uses up its first animal, for good (the Nursery keeps
+  its own): `pop_unit` (place, town, the animal) with no tile, after the
+  `collect_new`. When the last has gone the ranch stops. The Flash client
+  shows the animal flying off; for now a "−1 Sheep" rises with the harvest.
 - Collecting sends `collect_new` (place, town, item, workers inside, 1, 0),
   and its work starts over then. The 1 is a bonus the Flash client only
   gives gold rocks on the map; the 0 is cash paid to hurry it.
@@ -466,11 +471,11 @@ against a server of its own with a throwaway database. One edits a new town
 (turns a tower, moves a house, finds a tree can't be sold, sells a house,
 stores a tower) and checks the server's save afterwards: every
 change is there, with the refund, and reloading shows the town as it was
-left. Another sets a new town up as the Flash client would (a farm, a ranch
-and a gold mine, with a villager in each), then in the new client chooses
-the mine's working time and collects the farm and the ranch: the save has
-the harvests, the farm's wood, the experience, level 2 with its prize, and
-the timers started again. A third buys three farms and a mill in a new
+left. Another sets a new town up as the Flash client would (a farm and a
+gold mine with a villager each, a sheep ranch with a sheep), then in the
+new client chooses the mine's working time and collects the farm and the
+ranch: the save has the harvests, the farm's wood, the experience, level 2
+with its prize, the timers started again, and the ranch's sheep used up. A third buys three farms and a mill in a new
 town through the shop: placing on the town hall is refused, placing goes on
 after each farm and stops after the mill (one per town, and level 2 with
 its prize), the mill's card then says "You have one", and the save has all
@@ -488,9 +493,10 @@ a new town's hall until there's no room (6 of 11 people to 11 of 11), and
 checks the save has them and the food paid. The cash test takes a town to
 level 20 (its prizes give cash), buys land for cash after gold is refused,
 opens House IV early, hurries a gold mine and trades cash for gold at the
-bank, checking the save for each. The bonus test collects the daily
-bonus's first day, reaches the first goal by building a farm (its gold is
-paid), and checks that skipping without cash says so and that the save has
+bank, checking the save for each. The bonus test checks there's no daily
+bonus at level 1, collects its first day at level 5, reaches the first
+goal by building a farm (its gold is paid), and checks that goals have no
+Skip and that the save has
 the goal and the bonus. The menus test
 opens every window from the rail, checks one is open at a time with its
 button lit, visits another test player from the neighbours list, and on a
@@ -654,7 +660,9 @@ Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
   `PICAR`, facing it.
 - A tree or rock takes the config's `activation` in whole seconds (4 for a
   tree, 7 for a rock) from the first villager's arrival; more villagers
-  don't make it quicker. If they all leave first, the work is lost.
+  don't make it quicker. If they all leave first, the work is lost. With
+  the Forestry Academy, trees take a second; with the Minery Academy,
+  stone and gold rocks do.
 - Done: it gives the config's `collect` (20 wood, 10 stone, 10 gold) and
   its experience (1). Gold gives more as the town grows: 1 to 5 times (up to
   level 10, 15, 20, 25, then more). The tree or rock goes. The commands:
@@ -666,17 +674,19 @@ Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
 - Then the villager goes on to the next tree or rock of the same kind that
   touches the one done (or touches those, and so on), nearest first,
   skipping any another villager is at, until there are none.
-- Into buildings: villagers into mills, mines and farms; any unit but
-  siege engines into a refuge; only the player's own, with room. The unit
+- Into buildings: villagers into mills, mines and farms; any unit into a
+  refuge, siege engines too; only the player's own, with room. (Not the
+  Sacrifice Altar, a mine by its kind: in the classic game for now.) The unit
   leaves the map; a building with nobody inside starts its work as the
   first comes in (a mine whose time is chosen waits for the choice).
   `push_unit` (where the save had the unit, its item, the building's
   place, town).
 - Let out: the last unit in comes out on the nearest free tile around the
   building (`pop_unit`: the building's place, town, item, the tile, 0).
-  Selling or storing a building lets everybody out first, as the Flash
-  client does.
-
+  The last one out ends the building's work; a mill or mine whose time is
+  chosen forgets the choice too (`activate`, 0) and asks again when the
+  next worker comes in. Selling or storing a building lets everybody out
+  first, as the Flash client does.
 - Pointers: with a unit selected, the mouse pointer over the map is the
   Flash client's own for what the unit would do there: an axe over a tree
   it can chop, a pickaxe over a rock or gold, a red arrow over a building it
@@ -714,8 +724,8 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
   `cost_unit_cash` in cash instead.
 - Room: the `population` of the player's buildings (houses, the town
   hall...), at most 175, plus that of the wonders on top (they count in
-  both, as in the Flash client), plus the Great Church's steps (10 room
-  each). Taken: the `population` of the player's units, on the map and
+  both, as in the Flash client), except the Great Church, whose own room
+  counts once and whose steps (10 room each) go on top instead. Taken: the `population` of the player's units, on the map and
   inside buildings. Wild animals and the island's trolls don't count.
 - What stops it: no room for the unit, the unit's `units_limit` reached
   (counting those inside buildings), not enough to pay, or the building
@@ -759,14 +769,16 @@ for 2 cash; and the bank, from the + on the gold and cash pills. Code:
 ### Missions and bonuses
 
 Built (Beta 1's sixth slice). The next goal shows bottom left (tap it for
-all 15 open, with Skip for cash); goals reached are paid their gold. The
-daily bonus, Monday's chest and the welcome-back chest show as round
-buttons at the top right while on offer. Code: `rules/goals.ts` and
+all 15 open); goals reached are paid their gold. The daily bonus and
+Monday's chest show as round buttons at the top right while on offer. Code: `rules/goals.ts` and
 `goals.json`, `rules/bonuses.ts` (with tests), `goals.ts`, `bonuses.ts`.
 
 **How the goals work**, read from the Flash client (our notes, our words):
 
-- The config's `missions` have each goal's title, text and gold; what each
+- Goals run only in a human town below level 35, decided when the town
+  loads, as in the Flash client (from 35 the spells box takes their place).
+- The config's `missions` have each goal's title, text and gold ("#0#" in
+  them is the host, Arthur); what each
   asks is in `goals.json`, by the goal's number (the Flash client looks it
   up by its place in its own list, and the numbers written in that list
   drift by one from goal 80; the place is what matches the titles). The
@@ -783,17 +795,20 @@ buttons at the top right while on offer. Code: `rules/goals.ts` and
   opened, as the Flash client counts them: collecting (buildings, trees and
   rocks), working times chosen, units let out, buildings moved and stored,
   something placed from storage, units trained at a building, units sent
-  into buildings, cash spent, zooming, the daily bonus's day.
-- Skip: 2 cash (the config's `PRICE_COMPLETE_GOAL`) makes a goal done
-  (`complete_mission`, the goal, 1); it's paid at the next check.
+  into buildings, cash spent, zooming, the daily bonus's day, the neighbour
+  visited last and the buildings helped on visits (kept in the browser tab,
+  so a visit counts back home).
+- No skipping for cash: the Flash client had its Pay button switched off
+  (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
   capturing animals say they're played in the classic game for now (72 of
   the 226); the server keeps them done whichever client does them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
-`monday_bonus.py`, `comeback_bonus.py`):
+`monday_bonus.py`):
 
-- Daily: on offer from the next calendar day (UTC) after the last; the
+- Daily: from level 5, in a human town; on offer from the next calendar
+  day (UTC) after the last; the
   five days' prizes in turn, the first again after a day missed. A hero is
   drawn at random and goes into storage. `win_bonus` (gold, town, hero,
   day, cash).
@@ -801,9 +816,8 @@ buttons at the top right while on offer. Code: `rules/goals.ts` and
   collected; previewed on Sundays. Three chests; whichever is picked holds
   one of the config's three prizes by chance (gold, cash or a unit).
   `weekly_reward` (kind, amount or unit).
-- Welcome-back: on the 2nd and 3rd day after the empire was made (the page
-  says how many days), from level 4, once each; a chest like Monday's, its
-  unit the day's own. `comeback_reward` (kind, amount or unit, day).
+- No welcome-back chest: the Flash client has one, switched off inside it
+  as it was built, so it never shows.
 
 **Not yet:** the troll raids and their treasure chest (with battles), and
 renaming the empire.
@@ -822,8 +836,11 @@ neighbours, Arthur last; Visit opens their town. Code:
   level), and the town shown is the one for the player's stage: up to
   level 10, up to 20, then the grown one (the server's villages
   100000030 to 32). So his town grows as the player's does.
-- **Visiting**, the top bar keeps the player's own numbers, with "Visiting
-  <name>" and Back home. Their farms, mills, mines, ranches, the bakery
+- **Visiting**, the top bar shows the neighbour's numbers (gold, wood,
+  food, stone, cash, level, an empty XP bar), as the Flash client did, with
+  "Visiting <name>", five rays for the helps left (the game's own; one fades
+  with each help) and Back home. The help's gold and XP rise from the
+  building. Their farms, mills, mines, ranches, the bakery
   and wonders that house nobody can be helped: up to 5, each once, for 10
   gold and 3 XP each. A neighbour can be helped once a day (the player's
   `neighborAssists`). The help goes to the server as one command on

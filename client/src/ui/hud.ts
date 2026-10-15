@@ -42,7 +42,12 @@ export interface Hud {
   ready(count: number): void;
   /** Offer the bank: a + on the gold and cash pills. */
   offerBank(open: () => void): void;
+  /** Visiting: the helps left today, as the Flash client's rays beside the neighbour's name. */
+  helpsLeft(count: number): void;
 }
+
+/** The most a neighbour's buildings can be helped on a visit: one ray each. */
+const RAYS = 5;
 
 const RESOURCES = ["gold", "wood", "food", "stone", "cash"] as const;
 
@@ -78,6 +83,10 @@ export function showHud(town: Town, actions: HudActions): Hud {
   if (actions.visiting) {
     const visiting = bar.querySelector<HTMLElement>(".hud-visiting")!;
     visiting.textContent = `Visiting ${actions.visiting}`;
+    const rays = document.createElement("span");
+    rays.className = "hud-rays";
+    rays.innerHTML = Array.from({ length: RAYS }, () => `<img src="${ICONS["help-ray"]}" alt="">`).join("");
+    visiting.append(rays);
     visiting.hidden = false;
     bar.querySelector<HTMLElement>("[data-home]")!.hidden = false;
     bar.classList.add("visiting");
@@ -87,11 +96,12 @@ export function showHud(town: Town, actions: HudActions): Hud {
     // How far from this level's experience to the next one's.
     const from = actions.levels?.[t.level - 1]?.xp ?? 0;
     const to = actions.levels?.[t.level]?.xp;
-    const done = to === undefined ? 1 : Math.min(Math.max((t.xp - from) / (to - from), 0), 1);
+    // Visiting, the bar is empty, as in the Flash client.
+    const done = actions.visiting ? 0 : to === undefined ? 1 : Math.min(Math.max((t.xp - from) / (to - from), 0), 1);
     bar.querySelector<HTMLElement>(".hud-xp-done")!.style.width = `${Math.round(done * 100)}%`;
-    level.dataset.tip = `${who}: ` + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
+    level.dataset.tip = actions.visiting ? `${actions.visiting}: level ${t.level}` : `${who}: ` + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
       : `${numbers.format(t.xp)} of ${numbers.format(to)} XP for level ${t.level + 1}`);
-    if (actions.population) {
+    if (actions.population && !actions.visiting) {
       const people = actions.population(t);
       const pill = bar.querySelector<HTMLElement>(".hud-people")!;
       pill.hidden = false;
@@ -154,6 +164,11 @@ export function showHud(town: Town, actions: HudActions): Hud {
   let offered = false;
   return {
     update,
+    helpsLeft(count) {
+      const rays = bar.querySelectorAll<HTMLElement>(".hud-rays img");
+      rays.forEach((ray, i) => ray.classList.toggle("used", i >= count));
+      bar.querySelector(".hud-rays")?.setAttribute("aria-label", `${count} helps left`);
+    },
     offerCollectAll(run) {
       offered = true;
       glove.addEventListener("click", run);

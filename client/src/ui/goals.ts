@@ -1,7 +1,7 @@
 // The goals on screen (CLIENT.md, "Missions and bonuses"): the first few
 // open goals as small cards under the resources, as the Flash client's goal
 // box on the left, and a window with all of them, what each asks, how far
-// along it is, its gold, and Skip for cash.
+// along it is, and its gold.
 
 import type { Goal } from "../rules/goals.ts";
 import { ICONS } from "./icons.ts";
@@ -22,12 +22,7 @@ export class GoalsView {
   private readonly cards: HTMLElement;
   private readonly panel = new Panel("goals", "Goals", { className: "list-window goals-window" });
   private rows: GoalRow[] = [];
-  private readonly skip: (goal: Goal) => void;
-  private readonly skipPrice: number;
-
-  constructor(skip: (goal: Goal) => void, skipPrice: number) {
-    this.skip = skip;
-    this.skipPrice = skipPrice;
+  constructor() {
     this.cards = document.createElement("ol");
     this.cards.className = "goal-cards";
     this.cards.setAttribute("aria-label", "Goals");
@@ -90,16 +85,6 @@ export class GoalsView {
       reward.append(numbers.format(row.goal.reward));
       reward.setAttribute("aria-label", `${row.goal.reward} gold`);
       li.append(text, reward);
-      if (!row.done) {
-        const skip = document.createElement("button");
-        skip.type = "button";
-        skip.className = "button tiny gold";
-        skip.innerHTML = `<img class="icon" src="${ICONS.cash}" alt="">`;
-        skip.append(`Skip: ${this.skipPrice}`);
-        skip.setAttribute("aria-label", `Skip ${row.goal.title} for ${this.skipPrice} cash`);
-        skip.addEventListener("click", () => this.skip(row.goal));
-        li.append(skip);
-      }
       list.append(li);
     }
     const note = document.createElement("p");

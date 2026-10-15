@@ -158,7 +158,7 @@ export class TownEditor {
       }
     }
     for (const [resource, work] of this.working) {
-      if (now - work.since >= harvestSeconds(resource.item)) {
+      if (now - work.since >= harvestSeconds(resource.item, this.town)) {
         this.finishHarvest(resource);
       }
     }
@@ -477,7 +477,7 @@ export class TownEditor {
       return `${placed.unitsInside} of ${placed.item.capacity} inside`;
     }
     if (isResource(placed.item) && this.working.has(placed)) {
-      const left = harvestSeconds(placed.item) - (this.clock() - this.working.get(placed)!.since);
+      const left = harvestSeconds(placed.item, this.town) - (this.clock() - this.working.get(placed)!.since);
       return `Being worked: ${duration(Math.max(left, 0))} left`;
     }
     if (canWalk(this.town, placed)) {
@@ -619,7 +619,7 @@ export class TownEditor {
       this.say(`There's no room around ${building.item.name}.`);
       return;
     }
-    this.send([out.command]);
+    this.send(out.commands);
     this.doings.letOut(building.item);
     void this.view.redraw(out.unit);
     this.select(building);
@@ -693,7 +693,7 @@ export class TownEditor {
   /** Before a building is sold or stored, everybody inside comes out, as in the Flash client. */
   private emptyOut(building: PlacedItem): void {
     for (const out of letAllOut(this.town, building, this.items)) {
-      this.send([out.command]);
+      this.send(out.commands);
       void this.view.redraw(out.unit);
     }
   }
@@ -767,6 +767,10 @@ export class TownEditor {
     }
     if (done.wood > 0) {
       lines.push({ text: `−${done.wood} wood`, colour: RESOURCE_COLOURS.wood });
+    }
+    if (done.usedUp !== undefined) {
+      // The animal the harvest used up (the Flash client shows it flying off).
+      lines.push({ text: `−1 ${this.items.get(done.usedUp)?.name ?? "animal"}`, colour: 0xffffff });
     }
     this.view.rise(placed, lines);
     this.levelUp();

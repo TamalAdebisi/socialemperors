@@ -34,7 +34,7 @@ function town(items: PlacedItem[] = [], level = 1): Town {
     race: "h", skin: 0, expansions: new Set([13]), unlocked: new Set(), gifts: new Map(), store: new Map(), items, unknown: [] };
 }
 
-test("villagers work trees, stone and gold; into mills, mines and farms; anyone but siege into a refuge", () => {
+test("villagers work trees, stone and gold; into mills, mines and farms; anyone into a refuge", () => {
   assert.equal(canHarvest(VILLAGER, TREE), true);
   assert.equal(canHarvest(KNIGHT, TREE), false);
   const t = town();
@@ -42,7 +42,9 @@ test("villagers work trees, stone and gold; into mills, mines and farms; anyone 
   assert.equal(canGoInside(t, VILLAGER, mine), true);
   assert.equal(canGoInside(t, KNIGHT, mine), false);
   assert.equal(canGoInside(t, KNIGHT, placed(REFUGE, 45, 45)), true);
-  assert.equal(canGoInside(t, CATAPULT, placed(REFUGE, 45, 45)), false);
+  assert.equal(canGoInside(t, CATAPULT, placed(REFUGE, 45, 45)), true, "siege engines too, as in the Flash client");
+  const altar = item({ id: 225, name: "Sacrifice Altar", subcategory: 124, capacity: 1 });
+  assert.equal(canGoInside(t, VILLAGER, placed(altar, 47, 47)), false, "the altar: in the classic game for now");
   assert.equal(canGoInside(t, VILLAGER, placed(MINE, 50, 50, { unitsInside: 1 })), false, "full");
 });
 
@@ -56,6 +58,11 @@ test("a unit stands on the free tile beside the thing nearest to it", () => {
 test("a tree takes 4 seconds, a rock 7; gold gives more with the level", () => {
   assert.equal(harvestSeconds(TREE), 4);
   assert.equal(harvestSeconds(STONE), 7);
+  // The Forestry Academy makes trees quick, the Minery Academy rocks.
+  const forestry = town([placed(item({ id: 223, name: "Forestry Academy", subcategory: 139 }), 60, 60)]);
+  assert.deepEqual([harvestSeconds(TREE, forestry), harvestSeconds(STONE, forestry)], [1, 7]);
+  const minery = town([placed(item({ id: 222, name: "Minery Academy", subcategory: 139 }), 60, 60)]);
+  assert.deepEqual([harvestSeconds(TREE, minery), harvestSeconds(STONE, minery), harvestSeconds(GOLD, minery)], [4, 1, 1]);
   assert.deepEqual([1, 10, 11, 15, 16, 21, 26, 60].map(goldMultiplier), [1, 1, 2, 2, 3, 4, 5, 5]);
 });
 
@@ -119,9 +126,24 @@ test("into a building: it starts working with its first worker; out again beside
   const out = letOut(t, mine, ITEMS)!;
   assert.equal(mine.unitsInside, 0);
   assert.equal(out.unit.item.id, 500);
-  assert.deepEqual(out.command.args.slice(0, 4), [50, 50, 0, 500]);
+  assert.deepEqual(out.commands[0].args.slice(0, 4), [50, 50, 0, 500]);
+  assert.equal(mine.startedAt, null, "the last one out ends its work");
   assert.equal(Math.max(Math.abs(out.unit.tx - 50), Math.abs(out.unit.ty - 50)), 1, "beside the building's corner");
   assert.equal(letOut(t, mine, ITEMS), null, "nobody left");
+});
+
+test("the last worker out of a mill or mine whose time is chosen: the choice goes, and it asks again", () => {
+  const chosenMine = item({ id: 13, name: "Gold Mine I", subcategory: 124, width: 2, height: 2, capacity: 2,
+    production: { kind: "chosen", seconds: 0, amount: 200, resource: "gold", xp: 7, farm: false } });
+  const mine = placed(chosenMine, 50, 50, { unitsInside: 2, units: [500, 500], startedAt: 5, workTime: 3 });
+  const t = town([mine]);
+  const first = letOut(t, mine, ITEMS)!;
+  assert.deepEqual(first.commands.map((c) => c.cmd), ["pop_unit"], "one still works: nothing changes");
+  assert.deepEqual([mine.workTime, mine.startedAt], [3, 5]);
+  const last = letOut(t, mine, ITEMS)!;
+  assert.deepEqual(last.commands.map((c) => c.cmd), ["pop_unit", "activate"]);
+  assert.deepEqual(last.commands[1].args, [50, 50, 0, 13, 0]);
+  assert.deepEqual([mine.workTime, mine.startedAt], [0, null]);
 });
 
 test("everybody out before a building goes", () => {

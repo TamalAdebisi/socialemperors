@@ -1,8 +1,9 @@
 // Goals and the daily bonus (CLIENT.md, "Missions and bonuses"): a new
 // town's first goal is to build a farm; one bought through the shop reaches
-// it, and its 10 gold is paid. The daily bonus is on offer on the first day:
-// day 1's 250 gold. Skipping a goal without the cash says so. The save has
-// the goal done and paid, and the bonus's day.
+// it, and its 10 gold is paid. The daily bonus is offered from level 5, as in
+// the Flash client: day 1's 250 gold. Goals can't be skipped for cash (the
+// Flash client had that switched off). The save has the goal done and paid,
+// and the bonus's day.
 
 import assert from "node:assert/strict";
 
@@ -16,6 +17,11 @@ export default async function bonus({ newPlayer }) {
   // The next goal shows bottom left.
   assert.match(await page.locator(".goal-card").first().textContent(), /^Build farm land/);
   await player.shot("goal");
+
+  // No daily bonus below level 5; at level 5 it's on offer.
+  assert.equal(await player.button("Daily bonus").count(), 0, "not at level 1");
+  await player.send([{ cmd: "rt_level_up", args: [5] }]);
+  await player.reload();
 
   // The daily bonus: on offer, day 1 is today, 250 gold.
   await player.press("Daily bonus");
@@ -35,11 +41,10 @@ export default async function bonus({ newPlayer }) {
   await player.press("Done");
   await player.said(/Goal reached: Build farm land! \+10 gold/);
 
-  // Skipping a goal takes cash, which a new town hasn't got.
+  // The goals window: no Skip.
   await page.locator(".goal-card").first().click();
   await player.wait(300);
-  await page.locator(".goals-window .goal-row button").first().click();
-  await player.said(/Not enough cash/);
+  assert.equal(await page.locator(".goals-window .goal-row button").count(), 0, "no Skip buttons");
   await player.shot("goals");
   await page.keyboard.press("Escape");
 

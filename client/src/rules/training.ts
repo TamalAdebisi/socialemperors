@@ -50,15 +50,15 @@ export function population(town: Town, items: Map<number, ItemInfo>, increasePer
     }
     if (item.population > 0 || item.capacity > 0) {
       granted += item.population;
-      if (item.category === WONDERS) {
+      if (item.id === GREAT_CHURCH) {
+        // The Great Church's extra is its steps instead of a second count of its own room.
+        extra += (town.increasedPopulation ?? 0) * increasePerStep;
+      } else if (item.category === WONDERS) {
         extra += item.population;
       }
       for (const id of placed.units ?? []) {
         current += items.get(id)?.population ?? 0;
       }
-    }
-    if (item.id === GREAT_CHURCH) {
-      extra += (town.increasedPopulation ?? 0) * increasePerStep;
     }
   }
   return { current, max: Math.min(granted, MOST_POPULATION) + extra };

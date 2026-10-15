@@ -33,7 +33,6 @@ export interface Production {
 
 const SUBCAT = { mill: 121, farm: 122, ranch: 123, mine: 124, foodShop: 138, wonder: 511 };
 const WITH_WORKERS = new Set([SUBCAT.mill, SUBCAT.farm, SUBCAT.ranch, SUBCAT.mine]);
-const ON_THEIR_OWN = new Set([SUBCAT.foodShop, SUBCAT.wonder]);
 
 /** The working times a player can choose, in minutes, and what each does to the harvest. */
 export const WORK_TIMES = [
@@ -63,7 +62,9 @@ export function productionOf(item: ConfigItem, chosenTime: Set<number>): Product
   let kind: ProductionKind;
   if (capacity > 0 && WITH_WORKERS.has(subcategory)) {
     kind = chosenTime.has(Number(item.id)) ? "chosen" : "workers";
-  } else if (capacity === 0 && ON_THEIR_OWN.has(subcategory)) {
+  } else if (capacity === 0) {
+    // Anything else with a working time and no room for workers works on its own, as in
+    // the Flash client: the wonders, the bakery and the like, the Cash Wonder.
     kind = "always";
   } else {
     return null;
@@ -135,7 +136,12 @@ export interface Collected {
   amount: number;
   xp: number;
   wood: number;
+  /** A ranch's harvest uses up an animal: its item id, gone for good. */
+  usedUp?: number;
 }
+
+/** The Nursery: a ranch by its kind, but it keeps its animals. */
+const NURSERY = 226;
 
 /**
  * Collect a ready building: the harvest and experience go to the town, its
@@ -165,7 +171,17 @@ export function collect(town: Town, placed: PlacedItem, now: number, hurried = f
     placed.workTime = 0;
     commands.push({ cmd: "activate", args: [placed.tx, placed.ty, town.id, placed.item.id, 0] });
   }
-  return { commands, resource: production.resource, amount, xp: production.xp, wood };
+  // A ranch's harvest uses up its first animal, for good, as in the Flash client:
+  // pop_unit with no tile to put it on. When the last has gone the ranch stops.
+  let usedUp: number | undefined;
+  if (placed.item.subcategory === SUBCAT.ranch && placed.item.id !== NURSERY && placed.unitsInside > 0) {
+    usedUp = placed.units?.shift();
+    placed.unitsInside -= 1;
+    if (usedUp !== undefined) {
+      commands.push({ cmd: "pop_unit", args: [placed.tx, placed.ty, town.id, usedUp] });
+    }
+  }
+  return { commands, resource: production.resource, amount, xp: production.xp, wood, ...(usedUp === undefined ? {} : { usedUp }) };
 }
 
 /** What finishing a building's work at once costs, in cash (the Flash client's hurry up). */

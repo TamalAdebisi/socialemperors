@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { ItemInfo } from "./config.ts";
-import { Doings, completeGoal, openGoals, payGoal, progress, readGoals, type Need } from "./goals.ts";
+import { Doings, completeGoal, goalsRun, openGoals, payGoal, progress, readGoals, type Need } from "./goals.ts";
 import type { PlacedItem, Town } from "./town.ts";
 import data from "./goals.json" with { type: "json" };
 
@@ -78,4 +78,26 @@ test("done and paid, as the Flash client tells the server", () => {
   assert.deepEqual(completeGoal(GOALS.get(1)!, true).args, [1, 1]);
   assert.deepEqual(payGoal(t, GOALS.get(1)!), { cmd: "reward_mission", args: [0, 1] });
   assert.equal(t.gold, 5);
+});
+
+test("goals run only in a human town below level 35", () => {
+  const at = (level: number, race = "h") => ({ level, race }) as Town;
+  assert.equal(goalsRun(at(34)), true);
+  assert.equal(goalsRun(at(35)), false, "the spells box instead");
+  assert.equal(goalsRun(at(5, "t")), false, "not in a troll town");
+});
+
+test("goal 44 names the host, and counts a visit to one of Arthur's towns; goal 102 the buildings helped", () => {
+  const goals = readGoals([{ id: 44, title: "Visit #0#!", description: "Click on the portrait of #0#", reward: 10 }], data.goals as unknown as Record<string, Need>);
+  const visit = goals.get(44)!;
+  assert.equal(visit.title, "Visit Arthur!");
+  assert.equal(visit.description, "Click on the portrait of Arthur");
+  const doings = new Doings();
+  const t = { items: [], race: "h", level: 3 } as unknown as Town;
+  assert.deepEqual(progress(t, visit, doings, 0, new Map()), { done: 0, of: 1 });
+  doings.lastVisited = "100000031";
+  assert.deepEqual(progress(t, visit, doings, 0, new Map()), { done: 1, of: 1 });
+  const help = readGoals([{ id: 102, title: "Help a friend", reward: 10 }], data.goals as unknown as Record<string, Need>).get(102)!;
+  doings.helpedBuildings = 3;
+  assert.deepEqual(progress(t, help, doings, 0, new Map()), { done: 3, of: 5 });
 });

@@ -17,7 +17,7 @@ Tick a line when its fix is merged.
 These come first: both clients play the same empire, so a wrong rule
 changes the save, not just the look.
 
-- [ ] **A ranch's harvest uses up an animal.** Each collect takes one
+- [x] **A ranch's harvest uses up an animal.** Each collect takes one
       animal out for good (`pop_unit` with no tile); an empty ranch stops.
       Ours keeps them, so a ranch gives food forever. S
 - [ ] **Villagers by town hall.** Speed 3 with no town hall, 5 with I or
@@ -25,30 +25,32 @@ changes the save, not just the look.
       IV; a queue of trees or rocks of 3/5/7/9/10 (+2 with the Academy),
       the queued ones glowing. Ours walk at 3 (about 40% slower) and have
       no queue. S (speed), M (queue)
-- [ ] **The last worker out of a mill or mine with a working time** loses
+- [x] **The last worker out of a mill or mine with a working time** loses
       its work: the choice goes back to none (`activate`, 0) and it asks
       again. Ours keeps the choice. S
-- [ ] **Skipping a goal for cash** was switched off in the original (only
+- [x] **Skipping a goal for cash** was switched off in the original (only
       a test switch turned it on). Ours offers Skip: remove it. S
-- [ ] **The daily bonus** is offered only from level 5, and only in a
+- [x] **The daily bonus** is offered only from level 5, and only in a
       human town. Ours, at any level. S
-- [ ] **Goals stop at level 35** in a human town, and don't run in a troll
+- [x] **Goals stop at level 35** in a human town, and don't run in a troll
       town. Ours carry on. S
-- [ ] **The welcome-back chest** shows from the first day ("come back
-      tomorrow") until the last chest is taken. Ours, only when one is
-      ready. S
-- [ ] **Visiting shows the neighbour's** name, level, gold, wood, food and
+- [x] **The welcome-back chest** was switched off inside the Flash client
+      as it was built (a setting nothing turns on), so it never showed.
+      Ours offered it: removed. S
+- [x] **Visiting shows the neighbour's** name, level, gold, wood, food and
       stone in the top bar, and the helps left. Ours shows your own
       numbers (and DECISIONS.md said, wrongly, that the original did). S
-- [ ] **The Great Church's room for people** is counted once; ours counts
+- [x] **The Great Church's room for people** is counted once; ours counts
       it twice. S
-- [ ] **The Sacrifice Altar** takes units, any but siege engines, and gives
-      back 1/20 of their gold price; ours lets a villager in as if it were
-      a mine. **Refuges** take siege engines too; ours refuses them. S
-- [ ] **The Cash Wonder** gives 1 cash every 24 hours; ours never gets
+- [x] **The Sacrifice Altar** takes units, any but siege engines, and gives
+      back 1/20 of their gold price; ours let a villager in as if it were
+      a mine. Now it lets nobody in (the altar stays a classic-game
+      building for now). **Refuges** take siege engines too, now ours as
+      well. S
+- [x] **The Cash Wonder** gives 1 cash every 24 hours; ours never gets
       ready. **The Forestry and Minery academies** make chopping and mining
       take about a second; ours don't. S
-- [ ] **Goal 44** ("Visit Arthur") and the help-your-neighbours goals can
+- [x] **Goal 44** ("Visit Arthur") and the help-your-neighbours goals can
       be done in the new client now; they still say "classic game". Goal
       44's title shows "#0#" instead of the host's name. S
 
@@ -122,15 +124,13 @@ dock"), so these come with a mockup first.
       and moving them as a group. M
 - [ ] **Renaming the town** from the game. S
 
-## Your call
+## Your calls (15 October 2026)
 
-- **The troll town:** from level 20 the original offers a second town, of
-  trolls. A whole second town: Beta 1 or later?
-- **The market:** trading wood, food and stone, with three goals that need
-  it. Town building, but a big window: Beta 1 or later?
-- **The Daily News window** opens by itself at every start in the
-  original (news, hints, offers). The offers are gone; keep it for the
-  hints, or leave it out?
+- [ ] **The troll town** (a second town, from level 20): in Beta 1. L
+- [ ] **The market** (trading wood, food and stone; three goals need it): in
+      Beta 1. M
+- **The Daily News window**: left out. It showed Social Point's news,
+  offers for cash and a few tips; there's no news to show now.
 
 ## Already the same
 
