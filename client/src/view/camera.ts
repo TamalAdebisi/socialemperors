@@ -55,7 +55,7 @@ export class Camera {
    * as it grows, from where the press began (screen points), and once more
    * when it's let go (`done`; a second finger ends it too, with no size).
    */
-  onPress: ((at: Point) => boolean) | null = null;
+  onPress: ((at: Point, touch: boolean) => boolean) | null = null;
   onBox: ((from: Point, to: Point, done: boolean) => void) | null = null;
   private canvas: HTMLCanvasElement | null = null;
 
@@ -93,7 +93,8 @@ export class Camera {
       this.pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
       if (this.pointers.size === 1) {
         const at = { x: e.offsetX, y: e.offsetY };
-        this.press = { ...at, t: performance.now(), moved: 0, pinched: false, box: this.onPress?.(at) ?? false };
+        const touch = e.pointerType === "touch" || e.pointerType === "pen";
+        this.press = { ...at, t: performance.now(), moved: 0, pinched: false, box: this.onPress?.(at, touch) ?? false };
       } else if (this.press) {
         this.press.pinched = true;
         if (this.press.box) {

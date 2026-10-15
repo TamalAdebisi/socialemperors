@@ -47,6 +47,7 @@ PICTURES = {
     "remove": ("GuiMC/bgBar/bulldozer", 0),
     "fast-collect": ("GuiMC/bgBar/recolectaRapido", 0),
     "pointer": ("GuiMC/bgBar/normalMouse", 0),
+    "pointer-cancel": ("GuiMC/bgBar/normalMouse", 1),  # a tool on: back to the pointer
     # The square tool, for selecting units with a box; with the mouse over it, it names its key.
     "square-tool": ("GuiMC/bgBar/herramientaCuadrado", 0),
     "square-tool-space": ("GuiMC/bgBar/herramientaCuadrado", 1),
@@ -127,6 +128,8 @@ CURSORS = {
     "cursor-inside": ("CursorMC", 10),  # a building to go into
     "cursor-repair": ("CursorMC", 5),   # a burning building to repair (villagers)
     "cursor-square": ("CursorMC", 13),  # the square tool on: the next drag draws a box
+    "cursor-remove": ("CursorMC", 8),   # the bulldozer on
+    "cursor-collect": ("CursorMC", 6),  # the glove on
 }
 CURSOR_SIZE = 32
 

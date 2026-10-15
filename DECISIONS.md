@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the pointer's tools
+
+- **Collect all stays,** beside the original's glove: one press collects
+  everything ready. The glove (Fast collect, in the pointer's menu) works
+  as the original's, collecting what it's swept over.
+- **On a phone the glove sweeps with a finger:** dragging collects what it
+  passes instead of moving the map. The original only ran on computers.
+- **The glove stays on until it's put down** (Cancel, Escape or the square
+  tool). In the original, the first press on the map made it look put
+  down while it went on collecting.
+- **Escape puts a tool down,** as it does the square tool.
+
 ## 15 October 2026: villagers getting stuck
 
 - **A unit off the bought land may cross land that isn't bought to get

@@ -15,7 +15,7 @@ import { placeStored, sellStored, storageChoices, storageRefund, storedItems, ty
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
-import { showMessage, type Hud } from "./ui/hud.ts";
+import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
@@ -103,6 +103,10 @@ export class TownEditor {
   private group: PlacedItem[] = [];
   /** The square tool: on, the next drag on the map draws a box, wherever it starts. */
   private squareTool = false;
+  /** The pointer's tool (ui/hud.ts): the pointer; the bulldozer, removing one thing after another; the glove, collecting what it's swept over. */
+  private tool: Tool = "pointer";
+  /** What the glove last passed over: each thing is collected once as it sweeps by. */
+  private swept: PlacedItem | null = null;
   /** The last thing tapped and when (the page's clock, ms): a second tap on a selected unit soon after is a double click. */
   private lastTap: { placed: PlacedItem; at: number } | null = null;
   private moving: PlacedItem | null = null;
@@ -153,7 +157,7 @@ export class TownEditor {
     this.sound = parts.sound ?? (() => {});
     this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
-    this.camera.onPress = (at) => this.startsBox(at);
+    this.camera.onPress = (at, touch) => this.startsBox(at, touch);
     this.camera.onBox = (from, to, done) => this.dragBox(from, to, done);
     window.addEventListener("keydown", (e) => {
       if (e.key === " " && (this.building || this.moving)) {
@@ -174,6 +178,8 @@ export class TownEditor {
           this.cancelMove();
         } else if (this.squareTool) {
           this.setSquareTool(false);
+        } else if (this.tool !== "pointer") {
+          this.chooseTool("pointer");
         } else {
           this.select(null);
         }
@@ -419,6 +425,10 @@ export class TownEditor {
       return;
     }
     const placed = this.view.itemAt(at);
+    if (this.tool !== "pointer") {
+      this.useTool(placed);
+      return;
+    }
     const cart = placed ? this.cartsWaiting.get(placed) : undefined;
     if (cart) {
       cart();  // a neighbour's cart, waiting: ask again
@@ -524,8 +534,12 @@ export class TownEditor {
   }
 
   private hover(at: Point): void {
-    if (this.squareTool) {
-      return;  // its pointer stays until it's used
+    if (this.tool === "collect") {
+      this.sweep(at);
+      return;
+    }
+    if (this.squareTool || this.tool !== "pointer") {
+      return;  // their pointer stays until they're put down
     }
     if (this.building || this.moving) {
       this.camera.setCursor("");  // a unit's pointer from before doesn't apply while placing
@@ -637,13 +651,13 @@ export class TownEditor {
     return sent;
   }
 
-  /** The square tool taken up (its button, or Space): nothing selected, and the next drag on the map draws a box. */
+  /** The square tool taken up (its button, or Space): nothing selected, the other tools down, and the next drag on the map draws a box. */
   takeSquareTool(): void {
     if (this.paused || this.building || this.moving) {
       return;
     }
     this.doings.selectionToolUsed = true;
-    this.select(null);
+    this.chooseTool("pointer");
     this.setSquareTool(true);
   }
 
@@ -653,13 +667,87 @@ export class TownEditor {
     }
     this.squareTool = on;
     this.hud.squareTool(on);
-    this.camera.setCursor(on ? CURSORS.square : "");
+    this.camera.setCursor(this.toolCursor());
   }
 
-  /** A press on the map: a drag from one of the player's units (or any, with the square tool on) draws a box, as in the Flash client. */
-  private startsBox(at: Point): boolean {
+  /**
+   * One of the pointer's tools taken up from its menu, or put down
+   * ("pointer"): as in the Flash client, nothing stays selected.
+   */
+  chooseTool(tool: Tool): void {
+    if (this.paused || this.building || this.moving) {
+      return;
+    }
+    this.select(null);
+    this.setSquareTool(false);
+    this.tool = tool;
+    this.swept = null;
+    this.hud.tool(tool);
+    this.camera.setCursor(this.toolCursor());
+  }
+
+  /** The mouse pointer for the tool that's on: the bulldozer, the glove, the square tool, or the usual arrow. */
+  private toolCursor(): string {
+    return this.tool === "remove" ? CURSORS.remove : this.tool === "collect" ? CURSORS.collect : this.squareTool ? CURSORS.square : "";
+  }
+
+  /** A tap with the bulldozer or the glove on: it removes, or collects, what's there; nothing is selected. */
+  private useTool(placed: PlacedItem | null): void {
+    if (!placed) {
+      return;
+    }
+    if (this.tool === "remove") {
+      this.bulldoze(placed);
+    } else if (workState(placed, this.clock())?.status === "ready") {
+      this.collect(placed);
+    }
+  }
+
+  /**
+   * The bulldozer on a thing: it goes, if the card would offer Sell or
+   * Remove for it, asking first unless it cost nothing, as in the Flash
+   * client. The bulldozer stays on for the next one.
+   */
+  private bulldoze(placed: PlacedItem): void {
+    if (!choices(this.town, placed).sell) {
+      return;
+    }
+    if (placed.item.cost <= 0) {
+      this.sell(placed);
+      return;
+    }
+    const back = refund(placed.item);
+    const verb = back ? "Sell" : "Remove";
+    this.bar.prompt(`${verb} ${placed.item.name}${back ? ` for ${back.amount} ${back.resource}` : ""}?`, [
+      { label: verb, run: () => this.sell(placed) },
+      { label: "Cancel", run: () => this.bar.hide() },
+    ]);
+  }
+
+  /** The glove over the map: a ready building it comes to is collected, once as it passes. */
+  private sweep(at: Point): void {
+    const placed = this.view.itemAt(at);
+    if (placed === this.swept) {
+      return;
+    }
+    this.swept = placed;
+    if (placed && workState(placed, this.clock())?.status === "ready") {
+      this.collect(placed);
+    }
+  }
+
+  /**
+   * A press on the map: a drag from one of the player's units (or any, with
+   * the square tool on) draws a box, as in the Flash client. With the glove
+   * on, a finger's drag sweeps it over the town instead (a phone has no
+   * pointer to move without pressing).
+   */
+  private startsBox(at: Point, touch: boolean): boolean {
     if (this.paused || this.building || this.moving) {
       return false;
+    }
+    if (this.tool !== "pointer") {
+      return this.tool === "collect" && touch;
     }
     if (this.squareTool) {
       return true;
@@ -668,8 +756,15 @@ export class TownEditor {
     return placed !== null && canWalk(this.town, placed);
   }
 
-  /** The box being drawn (screen points), and let go: the player's units in it are selected. */
+  /** The box being drawn (screen points), and let go: the player's units in it are selected. (Or the glove's sweep.) */
   private dragBox(from: Point, to: Point, done: boolean): void {
+    if (this.tool === "collect") {
+      this.sweep(to);
+      if (done) {
+        this.swept = null;
+      }
+      return;
+    }
     if (!done) {
       this.view.showBox(this.camera.toMap(from), this.camera.toMap(to));
       return;
@@ -684,7 +779,7 @@ export class TownEditor {
   }
 
   private select(placed: PlacedItem | null): void {
-    this.camera.setCursor(this.squareTool ? CURSORS.square : "");  // the unit's pointer was for the one selected before
+    this.camera.setCursor(this.toolCursor());  // the unit's pointer was for the one selected before
     this.selected = placed;
     this.group = [];
     this.view.highlight(placed);
@@ -835,6 +930,7 @@ export class TownEditor {
    * collected until it's over, and what the player was doing stops.
    */
   pause(why: string): void {
+    this.chooseTool("pointer");
     if (this.building) {
       this.stopBuilding();
     } else if (this.moving) {
