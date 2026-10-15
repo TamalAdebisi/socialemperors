@@ -94,7 +94,7 @@ dock"), so these come with a mockup first.
       at work, ripe crops; a ranch with the animals that are in it. Ours
       cycled through all of them, a man, a woman and ripe crops, whoever
       was there. S
-- [ ] **Construction:** a new building stands in scaffolding for 10
+- [x] **Construction:** a new building stands in scaffolding for 10
       seconds, with a bar and its sounds, and can't be used meanwhile. M
 - [x] **Turning while placing** (Space). S
 - [ ] **On phones, seeing where a building will go** before it's bought. S

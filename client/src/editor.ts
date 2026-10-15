@@ -12,6 +12,7 @@ import { levelUps, type Level } from "./rules/levels.ts";
 import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
+import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
@@ -258,7 +259,7 @@ export class TownEditor {
   /** The glove: collect every building that's ready, as tapping each would. */
   collectAll(): void {
     const now = this.clock();
-    const ready = this.town.items.filter((placed) => workState(placed, now)?.status === "ready");
+    const ready = this.town.items.filter((placed) => workState(placed, now)?.status === "ready" && !inConstruction(placed, Date.now()));
     for (const placed of ready) {
       this.collect(placed);
     }
@@ -360,6 +361,7 @@ export class TownEditor {
     }
     this.send([bought.command]);
     this.sound("place");
+    this.startConstruction(bought.placed);
     void this.view.redraw(bought.placed);
     this.emit({ kind: "placed", item, x: tile.x, y: tile.y });
     const price = priceOf(item);
@@ -393,6 +395,9 @@ export class TownEditor {
     this.send([done.command]);
     this.sound("place");
     this.doings.placedFromStorage();
+    if (isBuilt(done.placed.item, true)) {
+      this.startConstruction(done.placed);
+    }
     void this.view.redraw(done.placed);
     if (this.town.xp > xpBefore) {
       this.view.rise(done.placed, [{ text: `+${this.town.xp - xpBefore} XP`, colour: RESOURCE_COLOURS.xp }]);
@@ -401,6 +406,29 @@ export class TownEditor {
     this.hud.update(this.town);  // a unit placed takes room among the people
     this.refresh();
     this.stopBuilding();
+  }
+
+  /**
+   * Something just put on the map stands in scaffolding for 10 seconds, to
+   * the sound of hammering (rules/construction.ts); then it's drawn finished,
+   * with a sound of its own, and its card gets its buttons.
+   */
+  private startConstruction(placed: PlacedItem): void {
+    startBuilding(placed, Date.now());
+    this.sound("build");
+    setTimeout(() => this.finishConstruction(placed), BUILD_MS);
+  }
+
+  private finishConstruction(placed: PlacedItem): void {
+    placed.builtAt = undefined;
+    if (!this.town.items.includes(placed)) {
+      return;
+    }
+    void this.view.redraw(placed);
+    this.sound("built");
+    if (this.selected === placed && !this.moving) {
+      this.select(placed);
+    }
   }
 
   private stopBuilding(): void {
@@ -705,7 +733,7 @@ export class TownEditor {
     }
     if (this.tool === "remove") {
       this.bulldoze(placed);
-    } else if (workState(placed, this.clock())?.status === "ready") {
+    } else if (workState(placed, this.clock())?.status === "ready" && !inConstruction(placed, Date.now())) {
       this.collect(placed);
     }
   }
@@ -738,7 +766,7 @@ export class TownEditor {
       return;
     }
     this.swept = placed;
-    if (placed && workState(placed, this.clock())?.status === "ready") {
+    if (placed && workState(placed, this.clock())?.status === "ready" && !inConstruction(placed, Date.now())) {
       this.collect(placed);
     }
   }
@@ -794,6 +822,14 @@ export class TownEditor {
       this.bar.hide();
       return;
     }
+    if (inConstruction(placed, Date.now())) {
+      // Being built: its name and how far along, no buttons, as in the Flash client (finishConstruction shows them).
+      this.bar.show({
+        name: placed.item.name, detail: this.detail(placed), move: null, turn: null, store: null, sell: null, refund: "",
+        letOut: null, train: null, hurry: null, open: null, close: () => this.select(null),
+      });
+      return;
+    }
     const can = choices(this.town, placed);
     const back = refund(placed.item);
     // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
@@ -839,6 +875,9 @@ export class TownEditor {
 
   /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
   private detail(placed: PlacedItem): string {
+    if (inConstruction(placed, Date.now())) {
+      return `Being built… ${Math.floor(builtShare(placed, Date.now()) * 100)}%`;
+    }
     const training = this.training.get(placed);
     if (training) {
       return `Training ${training.unit.name}… ${duration((training.done - performance.now()) / 1000)}`;

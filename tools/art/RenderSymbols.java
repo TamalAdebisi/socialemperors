@@ -10,11 +10,15 @@
  * the names the game's code uses for it (GuiMC/bgBar/storeButton: the Build
  * button in the game bar), or a path ending in "@n" for the picture's n-th
  * layer alone (counting from 1, back to front), for parts the code never
- * names (NewQuestIslandButtonMC@1: the island map's name ribbon). It
+ * names (NewQuestIslandButtonMC@1: the island map's name ribbon), and
+ * "*n" after any of these for n frames of it playing, its parts' own
+ * animations running too (Construction2x2*140: the scaffold's workers at
+ * work, though its own timeline is one frame long). It
  * writes <out-folder>/<Name>-<frame>.png for
  * every frame of every name (a path's "/" as "."), and
- * <out-folder>/<Name>.json: the frames' labels and where each picture's
- * point (0, 0 in Flash) is, in its PNG. The pictures are vector drawings,
+ * <out-folder>/<Name>.json: the frames' labels, where each picture's
+ * point (0, 0 in Flash) is, in its PNG, and each frame's box as Flash
+ * measures it (the game places some pictures by it). The pictures are vector drawings,
  * so they're drawn at `scale` times their size in the game (3 for screens
  * with three pixels to the point), still sharp.
  *
@@ -23,7 +27,9 @@
 
 import com.jpexs.decompiler.flash.SWF;
 import com.jpexs.decompiler.flash.configuration.Configuration;
+import com.jpexs.decompiler.flash.exporters.commonshape.ExportRectangle;
 import com.jpexs.decompiler.flash.exporters.commonshape.Matrix;
+import com.jpexs.decompiler.flash.tags.base.BoundedTag;
 import com.jpexs.decompiler.flash.tags.base.CharacterTag;
 import com.jpexs.decompiler.flash.timeline.DepthState;
 import com.jpexs.decompiler.flash.timeline.Frame;
@@ -99,12 +105,19 @@ public class RenderSymbols {
     }
 
     static int render(SWF swf, String path, double scale, File out) throws Exception {
+        String name = path.replace('/', '.');
+        // "<name>*n": n moments of it playing, a frame apart, its parts' own animations running
+        // too (each frame else shows them still, at their first frame). Its timeline stops at its last frame.
+        int star = path.lastIndexOf('*');
+        int moments = star > 0 ? Integer.parseInt(path.substring(star + 1)) : 0;
+        if (star > 0) {
+            path = path.substring(0, star);
+        }
         int at = path.lastIndexOf('@');
         int only = at > 0 ? Integer.parseInt(path.substring(at + 1)) : 0;
         Timeline timeline = find(swf, at > 0 ? path.substring(0, at) : path).getTimeline();
-        String name = path.replace('/', '.');
         if (only == 0) {
-            return render(timeline, path, name, scale, out);
+            return render(timeline, path, name, scale, out, moments);
         }
         // Keep only the chosen layer in every frame, and put the others back
         // after: another picture of the run may want them.
@@ -115,7 +128,7 @@ public class RenderSymbols {
             frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
         }
         try {
-            return render(timeline, path, name, scale, out);
+            return render(timeline, path, name, scale, out, moments);
         } finally {
             for (int f = 0; f < all.size(); f++) {
                 timeline.getFrames().get(f).layers.putAll(all.get(f));
@@ -123,7 +136,7 @@ public class RenderSymbols {
         }
     }
 
-    static int render(Timeline timeline, String path, String name, double scale, File out) throws Exception {
+    static int render(Timeline timeline, String path, String name, double scale, File out, int moments) throws Exception {
         RECT bounds = timeline.getDisplayRectWithFilters();
         int pad = PAD * TWIPS;
         RECT rect = new RECT(
@@ -135,24 +148,78 @@ public class RenderSymbols {
 
         List<Frame> frames = timeline.getFrames();
         StringBuilder labels = new StringBuilder();
-        for (int f = 0; f < frames.size(); f++) {
+        StringBuilder sizes = new StringBuilder();
+        int count = moments > 0 ? moments : frames.size();
+        for (int f = 0; f < count; f++) {
+            int shown = Math.min(f, frames.size() - 1);
+            Frame frame = frames.get(shown);
             // Each frame as the game shows it after gotoAndStop: its children at their first frame.
-            for (DepthState layer : frames.get(f).layers.values()) {
+            // Playing, the children are f frames on.
+            for (DepthState layer : frame.layers.values()) {
                 layer.time = 0;
             }
-            BufferedImage image = RenderSwf.straightAlpha(SWF.frameToImageGet(timeline, f, 0, null, 0, rect,
+            int time = moments > 0 ? f : 0;
+            BufferedImage image = RenderSwf.straightAlpha(SWF.frameToImageGet(timeline, shown, time, null, 0, rect,
                     new Matrix(), null, null, scale, true, aaScale).getBufferedImage());
             ImageIO.write(image, "png", new File(out, name + "-" + f + ".png"));
-            labels.append(f > 0 ? ", " : "").append(RenderSwf.jsonStrings(frames.get(f).labels));
+            labels.append(f > 0 ? ", " : "").append(RenderSwf.jsonStrings(frame.labels));
+            sizes.append(f > 0 ? ", " : "").append(box(boundsAt(timeline, shown, time)));
         }
         String manifest = "{\n"
                 + "  \"name\": " + RenderSwf.jsonString(path) + ",\n"
                 + "  \"scale\": " + scale + ",\n"
                 + "  \"origin\": {\"x\": " + Math.round(-rect.Xmin * scale / TWIPS)
                 + ", \"y\": " + Math.round(-rect.Ymin * scale / TWIPS) + "},\n"
-                + "  \"labels\": [" + labels + "]\n"
+                + "  \"labels\": [" + labels + "],\n"
+                + "  \"bounds\": [" + sizes + "]\n"
                 + "}\n";
         Files.writeString(new File(out, name + ".json").toPath(), manifest, StandardCharsets.UTF_8);
-        return frames.size();
+        return count;
+    }
+
+    /**
+     * The box Flash measures a picture's width and height by, at one moment:
+     * each layer's box (a part's own, at its frame then: `time` frames on,
+     * from its first), moved by its matrix. Masks don't count. In twips from
+     * its point, or null when there's nothing.
+     */
+    static double[] boundsAt(Timeline timeline, int f, int time) {
+        double[] box = null;
+        for (DepthState layer : timeline.getFrames().get(f).layers.values()) {
+            CharacterTag character = layer.getCharacter();
+            if (character == null || layer.clipDepth > -1) {
+                continue;
+            }
+            double[] own = null;
+            if (character instanceof Timelined) {
+                Timeline inner = ((Timelined) character).getTimeline();
+                if (inner.getFrameCount() > 0) {
+                    own = boundsAt(inner, (layer.time + time) % inner.getFrameCount(), time);
+                }
+            } else if (character instanceof BoundedTag) {
+                RECT rect = ((BoundedTag) character).getRect();
+                if (rect != null && rect.Xmin <= rect.Xmax && rect.Ymin <= rect.Ymax) {
+                    own = new double[] {rect.Xmin, rect.Ymin, rect.Xmax, rect.Ymax};
+                }
+            }
+            if (own == null) {
+                continue;
+            }
+            Matrix matrix = layer.matrix == null ? new Matrix() : new Matrix(layer.matrix);
+            ExportRectangle moved = matrix.transform(new ExportRectangle(own[0], own[1], own[2], own[3]));
+            box = box == null ? new double[] {moved.xMin, moved.yMin, moved.xMax, moved.yMax}
+                    : new double[] {Math.min(box[0], moved.xMin), Math.min(box[1], moved.yMin),
+                                    Math.max(box[2], moved.xMax), Math.max(box[3], moved.yMax)};
+        }
+        return box;
+    }
+
+    /** A box from boundsAt as JSON, in pixels at the game's size, or null. */
+    static String box(double[] box) {
+        if (box == null) {
+            return "null";
+        }
+        return String.format(java.util.Locale.ROOT, "{\"x\": %.2f, \"y\": %.2f, \"w\": %.2f, \"h\": %.2f}",
+                box[0] / TWIPS, box[1] / TWIPS, (box[2] - box[0]) / TWIPS, (box[3] - box[1]) / TWIPS);
     }
 }

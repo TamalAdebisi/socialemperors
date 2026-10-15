@@ -32,6 +32,8 @@ ready FarmSound
 level-up LevelUpSound
 lumber Lumber3Sound
 stone Rock6Sound
+build BuildSound
+built FinalConstruc1Sound
 sword-1 Sword2Sound
 sword-2 Sword5Sound
 arrow Archer3Sound
