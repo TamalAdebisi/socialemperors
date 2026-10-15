@@ -18,10 +18,11 @@ import {
 import type { Battle, Fighter } from "./rules/battle.ts";
 import type { ItemInfo } from "./rules/config.ts";
 import { takenTiles } from "./rules/editing.ts";
-import type { PlacedItem, Town } from "./rules/town.ts";
+import { savedTile, type PlacedItem, type Town } from "./rules/town.ts";
 import { unitMoved } from "./rules/walking.ts";
 import { freeTileNear } from "./rules/work.ts";
 import type { TownEditor } from "./editor.ts";
+import { firstThisSession } from "./session.ts";
 import { notice } from "./ui/notice.ts";
 import { ScriptedCamps } from "./homeScripted.ts";
 import { scriptedHere } from "./rules/scripted.ts";
@@ -86,8 +87,9 @@ export class Camps {
 
   /**
    * The town opened: a camp due comes now. As in the original, a camp
-   * still standing is put up afresh, somewhere else, each time the game
-   * starts (DECISIONS.md, "Troll camps").
+   * still standing is put up afresh, somewhere else, the first time the
+   * town opens in a session (here, in this tab); coming home again from an
+   * island or a visit finds it as it was left (DECISIONS.md, "Troll camps").
    */
   arrive(): void {
     const { town, commands, camp, clock } = this.parts;
@@ -106,6 +108,9 @@ export class Camps {
     }
     if (!BUILT_HERE.has(id)) {
       return;  // a story camp not yet played here: the classic game puts it up
+    }
+    if (!firstThisSession(`se-camp-${id}-${camp.last}`) && this.chest()) {
+      return;  // put up already in this session: as it was left
     }
     this.spawn(id);
   }
@@ -130,7 +135,8 @@ export class Camps {
         }
         continue;
       }
-      commands.add("sell", placed.tx, placed.ty, placed.item.id, town.id, 1, `CLEAN_${id}`);
+      const at = savedTile(placed);
+      commands.add("sell", at.x, at.y, placed.item.id, town.id, 1, `CLEAN_${id}`);
       town.items.splice(town.items.indexOf(placed), 1);
       view.remove(placed);
     }
@@ -150,7 +156,10 @@ export class Camps {
       return;
     }
     for (const piece of plan.pieces) {
-      this.put(piece);
+      const placed = this.put(piece);
+      if (placed && piece.unit) {
+        placed.defensive = true;  // newly put up, its soldiers hold their ground until the next load, as in the original
+      }
     }
     for (const troll of borderTrolls(this.enemiesLeft(), town.level, town.race, this.random, ground)) {
       this.put(troll);
@@ -199,7 +208,12 @@ export class Camps {
   /** Every second: the chest lights up once no enemy unit is left. */
   watch(): void {
     this.scripted.watch();
-    const chest = this.chest();
+    let chest = this.chest();
+    if (!chest && this.scripted.playing === null && !this.parts.battle?.() && campDue(this.parts.camp.last, this.parts.clock())) {
+      // The 4 hours ran out while the town was open: the camp comes now, as in the original.
+      this.arrive();
+      chest = this.chest();
+    }
     this.ready = chest !== null && this.enemiesLeft() === 0;
     if (this.shown && this.shown !== chest) {
       this.parts.view.sign(this.shown, null);

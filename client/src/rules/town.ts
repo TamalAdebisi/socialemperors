@@ -62,8 +62,16 @@ export interface PlayerInfo {
 }
 
 export interface PlacedItem {
+  /**
+   * Where the server has it, when a fight has moved it since (an enemy: only
+   * the player's own units tell the server where they go). Commands about it
+   * name this tile (`savedTile`).
+   */
+  serverAt?: { x: number; y: number };
+  /** An enemy that holds its ground in a fight (a camp's soldier just put up: until the page loads again). */
+  defensive?: boolean;
   item: ItemInfo;
-  /** The tile the save names. */
+  /** The tile the save names (or, for an enemy a fight has moved, where it stands now: `serverAt`). */
   tx: number;
   ty: number;
   /** Buildings: which way it faces (the sprite's frame). Units: their direction. */
@@ -173,4 +181,9 @@ export function readBox(box: Box | undefined): Map<number, number> {
     }
   }
   return counts;
+}
+
+/** The tile the server has a thing on: where it was saved, if a fight has moved it since. */
+export function savedTile(placed: PlacedItem): { x: number; y: number } {
+  return placed.serverAt ?? { x: placed.tx, y: placed.ty };
 }

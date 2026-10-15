@@ -44,6 +44,8 @@ export interface IslandMapParts {
   clock: () => number;
   /** Where the map's pages are (assets' images_new/). */
   pageUrl: (page: number) => string;
+  /** Told each time it opens, and how: from the menus, a harbour's or zeppelin's button, or back from an island (the goals count these). */
+  opened?: (how: "menu" | "dock" | "back") => void;
   questUrl: (quest: number) => string;
   classicUrl: string;
 }
@@ -106,13 +108,17 @@ export class IslandsWindow {
   toggle(): void {
     this.fill();
     this.panel.toggle();
+    if (this.panel.isOpen) {
+      this.parts.opened?.("menu");
+    }
     this.showFurthest();
   }
 
   /** Open it; `page` (from 1) shows that page of the map, as the harbour (1) and the zeppelin tower (3) do. */
-  open(page?: number): void {
+  open(page?: number, how: "menu" | "dock" | "back" = page === undefined ? "menu" : "dock"): void {
     this.fill();
     this.panel.open();
+    this.parts.opened?.(how);
     if (page === undefined) {
       this.showFurthest();
       return;

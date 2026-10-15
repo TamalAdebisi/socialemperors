@@ -27,7 +27,7 @@ import { Camps } from "./homeCamps.ts";
 import { Raid, planRaids, type RaidPlan } from "./rules/raids.ts";
 import { Specials, type SpecialsTable } from "./rules/specials.ts";
 import specialsTable from "./rules/specials-table.json" with { type: "json" };
-import type { PlacedItem, Town } from "./rules/town.ts";
+import { savedTile, type PlacedItem, type Town } from "./rules/town.ts";
 import { letAllOut } from "./rules/work.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
@@ -89,6 +89,11 @@ export class HomeDefence {
     this.parts = parts;
     this.random = parts.random ?? Math.random;
     this.due = planRaids(parts.town.level, parts.town.race, this.random).sort((a, b) => a.startsAt - b.startsAt);
+    if ((window as unknown as { seCalm?: boolean }).seCalm) {
+      // The browser tests (e2e/lib.mjs) hold back the siege a town may meet as it opens
+      // (1 time in 10 from level 25): it would lock the town at random. They bring it when wanted.
+      this.due = this.due.filter((plan) => plan.kind === "bandits");
+    }
     this.lines = new Map(((parts.config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
     this.camps = new Camps({
       town: parts.town, items: parts.items, commands: parts.commands, view: parts.view, editor: parts.editor,
@@ -175,6 +180,13 @@ export class HomeDefence {
 /** The town as a battlefield, while raiders are in it. */
 /** The battle's tune, while the town is hit; the town's own comes back once no enemy is fighting (checked every 70 frames). */
 const BATTLE_TRACK = "BATALLA.mp3";
+/** A camp's tower destroyed: a quarter of its stone price, rounded down, times 0.02, rounded up, as the original drops. */
+function towerXp(stoneCost: number): number {
+  return Math.ceil(Math.floor(stoneCost / 4) * 0.02);
+}
+
+/** The town's trolls give up when they outnumber the player's armed things this many times over. */
+const OUTNUMBERED = 2;
 const MUSIC_CHECK = 70;
 /** Damage taken out of sight adds up (in sight takes away); past this the "under attack" alert shows. */
 const DAMAGE_TO_ALERT = 50;
@@ -224,6 +236,8 @@ class Fight {
         }
       } else if (side === SELF && placed.item.attack === 0) {
         fighter.condition = "survive";
+      } else if (placed.defensive) {
+        fighter.condition = "defensive";
       }
       if (placed.boss) {
         // A scripted camp's boss (homeScripted.ts).
@@ -287,7 +301,8 @@ class Fight {
         this.view.rise(fighter, [{ text, colour: 0xffffff }]);
       }
     } };
-    this.raids.push(new Raid(this.battle, plan, this.parts.items, this.parts.town.level, this.parts.town.race, voice));
+    const { town } = this.parts;
+    this.raids.push(new Raid(this.battle, plan, this.parts.items, town.level, town.race, voice, (block) => town.expansions.has(block)));
     void this.view.load(() => {});
   }
 
@@ -328,8 +343,34 @@ class Fight {
       raid.step();
     }
     this.stepRepairs();
+    if (this.battle.frame % MUSIC_CHECK === 0) {
+      this.mercy();
+    }
     if (this.battle.frame % MUSIC_CHECK === 0 && !this.battle.fighters.some((f) => f.side === ENEMY && !f.dead && f.attacking && f.target && !f.target.dead)) {
       this.parts.sound.setTrack(null);
+    }
+  }
+
+  /**
+   * The original's mercy: when the trolls of the town (a camp's, the
+   * border's: not raiders) fighting outnumber the player's armed units and
+   * buildings two to one, they give up and walk back to where they stood.
+   */
+  private mercy(): void {
+    const attacking = [...this.placedOf].filter(([f]) => f.side === ENEMY && f.isUnit && !f.dead && f.attacking && f.target && !f.target.dead);
+    if (attacking.length === 0) {
+      return;
+    }
+    const armed = this.battle.fighters.filter((f) => f.side === SELF && !f.dead && f.attack > 0 && f.item.subcategory !== SUBCAT.peasant).length;
+    if (attacking.length < OUTNUMBERED * armed) {
+      return;
+    }
+    for (const [fighter, placed] of attacking) {
+      fighter.target = null;
+      fighter.attacking = false;
+      if (this.battle.walk(fighter, savedTile(placed))) {
+        fighter.forced = true;
+      }
     }
   }
 
@@ -410,15 +451,18 @@ class Fight {
       }
     } else if (fighter.side === ENEMY && placed) {
       // An enemy of the save (a camp's, the border's): where the server has it, and gone from the town.
-      commands.add("kill", placed.tx, placed.ty, placed.item.id, town.id, placed.item.isUnit ? "u" : "b");
+      const at = savedTile(placed);
+      commands.add("kill", at.x, at.y, placed.item.id, town.id, placed.item.isUnit ? "u" : "b");
       town.items.splice(town.items.indexOf(placed), 1);
       this.placedOf.delete(fighter);
       this.parts.view.remove(placed);
       if (fighter.isUnit) {
         this.killedOne();
       }
-      const gold = fighter.isUnit && fighter.attack > 0 ? KILL_GOLD : 0;
-      const xp = fighter.item.collectXp;
+      // A fighting unit pays 5 gold and its experience; a camp's tower, 5 gold and a little experience (raiders.py).
+      const tower = !fighter.isUnit && fighter.item.attack > 0;
+      const gold = fighter.item.attack > 0 ? KILL_GOLD : 0;
+      const xp = tower ? towerXp(fighter.item.cost) : fighter.item.collectXp;
       town.gold += gold;
       town.xp += xp;
       if (gold || xp) {
@@ -451,6 +495,7 @@ class Fight {
       if (fighter.side === ENEMY) {
         // Where the fight left them, for now: the server keeps where they were, as in the original.
         if (fighter.isUnit && !fighter.dead) {
+          placed.serverAt ??= { x: placed.tx, y: placed.ty };
           placed.tx = fighter.tx;
           placed.ty = fighter.ty;
         }

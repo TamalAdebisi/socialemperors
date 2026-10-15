@@ -415,16 +415,38 @@ export function summonSpot(battle: Battle, tile: Point): Point | null {
 /** What the player has of magic: mana, and each spell learnt with how often it's been cast (privateState). */
 export interface MagicState {
   mana: number;
+  /** The level its mana counts up to (levels gone up since bring their mana). */
+  level?: number;
   /** Spell id: times cast. A spell is known once it's here. */
   casts: Record<string, number>;
 }
 
+/** One mana and spell record per save read, so the Academy and every fight of the page share it. */
+const shared = new WeakMap<object, MagicState>();
+
 export function readMagic(privateState: Record<string, unknown> | undefined): MagicState {
+  const known = privateState ? shared.get(privateState) : undefined;
+  if (known) {
+    return known;
+  }
   const casts = privateState?.magics;
-  return {
+  const state = {
     mana: Number(privateState?.mana) || 0,
     casts: casts && typeof casts === "object" && !Array.isArray(casts) ? { ...(casts as Record<string, number>) } : {},
   };
+  if (privateState) {
+    shared.set(privateState, state);
+  }
+  return state;
+}
+
+/**
+ * The mana levels bring, as the server gives it (magic.py): from
+ * START_LEVEL_MANA_REWARD on, MANA_REWARD_PER_LEVEL for each level gone up.
+ */
+export function manaForLevels(from: number, to: number, start: number, perLevel: number): number {
+  const first = Math.max(from + 1, start);
+  return Math.max(to - first + 1, 0) * perLevel;
 }
 
 /**

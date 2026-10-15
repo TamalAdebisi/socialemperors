@@ -36,7 +36,10 @@ changes the save, not just the look.
       town. Ours carry on. S
 - [x] **The welcome-back chest** was switched off inside the Flash client
       as it was built (a setting nothing turns on), so it never showed.
-      Ours offered it: removed. S
+      Ours offered it, and was removed. But our classic game switches it on
+      (`tools/patch_client.py`), so the two clients differed: the owner
+      chose to keep it in both, and ours now offers it as the patched
+      classic game does (from level 4, days 0 to 2, three chests). S
 - [x] **Visiting shows the neighbour's** name, level, gold, wood, food and
       stone in the top bar, and the helps left. Ours shows your own
       numbers (and DECISIONS.md said, wrongly, that the original did). S
@@ -150,12 +153,85 @@ buildings early; the bank; goal checking and paying; the daily bonus,
 Monday and welcome-back chests' prizes; helping neighbours and the donkey
 carts; Arthur. These were checked against the original line by line.
 
-## Not for Beta 1
+## Beta 2: battles and quests
 
-**Beta 2 (now in the new client, still to check side by side):** health
-and fighting numbers in battle, defending the town (raids, sieges, the
-enemy camp), fire and repair, spells, heroes and their graveyard, the dock
-and zeppelin, pausing.
+Made on 15 October 2026 the same way: four read-throughs of the Flash
+client's code (the battle, the islands, spells and special moves,
+defending the town), each checked against `client/src` and the server.
+Ticked lines are fixed; the rest wait, with their reasons. Calls made are
+in [DECISIONS.md](DECISIONS.md).
+
+### Rules we got wrong, now fixed
+
+- [x] **A camp troll moved in one fight and killed in a later one** stayed
+      in the save (the server knows it by the tile it was saved on), and
+      came back after a reload. S
+- [x] **Winning a god island early opened the island chain** up to it
+      (server). S
+- [x] **"Complete an island on N stars" goals** never completed: now
+      counted from the stars the save keeps; with them "Build Harbor",
+      "Check the map" and "Sail in another way". S
+- [x] **A standing camp was put up afresh on every return home**; the
+      original does it once a session. A camp due while the town is open
+      now comes then. S
+- [x] **Area moves** (whirls, stomps, smashes, beams) hit buildings and
+      villagers; the original's pick fighting units only. M
+- [x] **Button cooldowns** ran from the end of the move, not its start; a
+      LIMIT now clears them, as in the original. S
+- [x] **Special units:** the High Elf's and Anubis's two copies for 20
+      seconds, again and again; the Halberdier's and Balrog's diagonal
+      strike and stomp timings; Thor's throwing hits and square storm; the
+      werewolf's throws and its victim's life; the albino werewolf; the
+      Valkyrie's, Wallace's and the Valkyr's help for basic units only. S
+- [x] **Mana** could be stale in a fight at home until a reload; the mana
+      levels from 36 bring wasn't added here. S
+- [x] **Defending the town:** the trolls' mercy (they give up when they
+      outnumber the player two to one); no going into a burnt-out building;
+      the stampede standing with no units to charge; the army aiming by the
+      land opened; bandits not switching kinds; captains' pacing and lines;
+      camp towers paying; new camp soldiers holding their ground. S each
+- [x] **The battle:** the engineer mends siege engines; the healing spring
+      doesn't; bosses and their adds don't answer calls for help; the
+      elemental units' bonus; the monk goes for the nearest enemy; the
+      Dragon Killer Fortress turns to dragons; the Ice Tower shoots units
+      only; the Attack Booster Wizard; units look again by their own reach
+      after a kill. S each
+- [x] **The Arctic Isle's stables** were an enemy; the original leaves
+      them be. **"Leave the island?"** now pauses the battle. S
+
+### Still to do
+
+- [ ] **Who is an enemy on some islands.** The original's civilization,
+      troll, hardcore, god and Desert islands make cows, sheep, trees, gold
+      and stone deposits and refuges enemies (units would wander off to
+      chop the Elven Empire's 341 trees). The read-through wasn't sure how
+      it played: to check in the Flash game before copying. S
+- [ ] **The team of 20** for the last islands may take units inside
+      buildings, in the unit warehouse and in storage; ours, units standing
+      in town. Units in a refuge sail with the army in the original. M
+- [ ] **Domes:** the Protection Dome halves hits within 9 tiles; the Tower
+      Enhancer doubles nearby towers' rate (shop, levels 42 and 47). M
+- [ ] **The Wall Door** can be opened and shut by its owner in the
+      original. M
+- [ ] **Squads:** units sent together re-form round a walking target, and
+      archers step back from closer than 3 tiles. M
+- [ ] **Collection pieces** from kills on islands and at home, and the Blue
+      Phoenix's egg: with the collections, in the last stop. M
+- [ ] **Smaller:** old-style shots fly up to 40% faster in ours; enemy
+      towers wake up a little late in the original; the original's nearest-
+      target search can miss a house in range; a camp chest can't open
+      while raiders are on the map (DECISIONS.md, "Bandits appear when they
+      attack"). S each
+
+### Kept as ours (DECISIONS.md)
+
+The Ether Shield protects its marker's square (the original's protected
+nothing at rank 3), Fire Havoc falls inside its marker, the Arctic Isle's
+lent units are counted rightly, nothing counts after an island is decided,
+units on the border walk home rather than being sold, a walled-off order
+frees its unit.
+
+## Not for Beta 1
 
 **Later:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit

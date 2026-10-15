@@ -35,8 +35,9 @@ What the Flash client costs us today:
 - The game is laid out for 760 × 600 and scaled to fit the window: its
   pictures go soft on a big screen, everything is tiny on a phone, and it is
   made for a mouse, not fingers.
-- We can't change it. The welcome-back bonus is switched off inside the
-  client and stays off. New units and buildings need new Flash files.
+- We can hardly change it: switching on its welcome-back bonus took
+  patching three bytes of the file (`tools/patch_client.py`). New units and
+  buildings need new Flash files.
 - It decides what happened, and the server believes it. That is the cheating
   gap in the [Cash](ROADMAP.md#cash) section.
 
@@ -504,7 +505,11 @@ checks the save has them and the food paid. The cash test takes a town to
 level 20 (its prizes give cash), buys land for cash after gold is refused,
 opens House IV early, hurries a gold mine and trades cash for gold at the
 bank, checking the save for each. The bonus test checks there's no daily
-bonus at level 1, collects its first day at level 5, reaches the first
+bonus or welcome-back chest at level 1; at level 5, on the empire's first
+day, the chest's window says to come back tomorrow, its chests shut (one
+can't be opened before an empire is a day old, which a test can't make:
+the rules test and the server's `test_comeback_bonus.py` cover it); it
+collects the daily bonus's first day, reaches the first
 goal by building a farm (its gold is paid), and checks that goals have no
 Skip and that the save has
 the goal and the bonus. The menus test
@@ -949,7 +954,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   the 227); the server keeps them done whichever client does them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
-`monday_bonus.py`):
+`monday_bonus.py`, `comeback_bonus.py`):
 
 - Daily: from level 5, in a human town; on offer from the next calendar
   day (UTC) after the last; the
@@ -960,8 +965,18 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   collected; previewed on Sundays. Three chests; whichever is picked holds
   one of the config's three prizes by chance (gold, cash or a unit).
   `weekly_reward` (kind, amount or unit).
-- No welcome-back chest: the Flash client has one, switched off inside it
-  as it was built, so it never shows.
+- Welcome-back chest: switched off in the Flash client as it was built;
+  our classic game switches it on (`tools/patch_client.py`), so the new
+  client offers it too (the owner's call). From level 4 (or on reaching
+  it), on the empire's first three days (the page says how many days since
+  it was made, 0 to 2), until the third day's chest is opened; its button
+  is the game's own "Reward" box. On days 1 and 2 three chests are ready
+  to pick, once each; whichever is picked holds one of Monday's prizes by
+  chance, its unit the day's own (`COMEBACK_BONUS_UNITS`, the first on day
+  1, the second on day 2). On day 0, or once day 1's is opened, the window
+  says what tomorrow's holds, the chests shut. `comeback_reward` (kind,
+  amount or unit, day). The daily bonus, like the original's, is decided
+  as the town opens: reaching level 5 shows it on the next visit.
 
 **Not yet:** the troll raids and their treasure chest (with battles), and
 renaming the empire.
@@ -1420,7 +1435,9 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   them, and trolls are topped up about the border (a few clusters, fewer
   the more enemies there are). The camp's window tells its story in the
   game's words, with its picture. As in the original, a camp still
-  standing is put up afresh, somewhere else, each time the game opens.
+  standing is put up afresh, somewhere else, the first time the town
+  opens in a session (the browser tab: `session.ts`); coming home from an
+  island or a visit finds it as it was left.
 - **Whose things are:** as the original decides when the town loads: by
   race (the other race's are enemies), and on the border every building
   is an enemy but chests, fields, nature and scenery.

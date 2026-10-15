@@ -46,6 +46,7 @@ test("villagers work trees, stone and gold; into mills, mines and farms; anyone 
   const altar = item({ id: 225, name: "Sacrifice Altar", subcategory: 124, capacity: 1 });
   assert.equal(canGoInside(t, VILLAGER, placed(altar, 47, 47)), false, "the altar: in the classic game for now");
   assert.equal(canGoInside(t, VILLAGER, placed(MINE, 50, 50, { unitsInside: 1 })), false, "full");
+  assert.equal(canGoInside(t, VILLAGER, placed(MINE, 50, 50, { ruined: true })), false, "burnt out in a raid");
 });
 
 test("a unit stands on the free tile beside the thing nearest to it", () => {

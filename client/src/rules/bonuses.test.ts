@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { collectDaily, collectMonday, dailyBonusDay, dailyBonusOffered, mondayChest, readBonusConfig } from "./bonuses.ts";
+import { collectDaily, collectMonday, collectWelcomeBack, dailyBonusDay, dailyBonusOffered, mondayChest, readBonusConfig, welcomeBackChest } from "./bonuses.ts";
 import type { Town } from "./town.ts";
 
 const CONFIG = readBonusConfig({
@@ -9,6 +9,7 @@ const CONFIG = readBonusConfig({
   DAILY_BONUS_CONFIG_HEROES: [555, 554, 534],
   MONDAY_BONUS_REWARDS: [{ type: "g", value: 2500 }, { type: "u", value: 0 }, { type: "c", value: 10 }],
   MONDAY_BONUS_UNITS: [784, 699, 761],
+  COMEBACK_BONUS_UNITS: [701, 702],
 });
 const DAY = 86400;
 
@@ -56,4 +57,24 @@ test("the daily bonus is offered from level 5, in a human town", () => {
   assert.equal(dailyBonusOffered(town(5)), true);
   assert.equal(dailyBonusOffered(town(4)), false);
   assert.equal(dailyBonusOffered({ ...town(20), race: "t" }), false, "not in a troll town");
+});
+
+test("the welcome-back chest: from level 4, days 0 to 2; ready on days 1 and 2, once each", () => {
+  assert.deepEqual(welcomeBackChest(town(), {}, CONFIG, 0), { state: "soon", day: 1, unit: 701 }, "day 0 shows tomorrow's");
+  assert.deepEqual(welcomeBackChest(town(), {}, CONFIG, 1), { state: "ready", day: 1, unit: 701 });
+  assert.deepEqual(welcomeBackChest(town(), { comebackBonusCollected: [1] }, CONFIG, 1), { state: "soon", day: 2, unit: 702 });
+  assert.deepEqual(welcomeBackChest(town(), { comebackBonusCollected: [1] }, CONFIG, 2), { state: "ready", day: 2, unit: 702 });
+  assert.deepEqual(welcomeBackChest(town(), {}, CONFIG, 2), { state: "ready", day: 2, unit: 702 }, "day 1's missed");
+  assert.equal(welcomeBackChest(town(), { comebackBonusCollected: [2] }, CONFIG, 2), null, "the last one opened");
+  assert.equal(welcomeBackChest(town(), {}, CONFIG, 3), null);
+  assert.equal(welcomeBackChest(town(3), {}, CONFIG, 1), null, "below level 4");
+});
+
+test("opening a welcome-back chest: one of Monday's prizes, the unit the day's own", () => {
+  const state = {};
+  const t = town();
+  const opened = collectWelcomeBack(t, state, CONFIG, 2, () => 0.5);
+  assert.deepEqual(opened.command, { cmd: "comeback_reward", args: ["u", 702, 2] });
+  assert.equal(t.store.get(702), 1, "the unit goes into storage");
+  assert.deepEqual(state, { comebackBonusCollected: [2] });
 });

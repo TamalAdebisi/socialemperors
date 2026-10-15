@@ -26,12 +26,12 @@ import {
 } from "./rules/scripted.ts";
 import type { PlacedItem } from "./rules/town.ts";
 import { freeTileNear } from "./rules/work.ts";
+import { firstThisSession } from "./session.ts";
 import { notice } from "./ui/notice.ts";
 
 const TOWN_HALL = 135;
 /** The camps whose village starts half burnt, once a session (the Chinese dragon's). */
 const BURNT = 23;
-const burntThisSession = new Set<number>();
 /** A boss that gets away below a tenth of its life. */
 const FLEE_BELOW = 0.1;
 
@@ -253,9 +253,8 @@ export class ScriptedCamps {
       }
     }
     this.showSteps(camp);
-    if (this.id === BURNT && !burntThisSession.has(BURNT)) {
+    if (this.id === BURNT && firstThisSession(`se-burnt-${BURNT}-${this.parts.camp.last}`)) {
       // The Chinese village starts half burnt (once a session, as in the original: it isn't saved).
-      burntThisSession.add(BURNT);
       for (const tile of camp.tiles) {
         for (const [id, x, y, , role] of tile.pieces) {
           const piece = role === "key" || role === "chest" ? null : at(id, x, y);

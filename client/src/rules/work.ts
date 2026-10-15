@@ -45,13 +45,16 @@ export function canHarvest(unit: ItemInfo, target: ItemInfo): boolean {
  * Whether a unit can go into a building: one of the player's, with room;
  * villagers into mills, mines and farms; animals into ranches of their kind
  * (rules/animals.ts); any unit into a refuge, siege engines too, as in the
- * Flash client. (The special buildings such as the Sacrifice Altar come
- * later.)
+ * Flash client; not into one burnt out in a raid. (The special buildings
+ * such as the Sacrifice Altar come later.)
  */
 export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): boolean {
   const target = building.item;
   if (target.isUnit || building.unitsInside >= target.capacity) {
     return false;
+  }
+  if (building.ruined) {
+    return false;  // burnt out: nobody goes in until it's repaired in full, as in the original
   }
   if (target.race !== town.race && target.race !== "a") {
     return false;

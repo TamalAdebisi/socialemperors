@@ -6,7 +6,7 @@
 // buy_magic, buy_mana_new and use_magic, each sent at once.
 
 import type { GameConfig } from "../rules/config.ts";
-import { knownSpells, learn, learnProblem, rankOf, readMagic, readSpells, type MagicState, type SpellInfo } from "../rules/magic.ts";
+import { knownSpells, learn, learnProblem, manaForLevels, rankOf, readMagic, readSpells, type MagicState, type SpellInfo } from "../rules/magic.ts";
 import type { Town } from "../rules/town.ts";
 import { iconImage } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -34,10 +34,23 @@ export interface MagicParts {
 /** The parts for a town: its gold and cash pay, the config's spells and prices, the save's mana. */
 export function magicParts(config: GameConfig, privateState: Record<string, unknown> | undefined, town: Town, assetsUrl: string,
   send: (cmd: string, ...args: unknown[]) => void, changed: () => void): MagicParts {
+  const state = readMagic(privateState);
+  // Levels gone up since the save was read bring their mana here too, as in the Flash client.
+  const start = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
+  const perLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
+  const level = () => {
+    state.level ??= town.level;
+    if (town.level > state.level) {
+      state.mana += manaForLevels(state.level, town.level, start, perLevel);
+      state.level = town.level;
+    }
+    return town.level;
+  };
+  level();
   return {
     spells: readSpells(config),
-    state: readMagic(privateState),
-    level: () => town.level,
+    state,
+    level,
     town: town.id,
     bank: {
       amount: Number(config.globals?.MANA_PER_PURCHASE) || 5,

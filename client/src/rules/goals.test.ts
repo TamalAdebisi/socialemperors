@@ -109,3 +109,17 @@ test("goal 44 names the host, and counts a visit to one of Arthur's towns; goal 
   doings.helpedBuildings = 3;
   assert.deepEqual(progress(t, help, doings, 0, new Map()), { done: 3, of: 5 });
 });
+
+test("island goals: by the stars the save keeps; the map seen, and from the menus", () => {
+  const goals = readGoals([82, 166, 81, 85].map((id) => ({ id, title: `Goal ${id}` })), data.goals as unknown as Record<string, Need>);
+  const doings = new Doings();
+  const t = town();
+  assert.deepEqual(progress(t, goals.get(82)!, doings, 0, ITEMS), { done: 0, of: 1 });
+  doings.questStars = { 100000006: 1, 100000007: 2 };
+  assert.deepEqual(progress(t, goals.get(82)!, doings, 0, ITEMS), { done: 1, of: 1 }, "Mysterious Isle on 1 star");
+  assert.deepEqual(progress(t, goals.get(166)!, doings, 0, ITEMS), { done: 2, of: 3 }, "Unknown Isle: 2 of 3 stars");
+  assert.deepEqual(progress(t, goals.get(81)!, doings, 0, ITEMS), { done: 0, of: 1 });
+  doings.islandsOpened = true;
+  assert.deepEqual(progress(t, goals.get(81)!, doings, 0, ITEMS), { done: 1, of: 1 });
+  assert.deepEqual(progress(t, goals.get(85)!, doings, 0, ITEMS), { done: 0, of: 1 }, "not from a harbour's button");
+});

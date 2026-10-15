@@ -229,12 +229,12 @@ test("a kamikaze blows up: 500 to itself and to all within 2 tiles, and sets off
 const MONK = item({ id: 569, name: "Monk", subcategory: 72, life: 50, attack: 10, attackRange: 7, attackInterval: 60 });
 const THOR = item({ id: 556, name: "Thor", life: 500, attack: 0, velocity: 0 });
 
-test("a monk turns a unit within 10 tiles to its side, 24 seconds apart, 4 at most; not one of 500 life", () => {
+test("a monk turns the nearest enemy unit to its side, 24 seconds apart, 4 at most; not one of 500 life", () => {
   const b = battle(3);
   const turned: [Fighter, number][] = [];
   b.onConvert = (unit) => turned.push([unit, unit.side]);
   const monk = b.add(MONK, 50, 50, SELF);
-  b.add(THOR, 52, 50, ENEMY, { condition: "passive" });
+  b.add(THOR, 59, 50, ENEMY, { condition: "passive" });
   // Trolls that don't fight back, so all five live to be turned.
   const trolls = [0, 1, 2, 3, 4].map((i) => b.add({ ...TROLL, velocity: 0, attack: 0 }, 54, 48 + i, ENEMY, { condition: "passive" }));
   run(b, 200, () => turned.length > 0);
@@ -255,10 +255,87 @@ test("a monk turns a unit within 10 tiles to its side, 24 seconds apart, 4 at mo
   assert.ok(b.frame - at > 3 * 720);
 });
 
-test("without anyone listening (at home) a monk turns nobody", () => {
+test("a monk whose nearest enemy can't be turned stands at it, as in the original", () => {
+  const b = battle(3);
+  const turned: Fighter[] = [];
+  b.onConvert = (unit) => turned.push(unit);
+  b.add(MONK, 50, 50, SELF);
+  const thor = b.add(THOR, 52, 50, ENEMY, { condition: "passive" });
+  b.add({ ...TROLL, velocity: 0, attack: 0 }, 55, 50, ENEMY, { condition: "passive" });
+  run(b, 900);
+  assert.equal(turned.length, 0);
+  assert.equal(thor.side, ENEMY);
+});
+
+test("without anyone listening a monk turns nobody", () => {
   const b = battle(3);
   b.add(MONK, 50, 50, SELF);
   const troll = b.add({ ...TROLL, velocity: 0 }, 53, 50, ENEMY, { condition: "passive" });
   run(b, 600);
   assert.equal(troll.side, ENEMY);
+});
+
+test("the engineer mends siege engines of its side, not other units", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(1) });
+  const engineer = b.add(item({ id: 570, name: "Engineer", subcategory: 72, attack: 25, attackRange: 1, attackInterval: 15, life: 100 }), 50, 50, SELF);
+  const ram = b.add(item({ id: 519, name: "Ram", subcategory: 81, life: 1000 }), 55, 50, SELF);
+  const knight = b.add(item({ id: 514, name: "Knight", life: 1000 }), 50, 52, SELF);
+  ram.life = 500;
+  knight.life = 500;
+  for (const f of [ram, knight]) {
+    f.condition = "passive";
+  }
+  for (let i = 0; i < 300; i++) {
+    b.step();
+  }
+  assert.ok(ram.life > 500, "the ram mended");
+  assert.equal(knight.life, 500, "not the knight");
+  assert.ok(engineer.life > 0);
+});
+
+test("a boss's adds don't answer a call for help; ordinary units do", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(1) });
+  const golem = item({ id: 666, name: "Golem", subcategory: 85, life: 5000, race: "t" });
+  const troll = item({ id: 525, name: "Troll", life: 5000, race: "t" });
+  const archer = b.add(item({ id: 516, name: "Archer", attackRange: 9, life: 5000 }), 40, 50, SELF);
+  const hit = b.add(golem, 48, 50, ENEMY);
+  const add = b.add(golem, 49, 52, ENEMY);
+  const friend = b.add(troll, 49, 48, ENEMY);
+  for (const f of [hit, add, friend]) {
+    f.condition = "aggressive";
+    f.aggro = 1;  // nobody sees the archer by themselves
+  }
+  b.hurt(hit, 10, archer);
+  assert.equal(add.target, null, "the golem beside it stays");
+  assert.equal(friend.target, archer, "the troll beside it comes");
+});
+
+test("the Dragon Killer turns to a dragon; the Ice Tower shoots units only; the Attack Booster's units hit half again", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(2) });
+  const killer = b.add(item({ id: 1426, name: "Dragon Killer", isUnit: false, subcategory: 1711, attack: 400, attackRange: 15, attackInterval: 30, life: 5000, width: 3, height: 3 }), 50, 50, SELF);
+  b.add(item({ id: 525, name: "Troll", race: "t", life: 1e6 }), 53, 50, ENEMY, { condition: "passive" });
+  const dragon = b.add(item({ id: 700, name: "Dragon", race: "t", life: 1e6, groups: "dragon", flying: true }), 58, 50, ENEMY, { condition: "passive" });
+  for (let i = 0; i < 61; i++) {
+    b.step();
+  }
+  assert.equal(killer.target, dragon, "the dragon first, though the troll is nearer");
+
+  const c = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(2) });
+  const ice = c.add(item({ id: 384, name: "Ice Tower", isUnit: false, subcategory: 211, attack: 10, attackRange: 8, attackInterval: 30, life: 5000 }), 50, 50, SELF);
+  c.add(item({ id: 1, name: "House", isUnit: false, subcategory: 111, race: "t", life: 1000, attack: 0 }), 53, 50, ENEMY);
+  for (let i = 0; i < 61; i++) {
+    c.step();
+  }
+  assert.equal(ice.target, null, "no building for the Ice Tower");
+
+  const d = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(2) });
+  d.add(item({ id: 2052, name: "Attack Booster Wizard", attack: 0, life: 1000 }), 50, 50, SELF, { condition: "passive" });
+  const knight = d.add(item({ id: 514, name: "Knight", attack: 100 }), 51, 50, SELF, { condition: "passive" });
+  const dummy = d.add(item({ id: 525, name: "Troll", race: "t", life: 1e6, defense: 0 }), 52, 50, ENEMY, { condition: "passive" });
+  for (let i = 0; i < 30; i++) {
+    d.step();
+  }
+  d.hurt(dummy, 100, knight);
+  const cheered = 1e6 - dummy.life;
+  assert.ok(cheered > 100, `cheered: ${cheered}`);
 });

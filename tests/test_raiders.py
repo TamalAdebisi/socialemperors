@@ -15,7 +15,7 @@ import raiders
 import sessions
 from command import do_command
 
-SMALL_TROLL, BIG_TROLL, HOUSE = 525, 527, 1
+SMALL_TROLL, BIG_TROLL, HOUSE, TROLL_TOWER, TOWER_IV = 525, 527, 1, 291, 32
 TOWN = 0
 
 
@@ -41,9 +41,13 @@ class RaidersTest(unittest.TestCase):
         self.assertGreater(self.map["xp"], 0)
         self.assertEqual(self.map["raiderKills"]["count"], 2)
 
-    def test_buildings_pay_nothing(self):
+    def test_buildings_pay_nothing_but_camp_towers(self):
         self.kill(HOUSE, "b")
         self.assertEqual(self.map["coins"], 100)
+        self.map["items"].append([TROLL_TOWER, 3, 50, 0, 0, 0])
+        self.kill(TROLL_TOWER, "b")
+        self.assertEqual((self.map["coins"], self.map["xp"]), (105, 1), "5 gold and a little experience, as the original shows")
+        self.assertEqual([raiders.tower_xp(c) for c in (125, 250, 375, 500)], [1, 2, 2, 3])
 
     def test_a_saved_enemy_is_removed_and_pays_5_gold_and_its_experience_once(self):
         self.map["items"].append([SMALL_TROLL, 3, 50, 0, 0, 0])

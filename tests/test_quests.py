@@ -61,6 +61,11 @@ class QuestsTest(unittest.TestCase):
         self.play(SECOND)
         self.assertEqual(self.pState["unlockedQuestIndex"], 2)
 
+    def test_a_god_island_won_early_opens_nothing(self):
+        self.play(FIRST)
+        self.play(ISLE_ORDER[25])  # God Isle 1: open from the start
+        self.assertEqual(self.pState["unlockedQuestIndex"], 1)
+
     def test_losing_opens_nothing(self):
         self.play(FIRST, win=False)
         self.assertEqual(self.pState["unlockedQuestIndex"], 0)

@@ -31,6 +31,8 @@ export const ICONS = {
   population: new URL("./art/population.webp", import.meta.url).href,
   // Bonuses: the game bar's daily bonus button, and its gift box for the chests.
   "daily-bonus": new URL("./art/daily-bonus.webp", import.meta.url).href,
+  // The welcome-back chest's own button, the game's "Reward" box.
+  "welcome-back": new URL("./art/welcome-back.webp", import.meta.url).href,
   "music-on": new URL("./art/music-on.webp", import.meta.url).href,
   "music-off": new URL("./art/music-off.webp", import.meta.url).href,
   "sound-on": new URL("./art/sound-on.webp", import.meta.url).href,
