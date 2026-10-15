@@ -1,7 +1,8 @@
 """
-Raiders killed in the player's own town: the bandits and sieges the client
-sends at the town (rolled by the client each time the town opens, and never
-saved, as in the original game).
+Enemy units killed in the player's own town: the bandits and sieges the
+client sends at the town (rolled by the client each time the town opens, and
+never saved, as in the original game), and the troll camps' and the border's
+trolls (saved).
 
 The Flash client shows 5 gold and the raider's experience (its collect_xp)
 for each enemy unit killed at home, but only ever sends
@@ -27,8 +28,10 @@ def _today() -> str:
     return time.strftime("%Y-%m-%d", time.gmtime())
 
 
-def killed(map: dict, unit_id, kind) -> str:
-    """An enemy unit killed at home: 5 gold and its experience, within the day's limit."""
+def killed(map: dict, unit_id, kind, with_xp: bool = True) -> str:
+    """An enemy unit killed at home: 5 gold and its experience, within the day's
+    limit. A unit that was in the save (a camp's, the border's) has had its
+    experience already: `with_xp` False."""
     if kind != "u":
         return "not a unit"
     try:
@@ -47,5 +50,6 @@ def killed(map: dict, unit_id, kind) -> str:
     counted["count"] += 1
     map["raiderKills"] = counted
     map["coins"] = map["coins"] + KILL_GOLD
-    map["xp"] = map["xp"] + xp
-    return f"+{KILL_GOLD} gold, +{xp} xp"
+    if with_xp:
+        map["xp"] = map["xp"] + xp
+    return f"+{KILL_GOLD} gold" + (f", +{xp} xp" if with_xp else "")

@@ -34,6 +34,8 @@ export interface CommandSenderOptions {
 const SIGNATURE = "0".repeat(64);
 const SEND_EVERY_MS = 3000;
 const MAX_TRIES = 3;
+/** The most a keepalive request may carry (the browsers' 64 KB, less a margin). */
+const KEEPALIVE_MOST = 60_000;
 
 export class CommandSender {
   private readonly settings: PageSettings;
@@ -174,7 +176,11 @@ export class CommandSender {
     if (this.options.post) {
       return this.options.post(this.url(), body);
     }
-    // keepalive: a batch already on its way still arrives if the page is closed.
-    return fetch(this.url(), { method: "POST", body, keepalive: true });
+    // keepalive: a batch already on its way still arrives if the page is
+    // closed. Browsers refuse it for a body over 64 KB (a town's first batch
+    // can be that big: trees growing back, a camp clearing the border), so a
+    // big batch goes without it.
+    const keepalive = body.toString().length < KEEPALIVE_MOST;
+    return fetch(this.url(), { method: "POST", body, keepalive });
   }
 }

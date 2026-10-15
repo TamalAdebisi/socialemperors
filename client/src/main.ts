@@ -46,8 +46,6 @@ import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 
-/** Raids come from this level (rules/raids.ts). */
-const RAIDS_FROM = 10;
 /** The building where spells are learnt. */
 const WIZARDRY_ACADEMY = 416;
 
@@ -202,15 +200,13 @@ async function start(): Promise<void> {
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.
-    // Raids on the town (homeDefence.ts), from level 10 as in the Flash client: rolled each time it opens.
+    // Raids on the town and the troll camps (homeDefence.ts, homeCamps.ts): rolled each time it opens.
     const defend = () => {
-      if (town.level < RAIDS_FROM) {
-        return;
-      }
       void import("./homeDefence.ts").then(({ HomeDefence }) => {
         const defence = new HomeDefence({
           town, items, config, privateState: info.privateState as Record<string, unknown> | undefined, settings, commands, sound,
-          art, view, world: mapLayer, camera, editor,
+          art, view, world: mapLayer, camera, editor, clock,
+          camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0 },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
       });

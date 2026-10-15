@@ -5,6 +5,7 @@
 // rules/battle.ts. No drawing here.
 
 import { Battle, ENEMY, NEUTRAL, SELF, SUBCAT, type Fighter } from "./battle.ts";
+import { BossIsland, bossPlayedHere, type BossSetup } from "./bosses.ts";
 import type { ItemInfo } from "./config.ts";
 import { BLOCK_TILES, BLOCKS, MAP_TILES, type Point } from "./geometry.ts";
 import type { SaveItem, Town } from "./town.ts";
@@ -49,11 +50,17 @@ export interface Island {
   neutral: number[];
   neutralBuildingsExcept?: number[];
   friendlyItems?: number[];
+  /** The Hero Isle: its parts as [x1, y1, x2, y2] (inclusive), each with a door that opens once its units are dead. */
+  doorZones?: [number, number, number, number][];
+  /** A boss island: its guards, keys, gate and boss (rules/bosses.ts). */
+  boss?: BossSetup;
   notes?: string;
 }
 
 /** Refuges are nobody's on any island. */
 const REFUGE = 1311;
+/** The Hero Isle's doors. */
+const WALL_DOOR = 37;
 
 /** A row of the report's units: [unit id, sent, killed, recovered]. */
 export type UnitRow = [number, number, number, number];
@@ -106,6 +113,8 @@ export interface QuestParts {
   items: Map<number, ItemInfo>;
   /** The island's save rows (its map.items). */
   layout: SaveItem[];
+  /** The player's level: a boss's life comes from it. */
+  level?: number;
   random?: () => number;
 }
 
@@ -129,6 +138,15 @@ export class Quest {
   endsAt: number | null = null;
   /** The chest: lit (collectable) once every enemy unit is dead. */
   chest: Fighter | null = null;
+  /** The Hero Isle: enemies left in each part, each part's door, and the part each enemy was in. */
+  zoneLeft: number[] = [];
+  doors: (Fighter | null)[] = [];
+  private readonly zoneOf = new Map<Fighter, number>();
+  private readonly countedOut = new WeakSet<Fighter>();
+  /** Units on the player's side that aren't the player's to lose: a boss island's penguins. */
+  private readonly notOwned = new WeakSet<Fighter>();
+  /** A boss island's own rules. */
+  readonly boss: BossIsland | null = null;
   private readonly random: () => number;
   private recoveredDone = false;
 
@@ -141,6 +159,29 @@ export class Quest {
     this.items = parts.items;
     this.random = parts.random ?? Math.random;
     this.setUp(parts.items, parts.layout);
+    if (this.island.boss && bossPlayedHere(this.island.quest)) {
+      this.boss = new BossIsland(this.battle, this.island.boss, parts.items, parts.level ?? 1);
+      this.boss.onWin = (capped) => this.win(this.island.endDelay, capped);
+      this.remaining = this.boss.keysLeft;
+    }
+    this.battle.onConvert = (unit) => this.converted(unit);
+  }
+
+  /**
+   * A monk turned a unit: as in the original, it has fallen on its old
+   * side (an enemy pays and counts; one of the player's is lost), and now
+   * fights on the other.
+   */
+  converted(unit: Fighter): { gold: number; xp: number } {
+    if (this.state !== "fighting") {
+      return { gold: 0, xp: 0 };
+    }
+    const enemy = unit.side === ENEMY;
+    const paid = this.killed(unit);
+    if (enemy && this.state === "fighting") {
+      this.playerUnits++;
+    }
+    return paid;
   }
 
   /**
@@ -154,6 +195,7 @@ export class Quest {
     if (this.difficulty > 1 && this.island.difficulty === "copies") {
       this.copyEnemies(this.items);
     }
+    this.boss?.begin(this.difficulty);
     this.land(this.items, army);
   }
 
@@ -185,6 +227,51 @@ export class Quest {
       }
     }
     this.countRemaining();
+    this.setUpZones();
+  }
+
+  /**
+   * The Hero Isle's parts: each enemy unit, and each door, belongs to the
+   * first part holding its tile. Done before the copies, which belong to none.
+   */
+  private setUpZones(): void {
+    const zones = this.island.doorZones;
+    if (!zones) {
+      return;
+    }
+    const zoneAt = (x: number, y: number) => zones.findIndex(([x1, y1, x2, y2]) => x >= x1 && x <= x2 && y >= y1 && y <= y2);
+    this.zoneLeft = zones.map(() => 0);
+    this.doors = zones.map(() => null);
+    for (const f of this.battle.fighters) {
+      const zone = zoneAt(f.tx, f.ty);
+      if (zone < 0) {
+        continue;
+      }
+      if (f.isUnit && f.side === ENEMY) {
+        this.zoneOf.set(f, zone);
+        this.zoneLeft[zone]++;
+      } else if (f.item.id === WALL_DOOR && !this.doors[zone]) {
+        this.doors[zone] = f;
+      }
+    }
+  }
+
+  /**
+   * An enemy died on the Hero Isle: one fewer in its part, and the part's
+   * door opens when none are left. As in the original, an enemy in no part
+   * (a copy, or one of the few standing outside them) counts against the
+   * first part, so its door can open early (DECISIONS.md, "Hero Isle").
+   */
+  private zoneKill(fighter: Fighter): void {
+    if (!this.island.doorZones) {
+      return;
+    }
+    const zone = this.zoneOf.get(fighter) ?? 0;
+    this.zoneLeft[zone]--;
+    const door = this.doors[zone];
+    if (this.zoneLeft[zone] === 0 && door) {
+      this.battle.openDoor(door);
+    }
   }
 
   /** Whose a thing on the island is, by the island's rules (rules/islands.json, "sides"). */
@@ -257,12 +344,24 @@ export class Quest {
     if (fighter.side === SELF && !fighter.summoned) {
       // Only fighters count (summoned ones never: they're no loss, and don't keep the battle going) (a unit with no attack falling isn't counted, as in the Flash client).
       if (fighter.attack > 0 && fighter.isUnit) {
-        this.addTo(fighter.item.id, KILLED);
+        // An enemy a monk turned isn't the player's to lose (DECISIONS.md, "Hero Isle").
+        if (!fighter.converted && !this.notOwned.has(fighter)) {
+          this.addTo(fighter.item.id, KILLED);
+        }
         this.playerUnits--;
       }
+    } else if (fighter.side === ENEMY && !fighter.summoned && this.boss) {
+      // A boss island: only the guards pay; their keys light up; the bosses' fall wins.
+      if (this.boss.pays(fighter)) {
+        paid = this.pay(fighter);
+      }
+      this.boss.fell(fighter);
     } else if (fighter.side === ENEMY && !fighter.summoned) {
       paid = this.pay(fighter);
-      if (this.counts(fighter)) {
+      this.zoneKill(fighter);
+      // Each enemy counts once: one a monk turned (and maybe back) was counted when first turned.
+      if (this.counts(fighter) && !fighter.converted && !this.countedOut.has(fighter)) {
+        this.countedOut.add(fighter);
         this.remaining--;
       }
       if (this.remaining <= 0) {
@@ -320,8 +419,25 @@ export class Quest {
     }
   }
 
-  /** The player taps the lit chest: the island is won. */
+  /** Whether a tap on this collects it: the lit chest, or a boss island's lit key. */
+  canCollect(fighter: Fighter | null): boolean {
+    return fighter !== null && Boolean(fighter.collectable) && this.state === "fighting"
+      && (fighter === this.chest || Boolean(this.boss?.keys.includes(fighter)));
+  }
+
+  /** The player taps the lit chest: the island is won. Or a lit key: one fewer to go. */
   collect(fighter: Fighter): boolean {
+    if (this.boss && this.state === "fighting") {
+      const joined = this.boss.collect(fighter);
+      if (joined) {
+        for (const unit of joined) {
+          this.notOwned.add(unit);
+          this.playerUnits++;
+        }
+        this.remaining = this.boss.keysLeft;
+        return true;
+      }
+    }
     if (fighter !== this.chest || !fighter.collectable || this.state !== "fighting") {
       return false;
     }
@@ -355,6 +471,11 @@ export class Quest {
       this.state = "lost";
       this.endsAt = this.battle.frame;
     }
+  }
+
+  /** Every frame, after the battle's: the bosses with a mind of their own choose. */
+  step(): void {
+    this.boss?.minds.step();
   }
 
   /** Whether the results are due. */
@@ -427,11 +548,11 @@ export class Quest {
 }
 
 /**
- * Islands whose own rules aren't in this client yet (the bosses' keys and
- * doors, the Hero Isle's doors): played in the classic game for now.
+ * Islands whose own rules aren't in this client yet (the Rockdriller's and
+ * the dragons' islands): played in the classic game for now.
  */
 export function playedHere(island: Island): boolean {
-  return island.kind !== "boss" && island.kind !== "heroes";
+  return island.kind !== "boss" || bossPlayedHere(island.quest);
 }
 
 /** Whether an island can be sailed to, and why not. */

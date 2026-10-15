@@ -60,6 +60,19 @@ class MissionsTest(unittest.TestCase):
         self.send("set_quest_var", TOWN, "boss", json.dumps([[540, 10, 12]]))
         self.assertEqual(self.map["currentQuestVars"], {"spawned": True, "boss": [[540, 10, 12]]})
 
+    def test_progress_sent_after_the_chest_is_not_kept_for_the_next_raid(self):
+        # As the Flash client sends it for the Atlantis treasure (raid 26): the
+        # chest, then the last activators.
+        self.send("set_quest_var", TOWN, "spawned", "true")
+        self.send("set_quest_var", TOWN, "activators", json.dumps(["1", "2", "3"]))
+        self.send("collect_treasure", 750, 100, 27, 0, 0, TOWN)
+        self.send("set_quest_var", TOWN, "activators", json.dumps(["1", "2", "3", "4"]))
+        self.assertEqual(self.map["currentQuestVars"], {})
+        # The next raid starts, and its own progress is kept.
+        self.send("set_quest_var", TOWN, "spawned", "true")
+        self.send("set_quest_var", TOWN, "boss", json.dumps([[540, 10, 12]]))
+        self.assertEqual(self.map["currentQuestVars"], {"spawned": True, "boss": [[540, 10, 12]]})
+
     def test_the_treasure_at_the_end_of_a_raid(self):
         self.map["currentQuestVars"] = {"spawned": True}
         before = int(time.time())

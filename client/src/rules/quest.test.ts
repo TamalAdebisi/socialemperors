@@ -6,6 +6,7 @@ import { Battle, ENEMY, NEUTRAL, SELF, seededRandom } from "./battle.ts";
 import { itemsById, type GameConfig } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
 import islandData from "./islands.json" with { type: "json" };
+import { Dragon } from "./bossMinds.ts";
 import { Quest, armyOf, difficulties, islandGround, islandLock, lastTeam, teamArmy, teamChoices, teamProblem, teamSlots, type Island } from "./quest.ts";
 import type { PlacedItem, SaveItem, Town } from "./town.ts";
 
@@ -18,12 +19,12 @@ function layout(quest: number): SaveItem[] {
   return JSON.parse(readFileSync(new URL(`villages/quests/${quest}.json`, root), "utf8")).map.items;
 }
 
-function start(quest: number, difficulty: number, army: [number, number][], seed = 1): Quest {
+function start(quest: number, difficulty: number, army: [number, number][], seed = 1, level = 10): Quest {
   const island = islands.find((i) => i.quest === quest)!;
   const random = seededRandom(seed);
   let run: Quest | null = null;
   const battle = new Battle({ ground: islandGround(island), random, onDeath: (f) => run?.killed(f) });
-  run = new Quest({ island, battle, items, layout: layout(quest), random });
+  run = new Quest({ island, battle, items, layout: layout(quest), level, random });
   run.begin(difficulty, army);
   return run;
 }
@@ -170,4 +171,250 @@ test("the last islands take a team of 20: each kind up to its limit, gods needed
   const gods = [...items.values()].filter((i) => i.isUnit && (i.groups === "god" || i.groups === "colossus")).map((i) => i.id);
   assert.ok(gods.length >= 1);
   assert.equal(teamProblem(Array(5).fill(gods[0]), god3, items), null);
+});
+
+test("Hero Isle: seven parts behind doors; a part's door opens when its last enemy dies", () => {
+  const run = start(100000018, 1, [[510, 3]]);
+  const fighters = run.battle.fighters;
+  assert.deepEqual(run.zoneLeft, [6, 5, 4, 4, 7, 6, 6]);
+  assert.ok(run.doors.every((door) => door?.item.id === 37 && door.side === NEUTRAL), "a door to each part, nobody's");
+  assert.equal(run.remaining, 9 + 6 + 5 + 4 + 4 + 7 + 6 + 6, "every enemy unit, the nine outside the parts too");
+  const door = run.doors[1]!;
+  const tile = door.ty * MAP_TILES + door.tx;
+  assert.equal(run.battle.walkGrid()[tile], 0, "shut");
+  const inPart = (f: (typeof fighters)[number], [x1, y1, x2, y2]: number[]) => f.tx >= x1 && f.tx <= x2 && f.ty >= y1 && f.ty <= y2;
+  const part1 = fighters.filter((f) => f.side === ENEMY && f.isUnit && inPart(f, run.island.doorZones![1]));
+  for (const enemy of part1.slice(1)) {
+    run.battle.kill(enemy, null);
+  }
+  assert.equal(door.facing, 0, "not while one is left");
+  run.battle.kill(part1[0], null);
+  assert.equal(door.facing, 2, "its open picture");
+  assert.ok(door.open);
+  assert.equal(run.battle.walkGrid()[tile], 1, "units walk through");
+  assert.equal(run.doors[0]!.open, undefined);
+});
+
+test("Hero Isle: an enemy in no part counts against the first, so its door can open early", () => {
+  const run = start(100000018, 2, [[510, 3]]);
+  const enemies = run.battle.fighters.filter((f) => f.side === ENEMY && f.isUnit);
+  // The island's 47 units first, then a copy of each, which belongs to no part.
+  const outside = [...enemies.slice(0, 47).filter((f) => f.tx >= 86), ...enemies.slice(47)];
+  assert.equal(outside.length, 9 + 47, "the nine outside, and the copies");
+  for (const enemy of outside.slice(0, 6)) {
+    run.battle.kill(enemy, null);
+  }
+  assert.equal(run.zoneLeft[0], 0);
+  assert.ok(run.doors[0]!.open, "the first part's door opened, its Rangers alive");
+  run.battle.kill(outside[6], null);
+  assert.equal(run.zoneLeft[0], -1, "and never shuts again");
+  assert.ok(run.doors[0]!.open);
+});
+
+test("Hero Isle: every enemy dead wins; kills pay a sixteenth", () => {
+  const run = start(100000018, 1, [[510, 3]]);
+  const enemies = run.battle.fighters.filter((f) => f.side === ENEMY && f.isUnit);
+  for (const enemy of enemies) {
+    run.battle.kill(enemy, null);
+  }
+  assert.equal(run.state, "won");
+  assert.equal(run.endsAt, run.battle.frame + 90);
+  assert.ok(run.gold >= 12000 && run.gold <= 25000);
+  assert.ok(run.doors.every((door) => door!.open));
+});
+
+test("a turned enemy counts as beaten once; a turned unit of the player's as lost", () => {
+  const run = start(100000018, 1, [[510, 3]]);
+  const enemy = run.battle.fighters.find((f) => f.side === ENEMY && f.isUnit && f.tx >= 54 && f.ty >= 75)!;
+  const [left, zone, units] = [run.remaining, run.zoneLeft[0], run.playerUnits];
+  // What the battle does when a monk turns it: the quest hears, then it changes sides.
+  const paid = run.converted(enemy);
+  Object.assign(enemy, { side: SELF, converted: true });
+  assert.ok(paid.xp >= 1);
+  assert.deepEqual([run.remaining, run.zoneLeft[0], run.playerUnits], [left - 1, zone - 1, units + 1]);
+  run.battle.kill(enemy, null);
+  assert.deepEqual([run.remaining, run.playerUnits], [left - 1, units], "its fall later counts no more");
+  assert.ok(!run.units.some(([id]) => id === enemy.item.id), "and it isn't the player's to lose");
+
+  const mine = run.battle.fighters.find((f) => f.side === SELF && f.item.id === 510)!;
+  run.converted(mine);
+  Object.assign(mine, { side: ENEMY, converted: true });
+  assert.deepEqual(run.units.find(([id]) => id === 510), [510, 3, 1, 0]);
+  run.battle.kill(mine, null);
+  assert.equal(run.remaining, left - 1, "beaten again, it isn't one of the island's");
+});
+
+test("Arctic Isle: four guard groups, a key each, the gate, the yeti's life by level and stars", () => {
+  const run = start(100000002, 1, [[510, 3]], 1, 12);
+  const boss = run.boss!;
+  assert.ok(boss, "played here");
+  assert.deepEqual(boss.groups.map((g) => [...g].map((f) => f.item.id)), [[531, 531, 531, 531], [530, 530, 530, 530], [529, 529, 529, 529], [528, 528, 528, 528]]);
+  assert.deepEqual(boss.keys.map((k) => k && [k.tx, k.ty, k.side]), [[20, 40, NEUTRAL], [20, 60, NEUTRAL], [30, 80, NEUTRAL], [60, 80, NEUTRAL]]);
+  assert.equal(boss.door?.side, NEUTRAL);
+  assert.equal(run.remaining, 4);
+  assert.deepEqual(boss.bosses.map((b) => b.maxLife), [8000], "level 10 to 14");
+  const lent = run.battle.fighters.filter((f) => f.free);
+  assert.deepEqual(lent.map((f) => f.item.id).sort(), [541, 541, 541, 541, 550]);
+  const three = start(100000002, 3, [[510, 3]], 1, 25);
+  assert.deepEqual(three.boss!.bosses.map((b) => b.maxLife), [24000, 24000], "two at 3 stars, each twice the level's");
+});
+
+test("Arctic Isle: a group beaten lights its key; a key brings penguins; the last takes the gate; the yeti's fall wins", () => {
+  const run = start(100000002, 1, [[510, 3]], 1, 12);
+  const boss = run.boss!;
+  const gate = boss.door!;
+  const gateTile = gate.ty * MAP_TILES + gate.tx;
+  const goldBefore = run.gold;
+  for (const guard of [...boss.groups[0]].slice(1)) run.battle.kill(guard, null);
+  assert.ok(!boss.keys[0]!.collectable);
+  run.battle.kill([...boss.groups[0]][0], null);
+  assert.ok(boss.keys[0]!.collectable, "lit");
+  assert.ok(run.gold > goldBefore, "guards pay");
+  const players = run.playerUnits;
+  assert.ok(run.canCollect(boss.keys[0]));
+  assert.ok(run.collect(boss.keys[0]!));
+  assert.equal(run.remaining, 3);
+  assert.equal(run.playerUnits, players + 3, "three penguins join");
+  assert.equal(run.battle.fighters.filter((f) => f.item.id === 546 && f.side === SELF).length, 3);
+  assert.equal(gate.still, 1, "the gate's picture steps on");
+  for (const group of boss.groups) for (const guard of [...group]) run.battle.kill(guard, null);
+  for (const key of [...boss.keys]) if (key) run.collect(key);
+  assert.equal(run.remaining, 0);
+  assert.equal(boss.door, null);
+  assert.ok(!run.battle.fighters.includes(gate), "the gate is gone");
+  assert.equal(run.battle.walkGrid()[gateTile], 1);
+  const gold = run.gold;
+  const penguin = run.battle.fighters.find((f) => f.item.id === 546)!;
+  run.battle.kill(penguin, null);
+  assert.ok(!run.units.some(([id]) => id === 546), "a penguin isn't the player's to lose");
+  assert.equal(run.state, "fighting");
+  run.battle.kill(boss.bosses[0], null);
+  assert.equal(run.state, "won");
+  assert.equal(run.gold, gold + 3000, "the boss pays nothing itself; the win its bonus");
+  assert.equal(run.endsAt, run.battle.frame + 150);
+});
+
+test("Desert Isle: by quarters; the last gem takes the altar and brings the golem; small golems have 100 life", () => {
+  const run = start(100000003, 3, [[510, 3]], 1, 16);
+  const boss = run.boss!;
+  assert.deepEqual(boss.groups.map((g) => g.size), [6, 3, 3, 6]);
+  assert.ok([...boss.groups[3]].filter((f) => f.item.id === 537).every((f) => f.maxLife === 100));
+  assert.equal(boss.bosses.length, 0, "no golem yet");
+  const tower = run.battle.fighters.find((f) => f.item.id === 29)!;
+  assert.equal(tower.side, ENEMY);
+  const gold = run.gold;
+  run.battle.kill(tower, null);
+  assert.equal(run.gold, gold, "a tower outside the groups pays nothing");
+  for (const group of boss.groups) for (const guard of [...group]) run.battle.kill(guard, null);
+  for (const key of [...boss.keys]) assert.ok(run.collect(key!));
+  assert.equal(boss.door, null);
+  assert.equal(boss.bosses.length, 2, "and a second at 3 stars");
+  assert.deepEqual([boss.bosses[0].tx, boss.bosses[0].ty], [50, 49], "on the altar's tile");
+  assert.deepEqual(boss.bosses.map((b) => b.maxLife), [3800, 3800], "levels 15 to 19: the original's 1900, twice");
+  assert.equal(run.state, "fighting");
+  for (const golem of boss.bosses) run.battle.kill(golem, null);
+  assert.equal(run.state, "won");
+});
+
+test("Mineral Isle: troll and undead guards, huts too, by quarter; the last brazier brings the Rockdriller", () => {
+  const run = start(100000011, 1, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  assert.deepEqual(boss.groups.map((g) => [...g].filter((f) => !f.isUnit).map((f) => f.item.id)), [[134, 134], [], [], []], "the two huts");
+  assert.ok(boss.groups.every((g) => [...g].every((f) => f.item.race === "t" || f.item.race === "e")));
+  const ravager = run.battle.fighters.find((f) => f.item.id === 564)!;
+  assert.equal(ravager.side, ENEMY);
+  assert.ok(!boss.pays(ravager), "the Ravager Trolls fight but pay nothing");
+  assert.equal(run.remaining, 4);
+  for (const group of boss.groups) for (const guard of [...group]) run.battle.kill(guard, null);
+  for (const key of [...boss.keys]) assert.ok(run.collect(key!));
+  assert.equal(boss.bosses.length, 1);
+  const [drill] = boss.bosses;
+  assert.ok(Math.abs(drill.tx - 49) <= 1 && Math.abs(drill.ty - 49) <= 1);
+  assert.equal(drill.maxLife, 20000, "25,000 x 0.8 at 1 star");
+  assert.equal(boss.minds.minds.length, 1, "it chooses for itself");
+  const three = start(100000011, 3, [[510, 3]], 1, 30);
+  for (const group of three.boss!.groups) for (const guard of [...group]) three.battle.kill(guard, null);
+  for (const key of [...three.boss!.keys]) three.collect(key!);
+  assert.deepEqual(three.boss!.bosses.map((b) => b.maxLife), [50000, 50000]);
+  run.battle.kill(drill, null);
+  assert.equal(run.state, "won");
+});
+
+/** A few frames of the battle with the bosses' minds, as the game runs them. */
+function play(run: Quest, frames: number, until?: () => boolean): void {
+  for (let i = 0; i < frames && !until?.(); i++) {
+    run.battle.step();
+    run.step();
+  }
+}
+
+test("Nest Isle: the egg breaks, five rocks close the way, then the Crimson Scale comes, by the stars", () => {
+  const run = start(100000028, 2, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  const egg = run.battle.fighters.find((f) => f.item.id === 437)!;
+  assert.equal(egg.side, ENEMY);
+  assert.equal(boss.goal(), "", "the counter is hidden");
+  const gold = run.gold;
+  run.battle.kill(egg, null);
+  assert.equal(run.gold, gold, "nothing here pays");
+  play(run, 80);
+  // The island's own rocks close the arena's far side; these close the near one.
+  const rocks = run.battle.fighters.filter((f) => f.item.id === 946 && f.tx === 61 && f.ty <= 29).map((f) => f.ty).sort((a, b) => b - a);
+  assert.deepEqual(rocks, [29, 27, 25, 23, 21]);
+  assert.equal(boss.bosses.length, 0, "not yet");
+  play(run, 15);
+  assert.equal(boss.bosses.length, 1);
+  const [dragon] = boss.bosses;
+  assert.deepEqual([dragon.maxLife, dragon.attack, dragon.velocity], [20000, 40, 13], "2 stars");
+  assert.equal(boss.goal(), "Beat the boss!");
+  run.battle.kill(dragon, null);
+  assert.equal(run.state, "won");
+});
+
+test("the Crimson Scale fights 20 seconds, flies its bombing runs setting fires, then lays eggs that hatch draggies", () => {
+  const run = start(100000028, 1, [[510, 3]], 1, 30);
+  run.battle.kill(run.battle.fighters.find((f) => f.item.id === 437)!, null);
+  play(run, 100);
+  const dragon = run.boss!.bosses[0];
+  const mind = run.boss!.minds.minds[0] as Dragon;
+  // Someone for it to fight, close by and hard to kill.
+  run.battle.add(items.get(514)!, dragon.tx + 2, dragon.ty, SELF, { condition: "passive", velocity: 0, life: 1e9, maxLife: 1e9 });
+  play(run, 200, () => mind.engaged);
+  assert.ok(mind.engaged);
+  play(run, 600, () => mind.phase !== "fight");
+  assert.notEqual(mind.phase, "fight", "off on its runs");
+  play(run, 3000, () => mind.phase === "lay");
+  assert.equal(mind.phase, "lay");
+  play(run, 40);
+  assert.equal(mind.draggies.length, 2, "2 eggs at 1 star");
+  assert.ok(mind.draggies.every((d) => d.summoned && d.side === ENEMY));
+  play(run, 30);
+  assert.equal(mind.phase, "fight", "back to fighting");
+});
+
+test("Dangerous Isle: the dragons and eggs by the stars; eggs wound the black dragon; the eighth wins", () => {
+  const run = start(100000033, 1, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  assert.ok(run.battle.fighters.filter((f) => !boss.bosses.includes(f) && !boss.eggs.has(f) && f.side !== SELF).every((f) => f.side === NEUTRAL),
+    "everything in the file is nobody's");
+  assert.deepEqual(boss.bosses.map((b) => [b.item.id, b.maxLife, b.attack, b.aggro]), [[739, 8000, 40, 20], [739, 8000, 40, 20], [740, 30000, 100, 20]]);
+  assert.equal(boss.eggs.size, 8);
+  assert.ok([...boss.eggs].every((e) => e.maxLife === 5000 && e.side === ENEMY));
+  const black = boss.black!;
+  run.battle.hurt(black, 5000, null);
+  assert.equal(black.life, 30000, "no hit hurts it");
+  const rocks = () => run.battle.fighters.filter((f) => f.item.id === 945 && f.ty === 43).length;
+  assert.equal(rocks(), 2);
+  for (const golden of boss.bosses.filter((b) => b.item.id === 739)) run.battle.kill(golden, null);
+  play(run, 110);
+  assert.equal(rocks(), 0, "the path opens");
+  const eggs = [...boss.eggs];
+  for (const egg of eggs.slice(0, 7)) run.battle.kill(egg, null);
+  assert.ok(black.life < 30000 - 7 * 3000, `wounded: ${black.life}`);
+  assert.equal(run.state, "fighting");
+  run.battle.kill(eggs[7], null);
+  play(run, 50);
+  assert.ok(black.dead);
+  assert.equal(run.state, "won");
+  assert.equal(run.gold, 10000, "the prize, uncut; nothing else pays");
 });
