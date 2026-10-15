@@ -6,6 +6,7 @@
 
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "./config.ts";
+import { inConstruction } from "./construction.ts";
 import { BLOCK_TILES, MAP_TILES, expansionOf, isOuterBlock } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
@@ -92,10 +93,13 @@ export function isTheirs(town: Town, item: ItemInfo): boolean {
   return item.race === "a" || item.race === town.race;
 }
 
-/** What can be done to a thing: the buttons the Flash client's info panel shows, and its bulldozer. */
-export function choices(town: Town, placed: PlacedItem): { move: boolean; turn: boolean; store: boolean; sell: boolean; why: string } {
+/** What can be done to a thing: the buttons the Flash client's info panel shows, and its bulldozer (nothing while it's being built). */
+export function choices(town: Town, placed: PlacedItem, now = Date.now()): { move: boolean; turn: boolean; store: boolean; sell: boolean; why: string } {
   const none = { move: false, turn: false, store: false, sell: false };
   const { item } = placed;
+  if (inConstruction(placed, now)) {
+    return { ...none, why: "" };  // nothing to do with it until it's built (rules/construction.ts)
+  }
   if (onWildRing(placed.tx, placed.ty)) {
     return { ...none, why: "It isn't on your land." };
   }
