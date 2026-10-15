@@ -293,10 +293,12 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       is gone; Arthur's stay, and his town grows with the player's.
 - [ ] **Beta 2, battles and quests** (step 4): combat, defending a town,
       spells and heroes, the island map, then the quests in batches with
-      their bosses, checked side by side against the Flash game. First, the
-      last 11 sprite sheets: big dragons and bosses whose pictures are too
-      big for a sheet, too slow to draw, or crash the renderer
-      ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline)).
+      their bosses, checked side by side against the Flash game.
+  - [x] The last 11 sprite sheets: pictures too big for a sheet stored
+        smaller, a budget of 4 pages an item, an item's frames drawn on
+        several threads, and the slayer's stray part cut off; the
+        projectiles and effects exported too
+        ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with
       the Flash game one tap away for a while.

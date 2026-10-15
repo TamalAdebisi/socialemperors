@@ -22,7 +22,8 @@ export function isOpaqueAt(picture: Container, screen: Point): boolean {
     return true;  // an outline drawn for an item without art: its box will do
   }
   const texture = picture.texture;
-  const pixel = sheetPixel(picture.toLocal(screen), picture.anchor, texture.orig, texture.trim ?? null, texture.frame);
+  const pixel = sheetPixel(picture.toLocal(screen), picture.anchor, texture.orig, texture.trim ?? null, texture.frame,
+    texture.source.resolution);
   if (!pixel) {
     return false;
   }
@@ -44,9 +45,11 @@ export function isOpaqueAt(picture: Container, screen: Point): boolean {
  * point is in the see-through border the packer trimmed off.
  * `local` is measured from the sprite's anchor; `orig` is the whole picture
  * before trimming, `trim` the part of it kept, `frame` where that part is in
- * the sheet.
+ * the sheet. All are in the game's pixels; `scale` is the sheet's pixels to
+ * one of those (0.5 for the biggest gods, stored at half size).
  */
-export function sheetPixel(local: Point, anchor: Point, orig: Rect, trim: Rect | null, frame: Rect): Point | null {
+export function sheetPixel(local: Point, anchor: Point, orig: Rect, trim: Rect | null, frame: Rect,
+  scale = 1): Point | null {
   // From the anchor to the whole picture's top left...
   let x = local.x + anchor.x * orig.width;
   let y = local.y + anchor.y * orig.height;
@@ -59,7 +62,7 @@ export function sheetPixel(local: Point, anchor: Point, orig: Rect, trim: Rect |
     return null;
   }
   // ...to the sheet.
-  return { x: Math.floor(frame.x + x), y: Math.floor(frame.y + y) };
+  return { x: Math.floor((frame.x + x) * scale), y: Math.floor((frame.y + y) * scale) };
 }
 
 function makeProbe(): CanvasRenderingContext2D | null {

@@ -7,6 +7,8 @@
 //   java -cp <ffdec classes and jars> tools/art/RenderSwf.java <out-root> <file.swf>...
 //
 // For each SWF it writes <out-root>/<name>/: img_<n>.png and manifest.json.
+// "<file.swf>#<Class>" draws that class of a library file instead (the
+// projectiles: 05122012_projectiles.swf#ProyectilMC), named after the class.
 //
 // How the game's art is laid out (measured on all 1,587 files in
 // assets/buildingsprites/): each file has one sprite named after the file
@@ -25,6 +27,11 @@
 // them. The packer trims the empty space and keeps that point as the anchor.
 // Each frame also records its bounds as Flash measures them (transparent
 // parts of pictures included): the game places a building by those.
+//
+// The biggest dragons and gods have thousands of pictures to draw, each on a
+// canvas of several million pixels: hours on one processor core. With
+// RENDER_THREADS=n in the environment, n threads share an item's frames, each
+// with its own copy of the file (FFDec's objects aren't made to be shared).
 //
 // Only pictures are read here; the game's code is never decompiled or copied.
 
@@ -55,6 +62,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 
 public class RenderSwf {
@@ -65,6 +78,13 @@ public class RenderSwf {
     static final int[] PADS = {4 * TWIPS, 64 * TWIPS, 256 * TWIPS};
     static final int MAX_TIME = 600;      // longest animation we render (20 s at 30 fps)
     static final double ZOOM = 1.0;       // the art's bitmaps are drawn 1:1 (bitmap fill scale 20.0)
+    // No item is really this big (the widest, a chained god, is 11,247 pixels).
+    // A sprite whose bounds say more has a stray part placed absurdly far
+    // away (2099_medieval_slayer: 15 million pixels); its canvas is cut to
+    // this much around the origin, where the item is.
+    static final int MAX_REACH = 4096 * TWIPS;
+    static final int MAX_CANVAS = 20000 * TWIPS;
+    static final int THREADS = Math.max(1, parseInt(System.getenv("RENDER_THREADS"), 1));
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
@@ -89,17 +109,40 @@ public class RenderSwf {
         System.exit(failed == 0 ? 0 : 1);
     }
 
+    static int parseInt(String value, int fallback) {
+        try {
+            return value == null ? fallback : Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    static SWF load(File swfFile) throws Exception {
+        try (InputStream is = new BufferedInputStream(new FileInputStream(swfFile))) {
+            return new SWF(is, false);
+        }
+    }
+
     static int render(File swfFile, File outRoot) throws Exception {
         String name = swfFile.getName().replaceFirst("\\.swf$", "");
-        SWF swf;
-        try (InputStream is = new BufferedInputStream(new FileInputStream(swfFile))) {
-            swf = new SWF(is, false);
+        String chosen = null;
+        int hash = swfFile.getPath().lastIndexOf('#');
+        if (hash > 0) {
+            chosen = swfFile.getPath().substring(hash + 1);
+            swfFile = new File(swfFile.getPath().substring(0, hash));
+            name = chosen;
         }
-        String className = findClass(swf, name);
-        Timeline timeline = ((Timelined) swf.getCharacterByClass(className)).getTimeline();
+        SWF swf = load(swfFile);
+        String className = chosen != null ? chosen : findClass(swf, name);
         File out = new File(outRoot, name);
+        // One copy of the file per thread; the first is the one already read.
+        List<Timeline> timelines = new ArrayList<>();
+        timelines.add(((Timelined) swf.getCharacterByClass(className)).getTimeline());
+        for (int i = 1; i < THREADS; i++) {
+            timelines.add(((Timelined) load(swfFile).getCharacterByClass(className)).getTimeline());
+        }
         for (int i = 0; i < PADS.length; i++) {
-            int images = draw(swf, swfFile, className, timeline, out, PADS[i], i == PADS.length - 1);
+            int images = draw(swf, swfFile, name, className, timelines, out, PADS[i], i == PADS.length - 1);
             if (images >= 0) {
                 return images;
             }
@@ -111,17 +154,25 @@ public class RenderSwf {
      * Draws every picture with `pad` of room around the sprite's bounds.
      * Returns how many different pictures there are, or -1 when one reaches
      * the edge of the canvas (and `last` is false): it needs more room.
+     * Each timeline (one per thread) draws every n-th frame.
      */
-    static int draw(SWF swf, File swfFile, String className, Timeline timeline, File out, int pad, boolean last)
+    static int draw(SWF swf, File swfFile, String name, String className, List<Timeline> timelines, File out, int pad, boolean last)
             throws Exception {
         // The canvas: the sprite's bounds over all frames, children included,
         // in whole pixels, with the padding.
+        Timeline timeline = timelines.get(0);
         RECT bounds = timeline.getDisplayRectWithFilters();
+        if (bounds.Xmax - bounds.Xmin > MAX_CANVAS || bounds.Ymax - bounds.Ymin > MAX_CANVAS) {
+            bounds = new RECT(Math.max(bounds.Xmin, -MAX_REACH), Math.min(bounds.Xmax, MAX_REACH),
+                    Math.max(bounds.Ymin, -MAX_REACH), Math.min(bounds.Ymax, MAX_REACH));
+        }
         RECT rect = new RECT(
                 Math.floorDiv(bounds.Xmin, TWIPS) * TWIPS - pad,
                 Math.floorDiv(bounds.Xmax + TWIPS - 1, TWIPS) * TWIPS + pad,
                 Math.floorDiv(bounds.Ymin, TWIPS) * TWIPS - pad,
                 Math.floorDiv(bounds.Ymax + TWIPS - 1, TWIPS) * TWIPS + pad);
+        int width = (rect.Xmax - rect.Xmin) / TWIPS;
+        int height = (rect.Ymax - rect.Ymin) / TWIPS;
 
         out.mkdirs();
         for (File old : out.listFiles()) {
@@ -131,58 +182,52 @@ public class RenderSwf {
         int aaScale = Configuration.useMsaaForExport.get() ? Configuration.msaaGridForExport.get() : 1;
         // Pictures already written, by a fingerprint of their pixels: an
         // animation often shows the same picture for several frames.
-        Map<String, Integer> seen = new HashMap<>();
+        Map<String, Integer> seen = new ConcurrentHashMap<>();
+        AtomicInteger count = new AtomicInteger();
+        AtomicBoolean tooSmall = new AtomicBoolean();
+        AtomicBoolean capped = new AtomicBoolean();
+        int frameCount = timeline.getFrames().size();
+        @SuppressWarnings("unchecked")
+        List<Integer>[] sequences = new List[frameCount];
+
+        ExecutorService pool = Executors.newFixedThreadPool(timelines.size());
+        List<Future<?>> work = new ArrayList<>();
+        for (int k = 0; k < timelines.size(); k++) {
+            Timeline mine = timelines.get(k);
+            int first = k;
+            work.add(pool.submit(() -> {
+                for (int f = first; f < frameCount && !tooSmall.get(); f += timelines.size()) {
+                    sequences[f] = drawFrame(mine, f, rect, aaScale, out, seen, count, last, tooSmall, capped);
+                }
+                return null;
+            }));
+        }
+        pool.shutdown();
+        try {
+            for (Future<?> job : work) {
+                job.get();
+            }
+        } catch (java.util.concurrent.ExecutionException e) {
+            throw e.getCause() instanceof Exception ? (Exception) e.getCause() : e;
+        }
+        if (tooSmall.get()) {
+            return -1;
+        }
+
         StringBuilder frames = new StringBuilder();
-        boolean capped = false;
-        int width = 0, height = 0;
-
         List<Frame> timelineFrames = timeline.getFrames();
-        for (int f = 0; f < timelineFrames.size(); f++) {
+        for (int f = 0; f < frameCount; f++) {
             Frame frame = timelineFrames.get(f);
-            // The game jumps to this frame (gotoAndStop), which creates its
-            // children afresh, so each starts at its own first frame.
-            for (DepthState layer : frame.layers.values()) {
-                layer.time = 0;
-            }
-            int length = 1;
-            for (DepthState layer : frame.layers.values()) {
-                length = Math.max(length, cycle(layer.getCharacter(), new HashMap<>()));
-            }
-            if (length > MAX_TIME) {
-                length = MAX_TIME;
-                capped = true;
-            }
-
-            List<Integer> sequence = new ArrayList<>();
-            for (int t = 0; t < length; t++) {
-                BufferedImage rendered = SWF.frameToImageGet(timeline, f, t, null, 0, rect, new Matrix(),
-                        null, null, ZOOM, true, aaScale).getBufferedImage();
-                BufferedImage image = straightAlpha(rendered);
-                width = image.getWidth();
-                height = image.getHeight();
-                int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-                if (!last && touchesEdge(data, width, height)) {
-                    return -1;
-                }
-                String fingerprint = fingerprint(data);
-                Integer number = seen.get(fingerprint);
-                if (number == null) {
-                    number = seen.size();
-                    seen.put(fingerprint, number);
-                    ImageIO.write(image, "png", new File(out, "img_" + number + ".png"));
-                }
-                sequence.add(number);
-            }
-
             if (f > 0) {
                 frames.append(",\n");
             }
             frames.append("    {\"labels\": ").append(jsonStrings(frame.labels))
                     .append(", \"bounds\": ").append(bounds(frame))
-                    .append(", \"images\": ").append(sequence).append("}");
+                    .append(", \"images\": ").append(sequences[f]).append("}");
         }
 
         String manifest = "{\n"
+                + "  \"name\": " + jsonString(name) + ",\n"
                 + "  \"swf\": " + jsonString(swfFile.getName()) + ",\n"
                 + "  \"class\": " + jsonString(className) + ",\n"
                 + "  \"fps\": " + swf.frameRate + ",\n"
@@ -190,11 +235,63 @@ public class RenderSwf {
                 + "  \"canvas\": {\"w\": " + width + ", \"h\": " + height + "},\n"
                 + "  \"origin\": {\"x\": " + (int) Math.round(-rect.Xmin * ZOOM / TWIPS)
                 + ", \"y\": " + (int) Math.round(-rect.Ymin * ZOOM / TWIPS) + "},\n"
-                + "  \"capped\": " + capped + ",\n"
+                + "  \"capped\": " + capped.get() + ",\n"
                 + "  \"frames\": [\n" + frames + "\n  ]\n"
                 + "}\n";
         Files.writeString(new File(out, "manifest.json").toPath(), manifest, StandardCharsets.UTF_8);
         return seen.size();
+    }
+
+    /**
+     * Draws one frame of the sprite, letting its children play, and returns
+     * the number of the picture shown at each moment. Writes each picture
+     * not seen before. Sets `tooSmall` (and stops) when a picture reaches
+     * the canvas's edge, unless this is the `last` try.
+     */
+    static List<Integer> drawFrame(Timeline timeline, int f, RECT rect, int aaScale, File out,
+            Map<String, Integer> seen, AtomicInteger count, boolean last, AtomicBoolean tooSmall,
+            AtomicBoolean capped) throws Exception {
+        Frame frame = timeline.getFrames().get(f);
+        // The game jumps to this frame (gotoAndStop), which creates its
+        // children afresh, so each starts at its own first frame.
+        for (DepthState layer : frame.layers.values()) {
+            layer.time = 0;
+        }
+        int length = 1;
+        for (DepthState layer : frame.layers.values()) {
+            length = Math.max(length, cycle(layer.getCharacter(), new HashMap<>()));
+        }
+        if (length > MAX_TIME) {
+            length = MAX_TIME;
+            capped.set(true);
+        }
+
+        List<Integer> sequence = new ArrayList<>();
+        for (int t = 0; t < length; t++) {
+            if (tooSmall.get()) {
+                return sequence;
+            }
+            BufferedImage rendered = SWF.frameToImageGet(timeline, f, t, null, 0, rect, new Matrix(),
+                    null, null, ZOOM, true, aaScale).getBufferedImage();
+            BufferedImage image = straightAlpha(rendered);
+            int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+            if (!last && touchesEdge(data, image.getWidth(), image.getHeight())) {
+                tooSmall.set(true);
+                return sequence;
+            }
+            String fingerprint = fingerprint(data);
+            Integer number = seen.get(fingerprint);
+            if (number == null) {
+                // Only one thread writes a given picture, under the number it got.
+                int[] mine = {-1};
+                number = seen.computeIfAbsent(fingerprint, key -> mine[0] = count.getAndIncrement());
+                if (number == mine[0]) {
+                    ImageIO.write(image, "png", new File(out, "img_" + number + ".png"));
+                }
+            }
+            sequence.add(number);
+        }
+        return sequence;
     }
 
     /** Whether any pixel on the picture's border shows something. */
