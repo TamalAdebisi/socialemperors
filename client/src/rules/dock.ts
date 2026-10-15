@@ -1,6 +1,6 @@
 // The harbour and the zeppelin tower (CLIENT.md, "The harbour and the
 // zeppelin"), as the Flash client gives them: each time a human town opens,
-// a harbour it hasn't got (on the map or in storage) is put down for free
+// a harbour it hasn't got (on the map, in storage or in the gift box) is put down for free
 // near tile (59, 59), unless the Prisoner Princess still waits in the town;
 // from level 30, the zeppelin tower the same way. A new one is staffed at
 // once by 20 free helpers and opened. No drawing here.
@@ -41,7 +41,8 @@ export function givenOnOpening(town: Town, items: Map<number, ItemInfo>): Given[
   }
   for (const id of wanted) {
     const item = items.get(id);
-    if (!item || town.items.some((p) => p.item.id === id) || (town.store.get(id) ?? 0) > 0) {
+    // Not one on the map, in the town's storage or in the gift box, as the Flash client looks.
+    if (!item || town.items.some((p) => p.item.id === id) || (town.store.get(id) ?? 0) > 0 || (town.gifts.get(id) ?? 0) > 0) {
       continue;
     }
     const spot = freeSpotNear(town, item, NEAR);
@@ -59,6 +60,27 @@ export function givenOnOpening(town: Town, items: Map<number, ItemInfo>): Given[
     given.push({ placed, commands });
   }
   return given;
+}
+
+/** The Wizardry Academy, given at level 35 (`levelThirtyFive`). */
+const WIZARDRY_ACADEMY = 416;
+export const GOALS_END_LEVEL = 35;
+
+/**
+ * Reaching level 35 at home, as the Flash client does it: a Wizardry
+ * Academy, free, on the first spot it fits near tile (59, 59), even if the
+ * town has one already; none when there's no spot. (The goals stop too:
+ * goals.ts.)
+ */
+export function levelThirtyFive(town: Town, items: Map<number, ItemInfo>): Given | null {
+  const item = items.get(WIZARDRY_ACADEMY);
+  const spot = item ? freeSpotNear(town, item, NEAR) : null;
+  if (!item || !spot) {
+    return null;
+  }
+  const placed: PlacedItem = { item, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
+  town.items.push(placed);
+  return { placed, commands: [{ cmd: "buy", args: [item.id, spot.x, spot.y, 0, town.id, 1, 1, "b"] }] };
 }
 
 /** The free spot for the item nearest a tile, on the player's land, ring by ring; null when there's none. */

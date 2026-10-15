@@ -93,18 +93,17 @@ test("only the player's own walk; the save hears where they stopped", () => {
   assert.deepEqual(unitMoved(t, villager, { x: 41, y: 41 }).args, [41, 41, 500, 44, 46, 0, 0, "Unitat"]);
 });
 
-test("a unit off the bought land (after a fight at a troll camp) walks back onto it; it can't be sent off it", () => {
-  const unit = placed(VILLAGER, 30, 45);  // block 12, not bought; the land starts at x 40
+test("units walk the whole map but under buildings, as in the Flash client: the wild ring and land not yet bought too", () => {
+  const unit = placed(VILLAGER, 45, 45);
   const t = town([unit]);
-  const path = unitPath(t, unit, { x: 30, y: 45 }, { x: 42, y: 45 })!;
-  assert.deepEqual(path.at(-1), { x: 42, y: 45 });
-  assert.equal(unitPath(t, unit, { x: 30, y: 45 }, { x: 31, y: 45 }), null, "where it goes must be on the land");
-  const canReach = reachable(t, unit, { x: 30, y: 45 });
-  assert.equal(canReach({ x: 42, y: 45 }), true);
-  assert.equal(canReach({ x: 31, y: 45 }), false);
-  // On the land, as ever: only the land.
-  const home = placed(VILLAGER, 45, 45);
-  assert.equal(unitPath(town([home]), home, { x: 45, y: 45 }, { x: 30, y: 45 }), null);
+  const path = unitPath(t, unit, { x: 45, y: 45 }, { x: 30, y: 45 })!;
+  assert.deepEqual(path.at(-1), { x: 30, y: 45 }, "to block 12, not bought");
+  assert.deepEqual(unitPath(t, unit, { x: 45, y: 45 }, { x: 5, y: 5 })?.at(-1), { x: 5, y: 5 }, "to the wild ring");
+  const canReach = reachable(t, unit, { x: 45, y: 45 });
+  assert.equal(canReach({ x: 30, y: 45 }), true);
+  // Not under a building.
+  const house = placed({}, 31, 46);
+  assert.equal(unitPath(town([unit, house]), unit, { x: 45, y: 45 }, { x: 30, y: 45 }), null);
 });
 
 test("a unit under a building (a gate shut on it) steps out", () => {

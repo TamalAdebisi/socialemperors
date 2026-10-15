@@ -10,6 +10,7 @@ import { fits } from "./editing.ts";
 import type { Level } from "./levels.ts";
 import { atLimit, describe, priceOf, type Price } from "./shop.ts";
 import type { PlacedItem, Town } from "./town.ts";
+import { countOf } from "./training.ts";
 
 export interface Stored {
   item: ItemInfo;
@@ -25,6 +26,8 @@ const BAHAMUT_HEART = 1410;
 const LEVEL_UP_STATUE = 1478;
 /** Sold from storage for nothing: the Dock and the Zeppelin Tower. */
 const SOLD_FOR_NOTHING = new Set([224, 299]);
+/** The Mummy and the Ent: placed from storage past their kind's limit, as in the Flash client. */
+const NO_UNIT_LIMIT = new Set([615, 635]);
 const SALE_DIVISOR = 20;
 
 /** What's in storage: the gifts, then the town's own, each by name. */
@@ -55,6 +58,10 @@ export function storageChoices(town: Town, stored: Stored, room = 0): { place: b
   const most = atLimit(town, item);
   if (most !== null) {
     return { place: false, sell, why: describe({ kind: "limit", most }) };
+  }
+  // A unit as many as its kind allows (inside buildings too), as when training; the Mummy and the Ent are let through.
+  if (item.isUnit && item.unitsLimit > 0 && !NO_UNIT_LIMIT.has(item.id) && countOf(town, item.id) >= item.unitsLimit) {
+    return { place: false, sell, why: `That's as many ${item.name} as a town can have` };
   }
   return { place: true, sell, why: "" };
 }

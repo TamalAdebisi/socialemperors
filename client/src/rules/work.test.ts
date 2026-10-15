@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { ItemInfo } from "./config.ts";
 import type { PlacedItem, Town } from "./town.ts";
 import {
-  canGoInside, canHarvest, goInside, goldMultiplier, harvestSeconds, harvested, letAllOut, letOut, nextResources, regrow, standingTile,
+  canGoInside, canHarvest, freeTileNear, goInside, goldMultiplier, harvestSeconds, harvested, letAllOut, letOut, nextResources, regrow, standingTile,
 } from "./work.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
@@ -153,4 +153,15 @@ test("everybody out before a building goes", () => {
   const out = letAllOut(t, refuge, ITEMS);
   assert.deepEqual(out.map((o) => o.unit.item.id), [500, 512]);
   assert.notDeepEqual([out[0].unit.tx, out[0].unit.ty], [out[1].unit.tx, out[1].unit.ty], "each on a tile of its own");
+});
+
+test("a unit comes out on the first ring round the building with a free tile, the one furthest down the map", () => {
+  const mine = placed(MINE, 50, 50);  // tiles 49-50
+  assert.deepEqual(freeTileNear(town([mine]), mine), { x: 51, y: 51 });
+  // That one taken: the next nearest the far corner on the same ring (two are as near; the original's sort may give either).
+  const next = freeTileNear(town([mine, placed(VILLAGER, 51, 51)]), mine)!;
+  assert.ok([[51, 50], [50, 51]].some(([x, y]) => next.x === x && next.y === y), `${next.x}, ${next.y}`);
+  // Anywhere on the map, bought land or not, as in the Flash client.
+  const edge = placed(MINE, 59, 59);
+  assert.deepEqual(freeTileNear(town([edge]), edge), { x: 60, y: 60 });
 });

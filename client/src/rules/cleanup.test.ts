@@ -18,6 +18,7 @@ const ITEMS = new Map<number, ItemInfo>([
   [19, itemInfo(config(19, "Tree", { subcat_functional: "125", width: "1", height: "1", race: "n" }))],
   [3000, itemInfo(config(3000, "Path", { category_id: "6", width: "1", height: "1" }))],
   [222, itemInfo(config(222, "Wall Door", { subcat_functional: "222", width: "1", height: "1" }))],
+  [1311, itemInfo(config(1311, "Small Refuge", { subcat_functional: "1311" }))],
   [500, itemInfo(config(500, "Villager I", { type: "u", subcat_functional: "71", width: "1", height: "1" }))],
   [501, itemInfo(config(501, "Villager I", { type: "u", subcat_functional: "71", width: "1", height: "1" }))],
   [512, itemInfo(config(512, "Light Knight", { type: "u", subcat_functional: "79", width: "1", height: "1" }))],
@@ -87,4 +88,6 @@ test("a town with no villager gets one near the middle; with one, on the map or 
   assert.equal(oneVillager(t, ITEMS, 1000), null, "it has one now");
   const inside = town([at(10, 45, 45, { unitsInside: 1, units: [501] })]);
   assert.equal(oneVillager(inside, ITEMS, 1000), null, "one at work in a farm");
+  const sheltering = town([at(1311, 45, 45, { unitsInside: 1, units: [501] })]);
+  assert.ok(oneVillager(sheltering, ITEMS, 1000), "one in a refuge doesn't count, as in the Flash client");
 });

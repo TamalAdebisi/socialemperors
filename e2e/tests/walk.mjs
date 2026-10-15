@@ -1,12 +1,13 @@
 // Units walking (CLIENT.md, "Units walking"): a new town's Light Knight is
 // selected and sent across the island, round the town hall; it walks there
 // and the save hears where it stopped, with the Flash client's command.
-// Closed land is out of reach, and tapping a building still selects it.
+// Land not yet bought can be walked on too, as in the Flash client, and
+// tapping a building still selects it.
 
 import assert from "node:assert/strict";
 import { has } from "../lib.mjs";
 
-const KNIGHT = 512, FROM = [50, 44], TO = [55, 56];
+const KNIGHT = 512, FROM = [50, 44], TO = [55, 56], CLOSED = [50, 61];
 
 export default async function walk({ newPlayer }) {
   const player = await newPlayer();
@@ -26,9 +27,10 @@ export default async function walk({ newPlayer }) {
   assert.ok(has(saved, KNIGHT, TO), "the save has the knight where it stopped");
   assert.ok(!has(saved, KNIGHT, FROM), "and not where it was");
 
-  // Closed land can't be reached: it says so, and stays put.
-  await player.tapTile([50, 61]);  // block 18, not bought
-  await player.said(/can't get there/);
+  // Land not bought (block 18): it walks there too.
+  await player.tapTile(CLOSED);
+  await player.wait(4000);
+  assert.ok(has(await player.saved(), KNIGHT, CLOSED), "the knight is on land not yet bought");
 
   // Tapping a building with a unit selected selects the building.
   await player.select([51, 47], "Tower I");
@@ -36,5 +38,5 @@ export default async function walk({ newPlayer }) {
 
   // Reloaded, the knight is where it stopped.
   await player.reload();
-  await player.select(TO, "Light Knight");
+  await player.select(CLOSED, "Light Knight");
 }

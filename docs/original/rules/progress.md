@@ -576,11 +576,13 @@ so.
    lets a player do it; ours sells it on every locked shop card for a
    third of the level in cash (`client/src/ui/shop.ts`,
    `client/src/rules/shop.ts`). (checked twice)
+   *Fixed since "Progress as the original keeps it".*
 2. **Reaching level 35** (changes the save). The original stops goals at
    once, adds the spell box and places a free Wizardry Academy near tile
    (59, 59) when it finds a free spot; ours keeps goals running until the
    next load and gives no academy (`client/src/editor.ts`,
    `client/src/goals.ts`). (checked twice)
+   *Fixed since "Progress as the original keeps it", but the spell box (missing).*
 3. **Raids on a level up** (changes the save). The original rolls the
    raids again on each level up at home and puts an orc dragon on the
    border at levels 25, 30, 35...; ours plans raids only on opening
@@ -592,11 +594,14 @@ so.
    complete and pay sooner (`client/src/rules/goals.ts`,
    `client/src/goals.ts`; the island part is a recorded decision).
    (checked twice)
+   *Fixed since "Progress as the original keeps it".*
 5. **Units near the town hall** (changes the save). Original: a 3-tile
    circle, nearest 20; ours: a 7 by 7 square (`nearHall`,
    `client/src/rules/goals.ts`). (checked twice)
+   *Fixed since "Progress as the original keeps it".*
 6. **Working time** (changes the save, rarely). Original keeps the last
    choice, ours the longest (`Doings.workTime`). (checked twice)
+   *Fixed since "Progress as the original keeps it".*
 7. **The reversed goal checks** (changes the save, rarely). Moving two
    walls or opening the island map twice between checks blocks goals 38
    and 81 in the original for the session; ours completes them. (Goals 54
