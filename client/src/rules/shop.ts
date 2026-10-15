@@ -177,12 +177,12 @@ export function unlock(town: Town, item: ItemInfo): Command | string {
 }
 
 /** Buy a building and put it on a tile: the price is paid and its experience gained. A string when it can't be. */
-export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: number): { command: Command; placed: PlacedItem } | string {
+export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: number, orientation = 0): { command: Command; placed: PlacedItem } | string {
   const blocked = obstacle(town, item);
   if (blocked) {
     return `${item.name}: ${describe(blocked).toLowerCase()}.`;
   }
-  const placed: PlacedItem = { item, tx, ty, orientation: 0, unitsInside: 0, startedAt: now, workTime: 0 };
+  const placed: PlacedItem = { item, tx, ty, orientation, unitsInside: 0, startedAt: now, workTime: 0 };
   if (!fits(town, placed)) {
     return `${item.name} doesn't fit there.`;
   }
@@ -191,5 +191,5 @@ export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: num
   town.xp += item.xp;
   town.items.push(placed);
   // [item, x, y, facing, town, bought for free, price multiplier, type]
-  return { command: { cmd: "buy", args: [item.id, tx, ty, 0, town.id, 0, 1, "b"] }, placed };
+  return { command: { cmd: "buy", args: [item.id, tx, ty, orientation, town.id, 0, 1, "b"] }, placed };
 }

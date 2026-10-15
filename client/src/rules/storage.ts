@@ -94,13 +94,13 @@ export function sellStored(town: Town, stored: Stored): Command {
  * level-up statue: what's missing for the next level). A string when it can't be.
  */
 export function placeStored(town: Town, stored: Stored, tx: number, ty: number, now: number,
-  levels: Level[], room = 0): { command: Command; placed: PlacedItem } | string {
+  levels: Level[], room = 0, orientation = 0): { command: Command; placed: PlacedItem } | string {
   const { item } = stored;
   const can = storageChoices(town, stored, room);
   if (!can.place || stored.count <= 0) {
     return `${item.name}: ${(can.why || "none left").toLowerCase()}.`;
   }
-  const placed: PlacedItem = { item, tx, ty, orientation: 0, unitsInside: 0, units: [], startedAt: item.isUnit ? null : now, workTime: 0 };
+  const placed: PlacedItem = { item, tx, ty, orientation, unitsInside: 0, units: [], startedAt: item.isUnit ? null : now, workTime: 0 };
   if (!fits(town, placed)) {
     return `${item.name} doesn't fit there.`;
   }
@@ -111,6 +111,6 @@ export function placeStored(town: Town, stored: Stored, tx: number, ty: number, 
   }
   town.items.push(placed);
   // [item, x, y, facing, town]
-  const command = { cmd: stored.gift ? "place_gift" : "place_stored_item", args: [item.id, tx, ty, 0, town.id] };
+  const command = { cmd: stored.gift ? "place_gift" : "place_stored_item", args: [item.id, tx, ty, orientation, town.id] };
   return { command, placed };
 }

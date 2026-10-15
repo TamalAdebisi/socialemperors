@@ -142,10 +142,11 @@ export class Camera {
 
   /** Move the camera; called every frame with the milliseconds since the last. */
   update(ms: number): void {
-    // Arrow keys and WASD: 900 screen pixels a second.
+    // The arrow keys, as in the Flash client: 900 screen pixels a second. (Letters are the
+    // menus' shortcuts, ui/menus.ts; with WASD here too, S, A and W did both.)
     const step = 0.9 * ms;
-    const dx = (this.held("ArrowRight", "d") - this.held("ArrowLeft", "a")) * step;
-    const dy = (this.held("ArrowDown", "s") - this.held("ArrowUp", "w")) * step;
+    const dx = (this.held("ArrowRight") - this.held("ArrowLeft")) * step;
+    const dy = (this.held("ArrowDown") - this.held("ArrowUp")) * step;
     if (dx || dy) {
       this.panScreen(dx, dy);
     }
@@ -248,8 +249,8 @@ export class Camera {
     return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
 
-  private held(...keys: string[]): number {
-    return keys.some((key) => this.keys.has(key)) ? 1 : 0;
+  private held(key: string): number {
+    return this.keys.has(key) ? 1 : 0;
   }
 
   /** How much bigger the window is than the Flash stage, as the old page scaled it. */

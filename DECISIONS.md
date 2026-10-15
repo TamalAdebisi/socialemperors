@@ -4,6 +4,16 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the keyboard
+
+- **The arrow keys move the map; WASD doesn't any more.** Both were our
+  extras clashing (S, A and W also open Storage, Army and the World map);
+  the original moved the map with the arrow keys only, and its letters were
+  developer keys.
+- **Space turns a building while it's placed or moved,** as in the
+  original; elsewhere Space does nothing yet (the original's square tool
+  for picking several units comes with "Selecting several units").
+
 ## 15 October 2026: tidying a town as it opens
 
 - **Paths and other terrain take no tile** when tidying, as when placing

@@ -211,6 +211,11 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.at(TOWER, X, Y), [])
         self.assertEqual(self.at(TOWER, 62, 64)[0][3], 1)  # its orientation kept
 
+    def test_a_building_turned_while_moved(self):
+        self.map["items"].append([TOWER, X, Y, 0, 0, 0])
+        self.send("move", X, Y, TOWER, 62, 64, 1, TOWN, "mouseUsed")
+        self.assertEqual(self.at(TOWER, 62, 64)[0][3], 1)  # it faces the way it was turned to
+
     def test_a_unit_walking(self):
         self.send("move", 50, 44, LIGHT_KNIGHT, 55, 45, 2, TOWN, "Unitat")
         self.assertEqual(len(self.at(LIGHT_KNIGHT, 55, 45)), 1)
