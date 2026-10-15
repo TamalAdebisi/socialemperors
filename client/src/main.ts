@@ -151,11 +151,6 @@ async function start(): Promise<void> {
     for (const command of growBack(town, items, clock(), { animals }).commands) {
       commands.add(command.cmd, ...command.args);
     }
-    // The harbour (and from level 30 the zeppelin tower), given and opened as the Flash client does (rules/dock.ts).
-    const given = givenOnOpening(town, items);
-    for (const command of given.flatMap((g) => g.commands)) {
-      commands.add(command.cmd, ...command.args);
-    }
     const shop = new ShopWindow({
       categories: readShop(config.categories),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
@@ -264,14 +259,20 @@ async function start(): Promise<void> {
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+        // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
+        // client does (rules/dock.ts): after the camp, as a new town's prisoner holds the harbour back.
+        for (const { placed, commands: sent } of givenOnOpening(town, items)) {
+          for (const command of sent) {
+            commands.add(command.cmd, ...command.args);
+          }
+          void view.redraw(placed);
+          editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
+            : "Zeppelin operative! Click in the Zeppelin Tower to fly through the Ancient Sea!");
+        }
       });
     };
     afterDrawing = () => {
       defend();
-      for (const { placed } of given) {
-        editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
-          : "Zeppelin operative! Click in the Zeppelin Tower to fly through the Ancient Sea!");
-      }
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
       const then = () => {
         if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {

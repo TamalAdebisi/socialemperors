@@ -14,6 +14,10 @@ them can be found and reversed. The big, agreed decisions are in
 - **"Dock operative!" is a line at the top,** not a window with a
   picture, so it doesn't stand in front of the camp's window as the town
   opens.
+- **A monk's turning lasts the fight at home.** When a fight in the town
+  ends, a unit of the player's still turned is the player's again, and a
+  turned enemy that isn't in the save (a raider) goes with the fight. The
+  original kept them turned until the page was opened again.
 - **Pausing pauses whatever is open.** The original didn't pause on
   losing focus while one of its windows was open; ours don't stop the
   town beside them, so the game pauses anyway.

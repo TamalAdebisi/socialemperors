@@ -3,14 +3,15 @@
 // near tile (59, 59), and the line at the top says so; the server has it,
 // and a reload gives no second one. Its Open shows the island map. At
 // level 30 the zeppelin tower comes too. The pause button stops the game
-// under a curtain; a key let go starts it again.
+// under a curtain; a key let go starts it again. A brand-new town, whose
+// first camp holds the Prisoner Princess, gets no harbour yet.
 
 import assert from "node:assert/strict";
 
 const HARBOUR = 224, ZEPPELIN_TOWER = 299, KNIGHT = 514;
 
 export default async function dock({ newPlayer }) {
-  const player = await newPlayer();
+  const player = await newPlayer({ dock: true });
   const { page } = player;
   await player.said(/Dock operative/);
   const harbour = await page.evaluate(() => {
@@ -60,4 +61,11 @@ export default async function dock({ newPlayer }) {
   saved = await player.saved();
   assert.equal(saved.items.filter((i) => i[0] === ZEPPELIN_TOWER).length, 1);
   assert.equal(saved.items.filter((i) => i[0] === HARBOUR).length, 1);
+
+  // A brand-new town: its first camp holds the Prisoner Princess, and no harbour comes while she waits.
+  const fresh = await newPlayer({ camp: true, dock: true });
+  await fresh.page.waitForFunction(() => window.seHome, null, { timeout: 30_000 });
+  await fresh.wait(1500);
+  assert.deepEqual(await fresh.page.evaluate(() => window.seHome.parts.town.items.filter((p) => p.item.id === 83 || p.item.id === 224)
+    .map((p) => p.item.id)), [83], "the princess, and no harbour yet");
 }

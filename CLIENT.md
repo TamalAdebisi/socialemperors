@@ -1495,8 +1495,13 @@ dark curtain and the game's GAME PAUSED say so; RESUME, or any key let go,
 starts it again. While paused nothing moves (the drawing's clock stops);
 work and training go on, as they're the server's clock.
 
-**Not yet:** monks turning units at home, and the collection pieces
-dropped by enemies (they come with the collections, in the last stop).
+**Monks at home** turn units as on the islands (four each, one every 24
+seconds). As in the Flash client the server isn't told: a unit of the
+player's turned and then killed dies as an enemy (`kill`, so it's gone,
+not buried), and an enemy turned fights for the player.
+
+**Not yet:** the collection pieces dropped by enemies (they come with the
+collections, in the last stop).
 
 ### Making the art look better
 

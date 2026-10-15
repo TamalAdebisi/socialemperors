@@ -28,9 +28,10 @@ const FULL_WILD = [
 /**
  * A new account with a new town, open in the new client. Its own browser
  * window, as its own visitor. `wild`: let trees and rocks grow as for a new
- * player, rather than starting with enough.
+ * player, rather than starting with enough. `dock`: let the town be given its
+ * harbour (and zeppelin tower) as it opens, rather than starting with them.
  */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false } = {}) {
   const context = await browser.newContext({
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
@@ -43,8 +44,13 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
-  if (!wild || !camp) {
+  if (!wild || !camp || !dock) {
     await player.readSettings();
+  }
+  if (!dock) {
+    // A human town is given a harbour as it opens, and from level 30 a zeppelin tower, near
+    // tile (59, 59) where tests build (rules/dock.ts); most tests start with both in the far corner.
+    await player.send([{ cmd: "buy", args: [224, 44, 44, 0, 0, 1, 1, "b"] }, { cmd: "buy", args: [299, 48, 44, 0, 0, 1, 1, "b"] }]);
   }
   if (!wild) {
     await player.send(FULL_WILD);

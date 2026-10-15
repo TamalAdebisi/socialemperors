@@ -206,6 +206,9 @@ class Fight {
     const { town, items } = parts;
     this.battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random, home: true,
       onDeath: (fighter) => this.died(fighter) });
+    // Monks turn units at home too. As in the Flash client the server isn't told: a unit turned
+    // and then killed dies as an enemy (kill), and a raider turned fights for the player until it's gone.
+    this.battle.onConvert = () => {};
     for (const placed of town.items) {
       const side = sideOf(town, placed);
       const fighter = this.battle.add(placed.item, placed.tx, placed.ty, side, { tag: placed });
