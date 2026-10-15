@@ -4,6 +4,25 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the graveyards
+
+- **A list, not pages of six.** The Graveyard's units and the heroes show
+  as rows in our side window, like every other window here, rather than
+  six (or four) at a time with arrows.
+- **In the shop's order.** The original listed the fallen in no set
+  order; ours follow the shop.
+- **The potion pack is 100 cash for one potion,** the price this server
+  already used (from the project we forked). Social Point's real price
+  isn't known.
+- **Our own words when there isn't the cash for potions:** the game's
+  text for it is missing from its files.
+- **The original's quirks kept:** a unit brought back for gold costs its
+  whole price in food too; a hero comes back, or is bought at the altar,
+  without a check on room for people, and its experience comes again.
+- **The Altar of Heroes needs the altar:** its window opens from the
+  altar's card, so a hero always stands beside it (the original could
+  also send one to storage).
+
 ## 15 October 2026: Beta 2, scripted camps (part 3)
 
 - **A festival's steps show in order:** two keys taken show the first two

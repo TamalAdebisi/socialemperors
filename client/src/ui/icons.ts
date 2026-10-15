@@ -54,6 +54,8 @@ export const ICONS = {
   // Spells: the book that opens them in battle, and mana.
   "spell-book": new URL("./art/spell-book.webp", import.meta.url).href,
   mana: new URL("./art/mana.webp", import.meta.url).href,
+  // The graveyard's potions.
+  potion: new URL("./art/potion.webp", import.meta.url).href,
 } as const;
 
 export type IconName = keyof typeof ICONS;

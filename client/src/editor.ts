@@ -9,7 +9,7 @@ import type { ItemInfo } from "./rules/config.ts";
 import { choices, fits, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
-import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected } from "./rules/production.ts";
+import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
 import { buy, describe, obstacle, priceOf, unlock, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
@@ -665,6 +665,19 @@ export class TownEditor {
         this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
       }
     }
+  }
+
+  /**
+   * Someone back on the map from a window (a graveyard, the Altar of
+   * Heroes): drawn, the collect sound, what it cost rising over it, and any
+   * level reached with its experience.
+   */
+  arrived(placed: PlacedItem, lines: { text: string; resource: Resource | "xp" }[]): void {
+    void this.view.redraw(placed).then(() => this.view.rise(placed, lines.map((l) => ({ text: l.text, colour: RESOURCE_COLOURS[l.resource] }))));
+    this.sound("collect");
+    this.levelUp();
+    this.hud.update(this.town);
+    this.refresh();
   }
 
   /** Gold and experience won in a raid: a level may come with them. */

@@ -336,6 +336,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] The rarer special moves (shields, forms, seals, ghosts, the
         curse...), the battle music and the "under attack" alert at home,
         and the repair pointer ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [x] The graveyards and the Altar of Heroes: units and heroes brought
+        back for potions, food and gold, or cash; heroes bought
+        ([CLIENT.md](CLIENT.md#step-4-battles))
   - [ ] Checked side by side against the Flash game, and played by the
         owner
 - [ ] **The switch** (steps 5 and 6): battles against players, the long

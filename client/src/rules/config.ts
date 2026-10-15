@@ -56,6 +56,8 @@ export interface ConfigItem {
   /** How many of it a town may have (0: no limit), and what it costs in cash instead. */
   units_limit?: string;
   cost_unit_cash?: string;
+  /** How many potions bring the unit back from the graveyard. */
+  potion?: string;
   /** Battles (rules/battle.ts): hit points, damage a hit, taken off each hit,
    * reach in tiles, frames between hits (30 a second). */
   life?: string;
@@ -129,6 +131,8 @@ export interface ItemInfo {
   cashCost: number;
   cost: number;
   costType: string;
+  /** Units: how many potions bring it back from the graveyard. */
+  potion?: number;
   /** How many ways it can face: turning it goes round these. */
   facings: number;
   /** What it produces and how, or null when it doesn't (rules/production.ts). */
@@ -181,6 +185,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     cashCost: Number(item.cost_unit_cash) || 0,
     cost: Number(item.cost) || 0,
     costType: item.cost_type ?? "g",
+    potion: Number(item.potion) || 0,
     facings: Math.max(Number(item.max_frame) || 1, 1),
     production: productionOf(item, chosenTime),
     inStore: Number(item.in_store) || 0,

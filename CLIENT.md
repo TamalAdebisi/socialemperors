@@ -1438,6 +1438,30 @@ camps players reach, our own notes on the original's tables) and
   doors, and the festivals' buildings, are nobody's (they can't be
   attacked, and their towers don't shoot).
 
+**The graveyard**, the same way. Code: `rules/graveyard.ts` (the rules,
+with tests) and `ui/graveyard.ts` (the three windows).
+
+- **Who goes there:** every unit of the player's that falls, at home or
+  on an island, is counted in the save (`privateState.deadHeroes`, unit:
+  how many). At home the client counts it as it sends the death (`sell`
+  ... "KILL"); after an island the server has counted the losses. Villagers
+  aren't kept. Heroes are kept apart, for their own graveyard.
+- **The Graveyard** (its card's Open): the fallen of the town's race
+  bought with gold or cash, by the shop's order. Each comes back for its
+  potions, or for half its price: half the cash, or half the gold and its
+  whole price in food, as in the original. Room for people and the units
+  limit are checked first. It stands on the nearest free tile to the
+  graveyard (`resurrect_hero`, the last argument "1" for potions). The
+  window stays open. Potions are bought below (`graveyard_buy_potions`,
+  100 cash for one, from `config/patch/graveyard.json`).
+- **The Heroes' Graveyard:** the eight heroes, how many have fallen, and
+  their price: 500 gold for each cash of the hero's price. The hero's
+  experience comes again, and the window closes after each.
+- **The Altar of Heroes:** the eight heroes for cash (`buy_cash`), each
+  from its level; it stands beside the altar.
+- **Not yet:** the Blue Phoenix's egg (it would hatch the phoenix again
+  if it lasts five seconds); a phoenix that falls goes to the graveyard.
+
 **Not yet:** monks turning units at home, and the collection pieces
 dropped by enemies (they come with the collections, in the last stop).
 

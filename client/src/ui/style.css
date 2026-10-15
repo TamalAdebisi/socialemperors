@@ -1954,6 +1954,64 @@ body {
   height: 20px;
 }
 
+/* The graveyards and the Altar of Heroes (ui/graveyard.ts): a row for each
+   unit or hero, its picture, how many, and the prices; the potions below. */
+.grave-picture {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #f4ead2;
+}
+
+.hero-row .grave-picture {
+  object-fit: cover;
+  object-position: top;
+}
+
+.grave-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+}
+
+.grave-buttons small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.grave-buttons .button,
+.grave-potions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 90px;
+  margin: 0;
+}
+
+.grave-buttons .button:disabled {
+  opacity: 0.5;
+}
+
+.grave-buttons .icon,
+.grave-potions .icon {
+  height: 16px;
+}
+
+.grave-said {
+  min-height: 1.3em;
+  font-weight: 700;
+}
+
+.grave-potions {
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
 /* ---- Special moves (ui/specialButtons.ts) ---------------------------------- */
 /* A special unit's buttons, bottom middle, as on the Flash client's
    portrait panel: the game's pictures, the seconds left, the LIMIT bar. */

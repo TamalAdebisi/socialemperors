@@ -82,6 +82,8 @@ PICTURES = {
     # follows the mouse while aiming (its last frame, grown).
     "spell-book": ("PopupMagicMC/book@1", 0),
     "mana": ("IconResourcesMC", 16),
+    # The graveyard's potions (what brings a fallen unit back).
+    "potion": ("PopupGraveyardMC/iconPotions", 0),
     "spell-area": ("AOEMC", 4, 480),
     # The options panel: music and sound, on and off.
     "music-on": ("GuiMC/options_panel/bm", 0),
