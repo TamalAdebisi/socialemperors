@@ -8,9 +8,9 @@ import assert from "node:assert/strict";
 import { has } from "../lib.mjs";
 
 const VILLAGER = 500, TREE = 19, TOWN_HALL = 26, TOWN_HALL_IV = 141;
-const HALL_AT = [52, 52], WORKER = [42, 44];
-// Apart from each other, so the villager doesn't go on to touching ones by itself.
-const TREES = [[43, 41], [46, 41], [43, 47], [47, 47]];
+const HALL_AT = [52, 52], WORKER = [50, 54];
+// On screen where the camera starts, and apart from each other, so the villager doesn't go on to touching ones by itself.
+const TREES = [[54, 46], [55, 50], [54, 55], [48, 57]];
 
 export default async function villagers({ newPlayer }) {
   const player = await newPlayer();
