@@ -97,6 +97,8 @@ export class Doings {
   /** Resources spent, by letter (g, w, f, s, c). */
   spent = new Map<string, number>();
   zoomed = false;
+  /** The square tool taken up (its button, or Space). */
+  selectionToolUsed = false;
   placedStored = false;
   /** The daily bonus's day collected (1 to 5), 0 for none. */
   dailyBonusDay = 0;
@@ -213,6 +215,8 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(trainedAt(doings, args[0], n(1)) ? 1 : 0, 1);
     case "zoom":
       return of(doings.zoomed ? 1 : 0, 1);
+    case "selection-tool":
+      return of(doings.selectionToolUsed ? 1 : 0, 1);
     case "place-stored":
       return of(doings.placedStored ? 1 : 0, 1);
     case "daily-bonus":

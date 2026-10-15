@@ -654,6 +654,43 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 ground where a unit is going. (Units sent to a building or a tree: "Villagers
 at work"; wild animals following a unit home: "The living map".)
 
+### Selecting several units
+
+Built after Beta 1's run-through, at the owner's request. Code:
+`rules/group.ts` (the rules, with tests), `TownEditor.selectGroup`,
+`sendTo`, `startsBox` and `dragBox`, the box in `Camera` and `TownView`,
+the portraits in `ui/actions.ts`, and the square tool's button in
+`ui/hud.ts`. Test: `e2e/tests/group.mjs`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- **A box:** a drag that starts on one of the player's units draws a box
+  (a thin white line, faintly white inside) instead of moving the map; let
+  go, and the player's units whose pictures touch it are selected, at most
+  20. A drag from anywhere else still moves the map.
+- **The square tool** (its button at the bottom right, or Space): the next
+  drag draws a box wherever it starts, then the tool is off again, even
+  after a plain tap. Taking it up clears the selection, and does goal 41.
+  Space still turns a building while it's being placed or moved.
+- **A double click** (a second tap on a selected unit within a second)
+  selects the units of its kind within 10 tiles, nearest first, at most 20.
+  The kinds: healers; the engineer; the monk; those that fight up close
+  (clerics, footmen, riders and specials with a range of 1); villagers;
+  archers and riders that shoot; siege engines; kamikazes; and each of the
+  five elementals. Animals and pets pick nothing.
+- **The card** shows their portraits, ten to a row, each with its life bar;
+  tapping one selects it alone. Each unit stands on its golden ring.
+- **Sent to the ground,** they stand in a square grown from the tile
+  tapped: that tile, then the next column down and the row along, ring by
+  ring, the i-th unit on the i-th free tile. They stay selected.
+- **Sent to a tree or rock,** each villager lines it up, and those free set
+  off together. **To a building with room,** as many as fit go in, and the
+  building is selected. **To a wild animal,** each goes to it. **To a
+  burning building,** the villagers repair it. **To a camp's enemy,** those
+  that can fight attack it.
+- The server hears each unit's own commands, as when it's sent alone; there
+  is no command for a group.
+
 ### Villagers at work
 
 Built (Beta 1's third slice). With a villager selected, tap a tree, a stone
@@ -902,14 +939,14 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   opened, as the Flash client counts them: collecting (buildings, trees and
   rocks), working times chosen, units let out, buildings moved and stored,
   something placed from storage, units trained at a building, units sent
-  into buildings, cash spent, zooming, the daily bonus's day, the neighbour
-  visited last and the buildings helped on visits (kept in the browser tab,
-  so a visit counts back home).
+  into buildings, cash spent, zooming, taking up the square tool, the daily
+  bonus's day, the neighbour visited last and the buildings helped on visits
+  (kept in the browser tab, so a visit counts back home).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
-  capturing animals say they're played in the classic game for now (72 of
-  the 226); the server keeps them done whichever client does them.
+  capturing animals say they're played in the classic game for now (76 of
+  the 227); the server keeps them done whichever client does them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`):

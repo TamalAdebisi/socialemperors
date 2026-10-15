@@ -1,9 +1,10 @@
 // What's always on screen, in HTML over the map (CLIENT.md, "The menus:
 // rail and dock"): the level with a bar to the next, and the resources as
 // dark pills with the game's own icons (short numbers on a phone: 12.4k);
-// the way back to the classic game and full screen; and the fast-collect
-// glove, which collects every ready building at once. Messages slide in at
-// the top, not over the middle of the town.
+// the way back to the classic game and full screen; and in the bottom
+// right corner, the square tool (selecting units with a box) and the
+// fast-collect glove, which collects every ready building at once.
+// Messages slide in at the top, not over the middle of the town.
 
 import type { Level } from "../rules/levels.ts";
 import type { Town } from "../rules/town.ts";
@@ -40,6 +41,10 @@ export interface Hud {
   update(town: Town): void;
   /** Offer the glove: collect everything ready. */
   offerCollectAll(run: () => void): void;
+  /** Offer the square tool (its button; Space is the editor's). */
+  offerSquareTool(run: () => void): void;
+  /** Light the square tool's button while it's on. */
+  squareTool(on: boolean): void;
   /** How many buildings are ready: the glove shows when there are any, with the count. */
   ready(count: number): void;
   /** Offer the bank: a + on the gold and cash pills. */
@@ -158,6 +163,22 @@ export function showHud(town: Town, actions: HudActions): Hud {
   });
   document.body.appendChild(bar);
 
+  // The bottom right corner, as on the Flash client's bar: the square tool, then the glove.
+  const corner = document.createElement("div");
+  corner.className = "corner";
+  document.body.appendChild(corner);
+  const square = document.createElement("button");
+  square.type = "button";
+  square.className = "square-tool";
+  square.hidden = true;
+  square.setAttribute("aria-label", "Square tool: select several units");
+  square.title = "Square tool: drag a box round your units (Space)";
+  square.innerHTML = `<img src="${ICONS["square-tool"]}" alt="">`;
+  // Under the mouse, the game's own picture names the key for it.
+  square.addEventListener("pointerenter", () => { square.querySelector("img")!.src = ICONS["square-tool-space"]; });
+  square.addEventListener("pointerleave", () => { square.querySelector("img")!.src = ICONS["square-tool"]; });
+  corner.appendChild(square);
+
   // The glove: the Flash client's fast-collect button, here collecting everything ready at once.
   const glove = document.createElement("button");
   glove.type = "button";
@@ -166,7 +187,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
   glove.setAttribute("aria-label", "Collect all");
   glove.title = "Collect all (C)";
   glove.innerHTML = `<img src="${ICONS["fast-collect"]}" alt=""><span class="menu-count"></span>`;
-  document.body.appendChild(glove);
+  corner.appendChild(glove);
   let offered = false;
   return {
     update,
@@ -183,6 +204,13 @@ export function showHud(town: Town, actions: HudActions): Hud {
           run();
         }
       });
+    },
+    offerSquareTool(run) {
+      square.hidden = false;
+      square.addEventListener("click", run);
+    },
+    squareTool(on) {
+      square.classList.toggle("lit", on);
     },
     offerBank(open) {
       for (const key of ["gold", "cash"]) {

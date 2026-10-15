@@ -68,6 +68,14 @@ test("goals that count doings since the page opened: collecting", () => {
   assert.deepEqual(progress(town(), { id: 99, title: "", description: "", reward: 8, need: ["work-time-kind", 121, 480] }, doings, 0, ITEMS), { done: 1, of: 1 });
 });
 
+test("goal 41, the square tool: done when it's taken up", () => {
+  const goal = readGoals([{ id: 41, title: "Select unit with Square Tool", reward: 82 }], data.goals as unknown as Record<string, Need>).get(41)!;
+  const doings = new Doings();
+  assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 0, of: 1 });
+  doings.selectionToolUsed = true;
+  assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 1, of: 1 });
+});
+
 test("battles and the like are for the classic game", () => {
   assert.equal(progress(town(), { id: 79, title: "", description: "", reward: 1, need: ["classic"] }, new Doings(), 0, ITEMS), null);
 });

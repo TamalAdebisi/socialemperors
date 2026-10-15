@@ -69,8 +69,9 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
  * Where a unit stands to work a thing or go into it: a free tile in the
  * rings around the thing's tile (the corner the save names), the first ring
  * with any, the one nearest the unit; it must be reachable. Null when there's none.
+ * `avoid`: tiles ("x,y") others sent with it have taken, so a group spreads out.
  */
-export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem): Point | null {
+export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem, avoid: Set<string> = new Set()): Point | null {
   const grid = gridFor(town, unit);
   const taken = takenTiles(town, unit);
   for (let ring = 1; ring <= NEAR; ring++) {
@@ -78,7 +79,7 @@ export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem): 
     for (let x = target.tx - ring; x <= target.tx + ring; x++) {
       for (let y = target.ty - ring; y <= target.ty + ring; y++) {
         const edge = Math.max(Math.abs(x - target.tx), Math.abs(y - target.ty)) === ring;
-        if (edge && isWalkable(grid, x, y) && !taken.has(`${x},${y}`)) {
+        if (edge && isWalkable(grid, x, y) && !taken.has(`${x},${y}`) && !avoid.has(`${x},${y}`)) {
           around.push({ x, y });
         }
       }

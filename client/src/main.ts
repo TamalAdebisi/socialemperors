@@ -246,6 +246,7 @@ async function start(): Promise<void> {
         return graves.windowOf(placed);
       } });
     hud.offerCollectAll(() => editor.collectAll());
+    hud.offerSquareTool(() => editor.takeSquareTool());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.

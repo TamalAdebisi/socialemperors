@@ -2,6 +2,7 @@
 // the dock on a phone): its name, what it's doing, and what can be done
 // with it, with the buttons of the Flash client's info panel. Selling (or
 // removing) asks first. It also asks the player things ("Tap where it goes").
+// With several units selected, it shows their portraits instead.
 
 import { ICONS, type IconName } from "./icons.ts";
 
@@ -26,6 +27,13 @@ export interface ActionChoices {
   /** The building's own window: its label, and its picture (the spell book by default). */
   open?: { label: string; run: () => void; icon?: IconName } | null;
   close: () => void;
+}
+
+/** One of several units selected: its name, its picture, and how much of its life it has (0 to 1). */
+export interface Portrait {
+  name: string;
+  picture: string;
+  life: number;
 }
 
 export class ActionBar {
@@ -84,6 +92,38 @@ export class ActionBar {
       verb, "remove");
     tiles.hidden = tiles.childElementCount === 0;
     this.closeButton(choices.close);
+    this.bar.hidden = false;
+  }
+
+  /**
+   * Several units selected: their portraits, as on the Flash client's info
+   * panel (ten to a row, each with its life bar). Tapping one selects it
+   * alone (`pick`).
+   */
+  showGroup(units: Portrait[], pick: (index: number) => void, close: () => void): void {
+    this.bar.replaceChildren();
+    this.bar.classList.remove("asking");
+    this.detail = null;
+    this.tiles = null;
+    const grid = document.createElement("span");
+    grid.className = "actions-group";
+    grid.style.gridTemplateColumns = `repeat(${Math.min(10, units.length)}, minmax(0, 42px))`;
+    units.forEach((unit, i) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "portrait";
+      button.title = unit.name;
+      button.setAttribute("aria-label", unit.name);
+      button.innerHTML = `<img alt=""><span class="portrait-life"><span></span></span>`;
+      const picture = button.querySelector("img")!;
+      picture.src = unit.picture;
+      picture.addEventListener("error", () => picture.classList.add("missing"), { once: true });
+      button.querySelector<HTMLElement>(".portrait-life span")!.style.width = `${Math.round(unit.life * 100)}%`;
+      button.addEventListener("click", () => pick(i));
+      grid.append(button);
+    });
+    this.bar.append(grid);
+    this.closeButton(close);
     this.bar.hidden = false;
   }
 
