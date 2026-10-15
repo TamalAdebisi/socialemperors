@@ -172,6 +172,7 @@ export class Raid {
   private readonly battle: Battle;
   private readonly voice: RaidVoice;
   private readonly troll: boolean;
+  private readonly owns: (block: number) => boolean;
   private readonly quota: number;
   private stage = 0;
   private stageFrom = 0;
@@ -184,8 +185,14 @@ export class Raid {
   /** Stampede: re-sending the mounts at the town's units each time one of their targets falls. */
   private breaking = false;
 
-  constructor(battle: Battle, plan: RaidPlan, items: Map<number, ItemInfo>, level: number, race: string, voice: RaidVoice) {
+  /**
+   * `owns`: whether the player has opened a block of land (numbered as the
+   * save's expansions); the army picks its first targets by it.
+   */
+  constructor(battle: Battle, plan: RaidPlan, items: Map<number, ItemInfo>, level: number, race: string, voice: RaidVoice,
+    owns: (block: number) => boolean = () => false) {
     this.battle = battle;
+    this.owns = owns;
     this.plan = plan;
     this.voice = voice;
     this.troll = race === "t";
@@ -279,8 +286,8 @@ export class Raid {
       const needBuildings = this.burnt < this.quota;
       const needUnits = this.killed < this.quota;
       const building = needBuildings && (!needUnits || this.battle.random() < 0.5);
-      const target = this.nearestOfPlayer(bandit, building ? "building" : "unit")
-        ?? this.nearestOfPlayer(bandit, building ? "unit" : "building");
+      // As in the original: a kind with nothing left to hit means waiting for the next flip, not the other kind.
+      const target = this.nearestOfPlayer(bandit, building ? "building" : "unit");
       if (target) {
         this.battle.attackWith([bandit], target);
         bandit.forced = false;
@@ -348,7 +355,8 @@ export class Raid {
 
   /** The stampede: a minute's wait, then the mounts charge the town's units in two waves. It never retreats. */
   private stepStampede(frame: number): void {
-    const lines = this.troll ? 1 : 0;
+    // Lines by the captain's race, as in the original: the stampede's captain is of the other race.
+    const lines = this.troll ? 0 : 1;
     if (this.stage === 0) {
       this.paceCaptain(lines, 93);
       if (frame >= MINUTE) {
@@ -366,16 +374,23 @@ export class Raid {
     }
   }
 
-  /** Mounts at the town's units near the middle; if one can't get there, at the building nearest the captain instead. */
+  /**
+   * Mounts at the town's units near the middle; if one can't get there, at
+   * the building nearest the captain instead. With no units near the middle
+   * they stand, as in the original (only their own eyes look for enemies).
+   */
   private charge(which?: Squad): void {
     const mounts = which ? this.squad(which) : [...this.squad("first"), ...this.squad("second")];
     const targets = this.battle.within({ x: 50, y: 50 }, 30, 10, (f) => f.side === SELF && f.isUnit);
+    if (targets.length === 0) {
+      return;
+    }
     mounts.forEach((mount, i) => {
-      const target = targets[i % Math.max(1, targets.length)];
-      if (target) {
-        this.battle.attackWith([mount], target);
-      }
-      if (!target || !mount.target) {
+      const target = targets[i % targets.length];
+      this.battle.attackWith([mount], target);
+      if (mount.target) {
+        this.breaking = false;
+      } else {
         const from = this.captain ?? mount;
         const building = this.battle.within({ x: from.tx, y: from.ty }, 40, 1, (f) => f.side === SELF && !f.isUnit && !f.dead)[0];
         if (building) {
@@ -391,14 +406,16 @@ export class Raid {
     if (this.stage === 0) {
       this.cry();
       if (frame >= MINUTE) {
-        const target = this.battle.within({ x: 30, y: 30 }, MAP, 1, (f) => f.side === SELF && !f.dead)[0];
+        // The engines go for what's nearest the corner of the land the player has opened.
+        const corner = this.owns(7) ? { x: 30, y: 30 } : this.owns(8) ? { x: 50, y: 30 } : { x: 50, y: 50 };
+        const target = this.battle.within(corner, MAP, 1, (f) => f.side === SELF && !f.dead)[0];
         if (target) {
           this.battle.attackWith(this.squad("engines"), target);
         }
         this.next();
       }
     } else if (this.stage === 1 && frame >= 150) {
-      const target = this.battle.within({ x: 30, y: 50 }, MAP, 1, (f) => f.side === SELF && !f.dead)[0];
+      const target = this.battle.within(this.owns(12) ? { x: 30, y: 50 } : { x: 50, y: 50 }, MAP, 1, (f) => f.side === SELF && !f.dead)[0];
       if (target) {
         this.battle.attackWith(this.squad("first"), target);
       }
@@ -414,7 +431,7 @@ export class Raid {
     }
     this.pace++;
     this.voice.say(captain, (this.pace % 2 ? 592 : 594) + lines);
-    this.battle.moveTo([captain], { x: this.pace % 2 ? 57 : 47, y });
+    this.battle.moveTo([captain], { x: this.pace % 2 ? 47 : 57, y });  // left first, as in the original
   }
 
   /** The villager runs into town crying for help, one line after another. */
@@ -424,7 +441,7 @@ export class Raid {
       return;
     }
     this.voice.say(crier, (this.troll ? 600 : 596) + (this.cried++ % 4));
-    this.battle.moveTo([crier], { x: 30 + Math.floor(this.battle.random() * 40), y: 30 + Math.floor(this.battle.random() * 40) });
+    this.battle.moveTo([crier], this.owns(12) ? { x: 35, y: 55 } : { x: 55, y: 55 });
   }
 
   /** Back to where they came from, fighting no more. */

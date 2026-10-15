@@ -16,6 +16,7 @@ town"), up to MOST_A_DAY kills a day:
     map["raiderKills"]  {"day": "2026-10-15", "count": n}
 """
 
+import math
 import time
 
 from get_game_config import get_attribute_from_item_id
@@ -28,19 +29,29 @@ def _today() -> str:
     return time.strftime("%Y-%m-%d", time.gmtime())
 
 
+def tower_xp(stone_cost: int) -> int:
+    """A camp's tower destroyed: the original drops experience worth a quarter of
+    its stone price, rounded down, times 0.02, rounded up (1 to 3)."""
+    return math.ceil(math.floor(stone_cost / 4) * 0.02)
+
+
 def killed(map: dict, unit_id, kind, with_xp: bool = True) -> str:
     """An enemy unit killed at home: 5 gold and its experience, within the day's
     limit. A unit that was in the save (a camp's, the border's) has had its
-    experience already: `with_xp` False."""
-    if kind != "u":
-        return "not a unit"
+    experience already: `with_xp` False. A camp's tower (a building with an
+    attack) pays 5 gold and `tower_xp`, as the original shows."""
     try:
         attack = int(get_attribute_from_item_id(unit_id, "attack") or 0)
         xp = int(get_attribute_from_item_id(unit_id, "collect_xp") or 0)
         is_unit = get_attribute_from_item_id(unit_id, "type") == "u"
+        cost = int(get_attribute_from_item_id(unit_id, "cost") or 0)
     except Exception:
         return f"no unit {unit_id}"
-    if not is_unit or attack <= 0:
+    if kind == "b" and not is_unit and attack > 0:
+        xp, with_xp = tower_xp(cost), True
+    elif kind != "u" or not is_unit:
+        return "not a unit"
+    elif attack <= 0:
         return "not a fighter"
     counted = map.get("raiderKills")
     if not isinstance(counted, dict) or counted.get("day") != _today():

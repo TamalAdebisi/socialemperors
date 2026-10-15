@@ -37,6 +37,10 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
   });
   await serveArt(context);
+  // No siege at random as the town opens (homeDefence.ts): tests bring raids when they want them.
+  await context.addInitScript(() => {
+    window.seCalm = true;
+  });
   const page = await context.newPage();
   const player = new Player(page, base, out, viewport);
   const name = `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;

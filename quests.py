@@ -121,8 +121,11 @@ def end(save: dict, result: dict) -> str:
             prize = economy.ISLAND_THREE_STAR_CASH
             give(save, map, "c", prize)
         order = get_game_config()["globals"]["ISLE_ORDER"]
-        if quest_id in order:
-            pState["unlockedQuestIndex"] = max(int(pState.get("unlockedQuestIndex", 0)), order.index(quest_id) + 1)
+        # Only the island at the frontier opens the next. The god islands are open from the start,
+        # so winning one early mustn't open the chain up to it.
+        unlocked = int(pState.get("unlockedQuestIndex", 0))
+        if quest_id in order and order.index(quest_id) == unlocked:
+            pState["unlockedQuestIndex"] = unlocked + 1
 
     lost = lose_units(save, map, result.get("units"))
 

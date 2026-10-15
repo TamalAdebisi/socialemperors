@@ -262,3 +262,38 @@ test("without anyone listening (at home) a monk turns nobody", () => {
   run(b, 600);
   assert.equal(troll.side, ENEMY);
 });
+
+test("the engineer mends siege engines of its side, not other units", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(1) });
+  const engineer = b.add(item({ id: 570, name: "Engineer", subcategory: 72, attack: 25, attackRange: 1, attackInterval: 15, life: 100 }), 50, 50, SELF);
+  const ram = b.add(item({ id: 519, name: "Ram", subcategory: 81, life: 1000 }), 55, 50, SELF);
+  const knight = b.add(item({ id: 514, name: "Knight", life: 1000 }), 50, 52, SELF);
+  ram.life = 500;
+  knight.life = 500;
+  for (const f of [ram, knight]) {
+    f.condition = "passive";
+  }
+  for (let i = 0; i < 300; i++) {
+    b.step();
+  }
+  assert.ok(ram.life > 500, "the ram mended");
+  assert.equal(knight.life, 500, "not the knight");
+  assert.ok(engineer.life > 0);
+});
+
+test("a boss's adds don't answer a call for help; ordinary units do", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(1) });
+  const golem = item({ id: 666, name: "Golem", subcategory: 85, life: 5000, race: "t" });
+  const troll = item({ id: 525, name: "Troll", life: 5000, race: "t" });
+  const archer = b.add(item({ id: 516, name: "Archer", attackRange: 9, life: 5000 }), 40, 50, SELF);
+  const hit = b.add(golem, 48, 50, ENEMY);
+  const add = b.add(golem, 49, 52, ENEMY);
+  const friend = b.add(troll, 49, 48, ENEMY);
+  for (const f of [hit, add, friend]) {
+    f.condition = "aggressive";
+    f.aggro = 1;  // nobody sees the archer by themselves
+  }
+  b.hurt(hit, 10, archer);
+  assert.equal(add.target, null, "the golem beside it stays");
+  assert.equal(friend.target, archer, "the troll beside it comes");
+});

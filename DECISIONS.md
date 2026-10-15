@@ -207,7 +207,9 @@ them can be found and reversed. The big, agreed decisions are in
 - **A chest at level 26 pays like level 27** (750 gold, 100 experience).
   The original's table skipped level 26, so its chest paid nothing.
 - **Kept from the original:** a camp still standing is put up afresh,
-  somewhere else, each time the game opens (its window shows again); the
+  somewhere else, the first time the game opens in a session (its window
+  shows again; a "session" here is a browser tab), not on coming home
+  from an island or a visit (corrected after the Beta 2 check); the
   border is cleared for it, trees included; every enemy unit on the map
   must be beaten before the chest opens, the border's trolls included.
 - **A fight with a camp starts when units are sent at it.** In the

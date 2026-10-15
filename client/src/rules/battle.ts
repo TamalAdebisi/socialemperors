@@ -65,7 +65,10 @@ export type Side = typeof SELF | typeof ENEMY | typeof NEUTRAL;
 export type Condition = "aggressive" | "defensive" | "passive" | "survive";
 
 /** The units that heal their own side instead of attacking. */
-const HEALERS = new Set([502, 590, 866, 886]);
+/** The engineer: a healer of siege engines only, looking for them within 10 tiles (its config: 25 every 15 frames). */
+const ENGINEER = 570;
+const ENGINEER_LOOKS = 10;
+const HEALERS = new Set([502, 590, 866, 886, ENGINEER]);
 /** Units with range that still hit up close (bosses, the Juggernaut, the Angel Mecha). */
 const RANGED_MELEE = new Set([538, 545, 650, 702]);
 /** The level 1 town hall never shoots (its attack is 0 anyway). */
@@ -526,8 +529,10 @@ export class Battle {
       return;
     }
     if (!unit.target) {
-      const near = this.nearby(unit, unit.range, 30, (f) => f.isUnit && f.side === unit.side && f !== unit
-        && f.life < f.maxLife && f.item.subcategory !== SUBCAT.siege);
+      // Healers mend units but siege engines; the engineer, siege engines only.
+      const engineer = unit.item.id === ENGINEER;
+      const near = this.nearby(unit, engineer ? ENGINEER_LOOKS : unit.range, 30, (f) => f.isUnit && f.side === unit.side && f !== unit
+        && f.life < f.maxLife && (f.item.subcategory === SUBCAT.siege) === engineer);
       let weakest: Fighter | null = null;
       for (const f of near) {
         if (!weakest || f.life < weakest.life) {
@@ -633,7 +638,7 @@ export class Battle {
             this.convert(unit, target);
           }
         } else if (unit.item.subcategory === SUBCAT.cleric) {
-          // The engineer has work of its own (repairing siege units), not done here yet.
+          // Any other cleric doesn't hit.
         } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
           this.shoot(unit, target);
           if (DOUBLE_SHOT.has(unit.item.id)) {
@@ -671,7 +676,9 @@ export class Battle {
     }
     const sub = building.item.subcategory;
     if (sub === SUBCAT.healing) {
-      const hurt = this.nearestOf(building, building.range, (f) => f.isUnit && f.side === building.side && f.life < f.maxLife);
+      // Units of its side, not siege engines (the original's spring leaves those to engineers).
+      const hurt = this.nearestOf(building, building.range, (f) => f.isUnit && f.side === building.side && f.life < f.maxLife
+        && f.item.subcategory !== SUBCAT.siege);
       if (hurt) {
         this.heal(hurt, building.attack);
       }
@@ -1043,8 +1050,8 @@ export class Battle {
         continue;
       }
       const ring = Math.max(Math.abs(ally.tx - hit.tx), Math.abs(ally.ty - hit.ty));
-      if (ring < 1 || ring > HELP_RINGS || ally.target || ally.forced) {
-        continue;
+      if (ring < 1 || ring > HELP_RINGS || ally.target || ally.forced || isBossKind(ally)) {
+        continue;  // bosses and their adds don't answer, as in the original
       }
       if (ally.condition === "aggressive" || ally.condition === "defensive") {
         if (!HEALERS.has(ally.item.id)) {
@@ -1086,8 +1093,9 @@ export class Battle {
         continue;
       }
       hunter.attacking = false;
-      if (hunter.condition === "aggressive" && !hunter.forced && !HEALERS.has(hunter.item.id)) {
-        const next = this.nearestEnemy(hunter, { x: fighter.tx, y: fighter.ty }, AGGRO_RANGE);
+      // Bosses and their adds wait for their own next look instead, as in the original.
+      if (hunter.condition === "aggressive" && !hunter.forced && !HEALERS.has(hunter.item.id) && !isBossKind(hunter)) {
+        const next = this.nearestEnemy(hunter, { x: fighter.tx, y: fighter.ty }, hunter.aggro ?? AGGRO_RANGE);
         if (next) {
           this.attack(hunter, next);
         }
@@ -1330,6 +1338,11 @@ export class Battle {
 }
 
 /** How a unit behaves on its own, by what it is (the Flash client's per-unit mind). */
+/** A boss or a boss's add (the golems and yetis round a boss, the dragon bosses). */
+function isBossKind(f: Fighter): boolean {
+  return f.item.subcategory === SUBCAT.boss || f.item.subcategory === SUBCAT.bossAdd;
+}
+
 export function conditionOf(item: ItemInfo): Condition {
   if (!item.isUnit) {
     return "passive";
