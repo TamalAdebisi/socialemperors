@@ -8,6 +8,9 @@ import "./ui/style.css";
 import { Application, Container } from "pixi.js";
 
 import { TownEditor } from "./editor.ts";
+import { ISLANDS, playQuest } from "./questPlay.ts";
+import { armyOf } from "./rules/quest.ts";
+import { IslandsWindow } from "./ui/islands.ts";
 import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
@@ -46,6 +49,13 @@ const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
 async function start(): Promise<void> {
   const settings = readPageSettings();
   const server = new GameServer(settings);
+
+  // ?quest=<id>: a quest island, played here (questPlay.ts).
+  const quest = new URLSearchParams(location.search).get("quest");
+  if (quest) {
+    await playQuest(settings, server, quest);
+    return;
+  }
 
   // ?visit=<player id> shows another player's town, as visiting a neighbour does.
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
@@ -101,6 +111,7 @@ async function start(): Promise<void> {
 
   // The player's own town can be changed; a visited one only looked at.
   let afterDrawing = () => {};
+  let openIslands = () => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -117,7 +128,23 @@ async function start(): Promise<void> {
     // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
     const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE }];
     const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
-    const world = new WorldWindows(settings.classicUrl);
+    const islands = new IslandsWindow({
+      islands: ISLANDS, items,
+      unlockedIndex: () => Number((info.privateState as Record<string, unknown> | undefined)?.unlockedQuestIndex ?? 0),
+      stars: () => ((info.privateState as Record<string, unknown> | undefined)?.questsRank ?? {}) as Record<string, number>,
+      lastAttacked: () => {
+        const times = (info.map as unknown as { questTimes?: unknown }).questTimes;
+        return (times && !Array.isArray(times) ? times : {}) as Record<string, number>;
+      },
+      level: () => town.level,
+      armySize: () => armyOf(town).reduce((sum, [, n]) => sum + n, 0),
+      clock,
+      picture: (item, canvas) => void drawThumbnail(art, item, canvas),
+      questUrl: (quest) => `/client.html?quest=${quest}`,
+      classicUrl: settings.classicUrl,
+    });
+    const world = new WorldWindows(settings.classicUrl, islands);
+    openIslands = () => islands.open();
     const army = new ArmyWindow({
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
@@ -234,6 +261,10 @@ async function start(): Promise<void> {
     showStatus("");
   }
   afterDrawing();
+  // Back from an island: the island window again, as the Flash client opens it.
+  if (new URLSearchParams(location.search).has("islands")) {
+    openIslands();
+  }
 }
 
 /** The town's units by kind, the most first, as the Army window lists them. */

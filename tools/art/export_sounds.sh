@@ -32,6 +32,15 @@ ready FarmSound
 level-up LevelUpSound
 lumber Lumber3Sound
 stone Rock6Sound
+sword-1 Sword2Sound
+sword-2 Sword5Sound
+arrow Archer3Sound
+cannon CanonSound
+ballista BallestaSound
+die-man DieManSound
+die-woman DieWomanSound
+die-machine CatapMuerteSound
+die-troll MuerteTrol2Sound
 "
 
 mkdir -p "$OUT"

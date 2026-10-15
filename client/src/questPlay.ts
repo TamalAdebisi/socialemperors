@@ -1,0 +1,439 @@
+// A quest island played in the new client (CLIENT.md, "Quests"): the
+// start window with its stars, the battle itself (rules/battle.ts and
+// rules/quest.ts, drawn by view/battleView.ts), the player's orders, the
+// bar at the top, and the results. It talks to the server as the Flash
+// client does: game_status and start_quest at the start, end_quest at the
+// end, and nothing in between.
+
+import { Application, Container } from "pixi.js";
+
+import { CommandSender } from "./net/commands.ts";
+import type { GameServer, PageSettings } from "./net/server.ts";
+import { Battle, ENEMY, FPS, SELF, type Fighter } from "./rules/battle.ts";
+import { itemsById, type ItemInfo } from "./rules/config.ts";
+import { mapArea, tileUnder, unitPoint } from "./rules/geometry.ts";
+import islandData from "./rules/islands.json" with { type: "json" };
+import { MIN_LEVEL_QUESTS, Quest, armyOf, difficulties, islandGround, islandLock, playedHere, type Island } from "./rules/quest.ts";
+import { readTown } from "./rules/town.ts";
+import { Sound } from "./sound.ts";
+import { iconImage } from "./ui/icons.ts";
+import { showMessage, showStatus } from "./ui/hud.ts";
+import { ArtLibrary } from "./view/art.ts";
+import { BattleView } from "./view/battleView.ts";
+import { Camera } from "./view/camera.ts";
+
+export const ISLANDS = islandData.islands as unknown as Island[];
+/** The sea around an island: the Flash client's blue. */
+const SEA = 0x2e94e6;
+/** Faster play: the battle steps this many times as often. */
+const SPEEDS = [1, 2, 3];
+
+/** Where the island window opens on the way home. */
+export function homeUrl(): string {
+  return "/client.html?islands=1";
+}
+
+export async function playQuest(settings: PageSettings, server: GameServer, questId: string): Promise<void> {
+  showStatus("Sailing to the island…");
+  const [config, info, map] = await Promise.all([server.gameConfig(), server.playerInfo(), server.playerInfo({ user: questId })]);
+  const items = itemsById(config);
+  const town = readTown(info, items);
+  const index = ISLANDS.findIndex((island) => String(island.quest) === questId);
+  const island = ISLANDS[index];
+  const privateState = (info.privateState ?? {}) as Record<string, unknown>;
+  const questTimes = ((info.map as unknown as { questTimes?: Record<string, number> }).questTimes ?? {}) as Record<string, number>;
+  const ranks = (privateState.questsRank ?? {}) as Record<string, number>;
+  const stop = (text: string) => {
+    showStatus("");
+    finalWindow(text, [{ label: "Back home", run: () => location.assign(homeUrl()) }]);
+  };
+  if (!island) {
+    stop("There's no such island.");
+    return;
+  }
+  if (!playedHere(island)) {
+    stop("This island is played in the classic game for now.");
+    return;
+  }
+  const army = armyOf(town);
+  const lock = islandLock(island, index, Number(privateState.unlockedQuestIndex ?? 0), town.level,
+    Array.isArray(questTimes) ? undefined : questTimes[questId], info.timestamp);
+  if (town.level < MIN_LEVEL_QUESTS) {
+    stop(`Quests open at level ${MIN_LEVEL_QUESTS}.`);
+    return;
+  }
+  if (!lock.open) {
+    stop(lock.until ? "Your army is still resting from its last attack on this island." : `${lock.why}.`);
+    return;
+  }
+  if (army.length === 0) {
+    stop("You need an army to sail: train some units first.");
+    return;
+  }
+
+  const app = new Application();
+  await app.init({
+    resizeTo: window, background: SEA, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true,
+    antialias: false, preference: "webgl", sharedTicker: true,
+  });
+  document.getElementById("stage")!.appendChild(app.canvas);
+  document.body.style.background = `#${SEA.toString(16)}`;
+  document.body.classList.add("questing");
+  const world = new Container();
+  app.stage.addChild(world);
+  const camera = new Camera(world, mapArea(), unitPoint(island.landing[0], island.landing[1]));
+  camera.resize(app.screen.width, app.screen.height);
+  camera.attach(app.canvas);
+  app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
+  app.ticker.add((ticker) => camera.update(ticker.deltaMS));
+
+  const commands = new CommandSender(settings, { clock: () => info.timestamp, onFailure: (reason) => showStatus(reason) });
+  const sound = new Sound(settings.assetsUrl, town.race, "QUESTS.mp3");
+  const art = new ArtLibrary(settings.artUrl);
+  const name = items.get(island.item)?.name ?? "The island";
+
+  // The island, as its file lays it out, behind the start window.
+  const random = Math.random;
+  let quest: Quest | null = null;
+  const battle = new Battle({ ground: islandGround(island), random, onDeath: (fighter) => {
+    const paid = quest?.killed(fighter);
+    if (paid && (paid.gold || paid.xp)) {
+      view.rise(fighter, [{ text: `+${paid.gold}`, colour: 0xf2c14e }, ...(paid.xp ? [{ text: `+${paid.xp} XP`, colour: 0x7fb2ff }] : [])]);
+    }
+  } });
+  quest = new Quest({ island, battle, items, layout: map.map.items, random });
+  const view = new BattleView(art, battle, (effect) => sound.play(effect));
+  world.addChild(view.root);
+  await view.drawGround(items.get(island.terrain), island.shape);
+  await view.load((done, total) => showStatus(`Sailing to the island… ${Math.round((100 * done) / total)}%`));
+  app.ticker.add((ticker) => view.update(ticker.deltaMS, camera.scale));
+  showStatus("");
+  // As the Flash client: the island is shown, then the quest starts.
+  commands.add("game_status", "LOAD_MAP", "NORM", "QUEST");
+  void commands.flush();
+
+  // The start window: the island, the army, the stars; Start battle.
+  const stars = difficulties(Number(ranks[questId] ?? 0));
+  const difficulty = await startWindow(name, army, items, stars, settings);
+  if (difficulty === null) {
+    commands.add("game_status", "LOAD_MAP", "QUEST", "NORM");
+    await commands.flush();
+    location.assign(homeUrl());
+    return;
+  }
+  quest.begin(difficulty, army);
+  const missing = await view.load((done, total) => showStatus(`The army lands… ${Math.round((100 * done) / total)}%`));
+  showStatus(missing.length ? `Some pictures aren't available yet (${missing.length}); they show as outlines.` : "");
+  if (missing.length) {
+    setTimeout(() => showStatus(""), 5000);
+  }
+  commands.add("start_quest", questId, town.id);
+  void commands.flush();
+  const started = performance.now();
+
+  const bar = new QuestBar(island, quest, {
+    selectAll: () => select(battle.fighters.filter((f) => f.side === SELF && f.isUnit && !f.dead)),
+    speed: () => {
+      speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
+      return speed;
+    },
+    leave: () => {
+      if (quest!.state === "fighting") {
+        askLeave();
+      }
+    },
+  });
+  let speed = 1;
+  let owed = 0;
+  let finished = false;
+  // For the browser tests (e2e/tests/quest.mjs): where things are on screen, to tap them as a player would.
+  (window as unknown as Record<string, unknown>).seQuest = {
+    battle, quest, view,
+    screenOf: (fighter: Fighter) => {
+      const p = world.toGlobal(fighter.isUnit ? { x: fighter.at.x, y: fighter.at.y - 30 } : { x: fighter.at.x, y: fighter.at.y - 40 });
+      return { x: p.x, y: p.y };
+    },
+  };
+
+  const select = (units: Fighter[]) => {
+    view.selected = new Set(units);
+    bar.update();
+  };
+  const askLeave = () => {
+    finalWindow("Leave the island? The battle will be lost, and the units who fell stay lost.", [
+      { label: "Stay and fight", run: () => {} },
+      { label: "Leave", danger: true, run: () => quest!.leave() },
+    ], true);
+  };
+
+  camera.onTap = (at) => {
+    if (finished) {
+      return;
+    }
+    const tapped = view.fighterAt(at);
+    if (tapped && tapped === quest!.chest && tapped.collectable) {
+      quest!.collect(tapped);
+      sound.play("collect");
+      showMessage("The treasure is yours!");
+      setTimeout(() => showMessage(""), 2500);
+      return;
+    }
+    if (tapped && tapped.side === SELF && tapped.isUnit) {
+      // A unit of the player's: it alone, or added to (or taken from) the others with Shift.
+      const shift = (window.event as KeyboardEvent | undefined)?.shiftKey;
+      const now = new Set(shift ? view.selected : []);
+      if (shift && now.has(tapped)) {
+        now.delete(tapped);
+      } else {
+        now.add(tapped);
+      }
+      select([...now]);
+      sound.play("click");
+      return;
+    }
+    const chosen = [...view.selected].filter((f) => !f.dead);
+    if (chosen.length === 0) {
+      return;
+    }
+    if (tapped && tapped.side === ENEMY) {
+      battle.attackWith(chosen, tapped);
+    } else {
+      battle.moveTo(chosen, tileUnder(camera.toMap(at)));
+    }
+    sound.play("place");
+  };
+  camera.onHover = (at) => view.hover(view.fighterAt(at));
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      select([]);
+    } else if (e.key === " " || e.key.toLowerCase() === "a") {
+      e.preventDefault();
+      bar.selectAll();
+    }
+  });
+
+  app.ticker.add((ticker) => {
+    if (!finished) {
+      // The battle keeps the Flash client's 30 frames a second, whatever the screen's rate.
+      owed += Math.min(ticker.deltaMS, 250) * speed;
+      const step = 1000 / FPS;
+      while (owed >= step) {
+        owed -= step;
+        battle.step();
+      }
+      if (quest!.isOver()) {
+        finished = true;
+        quest!.settle();
+        void results(quest!, (performance.now() - started) / 1000);
+      }
+    }
+    bar.update();
+  });
+
+  async function results(run: Quest, seconds: number): Promise<void> {
+    // Sent at once, so nothing is lost if the page closes on the results.
+    const rewards = bossRewards(run, town.race);
+    commands.add("end_quest", JSON.stringify(run.report(town.id, seconds, rewards)));
+    void commands.flush();
+    const won = run.state === "won";
+    const lost = run.lost();
+    const body = document.createElement("div");
+    body.className = "quest-results";
+    const earned = document.createElement("p");
+    earned.className = "quest-earned";
+    earned.append(iconImage("gold"), `${run.gold.toLocaleString()}`, iconImage("xp"), `${run.xp.toLocaleString()}`);
+    body.append(earned);
+    const fallen = document.createElement("p");
+    fallen.className = "quest-fallen";
+    fallen.textContent = lost.length ? "Units lost:" : "No units lost.";
+    body.append(fallen);
+    if (lost.length) {
+      const list = document.createElement("ul");
+      list.className = "quest-lost";
+      for (const [id, count] of lost) {
+        const item = items.get(id);
+        const row = document.createElement("li");
+        const picture = document.createElement("img");
+        picture.src = `${settings.assetsUrl}/buildingthumbs/${item?.art ?? ""}.jpg`;
+        picture.alt = "";
+        row.append(picture, `${count} × ${item?.name ?? "unit"}`);
+        list.append(row);
+      }
+      body.append(list);
+    }
+    finalWindow(won ? "Victory!" : run.voluntary ? "You left the island." : "Defeat…", [
+      { label: "Back home", run: async () => {
+        await commands.flush();
+        commands.add("game_status", "LOAD_MAP", "QUEST", "NORM");
+        await commands.flush();
+        location.assign(homeUrl());
+      } },
+    ], false, body);
+  }
+}
+
+/** What a boss island gives on a win, for the player's people: { item id: how many }. */
+function bossRewards(run: Quest, race: string): Record<string, number> {
+  const rewards: Record<string, number> = {};
+  for (const id of run.island.itemRewards?.[race] ?? []) {
+    rewards[id] = (rewards[id] ?? 0) + 1;
+  }
+  return rewards;
+}
+
+/** The start window: resolves to the stars chosen, or null to go home. */
+function startWindow(name: string, army: [number, number][], items: Map<number, ItemInfo>,
+  stars: { allowed: number[]; chosen: number }, settings: PageSettings): Promise<number | null> {
+  return new Promise((resolve) => {
+    let chosen = stars.chosen;
+    const body = document.createElement("div");
+    body.className = "quest-start";
+    const sailing = document.createElement("p");
+    const count = army.reduce((sum, [, n]) => sum + n, 0);
+    sailing.textContent = `Your army is ready: ${count} unit${count === 1 ? "" : "s"}.`;
+    const units = document.createElement("ul");
+    units.className = "quest-army";
+    for (const [id, n] of army) {
+      const item = items.get(id);
+      const row = document.createElement("li");
+      const picture = document.createElement("img");
+      picture.src = `${settings.assetsUrl}/buildingthumbs/${item?.art ?? ""}.jpg`;
+      picture.alt = "";
+      picture.title = item?.name ?? "";
+      row.append(picture, `${n}`);
+      units.append(row);
+    }
+    const label = document.createElement("p");
+    label.className = "quest-difficulty-label";
+    label.textContent = "Difficulty";
+    const row = document.createElement("div");
+    row.className = "quest-stars";
+    const buttons: HTMLButtonElement[] = [];
+    const paint = () => buttons.forEach((b, i) => {
+      (b.firstChild as HTMLImageElement).src = iconImage(i < chosen ? "star-on" : "star-off").src;
+      b.setAttribute("aria-pressed", String(i + 1 === chosen));
+    });
+    for (const n of [1, 2, 3]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "quest-star";
+      button.append(iconImage("star-off", `${n} star${n > 1 ? "s" : ""}`));
+      button.disabled = !stars.allowed.includes(n);
+      button.title = button.disabled ? `Win this island on ${n - 1} star${n > 2 ? "s" : ""} first` : `${n} star${n > 1 ? "s" : ""}`;
+      button.addEventListener("click", () => {
+        chosen = n;
+        paint();
+      });
+      buttons.push(button);
+      row.append(button);
+    }
+    paint();
+    body.append(sailing, units, label, row);
+    finalWindow(name, [
+      { label: "Back home", run: () => resolve(null) },
+      { label: "Start battle", gold: true, run: () => resolve(chosen) },
+    ], false, body);
+  });
+}
+
+/** A window in the middle of the screen with a title, maybe a body, and buttons; each button closes it. */
+function finalWindow(title: string, buttons: { label: string; run: () => void; gold?: boolean; danger?: boolean }[],
+  small = false, body?: HTMLElement): void {
+  const box = document.createElement("section");
+  box.className = `quest-window${small ? " small" : ""}`;
+  box.setAttribute("role", "dialog");
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+  box.append(heading);
+  if (body) {
+    box.append(body);
+  }
+  const row = document.createElement("div");
+  row.className = "quest-buttons";
+  for (const choice of buttons) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `button ${choice.gold ? "gold" : choice.danger ? "danger" : "plain"}`;
+    button.textContent = choice.label;
+    button.addEventListener("click", () => {
+      box.remove();
+      choice.run();
+    });
+    row.append(button);
+  }
+  box.append(row);
+  document.body.append(box);
+  (row.lastElementChild as HTMLButtonElement | null)?.focus();
+}
+
+/** The bar at the top in battle: what's been earned, what's left to beat, and the buttons. */
+class QuestBar {
+  private readonly gold = document.createElement("span");
+  private readonly xp = document.createElement("span");
+  private readonly left = document.createElement("span");
+  private readonly speedButton = document.createElement("button");
+  private readonly selectButton = document.createElement("button");
+  private readonly island: Island;
+  private readonly quest: Quest;
+  private readonly actions: { selectAll: () => void; speed: () => number; leave: () => void };
+
+  constructor(island: Island, quest: Quest, actions: { selectAll: () => void; speed: () => number; leave: () => void }) {
+    this.island = island;
+    this.quest = quest;
+    this.actions = actions;
+    const bar = document.createElement("header");
+    bar.className = "hud quest-hud";
+    const numbers = document.createElement("ul");
+    numbers.className = "hud-resources";
+    const pill = (icon: "gold" | "xp" | null, value: HTMLElement, label: string) => {
+      const item = document.createElement("li");
+      item.className = "pill-dark";
+      item.title = label;
+      if (icon) {
+        item.append(iconImage(icon, label));
+      }
+      item.append(value);
+      numbers.append(item);
+    };
+    pill("gold", this.gold, "Gold won");
+    pill("xp", this.xp, "Experience won");
+    pill(null, this.left, "Left to beat");
+    const buttons = document.createElement("div");
+    buttons.className = "hud-buttons";
+    this.selectButton.type = "button";
+    this.selectButton.className = "button small plain";
+    this.selectButton.textContent = "Select all";
+    this.selectButton.title = "Select every unit (Space)";
+    this.selectButton.addEventListener("click", () => this.selectAll());
+    this.speedButton.type = "button";
+    this.speedButton.className = "button small plain";
+    this.speedButton.textContent = "Speed 1×";
+    this.speedButton.title = "Play faster";
+    this.speedButton.addEventListener("click", () => {
+      this.speedButton.textContent = `Speed ${actions.speed()}×`;
+    });
+    const home = document.createElement("button");
+    home.type = "button";
+    home.className = "hud-sound quest-home";
+    home.title = "Go home";
+    home.append(iconImage("my-town", "Go home"));
+    home.addEventListener("click", () => actions.leave());
+    buttons.append(this.selectButton, this.speedButton, home);
+    bar.append(numbers, buttons);
+    document.body.append(bar);
+    this.update();
+  }
+
+  selectAll(): void {
+    this.actions.selectAll();
+  }
+
+  update(): void {
+    this.gold.textContent = this.quest.gold.toLocaleString();
+    this.xp.textContent = this.quest.xp.toLocaleString();
+    const n = this.quest.remaining;
+    const what = this.island.win === "townhall" ? (n === 1 ? "town hall" : "town halls")
+      : this.island.kind === "trolls" ? (n === 1 ? "troll" : "trolls") : (n === 1 ? "enemy" : "enemies");
+    this.left.textContent = this.quest.chest?.collectable ? "Open the treasure!" : `${n} ${what} left`;
+  }
+}
