@@ -104,6 +104,10 @@ export default async function raids({ newPlayer }) {
     if (hit) onHouse = point;
   }
   assert.ok(onHouse, "the house can be tapped");
+  // The villager selected, the original's bucket over the burning house.
+  await player.page.mouse.move(onHouse.x, onHouse.y);
+  await player.wait(300);
+  assert.match(await player.page.evaluate(() => document.querySelector("canvas").style.cursor), /cursor-repair/);
   await player.click(onHouse);
   await player.wait(9000);
   assert.ok((await health()) >= 25, `repairing (${await health()})`);

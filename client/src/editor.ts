@@ -472,11 +472,16 @@ export class TownEditor {
   /**
    * The mouse over the map with a unit selected: the Flash client's pointer
    * for what the unit would do there, an axe over a tree it can chop, a
-   * pickaxe over a rock or gold, a red arrow over a building it can go into.
+   * pickaxe over a rock or gold, a red arrow over a building it can go into,
+   * a bucket over a burning building a villager can repair.
    */
   private pointAt(at: Point): void {
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
     const placed = unit ? this.view.itemAt(at) : null;
+    if (unit && placed && this.canRepair(unit, placed)) {
+      this.camera.setCursor(CURSORS.repair);
+      return;
+    }
     const work = unit && placed ? workFor(this.town, unit, placed) : null;
     this.camera.setCursor(work ? CURSORS[work] : "");
   }

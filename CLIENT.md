@@ -1332,7 +1332,8 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   burn as they lose life (the game's flames, in 4 stages), and at 0 they
   burn out: out of the fight, giving no room for people (the town hall
   still does), with their workers thrown out (`pop_unit`), until
-  villagers repair them in full. A villager selected, tap a burning
+  villagers repair them in full. A villager selected, the game's bucket
+  pointer shows over a burning building of the player's; tap a burning
   building: it walks over and puts back 25 life every 2 seconds. Nothing
   about burning is saved, as in the original: reopening the town finds it
   whole.
@@ -1437,9 +1438,8 @@ camps players reach, our own notes on the original's tables) and
   doors, and the festivals' buildings, are nobody's (they can't be
   attacked, and their towers don't shoot).
 
-**Not yet** (Beta 2's next slices): sixteen of the scripted camps, monks at
-home, collection pieces dropped by enemies (they come with the
-collections), and the original's repair pointer.
+**Not yet:** monks turning units at home, and the collection pieces
+dropped by enemies (they come with the collections, in the last stop).
 
 ### Making the art look better
 

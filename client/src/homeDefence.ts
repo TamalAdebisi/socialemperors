@@ -32,6 +32,7 @@ import { letAllOut } from "./rules/work.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
 import { attackAlert } from "./ui/notice.ts";
+import { CURSORS } from "./ui/icons.ts";
 import type { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import type { Camera } from "./view/camera.ts";
@@ -239,6 +240,9 @@ class Fight {
       privateState: parts.privateState, settings: parts.settings, commands: parts.commands, sound: parts.sound,
       specials: this.specials, random,
       tapFirst: (tapped, _tile, selected) => this.tapFirst(tapped, selected),
+      // The original's bucket over a burning building of the player's, with villagers selected.
+      cursorFor: (hovered, selected) => hovered && !hovered.isUnit && hovered.side === SELF && hovered.life < hovered.maxLife
+        && selected.some((f) => f.item.subcategory === SUBCAT.peasant) ? CURSORS.repair : "",
       changed: () => parts.editor.gained(),
     });
     this.battle.onHurt.push((target, damage, by) => this.hurt(target, damage, by));

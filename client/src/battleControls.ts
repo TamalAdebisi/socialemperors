@@ -36,6 +36,8 @@ export interface ControlParts {
   random: () => number;
   /** A tap the battle's owner looks at first (the island's chest, a building to repair): true when it took it. */
   tapFirst?: (tapped: Fighter | null, tile: Point, selected: Fighter[]) => boolean;
+  /** The mouse pointer over a fighter with these selected (the repair bucket at home), or "" for the usual. */
+  cursorFor?: (hovered: Fighter | null, selected: Fighter[]) => string;
   /** Mana and gold changed (the town's numbers at the top, at home). */
   changed?: () => void;
 }
@@ -168,7 +170,9 @@ export class BattleControls {
       view.hover(null);
       return;
     }
-    view.hover(view.fighterAt(at));
+    const hovered = view.fighterAt(at);
+    view.hover(hovered);
+    camera.setCursor(this.parts.cursorFor?.(hovered, this.selected) ?? "");
   }
 
   private key(e: KeyboardEvent): void {
