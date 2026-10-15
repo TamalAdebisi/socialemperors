@@ -655,9 +655,97 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
   animals they caught); wild animals and trolls on the island don't
   answer.
 
+**Getting unstuck** (after the owner found villagers stuck; test
+`e2e/tests/stuck.mjs`):
+
+- A unit standing off the bought land (left on the wild ring after a fight
+  at a troll camp, or freed from one) walks back when sent: its way may
+  cross land that isn't bought, but where it's sent must be on the land. A
+  unit standing in a building (a gate shut on it) walks out across it.
+  (`unitPath` and `reachable` in `rules/walking.ts`.)
+- A unit stopped short by something built in its way, on its way to work,
+  repair or go inside, sets off once more from where it stopped. It used to
+  start working from wherever it had stopped.
+- Where a unit stands by a tree, a building or an animal skips tiles other
+  units are walking to, and is chosen by one sweep of what it can reach
+  (a search for each tile could freeze the game for a quarter of a second).
+- A villager done with a tree goes on to the nearest one touching it that
+  it can reach, not just the nearest.
+- The tidy-up as the town opens keeps a unit on the land when it moves it
+  off a building, and moves one off a gate (gates are shut then).
+- A raid stops units' walks where they are; the server hears where.
+
+**Wall gates** open and close, as in the Flash client: the gate's card has
+Open door (the game's button); open, the gate shows its open picture,
+units walk through it, and Move, Turn, Store and Sell are hidden until
+Close door. It isn't saved: gates are shut each time the town opens.
+
 **Not yet:** the speech bubbles units say now and then, and a mark on the
 ground where a unit is going. (Units sent to a building or a tree: "Villagers
 at work"; wild animals following a unit home: "The living map".)
+
+### Selecting several units
+
+Built after Beta 1's run-through, at the owner's request. Code:
+`rules/group.ts` (the rules, with tests), `TownEditor.selectGroup`,
+`sendTo`, `startsBox` and `dragBox`, the box in `Camera` and `TownView`,
+the portraits in `ui/actions.ts`, and the square tool's button in
+`ui/hud.ts`. Test: `e2e/tests/group.mjs`.
+
+**How it works**, read from the Flash client (our notes, our words):
+
+- **A box:** a drag that starts on one of the player's units draws a box
+  (a thin white line, faintly white inside) instead of moving the map; let
+  go, and the player's units whose pictures touch it are selected, at most
+  20. A drag from anywhere else still moves the map.
+- **The square tool** (its button at the bottom right, or Space): the next
+  drag draws a box wherever it starts, then the tool is off again, even
+  after a plain tap. Taking it up clears the selection, and does goal 41.
+  Space still turns a building while it's being placed or moved.
+- **A double click** (a second tap on a selected unit within a second)
+  selects the units of its kind within 10 tiles, nearest first, at most 20.
+  The kinds: healers; the engineer; the monk; those that fight up close
+  (clerics, footmen, riders and specials with a range of 1); villagers;
+  archers and riders that shoot; siege engines; kamikazes; and each of the
+  five elementals. Animals and pets pick nothing.
+- **The card** shows their portraits, ten to a row, each with its life bar;
+  tapping one selects it alone. Each unit stands on its golden ring.
+- **Sent to the ground,** they stand in a square grown from the tile
+  tapped: that tile, then the next column down and the row along, ring by
+  ring, the i-th unit on the i-th free tile. They stay selected.
+- **Sent to a tree or rock,** each villager lines it up, and those free set
+  off together. **To a building with room,** as many as fit go in, and the
+  building is selected. **To a wild animal,** each goes to it. **To a
+  burning building,** the villagers repair it. **To a camp's enemy,** those
+  that can fight attack it.
+- The server hears each unit's own commands, as when it's sent alone; there
+  is no command for a group.
+
+### The pointer's tools
+
+Built with selecting several units, at the owner's request. Code:
+`ui/hud.ts` (the button and its menu) and `TownEditor.chooseTool`,
+`bulldoze` and `sweep`. Test: `e2e/tests/tools.mjs`.
+
+**How they work**, read from the Flash client (our notes, our words):
+
+- The pointer's button sits in the bottom right corner, before the square
+  tool. It opens a menu above it: Pointer, Remove (the bulldozer) and Fast
+  collect (the glove). Pressing the map closes the menu.
+- With a tool on, the button reads CANCEL (the game's picture) and puts it
+  down; so does Escape, and taking up the square tool. Taking up a tool
+  clears the selection.
+- **Remove:** the bulldozer's pointer. Tapping a thing removes it, if its
+  card would offer Sell or Remove: never the town hall, units, trees or
+  other people's things, but gold and stone rocks on the player's land.
+  Something that cost nothing goes at once; anything else asks first, with
+  what it gives back. It stays on for the next one, and a drag still moves
+  the map. The server hears `sell` as from the card.
+- **Fast collect:** the glove's pointer. A ready building it passes over is
+  collected; nothing is selected. On a phone, which has no pointer to move
+  without pressing, dragging a finger sweeps it.
+- **Collect all** (our own) stays beside them, collecting everything ready
+  at once.
 
 ### Villagers at work
 
@@ -907,14 +995,14 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   opened, as the Flash client counts them: collecting (buildings, trees and
   rocks), working times chosen, units let out, buildings moved and stored,
   something placed from storage, units trained at a building, units sent
-  into buildings, cash spent, zooming, the daily bonus's day, the neighbour
-  visited last and the buildings helped on visits (kept in the browser tab,
-  so a visit counts back home).
+  into buildings, cash spent, zooming, taking up the square tool, the daily
+  bonus's day, the neighbour visited last and the buildings helped on visits
+  (kept in the browser tab, so a visit counts back home).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
-  capturing animals say they're played in the classic game for now (72 of
-  the 226); the server keeps them done whichever client does them.
+  capturing animals say they're played in the classic game for now (76 of
+  the 227); the server keeps them done whichever client does them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`, `comeback_bonus.py`):

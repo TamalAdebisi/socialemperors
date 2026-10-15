@@ -17,6 +17,7 @@ const ITEMS = new Map<number, ItemInfo>([
   [289, itemInfo(config(289, "Troll Town Hall", { subcat_functional: "135", race: "t" }))],
   [19, itemInfo(config(19, "Tree", { subcat_functional: "125", width: "1", height: "1", race: "n" }))],
   [3000, itemInfo(config(3000, "Path", { category_id: "6", width: "1", height: "1" }))],
+  [222, itemInfo(config(222, "Wall Door", { subcat_functional: "222", width: "1", height: "1" }))],
   [500, itemInfo(config(500, "Villager I", { type: "u", subcat_functional: "71", width: "1", height: "1" }))],
   [501, itemInfo(config(501, "Villager I", { type: "u", subcat_functional: "71", width: "1", height: "1" }))],
   [512, itemInfo(config(512, "Light Knight", { type: "u", subcat_functional: "79", width: "1", height: "1" }))],
@@ -63,6 +64,17 @@ test("a unit on a building steps to the nearest free tile; on a farm or a path i
   assert.deepEqual(commands[0].args.slice(0, 3), [49, 49, 500]);
   assert.equal(commands[0].args[7], "Colisio #1");
   assert.deepEqual([onFarm.tx, onPath.tx], [60, 40]);
+});
+
+test("a unit on the player's land stays on it when it steps aside; one on a gate steps off it too", () => {
+  // The bought block is tiles 40 to 59; a house on its bottom-right corner, a villager on the house.
+  const house = at(1, 59, 59), onHouse = at(500, 59, 59);
+  const gate = at(222, 45, 45), onGate = at(500, 45, 45);
+  const t = town([house, onHouse, gate, onGate]);
+  const { moved } = cleanUp(t);
+  assert.deepEqual(moved, [onHouse, onGate]);
+  assert.ok(onHouse.tx <= 59 && onHouse.ty <= 59, `still on the land: ${onHouse.tx}, ${onHouse.ty}`);
+  assert.notDeepEqual([onGate.tx, onGate.ty], [45, 45]);
 });
 
 test("a town with no villager gets one near the middle; with one, on the map or inside, none", () => {

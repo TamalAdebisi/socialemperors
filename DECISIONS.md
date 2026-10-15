@@ -31,6 +31,46 @@ them can be found and reversed. The big, agreed decisions are in
 - **Quiet while learning:** the camps' story window and the first
   villager's welcome wait until the lessons are over. The original's "new
   town" window is left out: the question at the bottom does its job.
+## 15 October 2026: the pointer's tools
+
+- **Collect all stays,** beside the original's glove: one press collects
+  everything ready. The glove (Fast collect, in the pointer's menu) works
+  as the original's, collecting what it's swept over.
+- **On a phone the glove sweeps with a finger:** dragging collects what it
+  passes instead of moving the map. The original only ran on computers.
+- **The glove stays on until it's put down** (Cancel, Escape or the square
+  tool). In the original, the first press on the map made it look put
+  down while it went on collecting.
+- **Escape puts a tool down,** as it does the square tool.
+
+## 15 October 2026: villagers getting stuck
+
+- **A unit off the bought land may cross land that isn't bought to get
+  back.** Ours otherwise keep units on the land. The Flash client's path
+  finder doesn't seem to look at the land at all (from reading its code),
+  so its units could walk back from a fight at a camp.
+- **A unit stopped short by something built in its way tries once more**
+  from where it stopped, instead of working from there (the original
+  checked it was close enough first).
+- **The tidy-up keeps units on the land, and no longer leaves one standing
+  on a gate,** where it couldn't move while the gate was shut.
+- **Left as in the original:** trees growing back can still surround a
+  villager (it can chop its way out), and a unit let out of a building or
+  trained may still be put in a closed-off gap.
+
+## 15 October 2026: selecting several units
+
+- **A group sent to the ground only gets tiles it can walk to.** The
+  original handed out any tile with nothing on it, so a unit could be
+  given one off the bought land and stay where it was.
+- **A unit choosing where to stand by a tree, a building or an animal skips
+  tiles other units are already walking to,** so villagers sent together
+  (or one after another) each get a tile of their own instead of stacking
+  on one.
+- **Escape puts the square tool down,** as it closes everything else here.
+  The original had no Escape for it.
+- **A portrait under the mouse glows,** but its unit on the map doesn't
+  light up as in the original (there's no hover highlight on the map yet).
 
 ## 15 October 2026: Beta 2 checked against the original, the town and the islands
 

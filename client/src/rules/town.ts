@@ -94,6 +94,8 @@ export interface PlacedItem {
   ruined?: boolean;
   /** An animal in the wild, nobody's until one of the player's units comes near (rules/animals.ts). Not saved. */
   wild?: boolean;
+  /** A wall gate opened, for units to pass. Not saved: gates are shut each time the town opens, as in the Flash client. */
+  open?: boolean;
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */

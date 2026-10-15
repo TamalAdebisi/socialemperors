@@ -6,7 +6,7 @@
 
 import type { Command, CommandSender } from "./net/commands.ts";
 import type { ItemInfo } from "./rules/config.ts";
-import { choices, fits, move, refund, sell, store, turn } from "./rules/editing.ts";
+import { choices, fits, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
 import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
@@ -15,13 +15,16 @@ import { placeStored, sellStored, storageChoices, storageRefund, storedItems, ty
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
-import { showMessage, type Hud } from "./ui/hud.ts";
+import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
-import { canWalk, findPath, gridFor, isWalkable, unitMoved } from "./rules/walking.ts";
+import { canWalk, isWalkable, tilesUnder, unitMoved, unitPath, walkGrid } from "./rules/walking.ts";
+import { DOUBLE_CLICK_MS, MAX_SELECTED, sameKindNear, squareTiles } from "./rules/group.ts";
+import { takenTiles } from "./rules/editing.ts";
+import { lifeShare } from "./view/selected.ts";
 import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
 import { CURSORS, ICONS, type IconName } from "./ui/icons.ts";
@@ -42,6 +45,7 @@ const MOST_WAITING = 3;
 /** How long "Captured!" shows over a wild animal just caught, as in the Flash client. */
 const CAUGHT_MS = 5000;
 const TOWN_HALL = 135;
+const GATE = 222;
 
 export interface EditorParts {
   town: Town;
@@ -95,6 +99,16 @@ export class TownEditor {
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
   private readonly training = new Map<PlacedItem, { unit: ItemInfo; done: number; price: Price; withCash: boolean }>();
   private selected: PlacedItem | null = null;
+  /** Several units selected at once (two or more; `selected` is null then), as with the Flash client's square tool. */
+  private group: PlacedItem[] = [];
+  /** The square tool: on, the next drag on the map draws a box, wherever it starts. */
+  private squareTool = false;
+  /** The pointer's tool (ui/hud.ts): the pointer; the bulldozer, removing one thing after another; the glove, collecting what it's swept over. */
+  private tool: Tool = "pointer";
+  /** What the glove last passed over: each thing is collected once as it sweeps by. */
+  private swept: PlacedItem | null = null;
+  /** The last thing tapped and when (the page's clock, ms): a second tap on a selected unit soon after is a double click. */
+  private lastTap: { placed: PlacedItem; at: number } | null = null;
   private moving: PlacedItem | null = null;
   /** The way the thing being moved faced before (Space turns it; cancelling turns it back). */
   private movingFacing = 0;
@@ -106,10 +120,10 @@ export class TownEditor {
   private paused = false;
   /**
    * A thing tapped, before the editor looks at it (homeCamps.ts: a camp's
-   * chest, an enemy to attack): true when it was taken care of. `unit` is
-   * the unit selected, if any.
+   * chest, an enemy to attack): true when it was taken care of. `units`
+   * are the player's units selected (one, several, or none).
    */
-  onTapItem: (placed: PlacedItem, unit: PlacedItem | null) => boolean = () => false;
+  onTapItem: (placed: PlacedItem, units: PlacedItem[]) => boolean = () => false;
   /** Villagers repairing a burning building, and their repair's clock. */
   private readonly repairing = new Map<PlacedItem, { building: PlacedItem; timer: ReturnType<typeof setInterval> }>();
   /** Where it comes from: storage (one, then done), or null for the shop (as many as they like). */
@@ -143,10 +157,18 @@ export class TownEditor {
     this.sound = parts.sound ?? (() => {});
     this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
+    this.camera.onPress = (at, touch) => this.startsBox(at, touch);
+    this.camera.onBox = (from, to, done) => this.dragBox(from, to, done);
     window.addEventListener("keydown", (e) => {
       if (e.key === " " && (this.building || this.moving)) {
         e.preventDefault();  // not the page scrolling
         this.turnWhilePlacing();
+        return;
+      }
+      if (e.key === " " && !(e.target instanceof HTMLButtonElement || e.target instanceof HTMLInputElement)) {
+        // The square tool, as in the Flash client (a button that has the focus keeps Space for itself).
+        e.preventDefault();
+        this.takeSquareTool();
         return;
       }
       if (e.key === "Escape") {
@@ -154,6 +176,10 @@ export class TownEditor {
           this.stopBuilding();
         } else if (this.moving) {
           this.cancelMove();
+        } else if (this.squareTool) {
+          this.setSquareTool(false);
+        } else if (this.tool !== "pointer") {
+          this.chooseTool("pointer");
         } else {
           this.select(null);
         }
@@ -222,6 +248,10 @@ export class TownEditor {
     this.waiting([...this.town.gifts.values()].reduce((sum, n) => sum + n, 0));
     if (this.selected && !this.moving) {
       this.bar.describe(this.detail(this.selected));
+    }
+    // A unit of a group gone from the map (into a building, say): the others stay selected.
+    if (this.group.some((unit) => !this.town.items.includes(unit))) {
+      this.selectGroup(this.group.filter((unit) => this.town.items.includes(unit)));
     }
   }
 
@@ -406,6 +436,10 @@ export class TownEditor {
       return;
     }
     const placed = this.view.itemAt(at);
+    if (this.tool !== "pointer") {
+      this.useTool(placed);
+      return;
+    }
     const cart = placed ? this.cartsWaiting.get(placed) : undefined;
     if (cart) {
       cart();  // a neighbour's cart, waiting: ask again
@@ -414,26 +448,44 @@ export class TownEditor {
     if (placed?.item.id === CART) {
       return;  // a cart on its round: only the client has it, so it can't be sent anywhere
     }
-    if (placed && this.onTapItem(placed, this.selected && canWalk(this.town, this.selected) ? this.selected : null)) {
+    // The square tool works once: the box it drew is done, or this tap was instead.
+    this.setSquareTool(false);
+    // The player's units selected (one, or a group): what they're sent to do.
+    const units = this.sendable();
+    if (placed && this.onTapItem(placed, units)) {
       return;
     }
-    // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
-    const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
-    if (unit && placed?.wild) {
-      // A wild animal: the unit goes to it (as near as it can), and so catches it, as in the Flash client.
-      this.clearLine(unit);
-      const tile = standingTile(this.town, unit, placed);
-      if (!tile) {
-        this.say(`${unit.item.name} can't get to ${placed.item.name}.`);
-      } else if (this.walkTo(unit, tile)) {
+    // A selected unit of theirs tapped again within a second: the double click, its kind near it (rules/group.ts).
+    const last = this.lastTap;
+    this.lastTap = placed ? { placed, at: performance.now() } : null;
+    if (placed && last?.placed === placed && performance.now() - last.at < DOUBLE_CLICK_MS && units.includes(placed)) {
+      const kin = sameKindNear(placed, this.town.items.filter((u) => canWalk(this.town, u)));
+      if (kin.length > 0) {
+        this.lastTap = null;
+        this.selectGroup(kin);
+        return;
+      }
+    }
+    if (units.length > 0 && placed?.wild) {
+      // A wild animal: the units go to it (as near as they can), and so catch it, as in the Flash client.
+      let sent = false;
+      for (const unit of units) {
+        this.clearLine(unit);
+        const tile = this.standingTile(unit, placed);
+        if (!tile) {
+          this.say(`${unit.item.name} can't get to ${placed.item.name}.`);
+        } else if (this.walkTo(unit, tile)) {
+          sent = true;
+        }
+      }
+      if (sent) {
         this.sound("place");
       }
       return;
     }
-    if (unit && !placed) {
-      this.clearLine(unit);
-      if (this.walkTo(unit, this.tileAt(at))) {
-        this.sound("place");  // the Flash client's sound for a unit sent off
+    if (units.length > 0 && !placed) {
+      if (this.sendTo(units, this.tileAt(at))) {
+        this.sound("place");  // the Flash client's sound for units sent off
         this.emit({ kind: "walk" });
       }
       return;
@@ -446,22 +498,45 @@ export class TownEditor {
         return;
       }
     }
-    if (unit && placed && this.canRepair(unit, placed)) {
+    const repairers = placed ? units.filter((unit) => this.canRepair(unit, placed)) : [];
+    if (placed && repairers.length > 0) {
       this.sound("place");
-      this.repair(unit, placed);
+      repairers.forEach((unit) => this.repair(unit, placed));
       return;
     }
-    if (unit && placed && canHarvest(unit.item, placed.item)) {
-      this.lineUp(unit, placed, touch);
+    const workers = placed ? units.filter((unit) => canHarvest(unit.item, placed.item)) : [];
+    if (placed && workers.length === 1 && units.length === 1) {
+      this.lineUp(workers[0], placed, touch);
       this.emit({ kind: "harvest", resource: placed.item });
       return;
     }
-    if (unit && placed && canGoInside(this.town, unit.item, placed)) {
+    if (placed && workers.length > 0) {
+      // Several villagers: each lines it up, and those free set off together, each to a tile of its own beside it.
+      workers.forEach((unit, i) => this.lineUp(unit, placed, touch, { first: i === 0 }));
+      this.emit({ kind: "harvest", resource: placed.item });
+      return;
+    }
+    const goers = placed ? units.filter((unit) => canGoInside(this.town, unit.item, placed)) : [];
+    if (placed && goers.length === 1 && units.length === 1) {
+      const unit = goers[0];
       this.clearLine(unit);
       this.sound("place");
       this.showWhatItDoes(unit, placed, touch);
       this.goInto(unit, placed);
       this.emit({ kind: "inside", unit: unit.item, building: placed.item });
+      return;
+    }
+    if (placed && goers.length > 0) {
+      // Several: as many as there's room for go in, and the building is selected, as in the Flash client.
+      const room = placed.item.capacity - placed.unitsInside;
+      goers.slice(0, Math.max(0, room)).forEach((unit) => {
+        this.clearLine(unit);
+        this.goInto(unit, placed);
+      });
+      this.sound("place");
+      this.showWhatItDoes(goers[0], placed, touch);
+      this.select(placed);
+      this.emit({ kind: "inside", unit: goers[0].item, building: placed.item });
       return;
     }
     const state = placed ? workState(placed, this.clock()) : null;
@@ -478,6 +553,13 @@ export class TownEditor {
   }
 
   private hover(at: Point): void {
+    if (this.tool === "collect") {
+      this.sweep(at);
+      return;
+    }
+    if (this.squareTool || this.tool !== "pointer") {
+      return;  // their pointer stays until they're put down
+    }
     if (this.building || this.moving) {
       this.camera.setCursor("");  // a unit's pointer from before doesn't apply while placing
     }
@@ -497,13 +579,13 @@ export class TownEditor {
    * a bucket over a burning building a villager can repair.
    */
   private pointAt(at: Point): void {
-    const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
-    const placed = unit ? this.view.itemAt(at) : null;
-    if (unit && placed && this.canRepair(unit, placed)) {
+    const units = this.sendable();
+    const placed = units.length > 0 ? this.view.itemAt(at) : null;
+    if (placed && units.some((unit) => this.canRepair(unit, placed))) {
       this.camera.setCursor(CURSORS.repair);
       return;
     }
-    const work = unit && placed ? workFor(this.town, unit, placed) : null;
+    const work = placed ? units.map((unit) => workFor(this.town, unit, placed)).find((w) => w !== null) ?? null : null;
     this.camera.setCursor(work ? CURSORS[work] : "");
   }
 
@@ -520,9 +602,205 @@ export class TownEditor {
     return tileUnder(this.camera.toMap(at));
   }
 
+  /**
+   * Where a unit stands to work a thing, go into it or catch it
+   * (rules/work.ts): not where another unit is already walking to, so
+   * villagers sent together, or one after another, each get a tile of their own.
+   */
+  private standingTile(unit: PlacedItem, target: PlacedItem): Point | null {
+    return standingTile(this.town, unit, target, this.view.destinations(unit));
+  }
+
+  /** Whether a unit got to the tile it set off for (not stopped short by something built in its way). */
+  private reached(unit: PlacedItem, tile: Point): boolean {
+    return unit.tx === tile.x && unit.ty === tile.y;
+  }
+
+  /** The player's units selected, to send: the group, or the one selected. */
+  private sendable(): PlacedItem[] {
+    const chosen = this.group.length > 0 ? this.group : this.selected ? [this.selected] : [];
+    return chosen.filter((unit) => this.town.items.includes(unit) && canWalk(this.town, unit));
+  }
+
+  /**
+   * Several units selected (a box, a double click), at most 20: marked on
+   * the map, their portraits on the card. One alone is simply selected.
+   */
+  private selectGroup(units: PlacedItem[]): void {
+    const chosen = units.slice(0, MAX_SELECTED);
+    if (chosen.length <= 1) {
+      this.select(chosen[0] ?? null);
+      return;
+    }
+    this.camera.setCursor("");
+    this.selected = null;
+    this.group = chosen;
+    this.view.highlight(chosen);
+    this.bar.showGroup(chosen.map((unit) => ({ name: unit.item.name, picture: this.thumbnail(unit.item), life: lifeShare(unit) })),
+      (i) => this.select(chosen[i]), () => this.select(null));
+  }
+
+  /**
+   * Units sent to a tile of the ground. One walks to it; several stand in a
+   * square grown from it, the i-th on the i-th free tile, as in the Flash
+   * client (rules/group.ts). True when any set off.
+   */
+  private sendTo(units: PlacedItem[], tile: Point): boolean {
+    if (units.length === 1) {
+      this.clearLine(units[0]);
+      return this.walkTo(units[0], tile);
+    }
+    const grid = walkGrid(this.town);
+    if (!isWalkable(grid, tile.x, tile.y)) {
+      this.say("They can't get there.");
+      return false;
+    }
+    const taken = takenTiles(this.town);
+    for (const unit of units) {
+      taken.delete(`${unit.tx},${unit.ty}`);  // their own places are free as they set off
+    }
+    const tiles = squareTiles(tile, units.length, (t) => isWalkable(grid, t.x, t.y) && !taken.has(`${t.x},${t.y}`));
+    let sent = false;
+    units.forEach((unit, i) => {
+      if (tiles[i]) {
+        this.clearLine(unit);
+        sent = this.walkTo(unit, tiles[i]) || sent;
+      }
+    });
+    return sent;
+  }
+
+  /** The square tool taken up (its button, or Space): nothing selected, the other tools down, and the next drag on the map draws a box. */
+  takeSquareTool(): void {
+    if (this.paused || this.building || this.moving) {
+      return;
+    }
+    this.doings.selectionToolUsed = true;
+    this.chooseTool("pointer");
+    this.setSquareTool(true);
+  }
+
+  private setSquareTool(on: boolean): void {
+    if (this.squareTool === on) {
+      return;
+    }
+    this.squareTool = on;
+    this.hud.squareTool(on);
+    this.camera.setCursor(this.toolCursor());
+  }
+
+  /**
+   * One of the pointer's tools taken up from its menu, or put down
+   * ("pointer"): as in the Flash client, nothing stays selected.
+   */
+  chooseTool(tool: Tool): void {
+    if (this.paused || this.building || this.moving) {
+      return;
+    }
+    this.select(null);
+    this.setSquareTool(false);
+    this.tool = tool;
+    this.swept = null;
+    this.hud.tool(tool);
+    this.camera.setCursor(this.toolCursor());
+  }
+
+  /** The mouse pointer for the tool that's on: the bulldozer, the glove, the square tool, or the usual arrow. */
+  private toolCursor(): string {
+    return this.tool === "remove" ? CURSORS.remove : this.tool === "collect" ? CURSORS.collect : this.squareTool ? CURSORS.square : "";
+  }
+
+  /** A tap with the bulldozer or the glove on: it removes, or collects, what's there; nothing is selected. */
+  private useTool(placed: PlacedItem | null): void {
+    if (!placed) {
+      return;
+    }
+    if (this.tool === "remove") {
+      this.bulldoze(placed);
+    } else if (workState(placed, this.clock())?.status === "ready") {
+      this.collect(placed);
+    }
+  }
+
+  /**
+   * The bulldozer on a thing: it goes, if the card would offer Sell or
+   * Remove for it, asking first unless it cost nothing, as in the Flash
+   * client. The bulldozer stays on for the next one.
+   */
+  private bulldoze(placed: PlacedItem): void {
+    if (!choices(this.town, placed).sell) {
+      return;
+    }
+    if (placed.item.cost <= 0) {
+      this.sell(placed);
+      return;
+    }
+    const back = refund(placed.item);
+    const verb = back ? "Sell" : "Remove";
+    this.bar.prompt(`${verb} ${placed.item.name}${back ? ` for ${back.amount} ${back.resource}` : ""}?`, [
+      { label: verb, run: () => this.sell(placed) },
+      { label: "Cancel", run: () => this.bar.hide() },
+    ]);
+  }
+
+  /** The glove over the map: a ready building it comes to is collected, once as it passes. */
+  private sweep(at: Point): void {
+    const placed = this.view.itemAt(at);
+    if (placed === this.swept) {
+      return;
+    }
+    this.swept = placed;
+    if (placed && workState(placed, this.clock())?.status === "ready") {
+      this.collect(placed);
+    }
+  }
+
+  /**
+   * A press on the map: a drag from one of the player's units (or any, with
+   * the square tool on) draws a box, as in the Flash client. With the glove
+   * on, a finger's drag sweeps it over the town instead (a phone has no
+   * pointer to move without pressing).
+   */
+  private startsBox(at: Point, touch: boolean): boolean {
+    if (this.paused || this.building || this.moving) {
+      return false;
+    }
+    if (this.tool !== "pointer") {
+      return this.tool === "collect" && touch;
+    }
+    if (this.squareTool) {
+      return true;
+    }
+    const placed = this.view.itemAt(at);
+    return placed !== null && canWalk(this.town, placed);
+  }
+
+  /** The box being drawn (screen points), and let go: the player's units in it are selected. (Or the glove's sweep.) */
+  private dragBox(from: Point, to: Point, done: boolean): void {
+    if (this.tool === "collect") {
+      this.sweep(to);
+      if (done) {
+        this.swept = null;
+      }
+      return;
+    }
+    if (!done) {
+      this.view.showBox(this.camera.toMap(from), this.camera.toMap(to));
+      return;
+    }
+    this.view.showBox(null);
+    this.setSquareTool(false);
+    // A few pixels across is a slip, not a box.
+    if (Math.abs(to.x - from.x) <= 3 || Math.abs(to.y - from.y) <= 3) {
+      return;
+    }
+    this.selectGroup(this.view.unitsIn(from, to).filter((unit) => canWalk(this.town, unit)));
+  }
+
   private select(placed: PlacedItem | null): void {
-    this.camera.setCursor("");  // the unit's pointer was for the one selected before
+    this.camera.setCursor(this.toolCursor());  // the unit's pointer was for the one selected before
     this.selected = placed;
+    this.group = [];
     this.view.highlight(placed);
     if (!placed) {
       this.bar.hide();
@@ -530,20 +808,43 @@ export class TownEditor {
     }
     const can = choices(this.town, placed);
     const back = refund(placed.item);
+    // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
+    const shut = !placed.open;
     this.bar.show({
       name: placed.item.name,
       detail: this.detail(placed),
-      move: can.move ? () => this.startMove(placed) : null,
-      turn: can.turn ? () => this.turn(placed) : null,
-      store: can.store ? () => this.store(placed) : null,
-      sell: can.sell ? () => this.sell(placed) : null,
+      move: can.move && shut ? () => this.startMove(placed) : null,
+      turn: can.turn && shut ? () => this.turn(placed) : null,
+      store: can.store && shut ? () => this.store(placed) : null,
+      sell: can.sell && shut ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       train: this.trainChoice(placed),
       hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
-      open: this.windowOf(placed),
+      open: this.gateButton(placed) ?? this.windowOf(placed),
       close: () => this.select(null),
     });
+  }
+
+  /** A wall gate of the player's: its button to open it for units to pass, or shut it. */
+  private gateButton(placed: PlacedItem): { label: string; icon: IconName; run: () => void } | null {
+    if (placed.item.subcategory !== GATE || !isTheirs(this.town, placed.item)) {
+      return null;
+    }
+    return placed.open
+      ? { label: "Close door", icon: "close-gate", run: () => this.openGate(placed, false) }
+      : { label: "Open door", icon: "open-gate", run: () => this.openGate(placed, true) };
+  }
+
+  /**
+   * Open a wall gate, so units walk through it, or shut it again. As in the
+   * Flash client it isn't saved: gates are shut each time the town opens.
+   */
+  private openGate(gate: PlacedItem, open: boolean): void {
+    gate.open = open;
+    void this.view.redraw(gate);
+    this.sound("place");
+    this.select(gate);
   }
 
   /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
@@ -596,14 +897,20 @@ export class TownEditor {
    * 25 life back every 61 frames of the Flash client (about 2 seconds)
    * until it's whole, the flames going down as it goes.
    */
-  private repair(unit: PlacedItem, building: PlacedItem): void {
-    const tile = standingTile(this.town, unit, building);
+  private repair(unit: PlacedItem, building: PlacedItem, tries = 2): void {
+    const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
       return;
     }
     this.walkTo(unit, tile, () => {
       this.unitStopped(unit);
+      if (!this.reached(unit, tile)) {
+        if (tries > 1 && building.health !== undefined) {
+          this.repair(unit, building, tries - 1);
+        }
+        return;
+      }
       this.view.pose(unit, "PICAR", { x: building.tx, y: building.ty });
       const timer = setInterval(() => {
         if (!this.town.items.includes(unit) || building.health === undefined) {
@@ -642,6 +949,7 @@ export class TownEditor {
    * collected until it's over, and what the player was doing stops.
    */
   pause(why: string): void {
+    this.chooseTool("pointer");
     if (this.building) {
       this.stopBuilding();
     } else if (this.moving) {
@@ -658,6 +966,10 @@ export class TownEditor {
       this.clearLine(unit);
     }
     this.headingTo.clear();
+    // Walks stop where they are: the fight moves the units now, and a walk left going would finish unseen and undo it.
+    for (const unit of this.view.stopWalks()) {
+      this.unitStopped(unit);  // the server hears where it got to
+    }
     this.paused = true;
     this.bar.prompt(why, []);
   }
@@ -724,7 +1036,7 @@ export class TownEditor {
    */
   private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit), work?: PlacedItem): boolean {
     const from = this.view.headingFor(unit);
-    const path = findPath(gridFor(this.town, unit), from, tile, unit.item.flying);
+    const path = unitPath(this.town, unit, from, tile);
     if (path === null) {
       this.say(`${unit.item.name} can't get there.`);
       return false;
@@ -739,9 +1051,12 @@ export class TownEditor {
     if (!this.savedAt.has(unit)) {
       this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
     }
+    // A unit standing in a building (a gate shut on it) walks out across it.
+    const under = tilesUnder(this.town, from);
     this.view.walk(unit, path, (next) => {
-      // Something built in the way since it set off: it stops before it.
-      if (!unit.item.flying && !isWalkable(gridFor(this.town, unit), next.x, next.y)) {
+      // Something built in the way since it set off: it stops before it. (Its path may cross
+      // unbought land when it's on its way back to its own: only buildings count here.)
+      if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isWalkable(walkGrid(this.town, true), next.x, next.y)) {
         return false;
       }
       unit.tx = next.x;
@@ -756,11 +1071,14 @@ export class TownEditor {
    * line and glows, and the villager sets off for it if it isn't busy. The
    * line full, the tree or rock is selected instead, as in the Flash client.
    */
-  private lineUp(unit: PlacedItem, resource: PlacedItem, touch: boolean): void {
+  private lineUp(unit: PlacedItem, resource: PlacedItem, touch: boolean, group?: { first: boolean }): void {
     const line = this.lines.get(unit) ?? [];
     const room = villagers(this.town).line;
     const joined = lineUp(line, resource, room, this.workingOn.has(unit) || this.headingTo.has(unit));
     if (!joined) {
+      if (group) {
+        return;  // one of several: its line is full, the others go on
+      }
       this.say(`${unit.item.name} has ${room} lined up already.`);
       this.select(resource);
       return;
@@ -769,8 +1087,10 @@ export class TownEditor {
     if (joined.marked) {
       this.mark(resource, unit);
     }
-    this.sound("place");
-    this.showWhatItDoes(unit, resource, touch);
+    if (!group || group.first) {
+      this.sound("place");
+      this.showWhatItDoes(unit, resource, touch);
+    }
     if (joined.goNow && this.workingOn.get(unit) !== resource && this.headingTo.get(unit) !== resource) {
       this.work(unit, resource);
     }
@@ -867,15 +1187,21 @@ export class TownEditor {
       // Out of reach: work() took it off the line; the one after.
     }
     this.lines.delete(unit);
-    const touching = nextResources(this.town, { x: done.tx, y: done.ty }, done.item.subcategory, (placed) => this.working.has(placed))[0];
-    if (touching) {
-      this.work(unit, touching);
+    // The nearest touching it that it can get to (one walled in by others is passed over).
+    for (const touching of nextResources(this.town, { x: done.tx, y: done.ty }, done.item.subcategory, (placed) => this.working.has(placed))) {
+      if (this.work(unit, touching)) {
+        break;
+      }
     }
   }
 
-  /** A villager sent to a tree or rock: it walks beside it, then works it until it's done. False when it can't get there. */
-  private work(unit: PlacedItem, resource: PlacedItem): boolean {
-    const tile = standingTile(this.town, unit, resource);
+  /**
+   * A villager sent to a tree or rock: it walks beside it, then works it
+   * until it's done. False when it can't get there. `tries`: stopped short
+   * on the way (something built in it), it sets off again once from there.
+   */
+  private work(unit: PlacedItem, resource: PlacedItem, tries = 2): boolean {
+    const tile = this.standingTile(unit, resource);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${resource.item.name}.`);
     }
@@ -884,6 +1210,12 @@ export class TownEditor {
       this.unitStopped(unit);
       if (!this.town.items.includes(resource)) {
         this.goOn(unit, resource);  // gone while it walked (another villager finished it)
+        return;
+      }
+      if (!this.reached(unit, tile)) {
+        if (tries <= 1 || !this.work(unit, resource, tries - 1)) {
+          this.goOn(unit, resource);
+        }
         return;
       }
       const work = this.working.get(resource) ?? { since: this.clock(), workers: new Set<PlacedItem>() };
@@ -953,9 +1285,9 @@ export class TownEditor {
     }
   }
 
-  /** A unit sent into a building: it walks to its door and goes in, if there's still room. */
-  private goInto(unit: PlacedItem, building: PlacedItem): void {
-    const tile = standingTile(this.town, unit, building);
+  /** A unit sent into a building: it walks to its door and goes in, if there's still room (stopped short, it tries once more). */
+  private goInto(unit: PlacedItem, building: PlacedItem, tries = 2): void {
+    const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
       return;
@@ -963,6 +1295,13 @@ export class TownEditor {
     this.walkTo(unit, tile, () => {
       if (!this.town.items.includes(building) || !canGoInside(this.town, unit.item, building)) {
         this.unitStopped(unit);
+        return;
+      }
+      if (!this.reached(unit, tile)) {
+        this.unitStopped(unit);
+        if (tries > 1) {
+          this.goInto(unit, building, tries - 1);
+        }
         return;
       }
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };

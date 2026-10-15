@@ -65,7 +65,7 @@ export class Camps {
     this.parts = parts;
     this.random = parts.random ?? Math.random;
     this.scripted = new ScriptedCamps(parts, this, this.random);
-    parts.editor.onTapItem = (placed, unit) => this.tap(placed, unit);
+    parts.editor.onTapItem = (placed, units) => this.tap(placed, units);
   }
 
   /** Whose a thing in town is (the side the original gives it on load). */
@@ -227,7 +227,7 @@ export class Camps {
   }
 
   /** A tap: the chest, or an enemy with a unit of the player's selected. */
-  private tap(placed: PlacedItem, unit: PlacedItem | null): boolean {
+  private tap(placed: PlacedItem, units: PlacedItem[]): boolean {
     if (this.scripted.tap(placed)) {
       return true;
     }
@@ -242,8 +242,10 @@ export class Camps {
       }
       return true;
     }
-    if (unit && unit.item.attack > 0 && this.sideOf(placed) === "enemy") {
-      this.parts.engage([unit], placed);
+    // Those selected that can fight attack it together, as in the Flash client.
+    const fighters = units.filter((unit) => unit.item.attack > 0);
+    if (fighters.length > 0 && this.sideOf(placed) === "enemy") {
+      this.parts.engage(fighters, placed);
       return true;
     }
     return false;
