@@ -55,8 +55,10 @@ task each, and every slice ends tested, documented and merged.
   missions and bonuses, neighbours, sound and speed, then a full
   run-through against the Flash game. Players can then use the new client
   for everything but battles.
-- **Beta 2, battles and quests.** Combat, defending a town, spells and
-  heroes, the island map, the quests in batches with their bosses.
+- **Beta 2, battles and quests.** First the last 11 sprite sheets (big
+  dragons and bosses; CLIENT.md, Step 1, says why each failed), then
+  combat, defending a town, spells and heroes, the island map, the quests
+  in batches with their bosses.
 - **The switch.** Battles against players, the long tail, the tutorial and
   polish; the new client becomes the default.
 
