@@ -19,6 +19,8 @@ interface Mode {
 }
 
 const QUESTS: Mode = { name: "Quests", about: "The islands and their bosses", icon: ICONS.quests, verb: "Go" };
+/** The attacks made and received (the Flash client's Battle Results, from the world map's bar). */
+const RESULTS: Mode = { name: "Battle Results", about: "The last attacks you made and received", icon: ICONS.pvp, verb: "Open" };
 const BATTLES: Mode[] = [
   { name: "Attack a player", about: "Send your army against another empire", icon: ICONS.pvp, verb: "Play" },
   { name: "Survival", about: "Hold out against wave after wave", icon: ICONS.survival, verb: "Play" },
@@ -30,11 +32,13 @@ export class WorldWindows {
   private readonly battles: Panel;
   private readonly world: Panel;
 
-  constructor(classicUrl: string, islands: { toggle(): void; open(): void }) {
+  /** `results`: opens the Battle Results window (ui/attackHistory.ts). */
+  constructor(classicUrl: string, islands: { toggle(): void; open(): void }, results: () => void) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
-    this.battles = window_("battle", "Battles", BATTLES, classicUrl);
-    this.world = window_("world", "World", [quests, ...BATTLES], classicUrl);
+    const history = { ...RESULTS, run: results };
+    this.battles = window_("battle", "Battles", [...BATTLES, history], classicUrl);
+    this.world = window_("world", "World", [quests, ...BATTLES, history], classicUrl);
   }
 
   toggleQuests(): void {

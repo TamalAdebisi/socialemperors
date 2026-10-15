@@ -110,6 +110,13 @@ export class Doings {
   /** The island map opened at all, and from the menus (not a harbour's button). */
   islandsOpened = false;
   islandsFromMenu = false;
+  /** A defence plan picked in the army window (while its goal is open, as the Flash client counted it). */
+  planPicked = false;
+  /** Attacks on players fought to the end (not left), and the neighbours attacked, since the page opened. */
+  attacksMade = 0;
+  neighboursAttacked = new Set<string>();
+  /** The Battle Results window opened. */
+  historyOpened = false;
   /**
    * The goal kinds listened for: the open goals' (GoalKeeper sets them before
    * each check), or null for all. As in the Flash client, most doings count
@@ -198,6 +205,22 @@ export class Doings {
       this.islandsOpened = true;
     }
     this.islandsFromMenu ||= fromMenu;
+  }
+
+  pickedPlan(): void {
+    if (this.hears("defence-plan")) {
+      this.planPicked = true;
+    }
+  }
+
+  /** An attack on a player, played on its own page: told here when the player comes home (attackPlay.ts). */
+  attacked(victim: string, voluntary: boolean, neighbour: boolean): void {
+    if (!voluntary) {
+      this.attacksMade++;
+    }
+    if (neighbour) {
+      this.neighboursAttacked.add(victim);
+    }
   }
 
   spend(letter: string, amount: number): void {
@@ -298,6 +321,14 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.islandsOpened ? 1 : 0, 1);
     case "islands-from-menu":
       return of(doings.islandsFromMenu ? 1 : 0, 1);
+    case "attack-player":
+      return of(doings.attacksMade, n(0));
+    case "attack-neighbour":
+      return of(doings.neighboursAttacked.size ? 1 : 0, 1);
+    case "history-opened":
+      return of(doings.historyOpened ? 1 : 0, 1);
+    case "defence-plan":
+      return of(doings.planPicked ? 1 : 0, 1);
     case "near-hall":
       return of(nearHall(town, args[0] as number[]) ? 1 : 0, 1);
     default:

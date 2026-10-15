@@ -364,8 +364,10 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] Attacking players in the new client: from Neighbours, the start
         corner, the battle in their town with their defence plan, the
         pay and the report ([CLIENT.md](CLIENT.md#attacking-players))
-  - [ ] Attacking players, the rest: the history window, choosing the
-        defence plan, the world map, spying, revenge
+  - [x] Choosing the town's defence plan in the Army window; the Battle
+        Results window (attacks made and received, each report, Take
+        Revenge!!, the "Attacked!" notice); the goals about attacks
+  - [ ] Attacking players, the rest: the world map, spying
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))

@@ -7,6 +7,7 @@
 
 import type { ItemInfo } from "./config.ts";
 import { BLOCKS, BLOCK_TILES, type Point } from "./geometry.ts";
+import type { PlacedItem, Town } from "./town.ts";
 
 /** Player attacks open at this level. */
 export const MIN_LEVEL_PVP = 6;
@@ -21,7 +22,9 @@ export const KILL_GOLD_CAP = 200;
 export const MAX_GOLD = 20000;
 export const WIN_FLOOR = 25;
 
-const SUB = { peasant: 71, townHall: 135, wall: 221, lost: 911, refuge: 1311 } as const;
+const SUB = { peasant: 71, townHall: 135, wall: 221, deco: 411, lost: 911, refuge: 1311 } as const;
+/** Coming home to an attack not yet seen: the town hall and this many other buildings are found half burnt. */
+const BURNT_ON_RETURN = 5;
 /** The attacker's own transports, which never fight on either side. */
 const TRANSPORTS = new Set([542, 582, 543, 583]);
 
@@ -210,4 +213,36 @@ export function report(parts: {
     townhall_gold: parts.townHallGold,
     honor: parts.noTownHall ? 0 : honour(parts.attackerRows, parts.victimRows, parts.items),
   };
+}
+
+/**
+ * Coming home to an attack not yet seen, as the Flash client shows it: the
+ * town hall at half its life, and the first five of the player's buildings
+ * (by the save's order; not walls or decorations) too, for villagers to
+ * repair. Not saved, as there. Returns what was burnt, to draw again.
+ */
+export function burnOnReturn(town: Town): PlacedItem[] {
+  const burnt: PlacedItem[] = [];
+  const burn = (placed: PlacedItem) => {
+    placed.health = Math.floor(placed.item.life / 2);
+    if (!burnt.includes(placed)) {
+      burnt.push(placed);
+    }
+  };
+  const theirs = (item: ItemInfo) => !item.isUnit && item.life > 0 && (item.race === "a" || item.race === town.race);
+  const hall = town.items.find((p) => p.item.subcategory === SUB.townHall && theirs(p.item));
+  if (hall) {
+    burn(hall);
+  }
+  let count = 0;
+  for (const placed of town.items) {
+    if (count >= BURNT_ON_RETURN) {
+      break;
+    }
+    if (theirs(placed.item) && placed.item.subcategory !== SUB.wall && placed.item.subcategory !== SUB.deco) {
+      burn(placed);
+      count++;
+    }
+  }
+  return burnt;
 }

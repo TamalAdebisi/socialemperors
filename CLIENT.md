@@ -1024,13 +1024,14 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   counts back home) always; working times chosen (the last choice),
   buildings moved and stored, something placed from storage, units trained
   at a building, units sent into buildings, cash spent, the daily bonus's
-  day and the island map opened only while a goal of that kind is open and
+  day, the island map opened and a defence plan picked only while a goal
+  of that kind is open and
   not done, as there (before each check the game listens again for the
   open goals' kinds only).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
-  capturing animals say they're played in the classic game for now (76 of
+  capturing animals say they're played in the classic game for now (57 of
   the 227); the server keeps them done whichever client does them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
@@ -1848,6 +1849,38 @@ neighbour bar; it opens `/client.html?attack=<player>`.
   level (5 in 100 lost below level 10, a quarter to 15, half after) and
   the honour; then a window with the gold, XP, honour and units lost.
   Back home sends `game_status` and opens the player's own town.
+
+Third slice, the town's own defence plan (`ui/army.ts`, the browser test
+`e2e/tests/defence.mjs`). The Army window has two tabs, as the Flash
+client's battle options window: My Army, and My Defensive Strategy with
+the four plans, each with the game's picture, name and description (from
+the config's texts) and its tick on the one chosen. A town that never
+chose shows "Mid Aggressive" (half go out), the plan it fights with. The
+plan picked is saved with `set_strategy` as the window closes, only if
+it changed, as there; picking one also counts for the goal that asks
+for it.
+
+Fourth slice, the history (`ui/attackHistory.ts`, in `e2e/tests/attack.mjs`).
+**Battle Results**, a row in the Battle and World windows (the Flash
+client's button on the world map's bar), lists the last ten attacks made
+or received, newest first: the date, the opponent, won or lost and the
+gold. +INFO opens a battle's report: both armies alive and dead (the
+player's dead are those lost for good), the result in the game's words,
+what was won, the units lost, and Take Revenge!!, an attack on them.
+
+- **Coming home to an attack** not yet seen, the window opens by itself
+  on the attacks received with the game's "Attacked!" notice, the attack
+  marked new, and `clean_attacks` tells the server it has been seen. As
+  in the Flash client, the town hall and the first five of the player's
+  buildings (not walls or decorations) are found half burnt, for
+  villagers to repair; that isn't saved.
+- **Goals:** attacking a player (fought to the end, not left), attacking
+  a neighbour, and opening the Battle Results now count here. Each attack
+  is played on its own page, so what it did is kept in the browser tab
+  (`attacksMade.ts`), as visits are.
+- **Names:** the server now puts the attacker's username in the
+  defender's history (every empire is called "Emperor" otherwise), as
+  the neighbours list does.
 
 ### Making the art look better
 

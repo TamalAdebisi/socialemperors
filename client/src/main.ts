@@ -19,7 +19,8 @@ import { readLevels } from "./rules/levels.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
-import { MIN_LEVEL_PVP } from "./rules/pvp.ts";
+import { planOf } from "./rules/defencePlans.ts";
+import { MIN_LEVEL_PVP, burnOnReturn } from "./rules/pvp.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
 import { cleanUp, oneVillager } from "./rules/cleanup.ts";
@@ -37,6 +38,8 @@ import { BankWindow } from "./ui/bank.ts";
 import { showHud, showMessage, showStatus } from "./ui/hud.ts";
 import { Sound } from "./sound.ts";
 import { Visit, visitsSoFar } from "./visit.ts";
+import { attacksSoFar } from "./attacksMade.ts";
+import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
@@ -141,6 +144,7 @@ async function start(): Promise<void> {
   // The player's own town can be changed; a visited one only looked at.
   let afterDrawing = () => {};
   let openIslands = () => {};
+  let openAttacked = () => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -205,12 +209,43 @@ async function start(): Promise<void> {
         doings.openedIslands(how === "menu");
       },
     });
-    const world = new WorldWindows(settings.classicUrl, islands);
+    const attackState = (info.privateState ??= {}) as Record<string, unknown>;
+    const history = new AttackHistoryWindow({
+      privateState: attackState, items,
+      words: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      attackUrl: (pid) => `/client.html?attack=${encodeURIComponent(pid)}`,
+      seen: () => {
+        for (const entry of (Array.isArray(attackState.attacksReceived) ? attackState.attacksReceived : []) as Record<string, unknown>[]) {
+          delete entry.viewPending;
+        }
+        commands.add("clean_attacks");
+      },
+      opened: () => {
+        doings.historyOpened = true;
+      },
+    });
+    const world = new WorldWindows(settings.classicUrl, islands, () => history.toggle());
+    // Home to an attack not yet seen: the attacks received open by themselves, as in the Flash client.
+    if (attackedWhileAway(attackState)) {
+      openAttacked = () => {
+        // Their town hall and a few buildings found half burnt (rules/pvp.ts), and the attacks received.
+        burnOnReturn(town).forEach((placed) => void view.redraw(placed));
+        history.open("received", true);
+      };
+    }
     openIslands = () => islands.open(undefined, "back");
     const army = new ArmyWindow({
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      words: (id) => lines.get(id) ?? "",
+      plan: () => planOf((info.privateState as Record<string, unknown> | undefined)?.strategy),
+      picked: () => doings.pickedPlan(),
+      save: (plan) => {
+        ((info.privateState ??= {}) as Record<string, unknown>).strategy = plan;
+        commands.add("set_strategy", plan);
+      },
     });
     const menus = new Menus([
       { key: "build", label: "Build", icon: ICONS.build, run: () => editor.openShop(), shortcut: "b" },
@@ -252,6 +287,11 @@ async function start(): Promise<void> {
     const visits = visitsSoFar();
     doings.lastVisited = visits.last;
     doings.helpedBuildings = visits.helped;
+    // And what attacks on players in this tab did.
+    const neighbourIds = new Set((info.neighbors ?? []).map((n) => String(n.pid)));
+    for (const made of attacksSoFar()) {
+      doings.attacked(made.victim, made.voluntary, neighbourIds.has(made.victim));
+    }
     // The bonuses (made once the town's goals are, below) hear of a level up.
     let bonuses: BonusDesk | undefined;
     // The goals, while they run (from level 35 they stop, as in the Flash client).
@@ -505,6 +545,8 @@ async function start(): Promise<void> {
   // Back from an island: the island window again, as the Flash client opens it.
   if (new URLSearchParams(location.search).has("islands")) {
     openIslands();
+  } else {
+    openAttacked();
   }
 }
 

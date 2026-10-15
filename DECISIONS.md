@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the defence plan and the battle results
+
+- **The plan is a tab of the Army window** ("My Defensive Strategy"), as
+  the Flash client's options window had the army and the plans side by
+  side.
+- **A defender's report shows no units lost for good,** since this
+  server never takes them (see 15 October), even though the report the
+  attacker's game sent counts some as lost.
+- **"Attack a neighbour" counts any neighbour that's a player or one of
+  the villages that ship with the game,** not only friends from the
+  Friends page: the client can't tell those apart, and the original's
+  "friends" were simply the people in the neighbour bar.
+- **The attacker's username goes in the defender's history,** not
+  "Emperor", so the defender knows who it was.
+
 ## 15 October 2026: attacking players in the new client
 
 - **Attack is in the Neighbours window, from level 6.** The original's

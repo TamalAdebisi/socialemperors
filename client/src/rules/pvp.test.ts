@@ -4,8 +4,10 @@ import { test } from "node:test";
 
 import { itemsById, type GameConfig } from "./config.ts";
 import {
-  ATTACKS_PERIOD, attackerShare, attacksLeft, defenderTenth, honour, isTarget, killWorth, placeOf, recover, report, startPoints, type Row,
+  ATTACKS_PERIOD, attackerShare, attacksLeft, burnOnReturn, defenderTenth, honour, isTarget, killWorth, placeOf, recover, report, startPoints,
+  type Row,
 } from "./pvp.ts";
+import type { Town } from "./town.ts";
 
 const root = new URL("../../../", import.meta.url);
 const config = JSON.parse(readFileSync(new URL("config/game_config_20120826.json", root), "utf8")) as GameConfig;
@@ -75,3 +77,15 @@ test("honour, who comes home, and the report", () => {
 });
 
 const KNIGHT = 514;
+
+test("home to an attack: the town hall and the first five buildings half burnt, not walls or decorations", () => {
+  const WALL = 34, FLAG = 154;
+  const placed = (id: number): { item: ReturnType<typeof item>; health?: number } => ({ item: item(id) });
+  const things = [placed(WALL), placed(FLAG), placed(SWORDSMAN), ...[1, 1, 1, 1, 1, 1].map(placed), placed(TOWN_HALL)];
+  const town = { race: "h", items: things } as unknown as Town;
+  const burnt = burnOnReturn(town);
+  assert.equal(burnt.length, 6, "the town hall and five houses");
+  assert.equal(things.at(-1)!.health, Math.floor(item(TOWN_HALL).life / 2));
+  assert.equal(things.filter((p) => p.item.id === HOUSE && "health" in p).length, 5);
+  assert.ok([WALL, FLAG, SWORDSMAN].every((id) => !("health" in things.find((p) => p.item.id === id)!)));
+});

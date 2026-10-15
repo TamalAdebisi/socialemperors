@@ -45,7 +45,7 @@ from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config, get_level_from_xp
 import levels
 import quests
-from sessions import save_session, session
+from sessions import save_session, session, username_of
 from village import number
 import worlds
 
@@ -177,7 +177,10 @@ def _defender_gold(attacker_units) -> int:
 
 def end(save: dict, report: dict, no_town_hall=False) -> str:
     pState = save["privateState"]
-    attacker = report.get("attacker") or {}
+    attacker = dict(report.get("attacker") or {})
+    # The defender's history shows the attacker by their username, as the neighbours list does
+    # (every empire is called "Emperor" otherwise).
+    attacker["name"] = username_of(save["playerInfo"]["pid"]) or attacker.get("name")
     victim = report.get("victim") or {}
     victim_id = str(victim.get("user_id", ""))
     town_id = int(attacker.get("map") or 0)

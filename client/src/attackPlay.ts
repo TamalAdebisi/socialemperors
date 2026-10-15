@@ -8,6 +8,7 @@
 
 import { Application, Container } from "pixi.js";
 
+import { rememberAttack } from "./attacksMade.ts";
 import { BattleControls } from "./battleControls.ts";
 import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
@@ -284,6 +285,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
     // Sent at once, so nothing is lost if the page closes on the results (as the islands).
     commands.add("end_attack", JSON.stringify(sent), ...(hasTownHall ? [] : [true]));
     void commands.flush();
+    rememberAttack({ victim: victimId, voluntary });
     const body = document.createElement("div");
     body.className = "quest-results";
     const earned = document.createElement("p");

@@ -469,6 +469,70 @@ body {
   visibility: hidden;
 }
 
+/* The army window's tabs, and its defence plans: the game's picture, its tick on the one chosen, the words beside. */
+.army-tabs {
+  margin-bottom: 10px;
+}
+
+.army-plan-header {
+  margin: 0 0 10px;
+}
+
+.army-plans {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.army-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.army-plan[aria-pressed="true"] {
+  border-color: var(--gold-edge);
+  background: #fff8df;
+}
+
+.army-plan:hover .army-plan-picture img:first-child {
+  transform: scale(1.05);
+}
+
+.army-plan-picture {
+  position: relative;
+  flex: none;
+  width: 84px;
+  height: 84px;
+}
+
+.army-plan-picture img:first-child {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.1s;
+}
+
+.army-plan-tick {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 40px;
+}
+
+.army-plan .row-text small {
+  white-space: normal;
+}
+
 /* ---- The bottom right corner: the square tool and the glove ---------------- */
 .corner {
   position: fixed;
@@ -2886,4 +2950,107 @@ body {
 
 .attack-cell:not(:disabled):hover {
   filter: brightness(1.1);
+}
+
+/* The Battle Results window: the attacks as a table, the "Attacked!" notice, and one battle's report. */
+.attack-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.attack-table th {
+  padding: 4px;
+  color: var(--ink-soft);
+  font: 800 12px var(--round);
+  text-align: left;
+}
+
+.attack-table td {
+  padding: 6px 4px;
+  border-top: 1px solid var(--parchment-edge);
+}
+
+.attack-table td:last-child {
+  text-align: right;
+}
+
+.attack-won {
+  color: #1f8a2e;
+  font-weight: 800;
+}
+
+.attack-lost {
+  color: #c0281c;
+  font-weight: 800;
+}
+
+.attack-new {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #d9483b;
+  color: #fff;
+  font: 800 11px var(--round);
+}
+
+.attack-notice {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 2px solid #a1281c;
+  border-radius: 12px;
+  background: #fff1ee;
+  text-align: center;
+}
+
+.attack-notice strong {
+  font: 800 18px var(--round);
+  color: #a1281c;
+}
+
+.attack-notice p {
+  margin: 4px 0 8px;
+}
+
+.attack-back {
+  margin-bottom: 10px;
+}
+
+.attack-armies {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.attack-army {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.attack-army small {
+  color: var(--ink-soft);
+}
+
+.attack-army p {
+  margin: 4px 0 0;
+}
+
+.attack-result {
+  margin: 12px 0 4px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.attack-losses {
+  margin: 8px 0;
+}
+
+.attack-revenge {
+  display: block;
+  width: fit-content;
+  margin: 10px auto 0;
 }
