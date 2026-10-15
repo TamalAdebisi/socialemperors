@@ -6,6 +6,7 @@
 // where the fight left them and its burnt buildings to repair.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 const KNIGHT = 514, VILLAGER = 500, HOUSE = [44, 50];
 
@@ -105,9 +106,14 @@ export default async function raids({ newPlayer }) {
   }
   assert.ok(onHouse, "the house can be tapped");
   // The villager selected, the original's bucket over the burning house.
-  await player.page.mouse.move(onHouse.x, onHouse.y);
+  // Off the house and back onto it: a pointer that hasn't moved hovers nothing new.
+  await player.page.mouse.move(onHouse.x + 200, onHouse.y + 200, { steps: 4 });
+  await player.page.mouse.move(onHouse.x, onHouse.y, { steps: 4 });
   await player.wait(300);
-  assert.match(await player.page.evaluate(() => document.querySelector("canvas").style.cursor), /cursor-repair/);
+  // The build may inline the small picture: its own data, or its name.
+  const bucket = readFileSync(new URL("../../client/src/ui/art/cursor-repair.png", import.meta.url)).toString("base64").slice(0, 200);
+  const cursor = await player.page.evaluate(() => document.querySelector("canvas").style.cursor);
+  assert.ok(cursor.includes(bucket) || cursor.includes("cursor-repair"), "the bucket pointer");
   await player.click(onHouse);
   await player.wait(9000);
   assert.ok((await health()) >= 25, `repairing (${await health()})`);
