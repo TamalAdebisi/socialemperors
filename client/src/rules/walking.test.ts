@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { ItemInfo } from "./config.ts";
 import { unitPoint } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { DIRECTION, canWalk, directionTo, findPath, isWalkable, lookAround, stepTowards, unitMoved, walkGrid } from "./walking.ts";
+import { DIRECTION, canWalk, directionTo, findPath, isWalkable, lookAround, reachable, stepTowards, unitMoved, unitPath, walkGrid } from "./walking.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
@@ -91,4 +91,43 @@ test("only the player's own walk; the save hears where they stopped", () => {
   assert.equal(canWalk(t, placed({ ...VILLAGER, race: "n" }, 44, 46)), false);  // a wild cow
   assert.equal(canWalk(t, placed({}, 44, 46)), false);  // a house
   assert.deepEqual(unitMoved(t, villager, { x: 41, y: 41 }).args, [41, 41, 500, 44, 46, 0, 0, "Unitat"]);
+});
+
+test("a unit off the bought land (after a fight at a troll camp) walks back onto it; it can't be sent off it", () => {
+  const unit = placed(VILLAGER, 30, 45);  // block 12, not bought; the land starts at x 40
+  const t = town([unit]);
+  const path = unitPath(t, unit, { x: 30, y: 45 }, { x: 42, y: 45 })!;
+  assert.deepEqual(path.at(-1), { x: 42, y: 45 });
+  assert.equal(unitPath(t, unit, { x: 30, y: 45 }, { x: 31, y: 45 }), null, "where it goes must be on the land");
+  const canReach = reachable(t, unit, { x: 30, y: 45 });
+  assert.equal(canReach({ x: 42, y: 45 }), true);
+  assert.equal(canReach({ x: 31, y: 45 }), false);
+  // On the land, as ever: only the land.
+  const home = placed(VILLAGER, 45, 45);
+  assert.equal(unitPath(town([home]), home, { x: 45, y: 45 }, { x: 30, y: 45 }), null);
+});
+
+test("a unit under a building (a gate shut on it) steps out", () => {
+  const gate = placed({ id: 37, subcategory: 222, width: 3, height: 3 }, 46, 46);
+  const unit = placed(VILLAGER, 45, 45);
+  const path = unitPath(town([gate, unit]), unit, { x: 45, y: 45 }, { x: 42, y: 42 });
+  assert.deepEqual(path?.at(-1), { x: 42, y: 42 });
+});
+
+test("an open wall gate can be walked through; a shut one can't", () => {
+  const gate = placed({ id: 37, subcategory: 222, width: 3, height: 3 }, 46, 46);
+  assert.equal(isWalkable(walkGrid(town([gate])), 45, 45), false);
+  gate.open = true;
+  assert.equal(isWalkable(walkGrid(town([gate])), 45, 45), true);
+});
+
+test("what a unit can reach agrees with the path finder: a pocket walled in can't be reached", () => {
+  // A ring of houses round (50, 50): 2 x 2 houses ending at the corners and sides.
+  const ring = [[49, 49], [51, 49], [53, 49], [53, 51], [53, 53], [51, 53], [49, 53], [49, 51]].map(([x, y]) => placed({}, x, y));
+  const unit = placed(VILLAGER, 42, 42);
+  const t = town([...ring, unit]);
+  const canReach = reachable(t, unit, { x: 42, y: 42 });
+  for (const tile of [{ x: 50, y: 50 }, { x: 51, y: 51 }, { x: 55, y: 55 }, { x: 44, y: 58 }]) {
+    assert.equal(canReach(tile), findPath(walkGrid(t), { x: 42, y: 42 }, tile) !== null, `${tile.x}, ${tile.y}`);
+  }
 });

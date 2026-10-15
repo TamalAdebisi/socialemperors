@@ -118,12 +118,12 @@ function free(taken: Set<string>, x: number, y: number): boolean {
   return x >= 0 && y >= 0 && x < MAP_TILES && y < MAP_TILES && !taken.has(`${x},${y}`);
 }
 
-/** The tiles on the square ring `ring` tiles out from a tile that are free. */
-function freeOnRing(taken: Set<string>, at: Point, ring: number): Point[] {
+/** The tiles on the square ring `ring` tiles out from a tile that are free (and `ok`). */
+function freeOnRing(taken: Set<string>, at: Point, ring: number, ok: (p: Point) => boolean = () => true): Point[] {
   const found: Point[] = [];
   for (let x = at.x - ring; x <= at.x + ring; x++) {
     for (let y = at.y - ring; y <= at.y + ring; y++) {
-      if (Math.max(Math.abs(x - at.x), Math.abs(y - at.y)) === ring && free(taken, x, y)) {
+      if (Math.max(Math.abs(x - at.x), Math.abs(y - at.y)) === ring && free(taken, x, y) && ok({ x, y })) {
         found.push({ x, y });
       }
     }
@@ -135,14 +135,15 @@ function freeOnRing(taken: Set<string>, at: Point, ring: number): Point[] {
  * A clump's next tree or rock: the tile itself if free, otherwise the first
  * ring out with a free tile, and on it the one furthest down the map (the
  * Flash client sorts them by their distance from a corner past the map).
+ * `ok`: a further test the tile must pass (on the player's land, say).
  */
-export function nearestFree(taken: Set<string>, at: Point): Point | null {
-  if (free(taken, at.x, at.y)) {
+export function nearestFree(taken: Set<string>, at: Point, ok: (p: Point) => boolean = () => true): Point | null {
+  if (free(taken, at.x, at.y) && ok(at)) {
     return at;
   }
   const corner = 2 * MAP_TILES;
   for (let ring = 1; ring < MAP_TILES; ring++) {
-    const found = freeOnRing(taken, at, ring);
+    const found = freeOnRing(taken, at, ring, ok);
     if (found.length > 0) {
       const away = (p: Point) => (p.x - corner) ** 2 + (p.y - corner) ** 2;
       return found.reduce((best, p) => (away(p) < away(best) ? p : best));

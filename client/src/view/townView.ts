@@ -188,6 +188,14 @@ export class TownView {
     return this.walkers.has(placed);
   }
 
+  /** Stop every walk on the last tile it reached, without hearing that they arrived (a raid takes over the town): the units that were walking. */
+  stopWalks(): PlacedItem[] {
+    const walking = [...this.walkers.keys()];
+    this.walkers.clear();
+    walking.forEach((placed) => void this.redrawUnit(placed));
+    return walking;
+  }
+
   /** The tiles units are walking to, the ends of their paths ("x,y"), but `except`'s own. */
   destinations(except?: PlacedItem): Set<string> {
     const tiles = new Set<string>();
@@ -626,8 +634,10 @@ function pictureOf(slot: Container): Container | undefined {
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {
-  // Its frame is the way it faces; past the last, the game shows the last.
-  const facing = Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
+  // Its frame is the way it faces; past the last, the game shows the last. An open wall gate
+  // shows the frames after its closed ones (two on), as in the Flash client.
+  const facing = placed.open && art.has(`frame/${placed.orientation + 2}`) ? placed.orientation + 2
+    : Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
   let textures = art.animation(name) ?? [];
   if (isTree(placed.item) && textures.length > 1) {

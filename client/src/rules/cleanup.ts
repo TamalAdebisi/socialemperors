@@ -8,12 +8,12 @@
 
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "./config.ts";
-import { footprintTiles } from "./editing.ts";
+import { footprintTiles, isOpenLand } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { nearestFree } from "./nature.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
-const TOWN_HALL = 135, FARM = 122, GATE = 222, VILLAGER = 71;
+const TOWN_HALL = 135, FARM = 122, VILLAGER = 71;
 /** Terrain (paths and the like) is built over, here as when placing (rules/editing.ts): it takes no tile. */
 const TERRAIN = 6;
 /** The villagers a town with none gets one of, by its people. */
@@ -29,8 +29,9 @@ const NEAR = 5;
  * people that finds one taken, or stands off the map, goes to storage
  * (`store_item_frombug`); anyone else's off the map is removed for nothing;
  * anyone else's on a taken tile stays, as in the Flash client. A unit on a
- * tile something else has (but a farm or a gate, which can be walked over)
- * moves to the nearest free tile (`move`).
+ * tile something else has (but a farm, which can be walked over) moves to
+ * the nearest free tile (`move`); one on the player's land stays on it (the
+ * Flash client's units could walk back from anywhere; ours walk on the land).
  */
 export function cleanUp(town: Town): { commands: Command[]; stored: PlacedItem[]; moved: PlacedItem[] } {
   const buildingsFirst = (placed: PlacedItem) => (placed.item.isUnit ? 2 : placed.item.subcategory === TOWN_HALL ? 0 : 1);
@@ -64,9 +65,10 @@ export function cleanUp(town: Town): { commands: Command[]; stored: PlacedItem[]
       take(placed, tiles);
       continue;
     }
-    const walkable = under.every((other) => other.item.subcategory === FARM || other.item.subcategory === GATE);
+    const walkable = under.every((other) => other.item.subcategory === FARM);
     if (under.length > 0 && !walkable) {
-      const to = nearestFree(new Set(on.keys()), { x: placed.tx, y: placed.ty });
+      const onLand = isOpenLand(town, placed.tx, placed.ty);
+      const to = nearestFree(new Set(on.keys()), { x: placed.tx, y: placed.ty }, (p) => !onLand || isOpenLand(town, p.x, p.y));
       if (to) {
         commands.push({ cmd: "move", args: [placed.tx, placed.ty, placed.item.id, to.x, to.y, 0, town.id, `Colisio #${moved.length + 1}`] });
         placed.tx = to.x;

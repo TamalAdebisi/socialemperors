@@ -12,7 +12,7 @@ import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { findPath, gridFor, isWalkable, walkGrid } from "./walking.ts";
+import { gridFor, isWalkable, reachable, walkGrid } from "./walking.ts";
 
 export const SUBCAT = {
   villager: 71, siege: 81,
@@ -77,6 +77,8 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
 export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem, avoid: Set<string> = new Set()): Point | null {
   const grid = gridFor(town, unit);
   const taken = takenTiles(town, unit);
+  // Where it can get to, worked out once (and only if there's a free tile to look at).
+  let canReach: ((tile: Point) => boolean) | null = null;
   for (let ring = 1; ring <= NEAR; ring++) {
     const around: Point[] = [];
     for (let x = target.tx - ring; x <= target.tx + ring; x++) {
@@ -88,10 +90,10 @@ export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem, a
       }
     }
     around.sort((a, b) => distance2(a, unit) - distance2(b, unit));
-    for (const tile of around) {
-      if (findPath(grid, { x: unit.tx, y: unit.ty }, tile, unit.item.flying) !== null) {
-        return tile;
-      }
+    canReach ??= reachable(town, unit, { x: unit.tx, y: unit.ty });
+    const tile = around.find((t) => canReach!(t));
+    if (tile) {
+      return tile;
     }
   }
   return null;

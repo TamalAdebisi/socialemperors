@@ -66,6 +66,8 @@ export const ICONS = {
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
   "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  "open-gate": new URL("./art/open-gate.webp", import.meta.url).href,
+  "close-gate": new URL("./art/close-gate.webp", import.meta.url).href,
   // Pausing: the options panel's button, the game's GAME PAUSED and its RESUME.
   pause: new URL("./art/pause.webp", import.meta.url).href,
   "game-paused": new URL("./art/game-paused.webp", import.meta.url).href,
