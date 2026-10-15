@@ -323,7 +323,11 @@ export class BattleView {
     if (fighter.isUnit) {
       const picture = drawn.slot.children[0];
       picture?.position.set(fighter.at.x, fighter.at.y);
-      picture?.scale.set(this.sizeOf(fighter));
+      if (picture) {
+        // Keep a unit facing the other way mirrored.
+        const size = this.sizeOf(fighter);
+        picture.scale.set(Math.sign(picture.scale.x || 1) * size, size);
+      }
       drawn.slot.tint = this.battle.isFrozen(fighter) ? TINT_FROZEN : fighter.poison ? TINT_POISONED : 0xffffff;
       if (fighter.fadingSince !== undefined) {
         drawn.slot.alpha = Math.max(0, 1 - (this.battle.frame - fighter.fadingSince) / 15);
