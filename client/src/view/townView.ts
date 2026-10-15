@@ -23,6 +23,7 @@ import {
 import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
+import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
@@ -75,6 +76,16 @@ export class TownView {
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
     this.root.addChild(this.ground, this.marks, this.things, this.ghostLayer, this.markers.layer);
     this.ghostLayer.alpha = 0.7;
+  }
+
+  /**
+   * A raid has the town (homeDefence.ts): the battle draws everything on
+   * the map but the ground, until it's over.
+   */
+  setFighting(fighting: boolean): void {
+    for (const layer of [this.marks, this.things, this.ghostLayer, this.markers.layer]) {
+      layer.visible = !fighting;
+    }
   }
 
   /** Show a building that isn't on the map yet (being bought) see-through at its tile; null takes it away. */
@@ -401,8 +412,18 @@ export class TownView {
       const walk = this.walkers.get(placed);
       slot.addChild(unitSprite(art, this.facing.get(placed)!, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty)));
     } else {
-      slot.addChild(buildingSprite(art, placed, this.town.skin));
-      if (this.lined.has(placed)) {
+      const sprite = buildingSprite(art, placed, this.town.skin);
+      slot.addChild(sprite);
+      // Burning since a raid (homeDefence.ts): the game's flames over it.
+      const stage = placed.health === undefined ? 0 : fireStage(placed.health, placed.item.life);
+      if (stage > 0) {
+        const fire = await fireSprite(stage);
+        if (!slot.destroyed) {
+          fire.position.copyFrom(sprite.position);
+          slot.addChild(fire);
+        }
+      }
+      if (this.lined.has(placed) && !slot.destroyed) {
         this.outline(slot, true);
       }
     }

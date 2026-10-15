@@ -19,6 +19,7 @@ import { showMessage, type Hud } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
+import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
@@ -33,6 +34,9 @@ import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
+/** A villager's repair: 25 life every 61 frames of the Flash client (30 a second). */
+const REPAIR_LIFE = 25;
+const REPAIR_MS = (61 * 1000) / 30;
 const MOST_WAITING = 3;
 
 export interface EditorParts {
@@ -87,6 +91,10 @@ export class TownEditor {
   private moving: PlacedItem | null = null;
   /** What was chosen in the shop or storage, while the player places it: see-through, not on the map yet. */
   private building: PlacedItem | null = null;
+  /** A raid has the town (homeDefence.ts): no editing until it's over. */
+  private paused = false;
+  /** Villagers repairing a burning building, and their repair's clock. */
+  private readonly repairing = new Map<PlacedItem, { building: PlacedItem; timer: ReturnType<typeof setInterval> }>();
   /** Where it comes from: storage (one, then done), or null for the shop (as many as they like). */
   private fromStorage: Stored | null = null;
   /** Messages for the top of the screen: the first shows, the others wait their turn. */
@@ -344,6 +352,9 @@ export class TownEditor {
   }
 
   private tap(at: Point, touch = false): void {
+    if (this.paused) {
+      return;
+    }
     if (this.building) {
       this.placeBuilding(this.tileAt(at));
       return;
@@ -377,6 +388,11 @@ export class TownEditor {
         this.offerLand(block);
         return;
       }
+    }
+    if (unit && placed && this.canRepair(unit, placed)) {
+      this.sound("place");
+      this.repair(unit, placed);
+      return;
     }
     if (unit && placed && canHarvest(unit.item, placed.item)) {
       this.lineUp(unit, placed, touch);
@@ -499,6 +515,115 @@ export class TownEditor {
     return why ? why[0].toUpperCase() + why.slice(1) : "";
   }
 
+  /** Only villagers repair, and only the player's buildings that burn. */
+  private canRepair(unit: PlacedItem, building: PlacedItem): boolean {
+    return unit.item.subcategory === SUBCAT.villager && !building.item.isUnit && building.health !== undefined
+      && building.health < building.item.life;
+  }
+
+  /**
+   * A villager sent to a burning building: it walks beside it, then puts
+   * 25 life back every 61 frames of the Flash client (about 2 seconds)
+   * until it's whole, the flames going down as it goes.
+   */
+  private repair(unit: PlacedItem, building: PlacedItem): void {
+    const tile = standingTile(this.town, unit, building);
+    if (!tile) {
+      this.say(`${unit.item.name} can't get to ${building.item.name}.`);
+      return;
+    }
+    this.walkTo(unit, tile, () => {
+      this.unitStopped(unit);
+      this.view.pose(unit, "PICAR", { x: building.tx, y: building.ty });
+      const timer = setInterval(() => {
+        if (!this.town.items.includes(unit) || building.health === undefined) {
+          this.stopRepair(unit);
+          return;
+        }
+        const before = fireStage(building.health, building.item.life);
+        building.health = Math.min(building.item.life, building.health + REPAIR_LIFE);
+        this.view.rise(building, [{ text: `+${REPAIR_LIFE}`, colour: 0x6fe36f }]);
+        if (building.health >= building.item.life) {
+          building.health = undefined;
+          building.ruined = undefined;
+          this.stopRepair(unit);
+          this.say(`${building.item.name} is repaired.`);
+        }
+        if (fireStage(building.health ?? building.item.life, building.item.life) !== before) {
+          void this.view.redraw(building);
+          this.hud.update(this.town);
+        }
+      }, REPAIR_MS);
+      this.repairing.set(unit, { building, timer });
+    });
+  }
+
+  private stopRepair(unit: PlacedItem): void {
+    const repair = this.repairing.get(unit);
+    if (repair) {
+      clearInterval(repair.timer);
+      this.repairing.delete(unit);
+      this.view.pose(unit, null);
+    }
+  }
+
+  /**
+   * A raid has the town (homeDefence.ts): nothing can be built, moved or
+   * collected until it's over, and what the player was doing stops.
+   */
+  pause(why: string): void {
+    if (this.building) {
+      this.stopBuilding();
+    } else if (this.moving) {
+      this.cancelMove();
+    }
+    this.select(null);
+    for (const unit of [...this.repairing.keys()]) {
+      this.stopRepair(unit);
+    }
+    for (const unit of [...this.workingOn.keys()]) {
+      this.stopWorking(unit);
+    }
+    for (const unit of [...this.lines.keys()]) {
+      this.clearLine(unit);
+    }
+    this.headingTo.clear();
+    this.paused = true;
+    this.bar.prompt(why, []);
+  }
+
+  /** The raid is over: the town is the player's again (its units where the fight left them). */
+  resume(moved: PlacedItem[]): void {
+    this.paused = false;
+    this.bar.hide();
+    this.camera.onTap = (at, touch) => this.tap(at, touch);
+    this.camera.onHover = (at) => this.hover(at);
+    for (const unit of moved) {
+      const from = this.savedAt.get(unit) ?? null;
+      this.savedAt.delete(unit);
+      if (from && (from.x !== unit.tx || from.y !== unit.ty)) {
+        this.send([unitMoved(this.town, unit, from)]);
+      }
+    }
+    this.refresh();
+    this.hud.update(this.town);
+  }
+
+  /** Where each unit is saved, before a raid moves them. */
+  remember(units: PlacedItem[]): void {
+    for (const unit of units) {
+      if (!this.savedAt.has(unit)) {
+        this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
+      }
+    }
+  }
+
+  /** Gold and experience won in a raid: a level may come with them. */
+  gained(): void {
+    this.levelUp();
+    this.hud.update(this.town);
+  }
+
   /**
    * Send a unit walking to a tile, round what's in the way, as the Flash
    * client does; `then` when it gets there. `work`: the tree or rock it's
@@ -512,6 +637,7 @@ export class TownEditor {
       return false;
     }
     this.stopWorking(unit);
+    this.stopRepair(unit);
     if (work) {
       this.headingTo.set(unit, work);
     } else {

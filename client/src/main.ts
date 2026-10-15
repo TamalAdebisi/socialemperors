@@ -44,6 +44,8 @@ import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 
+/** Raids come from this level (rules/raids.ts). */
+const RAIDS_FROM = 10;
 /** The building where spells are learnt. */
 const WIZARDRY_ACADEMY = 416;
 
@@ -95,6 +97,8 @@ async function start(): Promise<void> {
   document.body.style.background = `#${skinColour(town.skin).toString(16).padStart(6, "0")}`;
 
   const world = new Container();
+  /** The map's layer, by another name: the menus' world windows take the name below. */
+  const mapLayer = world;
   app.stage.addChild(world);
   const camera = new Camera(world, mapArea(), FLASH_START);
   camera.resize(app.screen.width, app.screen.height);
@@ -186,7 +190,21 @@ async function start(): Promise<void> {
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.
+    // Raids on the town (homeDefence.ts), from level 10 as in the Flash client: rolled each time it opens.
+    const defend = () => {
+      if (town.level < RAIDS_FROM) {
+        return;
+      }
+      void import("./homeDefence.ts").then(({ HomeDefence }) => {
+        const defence = new HomeDefence({
+          town, items, config, privateState: info.privateState as Record<string, unknown> | undefined, settings, commands, sound,
+          art, view, world: mapLayer, camera, editor,
+        });
+        app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+      });
+    };
     afterDrawing = () => {
+      defend();
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
       if (lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
         editor.offerLessons(settings.classicUrl);

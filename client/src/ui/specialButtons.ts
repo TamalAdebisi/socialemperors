@@ -26,6 +26,12 @@ export class SpecialButtons {
     document.body.append(this.element);
   }
 
+  /** Off the screen for good: the battle is over. */
+  remove(): void {
+    this.unit = null;
+    this.element.remove();
+  }
+
   /** The units selected: buttons show for one special unit alone. */
   select(units: Fighter[]): void {
     this.unit = units.length === 1 && this.specials.entryOf(units[0]) ? units[0] : null;

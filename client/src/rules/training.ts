@@ -21,6 +21,8 @@ const SUBCAT = {
   blacksmith: 131, university: 134,
 };
 const WONDERS = 5;
+/** Town halls give their room even burnt out. */
+const TOWN_HALL = 135;
 /** The Great Church: each step of its staff adds room (the config's POPULATION_INCREASE). */
 const GREAT_CHURCH = 470;
 
@@ -46,6 +48,10 @@ export function population(town: Town, items: Map<number, ItemInfo>, increasePer
     }
     if (item.isUnit) {
       current += item.population;
+      continue;
+    }
+    // Burnt out in a raid: no room for people until it's repaired (the town hall still counts).
+    if (placed.ruined && item.subcategory !== TOWN_HALL) {
       continue;
     }
     if (item.population > 0 || item.capacity > 0) {
