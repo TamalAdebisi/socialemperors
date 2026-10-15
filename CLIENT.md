@@ -1250,6 +1250,21 @@ few kinds with its numbers; our notes in words are in
   target, a whirlwind round the unit (hitting, throwing, poisoning), a
   blast, a line of hits ahead, a single hit, healing, eggs and minions,
   swallowing, freezing, poison, growing, a war cry.
+- **The rarer ones:** a shield of its own (Leonidas's shield wall and the
+  Ether Messiah's shelter take no damage for 10 seconds, the Dragon
+  Hunter II's force field half); the Invisible Killer can't be picked as
+  a target for 8 seconds (drawn see-through); the Luring Warrior draws up
+  to 10 enemy units within 17 tiles to fight it for 15 seconds; the
+  Rainbow Dragon becomes a Crystal, Vulcano, Death or Electric Bahamut
+  dragon for 20 seconds, keeping its life and its own buttons; the
+  Chameleon takes its target's form for 30 seconds, keeping its share of
+  life; the epic dragons' seals lift small enemy units helpless (drawn
+  higher), hurt them and drop them, and the skull seal kills some
+  outright; the Red Hot dragon's ghost copies strike four points 8 tiles
+  round it, throwing and burning; the Ether Messiah's copies strike ahead
+  and behind; the werewolf's curse turns its target (one whose kind has
+  under 500 life, no boss) into a werewolf on its side, poisoned for good;
+  the Red Wizard's fire rain is only a picture, as in the original.
 - **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
   from the damage they deal (healers from the healing they do), at most
   once a second, doubled beside a Limit Wizard of their side; full at
@@ -1351,11 +1366,16 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
   healers... The next camp comes 4 hours later.
 
+- **Music and the alert:** when one of the player's things is hit at home,
+  the game's battle tune (BATALLA) takes over from the town's; every 70
+  frames, with no enemy fighting, the town's comes back. Damage taken out
+  of sight adds up (in sight takes away); past 50, a red "Your town is
+  under attack!" shows for 5 seconds, and its Help button takes the
+  camera there.
+
 **Not yet** (Beta 2's next slices): the twenty scripted camps, monks at
-home, the rarer special moves (shape-shifting, flying, ghosts, shields
-and the like: their buttons don't show yet), collection pieces dropped by
-enemies, the battle music and the "under attack" alert at home, and the
-original's repair pointer.
+home, collection pieces dropped by enemies (they come with the
+collections), and the original's repair pointer.
 
 ### Making the art look better
 

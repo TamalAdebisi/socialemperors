@@ -34,6 +34,8 @@ const REDDER = brighter([0.25, 0, 0]);
 /** The spell marker's picture (the game's AOEMC), and its width in the game: it's drawn (area + 1) / 5 times that. */
 const SPELL_AREA = new URL("../ui/art/spell-area.webp", import.meta.url).href;
 const SPELL_AREA_WIDTH = 406;
+/** How high a unit floats under a seal. */
+const LIFT_PIXELS = 40;
 /** A lasting effect fades over a second when its time is up. */
 const EFFECT_FADE = 30;
 
@@ -332,13 +334,16 @@ export class BattleView {
     }
     if (fighter.isUnit) {
       const picture = drawn.slot.children[0];
-      picture?.position.set(fighter.at.x, fighter.at.y);
+      // Floating under a seal: drawn higher.
+      picture?.position.set(fighter.at.x, fighter.at.y - (this.battle.frame < (fighter.liftedUntil ?? 0) ? LIFT_PIXELS : 0));
       if (picture) {
         // Keep a unit facing the other way mirrored.
         const size = this.sizeOf(fighter);
         picture.scale.set(Math.sign(picture.scale.x || 1) * size, size);
       }
       drawn.slot.tint = this.battle.isFrozen(fighter) ? TINT_FROZEN : fighter.poison ? TINT_POISONED : 0xffffff;
+      // Unseen (its own move): see-through.
+      drawn.slot.alpha = this.battle.frame < (fighter.hiddenUntil ?? 0) ? 0.4 : 1;
       if (fighter.fadingSince !== undefined) {
         drawn.slot.alpha = Math.max(0, 1 - (this.battle.frame - fighter.fadingSince) / 15);
       }
@@ -401,7 +406,7 @@ export class BattleView {
   /** What picture a fighter shows: its pose and way, or a special move's animation. */
   private keyOf(fighter: Fighter, pose: Pose, special: number): string {
     return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)} ${fighter.still ?? ""}`
-      : special ? `s${special} ${fighter.facing}` : `${pose} ${fighter.facing}`;
+      : special ? `s${special} ${fighter.facing} ${fighter.item.id}` : `${pose} ${fighter.facing} ${fighter.item.id}`;
   }
 
   /** The special animation a unit is playing (rules/specials.ts), or 0. */

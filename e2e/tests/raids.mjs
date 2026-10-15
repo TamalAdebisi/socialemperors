@@ -40,6 +40,21 @@ export default async function raids({ newPlayer }) {
   }, HOUSE);
   await player.shot("raid");
 
+  // A hit by a raider out of sight (the camera off at the map's corner): the
+  // battle's tune, and the "under attack" alert, whose button looks there.
+  const heard = await player.page.evaluate(() => {
+    const { fighting: fight, parts } = window.seHome;
+    const building = fight.battle.fighters.find((f) => f.side === 1 && !f.isUnit && !f.dead && f.life > 200);
+    parts.camera.lookAt({ x: -20000, y: 20000 });
+    fight.battle.hurt(building, 80, fight.raids[0].fighters[0]);
+    return { track: parts.sound.currentTrack };
+  });
+  assert.equal(heard.track, "BATALLA.mp3");
+  await player.page.waitForSelector(".attack-alert", { timeout: 5000 });
+  await player.page.locator(".attack-alert button").click();
+  await player.wait(500);
+  await player.shot("after-alert");
+
   // The knights at the bandits, until the raid is over.
   let killed = 0;
   for (let i = 0; i < 150; i++) {
@@ -57,6 +72,7 @@ export default async function raids({ newPlayer }) {
     await player.wait(1000);
   }
   assert.equal(await player.page.evaluate(() => Boolean(window.seHome.fighting)), false, "the raid is over");
+  assert.notEqual(await player.page.evaluate(() => window.seHome.parts.sound.currentTrack), "BATALLA.mp3", "the town's tune again");
   assert.equal(await player.bar(), "", "the town is the player's again");
   killed = await player.page.evaluate(() => window.seHome.kills);
   assert.ok(killed > 0, "the knights killed some");

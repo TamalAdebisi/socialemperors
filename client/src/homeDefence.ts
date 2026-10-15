@@ -31,6 +31,7 @@ import type { PlacedItem, Town } from "./rules/town.ts";
 import { letAllOut } from "./rules/work.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
+import { attackAlert } from "./ui/notice.ts";
 import type { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import type { Camera } from "./view/camera.ts";
@@ -164,6 +165,14 @@ export class HomeDefence {
 }
 
 /** The town as a battlefield, while raiders are in it. */
+/** The battle's tune, while the town is hit; the town's own comes back once no enemy is fighting (checked every 70 frames). */
+const BATTLE_TRACK = "BATALLA.mp3";
+const MUSIC_CHECK = 70;
+/** Damage taken out of sight adds up (in sight takes away); past this the "under attack" alert shows. */
+const DAMAGE_TO_ALERT = 50;
+/** The original's "Help" (go and look). */
+const HELP = 623;
+
 class Fight {
   private readonly parts: DefenceParts;
   readonly battle: Battle;
@@ -179,6 +188,8 @@ class Fight {
   private quiet = 0;
   /** Villagers repairing: which building, and their last repair's frame. */
   private readonly repairs = new Map<Fighter, { building: Fighter; last: number }>();
+  /** Damage taken out of sight since the last alert. */
+  private unseen = 0;
 
   constructor(parts: DefenceParts, random: () => number, line: (id: number) => string, killedOne: () => void) {
     this.parts = parts;
@@ -220,8 +231,26 @@ class Fight {
       tapFirst: (tapped, _tile, selected) => this.tapFirst(tapped, selected),
       changed: () => parts.editor.gained(),
     });
+    this.battle.onHurt.push((target, damage, by) => this.hurt(target, damage, by));
     showMessage("Raiders are coming!");
     setTimeout(() => showMessage(""), 3000);
+  }
+
+  /** One of the player's things hit: the battle's tune, and the alert if it's out of sight. */
+  private hurt(target: Fighter, damage: number, by: Fighter | null): void {
+    if (target.side !== SELF || !by) {
+      return;
+    }
+    const { sound, world, camera } = this.parts;
+    sound.setTrack(BATTLE_TRACK);
+    const at = world.toGlobal(target.at);
+    const seen = at.x >= 0 && at.y >= 0 && at.x <= window.innerWidth && at.y <= window.innerHeight;
+    this.unseen = seen ? Math.max(0, this.unseen - damage) : this.unseen + damage;
+    if (this.unseen >= DAMAGE_TO_ALERT) {
+      this.unseen = 0;
+      const where = { ...target.at };
+      attackAlert("Your town is under attack!", this.line(HELP) || "Help", () => camera.lookAt(where));
+    }
   }
 
   add(plan: RaidPlan): void {
@@ -262,6 +291,9 @@ class Fight {
       raid.step();
     }
     this.stepRepairs();
+    if (this.battle.frame % MUSIC_CHECK === 0 && !this.battle.fighters.some((f) => f.side === ENEMY && !f.dead && f.attacking && f.target && !f.target.dead)) {
+      this.parts.sound.setTrack(null);
+    }
   }
 
   /** Every screen frame: the drawing, and the buttons. */
@@ -373,6 +405,7 @@ class Fight {
   end(): void {
     const { view, world, editor } = this.parts;
     this.controls.stop();
+    this.parts.sound.setTrack(null);
     const moved: PlacedItem[] = [];
     for (const [fighter, placed] of this.placedOf) {
       if (fighter.side === ENEMY) {

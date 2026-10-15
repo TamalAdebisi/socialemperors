@@ -47,6 +47,9 @@ export class Sound {
   private readonly sounds = new Map<Effect, Promise<AudioBuffer | null>>();
   private readonly playing = new Map<Effect, number>();
   private musicOn: boolean;
+  private readonly musicFolder: string;
+  private readonly ownTrack: string;
+  private track: string;
   private effectsOn: boolean;
   private unlocked = false;
   private readonly listeners = new Set<() => void>();
@@ -60,7 +63,9 @@ export class Sound {
     this.music.loop = true;
     this.music.volume = MUSIC_VOLUME;
     this.music.preload = "none";  // only fetched once it can play
-    this.music.src = `${assetsUrl}/music/${encodeURIComponent(track ?? (race === "t" ? MUSIC.t : MUSIC.h))}`;
+    this.musicFolder = `${assetsUrl}/music/`;
+    this.ownTrack = this.track = track ?? (race === "t" ? MUSIC.t : MUSIC.h);
+    this.music.src = this.musicFolder + encodeURIComponent(this.track);
     const unlock = () => {
       this.unlock();
       document.removeEventListener("pointerdown", unlock, true);
@@ -96,6 +101,22 @@ export class Sound {
     save(SAVED.music, on);
     this.playMusic();
     this.listeners.forEach((listener) => listener());
+  }
+
+  /** Another of the game's tunes for a while (the battle's, BATALLA.mp3, when the town is attacked); null: the page's own again. */
+  setTrack(track: string | null): void {
+    const next = track ?? this.ownTrack;
+    if (next === this.track) {
+      return;
+    }
+    this.track = next;
+    this.music.src = this.musicFolder + encodeURIComponent(next);
+    this.playMusic();
+  }
+
+  /** The tune playing (or that would, with the music on). */
+  get currentTrack(): string {
+    return this.track;
   }
 
   setEffects(on: boolean): void {

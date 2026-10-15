@@ -4,6 +4,24 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the rarer special moves
+
+- **Ghost copies aren't drawn:** the Red Hot dragon's and the Ether
+  Messiah's copies strike where the original's flew, but no see-through
+  dragon flies there.
+- **The Ether Messiah's copies do their slash as six small hits** (5
+  each, once a second), as close as we could read the original's.
+- **Who can be cursed or turned goes by the unit's kind:** under 500 life
+  in the config, as the original decided when the unit was made.
+- **The cursed werewolf pays nothing and isn't counted,** like a summoned
+  unit; the unit it replaced counts as fallen.
+
+## 15 October 2026: Beta 2, battle music and the alert
+
+- **The "under attack" alert's words are ours** ("Your town is under
+  attack!"): the original's were drawn into its picture. Its button keeps
+  the game's own word, Help.
+
 ## 15 October 2026: Beta 2, the Rockdriller and the dragons
 
 - **Kept from the original:** the Rockdriller goes back to 25,000 life when
