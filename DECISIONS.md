@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2 checked against the original, spells and special moves
+
+- **The Ether Shield protects the square it shows.** In the original a
+  slip in its code made it protect one size bigger than its marker at
+  ranks 1 and 2, and nothing at all at rank 3. Ours protects the marker's
+  5, 7 or 9 tiles, as the spell's picture promises.
+- **Fire Havoc falls inside its marker.** In the original it fell two
+  tiles up and to the left of it (the same slip: half the area taken off
+  twice), sometimes on the player's own units.
+- **A LIMIT clears the buttons' cooldown, as in the original.** It reads
+  like a side effect of the original's code rather than a design, but
+  players met it, so it stays.
+
 ## 15 October 2026: Beta 2, the harbour, the zeppelin and pausing
 
 - **The new client gives the harbour and the zeppelin tower,** as the

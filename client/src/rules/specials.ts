@@ -18,7 +18,9 @@ export type Around = "self" | "target";
 
 export type Move =
   | { kind: "volley"; shots: number; every: number; factor: number; projectile: number | null }
-  | { kind: "storm"; count: number; radius: number; factor: number; minDelay: number; maxDelay: number; around: Around; fx: string | null }
+  | { kind: "storm"; count: number; radius: number; factor: number; minDelay: number; maxDelay: number; around: Around; fx: string | null;
+    /** Thor's: instead of `count` random tiles, each tile of the square has this chance of a bolt. */
+    chance?: number }
   | { kind: "whirl"; radius: number; max: number; factor: number; every: number; duration: number; around: Around; push: number; stun: boolean;
     poison: { damage: number; ticks: number } | null; fx: string | null }
   | { kind: "blast"; radius: number; max: number; factor: number; around: Around; push: number; stun: boolean; fx: string | null; skipCross?: boolean }
@@ -45,6 +47,10 @@ export type Move =
   | { kind: "lure"; radius: number; max: number; frames: number }
   /** Its target becomes one of these on its side, with this life, poisoned for good (half its attack every 3 s). */
   | { kind: "curse"; into: number; life: number }
+  /** Several moves at once (the halberdier's stomp and diagonal strike). */
+  | { kind: "both"; moves: Move[] }
+  /** A move that lands a few frames after the beat (a stomp waits for the foot). */
+  | { kind: "later"; frames: number; move: Move }
   /** It becomes another unit for a while (null: a copy of its target), keeping its life or its share of life. */
   | { kind: "become"; into: number | null; frames: number; keepShare: boolean }
   /**
@@ -67,7 +73,11 @@ export type Move =
   | { kind: "other"; note: string };
 
 /** `animations`: each move its own (the bosses' three), else `animation` for all. */
-export interface AutoEntry { ids: number[]; name: string; interval: number; length: number; animation: number; animations?: number[]; moves: Move[] }
+export interface AutoEntry {
+  ids: number[]; name: string; interval: number; length: number; animation: number; animations?: number[]; moves: Move[];
+  /** Each move's own length, when they differ (the Balrog's stomp 45 frames, its storm 70). */
+  lengths?: number[];
+}
 export interface Button { slot: number; name: string; picture: string; animation: number; needsTarget: boolean; move: Move }
 export interface Limit { max: number; fill: "damage" | "heal"; name: string; animation: number; move: Move }
 export interface UnitEntry { ids: number[]; name: string; cooldown: number; buttons: Button[]; limit: Limit | null; giant: boolean }
@@ -113,6 +123,8 @@ interface State {
   lastFill: number;
   limitRunning: boolean;
   duplicated: boolean;
+  /** Ordinary hits so far (the albino werewolf's count). */
+  hits?: number;
 }
 
 export class Specials {
@@ -209,7 +221,7 @@ export class Specials {
       const state = this.state(f);
       const fighting = f.attacking && f.target !== null && !f.target.dead && !this.battle.isStilled(f);
       if (state.windowFrom >= 0) {
-        if (frame - state.windowFrom >= entry.length) {
+        if (frame - state.windowFrom >= (entry.lengths?.[state.turn % entry.moves.length] ?? entry.length)) {
           state.windowFrom = -1;
           state.counter = 0;
           state.turn = (state.turn + 1) % entry.moves.length;
@@ -218,7 +230,8 @@ export class Specials {
         state.counter++;
         if (state.counter >= entry.interval) {
           state.windowFrom = frame;
-          f.special = { animation: entry.animations?.[state.turn % entry.moves.length] ?? entry.animation, until: frame + entry.length };
+          f.special = { animation: entry.animations?.[state.turn % entry.moves.length] ?? entry.animation,
+            until: frame + (entry.lengths?.[state.turn % entry.moves.length] ?? entry.length) };
         }
       }
     }
@@ -228,17 +241,53 @@ export class Specials {
   private beat(unit: Fighter, target: Fighter): boolean {
     const entry = this.auto.get(unit.item.id);
     if (!entry) {
-      return false;
+      return this.plainBeat(unit, target);
     }
     const state = this.state(unit);
     if (state.windowFrom < 0) {
-      return false;
+      return this.plainBeat(unit, target);
     }
     const move = entry.moves[state.turn % entry.moves.length];
     if (move.kind === "duplicate" && state.duplicated) {
       return false;
     }
     this.play(unit, move, target);
+    return true;
+  }
+
+  /**
+   * Ordinary hits with something more, as in the Flash client: Thor's throw
+   * a unit 2 tiles, half the werewolf's 1 tile; the albino werewolf turns
+   * every tenth victim into a werewolf and whirls on every fifth.
+   */
+  private plainBeat(unit: Fighter, target: Fighter): boolean {
+    const from = { x: unit.tx, y: unit.ty };
+    if (unit.item.id === ALBINO_WEREWOLF) {
+      const state = this.state(unit);
+      state.hits = (state.hits ?? 0) + 1;
+      if (state.hits % 10 === 0) {
+        this.play(unit, { kind: "curse", into: ALBINO_WEREWOLF, life: 0 }, target);
+        return true;
+      }
+      if (state.hits % 10 === 5) {
+        // Nine blows, a frame apart from the tenth: each at the nearest enemy, full strength, thrown 4 tiles.
+        for (let i = 0; i < 9; i++) {
+          this.battle.after(10 + 2 * i, () => {
+            const o = this.battle.within({ x: unit.tx, y: unit.ty }, Math.max(unit.range, 1), 1, (e) => this.isEnemy(unit, e) && e.isUnit)[0];
+            if (o && !unit.dead) {
+              this.strike(unit, o, 1, 4, false, { x: unit.tx, y: unit.ty });
+            }
+          });
+        }
+        return true;
+      }
+      return false;
+    }
+    const throws = THROWING_HITS.get(unit.item.id);
+    if (!throws || !target.isUnit || (throws.chance < 1 && this.random() >= throws.chance)) {
+      return false;
+    }
+    this.strike(unit, target, 1, throws.tiles, false, from);
     return true;
   }
 
@@ -311,6 +360,9 @@ export class Specials {
         return "The LIMIT bar isn't full yet";
       }
       state.limitRunning = true;
+      // As in the Flash client, a LIMIT takes the buttons' place with no cooldown of its own: the
+      // four buttons are ready again a second after it starts, whatever their cooldown had left.
+      state.busyUntil = frame + start + TICK;
       const ends = start + lasting(limit.move);
       f.special = { animation: limit.animation, until: frame + Math.max(ends, SHOW_AT_LEAST) };
       this.battle.after(start, () => this.play(f, limit.move, this.targetOf(f)));
@@ -332,7 +384,8 @@ export class Specials {
       return why;
     }
     const target = this.targetOf(f);
-    state.busyUntil = frame + start + lasting(button.move) + entry.cooldown * 30;
+    // The cooldown runs from the move's start, while it plays, as in the Flash client.
+    state.busyUntil = frame + start + entry.cooldown * 30;
     f.special = { animation: button.animation, until: frame + Math.max(start + lasting(button.move), SHOW_AT_LEAST) };
     this.battle.after(start, () => this.play(f, button.move, target && !target.dead ? target : this.targetOf(f)));
     return "";
@@ -397,6 +450,10 @@ export class Specials {
     const centreOf = (around: Around): Point => (around === "target" && target ? { x: target.tx, y: target.ty } : self());
     const enemies = (centre: Point, radius: number, max: number, which: (o: Fighter) => boolean = () => true) =>
       battle.within(centre, radius < 0 ? f.range : radius, max, (o) => this.isEnemy(f, o) && which(o));
+    // The original's area moves (whirls, stomps, smashes, beams) pick fighting units only:
+    // no buildings, no villagers, nothing without an attack. Moves on a single tile hit anything.
+    const fighters = (centre: Point, radius: number, max: number, which: (o: Fighter) => boolean = () => true) =>
+      enemies(centre, radius, max, (o) => fighting(o) && which(o));
     switch (move.kind) {
       case "volley":
         for (let i = 0; i < move.shots; i++) {
@@ -410,10 +467,24 @@ export class Specials {
         break;
       case "storm": {
         const centre = centreOf(move.around);
-        for (let i = 0; i < move.count; i++) {
+        const tiles: (Point | null)[] = [];
+        if (move.chance !== undefined) {
+          for (let dx = -move.radius; dx <= move.radius; dx++) {
+            for (let dy = -move.radius; dy <= move.radius; dy++) {
+              if (this.random() < move.chance) {
+                tiles.push({ x: centre.x + dx, y: centre.y + dy });
+              }
+            }
+          }
+        } else {
+          for (let i = 0; i < move.count; i++) {
+            tiles.push(null);  // picked when it falls
+          }
+        }
+        for (const picked of tiles) {
           const delay = move.minDelay + Math.floor(this.random() * Math.max(0, move.maxDelay - move.minDelay));
           battle.after(delay, () => {
-            const tile = randomTile(centre, move.radius, this.random);
+            const tile = picked ?? randomTile(centre, move.radius, this.random);
             this.show(move.fx, tile);
             const there = battle.standingAt(tile.x, tile.y);
             if (there && this.isEnemy(f, there)) {
@@ -433,7 +504,7 @@ export class Specials {
               return;
             }
             const centre = centreOf(move.around);
-            for (const o of enemies(centre, move.radius, move.max)) {
+            for (const o of fighters(centre, move.radius, move.max)) {
               this.strike(f, o, move.factor, move.push, move.stun, centre);
               if (move.poison && o.isUnit && !o.dead && !o.poison && !poisoned.has(o)) {
                 poisoned.add(o);
@@ -449,7 +520,7 @@ export class Specials {
         this.show(move.fx, centre);
         // The bosses' pound leaves out the row and column it stands on.
         const off = (o: Fighter) => !move.skipCross || (o.tx !== centre.x && o.ty !== centre.y);
-        for (const o of enemies(centre, move.radius, move.max, off)) {
+        for (const o of fighters(centre, move.radius, move.max, off)) {
           this.strike(f, o, move.factor, move.push, move.stun, centre);
         }
         break;
@@ -490,7 +561,8 @@ export class Specials {
         const amount = move.amount + move.factor * f.attack;
         const who = move.who === "self" ? [f]
           : move.who === "target" ? (target && target.side === f.side ? [target] : [])
-            : battle.within(self(), move.radius, move.max, (o) => o.side === f.side && o.isUnit && o.life < o.maxLife);
+            : battle.within(self(), move.radius, move.max, (o) => o.side === f.side && o.isUnit && o.life < o.maxLife
+              && (!BASIC_ONLY.has(f.item.id) || basic(o)));
         for (const o of who) {
           battle.heal(o, amount, f);
         }
@@ -561,7 +633,8 @@ export class Specials {
         break;
       }
       case "haste":
-        for (const o of battle.within(self(), move.radius, move.max, (o) => o.side === f.side && o.isUnit && o !== f)) {
+        for (const o of battle.within(self(), move.radius, move.max, (o) => o.side === f.side && o.isUnit && o !== f
+          && (!BASIC_ONLY.has(f.item.id) || basic(o)))) {
           o.interval = Math.max(10, o.item.attackInterval - move.cut);
           battle.after(move.frames, () => {
             o.interval = o.item.attackInterval;
@@ -571,7 +644,8 @@ export class Specials {
       case "beams":
         for (let i = 0; i < move.count; i++) {
           battle.after(i * move.every, () => {
-            const near = enemies(self(), Math.max(f.range, 1) + 1, 50);
+            // Within its reach, the nearest 20 at most, as the original's beams pick.
+            const near = fighters(self(), Math.max(f.range, 1), 20);
             const o = near[Math.floor(this.random() * near.length)];
             if (o && !f.dead) {
               battle.shootAt(f, o, LIGHTNING, this.amount(f, move.factor));
@@ -591,7 +665,7 @@ export class Specials {
         }
         break;
       case "smash":
-        for (const o of enemies(self(), Math.max(f.range, 2), move.max, (o) => o.isUnit)) {
+        for (const o of fighters(self(), Math.max(f.range, 2), move.max)) {
           this.strike(f, o, move.factor, 4, false, self());
         }
         break;
@@ -600,12 +674,24 @@ export class Specials {
         if (state.duplicated) {
           break;
         }
+        // As in the Flash client: two copies beside it for 20 seconds, then they fade, and it
+        // can duplicate again. The copies can't duplicate themselves.
         state.duplicated = true;
-        const tile = battle.freeTileNear(self(), true);
-        if (tile) {
-          const copy = battle.add(f.item, tile.x, tile.y, f.side, { summoned: true });
-          this.states.set(copy, { ...this.state(copy), duplicated: true });
+        const copies: Fighter[] = [];
+        for (let i = 0; i < DUPLICATES; i++) {
+          const tile = battle.freeTileNear(self(), true);
+          if (tile) {
+            const copy = battle.add(f.item, tile.x, tile.y, f.side, { summoned: true });
+            this.states.set(copy, { ...this.state(copy), duplicated: true });
+            copies.push(copy);
+          }
         }
+        battle.after(DUPLICATE_FRAMES, () => {
+          for (const copy of copies.filter((c) => !c.dead)) {
+            battle.fade(copy);
+          }
+          state.duplicated = false;
+        });
         break;
       }
       case "guard":
@@ -629,15 +715,26 @@ export class Specials {
           });
         }
         break;
+      case "both":
+        for (const each of move.moves) {
+          this.play(f, each, target);
+        }
+        break;
+      case "later":
+        battle.after(move.frames, () => this.play(f, move.move, target && !target.dead ? target : this.targetOf(f)));
+        break;
       case "curse": {
         const item = this.items.get(move.into);
         if (!target || target.dead || !target.isUnit || target.item.subcategory === SUBCAT.boss || target.item.life >= 500 || !item || f.cursed) {
           break;
         }
         const at = { x: target.tx, y: target.ty };
+        // As in the Flash client: the wolf's own maximum life, so healers can bring it up; its life
+        // the move's (the werewolf's 300), or what the victim had left (the albino werewolf's, 0).
+        const life = move.life > 0 ? move.life : Math.max(1, Math.round(target.life));
         battle.kill(target, f);
         battle.remove(target);
-        const wolf = battle.add(item, at.x, at.y, f.side, { summoned: true, life: move.life, maxLife: move.life, cursed: true });
+        const wolf = battle.add(item, at.x, at.y, f.side, { summoned: true, life, maxLife: item.life, cursed: true });
         wolf.poison = { damage: Math.ceil(wolf.attack / 2), left: 1000, next: battle.frame + 90 };
         break;
       }
@@ -729,6 +826,10 @@ const LIGHTNING = 8;
 /** How long a move goes on, in frames (0 for one that happens at once). */
 function lasting(move: Move): number {
   switch (move.kind) {
+    case "both":
+      return Math.max(0, ...move.moves.map(lasting));
+    case "later":
+      return move.frames + lasting(move.move);
     case "volley":
       return move.shots * move.every;
     case "storm":
@@ -747,6 +848,30 @@ function lasting(move: Move): number {
     default:
       return 0;
   }
+}
+
+/**
+ * The heroes whose help reaches only the basic units, as in the original: the
+ * Valkyrie's heal, Willy Wallace's and the Valkyr's war cry. Not other heroes,
+ * dragons, siege engines or animals.
+ */
+const BASIC_ONLY = new Set([554, 555, 759]);
+
+function basic(o: Fighter): boolean {
+  return ([SUBCAT.archer, SUBCAT.cleric, SUBCAT.footman, SUBCAT.mounted, SUBCAT.peasant] as number[]).includes(o.item.subcategory);
+}
+
+/** Ordinary hits that throw: Thor's always (2 tiles), the werewolf's half the time (1 tile). */
+const THROWING_HITS = new Map([[556, { tiles: 2, chance: 1 }], [735, { tiles: 1, chance: 0.5 }]]);
+const ALBINO_WEREWOLF = 791;
+
+/** The High Elf's and Anubis's duplicates: two, for 20 seconds. */
+const DUPLICATES = 2;
+const DUPLICATE_FRAMES = 600;
+
+/** A fighting unit: what the original's area moves can pick (not a building, a villager or anything unarmed). */
+function fighting(o: Fighter): boolean {
+  return o.isUnit && o.attack > 0 && o.item.subcategory !== SUBCAT.peasant;
 }
 
 /** A random tile within `radius` of a tile (a circle, as the original picks). */
