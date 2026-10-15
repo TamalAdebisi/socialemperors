@@ -39,7 +39,9 @@ export interface Island {
   skipAnimalsWhenCopying: boolean;
   /** Seconds between the end and the results. */
   endDelay: number;
+  /** A team of 20 is picked instead of the whole army sailing; god islands need some gods or colossi in it. */
   team?: boolean;
+  teamRule?: { groups: string[]; atLeast: number };
   minLevel?: number;
   alwaysOpen?: boolean;
   itemRewards?: Record<string, number[]>;
@@ -451,4 +453,60 @@ export function islandLock(island: Island, index: number, unlockedIndex: number,
 export function difficulties(starsWon: number): { allowed: number[]; chosen: number } {
   const allowed = [1, 2, 3].filter((d) => d === 1 || starsWon >= d - 1);
   return { allowed, chosen: Math.max(1, Math.min(3, starsWon)) };
+}
+
+/** How many units a team takes. */
+export const TEAM_SLOTS = 20;
+
+/** The units that may join a team: each kind the player has, up to its units_limit when it has one. */
+export function teamChoices(army: [number, number][], items: Map<number, ItemInfo>): [number, number][] {
+  return army.map(([id, count]) => {
+    const limit = items.get(id)?.unitsLimit ?? 0;
+    return [id, limit > 0 ? Math.min(count, limit) : count];
+  });
+}
+
+/**
+ * The team the player picked last time (privateState.teams.quest: 20 ids,
+ * 0 for an empty place), kept to what they still have.
+ */
+export function lastTeam(saved: unknown, choices: [number, number][]): number[] {
+  const left = new Map(choices);
+  const team: number[] = [];
+  for (const id of Array.isArray(saved) ? saved.map(Number) : []) {
+    if (id > 0 && (left.get(id) ?? 0) > 0 && team.length < TEAM_SLOTS) {
+      team.push(id);
+      left.set(id, left.get(id)! - 1);
+    }
+  }
+  return team;
+}
+
+/** Why a team can't sail, or null when it can: none picked, or not enough gods or colossi for a god island. */
+export function teamProblem(team: number[], island: Island, items: Map<number, ItemInfo>): string | null {
+  if (team.length === 0) {
+    return "Pick the units who sail.";
+  }
+  const rule = island.teamRule;
+  if (rule) {
+    const have = team.filter((id) => rule.groups.includes(items.get(id)?.groups ?? "")).length;
+    if (have < rule.atLeast) {
+      return `This island needs at least ${rule.atLeast} god${rule.atLeast === 1 ? "" : "s"} or colossus${rule.atLeast === 1 ? "" : "es"} in the team.`;
+    }
+  }
+  return null;
+}
+
+/** A team as the server keeps it (set_attack_team): 20 ids, 0 for an empty place. */
+export function teamSlots(team: number[]): number[] {
+  return Array.from({ length: TEAM_SLOTS }, (_, i) => team[i] ?? 0);
+}
+
+/** A team as an army: [unit id, how many], in the order picked. */
+export function teamArmy(team: number[]): [number, number][] {
+  const counts = new Map<number, number>();
+  for (const id of team) {
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return [...counts];
 }

@@ -893,9 +893,10 @@ it and draws the farm the new client built; another player skips them.
 ### Step 4: battles
 
 Beta 2. Code: `rules/battle.ts` (the fighting, with tests), `rules/quest.ts`
-and `rules/islands.json` (the islands), `view/battleView.ts` (the
-drawing), `questPlay.ts` (an island played in the page) and
-`ui/islands.ts` (the Quests window).
+and `rules/islands.json` (the islands; their rules in words are in
+`rules/islands-notes.json`, which the game doesn't load),
+`view/battleView.ts` (the drawing), `questPlay.ts` (an island played in
+the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
 
 **How a battle works**, read from the Flash client (our notes, our words):
 
@@ -951,8 +952,14 @@ drawing), `questPlay.ts` (an island played in the page) and
 
 **The quests**, the same way:
 
-- The Quests window lists the 28 islands in the game's order
-  (`ISLE_ORDER`), from level 6: the first open, each win opening the next
+- The Quests window is the game's own island map: its seven painted pages
+  side by side (`images_new/quests_manager_img_<n>.jpg`), each island's
+  ribbon where the Flash client puts it, with its name, the stars won (or
+  a padlock while out of reach) and Enter Now once it can be sailed to;
+  tapping a locked or resting island says why. It scrolls sideways, opens
+  on the furthest island reached, and a page is never drawn narrower than
+  560 pixels so the names stay readable. The 28 islands come in the game's
+  order (`ISLE_ORDER`), from level 6: the first open, each win opening the next
   (`privateState.unlockedQuestIndex`), the last two from level 40, the god
   islands always. An island rests 4 hours after it's attacked
   (`map.questTimes`). Stars won are `privateState.questsRank`.
@@ -967,6 +974,14 @@ drawing), `questPlay.ts` (an island played in the page) and
   copy of every enemy unit beside it, 3 stars two, then the army lands.
   `game_status` ("LOAD_MAP", "NORM", "QUEST") when the island is shown,
   `start_quest` (island, town) on Start.
+- **Teams:** the last two hardcore islands and the god islands take a
+  team of 20 instead of the whole army (the start window becomes the
+  picker: tap a kind to add one, tap one in the team to take it out). Each
+  kind counts up to its `units_limit`, the last team is offered again
+  (`privateState.teams.quest`), and the god islands need 1 god or
+  colossus in it (God Isle 3: 5), by the unit's `groups`. Fewer than 20
+  asks once. Start sends `set_attack_team` ("quest", the 20 ids, 0 for an
+  empty place) and only the team lands.
 - **Playing:** tap a unit to select it (Shift adds or takes away), Select
   all (or Space) for the whole army; tap the ground to send them there,
   spread out, or an enemy to attack it. Escape lets go. Nothing is sent to
@@ -1000,8 +1015,8 @@ Speed button speeds them too. The report goes as the results show, not
 when the player shares or skips them, so closing the page then loses
 nothing.
 
-**Not yet** (Beta 2's next slices): the island map's pictures, the team
-picker for the last islands, the boss islands and the Hero Isle, spells
+**Not yet** (Beta 2's next slices): the boss islands and the Hero Isle,
+spells
 and the heroes' special moves, collection pieces dropped by enemies, and
 defending the town.
 

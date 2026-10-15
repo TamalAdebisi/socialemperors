@@ -13,7 +13,10 @@ import { Battle, ENEMY, FPS, SELF, type Fighter } from "./rules/battle.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, tileUnder, unitPoint } from "./rules/geometry.ts";
 import islandData from "./rules/islands.json" with { type: "json" };
-import { MIN_LEVEL_QUESTS, Quest, armyOf, difficulties, islandGround, islandLock, playedHere, type Island } from "./rules/quest.ts";
+import {
+  MIN_LEVEL_QUESTS, Quest, TEAM_SLOTS, armyOf, difficulties, islandGround, islandLock, lastTeam, playedHere, teamArmy,
+  teamChoices, teamProblem, teamSlots, type Island,
+} from "./rules/quest.ts";
 import { readTown } from "./rules/town.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
@@ -55,7 +58,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     stop("This island is played in the classic game for now.");
     return;
   }
-  const army = armyOf(town);
+  let army = armyOf(town);
   const lock = islandLock(island, index, Number(privateState.unlockedQuestIndex ?? 0), town.level,
     Array.isArray(questTimes) ? undefined : questTimes[questId], info.timestamp);
   if (town.level < MIN_LEVEL_QUESTS) {
@@ -114,7 +117,15 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
 
   // The start window: the island, the army, the stars; Start battle.
   const stars = difficulties(Number(ranks[questId] ?? 0));
-  const difficulty = await startWindow(name, army, items, stars, settings);
+  const savedTeam = ((privateState.teams ?? {}) as Record<string, unknown>).quest;
+  const picked = await startWindow(name, army, items, stars, settings,
+    island.team ? { island, start: lastTeam(savedTeam, teamChoices(army, items)) } : null);
+  const difficulty = picked?.difficulty ?? null;
+  if (picked && island.team) {
+    // As the Flash client: the team is kept on the server, and it alone sails.
+    army = teamArmy(picked.team);
+    commands.add("set_attack_team", "quest", JSON.stringify(teamSlots(picked.team)));
+  }
   if (difficulty === null) {
     commands.add("game_status", "LOAD_MAP", "QUEST", "NORM");
     await commands.flush();
@@ -281,35 +292,96 @@ function bossRewards(run: Quest, race: string): Record<string, number> {
   return rewards;
 }
 
-/** The start window: resolves to the stars chosen, or null to go home. */
+/** The start window: resolves to the stars chosen (and the team, on the islands that take one), or null to go home. */
 function startWindow(name: string, army: [number, number][], items: Map<number, ItemInfo>,
-  stars: { allowed: number[]; chosen: number }, settings: PageSettings): Promise<number | null> {
+  stars: { allowed: number[]; chosen: number }, settings: PageSettings,
+  teamOf: { island: Island; start: number[] } | null): Promise<{ difficulty: number; team: number[] } | null> {
   return new Promise((resolve) => {
     let chosen = stars.chosen;
-    const body = document.createElement("div");
-    body.className = "quest-start";
-    const sailing = document.createElement("p");
-    const count = army.reduce((sum, [, n]) => sum + n, 0);
-    sailing.textContent = `Your army is ready: ${count} unit${count === 1 ? "" : "s"}.`;
-    const units = document.createElement("ul");
-    units.className = "quest-army";
-    for (const [id, n] of army) {
+    const team = [...(teamOf?.start ?? [])];
+    const thumbnail = (id: number) => {
       const item = items.get(id);
-      const row = document.createElement("li");
       const picture = document.createElement("img");
       picture.src = `${settings.assetsUrl}/buildingthumbs/${item?.art ?? ""}.jpg`;
       picture.alt = "";
       picture.title = item?.name ?? "";
-      row.append(picture, `${n}`);
-      units.append(row);
-    }
+      return picture;
+    };
+    const body = document.createElement("div");
+    body.className = "quest-start";
+    const sailing = document.createElement("p");
+    const units = document.createElement("ul");
+    units.className = "quest-army";
+    const slots = document.createElement("ul");
+    slots.className = "quest-team";
+    const problem = document.createElement("p");
+    problem.className = "quest-problem";
+    let warned = false;
+    const choices = teamOf ? teamChoices(army, items) : army;
+    const paintArmy = () => {
+      units.replaceChildren();
+      for (const [id, n] of choices) {
+        const left = n - team.filter((t) => t === id).length;
+        const row = document.createElement("li");
+        row.append(thumbnail(id), `${left}`);
+        if (teamOf) {
+          // Tap a kind to add one to the team.
+          const add = document.createElement("button");
+          add.type = "button";
+          add.className = "quest-pick";
+          add.disabled = left <= 0 || team.length >= TEAM_SLOTS;
+          add.setAttribute("aria-label", `Add a ${items.get(id)?.name ?? "unit"}`);
+          add.append(...row.childNodes);
+          add.addEventListener("click", () => {
+            team.push(id);
+            warned = false;
+            paint();
+          });
+          row.replaceChildren(add);
+        }
+        units.append(row);
+      }
+    };
+    const paintTeam = () => {
+      slots.replaceChildren();
+      for (let i = 0; i < TEAM_SLOTS; i++) {
+        const slot = document.createElement("li");
+        const id = team[i];
+        if (id) {
+          // Tap one in the team to take it out.
+          const out = document.createElement("button");
+          out.type = "button";
+          out.className = "quest-pick";
+          out.setAttribute("aria-label", `Take out a ${items.get(id)?.name ?? "unit"}`);
+          out.append(thumbnail(id));
+          out.addEventListener("click", () => {
+            team.splice(i, 1);
+            warned = false;
+            paint();
+          });
+          slot.append(out);
+        }
+        slots.append(slot);
+      }
+    };
+    const paint = () => {
+      if (teamOf) {
+        sailing.textContent = `Pick your team: ${team.length} of ${TEAM_SLOTS}.`;
+        paintTeam();
+      } else {
+        const count = army.reduce((sum, [, n]) => sum + n, 0);
+        sailing.textContent = `Your army is ready: ${count} unit${count === 1 ? "" : "s"}.`;
+      }
+      paintArmy();
+      problem.textContent = "";
+    };
     const label = document.createElement("p");
     label.className = "quest-difficulty-label";
     label.textContent = "Difficulty";
     const row = document.createElement("div");
     row.className = "quest-stars";
     const buttons: HTMLButtonElement[] = [];
-    const paint = () => buttons.forEach((b, i) => {
+    const paintStars = () => buttons.forEach((b, i) => {
       (b.firstChild as HTMLImageElement).src = iconImage(i < chosen ? "star-on" : "star-off").src;
       b.setAttribute("aria-pressed", String(i + 1 === chosen));
     });
@@ -322,22 +394,39 @@ function startWindow(name: string, army: [number, number][], items: Map<number, 
       button.title = button.disabled ? `Win this island on ${n - 1} star${n > 2 ? "s" : ""} first` : `${n} star${n > 1 ? "s" : ""}`;
       button.addEventListener("click", () => {
         chosen = n;
-        paint();
+        paintStars();
       });
       buttons.push(button);
       row.append(button);
     }
     paint();
-    body.append(sailing, units, label, row);
+    paintStars();
+    body.append(sailing, ...(teamOf ? [slots] : []), units, label, row, problem);
     finalWindow(name, [
       { label: "Back home", run: () => resolve(null) },
-      { label: "Start battle", gold: true, run: () => resolve(chosen) },
+      { label: "Start battle", gold: true, keep: true, run: () => {
+        if (teamOf) {
+          const why = teamProblem(team, teamOf.island, items);
+          if (why) {
+            problem.textContent = why;
+            return false;
+          }
+          if (team.length < TEAM_SLOTS && !warned) {
+            // As the Flash client asks: sure, with fewer than 20?
+            warned = true;
+            problem.textContent = `Only ${team.length} of ${TEAM_SLOTS} picked. Press Start battle again to sail anyway.`;
+            return false;
+          }
+        }
+        resolve({ difficulty: chosen, team });
+        return true;
+      } },
     ], false, body);
   });
 }
 
 /** A window in the middle of the screen with a title, maybe a body, and buttons; each button closes it. */
-function finalWindow(title: string, buttons: { label: string; run: () => void; gold?: boolean; danger?: boolean }[],
+function finalWindow(title: string, buttons: { label: string; run: () => unknown; gold?: boolean; danger?: boolean; keep?: boolean }[],
   small = false, body?: HTMLElement): void {
   const box = document.createElement("section");
   box.className = `quest-window${small ? " small" : ""}`;
@@ -356,6 +445,13 @@ function finalWindow(title: string, buttons: { label: string; run: () => void; g
     button.className = `button ${choice.gold ? "gold" : choice.danger ? "danger" : "plain"}`;
     button.textContent = choice.label;
     button.addEventListener("click", () => {
+      // A button that may keep the window open (a question first) says so by returning false.
+      if (choice.keep) {
+        if (choice.run() !== false) {
+          box.remove();
+        }
+        return;
+      }
       box.remove();
       choice.run();
     });
