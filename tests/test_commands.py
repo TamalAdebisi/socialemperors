@@ -17,6 +17,7 @@ import sessions
 import towns
 from command import do_command
 from engine import timestamp_now
+from get_player_info import get_player_info
 from get_game_config import get_game_config
 from village import number
 
@@ -313,6 +314,16 @@ class CommandsTest(unittest.TestCase):
         self.send("admin_add_animal", COW, 3)
         self.send("admin_add_animal", SHEEP, 2)
         self.assertEqual(self.pState["arrayAnimals"], {str(SHEEP): 6, str(COW): 3})
+
+    def test_the_animals_count_starts_again_each_day(self):
+        self.send("admin_add_animal", SHEEP, 20)
+        self.pState["arrayAnimalsDay"] -= 1  # as if added yesterday
+        self.send("admin_add_animal", COW, 2)
+        self.assertEqual(self.pState["arrayAnimals"], {str(COW): 2})
+        # And on opening the town, for the client to read.
+        self.pState["arrayAnimalsDay"] -= 1
+        get_player_info(self.pid)
+        self.assertEqual(self.pState["arrayAnimals"], {})
 
     def test_the_client_cannot_claim_a_tournament_prize(self):
         # tournaments.py pays the prize itself when the tournament ends.

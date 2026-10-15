@@ -21,7 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
-import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { canWalk, findPath, gridFor, isWalkable, unitMoved } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
 import { CURSORS, ICONS } from "./ui/icons.ts";
@@ -30,6 +30,7 @@ import { skipLessons } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
+import { caught, homeFor } from "./rules/animals.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
@@ -38,6 +39,9 @@ const SAY_MS = 2500;
 const REPAIR_LIFE = 25;
 const REPAIR_MS = (61 * 1000) / 30;
 const MOST_WAITING = 3;
+/** How long "Captured!" shows over a wild animal just caught, as in the Flash client. */
+const CAUGHT_MS = 5000;
+const TOWN_HALL = 135;
 
 export interface EditorParts {
   town: Town;
@@ -183,6 +187,11 @@ export class TownEditor {
     for (const [resource, work] of this.working) {
       if (now - work.since >= harvestSeconds(resource.item, this.town)) {
         this.finishHarvest(resource);
+      }
+    }
+    if (!this.paused) {
+      for (const animal of caught(this.town)) {
+        this.caught(animal);
       }
     }
     for (const placed of [...this.town.items]) {
@@ -383,6 +392,17 @@ export class TownEditor {
     }
     // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
+    if (unit && placed?.wild) {
+      // A wild animal: the unit goes to it (as near as it can), and so catches it, as in the Flash client.
+      this.clearLine(unit);
+      const tile = standingTile(this.town, unit, placed);
+      if (!tile) {
+        this.say(`${unit.item.name} can't get to ${placed.item.name}.`);
+      } else if (this.walkTo(unit, tile)) {
+        this.sound("place");
+      }
+      return;
+    }
     if (unit && !placed) {
       this.clearLine(unit);
       if (this.walkTo(unit, this.tileAt(at))) {
@@ -514,6 +534,9 @@ export class TownEditor {
       const left = harvestSeconds(placed.item, this.town) - (this.clock() - this.working.get(placed)!.since);
       return `Being worked: ${duration(Math.max(left, 0))} left`;
     }
+    if (placed.wild) {
+      return "In the wild: bring one of your units near to catch it";
+    }
     if (placed.item.subcategory === SUBCAT.villager && canWalk(this.town, placed)) {
       return `Tap the ground where it should go, or up to ${villagers(this.town).line} trees or rocks to work`;
     }
@@ -640,7 +663,7 @@ export class TownEditor {
    */
   private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit), work?: PlacedItem): boolean {
     const from = this.view.headingFor(unit);
-    const path = findPath(walkGrid(this.town), from, tile, unit.item.flying);
+    const path = findPath(gridFor(this.town, unit), from, tile, unit.item.flying);
     if (path === null) {
       this.say(`${unit.item.name} can't get there.`);
       return false;
@@ -657,7 +680,7 @@ export class TownEditor {
     }
     this.view.walk(unit, path, (next) => {
       // Something built in the way since it set off: it stops before it.
-      if (!unit.item.flying && !isWalkable(walkGrid(this.town), next.x, next.y)) {
+      if (!unit.item.flying && !isWalkable(gridFor(this.town, unit), next.x, next.y)) {
         return false;
       }
       unit.tx = next.x;
@@ -731,6 +754,28 @@ export class TownEditor {
       this.unmark(resource, unit);
     }
     this.lines.delete(unit);
+  }
+
+  /**
+   * A wild animal one of the player's units came near: theirs now. "Captured!"
+   * shows over it, and it walks to the nearest ranch of its kind and in, or
+   * with none, beside the town hall, as in the Flash client.
+   */
+  private caught(animal: PlacedItem): void {
+    animal.wild = false;
+    this.doings.captured(animal.item);
+    this.view.sign(animal, { kind: "caught" });
+    setTimeout(() => this.view.sign(animal, null), CAUGHT_MS);
+    const home = homeFor(this.town, animal);
+    if (home) {
+      this.goInto(animal, home);
+      return;
+    }
+    const hall = this.town.items.find((placed) => placed.item.subcategory === TOWN_HALL);
+    const tile = hall ? freeTileNear(this.town, hall) : null;
+    if (tile) {
+      this.walkTo(animal, tile);
+    }
   }
 
   /** A villager sold or stored: it stops whatever it was doing. */

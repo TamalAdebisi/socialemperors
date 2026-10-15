@@ -1,5 +1,6 @@
 from sessions import session, neighbor_session, neighbors, save_session, share_tutorial, username_of
 from engine import timestamp_now
+import animals
 import towns
 import worlds
 
@@ -11,6 +12,7 @@ def get_player_info(USERID, map_number=None):
     save = session(USERID)
     save["playerInfo"]["last_logged_in"] = ts_now
     town_id = towns.open_town(save, map_number)
+    animals.fresh_day(save)  # the day's wild animals start again
     share_tutorial(USERID)  # done in another empire of this account: not again here
     world_news = worlds.home(save, town_id)  # seven islands beaten: on to the next continent
     if world_news:

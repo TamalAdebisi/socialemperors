@@ -84,6 +84,8 @@ export interface PlacedItem {
   health?: number;
   /** Burnt out in a raid: no room for people (but the town hall's) until it's repaired in full. */
   ruined?: boolean;
+  /** An animal in the wild, nobody's until one of the player's units comes near (rules/animals.ts). Not saved. */
+  wild?: boolean;
 }
 
 export interface Town {

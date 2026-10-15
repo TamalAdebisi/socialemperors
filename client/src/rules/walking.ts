@@ -4,6 +4,7 @@
 // that tells the server where it stopped. No drawing here.
 
 import type { Command } from "../net/commands.ts";
+import { isAnimal } from "./animals.ts";
 import { footprintTiles, isOpenLand } from "./editing.ts";
 import { MAP_TILES, TILE_HEIGHT, TILE_WIDTH, unitPoint, type Point } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
@@ -19,13 +20,14 @@ export type WalkGrid = Uint8Array;
 
 /**
  * Bought land is walkable, except under buildings. Fields (farms) can be
- * walked over, and units don't stand in each other's way.
+ * walked over, and units don't stand in each other's way. `anywhere`: the
+ * whole map but under buildings, as the Flash client's paths go.
  */
-export function walkGrid(town: Town): WalkGrid {
+export function walkGrid(town: Town, anywhere = false): WalkGrid {
   const grid = new Uint8Array(MAP_TILES * MAP_TILES);
   for (let y = 0; y < MAP_TILES; y++) {
     for (let x = 0; x < MAP_TILES; x++) {
-      grid[y * MAP_TILES + x] = isOpenLand(town, x, y) ? 1 : 0;
+      grid[y * MAP_TILES + x] = anywhere || isOpenLand(town, x, y) ? 1 : 0;
     }
   }
   for (const placed of town.items) {
@@ -39,6 +41,15 @@ export function walkGrid(town: Town): WalkGrid {
     }
   }
   return grid;
+}
+
+/**
+ * Where a unit can walk: the player's units, on their land (they can't be
+ * sent beyond it); animals anywhere but through buildings, so one caught in
+ * the wild can walk in to its ranch.
+ */
+export function gridFor(town: Town, unit: PlacedItem): WalkGrid {
+  return walkGrid(town, isAnimal(unit.item));
 }
 
 function inMap(x: number, y: number): boolean {
@@ -261,9 +272,10 @@ export function stepTowards(at: Point, to: Point, velocity: number, ms: number):
   return { x: at.x + (dx * reach) / longest, y: at.y + (dy * reach) / longest };
 }
 
-/** Whether a unit is the player's to send about: their people's, or anyone's, and not in the wild. */
+/** Whether a unit is the player's to send about: their people's, anyone's, or an animal they caught (rules/animals.ts). */
 export function canWalk(town: Town, placed: PlacedItem): boolean {
-  return placed.item.isUnit && (placed.item.race === town.race || placed.item.race === "a") && placed.item.velocity > 0;
+  const theirs = placed.item.race === town.race || placed.item.race === "a" || (isAnimal(placed.item) && !placed.wild);
+  return placed.item.isUnit && theirs && placed.item.velocity > 0;
 }
 
 /**

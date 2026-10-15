@@ -95,6 +95,8 @@ PICTURES = {
     "axe": ("CursorMC", 11),
     "pick": ("CursorMC", 4),
     "inside": ("CursorMC", 10),
+    # Over a wild animal just caught, for a few seconds.
+    "caught": ("IconoCapturadoMC", 0),
 }
 
 # The mouse pointers a selected unit shows over what it can work or go into
