@@ -1781,6 +1781,36 @@ not buried), and an enemy turned fights for the player.
 **Not yet:** the collection pieces dropped by enemies (they come with the
 collections, in the last stop).
 
+### Attacking players
+
+"The switch". Attacking another player's town still opens the classic
+game; the new client's side comes in slices. A reading of the original,
+in our words, is the plan (how an attack starts, the battlefield and the
+four defence plans, the report, the windows after, spying, the world
+map, revenge).
+
+First slice, the server (`pvp.py`, with tests in
+`tests/test_social.py`): the report the client sends at the end
+(`end_attack`) is no longer taken on trust. Whichever game sends it:
+
+- **Gold** is at most what the defender's things killed are worth, as
+  the Flash client prices them: a town hall its owner's level x 100 (the
+  level from the defender's save), a fighter half its gold price, an
+  eighth of its stone price or ten times its cash price, each at most
+  200; a won attack that found none pays 25; 20,000 at most in all.
+- **Experience** is at most a twentieth of each kill's gold (at least 1),
+  plus 1 for each other thing the defender's town has.
+- **Honour** is worked out again from both armies: what the defender
+  lost less what the attacker lost, against what the defender had, 1 to
+  10 (0 when there was no town hall).
+- **Losses:** at least the attacker's share of its fallen stay lost, by
+  its level: 5 in 100 below level 10, a quarter from 10 to 15, half from
+  16.
+- **The count:** a fourth attack within the 6 hours up to the last (a
+  fifth with an Odin Statue) is recorded, but pays nothing.
+- The defender's tenths go to the town that was attacked; each player
+  keeps the last 20 attacks made and received (the history shows 10).
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: attacking players, the server's checks
+
+- **A fourth attack in 6 hours is recorded but pays nothing,** rather
+  than being refused: the Flash client's own checks happen in places the
+  server can't see (the neighbour bar and Revenge don't count), so a
+  refusal could break an attack the classic game allowed.
+- **The defender still loses nothing** when attacked (no units, no
+  gold), as `pvp.py` already chose; what Social Point's server did isn't
+  known. They earn a tenth of each attacker their town killed, as before,
+  now in the town that was attacked.
+- **Honour comes from the armies, not the report,** so an empty report
+  earns 1, the least any battle gives.
+
 ## 15 October 2026: the special units' counted beats
 
 - **As the original played, slips included, where a player would have
