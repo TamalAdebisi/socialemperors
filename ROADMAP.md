@@ -321,7 +321,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] Defending the town, camps: the ten troll camps the original
         lays out by code, their chests and prisoners every 4 hours, and
         the trolls on the border ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] The twenty scripted troll camps
+  - [x] Scripted camps, part 1: the burning mill (7) and the skeleton
+        statue (13) ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] Scripted camps, the rest (14 to 29)
   - [x] The Hero Isle: its seven parts behind doors that open as each is
         cleared, and the monks turning units to their side
         ([CLIENT.md](CLIENT.md#step-4-battles))

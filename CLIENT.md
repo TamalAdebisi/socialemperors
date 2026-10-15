@@ -1268,6 +1268,21 @@ few kinds with its numbers; our notes in words are in
   target, a whirlwind round the unit (hitting, throwing, poisoning), a
   blast, a line of hits ahead, a single hit, healing, eggs and minions,
   swallowing, freezing, poison, growing, a war cry.
+- **The rarer ones:** a shield of its own (Leonidas's shield wall and the
+  Ether Messiah's shelter take no damage for 10 seconds, the Dragon
+  Hunter II's force field half); the Invisible Killer can't be picked as
+  a target for 8 seconds (drawn see-through); the Luring Warrior draws up
+  to 10 enemy units within 17 tiles to fight it for 15 seconds; the
+  Rainbow Dragon becomes a Crystal, Vulcano, Death or Electric Bahamut
+  dragon for 20 seconds, keeping its life and its own buttons; the
+  Chameleon takes its target's form for 30 seconds, keeping its share of
+  life; the epic dragons' seals lift small enemy units helpless (drawn
+  higher), hurt them and drop them, and the skull seal kills some
+  outright; the Red Hot dragon's ghost copies strike four points 8 tiles
+  round it, throwing and burning; the Ether Messiah's copies strike ahead
+  and behind; the werewolf's curse turns its target (one whose kind has
+  under 500 life, no boss) into a werewolf on its side, poisoned for good;
+  the Red Wizard's fire rain is only a picture, as in the original.
 - **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
   from the damage they deal (healers from the healing they do), at most
   once a second, doubled beside a Limit Wizard of their side; full at
@@ -1369,11 +1384,54 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
   healers... The next camp comes 4 hours later.
 
-**Not yet** (Beta 2's next slices): the twenty scripted camps, monks at
-home, the rarer special moves (shape-shifting, flying, ghosts, shields
-and the like: their buttons don't show yet), collection pieces dropped by
-enemies, the battle music and the "under attack" alert at home, and the
-original's repair pointer.
+- **Music and the alert:** when one of the player's things is hit at home,
+  the game's battle tune (BATALLA) takes over from the town's; every 70
+  frames, with no enemy fighting, the town's comes back. Damage taken out
+  of sight adds up (in sight takes away); past 50, a red "Your town is
+  under attack!" shows for 5 seconds, and its Help button takes the
+  camera there.
+
+**Scripted camps**, the same way. Code: `rules/scripted.ts` (the rules,
+with tests), `rules/scripted-camps.json` (every piece of the eighteen
+camps players reach, our own notes on the original's tables) and
+`homeScripted.ts` (playing them in the town).
+
+- **Which:** twenty of the thirty camps are stories. They stand in the
+  map's four corners, always in the same places. Camps 9 and 11 are never
+  reached by any player, as in the original. Played here so far: 7 (the
+  burning mill), 13 (the skeleton statue), 15 (the golden golem), 17 (the
+  black yeti), 19 (the giant viper), 21 (the mummy), 22 (the evil
+  rockdriller), 26 (the Atlantis treasure), 27 (the Balrog), 28 (the demon
+  portals) and 29 (the corrupted wizards). The others (the four festival
+  camps with chests that fill up step by step, the Chinese dragon, Neptune
+  and the Ent) are put up by the classic game for now, in the same empire.
+- **How:** each key (a well, a statue) is guarded by the enemy units
+  standing within 7 tiles of it when the camp is read (border trolls
+  there too). When they've all fallen it lights up; one tap takes it: it
+  pays its experience (`collect_new`), and it and its scenery go (`sell`
+  ... "COLQS" and "ATRZO"). The last key lights the chest (the mill), or
+  brings a wave of five skeletons (the statue), whose fall lights it.
+  Unlike the ten camps built by code, these chests don't wait for every
+  enemy on the map to fall. Opening one pays the level's reward and the
+  next camp comes in 4 hours.
+- **Reloading:** camps 7 and 13 save nothing of their own: how far one
+  has got is read from the pieces still standing (keys left, the chest,
+  the wave), as in the original. The newer camps (14 to 29) save their
+  progress with `set_quest_var` (started, the keys taken, the bosses
+  beaten). Each time the town opens, they clear the four corners and put
+  back what isn't done: the guards of the keys left come back whole, and
+  so does a boss not yet beaten.
+- **Bosses and prizes:** a boss comes when the last key is taken (or at
+  once, when the camp has no keys); the chest lights up when it falls, or
+  the camp ends there when it has no chest (the Balrog), or when the last
+  key is taken (the treasure, the portals, the wizards). A camp's helpers
+  join the player by the town hall when it starts. Its prizes come with
+  the chest: units beside it (or beside the last key), buildings to
+  storage (`store_add_items`).
+
+**Not yet** (Beta 2's next slices): sixteen of the scripted camps, monks at
+home, collection pieces dropped by enemies (they come with the
+collections), and the original's repair pointer.
 
 ### Making the art look better
 

@@ -93,7 +93,8 @@ const BLAST = 500;
 export interface Fighter {
   /** A number of its own, in the order fighters were added. */
   readonly key: number;
-  readonly item: ItemInfo;
+  /** What it is (a dragon that changes form, or a chameleon, is another thing for a while). */
+  item: ItemInfo;
   side: Side;
   readonly isUnit: boolean;
   /** Units: the tile under them, as they walk; buildings: the tile the save names (their last). */
@@ -109,7 +110,7 @@ export interface Fighter {
   /** Frames between hits: the item's, cut for a while by a war cry. */
   interval: number;
   velocity: number;
-  readonly flying: boolean;
+  flying: boolean;
   /** 0 to 4: spreads the units' attack checks over the 5 frames, as the Flash client does. */
   readonly offset: number;
   condition: Condition;
@@ -162,6 +163,16 @@ export interface Fighter {
   invulnerable?: boolean;
   /** Drawn this many times its size. */
   scale?: number;
+  /** A shield of its own (rules/specials.ts): until when, and the share of each hit it still takes. */
+  guard?: { until: number; taken: number } | null;
+  /** Can't be picked as a target until this frame. */
+  hiddenUntil?: number;
+  /** Floating helpless under a seal until this frame (drawn higher). */
+  liftedUntil?: number;
+  /** Another form for a while: what it was, and until when. */
+  form?: { base: ItemInfo; until: number; keepShare: boolean } | null;
+  /** A werewolf made by a curse: it can't curse again. */
+  cursed?: boolean;
   /** At home: a building of the player's burnt out at 0 life (it counts as dead until repaired in full). */
   ruined?: boolean;
   /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
@@ -836,7 +847,14 @@ export class Battle {
     let dealt = crit ? (amount + Math.abs(variance)) * CRIT_MULTIPLIER : amount + variance;
     // An Ether Shield over it takes its share.
     dealt -= Math.round(dealt - dealt * this.shieldFactor(target));
-    const damage = Math.max(1, Math.round(dealt - target.item.defense));
+    let damage = Math.max(1, Math.round(dealt - target.item.defense));
+    // A shield of its own takes its share, or all of it.
+    if (target.guard && this.frame < target.guard.until) {
+      damage = Math.round(damage * target.guard.taken);
+      if (damage <= 0) {
+        return;
+      }
+    }
     target.life = Math.max(0, target.life - damage);
     this.events.push({ kind: "hit", fighter: target, amount: damage, crit, by });
     if (by) {
@@ -1052,7 +1070,8 @@ export class Battle {
     let best: Fighter | null = null;
     let bestSort = Infinity;
     for (const f of this.fighters) {
-      if (f.dead || f.side !== other || f.sinkingSince !== undefined || f.fadingSince !== undefined || (also && !also(f))) {
+      if (f.dead || f.side !== other || f.sinkingSince !== undefined || f.fadingSince !== undefined || this.frame < (f.hiddenUntil ?? 0)
+        || (also && !also(f))) {
         continue;
       }
       const squared = (f.tx - from.x) ** 2 + (f.ty - from.y) ** 2;

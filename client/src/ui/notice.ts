@@ -34,3 +34,27 @@ export function notice(title: string, text: string, picture: string | null, then
   document.body.append(box);
   ok.focus();
 }
+
+/**
+ * The town's "under attack" alert, as the original showed it for 5
+ * seconds by the missions: its button takes the camera there.
+ */
+export function attackAlert(text: string, help: string, go: () => void): void {
+  document.querySelector(".attack-alert")?.remove();
+  const box = document.createElement("div");
+  box.className = "attack-alert";
+  box.setAttribute("role", "alert");
+  const words = document.createElement("span");
+  words.textContent = text;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "button gold";
+  button.textContent = help;
+  button.addEventListener("click", () => {
+    go();
+    box.remove();
+  });
+  box.append(words, button);
+  document.body.append(box);
+  setTimeout(() => box.remove(), 5000);
+}
