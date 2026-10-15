@@ -41,6 +41,10 @@ import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
+import { Graveyards } from "./ui/graveyard.ts";
+import { Pause } from "./ui/pause.ts";
+import { bury, readDead } from "./rules/graveyard.ts";
+import { givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -49,6 +53,8 @@ import { TownView } from "./view/townView.ts";
 
 /** The building where spells are learnt. */
 const WIZARDRY_ACADEMY = 416;
+/** The harbours and zeppelin towers (human and troll), and the island map's page each opens. */
+const DOCKS = new Map([[HARBOUR, 1], [343, 1], [ZEPPELIN_TOWER, 3], [344, 3]]);
 
 /** Arthur's portrait in the Neighbours window: the game's own king. */
 const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
@@ -113,7 +119,7 @@ async function start(): Promise<void> {
   const sound = new Sound(settings.assetsUrl, town.race);
   // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
   const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
-    population: (t) => population(t, items, increase), sound });
+    population: (t) => population(t, items, increase), sound, pause: new Pause(app.ticker) });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -195,6 +201,23 @@ async function start(): Promise<void> {
         commands.add(cmd, ...args);
         void commands.flush();  // as the Flash client: at once
       }, () => hud.update(town)));
+    // The graveyards and the Altar of Heroes (ui/graveyard.ts): the fallen as the save keeps them, and the potions.
+    const saved = (info.privateState ?? {}) as Record<string, unknown>;
+    const dead = readDead(saved.deadHeroes);
+    const potionPack = (config.globals?.GRAVEYARD_POTIONS ?? {}) as { price?: { c?: number }; amount?: number };
+    const graves = new Graveyards({
+      town, items, dead,
+      potions: { count: Number(saved.potion) || 0 },
+      pack: { amount: Number(potionPack.amount) || 1, cash: Number(potionPack.price?.c) || 100 },
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      heroPicture: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}_altar.png`,
+      send: (cmd, ...args) => {
+        commands.add(cmd, ...args);
+        void commands.flush();  // as the Flash client: at once
+      },
+      arrived: (placed, lines) => editor.arrived(placed, lines),
+      changed: () => hud.update(town),
+    });
     const doings = new Doings();
     // What visits to neighbours did in this tab counts for the goals here.
     const visits = visitsSoFar();
@@ -205,7 +228,23 @@ async function start(): Promise<void> {
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
-      windowOf: (placed) => (placed.item.id === WIZARDRY_ACADEMY ? { label: "Spells", run: () => spells.open() } : null) });
+      windowOf: (placed) => {
+        if (placed.item.id === WIZARDRY_ACADEMY) {
+          return { label: "Spells", run: () => spells.open() };
+        }
+        // The harbour opens the island map at its first page, the zeppelin tower at its third, as in the original.
+        const page = DOCKS.get(placed.item.id);
+        if (page) {
+          return { label: page === 1 ? "Let's sail" : "Let's fly", icon: page === 1 ? "open-harbour" : "open-zeppelin", run: () => {
+            if (armyOf(town).length === 0) {
+              editor.tell(page === 1 ? "You don't have any troop to set sail!" : "You don't have any troop to fly!");
+            } else {
+              islands.open(page);
+            }
+          } };
+        }
+        return graves.windowOf(placed);
+      } });
     hud.offerCollectAll(() => editor.collectAll());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
@@ -215,11 +254,21 @@ async function start(): Promise<void> {
       void import("./homeDefence.ts").then(({ HomeDefence }) => {
         const defence = new HomeDefence({
           town, items, config, privateState: info.privateState as Record<string, unknown> | undefined, settings, commands, sound,
-          art, view, world: mapLayer, camera, editor, clock,
+          art, view, world: mapLayer, camera, editor, clock, buried: (id) => bury(dead, id),
           camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0,
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+        // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
+        // client does (rules/dock.ts): after the camp, as a new town's prisoner holds the harbour back.
+        for (const { placed, commands: sent } of givenOnOpening(town, items)) {
+          for (const command of sent) {
+            commands.add(command.cmd, ...command.args);
+          }
+          void view.redraw(placed);
+          editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
+            : "Zeppelin operative! Click in the Zeppelin Tower to fly through the Ancient Sea!");
+        }
       });
     };
     afterDrawing = () => {

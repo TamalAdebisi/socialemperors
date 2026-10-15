@@ -56,6 +56,16 @@ export const ICONS = {
   // Spells: the book that opens them in battle, and mana.
   "spell-book": new URL("./art/spell-book.webp", import.meta.url).href,
   mana: new URL("./art/mana.webp", import.meta.url).href,
+  // The graveyard's potions.
+  potion: new URL("./art/potion.webp", import.meta.url).href,
+  // The cards' buttons for a building's window: the graveyards' and the altar's, the harbour's, the zeppelin tower's.
+  "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
+  "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
+  "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  // Pausing: the options panel's button, the game's GAME PAUSED and its RESUME.
+  pause: new URL("./art/pause.webp", import.meta.url).href,
+  "game-paused": new URL("./art/game-paused.webp", import.meta.url).href,
+  resume: new URL("./art/resume.webp", import.meta.url).href,
 } as const;
 
 export type IconName = keyof typeof ICONS;

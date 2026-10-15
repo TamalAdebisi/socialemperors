@@ -302,7 +302,7 @@ export class Battle {
   /**
    * Told when a monk turns a unit, while it's still on its old side (a
    * quest counts it as fallen there). Monks only turn units when someone
-   * listens: on the islands, not at home yet.
+   * listens: on the islands and at home (homeDefence.ts).
    */
   onConvert: ((unit: Fighter, by: Fighter) => void) | null = null;
   /**

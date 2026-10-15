@@ -20,9 +20,10 @@ export default async function bubble({ newPlayer }) {
   await player.reload();
   const before = await player.saved();
 
-  // Ready after 32.4 seconds: the bubble stands over the field's middle.
-  await player.wait(Math.max(0, setUpAt + 35_000 - Date.now()));
+  // Ready after 32.4 seconds: the bubble stands over the field's middle (from the next look the town takes).
+  await player.wait(Math.max(0, setUpAt + 32_400 - Date.now()));
   const bubbleAt = player.screenOf(54.5, 55.5, 95);
+  await player.page.waitForFunction((at) => window.seHome?.parts.view.itemAt(at)?.item.id === 10, bubbleAt, { timeout: 20_000 });
   await player.shot("ready");
   await player.click(bubbleAt);
   const after = await player.saved();
