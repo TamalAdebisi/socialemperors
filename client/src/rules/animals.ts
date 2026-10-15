@@ -61,9 +61,20 @@ export function animalsToAdd(town: Town, today: Record<string, number>, perDay: 
   return wanted;
 }
 
-/** Whether an animal can go into a building: one of its kind's, or the hatchery. */
-export function canLiveIn(animal: ItemInfo, building: ItemInfo): boolean {
-  return (HOMES.get(animal.subcategory) ?? []).includes(building.id) || building.id === HATCHERY;
+/** The animals the Nursery (the hatchery) takes: the white cow and sheep, the horse and the boar. */
+const HATCHABLE = new Set([504, 505, 571, 584]);
+
+/**
+ * Whether an animal can go into a building: one of its kind's ranches, or
+ * the Nursery, which takes only the same animal as the first already inside
+ * (any of the four, when empty), as in the Flash client. `inside`: the
+ * building's units, by id.
+ */
+export function canLiveIn(animal: ItemInfo, building: ItemInfo, inside: number[] = []): boolean {
+  if (building.id === HATCHERY) {
+    return HATCHABLE.has(animal.id) && (inside.length === 0 || inside[0] === animal.id);
+  }
+  return (HOMES.get(animal.subcategory) ?? []).includes(building.id);
 }
 
 /**

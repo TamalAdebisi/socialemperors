@@ -20,9 +20,11 @@ export const FLASH_FPS = 30;
 export type WalkGrid = Uint8Array;
 
 /**
- * Bought land is walkable, except under buildings. Fields (farms) and open
- * wall gates can be walked over, and units don't stand in each other's way.
- * `anywhere`: the whole map but under buildings, as the Flash client's paths go.
+ * Where units walk: the whole map, the wild ring and land not yet bought
+ * too, except under buildings, as the Flash client's paths go. Fields
+ * (farms) and open wall gates can be walked over, and units don't stand in
+ * each other's way. Without `anywhere`, only the bought land (for what must
+ * stand on it, not for walking).
  */
 export function walkGrid(town: Town, anywhere = false): WalkGrid {
   const grid = new Uint8Array(MAP_TILES * MAP_TILES);
@@ -46,12 +48,12 @@ export function walkGrid(town: Town, anywhere = false): WalkGrid {
 }
 
 /**
- * Where a unit can walk: the player's units, on their land (they can't be
- * sent beyond it); animals anywhere but through buildings, so one caught in
- * the wild can walk in to its ranch.
+ * Where a unit can walk: anywhere on the map but through buildings, as in
+ * the Flash client, so villagers walk out to the trees and rocks that grow
+ * in the wild (rules/nature.ts) and an animal caught there walks in.
  */
-export function gridFor(town: Town, unit: PlacedItem): WalkGrid {
-  return walkGrid(town, isAnimal(unit.item));
+export function gridFor(town: Town, _unit: PlacedItem): WalkGrid {
+  return walkGrid(town, true);
 }
 
 function inMap(x: number, y: number): boolean {
@@ -63,19 +65,17 @@ export function isWalkable(grid: WalkGrid, x: number, y: number): boolean {
 }
 
 /**
- * The ground a unit standing at `from` walks on. Its own (gridFor), unless
- * it stands off it: left on the wild ring after a fight at a troll camp,
- * freed from one, or under a gate shut on it. Then it may cross the whole
- * map to get back, other buildings still in the way (it walks out of one it
- * stands in); where it's sent must be on its ground all the same (unitPath,
- * reachable).
+ * The ground a unit standing at `from` walks on: its own (gridFor), unless
+ * it stands under a building (a gate shut on it, a building put down where
+ * it stood). Then it walks out across that building; where it's sent must
+ * be on its ground all the same (unitPath, reachable).
  */
 function groundFrom(town: Town, unit: PlacedItem, from: Point): { grid: WalkGrid; ground: WalkGrid } {
   const grid = gridFor(town, unit);
   if (isWalkable(grid, from.x, from.y) || !inMap(from.x, from.y)) {
     return { grid, ground: grid };
   }
-  const ground = walkGrid(town, true);
+  const ground = grid.slice();
   ground[from.y * MAP_TILES + from.x] = 1;
   for (const key of tilesUnder(town, from)) {
     const [x, y] = key.split(",").map(Number);
@@ -96,7 +96,7 @@ export function tilesUnder(town: Town, at: Point): Set<string> {
   return tiles;
 }
 
-/** A unit's way from one tile to another (findPath), back onto its ground if it stands off it. */
+/** A unit's way from one tile to another (findPath), out of a building first if it stands in one. */
 export function unitPath(town: Town, unit: PlacedItem, from: Point, to: Point): Point[] | null {
   if (unit.item.flying) {
     return findPath(gridFor(town, unit), from, to, true);

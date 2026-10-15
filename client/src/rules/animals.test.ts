@@ -21,6 +21,7 @@ const ITEMS = new Map<number, ItemInfo>([
   [500, itemInfo(config(500, "Villager I", "u", 71, { race: "h" }))],
   [11, itemInfo(config(11, "Sheep Ranch I", "b", 123, { race: "h", unit_capacity: "6", width: "3", height: "3" }))],
   [12, itemInfo(config(12, "Cow Ranch I", "b", 123, { race: "h", unit_capacity: "6", width: "3", height: "3" }))],
+  [226, itemInfo(config(226, "Nursery", "b", 123, { race: "a", unit_capacity: "3", width: "3", height: "3" }))],
 ]);
 
 function at(id: number, tx: number, ty: number, more: Partial<PlacedItem> = {}): PlacedItem {
@@ -73,4 +74,12 @@ test("animals grow back with the trees, wild, and the server hears how many came
   assert.ok(animals.every((p) => p.wild === true));
   assert.deepEqual(commands.filter((c) => c.cmd === "admin_add_animal").map((c) => c.args), [[ANIMAL.sheep, 7], [ANIMAL.cow, 2]]);
   assert.equal(commands.find((c) => c.cmd === "buy" && c.args[0] === 505)?.args[7], "u");
+});
+
+test("the Nursery takes a white cow, sheep, horse or boar, and then only that animal", () => {
+  const nursery = ITEMS.get(226)!;
+  assert.equal(canLiveIn(ITEMS.get(504)!, nursery), true, "empty: any of the four");
+  assert.equal(canLiveIn(ITEMS.get(500)!, nursery), false, "not a villager");
+  assert.equal(canLiveIn(ITEMS.get(505)!, nursery, [504]), false, "a cow inside: no sheep");
+  assert.equal(canLiveIn(ITEMS.get(504)!, nursery, [504]), true, "another cow");
 });

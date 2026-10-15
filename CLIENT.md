@@ -442,8 +442,8 @@ see-through, with its footprint green or red; each tap buys one, until Done.
 
 - Humans are sold items whose `in_store` is 1 or 3, trolls 2 or 4. An item
   shows from its `store_level`, and can be bought from its `min_level`, or
-  sooner once unlocked with cash (the save's
-  `privateState.unlockedEarlyBuildings`).
+  sooner if the save has it unlocked (`privateState.unlockedEarlyBuildings`,
+  from the old site; nothing in the game unlocks one now).
 - Each category lists its items by `display_order`, the locked ones last;
   its tabs are the config's `categories` table, by `subcategory_id`. The
   New category has its own items, and the other categories' new ones
@@ -478,8 +478,14 @@ Sell asks first, on the card itself.
   for cash things, the Dock or the Zeppelin Tower. `sell_gift` or
   `sell_stored_item` (item, town). The town hall can't be sold; the
   Bahamut Heart and the pieces of special collections are only kept.
-- Units can be stored too (heroes); placing them waits for training units,
-  which needs the town's population.
+- Units can be stored too (heroes); placing one needs room among the
+  town's people and obeys its kind's limit, as training does (the Mummy
+  and the Ent are let through, as in the Flash client).
+- Social buildings (the Summit, the Allied Markets...) are in the classic
+  game for now, but as the town opens the new client hires the Flash
+  client's free helper for one waiting for staff: one when its staff list
+  is empty and it has 3 places or more, a second when it has one and 7 or
+  more (`buy_si_help`, free). Test: `e2e/tests/town-rules.mjs`.
 
 **Tested:** the rules and the command queue have unit tests (`npm test`).
 The browser tests are in `e2e/tests/`, and `node e2e/run.mjs` plays them
@@ -508,7 +514,7 @@ again, and checks the save after each. The train test trains villagers at
 a new town's hall until there's no room (6 of 11 people to 11 of 11), and
 checks the save has them and the food paid. The cash test takes a town to
 level 20 (its prizes give cash), buys land for cash after gold is refused,
-opens House IV early, hurries a gold mine and trades cash for gold at the
+finds House IV can't be opened early, hurries a gold mine and trades cash for gold at the
 bank, checking the save for each. The bonus test checks there's no daily
 bonus or welcome-back chest at level 1; at level 5, on the empire's first
 day, the chest's window says to come back tomorrow, its chests shut (one
@@ -638,9 +644,10 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 
 **How units walk**, read from the Flash client (our notes, our words):
 
-- Bought land can be walked on, except under buildings. Fields (farms)
-  can be walked over, and units don't stand in each other's way. Closed
-  land, the wild ring and the sea can't be reached.
+- The whole map can be walked on, the wild ring and land not yet bought
+  too, except under buildings (this client kept units on the bought land
+  until the map of the original showed otherwise). Fields (farms) and open
+  wall gates can be walked over, and units don't stand in each other's way.
 - A path goes tile by tile in 8 directions, but never squeezes diagonally
   between two corners. Flying units go in a straight line, over anything.
   A tile that has become a building since the unit set off stops it there.
@@ -663,11 +670,10 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 **Getting unstuck** (after the owner found villagers stuck; test
 `e2e/tests/stuck.mjs`):
 
-- A unit standing off the bought land (left on the wild ring after a fight
-  at a troll camp, or freed from one) walks back when sent: its way may
-  cross land that isn't bought, but where it's sent must be on the land. A
-  unit standing in a building (a gate shut on it) walks out across it.
-  (`unitPath` and `reachable` in `rules/walking.ts`.)
+- A unit standing in a building (a gate shut on it) walks out across it.
+  (`unitPath` and `reachable` in `rules/walking.ts`.) One left off the
+  bought land, after a fight at a troll camp, simply walks home: units
+  walk the whole map.
 - A unit stopped short by something built in its way, on its way to work,
   repair or go inside, sets off once more from where it stopped. It used to
   start working from wherever it had stopped.
@@ -815,12 +821,19 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
   animals as are inside (1 for none). Buildings whose pictures are laid out
   otherwise, such as the Training Stables' long animation, play as they
   are. Test: `e2e/tests/looks.mjs`.
-- Let out: the last unit in comes out on the nearest free tile around the
-  building (`pop_unit`: the building's place, town, item, the tile, 0).
+- Let out: the last unit in comes out beside the building
+  (`pop_unit`: the building's place, town, item, the tile, 0). Where a
+  unit comes out (let out or trained): ring by ring round the building's
+  tile, the first ring with a free tile, and on it the one furthest down
+  the map, anywhere on the map, as in the Flash client.
   The last one out ends the building's work; a mill or mine whose time is
   chosen forgets the choice too (`activate`, 0) and asks again when the
-  next worker comes in. Selling or storing a building lets everybody out
-  first, as the Flash client does.
+  next worker comes in. Selling, storing or lifting a building to move it
+  lets everybody out first, as the Flash client does (a cancelled move
+  doesn't put them back). A building can't be moved or stored while it
+  trains a unit.
+- The Nursery takes a white cow, a white sheep, a horse or a boar, and
+  then only the same animal as the first inside.
 - Pointers: with a unit selected, the mouse pointer over the map is the
   Flash client's own for what the unit would do there: an axe over a tree
   it can chop, a pickaxe over a rock or gold, a red arrow over a building it
@@ -843,8 +856,9 @@ the Flash client sometimes drops from a harvest.
 Each time the player opens their town, it's tidied up, and trees, rocks
 and wild animals grow back, as in the Flash client, so wood, stone and gold
 don't run out; wild animals are caught by coming near them. Code: `rules/nature.ts` and
-`rules/animals.ts` (with tests), called from `main.ts` before the town is
-drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
+`rules/animals.ts` (with tests), called from `main.ts` once the camp of the
+moment is up, as in the original (a camp that clears the wild ring first
+doesn't take what just grew); catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 `animals.mjs`.
 
 **How it works**, read from the Flash client (our notes, our words):
@@ -857,10 +871,11 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   clump fewer. A clump is 5 or 6 rocks, or 16 to 19 trees, the size picked
   once per kind each time.
 - A clump starts on a tile picked at random in one of the blocks of the
-  wild ring round the island or of the player's land; each of its trees or
-  rocks takes the free tile nearest it (the tile itself first, then the
-  first ring of tiles out with a free one). So a clump at a block's edge can
-  spill onto land not bought yet, as in the original.
+  wild ring round the island or of the middle land not bought yet, never
+  the player's own; each of its trees or rocks takes the free tile nearest
+  it (the tile itself first, then the first ring of tiles out with a free
+  one). So a clump at a block's edge can spill onto the player's land, as
+  in the original. Villagers walk out to them.
 - Then single trees, until there are a hundred: each at a random tile, or
   a free one up to 5 tiles from it, else not at all.
 - Each is "bought" for nothing (`buy`, the item, its tile, 0, town, 1, 1,
@@ -881,10 +896,9 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   for 5 seconds (the game's own picture, `IconoCapturadoMC`), the goals
   count it, and it walks to the nearest ranch of its kind and in (sheep
   ranches, cow ranches, the training stable for horses, boar ranches), as
-  workers go in (`push_unit`); with none, to beside the town hall. Animals
-  find their way anywhere but through buildings, as the original's paths
-  do, so one caught in the wild walks in; the player's units still go only
-  on their land.
+  workers go in (`push_unit`); with none, to beside the town hall. Units
+  and animals find their way anywhere but through buildings, as the
+  original's paths do, so one caught in the wild walks in.
 - A caught animal is the player's: select it and tap one of its ranches (or
   the hatchery) to send it in. Tapping a wild animal with a unit selected
   sends the unit beside it, and so catches it.
@@ -897,9 +911,9 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   stays. A unit on a tile something else has (but a farm or a gate) steps to
   the nearest free tile (`move`, "Colisio #1"...), and so does the second of
   two units on one tile. Terrain (paths) takes no tile, as when placing.
-- A town with no villager, on the map or inside a building, gets one, a man
-  or a woman by chance, on a free tile near the middle (54, 54), bought for
-  nothing. Not before Arthur's lessons are taken or skipped, as the Flash
+- A town with no villager on the map or at work in a farm, mill or mine
+  (one sheltering in a refuge doesn't count) gets one, a man or a woman by
+  chance, on a free tile near the middle (54, 54), bought for nothing. Not before Arthur's lessons are taken or skipped, as the Flash
   client doesn't during its tutorial. Test: `e2e/tests/tidy.mjs`.
 - The browser tests give each new town enough trees, rocks and animals
   first, in the wild corners at the top, so none grow on the land a test
@@ -918,7 +932,8 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
 
 - Each building trains one kind of unit (the config's `trains`), one at a
   time, in 3 seconds. The price is paid when it starts, with the unit's
-  experience; then it stands on the nearest free tile beside the building.
+  experience; then it stands beside the building (where units come out:
+  "Villagers at work").
 - Price: the unit's `cost` (a blacksmith takes a tenth off footmen,
   horsemen and archers, a university off siege engines, rounded up), and
   twice that in food; villagers need no food. Or the unit's
@@ -942,8 +957,8 @@ windows are in the classic game for now.
 ### Land and cash
 
 Built (Beta 1's fifth slice). Tap land for sale to buy it, in gold or cash;
-open a building early from the shop for cash; finish a building's work now
-for 2 cash; and the bank, from the + on the gold and cash pills. Code:
+finish a building's work now for 2 cash; and the bank, from the + on the
+gold and cash pills. Code:
 `rules/land.ts`, `unlock` in `rules/shop.ts`, `hurry` in
 `rules/production.ts` (all with tests), `ui/bank.ts`.
 
@@ -959,10 +974,11 @@ for 2 cash; and the bank, from the + on the gold and cash pills. Code:
   the player's own town only, as in the Flash client; tapping a block that
   doesn't touch theirs does nothing.
   `expand` (block, "gold" or "cash", town).
-- Opening a building early: a building the shop shows but whose level
-  isn't reached costs a third of that level in cash, rounded up (House IV,
-  level 31: 11 cash); the shop sells it from then on. `unlock_building`
-  (its id, as text).
+- Opening a building early: the original has a price for it (a third of
+  the level in cash, rounded up; `unlock_building`), but nothing in it
+  opens that window: the "Level N" tag on a shop card does nothing. So
+  ours doesn't offer it either (it did, until the map of the original
+  showed this); unlocks already in a save still count.
 - Hurrying: 2 cash finishes a working mill, mine, bakery or a wonder that
   houses nobody, and collects it at once; the cash goes in `collect_new`'s
   last place. Farms and ranches can't be hurried.
@@ -981,7 +997,10 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 **How the goals work**, read from the Flash client (our notes, our words):
 
 - Goals run only in a human town below level 35, decided when the town
-  loads, as in the Flash client (from 35 the spells box takes their place).
+  loads, as in the Flash client (from 35 the spells box takes their place;
+  ours has none yet). Reaching level 35 at home stops them at once, and a
+  Wizardry Academy is placed for free near tile (59, 59), even if the town
+  has one (`levelThirtyFive` in `rules/dock.ts`).
 - The config's `missions` have each goal's title, text and gold ("#0#" in
   them is the host, Arthur); what each
   asks is in `goals.json`, by the goal's number (the Flash client looks it
@@ -996,13 +1015,18 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - Some goals count the town as it is: things built (on the map and units
   inside buildings), units of a kind, units inside buildings of a kind,
   people, land, walls along the south edge, units near the town hall, the
-  Small Refuge's units. Others count what the player did since the page
-  opened, as the Flash client counts them: collecting (buildings, trees and
-  rocks), working times chosen, units let out, buildings moved and stored,
-  something placed from storage, units trained at a building, units sent
-  into buildings, cash spent, zooming, taking up the square tool, the daily
-  bonus's day, the neighbour visited last and the buildings helped on visits
-  (kept in the browser tab, so a visit counts back home).
+  Small Refuge's units. Units near the town hall: the nearest 20 of the
+  player's units within a circle of 3 tiles round its tile. Others count
+  what the player did since the page opened, as the Flash client counts
+  them: collecting (buildings, trees and rocks), units let out, animals
+  caught, zooming, taking up the square tool, the neighbour visited last
+  and the buildings helped on visits (kept in the browser tab, so a visit
+  counts back home) always; working times chosen (the last choice),
+  buildings moved and stored, something placed from storage, units trained
+  at a building, units sent into buildings, cash spent, the daily bonus's
+  day and the island map opened only while a goal of that kind is open and
+  not done, as there (before each check the game listens again for the
+  open goals' kinds only).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the market, the social buildings and
