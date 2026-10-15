@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: tidying a town as it opens
+
+- **Paths and other terrain take no tile** when tidying, as when placing
+  here, so nothing built over a path is put away.
+- **A building's footprint is the same whichever way it faces,** as when
+  placing here; the original turned it for this check only.
+- **The villager for a town with none** comes once Arthur's lessons are
+  taken or skipped (the original waited for its tutorial to end).
+- **The browser tests start each town with a villager** far off in the
+  wild corner, so none appears near the middle where tests tap; one test
+  checks the villager comes.
+
 ## 15 October 2026: Beta 2, the Rockdriller and the dragons
 
 - **Kept from the original:** the Rockdriller goes back to 25,000 life when

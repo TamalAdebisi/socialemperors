@@ -732,9 +732,9 @@ the Flash client sometimes drops from a harvest.
 
 ### The living map
 
-Trees, rocks and wild animals grow back each time the player opens their
-town, as in the Flash client, so wood, stone and gold don't run out; wild
-animals are caught by coming near them. Code: `rules/nature.ts` and
+Each time the player opens their town, it's tidied up, and trees, rocks
+and wild animals grow back, as in the Flash client, so wood, stone and gold
+don't run out; wild animals are caught by coming near them. Code: `rules/nature.ts` and
 `rules/animals.ts` (with tests), called from `main.ts` before the town is
 drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 `animals.mjs`.
@@ -780,9 +780,22 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
 - A caught animal is the player's: select it and tap one of its ranches (or
   the hatchery) to send it in. Tapping a wild animal with a unit selected
   sends the unit beside it, and so catches it.
+- Tidying, first of all (`rules/cleanup.ts`): a save can have things on
+  top of each other (a bug, an old game). Buildings take their tiles first,
+  the town hall before all, then the units, in the save's order. One of the
+  player's people's buildings that finds a tile taken, or stands off the
+  map, goes to storage (`store_item_frombug`); anyone else's off the map is
+  removed for nothing (`sell`, "OUTOB"); anyone else's on a taken tile
+  stays. A unit on a tile something else has (but a farm or a gate) steps to
+  the nearest free tile (`move`, "Colisio #1"...), and so does the second of
+  two units on one tile. Terrain (paths) takes no tile, as when placing.
+- A town with no villager, on the map or inside a building, gets one, a man
+  or a woman by chance, on a free tile near the middle (54, 54), bought for
+  nothing. Not before Arthur's lessons are taken or skipped, as the Flash
+  client doesn't during its tutorial. Test: `e2e/tests/tidy.mjs`.
 - The browser tests give each new town enough trees, rocks and animals
   first, in the wild corners at the top, so none grow on the land a test
-  uses (`e2e/lib.mjs`, `FULL_WILD`).
+  uses, and a villager far off (`e2e/lib.mjs`, `FULL_WILD`).
 
 ### Training and population
 
