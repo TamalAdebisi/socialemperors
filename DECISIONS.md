@@ -4,6 +4,23 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: attacking players in the new client
+
+- **Attack is in the Neighbours window, from level 6.** The original's
+  neighbour bar offered Attack at any level, but its Battle button
+  stays locked until 6; the new client keeps both to 6.
+- **Every attack counts, wherever it starts.** The original's neighbour
+  bar didn't take one off its counter until the town reloaded; here the
+  count is read fresh before each attack.
+- **The defender's race comes from their saved town,** not the
+  original's guess of "human" for neighbours, so a troll town keeps its
+  trolls in the battle.
+- **The report is sent as the results open,** not when the player
+  presses OK, so nothing is lost if the page closes there (as the
+  islands do).
+- **Bought attack packs aren't offered:** the server has never sold
+  them, so nothing opens that window.
+
 ## 15 October 2026: attacking players, the server's checks
 
 - **A fourth attack in 6 hours is recorded but pays nothing,** rather
