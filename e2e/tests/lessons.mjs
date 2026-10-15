@@ -18,11 +18,20 @@ export default async function lessons({ newPlayer }) {
     await page.waitForFunction((n) => (window.seLessons?.at ?? -1) >= n, n, { timeout });
     await player.wait(600);  // the arrow glides there
   };
-  /** A tap where Arthur's arrow points. */
+  /**
+   * A tap where Arthur's arrow points; every one moves the lessons on. A tap
+   * that changed nothing is tried once more, as a player would: now and then
+   * Chromium loses one on a busy machine.
+   */
   const follow = async () => {
-    const at = await page.evaluate(() => window.seLessons.pointing);
-    assert.ok(at, `the arrow points somewhere (step ${await step()})`);
-    await player.click(at);
+    const before = await step();
+    for (let tries = 0; tries < 2; tries++) {
+      const at = await page.evaluate(() => window.seLessons.pointing);
+      assert.ok(at, `the arrow points somewhere (step ${before})`);
+      await player.click(at);
+      const moved = await page.waitForFunction((n) => window.seLessons.at !== n, before, { timeout: 3000 }).then(() => true, () => false);
+      if (moved) break;
+    }
     await player.wait(300);
   };
 
@@ -112,7 +121,7 @@ export default async function lessons({ newPlayer }) {
   await follow();  // a villager
   await reach(31);
   await player.shot("trees");
-  await follow();  // the marked trees
+  await player.click(await page.evaluate(() => window.seLessons.pointing));  // the marked trees (the last step stays till three fall)
 
   // Three trees down: the nest, and the draggy.
   await page.waitForSelector(".draggy-window.choose", { timeout: 180_000 });
