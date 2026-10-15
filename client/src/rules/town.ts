@@ -96,6 +96,8 @@ export interface PlacedItem {
   wild?: boolean;
   /** A wall gate opened, for units to pass. Not saved: gates are shut each time the town opens, as in the Flash client. */
   open?: boolean;
+  /** A social building's helpers so far, when the save keeps its staff list (the item's `si`). */
+  staff?: number;
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */
@@ -148,6 +150,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       units: Array.isArray(units) ? units.map(Number) : [],
       startedAt: Number.isFinite(started) ? Number(started) : null,
       workTime: Number(attributes?.cp) || 0,
+      ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length } : {}),
     });
   }
   return {

@@ -14,6 +14,8 @@ import { nearestFree } from "./nature.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
 const TOWN_HALL = 135, FARM = 122, VILLAGER = 71;
+/** Where a villager works out of sight: mills, farms and mines. */
+const WORKPLACES = new Set([121, FARM, 124]);
 /** Terrain (paths and the like) is built over, here as when placing (rules/editing.ts): it takes no tile. */
 const TERRAIN = 6;
 /** The villagers a town with none gets one of, by its people. */
@@ -84,14 +86,15 @@ export function cleanUp(town: Town): { commands: Command[]; stored: PlacedItem[]
 }
 
 /**
- * A town with no villager, on the map or inside a building, gets one (a man
- * or a woman of its people, by chance) on a free tile near the middle of the
- * map, as the Flash client does outside its tutorial. Null when it has one.
+ * A town with no villager on the map or at work in a farm, mill or mine
+ * gets one (a man or a woman of its people, by chance) on a free tile near
+ * the middle of the map, as the Flash client does outside its tutorial: one
+ * sheltering in a refuge doesn't count. Null when it has one.
  */
 export function oneVillager(town: Town, items: Map<number, ItemInfo>, now: number, random = Math.random): { commands: Command[]; villager: PlacedItem } | null {
   const ids = VILLAGERS[town.race] ?? VILLAGERS.h;
   const has = town.items.some((placed) => placed.item.subcategory === VILLAGER
-    || (placed.units ?? []).some((id) => items.get(id)?.subcategory === VILLAGER));
+    || (WORKPLACES.has(placed.item.subcategory) && (placed.units ?? []).some((id) => items.get(id)?.subcategory === VILLAGER)));
   const item = items.get(ids[Math.floor(random() * ids.length)]);
   if (has || !item) {
     return null;

@@ -44,6 +44,7 @@ import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
+import { freeHelpers } from "./rules/social.ts";
 import { givenOnOpening, HARBOUR, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
@@ -136,7 +137,8 @@ async function start(): Promise<void> {
     // a villager for a town with none (rules/cleanup.ts; not before Arthur's lessons are
     // taken or skipped); animals off the player's land are wild (rules/animals.ts); then
     // trees, rocks and a few animals grow back (rules/nature.ts).
-    const opening = [...cleanUp(town).commands];
+    // As the Flash client opens a town: the tidy-up, and a free helper at a social building that waits for some.
+    const opening = [...cleanUp(town).commands, ...freeHelpers(town)];
     if (!lessonsNotStarted(info.playerInfo.completed_tutorial, town.id)) {
       opening.push(...(oneVillager(town, items, clock())?.commands ?? []));
     }

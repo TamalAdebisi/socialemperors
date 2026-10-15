@@ -595,8 +595,10 @@ tree of the kind wasn't checked.
    all out (`pop_unit` each), stops its work and, for a mill or mine on the
    working-time list, sends `activate` 0, even when the move is cancelled
    (`client/src/editor.ts`; recorded). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 3. **A stored unit ignores its `units_limit`.** The original refuses it
    (the Mummy and the Ent aside) (`client/src/rules/storage.ts`). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 4. **A farm without wood is kept.** The original destroys it with `kill`
    (`client/src/rules/production.ts`; recorded). (checked twice)
 5. **The worker count is live.** The original keeps the count from the
@@ -608,14 +610,19 @@ tree of the kind wasn't checked.
 7. **Where units come out.** The original picks the free tile toward the
    far corner, anywhere (a nursery's copy only 4 rings out); ours the
    nearest, on owned land only (`client/src/rules/work.ts`). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 8. **A free villager when all shelter in a refuge.** The original counts
    only villagers on the map and in farms, mills, mines, trees and rocks
    (`client/src/rules/cleanup.ts`). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 9. **The nursery takes any animal.** The original wants the kind already
    inside (`client/src/rules/animals.ts`). (checked twice)
+   *Fixed since "Town rules from the map of the original".*
 10. **The harbour and zeppelin.** The original also looks in the gift box
     and staffs one still waiting; ours only the town's storage and a new
     one (`client/src/rules/dock.ts`). (checked twice)
+    *Partly fixed since "Town rules from the map of the original": the gift
+    box too; none waits for a crew on our server (DECISIONS.md).*
 
 **Looks or feels different**
 

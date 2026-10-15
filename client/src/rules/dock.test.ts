@@ -42,11 +42,14 @@ test("a human town is given a harbour near (59, 59), staffed by 20 free helpers 
   assert.equal(givenOnOpening(t, ITEMS).length, 0, "once only");
 });
 
-test("not with the princess waiting, nor one in storage, nor in a troll town; the zeppelin tower from level 30", () => {
+test("not with the princess waiting, nor one in storage or the gift box, nor in a troll town; the zeppelin tower from level 30", () => {
   assert.equal(givenOnOpening(town(5, [placed(PRINCESS, 70, 45)]), ITEMS).length, 0);
   const stored = town(5);
   stored.store.set(HARBOUR, 1);
   assert.equal(givenOnOpening(stored, ITEMS).length, 0);
+  const gift = town(5);
+  gift.gifts.set(HARBOUR, 1);
+  assert.equal(givenOnOpening(gift, ITEMS).length, 0, "nor one in the gift box");
   assert.equal(givenOnOpening(town(40, [], "t"), ITEMS).length, 0);
   assert.deepEqual(givenOnOpening(town(29), ITEMS).map((g) => g.placed.item.id), [HARBOUR]);
   const both = givenOnOpening(town(30), ITEMS);

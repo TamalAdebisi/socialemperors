@@ -478,8 +478,14 @@ Sell asks first, on the card itself.
   for cash things, the Dock or the Zeppelin Tower. `sell_gift` or
   `sell_stored_item` (item, town). The town hall can't be sold; the
   Bahamut Heart and the pieces of special collections are only kept.
-- Units can be stored too (heroes); placing them waits for training units,
-  which needs the town's population.
+- Units can be stored too (heroes); placing one needs room among the
+  town's people and obeys its kind's limit, as training does (the Mummy
+  and the Ent are let through, as in the Flash client).
+- Social buildings (the Summit, the Allied Markets...) are in the classic
+  game for now, but as the town opens the new client hires the Flash
+  client's free helper for one waiting for staff: one when its staff list
+  is empty and it has 3 places or more, a second when it has one and 7 or
+  more (`buy_si_help`, free). Test: `e2e/tests/town-rules.mjs`.
 
 **Tested:** the rules and the command queue have unit tests (`npm test`).
 The browser tests are in `e2e/tests/`, and `node e2e/run.mjs` plays them
@@ -815,12 +821,19 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
   animals as are inside (1 for none). Buildings whose pictures are laid out
   otherwise, such as the Training Stables' long animation, play as they
   are. Test: `e2e/tests/looks.mjs`.
-- Let out: the last unit in comes out on the nearest free tile around the
-  building (`pop_unit`: the building's place, town, item, the tile, 0).
+- Let out: the last unit in comes out beside the building
+  (`pop_unit`: the building's place, town, item, the tile, 0). Where a
+  unit comes out (let out or trained): ring by ring round the building's
+  tile, the first ring with a free tile, and on it the one furthest down
+  the map, anywhere on the map, as in the Flash client.
   The last one out ends the building's work; a mill or mine whose time is
   chosen forgets the choice too (`activate`, 0) and asks again when the
-  next worker comes in. Selling or storing a building lets everybody out
-  first, as the Flash client does.
+  next worker comes in. Selling, storing or lifting a building to move it
+  lets everybody out first, as the Flash client does (a cancelled move
+  doesn't put them back). A building can't be moved or stored while it
+  trains a unit.
+- The Nursery takes a white cow, a white sheep, a horse or a boar, and
+  then only the same animal as the first inside.
 - Pointers: with a unit selected, the mouse pointer over the map is the
   Flash client's own for what the unit would do there: an axe over a tree
   it can chop, a pickaxe over a rock or gold, a red arrow over a building it
@@ -897,9 +910,9 @@ drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
   stays. A unit on a tile something else has (but a farm or a gate) steps to
   the nearest free tile (`move`, "Colisio #1"...), and so does the second of
   two units on one tile. Terrain (paths) takes no tile, as when placing.
-- A town with no villager, on the map or inside a building, gets one, a man
-  or a woman by chance, on a free tile near the middle (54, 54), bought for
-  nothing. Not before Arthur's lessons are taken or skipped, as the Flash
+- A town with no villager on the map or at work in a farm, mill or mine
+  (one sheltering in a refuge doesn't count) gets one, a man or a woman by
+  chance, on a free tile near the middle (54, 54), bought for nothing. Not before Arthur's lessons are taken or skipped, as the Flash
   client doesn't during its tutorial. Test: `e2e/tests/tidy.mjs`.
 - The browser tests give each new town enough trees, rocks and animals
   first, in the wild corners at the top, so none grow on the land a test
@@ -918,7 +931,8 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
 
 - Each building trains one kind of unit (the config's `trains`), one at a
   time, in 3 seconds. The price is paid when it starts, with the unit's
-  experience; then it stands on the nearest free tile beside the building.
+  experience; then it stands beside the building (where units come out:
+  "Villagers at work").
 - Price: the unit's `cost` (a blacksmith takes a tenth off footmen,
   horsemen and archers, a university off siege engines, rounded up), and
   twice that in food; villagers need no food. Or the unit's

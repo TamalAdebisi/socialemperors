@@ -19,6 +19,20 @@ them can be found and reversed. The big, agreed decisions are in
 - **The rules that change the save went to PARITY.md;** those that only
   look or feel different stay in the rule books for their slices.
 
+## 16 October 2026: town rules from the map of the original
+
+- **Moving a building now lets its units out, as in the Flash client.**
+  This reverses "Moving a building keeps its units inside", further down:
+  the map of the original showed it changes the save (their work stops),
+  and PARITY.md asked for the original's rule.
+- **A harbour still waiting for its crew isn't staffed by the client.**
+  The original sends 20 free helpers to one; our server opens the harbour
+  and the zeppelin tower on the next load without a crew list (social.py
+  keeps staff only for the six that fill up again), so none ever waits.
+- **The Nursery's own work is still missing** (with two of a kind inside,
+  a copy comes out when it's collected). It wasn't on the parity list; it
+  stays with the classic game for now.
+
 ## 15 October 2026: the pointer's tools
 
 - **Collect all stays,** beside the original's glove: one press collects

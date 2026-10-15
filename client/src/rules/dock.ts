@@ -1,6 +1,6 @@
 // The harbour and the zeppelin tower (CLIENT.md, "The harbour and the
 // zeppelin"), as the Flash client gives them: each time a human town opens,
-// a harbour it hasn't got (on the map or in storage) is put down for free
+// a harbour it hasn't got (on the map, in storage or in the gift box) is put down for free
 // near tile (59, 59), unless the Prisoner Princess still waits in the town;
 // from level 30, the zeppelin tower the same way. A new one is staffed at
 // once by 20 free helpers and opened. No drawing here.
@@ -41,7 +41,8 @@ export function givenOnOpening(town: Town, items: Map<number, ItemInfo>): Given[
   }
   for (const id of wanted) {
     const item = items.get(id);
-    if (!item || town.items.some((p) => p.item.id === id) || (town.store.get(id) ?? 0) > 0) {
+    // Not one on the map, in the town's storage or in the gift box, as the Flash client looks.
+    if (!item || town.items.some((p) => p.item.id === id) || (town.store.get(id) ?? 0) > 0 || (town.gifts.get(id) ?? 0) > 0) {
       continue;
     }
     const spot = freeSpotNear(town, item, NEAR);

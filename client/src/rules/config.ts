@@ -135,6 +135,9 @@ export interface ItemInfo {
   potion?: number;
   /** A social building (the config's social_items: staffed by friends or helpers, like the harbour). */
   social?: boolean;
+  /** A social building's places for helpers (its staff list's length), and the cash a hired helper costs. */
+  staffPlaces?: number;
+  workerCost?: number;
   /** How many ways it can face: turning it goes round these. */
   facings: number;
   /** What it produces and how, or null when it doesn't (rules/production.ts). */
@@ -212,12 +215,16 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
 /** The config's items by id. */
 export function itemsById(config: GameConfig): Map<number, ItemInfo> {
   const chosenTime = new Set((config.globals?.COLLECT_VARIABLE_IDS ?? []).map(Number));
-  const social = new Set(((config.social_items ?? []) as { id: number | string }[]).map((s) => Number(s.id)));
+  const social = new Map(((config.social_items ?? []) as { id: number | string; workers?: string; worker_cost?: number | string }[])
+    .map((s) => [Number(s.id), s]));
   const items = new Map<number, ItemInfo>();
   for (const item of config.items) {
     const info = itemInfo(item, chosenTime);
-    if (social.has(info.id)) {
+    const staff = social.get(info.id);
+    if (staff) {
       info.social = true;
+      info.staffPlaces = String(staff.workers ?? "").split(",").filter(Boolean).length;
+      info.workerCost = Number(staff.worker_cost) || 0;
     }
     items.set(info.id, info);
   }

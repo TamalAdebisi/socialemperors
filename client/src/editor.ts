@@ -791,12 +791,14 @@ export class TownEditor {
     const back = refund(placed.item);
     // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
     const shut = !placed.open;
+    // Nor can a building training a unit be moved or stored until it's done, as there.
+    const free = shut && !this.training.has(placed);
     this.bar.show({
       name: placed.item.name,
       detail: this.detail(placed),
-      move: can.move && shut ? () => this.startMove(placed) : null,
+      move: can.move && free ? () => this.startMove(placed) : null,
       turn: can.turn && shut ? () => this.turn(placed) : null,
-      store: can.store && shut ? () => this.store(placed) : null,
+      store: can.store && free ? () => this.store(placed) : null,
       sell: can.sell && shut ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
@@ -1339,6 +1341,9 @@ export class TownEditor {
     this.view.rise(building, lines);
     this.levelUp();
     this.hud.update(this.town);
+    if (this.selected === building) {
+      this.select(building);  // its card: no Move or Store while it trains
+    }
     this.refresh();
     setTimeout(() => this.refresh(), TRAINING_MS + 50);
   }
@@ -1488,7 +1493,14 @@ export class TownEditor {
     this.refresh();
   }
 
+  /**
+   * Move tapped: as in the Flash client, lifting a building lets everybody
+   * inside out and stops its work (a mill or mine forgets its working time),
+   * and that stays so if the move is cancelled.
+   */
   private startMove(placed: PlacedItem): void {
+    this.emptyOut(placed);
+    this.refresh();
     this.moving = placed;
     this.movingFacing = placed.orientation;
     this.view.setGhost(placed, true);

@@ -163,24 +163,24 @@ The rule books list more that only look or feel different.
       (units near the town hall) is a 3-tile circle, nearest 20, not ours
       7 by 7; the working-time goals keep the last time chosen, not the
       longest. ([progress](docs/original/rules/progress.md#differences)) M
-- [ ] **Moving a building** lets everybody inside out and resets its
+- [x] **Moving a building** lets everybody inside out and resets its
       working time, even if the move is cancelled. ([town](docs/original/rules/town.md#differences)) S
-- [ ] **A unit placed from storage** obeys its kind's limit, as training
+- [x] **A unit placed from storage** obeys its kind's limit, as training
       does. ([town](docs/original/rules/town.md#differences)) S
-- [ ] **Where new units come out** (trained, let out, from the nursery):
+- [x] **Where new units come out** (trained, let out, from the nursery):
       the first free ring, on the tile nearest the far corner. ([town](docs/original/rules/town.md#differences)) S
 - [ ] **What grows back** grows in the wild ring and on land not yet
       bought, never aimed at the player's land; and after the camp is put
       up, not before. ([town](docs/original/rules/town.md#differences)) S
-- [ ] **The free villager** comes when none is on the map or working
+- [x] **The free villager** comes when none is on the map or working
       inside farms, mills, mines, trees or rocks (refuges don't count).
       ([town](docs/original/rules/town.md#differences)) S
-- [ ] **The Nursery** only takes an animal of the kind already inside.
+- [x] **The Nursery** only takes an animal of the kind already inside.
       ([town](docs/original/rules/town.md#differences)) S
-- [ ] **The free harbour and zeppelin tower** aren't given when one waits
+- [x] **The free harbour and zeppelin tower** aren't given when one waits
       in storage or the gift box; one still waiting for its crew gets 20
       helpers. ([town](docs/original/rules/town.md#differences)) S
-- [ ] **Social buildings get a free helper** as the town opens, when their
+- [x] **Social buildings get a free helper** as the town opens, when their
       list is empty and they have 3 or more places (or one helper and 7 or
       more). ([neighbours](docs/original/rules/neighbours.md#differences)) S
 - [ ] **Collection pieces** now and then drop from trees and rocks in a
