@@ -161,6 +161,7 @@ export class TownEditor {
         continue;
       }
       const resource = placed.item.production!.resource;
+      this.view.showState(placed, state.status === "ready");
       if (state.status === "ready") {
         ready++;
         readyNow.add(placed);

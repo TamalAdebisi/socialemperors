@@ -86,9 +86,10 @@ dock"), so these come with a mockup first.
 - [x] **Wild animals** become yours when a unit comes near, then walk into
       a ranch of their kind (horses to the training stable). Three early
       goals need it. M
-- [ ] **Farms and ranches show their state:** an empty field, the farmer
+- [x] **Farms and ranches show their state:** an empty field, the farmer
       at work, ripe crops; a ranch with the animals that are in it. Ours
-      cycles through all of them, showing ripe crops that aren't. S
+      cycled through all of them, a man, a woman and ripe crops, whoever
+      was there. S
 - [ ] **Construction:** a new building stands in scaffolding for 10
       seconds, with a bar and its sounds, and can't be used meanwhile. M
 - [ ] **Turning while placing** (Space), and on phones seeing where a
