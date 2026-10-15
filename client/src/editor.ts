@@ -23,6 +23,7 @@ import type { TownView } from "./view/townView.ts";
 import { canWalk, findPath, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
 import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
+import { CURSORS, ICONS } from "./ui/icons.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
 import { skipLessons } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
@@ -103,7 +104,7 @@ export class TownEditor {
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
     this.sound = parts.sound ?? (() => {});
-    this.camera.onTap = (at) => this.tap(at);
+    this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
@@ -329,7 +330,7 @@ export class TownEditor {
     this.bar.hide();
   }
 
-  private tap(at: Point): void {
+  private tap(at: Point, touch = false): void {
     if (this.building) {
       this.placeBuilding(this.tileAt(at));
       return;
@@ -365,11 +366,13 @@ export class TownEditor {
     }
     if (unit && placed && canHarvest(unit.item, placed.item)) {
       this.sound("place");
+      this.showWhatItDoes(unit, placed, touch);
       this.work(unit, placed);
       return;
     }
     if (unit && placed && canGoInside(this.town, unit.item, placed)) {
       this.sound("place");
+      this.showWhatItDoes(unit, placed, touch);
       this.goInto(unit, placed);
       return;
     }
@@ -384,10 +387,35 @@ export class TownEditor {
   }
 
   private hover(at: Point): void {
+    if (this.building || this.moving) {
+      this.camera.setCursor("");  // a unit's pointer from before doesn't apply while placing
+    }
     if (this.building) {
       this.previewBuilding(this.tileAt(at));
     } else if (this.moving) {
       this.preview(this.moving, this.tileAt(at));
+    } else {
+      this.pointAt(at);
+    }
+  }
+
+  /**
+   * The mouse over the map with a unit selected: the Flash client's pointer
+   * for what the unit would do there, an axe over a tree it can chop, a
+   * pickaxe over a rock or gold, a red arrow over a building it can go into.
+   */
+  private pointAt(at: Point): void {
+    const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
+    const placed = unit ? this.view.itemAt(at) : null;
+    const work = unit && placed ? workFor(this.town, unit, placed) : null;
+    this.camera.setCursor(work ? CURSORS[work] : "");
+  }
+
+  /** On a phone (no pointer to show it), the same picture pops up over what the unit was sent to. */
+  private showWhatItDoes(unit: PlacedItem, placed: PlacedItem, touch: boolean): void {
+    const work = workFor(this.town, unit, placed);
+    if (touch && work) {
+      this.view.pop(placed, ICONS[work]);
     }
   }
 
@@ -397,6 +425,7 @@ export class TownEditor {
   }
 
   private select(placed: PlacedItem | null): void {
+    this.camera.setCursor("");  // the unit's pointer was for the one selected before
     this.selected = placed;
     this.view.highlight(placed);
     if (!placed) {
@@ -973,4 +1002,12 @@ function noMore(item: ItemInfo, why: Obstacle): string {
     case "level":
       return `${item.name}: ${describe(why).toLowerCase()}.`;
   }
+}
+
+/** What a unit would do to a thing on the map, as the Flash client's pointers show it, or null. */
+function workFor(town: Town, unit: PlacedItem, placed: PlacedItem): "axe" | "pick" | "inside" | null {
+  if (canHarvest(unit.item, placed.item)) {
+    return placed.item.subcategory === SUBCAT.tree ? "axe" : "pick";
+  }
+  return canGoInside(town, unit.item, placed) ? "inside" : null;
 }

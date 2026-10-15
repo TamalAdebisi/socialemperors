@@ -677,6 +677,14 @@ Let out. Code: `rules/work.ts` (the rules, with tests), `TownEditor.work`,
   Selling or storing a building lets everybody out first, as the Flash
   client does.
 
+- Pointers: with a unit selected, the mouse pointer over the map is the
+  Flash client's own for what the unit would do there: an axe over a tree
+  it can chop, a pickaxe over a rock or gold, a red arrow over a building it
+  can go into (`CursorMC` in the game's file, exported by
+  `tools/art/export_ui.py`). Phones have no pointer, so there the same
+  picture pops up for a second over what the unit was sent to (the owner's
+  pick). Test: `e2e/tests/pointers.mjs`.
+
 **Not the same as the Flash client:** the server gave a fifth more for each
 extra villager at a tree or rock, which the Flash client never showed; it
 now gives the same as the client (`production.py`).
