@@ -1,7 +1,8 @@
 // Signs over the map's buildings, as the Flash client shows them: a bubble in
 // the colour of what a building gives when it's ready to collect, "zz" when
-// its workers wait for a working time, and the "+240" that rises from a
-// building as it's collected. Drawn on the map, so they move with it.
+// its workers wait for a working time, "Captured!" over a wild animal just
+// caught, and the "+240" that rises from a building as it's collected.
+// Drawn on the map, so they move with it.
 
 import { Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
 
@@ -17,6 +18,8 @@ export const RESOURCE_COLOURS: Record<Resource | "xp", number> = {
 
 /** How big an icon is in its bubble, on the map. */
 const ICON_SIZE = 28;
+/** How wide "Captured!" is over an animal. */
+const CAUGHT_SIZE = 64;
 /** The icons' pictures, loaded once for every sign. */
 const textures = new Map<string, Promise<Texture | null>>();
 
@@ -29,7 +32,7 @@ function texture(url: string): Promise<Texture | null> {
   return loading;
 }
 
-export type Sign = { kind: "ready"; resource: Resource } | { kind: "asleep" };
+export type Sign = { kind: "ready"; resource: Resource } | { kind: "asleep" } | { kind: "caught" };
 
 /** How far signs bob up and down (pixels), and how long one bob takes (ms). */
 const BOB = 4;
@@ -53,7 +56,7 @@ export class Markers {
 
   /** Put a sign over a building at `top` (its picture's top middle), or take it away (null). */
   set(placed: PlacedItem, sign: Sign | null, top: Point | null): void {
-    const key = sign === null ? "" : sign.kind === "ready" ? `ready ${sign.resource}` : "asleep";
+    const key = sign === null ? "" : sign.kind === "ready" ? `ready ${sign.resource}` : sign.kind;
     const current = this.signs.get(placed);
     if (current && current.key === key && top) {
       current.sign.position.x = top.x;
@@ -67,7 +70,8 @@ export class Markers {
     if (sign === null || top === null) {
       return;
     }
-    const drawn = signWith(sign.kind === "ready" ? ICONS[sign.resource] : ICONS.asleep);
+    const drawn = sign.kind === "caught" ? picture(ICONS.caught, CAUGHT_SIZE)
+      : signWith(sign.kind === "ready" ? ICONS[sign.resource] : ICONS.asleep);
     drawn.position.set(top.x, top.y);
     drawn.scale.set(this.scale);
     this.layer.addChild(drawn);
@@ -172,6 +176,21 @@ function bubble(): Graphics {
 }
 
 /** A bubble with one of the game's icons in it: the resource that's ready, or "zZ". */
+/** A picture of its own, no bubble (the game's "Captured!"), its longest side `size`. */
+function picture(url: string, size: number): Container {
+  const sign = new Container();
+  void texture(url).then((loaded) => {
+    if (!loaded || sign.destroyed) {
+      return;
+    }
+    const icon = new Sprite(loaded);
+    icon.anchor.set(0.5, 1);
+    icon.scale.set(size / Math.max(loaded.width, loaded.height));
+    sign.addChild(icon);
+  });
+  return sign;
+}
+
 function signWith(url: string): Container {
   const sign = new Container();
   sign.addChild(bubble());

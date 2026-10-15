@@ -636,12 +636,13 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
   tile it stopped on, which way it faces, the town and "Unitat". The Flash
   client sends it every 6 seconds for each unit that has stopped somewhere
   new; we send it as it stops, in the next batch.
-- Only the player's own units walk (their people's, or anyone's); wild
-  animals and trolls on the island don't answer.
+- Only the player's own units walk (their people's, or anyone's, and
+  animals they caught); wild animals and trolls on the island don't
+  answer.
 
-**Not yet:** the speech bubbles units say now and then, a unit sent to a
-building or a tree (the next slice: villagers at work), wild animals
-following a unit home, and a mark on the ground where a unit is going.
+**Not yet:** the speech bubbles units say now and then, and a mark on the
+ground where a unit is going. (Units sent to a building or a tree: "Villagers
+at work"; wild animals following a unit home: "The living map".)
 
 ### Villagers at work
 
@@ -716,17 +717,19 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
 extra villager at a tree or rock, which the Flash client never showed; it
 now gives the same as the client (`production.py`).
 
-**Not yet:** animals into ranches and stables, the Unit Warehouse, the
-hatchery, the sacrifice altar and the dragon nest (in the classic game for
-now); villagers putting out fires after a battle; the collection pieces
+**Not yet:** the Unit Warehouse, the hatchery's own work, the sacrifice
+altar and the dragon nest (in the classic game for now; animals go into
+ranches, "The living map"); villagers putting out fires after a battle; the collection pieces
 the Flash client sometimes drops from a harvest.
 
 ### The living map
 
-Trees and rocks grow back each time the player opens their town, as in the
-Flash client, so wood, stone and gold don't run out. Code:
-`rules/nature.ts` (with tests), called from `main.ts` before the town is
-drawn. Test: `e2e/tests/nature.mjs`.
+Trees, rocks and wild animals grow back each time the player opens their
+town, as in the Flash client, so wood, stone and gold don't run out; wild
+animals are caught by coming near them. Code: `rules/nature.ts` and
+`rules/animals.ts` (with tests), called from `main.ts` before the town is
+drawn; catching in `TownEditor.caught`. Tests: `e2e/tests/nature.mjs` and
+`animals.mjs`.
 
 **How it works**, read from the Flash client (our notes, our words):
 
@@ -747,13 +750,31 @@ drawn. Test: `e2e/tests/nature.mjs`.
 - Each is "bought" for nothing (`buy`, the item, its tile, 0, town, 1, 1,
   "b"), so the server keeps it. A new town gets about 270 trees and a few
   dozen rocks the first time it opens.
-- The browser tests give each new town enough trees and rocks first, in the
-  wild corners at the top, so none grow on the land a test uses
-  (`e2e/lib.mjs`, `FULL_WILD`).
-
-**Not yet:** wild sheep, cows and horses (boars in a troll town), which grow
-back the same way up to 7 of each (horses from level 11), at most 20 a day,
-and become the player's when a unit comes near.
+- Wild animals come after the trees, one by one like single trees: up to 7
+  sheep and 7 cows, and 6 horses from level 11 (in a troll town, 7 boars),
+  counting those on the map, but no more than the config's
+  `ANIMALS_PER_DAY` (20) of a kind a day. The server hears how many came
+  (`admin_add_animal`, kind, how many) and keeps the day's count in
+  `arrayAnimals`, which it starts again each day (`animals.py`; it never
+  did before).
+- Which animals are wild isn't saved: as the town opens, those off the
+  player's land are wild, those on it theirs. A wild one stands looking
+  about (the original's don't wander).
+- Catching: one of the player's units on the map (an animal caught before
+  too) within 4 tiles of a wild animal catches it. "Captured!" shows over it
+  for 5 seconds (the game's own picture, `IconoCapturadoMC`), the goals
+  count it, and it walks to the nearest ranch of its kind and in (sheep
+  ranches, cow ranches, the training stable for horses, boar ranches), as
+  workers go in (`push_unit`); with none, to beside the town hall. Animals
+  find their way anywhere but through buildings, as the original's paths
+  do, so one caught in the wild walks in; the player's units still go only
+  on their land.
+- A caught animal is the player's: select it and tap one of its ranches (or
+  the hatchery) to send it in. Tapping a wild animal with a unit selected
+  sends the unit beside it, and so catches it.
+- The browser tests give each new town enough trees, rocks and animals
+  first, in the wild corners at the top, so none grow on the land a test
+  uses (`e2e/lib.mjs`, `FULL_WILD`).
 
 ### Training and population
 

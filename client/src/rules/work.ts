@@ -6,12 +6,13 @@
 // No drawing here.
 
 import type { Command } from "../net/commands.ts";
+import { canLiveIn, isAnimal } from "./animals.ts";
 import type { ItemInfo } from "./config.ts";
 import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { findPath, isWalkable, walkGrid } from "./walking.ts";
+import { findPath, gridFor, isWalkable, walkGrid } from "./walking.ts";
 
 export const SUBCAT = {
   villager: 71, siege: 81,
@@ -42,9 +43,10 @@ export function canHarvest(unit: ItemInfo, target: ItemInfo): boolean {
 
 /**
  * Whether a unit can go into a building: one of the player's, with room;
- * villagers into mills, mines and farms; any unit into a refuge, siege
- * engines too, as in the Flash client. (Animals into ranches, and the
- * special buildings such as the Sacrifice Altar, come later.)
+ * villagers into mills, mines and farms; animals into ranches of their kind
+ * (rules/animals.ts); any unit into a refuge, siege engines too, as in the
+ * Flash client. (The special buildings such as the Sacrifice Altar come
+ * later.)
  */
 export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): boolean {
   const target = building.item;
@@ -57,6 +59,9 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
   if (target.subcategory === SUBCAT.refuge) {
     return true;
   }
+  if (isAnimal(unit)) {
+    return canLiveIn(unit, target);
+  }
   return unit.subcategory === SUBCAT.villager && WORKPLACES.has(target.subcategory) && target.id !== SACRIFICE_ALTAR;
 }
 
@@ -66,7 +71,7 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
  * with any, the one nearest the unit; it must be reachable. Null when there's none.
  */
 export function standingTile(town: Town, unit: PlacedItem, target: PlacedItem): Point | null {
-  const grid = walkGrid(town);
+  const grid = gridFor(town, unit);
   const taken = takenTiles(town, unit);
   for (let ring = 1; ring <= NEAR; ring++) {
     const around: Point[] = [];

@@ -1,11 +1,13 @@
-// Trees and rocks come back, as in the Flash client (our notes, our words;
-// CLIENT.md, "The living map"). Each time the player opens their town, the
-// game counts the trees, stone rocks and gold rocks on the map, and where
-// there are too few it adds clumps of them, and single trees, in the wild
-// ring round the island and on the player's land. They're "bought" for
-// nothing, so the server keeps them. No drawing here.
+// Trees, rocks and wild animals come back, as in the Flash client (our
+// notes, our words; CLIENT.md, "The living map"). Each time the player
+// opens their town, the game counts the trees, stone rocks and gold rocks
+// on the map, and where there are too few it adds clumps of them, and
+// single trees, in the wild ring round the island and on the player's land;
+// then a few wild animals (rules/animals.ts). They're "bought" for nothing,
+// so the server keeps them. No drawing here.
 
 import type { Command } from "../net/commands.ts";
+import { animalsToAdd } from "./animals.ts";
 import type { ItemInfo } from "./config.ts";
 import { takenTiles } from "./editing.ts";
 import { BLOCK_TILES, BLOCKS, MAP_TILES, isOuterBlock, type Point } from "./geometry.ts";
@@ -34,22 +36,28 @@ const TREES: Kind = { adds: [19, 20, 21], counts: [19, 20, 21], clumps: 10, size
 const SINGLE_NEAR = 5;
 
 /**
- * Trees and rocks added to the town as it opens: on the map, and the
- * commands that tell the server. `random` is Math.random but for tests.
+ * Trees, rocks and animals added to the town as it opens: on the map, and
+ * the commands that tell the server. `animals`: the animals added today
+ * (the save's `arrayAnimals`, by kind) and how many a kind may have a day;
+ * without it, no animals. `random` is Math.random but for tests.
  */
-export function growBack(town: Town, items: Map<number, ItemInfo>, now: number, random = Math.random): { commands: Command[]; added: PlacedItem[] } {
+export function growBack(town: Town, items: Map<number, ItemInfo>, now: number,
+  { random = Math.random, animals }: { random?: () => number; animals?: { today: Record<string, number>; perDay: number } } = {},
+): { commands: Command[]; added: PlacedItem[] } {
   // Counted before any is added, as the Flash client counts the map once.
+  const wantedAnimals = animals ? animalsToAdd(town, animals.today, animals.perDay) : [];
   const count = (kind: Kind) => town.items.filter((placed) => kind.counts.includes(placed.item.id)).length;
   const counted = new Map([GOLD, STONE, TREES].map((kind) => [kind, count(kind)]));
   const taken = takenTiles(town);
   const blocks = wildAndOwnBlocks(town);
   const added: PlacedItem[] = [];
-  const add = (kind: Kind, at: Point | null) => {
-    const item = items.get(kind.adds[pick(random, kind.adds.length)]);
+  const add = (id: number, at: Point | null) => {
+    const item = items.get(id);
     if (!item || !at) {
       return;
     }
-    const placed: PlacedItem = { item, tx: at.x, ty: at.y, orientation: 0, unitsInside: 0, startedAt: now, workTime: 0 };
+    const placed: PlacedItem = { item, tx: at.x, ty: at.y, orientation: 0, unitsInside: 0, startedAt: now, workTime: 0,
+      ...(item.isUnit ? { wild: true } : {}) };
     town.items.push(placed);
     taken.add(`${at.x},${at.y}`);
     added.push(placed);
@@ -62,15 +70,24 @@ export function growBack(town: Town, items: Map<number, ItemInfo>, now: number, 
     for (let clump = 0; clump < clumps; clump++) {
       const middle = tileIn(blocks[pick(random, blocks.length)], random);
       for (let n = 0; n < size; n++) {
-        add(kind, nearestFree(taken, middle));
+        add(kind.adds[pick(random, kind.adds.length)], nearestFree(taken, middle));
       }
     }
     for (let n = 0; n < Math.max((kind.single ?? 0) - counted.get(kind)!, 0); n++) {
-      add(kind, freeNear(taken, tileIn(blocks[pick(random, blocks.length)], random), random));
+      add(kind.adds[pick(random, kind.adds.length)], freeNear(taken, tileIn(blocks[pick(random, blocks.length)], random), random));
+    }
+  }
+  // Animals one by one, as single trees; then the server hears how many of each kind came today.
+  for (const { id, count } of wantedAnimals) {
+    for (let n = 0; n < count; n++) {
+      add(id, freeNear(taken, tileIn(blocks[pick(random, blocks.length)], random), random));
     }
   }
   return {
-    commands: added.map((placed) => ({ cmd: "buy", args: [placed.item.id, placed.tx, placed.ty, 0, town.id, 1, 1, "b"] })),
+    commands: [
+      ...added.map((placed) => ({ cmd: "buy", args: [placed.item.id, placed.tx, placed.ty, 0, town.id, 1, 1, placed.item.isUnit ? "u" : "b"] })),
+      ...wantedAnimals.map(({ kind, count }) => ({ cmd: "admin_add_animal", args: [kind, count] })),
+    ],
     added,
   };
 }
