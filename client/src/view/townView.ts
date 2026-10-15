@@ -24,12 +24,13 @@ import {
 import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
-import { PROGRESS, ProgressBar, loadProgress, scaffoldArt, scaffoldSprite } from "./construction.ts";
+import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
+import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
-import { LIFE, SELECTED, loadSelected, markSelected, unmarkSelected } from "./selected.ts";
+import { HOVER_LIFE, LIFE, SELECTED, loadSelected, markLife, markSelected, unmarkLife, unmarkSelected } from "./selected.ts";
 import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
 import { BLOCKS, BLOCK_TILES, isOuterBlock } from "../rules/geometry.ts";
 import { ICONS } from "../ui/icons.ts";
@@ -83,17 +84,22 @@ export class TownView {
   /** What a unit standing still is doing: working a tree (ATAQUE) or a rock (PICAR); standing (QUIETO) when it's not here. */
   private readonly poses = new Map<PlacedItem, Pose>();
   private lookAroundIn = LOOK_AROUND_MS;
-  /** The bars under things being built (view/construction.ts), filled as time goes. */
-  private readonly bars = new Map<PlacedItem, ProgressBar>();
+  /** The bars at the foot of things being built or collected (view/bars.ts), filled as `share` says. */
+  private readonly bars = new Map<PlacedItem, { bar: ProgressBar; share: () => number }>();
+  /** What the mouse is on, marked as the game marks it (hover), and its popup, over everything on the map. */
+  private hovered: PlacedItem | null = null;
+  private readonly popups = new Container();
+  private popup: { placed: PlacedItem; popup: InfoPopup } | null = null;
+  private zoom = 1;
 
   constructor(art: ArtLibrary, items: Map<number, ItemInfo>, town: Town) {
     this.art = art;
     this.items = items;
     this.town = town;
     void loadSelected();
-    void loadProgress();
+    void loadBars();
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
-    this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer, this.box);
+    this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.popups, this.ghostLayer, this.markers.layer, this.box);
     this.ghostLayer.alpha = 0.7;
   }
 
@@ -102,7 +108,7 @@ export class TownView {
    * the map but the ground, until it's over.
    */
   setFighting(fighting: boolean): void {
-    for (const layer of [this.marks, this.things, this.ghostLayer, this.markers.layer]) {
+    for (const layer of [this.marks, this.things, this.popups, this.ghostLayer, this.markers.layer]) {
       layer.visible = !fighting;
     }
   }
@@ -130,11 +136,13 @@ export class TownView {
   /** Move animations along: `ms` since the last frame, at the camera's zoom. */
   tick(ms: number, zoom: number): void {
     this.markers.tick(ms, zoom);
-    const now = Date.now();
-    for (const [placed, bar] of this.bars) {
-      bar.set(builtShare(placed, now));
-      bar.scale.set(1 / zoom);  // the same size on the screen, whatever the zoom, as the game's
+    // The bars and the popup keep their size on the screen, whatever the zoom, as the game's.
+    this.zoom = zoom;
+    for (const { bar, share } of this.bars.values()) {
+      bar.set(share());
+      bar.scale.set(1 / zoom);
     }
+    this.popup?.popup.scale.set(1 / zoom);
     for (const [placed, walk] of this.walkers) {
       this.stepWalk(placed, walk, Math.min(ms, 100));
     }
@@ -366,6 +374,9 @@ export class TownView {
     if (this.highlighted.has(placed)) {
       this.mark(placed);
     }
+    if (this.hovered === placed) {
+      this.markHover(placed);
+    }
   }
 
   /** Take a thing off the map (sold, stored). */
@@ -377,6 +388,9 @@ export class TownView {
     this.poses.delete(placed);
     this.facing.delete(placed);
     this.bars.delete(placed);
+    if (this.hovered === placed) {
+      this.hover(null, null);
+    }
     const slot = this.slots.get(placed);
     if (slot) {
       this.things.removeChild(slot);
@@ -519,10 +533,83 @@ export class TownView {
   }
 
   /** Show where a footprint would go, green if it fits and red if not; null hides it. */
-  showFootprint(placed: PlacedItem | null, fits = true): void {
+  /**
+   * A short bar at a thing's foot with the game's words on it
+   * ("Collecting..."), filling as `share` goes from 0 to 1; hideBar takes
+   * it away.
+   */
+  showBar(placed: PlacedItem, words: string, share: () => number): void {
+    const slot = this.slots.get(placed);
+    if (!slot || slot.destroyed) {
+      return;
+    }
+    this.hideBar(placed);
+    const bar = new ProgressBar(placed.item.isUnit ? unitPoint(placed.tx, placed.ty) : buildingPoint(placed.tx, placed.ty), false, words);
+    bar.set(share());
+    bar.scale.set(1 / this.zoom);
+    slot.addChild(bar);
+    this.bars.set(placed, { bar, share });
+  }
+
+  hideBar(placed: PlacedItem): void {
+    const shown = this.bars.get(placed);
+    if (shown) {
+      shown.bar.destroy({ children: true });
+      this.bars.delete(placed);
+    }
+  }
+
+  /**
+   * The thing the mouse is on (null: none), marked as the Flash client
+   * marks it: a thin white outline and its life bar, and over it its popup
+   * (view/bars.ts) when `info` gives one: its name, and a building's round
+   * of work. `ground`: its ground outlined in white too, as the bulldozer
+   * shows what it would take.
+   */
+  hover(placed: PlacedItem | null, info: { name: string; round: { share: number; left: string } | null } | null, ground = false): void {
+    if (placed !== this.hovered) {
+      if (this.hovered) {
+        const slot = this.slots.get(this.hovered);
+        if (slot && !slot.destroyed) {
+          this.outline(slot, this.lined.has(this.hovered));
+          unmarkLife(slot);
+        }
+      }
+      this.hovered = placed;
+      if (placed) {
+        this.markHover(placed);
+      }
+    }
+    this.showFootprint(placed && ground ? placed : null, true, 0xffffff);
+    if (!placed || !info) {
+      this.popup?.popup.destroy({ children: true });
+      this.popup = null;
+      return;
+    }
+    if (this.popup?.placed !== placed) {
+      this.popup?.popup.destroy({ children: true });
+      const popup = new InfoPopup(placed.item.isUnit ? unitPoint(placed.tx, placed.ty) : buildingPoint(placed.tx, placed.ty), info.name);
+      popup.scale.set(1 / this.zoom);
+      this.popups.addChild(popup);
+      this.popup = { placed, popup };
+    }
+    this.popup.popup.set(info.round);
+  }
+
+  private markHover(placed: PlacedItem): void {
+    const slot = this.slots.get(placed);
+    const picture = slot && pictureOf(slot);
+    if (!slot || !picture) {
+      return;
+    }
+    this.outline(slot, true);
+    markLife(slot, placed, picture, this.walkers.get(placed)?.at);
+  }
+
+  showFootprint(placed: PlacedItem | null, fits = true, colour?: number): void {
     this.marks.removeChildren().forEach((child) => child.destroy());
     if (placed) {
-      this.marks.addChild(footprint(placed, fits ? 0x5fd35f : 0xe0533d));
+      this.marks.addChild(footprint(placed, colour ?? (fits ? 0x5fd35f : 0xe0533d)));
     }
   }
 
@@ -592,8 +679,9 @@ export class TownView {
     slot.addChild(scaffold ? scaffoldSprite(scaffold, point, builtShare(placed, now) * BUILD_MS) : footprint(placed, 0xffffff));
     const bar = new ProgressBar(point, placed.item.width <= 1);
     bar.set(builtShare(placed, now));
+    bar.scale.set(1 / this.zoom);
     slot.addChild(bar);
-    this.bars.set(placed, bar);
+    this.bars.set(placed, { bar, share: () => builtShare(placed, Date.now()) });
     if (this.highlighted.has(placed)) {
       this.mark(placed);
     }
@@ -612,6 +700,9 @@ export class TownView {
     slot.addChild(sprite);
     if (this.highlighted.has(placed)) {
       this.mark(placed);
+    }
+    if (this.hovered === placed) {
+      this.markHover(placed);
     }
   }
 
@@ -680,7 +771,8 @@ export class TownView {
 
 /** A thing's picture in its slot: not its outline, nor its marks as selected. */
 function pictureOf(slot: Container): Container | undefined {
-  return slot.children.find((child) => child.label !== OUTLINE && child.label !== SELECTED && child.label !== LIFE && child.label !== PROGRESS);
+  return slot.children.find((child) => child.label !== OUTLINE && child.label !== SELECTED && child.label !== LIFE
+    && child.label !== HOVER_LIFE && child.label !== PROGRESS);
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {

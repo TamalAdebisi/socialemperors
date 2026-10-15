@@ -389,7 +389,10 @@ the server.
 
 **Collecting.** A building that's ready has a bubble over it in the colour
 of what it gives; tap it, or its bubble (part of the building, as in the
-Flash client), to collect, and the harvest and experience rise from it. Mills and mines whose workers wait for orders show "zz": tapping
+Flash client), to collect: the game's short bar runs at its foot with
+"Collecting..." (about two thirds of a second, as there), then the
+harvest and experience rise from it. The glove collects at once, without
+the bar. Mills and mines whose workers wait for orders show "zz": tapping
 asks how long they should work, with what each choice gives. Selecting a
 producing building shows when it will be ready.
 
@@ -1142,10 +1145,37 @@ things, 69 pictures) opens in under 3 seconds on our test machine once its
 art is cached, and in about 10 the first time, mostly downloading the
 pictures; the bucket keeps them a day in the browser's cache.
 
+### Hovering
+
+Built (PARITY.md, "Small things"). Code: `rules/hover.ts` (what lights up
+and what its popup says), `view/bars.ts` (the popup and the bars),
+`view/selected.ts` (`markLife`), the editor's `light`. Test:
+`e2e/tests/hover.mjs`.
+
+As the Flash client does it, with a mouse (our notes, our words):
+
+- **What the mouse is on lights up:** a thin white outline round its
+  picture and its life bar over it, and the game's popup a little above its
+  point: its name, and for a building that works the yellow bar with how
+  far along its round is and the time left under it (a building with no
+  workers shows its whole round still to go, as the game's does). The time
+  goes down each second.
+- **No popup** for towers, walls and castles (they're still lit), and the
+  name alone for a mill or mine waiting for its working time. Scenery and
+  anything being built light nothing.
+- **With the bulldozer** only what it would take lights up, its ground
+  outlined in white too.
+- Phones have no mouse, so nothing lights there, as with the Flash client
+  on a touch screen.
+- The popup is drawn over the town; the Flash client drew it on the
+  ground, under the buildings, where a building's front can hide it
+  (DECISIONS.md). Its trick of fading what stands in front of the thing
+  under the mouse isn't built.
+
 ### Construction
 
 Built (PARITY.md, "Construction"). Code: `rules/construction.ts`,
-`view/construction.ts`, the editor's `startConstruction`; the scaffolding
+`view/construction.ts` and `view/bars.ts` (the bar), the editor's `startConstruction`; the scaffolding
 sheets and the bar's pictures in `client/src/view/art/`, made by
 `tools/art/export_ui.py` from the game's library
 (`assets/swf/120608_dynamic.swf`, where the Flash client finds them too).

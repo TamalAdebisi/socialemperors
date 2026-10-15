@@ -13,6 +13,7 @@ import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hur
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
+import { lights, popupOf } from "./rules/hover.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
@@ -47,6 +48,8 @@ const MOST_WAITING = 3;
 const CAUGHT_MS = 5000;
 const TOWN_HALL = 135;
 const GATE = 222;
+/** The "Collecting..." bar before a tapped building's harvest: the Flash client's fills 8% every 50 ms. */
+const COLLECT_BAR_MS = 650;
 
 export interface EditorParts {
   town: Town;
@@ -135,6 +138,11 @@ export class TownEditor {
   private readonly savedAt = new Map<PlacedItem, Point>();
   /** Trees and rocks being worked: since when (the game's clock), and by whom. */
   private readonly working = new Map<PlacedItem, { since: number; workers: Set<PlacedItem> }>();
+  /** Ready buildings tapped, their "Collecting..." bar running (startCollecting). */
+  private readonly collecting = new Set<PlacedItem>();
+  /** What the mouse is on and lit (light), and whether its ground is lit too (the bulldozer). */
+  private lit: PlacedItem | null = null;
+  private litGround = false;
   /** Carts waiting to be let in: tapping one asks again. */
   private readonly cartsWaiting = new Map<PlacedItem, () => void>();
   /** What each villager at work is working. */
@@ -158,6 +166,7 @@ export class TownEditor {
     this.sound = parts.sound ?? (() => {});
     this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
+    this.camera.onLeave = () => this.light(null);
     this.camera.onPress = (at, touch) => this.startsBox(at, touch);
     this.camera.onBox = (from, to, done) => this.dragBox(from, to, done);
     window.addEventListener("keydown", (e) => {
@@ -249,6 +258,10 @@ export class TownEditor {
     this.waiting([...this.town.gifts.values()].reduce((sum, n) => sum + n, 0));
     if (this.selected && !this.moving) {
       this.bar.describe(this.detail(this.selected));
+    }
+    if (this.lit) {
+      // The popup's time goes down, as the game's does.
+      this.light(this.town.items.includes(this.lit) ? this.lit : null, this.litGround);
     }
     // A unit of a group gone from the map (into a building, say): the others stay selected.
     if (this.group.some((unit) => !this.town.items.includes(unit))) {
@@ -557,7 +570,7 @@ export class TownEditor {
     }
     const state = placed ? workState(placed, this.clock()) : null;
     if (placed && state?.status === "ready") {
-      this.collect(placed);
+      this.startCollecting(placed);
     } else if (placed && state?.status === "asleep") {
       this.askWorkTime(placed);
     } else {
@@ -570,13 +583,22 @@ export class TownEditor {
 
   private hover(at: Point): void {
     if (this.tool === "collect") {
+      this.light(null);
       this.sweep(at);
       return;
     }
+    if (this.tool === "remove" && !this.building && !this.moving) {
+      // The bulldozer lights up only what it would take, its ground too, as in the Flash client.
+      const placed = this.view.itemAt(at);
+      this.light(placed && choices(this.town, placed).sell ? placed : null, true);
+      return;
+    }
     if (this.squareTool || this.tool !== "pointer") {
+      this.light(null);
       return;  // their pointer stays until they're put down
     }
     if (this.building || this.moving) {
+      this.light(null);
       this.camera.setCursor("");  // a unit's pointer from before doesn't apply while placing
     }
     if (this.building) {
@@ -584,8 +606,25 @@ export class TownEditor {
     } else if (this.moving) {
       this.preview(this.moving, this.tileAt(at));
     } else {
-      this.pointAt(at);
+      const placed = this.view.itemAt(at);
+      this.pointAt(placed);
+      this.light(placed);
     }
+  }
+
+  /**
+   * The thing the mouse is on, lit as the Flash client lights it (view.hover):
+   * not scenery, nor anything being built. `ground`: the bulldozer's way.
+   */
+  private light(placed: PlacedItem | null, ground = false): void {
+    const lit = placed && lights(placed, Date.now()) ? placed : null;
+    this.lit = lit;
+    this.litGround = ground;
+    const popup = lit ? popupOf(lit, this.clock()) : null;
+    this.view.hover(lit, popup && {
+      name: popup.name,
+      round: popup.round && { share: popup.round.share, left: duration(popup.round.secondsLeft) },
+    }, ground);
   }
 
   /**
@@ -594,9 +633,9 @@ export class TownEditor {
    * pickaxe over a rock or gold, a red arrow over a building it can go into,
    * a bucket over a burning building a villager can repair.
    */
-  private pointAt(at: Point): void {
+  private pointAt(under: PlacedItem | null): void {
     const units = this.sendable();
-    const placed = units.length > 0 ? this.view.itemAt(at) : null;
+    const placed = units.length > 0 ? under : null;
     if (placed && units.some((unit) => this.canRepair(unit, placed))) {
       this.camera.setCursor(CURSORS.repair);
       return;
@@ -1009,6 +1048,7 @@ export class TownEditor {
     this.bar.hide();
     this.camera.onTap = (at, touch) => this.tap(at, touch);
     this.camera.onHover = (at) => this.hover(at);
+    this.camera.onLeave = () => this.light(null);
     for (const unit of moved) {
       const from = this.savedAt.get(unit) ?? null;
       this.savedAt.delete(unit);
@@ -1445,6 +1485,29 @@ export class TownEditor {
 
   private collect(placed: PlacedItem): void {
     this.collected(placed, collect(this.town, placed, this.clock()));
+  }
+
+  /**
+   * A ready building tapped: the game's short bar with "Collecting..."
+   * first (about two thirds of a second), then the harvest, as in the Flash
+   * client. Tapping it again meanwhile does nothing; the glove collects at
+   * once, without the bar.
+   */
+  private startCollecting(placed: PlacedItem): void {
+    if (this.collecting.has(placed)) {
+      return;
+    }
+    this.collecting.add(placed);
+    const start = performance.now();
+    // The game's own word (its text 89).
+    this.view.showBar(placed, "Collecting...", () => (performance.now() - start) / COLLECT_BAR_MS);
+    setTimeout(() => {
+      this.collecting.delete(placed);
+      this.view.hideBar(placed);
+      if (this.town.items.includes(placed) && workState(placed, this.clock())?.status === "ready") {
+        this.collect(placed);
+      }
+    }, COLLECT_BAR_MS);
   }
 
   /** Finish a building's work now, for cash, and collect it. */

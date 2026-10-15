@@ -170,7 +170,7 @@ of the original's searches measure from.
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
   the player's except gold and stone rocks, and rocks in the wild ring.
-  (The panel's sell slot is wired as the Upgrade button.) *Same: ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); different: the card keeps a Sell button as well, and hovering with the bulldozer lights nothing up. CLIENT.md's "red ✕ for Sell" is our own use of that slot.*
+  (The panel's sell slot is wired as the Upgrade button.) *Same (hovering with it too, `client/src/editor.ts`, `hover`): ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); different: the card keeps a Sell button as well. CLIENT.md's "red ✕ for Sell" is our own use of that slot.*
 - **What a sale gives, and when it asks.** A twentieth of the `cost`,
   rounded down, in its `cost_type`; things bought with cash give nothing.
   Free things go at once; wonders and units bought with resources go at
@@ -192,7 +192,7 @@ of the original's searches measure from.
   *Fixed since "Construction: scaffolding for 10 seconds".*
 - **Meanwhile** the building has no buttons, takes no units, can't be
   bulldozed, isn't lit when hovered, and a tower doesn't shoot. Its
-  production clock runs anyway. *Same, but hovering lights nothing up in ours anyway; a unit in scaffolding can't be sent (nothing in the original's code stops one walking off in it), `client/src/editor.ts`.*
+  production clock runs anyway. *Same (`client/src/rules/hover.ts`, `lights`); a unit in scaffolding can't be sent (nothing in the original's code stops one walking off in it), `client/src/editor.ts`.*
 - **Switched off:** a longer build time with a 10-cash speed-up exists for
   items with a `build_time`, but no item in the config has one; and a
   tutorial shortening of the bar has no effect (it's applied after the
@@ -231,7 +231,7 @@ of the original's searches measure from.
   Altar finish on their own). *Same: `client/src/editor.ts` (`refresh`).*
 - **Collecting.** Tapping a ready building runs a short bar (about two
   thirds of a second), then collects. The glove is a mode in which
-  hovering collects each ready building, without the bar. *Missing: the bar (PARITY.md, "Small things"); same: the glove (Fast collect, in the pointer's menu) collects each ready building it's swept over, `client/src/editor.ts` (`sweep`); ours keeps Collect all beside it, which collects everything ready at once (a recorded call, `collectAll`).*
+  hovering collects each ready building, without the bar. *Same: the bar, `client/src/editor.ts` (`startCollecting`); the glove (Fast collect, in the pointer's menu) collects each ready building it's swept over, `client/src/editor.ts` (`sweep`); ours keeps Collect all beside it, which collects everything ready at once (a recorded call, `collectAll`).*
 - **The harvest** is the config's `collect`, rounded down, times the gold
   multiplier (1 for buildings). With more than one worker: the harvest
   plus a fifth of it for each worker after the first, rounded down, then
@@ -707,6 +707,7 @@ tree of the kind wasn't checked.
 30. The Training Stables turning footmen and archers into riders. (checked twice)
 31. The troll town: founding it and travelling there. (checked twice)
 32. The short collecting bar. (checked twice)
+    *Fixed since "Hovering and the collecting bar".*
 33. Friends' help on buildings (an hour off each). (checked twice)
 34. The Nursery's copies, the Sacrifice Altar, the Treasure Mine. (checked twice)
 35. The Unit Warehouse, and storing it. (checked twice)
