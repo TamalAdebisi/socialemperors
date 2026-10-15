@@ -30,6 +30,8 @@ export const DEAD_FRAMES = 5 * FPS;
 const REPLAN_FRAMES = 9;
 /** Swallowed things sink, and summoned ones fade, for half a second. */
 const SINK_FRAMES = 15;
+/** A thrown unit lies helpless this long. */
+const THROWN_FRAMES = 30;
 /** Poison bites every 3 seconds. */
 const POISON_EVERY = 90;
 /** An enlarged unit's hits. */
@@ -89,7 +91,8 @@ export interface Fighter {
   attack: number;
   /** Reach in tiles: the item's, doubled for a while by 2x Range. */
   range: number;
-  readonly interval: number;
+  /** Frames between hits: the item's, cut for a while by a war cry. */
+  interval: number;
   velocity: number;
   readonly flying: boolean;
   /** 0 to 4: spreads the units' attack checks over the 5 frames, as the Flash client does. */
@@ -130,6 +133,8 @@ export interface Fighter {
   /** Grown big (from frame `grewAt`), hitting half again as hard, until this frame. */
   enlargedUntil?: number;
   grewAt?: number;
+  /** Grown by a move of its own (bigger, not stronger by the spell's half), until this frame. */
+  grownUntil?: number;
   /** Being swallowed by the ground since this frame: it dies half a second later. */
   sinkingSince?: number;
   /** A summoned unit whose time is up, fading since this frame. */
@@ -137,6 +142,10 @@ export interface Fighter {
   /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
   limit?: number;
   limitMax?: number;
+  /** Playing one of its special animations (rules/specials.ts): which (6 is the first), until this frame. */
+  special?: { animation: number; until: number } | null;
+  /** Too big to be thrown or knocked down (giants, gods, the biggest dragons). */
+  giant?: boolean;
   /** Which 2x Speed and 2x Range casts it carries: a newer cast takes over from an older one. */
   boosts?: { speed?: number; range?: number };
 }
@@ -189,6 +198,8 @@ export interface Shot {
   readonly arc: number;
   readonly frames: number;
   frame: number;
+  /** What it does when it lands, if not the shooter's attack: a special move's share. */
+  readonly damage?: number;
 }
 
 export interface BattleOptions {
@@ -216,6 +227,14 @@ export class Battle {
   /** Things due on a later frame (a kamikaze set off by another, a spell's effects). */
   private later: { frame: number; run: () => void }[] = [];
   private shields: Shield[] = [];
+  /**
+   * Special moves (rules/specials.ts) listen here. `onBeat` hears a unit's
+   * attack beat first and returns true when a special move takes it
+   * instead of the normal hit; `onDealt` hears the damage (or healing) a
+   * fighter deals, for its LIMIT bar.
+   */
+  onBeat: (unit: Fighter, target: Fighter) => boolean = () => false;
+  onDealt: (by: Fighter, amount: number, healing: boolean) => void = () => {};
 
   constructor(options: BattleOptions) {
     this.ground = options.ground;
@@ -490,8 +509,10 @@ export class Battle {
       if ((frame + unit.offset) % unit.interval === 0) {
         unit.facing = headingTo(unit.at, pointOf(target), unit.facing);
         unit.struckAt = frame;
-        if (healer) {
-          this.heal(target, unit.attack);
+        if (this.onBeat(unit, target)) {
+          // A special move instead of the hit.
+        } else if (healer) {
+          this.heal(target, unit.attack, unit);
         } else if (unit.item.subcategory === SUBCAT.cleric) {
           // Other clerics (the engineer, the monk) have work of their own, not done here yet.
         } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
@@ -654,13 +675,18 @@ export class Battle {
     if (distance(by, target) > by.range) {
       return;
     }
-    const kind = projectileOf(by.item);
+    this.shootAt(by, target);
+  }
+
+  /** A shot whatever the reach: `type` the picture (the shooter's own if null), `damage` what it does (its attack if not given). */
+  shootAt(by: Fighter, target: Fighter, type: number | null = null, damage?: number): void {
+    const kind = type === null ? projectileOf(by.item) : { type, ...(SHOT_FLIGHT.get(type) ?? { speed: 33, arc: 0.2 }) };
     const from = muzzleOf(by);
     const to = pointOf(target);
     const length = Math.hypot(to.x - from.x, to.y - from.y);
     // A random head start of up to one frame's flight, as the Flash client gives each shot.
     const frames = Math.max(1, Math.ceil(length / kind.speed - this.random()));
-    const shot: Shot = { from, to, target, by, type: kind.type, arc: kind.arc, frames, frame: 0 };
+    const shot: Shot = { from, to, target, by, type: kind.type, arc: kind.arc, frames, frame: 0, damage };
     this.shots.push(shot);
     this.events.push({ kind: "shot", shot });
   }
@@ -673,7 +699,7 @@ export class Battle {
     }
     const where = pointOf(target);
     if (Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS) {
-      this.hurt(target, shot.by.attack, shot.by);
+      this.hurt(target, shot.damage ?? shot.by.attack, shot.by);
     }
   }
 
@@ -702,6 +728,9 @@ export class Battle {
     const damage = Math.max(1, Math.round(dealt - target.item.defense));
     target.life = Math.max(0, target.life - damage);
     this.events.push({ kind: "hit", fighter: target, amount: damage, crit, by });
+    if (by) {
+      this.onDealt(by, damage, false);
+    }
     if (target.life <= 0) {
       this.kill(target, by);
       return;
@@ -758,13 +787,41 @@ export class Battle {
     return null;
   }
 
-  heal(target: Fighter, amount: number): void {
+  heal(target: Fighter, amount: number, by: Fighter | null = null): void {
     if (target.dead || amount <= 0) {
       return;
     }
-    const healed = Math.min(amount, target.maxLife - target.life);
+    const healed = Math.min(Math.round(amount), target.maxLife - target.life);
     target.life += healed;
     this.events.push({ kind: "hit", fighter: target, amount: healed, crit: false, heal: true });
+    if (by) {
+      this.onDealt(by, healed, true);
+    }
+  }
+
+  /**
+   * Thrown: a unit flies about half of `tiles` away from a point, to the
+   * nearest free tile there, and lies helpless for a second. Giants,
+   * bosses and the already helpless stay put.
+   */
+  knock(unit: Fighter, from: Point, tiles: number): void {
+    if (!unit.isUnit || unit.dead || unit.giant || unit.item.subcategory === SUBCAT.boss || this.isStilled(unit)
+      || unit.sinkingSince !== undefined || this.isEnlarged(unit)) {
+      return;
+    }
+    const dx = unit.tx - from.x;
+    const dy = unit.ty - from.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const far = Math.max(1, Math.round(tiles / 2));
+    const to = this.freeTileNear({ x: Math.round(unit.tx + (far * dx) / length), y: Math.round(unit.ty + (far * dy) / length) }, false);
+    if (to) {
+      unit.path = [];
+      unit.next = null;
+      unit.tx = to.x;
+      unit.ty = to.y;
+      unit.at = unitPoint(to.x, to.y);
+    }
+    this.still(unit, THROWN_FRAMES);
   }
 
   /** Hit back: a unit turns on whoever hit it, unless it's busy with a closer fight. */

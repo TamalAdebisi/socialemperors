@@ -6,12 +6,12 @@ import { Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } 
 
 import { DEAD_FRAMES, ENEMY, SELF, type Battle, type BattleEvent, type Effect, type Fighter, type Shot } from "../rules/battle.ts";
 import type { ItemInfo } from "../rules/config.ts";
-import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitPoint, type Point } from "../rules/geometry.ts";
+import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitFacing, unitPoint, type Point } from "../rules/geometry.ts";
 import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { Markers } from "./markers.ts";
-import { buildingSprite, unitSprite, type Pose } from "./townView.ts";
+import { animated, buildingSprite, unitSprite, type Pose } from "./townView.ts";
 import type { Effect as SoundEffect } from "../sound.ts";
 
 /** The units whose death cry is a woman's: villager women, healers, the princess, the valkyrie. */
@@ -315,10 +315,11 @@ export class BattleView {
       this.bars.addChild(bar);
     }
     const pose = this.poseOf(fighter);
-    const key = fighter.isUnit ? `${pose} ${fighter.facing}` : `b ${fighter.facing}`;
+    const special = this.specialOf(fighter);
+    const key = this.keyOf(fighter, pose, special);
     if (key !== drawn.key) {
       drawn.key = key;
-      void this.paint(fighter, drawn, pose);
+      void this.paint(fighter, drawn, pose, special);
     }
     if (fighter.isUnit) {
       const picture = drawn.slot.children[0];
@@ -356,7 +357,7 @@ export class BattleView {
     if (fighter.sinkingSince !== undefined) {
       return Math.max(0, 1 - (this.battle.frame - fighter.sinkingSince) / 15);
     }
-    const until = fighter.enlargedUntil ?? 0;
+    const until = Math.max(fighter.enlargedUntil ?? 0, fighter.grownUntil ?? 0);
     const frame = this.battle.frame;
     if (frame >= until) {
       return Math.max(1, 2 - (frame - until) / 15);
@@ -378,14 +379,35 @@ export class BattleView {
     return "QUIETO";
   }
 
-  private async paint(fighter: Fighter, drawn: Drawn, pose: Pose): Promise<void> {
+  /** What picture a fighter shows: its pose and way, or a special move's animation. */
+  private keyOf(fighter: Fighter, pose: Pose, special: number): string {
+    return !fighter.isUnit ? `b ${fighter.facing}` : special ? `s${special} ${fighter.facing}` : `${pose} ${fighter.facing}`;
+  }
+
+  /** The special animation a unit is playing (rules/specials.ts), or 0. */
+  private specialOf(fighter: Fighter): number {
+    const special = fighter.special;
+    return special && !fighter.dead && this.battle.frame < special.until ? special.animation : 0;
+  }
+
+  private async paint(fighter: Fighter, drawn: Drawn, pose: Pose, special = 0): Promise<void> {
     const art = await this.art.get(fighter.item.art);
-    if (drawn.slot.destroyed || drawn.key !== (fighter.isUnit ? `${pose} ${fighter.facing}` : `b ${fighter.facing}`)) {
+    if (drawn.slot.destroyed || drawn.key !== this.keyOf(fighter, pose, special)) {
       return;
     }
     drawn.slot.removeChildren().forEach((child) => child.destroy());
+    const facing = unitFacing(fighter.facing);
+    const moving = special && art ? art.numbered(special, facing.frame) : undefined;
     if (!art) {
       drawn.slot.addChild(outline(fighter));
+    } else if (moving?.length) {
+      // A special move: the animation the game numbers for it, played once from its start.
+      const sprite = animated(moving, art.fps, true);
+      if (facing.mirrored) {
+        sprite.scale.x = -1;
+      }
+      sprite.position.set(fighter.at.x, fighter.at.y);
+      drawn.slot.addChild(sprite);
     } else if (fighter.isUnit) {
       drawn.slot.addChild(unitSprite(art, fighter.facing, pose, fighter.at, pose === "MUERTE"));
     } else {

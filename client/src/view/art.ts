@@ -28,6 +28,7 @@ export class ItemArt {
   readonly fps: number;
   private readonly animations: Map<string, Texture[]>;
   private readonly bounds: Record<string, Bounds>;
+  private order: Texture[][] | null = null;
 
   constructor(name: string, fps: number, animations: Map<string, Texture[]>, bounds: Record<string, Bounds>) {
     this.name = name;
@@ -68,6 +69,19 @@ export class ItemArt {
       frames.push(...textures);
     }
     return { frames, lastPart };
+  }
+
+  /**
+   * A unit's animation by the Flash client's number for it, the way the
+   * game finds it (the game never names them): animation n facing way k
+   * (0 to 4) is the (5n + k)th picture run of the sheet, whatever its label.
+   * 0 standing, 1 walking, 2 attacking, 3 dying, 6 to 14 its special moves.
+   */
+  numbered(animation: number, way: number): Texture[] | undefined {
+    if (!this.order) {
+      this.order = [...this.animations.values()];
+    }
+    return this.order[animation * 5 + way];
   }
 
   /** How many frames follow a label: a unit's directions, a building's ways of facing. */

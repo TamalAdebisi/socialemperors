@@ -310,7 +310,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] Spells: the fifteen spells as the Flash client casts them, the
         Wizardry Academy's window, the mana bank and the spell book in
         battle ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] The heroes' and special units' moves
+  - [x] Special moves: the heroes' moves that come by themselves, the
+        special units' buttons with their shared cooldown, and the LIMIT
+        bar ([CLIENT.md](CLIENT.md#step-4-battles))
   - [ ] Defending the town (troll camps, bandits, sieges)
   - [ ] The boss islands and the Hero Isle
 - [ ] **The switch** (steps 5 and 6): battles against players, the long

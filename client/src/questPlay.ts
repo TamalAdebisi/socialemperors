@@ -18,10 +18,13 @@ import {
   teamChoices, teamProblem, teamSlots, type Island,
 } from "./rules/quest.ts";
 import { areaOf, castSpell, magicOpen, marked, rankOf, spend, type SpellInfo } from "./rules/magic.ts";
+import { Specials, type SpecialsTable } from "./rules/specials.ts";
+import specialsTable from "./rules/specials-table.json" with { type: "json" };
 import { readTown } from "./rules/town.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
 import { showMessage, showStatus } from "./ui/hud.ts";
+import { SpecialButtons } from "./ui/specialButtons.ts";
 import { SpellBook, magicParts } from "./ui/spells.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
@@ -107,6 +110,8 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     }
   } });
   quest = new Quest({ island, battle, items, layout: map.map.items, random });
+  // Special moves (rules/specials.ts): the heroes' by themselves, the special units' on buttons.
+  const specials = new Specials(battle, specialsTable as unknown as SpecialsTable, items, random);
   const view = new BattleView(art, battle, (effect) => sound.play(effect));
   world.addChild(view.root);
   await view.drawGround(items.get(island.terrain), island.shape);
@@ -198,7 +203,8 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   };
   // For the browser tests (e2e/tests/quest.mjs): where things are on screen, to tap them as a player would.
   (window as unknown as Record<string, unknown>).seQuest = {
-    battle, quest, view, magic,
+    battle, quest, view, magic, specials,
+    select: (units: Fighter[]) => select(units),
     lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)),
     tileScreen: (tile: Point) => {
       const p = world.toGlobal(unitPoint(tile.x, tile.y));
@@ -210,8 +216,13 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     },
   };
 
+  const moves = new SpecialButtons(specials, (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`, (text) => {
+    showMessage(text);
+    setTimeout(() => showMessage(""), 2000);
+  });
   const select = (units: Fighter[]) => {
     view.selected = new Set(units);
+    moves.select(units);
     bar.update();
   };
   const askLeave = () => {
@@ -295,9 +306,11 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       while (owed >= step) {
         owed -= step;
         battle.step();
+        specials.step();
       }
       if (quest!.isOver()) {
         finished = true;
+        moves.select([]);
         book?.stopAiming();
         book?.hide();
         quest!.settle();
@@ -305,6 +318,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       }
     }
     bar.update();
+    moves.update();
   });
 
   async function results(run: Quest, seconds: number): Promise<void> {

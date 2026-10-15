@@ -4,6 +4,33 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, special moves
+
+- **Each move is one of a few kinds** (a volley, a storm of hits, a
+  whirlwind, a blast, a line, a hit, healing, eggs and minions,
+  swallowing, freezing, poison, growing, a war cry, the three LIMITs),
+  with its own numbers from our notes on the original
+  (`rules/specials-table.json`). Most moves fit one exactly; some were
+  simplified to the nearest kind: a move that hits and also burns or
+  freezes keeps the hit, a burn ticks every 3 seconds like poison, a
+  square area is a circle of the same reach, a volley at several targets
+  goes at one, and moves that repeat "N times per loop" are timed by our
+  best reading of the animation. The 15 rarest buttons (shape-shifting,
+  shields, levitation, ghost copies, invisibility and the like) don't
+  show yet.
+- **The moves show the unit's own special animation.** The particles some
+  moves add on top (fireballs, rays) aren't drawn yet; shots and beams use
+  the game's projectiles.
+- **Minions and area moves follow the caster's side.** In the original,
+  minions always joined the player and units' area moves only ever hit
+  the computer's side, which only went wrong when an enemy used them;
+  here an enemy's minions fight for the enemy.
+- **Enemy heroes use their moves too** (the ones that come by
+  themselves); buttons are the player's alone, as in the original.
+- **The buttons are a bar at the bottom** for the one special unit
+  selected, with the seconds left on each, instead of the original's
+  portrait panel.
+
 ## 15 October 2026: Beta 2, spells
 
 Where the original had a bug, the spell does what it was plainly meant to:
