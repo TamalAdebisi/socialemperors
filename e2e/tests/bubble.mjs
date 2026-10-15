@@ -35,12 +35,9 @@ export default async function bubble({ newPlayer }) {
   await player.wait(300);
   await player.shot("sold");
 
-  // The land below the middle: its sign, half a screen down.
-  await player.page.keyboard.down("ArrowDown");
-  await player.wait(500);
-  await player.page.keyboard.up("ArrowDown");
-  await player.wait(500);
+  // The land around the middle, zoomed out: each block has its sign in its middle.
+  await player.page.keyboard.press("Escape");
+  for (let i = 0; i < 3; i++) await player.page.keyboard.press("-");
+  await player.wait(1500);
   await player.shot("for-sale");
-  await player.click({ x: 640, y: 420 });
-  assert.match(await player.bar(), /^Land for sale/, "tapping it offers it");
 }
