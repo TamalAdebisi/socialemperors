@@ -3,7 +3,10 @@
 // it, and its 10 gold is paid. The daily bonus is offered from level 5, as in
 // the Flash client: day 1's 250 gold. Goals can't be skipped for cash (the
 // Flash client had that switched off). The save has the goal done and paid,
-// and the bonus's day.
+// and the bonus's day. The welcome-back chest shows from level 4: on the day
+// the empire is made, its window says to come back tomorrow, the chests shut.
+// (Opening one needs an empire a day old, which a test can't make: the
+// client's rules test and the server's test_comeback_bonus.py cover it.)
 
 import assert from "node:assert/strict";
 
@@ -18,10 +21,19 @@ export default async function bonus({ newPlayer }) {
   assert.match(await page.locator(".goal-card").first().textContent(), /^Build farm land/);
   await player.shot("goal");
 
-  // No daily bonus below level 5; at level 5 it's on offer.
+  // No daily bonus below level 5, nor welcome-back chest below level 4; at level 5 both are on offer.
   assert.equal(await player.button("Daily bonus").count(), 0, "not at level 1");
+  assert.equal(await player.button("Welcome-back chest").count(), 0, "not at level 1");
   await player.send([{ cmd: "rt_level_up", args: [5] }]);
   await player.reload();
+
+  // The welcome-back chest on the first day: tomorrow's, shut.
+  await player.press("Welcome-back chest");
+  const welcome = page.locator(".panel", { has: page.locator(".bonus-chests") }).filter({ hasText: "Come back tomorrow" });
+  assert.match(await welcome.textContent(), /Come back tomorrow for a chest: it holds 2,500 gold, .+ or 10 cash\./);
+  assert.equal(await welcome.locator(".bonus-chests button:disabled").count(), 3, "the chests are shut");
+  await player.shot("welcome-back");
+  await page.keyboard.press("Escape");
 
   // The daily bonus: on offer, day 1 is today, 250 gold.
   await player.press("Daily bonus");
@@ -53,5 +65,6 @@ export default async function bonus({ newPlayer }) {
   assert.ok(saved.privateState.completedMissions.includes(1), "goal 1 is done in the save");
   assert.ok(saved.privateState.rewardedMissions.includes(1), "and paid");
   assert.equal(saved.privateState.bonusNextId, 2, "the daily bonus's next day is the 2nd");
+  assert.deepEqual(saved.privateState.comebackBonusCollected, [], "no welcome-back chest opened on the first day");
   assert.ok(saved.map.coins >= 250 + 10, "250 for the bonus and 10 for the goal, less the farm's price in wood");
 }

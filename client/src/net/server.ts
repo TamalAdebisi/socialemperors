@@ -20,6 +20,8 @@ export interface PageSettings {
   classicUrl: string;
   /** The page's form token, for the site's own windows (the bank). */
   csrf?: string;
+  /** Days since the empire was made (the welcome-back chest). */
+  days?: number;
 }
 
 export function readPageSettings(doc: Document = document): PageSettings {

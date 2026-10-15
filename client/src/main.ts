@@ -229,6 +229,8 @@ async function start(): Promise<void> {
     const visits = visitsSoFar();
     doings.lastVisited = visits.last;
     doings.helpedBuildings = visits.helped;
+    // The bonuses (made once the town's goals are, below) hear of a level up.
+    let bonuses: BonusDesk | undefined;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -250,7 +252,8 @@ async function start(): Promise<void> {
           } };
         }
         return graves.windowOf(placed);
-      } });
+      },
+      levelled: () => bonuses?.levelled() });
     hud.offerCollectAll(() => editor.collectAll());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
@@ -337,10 +340,11 @@ async function start(): Promise<void> {
         changed: () => hud.update(town),
       });
     }
-    new BonusDesk({
+    bonuses = new BonusDesk({
       town, items, thumbnail,
       state: privateState,
       config: readBonusConfig(config.globals),
+      days: settings.days ?? 1000,
       clock,
       send: (cmd, ...args) => {
         commands.add(cmd, ...args);
@@ -359,15 +363,32 @@ async function start(): Promise<void> {
     document.body.classList.add("visiting");
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     let quiet: ReturnType<typeof setTimeout> | undefined;
+    const show = (text: string) => {
+      showMessage(text);
+      clearTimeout(quiet);
+      quiet = setTimeout(() => showMessage(""), 3000);
+    };
+    // What's said before the town is drawn waits for it: a big town takes
+    // more than the message's 3 seconds to draw, and the hint went unseen.
+    let held: string | undefined;
+    let drawn = false;
     const visitor = new Visit({
       neighbour: visit, view, hud, commands, clock,
       assists: mine?.privateState?.neighborAssists,
       say: (text) => {
-        showMessage(text);
-        clearTimeout(quiet);
-        quiet = setTimeout(() => showMessage(""), 3000);
+        if (drawn) {
+          show(text);
+        } else {
+          held = text;
+        }
       },
     });
+    afterDrawing = () => {
+      drawn = true;
+      if (held !== undefined) {
+        show(held);
+      }
+    };
     commands.start();  // after the visit's own leaving, so the help goes with the last send
     camera.onTap = (at) => visitor.tap(at);
   }

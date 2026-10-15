@@ -27,6 +27,7 @@ import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
+import { LIFE, SELECTED, loadSelected, markSelected, unmarkSelected } from "./selected.ts";
 import { LOOK_AROUND_MS, headingTo, lookAround, stepTowards } from "../rules/walking.ts";
 import { BLOCKS, BLOCK_TILES, isOuterBlock } from "../rules/geometry.ts";
 import { ICONS } from "../ui/icons.ts";
@@ -57,7 +58,7 @@ export class TownView {
   private readonly town: Town;
   /** Each thing on the map and the container its picture is drawn in. */
   private readonly slots = new Map<PlacedItem, Container>();
-  private readonly glow = new ColorMatrixFilter();
+  /** The thing selected: marked as the game marks it (view/selected.ts). */
   private highlighted: PlacedItem | null = null;
   private readonly outlineFill = new ColorMatrixFilter();
   /** Trees and rocks in a villager's line: they're outlined. */
@@ -83,7 +84,7 @@ export class TownView {
     this.art = art;
     this.items = items;
     this.town = town;
-    this.glow.brightness(1.25, false);
+    void loadSelected();
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
     this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.ghostLayer, this.markers.layer);
     this.ghostLayer.alpha = 0.7;
@@ -211,8 +212,12 @@ export class TownView {
     const target = unitPoint(walk.next.x, walk.next.y);
     walk.at = stepTowards(walk.at, target, placed.item.velocity, ms);
     const slot = this.slots.get(placed);
-    if (slot) {
-      pictureOf(slot)?.position.set(walk.at.x, walk.at.y);
+    const picture = slot && pictureOf(slot);
+    if (slot && picture) {
+      // The picture and its marks (selected) move together.
+      const dx = walk.at.x - picture.x;
+      const dy = walk.at.y - picture.y;
+      slot.children.forEach((child) => child.position.set(child.x + dx, child.y + dy));
     }
     this.markers.moveTo(placed, this.topOf(placed));
     if (walk.at.x === target.x && walk.at.y === target.y) {
@@ -340,15 +345,35 @@ export class TownView {
     }
   }
 
-  /** Make one thing stand out (the one selected), or none. */
+  /**
+   * Mark the thing selected as the Flash client does, or none: a ring
+   * under a unit or the outline of a building's ground, its life bar over
+   * it (view/selected.ts).
+   */
   highlight(placed: PlacedItem | null): void {
-    for (const slot of this.slots.values()) {
-      slot.filters = [];
+    const before = this.highlighted && this.slots.get(this.highlighted);
+    if (before) {
+      unmarkSelected(before);
     }
     this.highlighted = placed;
-    const slot = placed ? this.slots.get(placed) : undefined;
-    if (slot) {
-      slot.filters = [this.glow];
+    if (placed) {
+      this.mark(placed);
+    }
+  }
+
+  private mark(placed: PlacedItem): void {
+    const slot = this.slots.get(placed);
+    const picture = slot && pictureOf(slot);
+    if (!slot || !picture) {
+      return;
+    }
+    if (!markSelected(slot, placed, picture, this.walkers.get(placed)?.at)) {
+      // The marks' pictures are still on their way: mark it when they're here, if it's still the one.
+      void loadSelected().then(() => {
+        if (this.highlighted === placed && !slot.destroyed) {
+          markSelected(slot, placed, picture, this.walkers.get(placed)?.at);
+        }
+      });
     }
   }
 
@@ -484,6 +509,9 @@ export class TownView {
     const sprite = unitSprite(art, this.facing.get(placed) ?? 5, walk ? "ANDAR" : this.poses.get(placed) ?? "QUIETO", walk?.at ?? unitPoint(placed.tx, placed.ty));
     slot.removeChildren().forEach((child) => child.destroy());
     slot.addChild(sprite);
+    if (this.highlighted === placed) {
+      this.mark(placed);
+    }
   }
 
   /** Draw the ground again: land bought. */
@@ -549,9 +577,9 @@ export class TownView {
   }
 }
 
-/** A thing's picture in its slot: not its outline. */
+/** A thing's picture in its slot: not its outline, nor its marks as selected. */
 function pictureOf(slot: Container): Container | undefined {
-  return slot.children.find((child) => child.label !== OUTLINE);
+  return slot.children.find((child) => child.label !== OUTLINE && child.label !== SELECTED && child.label !== LIFE);
 }
 
 export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {

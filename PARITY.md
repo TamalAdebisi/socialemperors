@@ -36,7 +36,10 @@ changes the save, not just the look.
       town. Ours carry on. S
 - [x] **The welcome-back chest** was switched off inside the Flash client
       as it was built (a setting nothing turns on), so it never showed.
-      Ours offered it: removed. S
+      Ours offered it, and was removed. But our classic game switches it on
+      (`tools/patch_client.py`), so the two clients differed: the owner
+      chose to keep it in both, and ours now offers it as the patched
+      classic game does (from level 4, days 0 to 2, three chests). S
 - [x] **Visiting shows the neighbour's** name, level, gold, wood, food and
       stone in the top bar, and the helps left. Ours shows your own
       numbers (and DECISIONS.md said, wrongly, that the original did). S
@@ -68,8 +71,9 @@ changes the save, not just the look.
       collect brings and a time bar, how full it is, the units inside (tap
       one to let it out), the unit a barracks trains with its name and
       numbers, and a short tip per kind of building. S each
-- [ ] **On the map when selected:** a yellow outline of its footprint,
-      its name under it, a small health bar. Ours glows (a decision). S
+- [x] **On the map when selected:** a golden ring under a unit, a golden
+      outline of a building's ground, a small life bar over either. Ours
+      only glowed. S
 - [ ] **The wall gate opens and closes,** for units to pass (not saved). S
 
 The card's look is the owner's pick (CLIENT.md, "The menus: rail and
@@ -99,8 +103,9 @@ dock"), so these come with a mockup first.
 - [x] **Tapping the ready bubble collects;** the refund rises as a number
       when selling. S
 - [x] **"For sale" signs** on closed land. S
-- [ ] **Small things:** a name and time bar when hovering a building; a
-      short "collecting" bar. S each
+- [ ] **Small things:** when hovering a thing, a thin white outline, its
+      life bar, and a bar with its name and time; a short "collecting"
+      bar. S each
 - [x] **Keyboard:** S, A and W both moved the map and opened a window;
       the arrow keys move it now, as in the original. S
 
