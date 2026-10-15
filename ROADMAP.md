@@ -299,6 +299,16 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         several threads, and the slayer's stray part cut off; the
         projectiles and effects exported too
         ([CLIENT.md](CLIENT.md#step-1-the-art-pipeline))
+  - [x] Combat and the first islands: the fighting as the Flash client
+        does it (damage, targets, reach, shots, towers), the Quests
+        window, the troll, civilization, hardcore and god islands played
+        here with their stars, prizes and losses, and the battle sounds
+        ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] The island map's pictures and the team picker for the last
+        islands
+  - [ ] Spells and the heroes' special moves
+  - [ ] Defending the town (troll camps, bandits, sieges)
+  - [ ] The boss islands and the Hero Isle
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with
       the Flash game one tap away for a while.

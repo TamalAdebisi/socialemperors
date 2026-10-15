@@ -17,11 +17,22 @@ const EFFECTS = {
   "level-up": new URL("./sound/level-up.mp3", import.meta.url).href,
   lumber: new URL("./sound/lumber.mp3", import.meta.url).href,  // a villager starts on a tree
   stone: new URL("./sound/stone.mp3", import.meta.url).href,  // ...or a rock
+  // Battles: a sword's hit (one of two), shots, and the four death cries.
+  "sword-1": new URL("./sound/sword-1.mp3", import.meta.url).href,
+  "sword-2": new URL("./sound/sword-2.mp3", import.meta.url).href,
+  arrow: new URL("./sound/arrow.mp3", import.meta.url).href,
+  cannon: new URL("./sound/cannon.mp3", import.meta.url).href,
+  ballista: new URL("./sound/ballista.mp3", import.meta.url).href,
+  "die-man": new URL("./sound/die-man.mp3", import.meta.url).href,
+  "die-woman": new URL("./sound/die-woman.mp3", import.meta.url).href,
+  "die-machine": new URL("./sound/die-machine.mp3", import.meta.url).href,
+  "die-troll": new URL("./sound/die-troll.mp3", import.meta.url).href,
 };
 export type Effect = keyof typeof EFFECTS;
 
 /** How many of each effect may play at once, as in the Flash client. */
-const AT_ONCE: Record<Effect, number> = { click: 3, place: 3, collect: 3, ready: 3, "level-up": 3, lumber: 3, stone: 2 };
+const AT_ONCE: Record<Effect, number> = { click: 3, place: 3, collect: 3, ready: 3, "level-up": 3, lumber: 3, stone: 2,
+  "sword-1": 5, "sword-2": 5, arrow: 8, cannon: 3, ballista: 5, "die-man": 3, "die-woman": 3, "die-machine": 3, "die-troll": 3 };
 const VOLUME = 0.25;
 const MUSIC_VOLUME = 0.25;
 const DELAY_MS = [50, 150];
@@ -40,15 +51,16 @@ export class Sound {
   private unlocked = false;
   private readonly listeners = new Set<() => void>();
 
-  /** `assetsUrl`: where the game's files are (the music is in its music/ folder); `race`: the town's. */
-  constructor(assetsUrl: string, race: string) {
+  /** `assetsUrl`: where the game's files are (the music is in its music/ folder); `race`: the town's;
+   * `track`: another of the game's tunes instead (QUESTS.mp3 on an island). */
+  constructor(assetsUrl: string, race: string, track?: string) {
     this.musicOn = saved(SAVED.music);
     this.effectsOn = saved(SAVED.effects);
     this.music = new Audio();
     this.music.loop = true;
     this.music.volume = MUSIC_VOLUME;
     this.music.preload = "none";  // only fetched once it can play
-    this.music.src = `${assetsUrl}/music/${encodeURIComponent(race === "t" ? MUSIC.t : MUSIC.h)}`;
+    this.music.src = `${assetsUrl}/music/${encodeURIComponent(track ?? (race === "t" ? MUSIC.t : MUSIC.h))}`;
     const unlock = () => {
       this.unlock();
       document.removeEventListener("pointerdown", unlock, true);

@@ -9,7 +9,8 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 5, name: "Mill I", isUnit: false, art: "x", width: 2, height: 2, category: 1, subcategory: 121,
     flying: false, velocity: 0, capacity: 1, activation: 0, collect: 300, collectType: "f", collectXp: 0, trains: 0, population: 0, unitsLimit: 0, cashCost: 0,
     cost: 30, costType: "w", facings: 1, production: null,
-    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
+    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", ...fields };
 }
 const MILL = item({});
 const HOUSE = item({ id: 1, name: "House I", subcategory: 111 });

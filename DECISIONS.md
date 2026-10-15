@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, battles and the first islands
+
+- **Quests are played in the new client** from the Quests button: the
+  troll islands, the civilization islands, and the hardcore and god
+  islands. The boss islands and the Hero Isle (whose doors open as you
+  clear each part) say "Played in the classic game for now", with a link,
+  until their slices.
+- **Extras, which change neither the rules nor the look:** a Speed button
+  (1x, 2x, 3x), Select all (or Space) since the original's box tool needs
+  a mouse, Shift to add a unit to the selection, and Escape to let go.
+  Life bars also show for 3 seconds after a hit, not only on the selected
+  or hovered unit, so you can see who's hurt.
+- **The report is sent when the results show,** not when you press a
+  button on them, so closing the page then loses nothing. The original
+  waited for "Share" or "Skip".
+- **The island waits behind the start window,** as in the original; the
+  window shows the army sailing (with its pictures) and the game's own
+  stars.
+- **Same seed, same battle:** chance in battles comes from one function
+  that tests can seed (the page still plays at random), and the battle's
+  timers count its frames, so the Speed button speeds everything. Part of
+  the plan for the server checking battles one day (CLIENT.md).
+- **Quirks of the original kept:** the chest's prize isn't cut by the
+  island's gold cap (it's paid outside a kill); a unit with no attack that
+  falls isn't counted; walls give 1 experience.
+
 ## 15 October 2026: Beta 2, the last sprite sheets
 
 - **The biggest pictures are stored at half size** (a quarter for the
