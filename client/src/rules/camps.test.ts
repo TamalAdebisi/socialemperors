@@ -106,3 +106,10 @@ test("whose things are at home: by race, and the border's buildings are enemies 
   assert.equal(sideAtHome("h", item({ race: "n", subcategory: 811 }), 5, 50), "nobody", "the chest");
   assert.equal(sideAtHome("h", item({ race: "n", subcategory: 125 }), 50, 50), "nobody");
 });
+
+test("the scripted camps' chests aren't ours: their stories open them", () => {
+  // The burning mill's (camp 7) and the skeleton statue's (13).
+  assert.equal(campOfChest(211), null);
+  assert.equal(campOfChest(259), null);
+  assert.equal(campOfChest(83), 0);
+});

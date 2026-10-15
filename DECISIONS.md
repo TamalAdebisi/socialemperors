@@ -60,7 +60,9 @@ them can be found and reversed. The big, agreed decisions are in
   original lays out by its own code. The other twenty are scripted
   stories (with their own steps and bosses); while one is due, the new
   client leaves it to the classic game, which puts it up in the same
-  empire.
+  empire. If the classic game has put one up, the new client leaves its
+  chest alone too: those chests open by their story, not when the
+  enemies are gone.
 - **A chest at level 26 pays like level 27** (750 gold, 100 experience).
   The original's table skipped level 26, so its chest paid nothing.
 - **Kept from the original:** a camp still standing is put up afresh,

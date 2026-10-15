@@ -66,8 +66,13 @@ export class Camps {
     return this.parts.town.items.filter((p) => p.item.isUnit && this.sideOf(p) === "enemy").length;
   }
 
+  /**
+   * The chest of a camp built here. A scripted camp's chest (the classic
+   * game puts those up) opens by its own story, not when the enemies are
+   * gone, so it's left alone (DECISIONS.md, "Troll camps").
+   */
   private chest(): PlacedItem | null {
-    return this.parts.town.items.find((p) => isChest(p.item)) ?? null;
+    return this.parts.town.items.find((p) => isChest(p.item) && campOfChest(p.item.id) !== null) ?? null;
   }
 
   /**
