@@ -254,8 +254,8 @@ export class Quest {
       return { gold: 0, xp: 0 };
     }
     let paid = { gold: 0, xp: 0 };
-    if (fighter.side === SELF) {
-      // Only fighters count (a unit with no attack falling isn't counted, as in the Flash client).
+    if (fighter.side === SELF && !fighter.summoned) {
+      // Only fighters count (summoned ones never: they're no loss, and don't keep the battle going) (a unit with no attack falling isn't counted, as in the Flash client).
       if (fighter.attack > 0 && fighter.isUnit) {
         this.addTo(fighter.item.id, KILLED);
         this.playerUnits--;

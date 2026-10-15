@@ -57,6 +57,8 @@ export interface EditorParts {
   doings?: Doings;
   /** The game's sound effects. */
   sound?: (effect: Effect) => void;
+  /** A building's own window, if it has one (the Wizardry Academy's spells): its button on the card. */
+  windowOf?: (placed: PlacedItem) => { label: string; run: () => void } | null;
 }
 
 export class TownEditor {
@@ -75,6 +77,7 @@ export class TownEditor {
   private readonly land: { prices: LandPrice[]; neighbours: number };
   private readonly doings: Doings;
   private readonly sound: (effect: Effect) => void;
+  private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void } | null;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -100,6 +103,7 @@ export class TownEditor {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
       camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
     this.waiting = parts.waiting ?? (() => {});
+    this.windowOf = parts.windowOf ?? (() => null);
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -445,6 +449,7 @@ export class TownEditor {
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       train: this.trainChoice(placed),
       hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
+      open: this.windowOf(placed),
       close: () => this.select(null),
     });
   }

@@ -11,16 +11,18 @@ import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
 import { Battle, ENEMY, FPS, SELF, type Fighter } from "./rules/battle.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
-import { mapArea, tileUnder, unitPoint } from "./rules/geometry.ts";
+import { mapArea, tileUnder, unitPoint, type Point } from "./rules/geometry.ts";
 import islandData from "./rules/islands.json" with { type: "json" };
 import {
   MIN_LEVEL_QUESTS, Quest, TEAM_SLOTS, armyOf, difficulties, islandGround, islandLock, lastTeam, playedHere, teamArmy,
   teamChoices, teamProblem, teamSlots, type Island,
 } from "./rules/quest.ts";
+import { areaOf, castSpell, magicOpen, marked, rankOf, spend, type SpellInfo } from "./rules/magic.ts";
 import { readTown } from "./rules/town.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
 import { showMessage, showStatus } from "./ui/hud.ts";
+import { SpellBook, magicParts } from "./ui/spells.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
@@ -157,9 +159,51 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   let speed = 1;
   let owed = 0;
   let finished = false;
+
+  // Spells (ui/spells.ts): the book at the bottom left, for those who have magic.
+  const parts = magicParts(config, privateState, town, settings.assetsUrl, (cmd, ...args) => {
+    commands.add(cmd, ...args);
+    void commands.flush();
+  }, () => {});
+  const magic = parts.state;
+  let aimAt: Point | null = null;
+  let hovering = false;
+  const book = magicOpen(town.race, town.level) ? new SpellBook(parts, (spell) => {
+    aimAt = null;
+    if (spell) {
+      select([]);
+    } else {
+      view.aim(null);
+    }
+  }) : null;
+  const aimOver = (tile: Point) => {
+    const spell = book?.isAiming;
+    if (!spell) {
+      return;
+    }
+    aimAt = tile;
+    // The marker shows the spell's area at its rank now (the cast itself may reach the next).
+    const rank = rankOf(Number(magic.casts[String(spell.id)] ?? 0));
+    view.aim({ tile, area: areaOf(spell, rank), lit: marked(battle, spell, rank, tile) });
+  };
+  const cast = (spell: SpellInfo, tile: Point) => {
+    const rank = spend(spell, magic);
+    castSpell(battle, spell, rank, tile, { items, random });
+    // As the Flash client: the spell's name and its mana rise from the tile, and the server hears at once.
+    view.riseAt(unitPoint(tile.x, tile.y), [{ text: spell.name, colour: 0xff5a4a }, { text: `-${spell.mana}`, colour: 0x5ec8ff }]);
+    commands.add("use_magic", spell.id);
+    void commands.flush();
+    sound.play("place");
+    book!.cast();
+  };
   // For the browser tests (e2e/tests/quest.mjs): where things are on screen, to tap them as a player would.
   (window as unknown as Record<string, unknown>).seQuest = {
-    battle, quest, view,
+    battle, quest, view, magic,
+    lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)),
+    tileScreen: (tile: Point) => {
+      const p = world.toGlobal(unitPoint(tile.x, tile.y));
+      return { x: p.x, y: p.y };
+    },
     screenOf: (fighter: Fighter) => {
       const p = world.toGlobal(fighter.isUnit ? { x: fighter.at.x, y: fighter.at.y - 30 } : { x: fighter.at.x, y: fighter.at.y - 40 });
       return { x: p.x, y: p.y };
@@ -179,6 +223,18 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
 
   camera.onTap = (at) => {
     if (finished) {
+      return;
+    }
+    const aiming = book?.isAiming;
+    if (aiming) {
+      const tile = tileUnder(camera.toMap(at));
+      // With a mouse the marker follows it, so a click casts; on a touch
+      // screen the first tap shows where it would fall, a second there casts.
+      if (hovering || (aimAt && aimAt.x === tile.x && aimAt.y === tile.y)) {
+        cast(aiming, tile);
+      } else {
+        aimOver(tile);
+      }
       return;
     }
     const tapped = view.fighterAt(at);
@@ -213,7 +269,15 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     }
     sound.play("place");
   };
-  camera.onHover = (at) => view.hover(view.fighterAt(at));
+  camera.onHover = (at) => {
+    hovering = true;
+    if (book?.isAiming) {
+      aimOver(tileUnder(camera.toMap(at)));
+      view.hover(null);
+      return;
+    }
+    view.hover(view.fighterAt(at));
+  };
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       select([]);
@@ -234,6 +298,8 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       }
       if (quest!.isOver()) {
         finished = true;
+        book?.stopAiming();
+        book?.hide();
         quest!.settle();
         void results(quest!, (performance.now() - started) / 1000);
       }

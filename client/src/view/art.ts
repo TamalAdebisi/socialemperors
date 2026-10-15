@@ -50,6 +50,26 @@ export class ItemArt {
     return this.animations.get("frame/0")?.[0] ?? this.animations.values().next().value?.[0];
   }
 
+  /**
+   * An effect's frames in the order the game plays them (a spell's
+   * animation, its labels one after another), and where its last labelled
+   * part starts: the part that goes round while the effect lasts.
+   */
+  timeline(): { frames: Texture[]; lastPart: number } {
+    const frames: Texture[] = [];
+    let lastPart = 0;
+    let label = "";
+    for (const [name, textures] of this.animations) {
+      const here = name.slice(0, name.lastIndexOf("/"));
+      if (here !== label) {
+        label = here;
+        lastPart = frames.length;
+      }
+      frames.push(...textures);
+    }
+    return { frames, lastPart };
+  }
+
   /** How many frames follow a label: a unit's directions, a building's ways of facing. */
   framesOf(label: string): number {
     let count = 0;

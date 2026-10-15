@@ -22,6 +22,8 @@ export interface ActionChoices {
   hurry?: { price: number; run: () => void } | null;
   /** Train its unit: the unit's picture and price, and the same for cash (null when it trains nothing). */
   train?: { unit: string; picture: string; price: string; run: () => void; cash: { price: string; run: () => void } | null } | null;
+  /** The building's own window (the Wizardry Academy's spells), or null. */
+  open?: { label: string; run: () => void } | null;
   close: () => void;
 }
 
@@ -66,6 +68,9 @@ export class ActionBar {
     }
     if (choices.train) {
       this.trainButtons(choices.train);
+    }
+    if (choices.open) {
+      this.button(choices.open.label, choices.open.run, choices.open.label, "spell-book");
     }
     this.button("Let out", choices.letOut ?? null, "Let out", "population");
     this.button("Move", choices.move, "Move", "move");

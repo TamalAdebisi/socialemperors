@@ -37,11 +37,15 @@ import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
+import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
+
+/** The building where spells are learnt. */
+const WIZARDRY_ACADEMY = 416;
 
 /** Arthur's portrait in the Neighbours window: the game's own king. */
 const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
@@ -161,12 +165,19 @@ async function start(): Promise<void> {
       { key: "world", label: "World", icon: ICONS.world, only: "dock", run: () => world.toggleWorld(), shortcut: "w" },
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
+    // The Wizardry Academy's spells (ui/spells.ts): learnt and mana bought at home, cast in battle.
+    const spells = new SpellsWindow(magicParts(config, info.privateState as Record<string, unknown> | undefined, town,
+      settings.assetsUrl, (cmd, ...args) => {
+        commands.add(cmd, ...args);
+        void commands.flush();  // as the Flash client: at once
+      }, () => hud.update(town)));
     const doings = new Doings();
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
-      waiting: (gifts) => menus.count("storage", gifts) });
+      waiting: (gifts) => menus.count("storage", gifts),
+      windowOf: (placed) => (placed.item.id === WIZARDRY_ACADEMY ? { label: "Spells", run: () => spells.open() } : null) });
     hud.offerCollectAll(() => editor.collectAll());
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));

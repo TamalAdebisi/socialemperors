@@ -28,6 +28,12 @@ const HELP_RINGS = 4;
 export const DEAD_FRAMES = 5 * FPS;
 /** Re-planning a chase waits at least 300 ms. */
 const REPLAN_FRAMES = 9;
+/** Swallowed things sink, and summoned ones fade, for half a second. */
+const SINK_FRAMES = 15;
+/** Poison bites every 3 seconds. */
+const POISON_EVERY = 90;
+/** An enlarged unit's hits. */
+const ENLARGED_HIT = 1.5;
 /** A shot hurts its target only if the target is within 100 pixels of where it lands. */
 const BLAST_PIXELS = 100;
 /** A wandering defender goes home past 20 tiles (across plus down). */
@@ -81,7 +87,8 @@ export interface Fighter {
   life: number;
   maxLife: number;
   attack: number;
-  readonly range: number;
+  /** Reach in tiles: the item's, doubled for a while by 2x Range. */
+  range: number;
   readonly interval: number;
   velocity: number;
   readonly flying: boolean;
@@ -114,6 +121,24 @@ export interface Fighter {
   collectable?: boolean;
   /** What the battle's owner keeps with it (the town's PlacedItem, for the drawing). */
   tag?: unknown;
+  /** Spells (rules/magic.ts). Can't move or attack before this frame: frozen, or knocked down. */
+  stilledUntil?: number;
+  /** Frozen (drawn blue; the ice tower leaves it alone) until this frame. */
+  frozenUntil?: number;
+  /** Poisoned: hurt by `damage` every 3 seconds, `left` more times, the next on frame `next`. */
+  poison?: { damage: number; left: number; next: number } | null;
+  /** Grown big (from frame `grewAt`), hitting half again as hard, until this frame. */
+  enlargedUntil?: number;
+  grewAt?: number;
+  /** Being swallowed by the ground since this frame: it dies half a second later. */
+  sinkingSince?: number;
+  /** A summoned unit whose time is up, fading since this frame. */
+  fadingSince?: number;
+  /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
+  limit?: number;
+  limitMax?: number;
+  /** Which 2x Speed and 2x Range casts it carries: a newer cast takes over from an older one. */
+  boosts?: { speed?: number; range?: number };
 }
 
 export type BattleEvent =
@@ -121,7 +146,35 @@ export type BattleEvent =
   | { kind: "shot"; shot: Shot }
   | { kind: "landed"; shot: Shot }
   | { kind: "died"; fighter: Fighter; by: Fighter | null }
-  | { kind: "gone"; fighter: Fighter };
+  | { kind: "gone"; fighter: Fighter }
+  | { kind: "effect"; effect: Effect };
+
+/**
+ * A spell's picture on the field (one of the game's magic_* animations),
+ * played from frame `start` of the battle, one picture a frame. Without
+ * `until` it plays once; with it, it stays until then, going round its last
+ * part (the shield, the black hole), then fades.
+ */
+export interface Effect {
+  art: string;
+  at: Point;
+  start: number;
+  until?: number;
+  scale?: number;
+  alpha?: number;
+  /** In front of everything (falling fireballs, rocks, rain), or on the ground. */
+  above?: boolean;
+}
+
+/** An Ether Shield's zone: hits on fighters standing in it are cut to `factor`. */
+interface Shield {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  factor: number;
+  until: number;
+}
 
 /** A projectile on its way. */
 export interface Shot {
@@ -160,8 +213,9 @@ export class Battle {
   private grid: WalkGrid;
   private gridStale = true;
   private nextKey = 1;
-  /** Things due on a later frame (a kamikaze set off by another). */
+  /** Things due on a later frame (a kamikaze set off by another, a spell's effects). */
   private later: { frame: number; run: () => void }[] = [];
+  private shields: Shield[] = [];
 
   constructor(options: BattleOptions) {
     this.ground = options.ground;
@@ -211,6 +265,18 @@ export class Battle {
         }
         continue;
       }
+      if (fighter.sinkingSince !== undefined) {
+        if (frame - fighter.sinkingSince >= SINK_FRAMES) {
+          this.kill(fighter, null);
+        }
+        continue;
+      }
+      if (fighter.fadingSince !== undefined) {
+        if (frame - fighter.fadingSince >= SINK_FRAMES) {
+          this.remove(fighter);
+        }
+        continue;
+      }
       if (fighter.isUnit) {
         this.stepUnit(fighter, frame);
       } else {
@@ -221,6 +287,7 @@ export class Battle {
       this.later.splice(this.later.indexOf(due), 1);
       due.run();
     }
+    this.shields = this.shields.filter((shield) => shield.until > frame);
     for (const shot of [...this.shots]) {
       shot.frame++;
       if (shot.frame >= shot.frames) {
@@ -274,6 +341,21 @@ export class Battle {
   // --- Units ------------------------------------------------------------
 
   private stepUnit(unit: Fighter, frame: number): void {
+    if (unit.poison && frame >= unit.poison.next) {
+      const poison = unit.poison;
+      poison.left--;
+      poison.next = frame + POISON_EVERY;
+      if (poison.left <= 0) {
+        unit.poison = null;
+      }
+      this.hurt(unit, poison.damage, null);
+      if (unit.dead) {
+        return;
+      }
+    }
+    if (this.isStilled(unit)) {
+      return;
+    }
     if (frame % THINK_EVERY === 0) {
       this.tidy(unit);
       this.think(unit);
@@ -469,9 +551,100 @@ export class Battle {
     }
   }
 
-  /** Spells come later (Beta 2's spells slice): nothing is frozen yet. */
-  private isFrozen(_fighter: Fighter): boolean {
-    return false;
+  isFrozen(fighter: Fighter): boolean {
+    return this.frame < (fighter.frozenUntil ?? 0);
+  }
+
+  /** Frozen or knocked down: it can't walk or fight. */
+  isStilled(fighter: Fighter): boolean {
+    return this.frame < (fighter.stilledUntil ?? 0);
+  }
+
+  isEnlarged(fighter: Fighter): boolean {
+    return this.frame < (fighter.enlargedUntil ?? 0);
+  }
+
+  // --- Spells' doings (rules/magic.ts decides when and to whom) -----------
+
+  /** Run something `frames` from now. */
+  after(frames: number, run: () => void): void {
+    this.later.push({ frame: this.frame + Math.max(0, Math.round(frames)), run });
+  }
+
+  /** Show a spell's picture. */
+  show(effect: Omit<Effect, "start"> & { start?: number }): void {
+    this.events.push({ kind: "effect", effect: { ...effect, start: effect.start ?? this.frame } });
+  }
+
+  /** Stop a unit where it is, unable to act for `frames`. */
+  still(unit: Fighter, frames: number, frozen = false): void {
+    unit.stilledUntil = Math.max(unit.stilledUntil ?? 0, this.frame + frames);
+    if (frozen) {
+      unit.frozenUntil = Math.max(unit.frozenUntil ?? 0, this.frame + frames);
+    }
+    unit.path = [];
+  }
+
+  /** The ground takes it: it sinks for half a second, then dies (no damage, so nothing protects it). */
+  swallow(fighter: Fighter): void {
+    if (fighter.dead || fighter.sinkingSince !== undefined) {
+      return;
+    }
+    fighter.sinkingSince = this.frame;
+    fighter.path = [];
+    fighter.next = null;
+    fighter.target = null;
+    fighter.attacking = false;
+  }
+
+  /** A summoned unit whose time is up: it fades for half a second and is gone, without dying. */
+  fade(fighter: Fighter): void {
+    if (!fighter.dead && fighter.fadingSince === undefined && this.fighters.includes(fighter)) {
+      fighter.fadingSince = this.frame;
+      fighter.path = [];
+      fighter.next = null;
+      fighter.attacking = false;
+    }
+  }
+
+  /** Take something off the field without a death. */
+  remove(fighter: Fighter): void {
+    const at = this.fighters.indexOf(fighter);
+    if (at < 0) {
+      return;
+    }
+    this.fighters.splice(at, 1);
+    fighter.dead = true;
+    for (const other of this.fighters) {
+      if (other.target === fighter) {
+        other.target = null;
+        other.attacking = false;
+      }
+    }
+    if (!fighter.isUnit) {
+      this.gridStale = true;
+    }
+    this.events.push({ kind: "gone", fighter });
+  }
+
+  /** An Ether Shield over the tiles x0..x1, y0..y1 for `frames`. */
+  addShield(x0: number, y0: number, x1: number, y1: number, factor: number, frames: number): void {
+    this.shields.push({ x0, y0, x1, y1, factor, until: this.frame + frames });
+  }
+
+  /** What a hit on a fighter is cut to: the first shield over its tile, or 1. */
+  shieldFactor(fighter: Fighter): number {
+    const shield = this.shields.find((s) => fighter.tx >= s.x0 && fighter.tx <= s.x1 && fighter.ty >= s.y0 && fighter.ty <= s.y1);
+    return shield ? shield.factor : 1;
+  }
+
+  /** Living fighters whose tile is within `radius` of a tile, nearest first, at most `count`. */
+  within(tile: Point, radius: number, count: number, which: (f: Fighter) => boolean): Fighter[] {
+    const squared = (f: Fighter) => (f.tx - tile.x) ** 2 + (f.ty - tile.y) ** 2;
+    return this.fighters
+      .filter((f) => !f.dead && f.sinkingSince === undefined && f.fadingSince === undefined && which(f) && squared(f) <= radius * radius)
+      .sort((a, b) => squared(a) - squared(b))
+      .slice(0, count);
   }
 
   // --- Hits -------------------------------------------------------------
@@ -510,6 +683,10 @@ export class Battle {
       return;
     }
     let amount = attack;
+    // Grown by Age of Colossus: half again.
+    if (by && this.isEnlarged(by)) {
+      amount *= ENLARGED_HIT;
+    }
     // Siege engines do half to units; units do a quarter more to siege engines.
     if (by && target.isUnit && by.isUnit && by.item.subcategory === SUBCAT.siege) {
       amount = Math.ceil(amount / 2);
@@ -519,7 +696,9 @@ export class Battle {
     }
     const crit = this.random() * 100 < CRIT_PERCENT;
     const variance = this.random() * VARIANCE - VARIANCE / 2;
-    const dealt = crit ? (amount + Math.abs(variance)) * CRIT_MULTIPLIER : amount + variance;
+    let dealt = crit ? (amount + Math.abs(variance)) * CRIT_MULTIPLIER : amount + variance;
+    // An Ether Shield over it takes its share.
+    dealt -= Math.round(dealt - dealt * this.shieldFactor(target));
     const damage = Math.max(1, Math.round(dealt - target.item.defense));
     target.life = Math.max(0, target.life - damage);
     this.events.push({ kind: "hit", fighter: target, amount: damage, crit, by });
@@ -566,9 +745,9 @@ export class Battle {
   }
 
   /** What stands on a tile: a unit there, or a building covering it. */
-  private standingAt(x: number, y: number, except: Fighter): Fighter | null {
+  standingAt(x: number, y: number, except: Fighter | null = null): Fighter | null {
     for (const f of this.fighters) {
-      if (f === except || f.dead) {
+      if (f === except || f.dead || f.sinkingSince !== undefined || f.fadingSince !== undefined) {
         continue;
       }
       if (f.isUnit ? f.tx === x && f.ty === y
@@ -682,7 +861,7 @@ export class Battle {
     let best: Fighter | null = null;
     let bestSort = Infinity;
     for (const f of this.fighters) {
-      if (f.dead || f.side !== other || (also && !also(f))) {
+      if (f.dead || f.side !== other || f.sinkingSince !== undefined || f.fadingSince !== undefined || (also && !also(f))) {
         continue;
       }
       const squared = (f.tx - from.x) ** 2 + (f.ty - from.y) ** 2;

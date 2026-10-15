@@ -1023,10 +1023,71 @@ Speed button speeds them too. The report goes as the results show, not
 when the player shares or skips them, so closing the page then loses
 nothing.
 
+**Spells**, from the Flash client the same way. Code: `rules/magic.ts`
+(what each spell does, with tests; our notes on each in
+`rules/spells-notes.json`, which the game doesn't load) and `ui/spells.ts`
+(the windows).
+
+- **Learning.** Human empires get magic at level 35 (the Wizardry
+  Academy), troll empires always. The Academy's card has a Spells button
+  that opens its window: every spell from the config's `magics` table,
+  with its picture (`images_new/<img_name>.jpg`), mana, area and price.
+  Gold learns a spell from its level; cash learns it at any level, as in
+  the original. Learning gives the spell's mana once, so the first cast is
+  free. `buy_magic` (spell, town, 0 gold or 1 cash), sent at once.
+- **Mana** (`privateState.mana`) doesn't come back by itself: 2 a level
+  from level 36, the spell's mana when it's learnt, and the Wizard's bank,
+  5 mana for 20,000 gold or 1 cash (`buy_mana_new`, town, 1 cash or 0
+  gold). The bank opens from the Academy's window and from the mana in
+  battle.
+- **Ranks.** A spell grows stronger with use (`privateState.magics`, times
+  cast): rank 2 from its 25th cast, rank 3 from its 50th. The rank sets
+  its area (5, 7 or 9 tiles a side for most) and its numbers.
+- **Casting,** in battle: the spell book at the bottom left, with the mana
+  left beside it. Open it, pick a spell (too little mana opens the bank),
+  and the game's marker follows the mouse, lighting up whom it would
+  reach; click to cast. On a touch screen the first tap shows the marker,
+  a second tap there casts. The book, or Escape, cancels. The tapped tile
+  is the bottom corner of the spell's square. The name and the mana float
+  up, the mana goes at once, and `use_magic` (spell) is sent at once.
+  The book's "Open book" opens the Academy's window, so troll empires
+  (who have no Academy) can learn there.
+- **The fifteen spells**, each with the game's own animation, frame by
+  frame on the battle's clock:
+  - *Fire Havoc:* 30 fireballs over 3 seconds; every third falls on an
+    enemy fighter in the square, the rest anywhere in it. Each hurts
+    whatever it lands on (150, 200, 250), the player's own too.
+  - *Ultimate Hail:* a boulder on each tile, in its own time; enemy
+    buildings take 800, 1,000 or 1,500 (not town halls, chests or keys),
+    enemy units a tenth and are knocked down for 2.5 seconds.
+  - *Deadly Frostbite:* enemy units in the square freeze (blue) for 15,
+    20 or 30 seconds: no walking, no fighting. Bosses don't.
+  - *Sacred Rain:* 100 life to the player's units under it; rank 2 adds
+    20 a second for 5 seconds, rank 3 for 10.
+  - *Golem's Wrath, Yeti's Trail, Summon Dragon:* a golem, a yeti or one
+    of five Bahamut dragons joins the player's side on the tapped tile (or
+    the nearest free one) with 4,000, 5,000 or 7,000 life. The dragon
+    leaves after 30 seconds at rank 1, 60 at rank 2. Summoned units are
+    no loss, earn nothing and don't keep a battle going.
+  - *Hell Abyss:* the ground swallows the enemies in the middle of the
+    square, buildings too; not bosses, town halls, chests, keys or units
+    of 500 life or more. *Black Hole* does the same once a second for 15,
+    20 or 30 seconds.
+  - *Poisonous Flood:* enemy units around the tapped tile take 15, 20 or
+    25 every 3 seconds, 5, 7 or 10 times.
+  - *Ether Shield:* hits on anyone standing in the square are cut to 70%,
+    55% or 40% for 20, 30 or 40 seconds.
+  - *Age of Colossus:* the player's units around the tapped tile grow
+    twice as big and hit half again as hard for 30, 45 or 60 seconds.
+  - *2x Speed, 2x Range:* up to 20 of the player's units in the middle
+    walk twice as fast, or reach twice as far, for 15, 30 or 45 seconds;
+    casting again starts the time over.
+  - *Instant Limit:* fills the LIMIT bar of the player's special units in
+    the middle (the bar comes with the heroes' slice).
+
 **Not yet** (Beta 2's next slices): the boss islands and the Hero Isle,
-spells
-and the heroes' special moves, collection pieces dropped by enemies, and
-defending the town.
+the heroes' special moves, collection pieces dropped by enemies,
+defending the town, and spells cast at home against raids.
 
 ### Making the art look better
 

@@ -78,6 +78,11 @@ PICTURES = {
     "island-stars-3": ("NewQuestIslandButtonMC/stars", 3),
     "map-next": ("PopupQuestsManagerMC/btnNext", 0),
     "map-prev": ("PopupQuestsManagerMC/btnPrev", 0),
+    # Spells: the book that opens them in battle, mana, and the marker that
+    # follows the mouse while aiming (its last frame, grown).
+    "spell-book": ("PopupMagicMC/book@1", 0),
+    "mana": ("IconResourcesMC", 16),
+    "spell-area": ("AOEMC", 4, 480),
     # The options panel: music and sound, on and off.
     "music-on": ("GuiMC/options_panel/bm", 0),
     "music-off": ("GuiMC/options_panel/bmo", 0),
