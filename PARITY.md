@@ -129,8 +129,12 @@ dock"), so these come with a mockup first.
       can help; Send gift. Friends' help on a building shows their picture
       over it; tapping takes an hour off. M
 - [ ] **Hurry:** the original's window adds "Ask friends". S
-- [ ] **Selecting several units** with the square tool or a double click,
-      and moving them as a group. M
+- [x] **Selecting several units** with the square tool (or Space), a box
+      or a double click, and sending them as a group. M
+- [ ] **The pointer's tools:** the original's pointer button opens a menu
+      of tools: Remove (the bulldozer, which stays on to remove one thing
+      after another) and Fast collect (the glove, collecting what it's
+      swept over). Ours has Sell on each card and Collect all. S
 - [ ] **Renaming the town** from the game. S
 
 ## Your calls (15 October 2026)

@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: selecting several units
+
+- **A group sent to the ground only gets tiles it can walk to.** The
+  original handed out any tile with nothing on it, so a unit could be
+  given one off the bought land and stay where it was.
+- **A unit choosing where to stand by a tree, a building or an animal skips
+  tiles other units are already walking to,** so villagers sent together
+  (or one after another) each get a tile of their own instead of stacking
+  on one.
+- **Escape puts the square tool down,** as it closes everything else here.
+  The original had no Escape for it.
+- **A portrait under the mouse glows,** but its unit on the map doesn't
+  light up as in the original (there's no hover highlight on the map yet).
+
 ## 15 October 2026: Beta 2 checked against the original, the town and the islands
 
 - **Island goals count the stars the save keeps.** The original counted

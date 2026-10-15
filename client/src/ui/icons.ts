@@ -18,6 +18,8 @@ export const ICONS = {
   build: new URL("./art/build.webp", import.meta.url).href,
   storage: new URL("./art/storage.webp", import.meta.url).href,
   "fast-collect": new URL("./art/fast-collect.webp", import.meta.url).href,
+  "square-tool": new URL("./art/square-tool.webp", import.meta.url).href,
+  "square-tool-space": new URL("./art/square-tool-space.webp", import.meta.url).href,
   // The menus' other buttons: the game bar's own, and its villager for the neighbours.
   units: new URL("./art/units.webp", import.meta.url).href,
   quests: new URL("./art/quests.webp", import.meta.url).href,
@@ -89,10 +91,12 @@ export function iconImage(name: IconName, label = ""): HTMLImageElement {
 }
 
 /**
- * The Flash client's mouse pointers for a selected unit, as CSS cursors: the
- * picture, then its hot spot (the pixel that points) from the top left.
+ * The Flash client's mouse pointers for a selected unit (and the square
+ * tool), as CSS cursors: the picture, then its hot spot (the pixel that
+ * points) from the top left.
  */
 export const CURSORS = {
+  square: `url("${new URL("./art/cursor-square.png", import.meta.url).href}") 13 9, crosshair`,
   axe: `url("${new URL("./art/cursor-axe.png", import.meta.url).href}") 4 4, pointer`,
   pick: `url("${new URL("./art/cursor-pick.png", import.meta.url).href}") 4 4, pointer`,
   inside: `url("${new URL("./art/cursor-inside.png", import.meta.url).href}") 1 12, pointer`,

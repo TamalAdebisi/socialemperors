@@ -1,6 +1,7 @@
 // The camera over the town: drag (mouse or one finger) to move, with a
 // glide after letting go; wheel, pinch (two fingers) or +/- to zoom,
-// smoothly, around the pointer. It runs every frame the screen draws, so it
+// smoothly, around the pointer. A drag the town asks for (one that starts
+// on a unit) draws a box to select units instead. It runs every frame the screen draws, so it
 // is as smooth as the screen (60 or 120 times a second; Flash drew 24 or 30).
 
 import type { Container } from "pixi.js";
@@ -44,10 +45,18 @@ export class Camera {
   private recentMoves: { t: number; x: number; y: number }[] = [];
   private pinchDistance = 0;
   private readonly keys = new Set<string>();
-  private press: { x: number; y: number; t: number; moved: number; pinched: boolean } | null = null;
+  private press: { x: number; y: number; t: number; moved: number; pinched: boolean; box: boolean } | null = null;
   /** A tap on the map (a click, or a short touch: `touch`), and the mouse moving over it. Screen points. */
   onTap: ((at: Point, touch: boolean) => void) | null = null;
   onHover: ((at: Point) => void) | null = null;
+  /**
+   * A press on the map: true when the town takes the drag to draw a box
+   * (selecting units) instead of moving the map. `onBox` then hears the box
+   * as it grows, from where the press began (screen points), and once more
+   * when it's let go (`done`; a second finger ends it too, with no size).
+   */
+  onPress: ((at: Point) => boolean) | null = null;
+  onBox: ((from: Point, to: Point, done: boolean) => void) | null = null;
   private canvas: HTMLCanvasElement | null = null;
 
   constructor(world: Container, area: Area, centre: Point) {
@@ -83,9 +92,15 @@ export class Camera {
       canvas.setPointerCapture(e.pointerId);
       this.pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
       if (this.pointers.size === 1) {
-        this.press = { x: e.offsetX, y: e.offsetY, t: performance.now(), moved: 0, pinched: false };
+        const at = { x: e.offsetX, y: e.offsetY };
+        this.press = { ...at, t: performance.now(), moved: 0, pinched: false, box: this.onPress?.(at) ?? false };
       } else if (this.press) {
         this.press.pinched = true;
+        if (this.press.box) {
+          // Two fingers: a pinch after all, not a box.
+          this.press.box = false;
+          this.onBox?.(this.press, this.press, true);
+        }
       }
       this.velocity = { x: 0, y: 0 };
       this.recentMoves = [];
@@ -107,7 +122,14 @@ export class Camera {
         if (e.type === "pointerup" && press && !press.pinched && press.moved < TAP_MOVE
             && performance.now() - press.t < TAP_MS) {
           this.velocity = { x: 0, y: 0 };
+          if (press.box) {
+            this.onBox?.(press, press, true);  // no box after all, just a tap
+          }
           this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen");
+          return;
+        }
+        if (press?.box) {
+          this.onBox?.(press, { x: e.offsetX, y: e.offsetY }, true);
           return;
         }
         this.startGlide();
@@ -204,7 +226,12 @@ export class Camera {
     if (this.press) {
       this.press.moved = Math.max(this.press.moved, Math.hypot(now.x - this.press.x, now.y - this.press.y));
     }
-    if (this.pointers.size === 1) {
+    if (this.pointers.size === 1 && this.press?.box) {
+      // Drawing a box: the map stays put.
+      if (this.press.moved >= TAP_MOVE) {
+        this.onBox?.(this.press, now, false);
+      }
+    } else if (this.pointers.size === 1) {
       // Drag: the map follows the pointer.
       this.panScreen(last.x - now.x, last.y - now.y);
       this.recentMoves.push({ t: performance.now(), x: last.x - now.x, y: last.y - now.y });
