@@ -63,6 +63,11 @@ them can be found and reversed. The big, agreed decisions are in
   empire. If the classic game has put one up, the new client leaves its
   chest alone too: those chests open by their story, not when the
   enemies are gone.
+- **The server ignores a raid's progress sent before the raid has
+  started.** Three scripted camps (the Atlantis treasure, the demon
+  portals, the corrupted wizards) send their last progress just after
+  their chest; kept, it made the next camp finish by itself on a reload,
+  for free. This fixes it for the classic game too.
 - **A chest at level 26 pays like level 27** (750 gold, 100 experience).
   The original's table skipped level 26, so its chest paid nothing.
 - **Kept from the original:** a camp still standing is put up afresh,
