@@ -288,7 +288,9 @@ shows another player's town, as visiting a neighbour does, to look at only.
 - Drawn as often as the screen shows a new picture (60 or 120 times a
   second; Flash drew 24 or 30), and sharp on high-resolution screens.
 - Drag to move, with a glide after letting go; wheel or pinch to zoom,
-  smoothly, around the pointer; arrow keys; full screen; phones and tablets.
+  smoothly, around the pointer; the arrow keys, as in the Flash client
+  (letters are the menus' shortcuts: with WASD too, S, A and W did both);
+  full screen; phones and tablets.
 - A bar in HTML with the player's name, level, resources and cash, and a way
   back to the classic game.
 
@@ -352,7 +354,10 @@ the server.
   tile.
 - Something fits where all its tiles are on bought land (the save's
   expansions) and none is taken by a building or a standing unit.
-- Turning goes round the item's ways of facing (its art's frames).
+- Turning goes round the item's ways of facing (its art's frames). Space
+  turns a building while it's being placed or moved, as in the Flash
+  client: it's bought, placed or moved facing that way (cancelling a move
+  turns it back). The server keeps the facing a `move` sends (it didn't).
 - Selling gives back a twentieth of the price, in what it was bought with,
   rounded down; nothing for things bought with cash.
 - Whose things are: an item's `race` in the config says. The player's own
