@@ -323,7 +323,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         the trolls on the border ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] Scripted camps, part 1: the burning mill (7) and the skeleton
         statue (13) ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] Scripted camps, the rest (14 to 29)
+  - [x] Scripted camps, the rest: the festivals, the bosses, the keys,
+        the doors and waves (14 to 29) ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] The Hero Isle: its seven parts behind doors that open as each is
         cleared, and the monks turning units to their side
         ([CLIENT.md](CLIENT.md#step-4-battles))

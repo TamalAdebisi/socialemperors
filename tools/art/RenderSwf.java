@@ -214,6 +214,29 @@ public class RenderSwf {
             return -1;
         }
 
+        // A chest that fills up as its camp goes (the festivals): its first
+        // frame again with the layers named step1, step2... shown one more at
+        // a time, from none to all.
+        List<Integer> steps = new ArrayList<>();
+        List<DepthState> stepLayers = new ArrayList<>();
+        collectSteps(timeline, stepLayers, new HashMap<>());
+        if (!stepLayers.isEmpty()) {
+            int most = 0;
+            for (DepthState layer : stepLayers) {
+                most = Math.max(most, stepNumber(layer));
+            }
+            for (int shown = 0; shown <= most; shown++) {
+                for (DepthState layer : stepLayers) {
+                    layer.isVisible = stepNumber(layer) <= shown;
+                }
+                List<Integer> picture = drawFrame(timeline, 0, rect, aaScale, out, seen, count, true, tooSmall, capped);
+                steps.add(picture.get(0));
+            }
+            for (DepthState layer : stepLayers) {
+                layer.isVisible = true;
+            }
+        }
+
         StringBuilder frames = new StringBuilder();
         List<Frame> timelineFrames = timeline.getFrames();
         for (int f = 0; f < frameCount; f++) {
@@ -236,6 +259,7 @@ public class RenderSwf {
                 + "  \"origin\": {\"x\": " + (int) Math.round(-rect.Xmin * ZOOM / TWIPS)
                 + ", \"y\": " + (int) Math.round(-rect.Ymin * ZOOM / TWIPS) + "},\n"
                 + "  \"capped\": " + capped.get() + ",\n"
+                + (steps.isEmpty() ? "" : "  \"steps\": " + steps + ",\n")
                 + "  \"frames\": [\n" + frames + "\n  ]\n"
                 + "}\n";
         Files.writeString(new File(out, "manifest.json").toPath(), manifest, StandardCharsets.UTF_8);
@@ -357,6 +381,30 @@ public class RenderSwf {
         }
         return String.format(java.util.Locale.ROOT, "{\"x\": %.2f, \"y\": %.2f, \"w\": %.2f, \"h\": %.2f}",
                 xMin / TWIPS, yMin / TWIPS, (xMax - xMin) / TWIPS, (yMax - yMin) / TWIPS);
+    }
+
+    /** Every layer named step<n>, in any frame, at any depth of the sprite. */
+    static void collectSteps(Timeline timeline, List<DepthState> found, Map<Timeline, Boolean> seen) {
+        if (seen.containsKey(timeline)) {
+            return;
+        }
+        seen.put(timeline, true);
+        for (Frame frame : timeline.getFrames()) {
+            for (DepthState layer : frame.layers.values()) {
+                if (stepNumber(layer) > 0) {
+                    found.add(layer);
+                }
+                if (layer.getCharacter() instanceof Timelined) {
+                    collectSteps(((Timelined) layer.getCharacter()).getTimeline(), found, seen);
+                }
+            }
+        }
+    }
+
+    /** n for a layer named step<n>, else 0. */
+    static int stepNumber(DepthState layer) {
+        String name = layer.instanceName;
+        return name != null && name.matches("step\\d+") ? Integer.parseInt(name.substring(4)) : 0;
     }
 
     /** How many frames until a character's animation repeats: the longest timeline inside it. */

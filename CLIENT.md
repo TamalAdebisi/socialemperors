@@ -1398,13 +1398,8 @@ camps players reach, our own notes on the original's tables) and
 
 - **Which:** twenty of the thirty camps are stories. They stand in the
   map's four corners, always in the same places. Camps 9 and 11 are never
-  reached by any player, as in the original. Played here so far: 7 (the
-  burning mill), 13 (the skeleton statue), 15 (the golden golem), 17 (the
-  black yeti), 19 (the giant viper), 21 (the mummy), 22 (the evil
-  rockdriller), 26 (the Atlantis treasure), 27 (the Balrog), 28 (the demon
-  portals) and 29 (the corrupted wizards). The others (the four festival
-  camps with chests that fill up step by step, the Chinese dragon, Neptune
-  and the Ent) are put up by the classic game for now, in the same empire.
+  reached by any player, as in the original. All eighteen others are
+  played here: a human town gets 7 and 13 to 29, a troll town 13 and 14.
 - **How:** each key (a well, a statue) is guarded by the enemy units
   standing within 7 tiles of it when the camp is read (border trolls
   there too). When they've all fallen it lights up; one tap takes it: it
@@ -1428,6 +1423,19 @@ camps players reach, our own notes on the original's tables) and
   join the player by the town hall when it starts. Its prizes come with
   the chest: units beside it (or beside the last key), buildings to
   storage (`store_add_items`).
+- **Their own rules:** the four festivals (the fireworks, the Viking
+  beer, the Aztec altar, the tree of life) fill up a step for each key
+  taken; their chests' step pictures are drawn by `tools/art/RenderSwf.java`
+  (the layers named `step1`, `step2`... shown one more at a time, as
+  `steps/0` in the sheet). The Chinese dragon's village starts half burnt
+  (once a session), and the dragon can't be killed: below a tenth of its
+  life it says its line and gets away, which counts as beating it.
+  Neptune's pen has two doors, each opened by the fall of its wave (the
+  crab knights, then the seahorses); Neptune gets away like the dragon.
+  The Ent can't be hurt while its door stands; the fall of its wave opens
+  the door, and the Ent's own fall ends the camp. The pens' walls and
+  doors, and the festivals' buildings, are nobody's (they can't be
+  attacked, and their towers don't shoot).
 
 **Not yet** (Beta 2's next slices): sixteen of the scripted camps, monks at
 home, collection pieces dropped by enemies (they come with the

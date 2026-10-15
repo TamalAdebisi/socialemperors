@@ -92,6 +92,8 @@ export class HomeDefence {
       line: (id) => this.lines.get(id) ?? "",
       pictureUrl: (name) => `${parts.settings.assetsUrl}/images_new/${name}`,
       engage: (units, target) => this.engage(units, target),
+      fighterOf: (placed) => this.fight?.fighterOf(placed) ?? null,
+      battle: () => this.fight?.battle ?? null,
     });
     this.camps.arrive();
     (window as unknown as Record<string, unknown>).seHome = this;
@@ -149,7 +151,9 @@ export class HomeDefence {
           this.fight = null;
           this.camps.watch();
         }
-      } else if (this.clock % 30 === 0) {
+      }
+      // Every second, fight or not: a scripted camp's doors open as soon as their wave falls.
+      if (this.clock % 30 === 0) {
         this.camps.watch();
       }
     }
@@ -214,6 +218,12 @@ class Fight {
       } else if (side === SELF && placed.item.attack === 0) {
         fighter.condition = "survive";
       }
+      if (placed.boss) {
+        // A scripted camp's boss (homeScripted.ts).
+        fighter.flee = placed.boss.flee ?? null;
+        fighter.invulnerable = placed.boss.invulnerable;
+        fighter.scale = placed.boss.scale;
+      }
       this.placedOf.set(fighter, placed);
     }
     parts.editor.remember(town.items.filter((p) => p.item.isUnit));
@@ -232,6 +242,13 @@ class Fight {
       changed: () => parts.editor.gained(),
     });
     this.battle.onHurt.push((target, damage, by) => this.hurt(target, damage, by));
+    // A boss getting away says its line.
+    this.battle.onFlee.push((fighter) => {
+      const line = fighter.flee?.line;
+      if (line) {
+        this.view.rise(fighter, [{ text: this.line(line), colour: 0xffffff }]);
+      }
+    });
     showMessage("Raiders are coming!");
     setTimeout(() => showMessage(""), 3000);
   }
@@ -267,6 +284,16 @@ class Fight {
   /** The fighting's over: no raid left, and nobody fighting for 5 seconds. */
   get over(): boolean {
     return this.raids.every((raid) => raid.done) && this.quiet >= QUIET_FRAMES;
+  }
+
+  /** The fighter standing for a thing of the town, if it's in this fight. */
+  fighterOf(placed: PlacedItem): Fighter | null {
+    for (const [fighter, p] of this.placedOf) {
+      if (p === placed) {
+        return fighter;
+      }
+    }
+    return null;
   }
 
   /** The player's units (from the town) at an enemy (from the town). */
@@ -445,7 +472,7 @@ class Fight {
  * town loads (rules/camps.ts), with what can't be hit (life 0) nobody's.
  */
 function sideOf(town: Town, placed: PlacedItem): Side {
-  const side = sideAtHome(town.race, placed.item, placed.tx, placed.ty);
+  const side = placed.nobodys ? "nobody" : sideAtHome(town.race, placed.item, placed.tx, placed.ty);
   if (side === "nobody" || placed.item.life <= 0) {
     return NEUTRAL;
   }
