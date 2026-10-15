@@ -9,16 +9,19 @@ export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 
 /**
- * Enough trees and rocks for a town (rules/nature.ts), in the wild corners
- * at the top of the map: with them, none grow on the player's land when the
- * town opens, where they'd stand in a test's way. A few can be cut before
+ * Enough trees, rocks and wild animals for a town (rules/nature.ts), in the
+ * wild corners at the top of the map: with them, none grow on the player's
+ * land when the town opens, where they'd stand in a test's way (or be
+ * caught by a unit and walk off). A few trees and rocks can be cut before
  * more grow.
  */
 const FULL_WILD = [
-  ...Array.from({ length: 200 }, (_, i) => [19, i % 20, Math.floor(i / 20)]),
-  ...Array.from({ length: 24 }, (_, i) => [73, 80 + (i % 20), Math.floor(i / 20)]),
-  ...Array.from({ length: 24 }, (_, i) => [69, 80 + (i % 20), 2 + Math.floor(i / 20)]),
-].map(([id, x, y]) => ({ cmd: "buy", args: [id, x, y, 0, 0, 1, 1, "b"] }));
+  ...Array.from({ length: 200 }, (_, i) => [19, i % 20, Math.floor(i / 20), "b"]),
+  ...Array.from({ length: 24 }, (_, i) => [73, 80 + (i % 20), Math.floor(i / 20), "b"]),
+  ...Array.from({ length: 24 }, (_, i) => [69, 80 + (i % 20), 2 + Math.floor(i / 20), "b"]),
+  // Sheep, cows and horses, apart from the trees.
+  ...[505, 504, 571].flatMap((id, row) => Array.from({ length: 7 }, (_, i) => [id, 2 * i, 12 + 2 * row, "u"])),
+].map(([id, x, y, type]) => ({ cmd: "buy", args: [id, x, y, 0, 0, 1, 1, type] }));
 
 /**
  * A new account with a new town, open in the new client. Its own browser

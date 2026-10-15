@@ -5,6 +5,7 @@ from sessions import session, save_session
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
+import animals
 import bank
 import comeback_bonus
 import temple
@@ -463,13 +464,9 @@ def do_command(USERID, cmd, args, previous=None):
         print(daily_bonus.collect(save, args[1], args[2], args[3]))
 
     elif cmd == Constant.CMD_ADMIN_ADD_ANIMAL:
-        subcatFunc = str(args[0])
-        toBeAdded = int(args[1])
-        print("Added", toBeAdded, get_item_from_subcat_functional(subcatFunc)["name"])
-
-        # TODO
-        oAnimals: dict = save["privateState"]["arrayAnimals"]
-        oAnimals[subcatFunc] = toBeAdded + (oAnimals[subcatFunc] if subcatFunc in oAnimals else 0)
+        subcat = str(args[0])
+        print("Added", int(args[1]), get_item_from_subcat_functional(subcat)["name"], end=": ")
+        print(animals.added(save, subcat, args[1]))
     
     elif cmd == Constant.CMD_GRAVEYARD_BUY_POTIONS:
         # no args

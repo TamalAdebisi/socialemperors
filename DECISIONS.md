@@ -4,6 +4,24 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: wild animals
+
+- **Caught animals walk in from the wild.** The original's paths go
+  anywhere but through buildings, so an animal caught out in the wild walks
+  to its ranch; the player's own units still go only on their land, as
+  decided when units first walked here.
+- **A wild animal's card says how it's caught** ("bring one of your units
+  near"); the original said nothing.
+- **Tapping a wild animal with a unit selected** sends the unit beside it
+  (as near as it can get on the player's land), so it catches it; the
+  original sent it to the animal's own tile.
+- **The server starts the day's animal count again each day.** It never
+  did, so a town got its animals once and never again.
+- **"Captured!" is a little bigger** than the original's, to be read on the
+  map at our zoom (64 pixels wide).
+- **The browser tests start each town with its wild animals** in the
+  corner, as with trees and rocks, so none walk about in a test's way.
+
 ## 15 October 2026: trees and rocks grow back
 
 - **As the original, quirks too:** the fourth kind of stone and of gold

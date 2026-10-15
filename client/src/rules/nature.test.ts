@@ -38,7 +38,7 @@ function town(things: [number, number, number][] = []): Town {
 
 test("a new town: three clumps of gold and of stone, ten of trees, and single trees up to a hundred", () => {
   const t = town([[19, 43, 54], [19, 44, 54]]);
-  const { commands, added } = growBack(t, ITEMS, 1000, seeded());
+  const { commands, added } = growBack(t, ITEMS, 1000, { random: seeded() });
   const of = (ids: number[]) => added.filter((p) => ids.includes(p.item.id)).length;
   // A clump is 5 or 6 rocks (the size picked once per kind), 16 to 19 trees.
   assert.ok([15, 18].includes(of(GOLD)), `gold: ${of(GOLD)}`);
@@ -63,10 +63,10 @@ test("a town with enough adds nothing; rocks growing back count, the fourth kind
   for (let i = 0; i < 180; i++) things.push([19, i % 20, Math.floor(i / 20)]);
   for (let i = 0; i < 18; i++) things.push([80, 20 + i, 10], [81, 20 + i, 11]);
   const t = town(things);
-  assert.deepEqual(growBack(t, ITEMS, 1000, seeded()).added, []);
+  assert.deepEqual(growBack(t, ITEMS, 1000, { random: seeded() }).added, []);
   // Gold IV doesn't count: 18 of them, and gold still comes.
   const fourth = town([...things.filter(([id]) => id !== 80), ...Array.from({ length: 18 }, (_, i): [number, number, number] => [76, 20 + i, 12])]);
-  const { added } = growBack(fourth, ITEMS, 1000, seeded());
+  const { added } = growBack(fourth, ITEMS, 1000, { random: seeded() });
   assert.ok(added.length > 0 && added.every((p) => GOLD.includes(p.item.id)), "only gold is added");
 });
 

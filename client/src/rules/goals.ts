@@ -88,6 +88,8 @@ export class Doings {
   letOutOf = new Map<number, number>();
   movedKind = new Map<number, number>();
   storedKind = new Map<number, number>();
+  /** Wild animals caught, by kind. */
+  capturedKind = new Map<number, number>();
   /** Units pushed: by the building's kind, then the unit's kind. */
   pushed = new Map<number, Map<number, number>>();
   /** Units trained: by the building, then the unit. */
@@ -119,6 +121,10 @@ export class Doings {
 
   moved(item: ItemInfo): void {
     add(this.movedKind, item.subcategory);
+  }
+
+  captured(item: ItemInfo): void {
+    add(this.capturedKind, item.subcategory);
   }
 
   stored(item: ItemInfo): void {
@@ -192,6 +198,8 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.letOutOf.get(n(0)) ?? 0, n(1));
     case "move-kind":
       return of(doings.movedKind.get(n(0)) ?? 0, n(1));
+    case "capture-kind":
+      return of(doings.capturedKind.get(n(0)) ?? 0, n(1));
     case "store-kind": {
       let done = 0;
       for (const kind_ of ids(0)) {
@@ -228,7 +236,7 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
     case "near-hall":
       return of(nearHall(town, args[0] as number[]) ? 1 : 0, 1);
     default:
-      return null;  // capturing animals, battles, quests, the social buildings: the classic game, for now
+      return null;  // battles, quests, the social buildings: the classic game, for now
   }
 }
 
