@@ -103,6 +103,11 @@ export class Doings {
   /** The neighbour visited last (their pid), and how many of neighbours' buildings were helped. */
   lastVisited = "";
   helpedBuildings = 0;
+  /** The islands' best stars, as the save keeps them (questsRank: quest id to stars). */
+  questStars: Record<string, number> = {};
+  /** The island map opened at all, and from the menus (not a harbour's button). */
+  islandsOpened = false;
+  islandsFromMenu = false;
 
   collected(item: ItemInfo): void {
     add(this.collectedKind, item.subcategory);
@@ -233,6 +238,12 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
     }
     case "walls":
       return of(wallsAlongTheFront(town, n(1)), n(0));
+    case "quest":
+      return of(Math.min(Number(doings.questStars[String(args[0])] ?? 0), n(1)), n(1));
+    case "islands-opened":
+      return of(doings.islandsOpened ? 1 : 0, 1);
+    case "islands-from-menu":
+      return of(doings.islandsFromMenu ? 1 : 0, 1);
     case "near-hall":
       return of(nearHall(town, args[0] as number[]) ? 1 : 0, 1);
     default:

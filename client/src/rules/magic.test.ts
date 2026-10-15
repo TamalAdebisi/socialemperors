@@ -5,8 +5,8 @@ import { Battle, ENEMY, SELF, seededRandom } from "./battle.ts";
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
 import {
-  castRank, castSpell, knownSpells, learn, learnProblem, magicOpen, marked, rankOf, readMagic, readSpells, spend, summonSpot,
-  type SpellInfo,
+  castRank, castSpell, knownSpells, learn, learnProblem, magicOpen, manaForLevels, marked, rankOf, readMagic, readSpells, spend,
+  summonSpot, type SpellInfo,
 } from "./magic.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
@@ -316,4 +316,15 @@ test("learning: gold from the spell's level, cash at any level; it gives the spe
   assert.ok(magicOpen("t", 1) && !magicOpen("h", 34) && magicOpen("h", 35));
   assert.deepEqual(readMagic({ mana: "12", magics: { 3: 4 } }), { mana: 12, casts: { 3: 4 } });
   assert.deepEqual(readMagic({ magics: [] }), { mana: 0, casts: {} });
+});
+
+test("one mana record per save read: the Academy and a fight share it; levels from 36 bring 2 mana each", () => {
+  const save = { mana: 10, magics: { 2: 3 } };
+  const a = readMagic(save);
+  const b = readMagic(save);
+  a.mana -= 4;
+  assert.equal(b.mana, 6, "the same record");
+  assert.equal(manaForLevels(34, 37, 36, 2), 4, "36 and 37");
+  assert.equal(manaForLevels(40, 41, 36, 2), 2);
+  assert.equal(manaForLevels(10, 20, 36, 2), 0);
 });

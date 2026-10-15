@@ -121,3 +121,30 @@ test("the siege: a minute's wait, then the engines go for the building nearest",
   const engines = raid.fighters.filter((f) => f.item.id === 520);
   assert.ok(engines.every((e) => e.target === near));
 });
+
+test("the stampede stands when no units of the player's are near the middle; the army aims by the land opened", () => {
+  const b = battle();
+  const stampede = new Raid(b, planRaids(32, "h", () => 0.05).find((p) => p.kind === "stampede")!, ITEMS, 32, "h", quiet);
+  b.add(HOUSE, 50, 70, SELF);  // within the captain's 40 tiles, out of the mounts' sight
+  for (let i = 0; i < 1900; i++) {
+    b.step();
+    stampede.step();
+  }
+  assert.ok(stampede.fighters.every((f) => f.target === null), "no charge at the town's buildings");
+
+  const army = (owns: number[]) => {
+    const a = battle();
+    const raid = new Raid(a, planRaids(40, "h", () => 0.05).find((p) => p.kind === "army")!, ITEMS, 40, "h", quiet,
+      (block) => owns.includes(block));
+    const corner = a.add(HOUSE, 32, 32, SELF);
+    const middle = a.add(HOUSE, 52, 52, SELF);
+    for (let i = 0; i < 1810; i++) {
+      a.step();
+      raid.step();
+    }
+    const engines = raid.fighters.filter((f) => f.target === corner || f.target === middle);
+    return engines.length ? (engines[0].target === corner ? "corner" : "middle") : "none";
+  };
+  assert.equal(army([7, 13]), "corner", "block 7 opened: the corner first");
+  assert.equal(army([13]), "middle", "only the first block: the middle");
+});

@@ -1398,7 +1398,9 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   them, and trolls are topped up about the border (a few clusters, fewer
   the more enemies there are). The camp's window tells its story in the
   game's words, with its picture. As in the original, a camp still
-  standing is put up afresh, somewhere else, each time the game opens.
+  standing is put up afresh, somewhere else, the first time the town
+  opens in a session (the browser tab: `session.ts`); coming home from an
+  island or a visit finds it as it was left.
 - **Whose things are:** as the original decides when the town loads: by
   race (the other race's are enemies), and on the border every building
   is an enemy but chests, fields, nature and scenery.

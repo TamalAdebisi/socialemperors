@@ -135,5 +135,6 @@ test("ghost copies strike 8 tiles round the Red Hot dragon, throwing and burning
   const made = wolf.b.fighters.filter((f) => f.item.id === 735 && f.cursed);
   assert.ok(squire.dead, "cursed");
   assert.equal(made.length, 1);
-  assert.ok(made[0].side === ENEMY && made[0].maxLife === 300 && made[0].poison);
+  // 300 life, its maximum the werewolf's own (healers can bring it up), as in the original.
+  assert.ok(made[0].side === ENEMY && made[0].life <= 300 && made[0].maxLife === made[0].item.life && made[0].poison);
 });

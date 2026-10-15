@@ -4,6 +4,42 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2 checked against the original, the town and the islands
+
+- **Island goals count the stars the save keeps.** The original counted
+  only wins made in the same session; here the island and the town are
+  separate pages, so that would never count. A player who already won an
+  island gets its goal at once.
+- **Kept ours: nothing counts after an island is decided.** In the
+  original, deaths and pay went on being counted in the few seconds
+  before the results, and on the hardcore, god and Hero islands each later
+  fall paid the win bonus again (a bug).
+- **Kept ours: the Arctic Isle counts its lent units rightly.** The
+  original miscounted the lent Wizard and knights, and could call the
+  battle lost too early.
+- **Kept ours: units of any race on the border walk home** when a camp
+  clears it. The original sold them (a Stone Golem, a Yeti, a ship...).
+- **Kept ours: a unit sent where it can't reach is freed.** The original
+  left it ignoring enemies until the next order.
+- **Not yet: neutral things as enemies on some islands.** The original's
+  rule would send units to chop trees and cows; it waits for a look in the
+  Flash game (PARITY.md, Beta 2).
+- **The browser tests hold back the siege a town may meet as it opens**
+  (`seCalm`, set only by `e2e/lib.mjs`): it locked tests' towns at random.
+
+## 15 October 2026: Beta 2 checked against the original, spells and special moves
+
+- **The Ether Shield protects the square it shows.** In the original a
+  slip in its code made it protect one size bigger than its marker at
+  ranks 1 and 2, and nothing at all at rank 3. Ours protects the marker's
+  5, 7 or 9 tiles, as the spell's picture promises.
+- **Fire Havoc falls inside its marker.** In the original it fell two
+  tiles up and to the left of it (the same slip: half the area taken off
+  twice), sometimes on the player's own units.
+- **A LIMIT clears the buttons' cooldown, as in the original.** It reads
+  like a side effect of the original's code rather than a design, but
+  players met it, so it stays.
+
 ## 15 October 2026: the welcome-back chest, in both games
 
 - **Your call: the chest stays in both games.** The classic game has
@@ -218,7 +254,9 @@ them can be found and reversed. The big, agreed decisions are in
 - **A chest at level 26 pays like level 27** (750 gold, 100 experience).
   The original's table skipped level 26, so its chest paid nothing.
 - **Kept from the original:** a camp still standing is put up afresh,
-  somewhere else, each time the game opens (its window shows again); the
+  somewhere else, the first time the game opens in a session (its window
+  shows again; a "session" here is a browser tab), not on coming home
+  from an island or a visit (corrected after the Beta 2 check); the
   border is cleared for it, trees included; every enemy unit on the map
   must be beaten before the chest opens, the border's trolls included.
 - **A fight with a camp starts when units are sent at it.** In the

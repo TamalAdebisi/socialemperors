@@ -178,9 +178,14 @@ async function start(): Promise<void> {
       pageUrl: (page) => `${settings.assetsUrl}/images_new/quests_manager_img_${page}.jpg`,
       questUrl: (quest) => `/client.html?quest=${quest}`,
       classicUrl: settings.classicUrl,
+      // For the goals: the map seen at all ("Check the map"), and from the menus ("Sail in another way").
+      opened: (how) => {
+        doings.islandsOpened = true;
+        doings.islandsFromMenu ||= how === "menu";
+      },
     });
     const world = new WorldWindows(settings.classicUrl, islands);
-    openIslands = () => islands.open();
+    openIslands = () => islands.open(undefined, "back");
     const army = new ArmyWindow({
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
@@ -219,6 +224,7 @@ async function start(): Promise<void> {
       changed: () => hud.update(town),
     });
     const doings = new Doings();
+    doings.questStars = ((info.privateState as Record<string, unknown> | undefined)?.questsRank ?? {}) as Record<string, number>;
     // What visits to neighbours did in this tab counts for the goals here.
     const visits = visitsSoFar();
     doings.lastVisited = visits.last;

@@ -198,15 +198,23 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       return { x: p.x, y: p.y };
     },
   };
+  // While the question is asked, the battle waits, as in the original.
+  let asking = false;
   const askLeave = () => {
+    asking = true;
     finalWindow("Leave the island? The battle will be lost, and the units who fell stay lost.", [
-      { label: "Stay and fight", run: () => {} },
-      { label: "Leave", danger: true, run: () => quest!.leave() },
+      { label: "Stay and fight", run: () => {
+        asking = false;
+      } },
+      { label: "Leave", danger: true, run: () => {
+        asking = false;
+        quest!.leave();
+      } },
     ], true);
   };
 
   app.ticker.add((ticker) => {
-    if (!finished) {
+    if (!finished && !asking) {
       // The battle keeps the Flash client's 30 frames a second, whatever the screen's rate.
       owed += Math.min(ticker.deltaMS, 250) * speed;
       const step = 1000 / FPS;

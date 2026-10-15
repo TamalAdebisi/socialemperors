@@ -101,6 +101,41 @@ test("a button: needs an enemy, then works, then waits its cooldown (25 s) befor
   assert.equal(specials.buttons(dragon)[0].wait, 0);
 });
 
+test("the cooldown runs while the move plays; a LIMIT clears it, as in the Flash client", () => {
+  const { b, specials } = setUp();
+  const dragon = b.add(DRAGON, 50, 50, SELF);
+  const troll = b.add(item({ id: 525, life: 100000 }), 54, 50, ENEMY);
+  troll.condition = "passive";
+  assert.equal(specials.press(dragon, 0), "");
+  run(b, specials, 30 * 26);
+  assert.equal(specials.buttons(dragon)[0].wait, 0, "25 s from the start, not from the end of the storm");
+  assert.equal(specials.press(dragon, 0), "");
+  run(b, specials, 60);
+  assert.ok(specials.buttons(dragon)[0].wait > 15);
+  dragon.limit = 2000;
+  assert.equal(specials.press(dragon, 4), "");
+  run(b, specials, 60);
+  assert.equal(specials.buttons(dragon)[0].wait, 0, "ready again two seconds after the LIMIT");
+});
+
+test("area moves pick fighting units only: no buildings, no villagers", () => {
+  const { b, specials } = setUp();
+  const dragon = b.add(DRAGON, 50, 50, SELF);
+  specials.buttons(dragon);
+  const troll = b.add(item({ id: 525, life: 100000, race: "t" }), 51, 50, ENEMY);
+  const tower = b.add(item({ id: 40, name: "Tower", isUnit: false, life: 100000, subcategory: 211, attack: 0 }), 50, 52, ENEMY);
+  const villager = b.add(item({ id: 500, name: "Villager", life: 100000, subcategory: 71, attack: 0, race: "t" }), 49, 50, ENEMY);
+  for (const o of [troll, tower, villager]) {
+    o.condition = "passive";
+  }
+  dragon.limit = 2000;
+  assert.equal(specials.press(dragon, 4), "");
+  run(b, specials, 40);
+  assert.ok(troll.life < 100000, "the troll is struck");
+  assert.equal(tower.life, 100000, "the tower isn't");
+  assert.equal(villager.life, 100000, "nor the villager");
+});
+
 test("eggs: laid towards the target, hatching on the dragon's side; 3 at most", () => {
   const { b, specials } = setUp();
   const dragon = b.add(DRAGON, 50, 50, SELF);
@@ -157,4 +192,49 @@ test("the game's own table leaves the monk to the battle: with special moves on,
   for (let i = 0; i < 3; i++) b.add(item({ ...TROLL, life: 100, velocity: 0, attack: 0 }), 54, 48 + i, ENEMY, { condition: "passive" });
   run(b, specials, 1000);
   assert.ok(turned >= 1, `turned ${turned}`);
+});
+
+test("the High Elf duplicates: two copies for 20 seconds, then again", () => {
+  const elf = item({ id: 557, name: "High Elf", attackRange: 7 });
+  const table: SpecialsTable = { auto: [{ ids: [557], name: "duplicates", interval: 210, length: 70, animation: 6, moves: [{ kind: "duplicate" }] }], units: [] };
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(3) });
+  const specials = new Specials(b, table, new Map([[557, elf]]), seededRandom(4));
+  const hero = b.add(elf, 50, 50, SELF);
+  const troll = b.add(item({ id: 525, life: 1e7, race: "t" }), 55, 50, ENEMY);
+  troll.condition = "passive";
+  b.attackWith([hero], troll);
+  const made = new Set();
+  let most = 0;
+  for (let i = 0; i < 1500; i++) {
+    run(b, specials, 1);
+    const copies = b.fighters.filter((o) => o.item.id === 557 && o !== hero && !o.dead && o.fadingSince === undefined);
+    copies.forEach((c) => made.add(c));
+    most = Math.max(most, copies.length);
+  }
+  assert.equal(most, 2, "two at a time");
+  assert.ok(made.size >= 4, `made again after the first two faded (${made.size})`);
+});
+
+test("Thor's ordinary hits throw; the albino werewolf whirls on its fifth hit and turns its tenth victim", () => {
+  const thor = item({ id: 556, name: "Thor", attack: 30, life: 500 });
+  const albino = item({ id: 791, name: "Albino Werewolf", attack: 40, life: 1500 });
+  const knight = item({ id: 514, name: "Knight", life: 300, race: "t" });
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(5) });
+  const specials = new Specials(b, { auto: [], units: [] }, new Map([[556, thor], [791, albino], [514, knight]]), seededRandom(6));
+  const hero = b.add(thor, 50, 50, SELF);
+  const troll = b.add(item({ id: 525, life: 1e6, race: "t" }), 51, 50, ENEMY);
+  troll.condition = "passive";
+  b.attackWith([hero], troll);
+  run(b, specials, 80);
+  assert.ok(troll.life < 1e6);
+  assert.ok(troll.tx !== 51 || troll.ty !== 50 || b.isStilled(troll), "thrown");
+
+  const b2 = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: seededRandom(7) });
+  const s2 = new Specials(b2, { auto: [], units: [] }, new Map([[791, albino], [514, knight]]), seededRandom(8));
+  const wolf = b2.add(albino, 50, 50, SELF);
+  const victims = Array.from({ length: 12 }, (_, i) => b2.add(knight, 51 + (i % 3), 49 + Math.floor(i / 3), ENEMY, { life: 1e6, maxLife: 1e6 }));
+  victims.forEach((v) => (v.condition = "passive"));
+  b2.attackWith([wolf], victims[0]);
+  run(b2, s2, 35 * 11);
+  assert.ok(b2.fighters.some((o) => o.item.id === 791 && o !== wolf && o.side === SELF && o.cursed), "a victim turned werewolf");
 });
