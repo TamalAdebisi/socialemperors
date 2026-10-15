@@ -45,14 +45,22 @@ export class Camera {
   private pinchDistance = 0;
   private readonly keys = new Set<string>();
   private press: { x: number; y: number; t: number; moved: number; pinched: boolean } | null = null;
-  /** A tap on the map (a click, or a short touch), and the mouse moving over it. Screen points. */
-  onTap: ((at: Point) => void) | null = null;
+  /** A tap on the map (a click, or a short touch: `touch`), and the mouse moving over it. Screen points. */
+  onTap: ((at: Point, touch: boolean) => void) | null = null;
   onHover: ((at: Point) => void) | null = null;
+  private canvas: HTMLCanvasElement | null = null;
 
   constructor(world: Container, area: Area, centre: Point) {
     this.world = world;
     this.area = area;
     this.centre = { ...centre };
+  }
+
+  /** The mouse pointer over the map, as CSS has it ("" for the usual arrow). */
+  setCursor(cursor: string): void {
+    if (this.canvas && this.canvas.style.cursor !== cursor) {
+      this.canvas.style.cursor = cursor;
+    }
   }
 
   /** The window's size changed (and at the start). */
@@ -69,6 +77,7 @@ export class Camera {
 
   /** Listen to the mouse, fingers and keyboard on the game's canvas. */
   attach(canvas: HTMLCanvasElement): void {
+    this.canvas = canvas;
     canvas.style.touchAction = "none";  // the page mustn't scroll or zoom itself under our fingers
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture(e.pointerId);
@@ -98,7 +107,7 @@ export class Camera {
         if (e.type === "pointerup" && press && !press.pinched && press.moved < TAP_MOVE
             && performance.now() - press.t < TAP_MS) {
           this.velocity = { x: 0, y: 0 };
-          this.onTap?.({ x: e.offsetX, y: e.offsetY });
+          this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen");
           return;
         }
         this.startGlide();

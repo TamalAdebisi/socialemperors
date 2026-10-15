@@ -37,13 +37,17 @@ const BOB_MS = 1600;
 /** A number rising from a collected building: how far, and for how long. */
 const RISE = 70;
 const RISE_MS = 1600;
+/** A picture popping up (pop): how big, how far it rises, for how long. */
+const POP_SIZE = 44;
+const POP_RISE = 24;
+const POP_MS = 1000;
 /** Zoomed out further than this, signs stop shrinking with the map, so they can still be seen. */
 const SMALLEST_SCALE = 0.75;
 
 export class Markers {
   readonly layer = new Container();
   private readonly signs = new Map<PlacedItem, { sign: Container; key: string; phase: number }>();
-  private readonly rising: { text: Container; age: number; from: number }[] = [];
+  private readonly rising: { text: Container; age: number; from: number; rise: number; ms: number }[] = [];
   private clock = 0;
   private scale = 1;
 
@@ -87,7 +91,25 @@ export class Markers {
     group.position.set(at.x, at.y);
     group.scale.set(this.scale);
     this.layer.addChild(group);
-    this.rising.push({ text: group, age: 0, from: at.y });
+    this.rising.push({ text: group, age: 0, from: at.y, rise: RISE, ms: RISE_MS });
+  }
+
+  /** One of the game's pictures popping up from `at` for a moment: what a unit was sent to do. */
+  pop(at: Point, url: string): void {
+    const group = new Container();
+    group.position.set(at.x, at.y);
+    group.scale.set(this.scale);
+    this.layer.addChild(group);
+    void texture(url).then((loaded) => {
+      if (!loaded || group.destroyed) {
+        return;
+      }
+      const icon = new Sprite(loaded);
+      icon.anchor.set(0.5, 1);
+      icon.scale.set(POP_SIZE / Math.max(loaded.width, loaded.height));
+      group.addChild(icon);
+    });
+    this.rising.push({ text: group, age: 0, from: at.y, rise: POP_RISE, ms: POP_MS });
   }
 
   /** Move things along: `ms` since the last tick; `zoom` is the map's. */
@@ -101,13 +123,13 @@ export class Markers {
     for (let i = this.rising.length - 1; i >= 0; i--) {
       const r = this.rising[i];
       r.age += ms;
-      const t = r.age / RISE_MS;
+      const t = r.age / r.ms;
       if (t >= 1) {
         r.text.destroy({ children: true });
         this.rising.splice(i, 1);
         continue;
       }
-      r.text.y = r.from - RISE * this.scale * easeOut(t);
+      r.text.y = r.from - r.rise * this.scale * easeOut(t);
       r.text.alpha = t < 0.5 ? 1 : 2 * (1 - t);
     }
   }
