@@ -1,8 +1,9 @@
 // The battle windows (CLIENT.md, "The menus: rail and dock"): a row for each
 // way to fight, with its icon, a line on what it is, and Play. On a wide
 // screen Quests and Battle are separate rail buttons; on a phone World holds
-// them all. Battles come to the new client in Beta 2: until then Play opens
-// the classic game, which plays them on the same empire.
+// them all. Quests are played here (ui/islands.ts, questPlay.ts); attacking
+// players, survival and tournaments still open the classic game, which
+// plays them on the same empire.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -12,6 +13,8 @@ interface Mode {
   about: string;
   icon: string;
   verb: string;
+  /** Played here: what Play does. Otherwise it opens the classic game. */
+  run?: () => void;
 }
 
 const QUESTS: Mode = { name: "Quests", about: "The islands and their bosses", icon: ICONS.quests, verb: "Go" };
@@ -22,18 +25,19 @@ const BATTLES: Mode[] = [
 ];
 
 export class WorldWindows {
-  private readonly quests: Panel;
+  private readonly islands: { toggle(): void; open(): void };
   private readonly battles: Panel;
   private readonly world: Panel;
 
-  constructor(classicUrl: string) {
-    this.quests = window_("quests", "Quests", [QUESTS], classicUrl);
+  constructor(classicUrl: string, islands: { toggle(): void; open(): void }) {
+    this.islands = islands;
+    const quests = { ...QUESTS, run: () => islands.open() };
     this.battles = window_("battle", "Battles", BATTLES, classicUrl);
-    this.world = window_("world", "World", [QUESTS, ...BATTLES], classicUrl);
+    this.world = window_("world", "World", [quests, ...BATTLES], classicUrl);
   }
 
   toggleQuests(): void {
-    this.quests.toggle();
+    this.islands.toggle();
   }
 
   toggleBattles(): void {
@@ -65,15 +69,24 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
     text.append(name, about);
     const play = document.createElement("a");
     play.className = "button tiny gold";
-    play.href = classicUrl;
     play.textContent = mode.verb;
-    play.setAttribute("aria-label", `${mode.name}: ${mode.verb.toLowerCase()} in the classic game`);
+    if (mode.run) {
+      const run = mode.run;
+      play.href = "#";
+      play.addEventListener("click", (e) => {
+        e.preventDefault();
+        run();
+      });
+    } else {
+      play.href = classicUrl;
+      play.setAttribute("aria-label", `${mode.name}: ${mode.verb.toLowerCase()} in the classic game`);
+    }
     row.append(icon, text, play);
     list.append(row);
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Battles open in the classic game for now, on the same empire.";
+  note.textContent = "Attacking players, survival and tournaments open in the classic game for now, on the same empire.";
   panel.body.append(list, note);
   return panel;
 }

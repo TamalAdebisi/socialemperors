@@ -400,7 +400,7 @@ export class TownView {
   }
 }
 
-function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Container {
+export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Container {
   // Its frame is the way it faces; past the last, the game shows the last.
   const facing = Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
@@ -415,15 +415,15 @@ function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Contain
   return sprite;
 }
 
-/** What a unit's picture shows: standing, walking, chopping (its attack) or picking at a rock. */
-export type Pose = "QUIETO" | "ANDAR" | "ATAQUE" | "PICAR";
+/** What a unit's picture shows: standing, walking, chopping (its attack), picking at a rock, or dying. */
+export type Pose = "QUIETO" | "ANDAR" | "ATAQUE" | "PICAR" | "MUERTE";
 
 /** A unit facing one of its 8 ways, in a pose, at a point of the map. */
-function unitSprite(art: ItemArt, direction: number, pose: Pose, at: Point): Container {
+export function unitSprite(art: ItemArt, direction: number, pose: Pose, at: Point, once = false): Container {
   const facing = unitFacing(direction);
   const name = art.has(`${pose}/${facing.frame}`) ? `${pose}/${facing.frame}`
     : art.has(`QUIETO/${facing.frame}`) ? `QUIETO/${facing.frame}` : "frame/0";
-  const sprite = animated(art.animation(name) ?? [], art.fps);
+  const sprite = animated(art.animation(name) ?? [], art.fps, once);
   if (facing.mirrored) {
     sprite.scale.x = -1;
   }
@@ -441,8 +441,8 @@ interface Walk {
   started?: boolean;
 }
 
-/** A still picture, or an animation playing at the art's own speed. */
-function animated(textures: Texture[], fps: number): Sprite {
+/** A still picture, or an animation playing at the art's own speed (from its start and just once: `once`). */
+export function animated(textures: Texture[], fps: number, once = false): Sprite {
   if (textures.length === 0) {
     return new Sprite();
   }
@@ -450,8 +450,13 @@ function animated(textures: Texture[], fps: number): Sprite {
   if (new Set(textures).size > 1) {
     const animation = new AnimatedSprite(textures);
     animation.animationSpeed = fps / TICKER_FPS;
-    // Start somewhere in the loop, so a crowd doesn't move in step.
-    animation.gotoAndPlay(Math.floor(Math.random() * textures.length));
+    if (once) {
+      animation.loop = false;
+      animation.gotoAndPlay(0);
+    } else {
+      // Start somewhere in the loop, so a crowd doesn't move in step.
+      animation.gotoAndPlay(Math.floor(Math.random() * textures.length));
+    }
     sprite = animation;
   } else {
     sprite = new Sprite(textures[0]);

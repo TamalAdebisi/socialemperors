@@ -29,8 +29,9 @@ SCALE = 3
 # Shown at most about 56 px wide, on screens with up to three pixels to the point.
 LONGEST = 160
 
-# Our name: (the picture in the game's file, which frame). A picture is a
-# class, or a part of one by the names the game's code gives it.
+# Our name: (the picture in the game's file, which frame[, its longest side
+# if not LONGEST]). A picture is a class, or a part of one by the names the
+# game's code gives it, or "<class>@n" for its n-th layer alone.
 PICTURES = {
     # The resource icons: one picture, a frame for each resource.
     "cash": ("IconResourcesMC", 0),
@@ -64,6 +65,19 @@ PICTURES = {
     # The top bar.
     "add-cash": ("AddCashButton", 0),
     "daily-bonus": ("DailyButtonMC", 0),
+    # The quest window's difficulty stars: won (or chosen) and not.
+    "star-on": ("PopupLoadingQuestMC/star1", 1),
+    "star-off": ("PopupLoadingQuestMC/star1", 0),
+    # The island map's buttons: the padlock, the way in, and the stars won (none to three).
+    "island-lock": ("NewQuestIslandButtonMC/lock", 0),
+    "island-ribbon": ("NewQuestIslandButtonMC@1", 0, 456),
+    "island-enter": ("NewQuestIslandButtonMC/enterQuestButton", 0),
+    "island-stars-0": ("NewQuestIslandButtonMC/stars", 0),
+    "island-stars-1": ("NewQuestIslandButtonMC/stars", 1),
+    "island-stars-2": ("NewQuestIslandButtonMC/stars", 2),
+    "island-stars-3": ("NewQuestIslandButtonMC/stars", 3),
+    "map-next": ("PopupQuestsManagerMC/btnNext", 0),
+    "map-prev": ("PopupQuestsManagerMC/btnPrev", 0),
     # The options panel: music and sound, on and off.
     "music-on": ("GuiMC/options_panel/bm", 0),
     "music-off": ("GuiMC/options_panel/bmo", 0),
@@ -113,12 +127,13 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     folder = tempfile.mkdtemp(prefix="se-ui-")
     try:
-        render(sorted({path for path, _ in [*PICTURES.values(), *CURSORS.values()]}), folder)
-        for name, (path, frame) in PICTURES.items():
+        render(sorted({path for path, *_ in [*PICTURES.values(), *CURSORS.values()]}), folder)
+        for name, (path, frame, *size) in PICTURES.items():
             drawn = os.path.join(folder, f"{path.replace('/', '.')}-{frame}.png")
             with Image.open(drawn) as image:
                 picture = trimmed(image.convert("RGBA"))
-            picture.thumbnail((LONGEST, LONGEST), Image.LANCZOS)
+            longest = size[0] if size else LONGEST
+            picture.thumbnail((longest, longest), Image.LANCZOS)
             picture.save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)
             print(f"{name}: {picture.width}x{picture.height}")
         for name, (path, frame) in CURSORS.items():

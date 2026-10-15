@@ -8,7 +8,10 @@
  *
  * A name is a picture's class (icoGoldMC), or a path to a part of one by
  * the names the game's code uses for it (GuiMC/bgBar/storeButton: the Build
- * button in the game bar). It writes <out-folder>/<Name>-<frame>.png for
+ * button in the game bar), or a path ending in "@n" for the picture's n-th
+ * layer alone (counting from 1, back to front), for parts the code never
+ * names (NewQuestIslandButtonMC@1: the island map's name ribbon). It
+ * writes <out-folder>/<Name>-<frame>.png for
  * every frame of every name (a path's "/" as "."), and
  * <out-folder>/<Name>.json: the frames' labels and where each picture's
  * point (0, 0 in Flash) is, in its PNG. The pictures are vector drawings,
@@ -96,8 +99,17 @@ public class RenderSymbols {
     }
 
     static int render(SWF swf, String path, double scale, File out) throws Exception {
-        Timeline timeline = find(swf, path).getTimeline();
+        int at = path.lastIndexOf('@');
+        int only = at > 0 ? Integer.parseInt(path.substring(at + 1)) : 0;
+        Timeline timeline = find(swf, at > 0 ? path.substring(0, at) : path).getTimeline();
         String name = path.replace('/', '.');
+        if (only > 0) {
+            // Keep only the chosen layer in every frame.
+            for (Frame frame : timeline.getFrames()) {
+                Integer keep = new java.util.ArrayList<>(frame.layers.keySet()).get(only - 1);
+                frame.layers.keySet().removeIf(depth -> !depth.equals(keep));
+            }
+        }
         RECT bounds = timeline.getDisplayRectWithFilters();
         int pad = PAD * TWIPS;
         RECT rect = new RECT(

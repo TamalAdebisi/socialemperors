@@ -898,6 +898,121 @@ The run-through (`e2e/tests/classic.mjs`) plays a new empire a little in
 the new client, takes the lessons, and checks that the classic game opens
 it and draws the farm the new client built; another player skips them.
 
+### Step 4: battles
+
+Beta 2. Code: `rules/battle.ts` (the fighting, with tests), `rules/quest.ts`
+and `rules/islands.json` (the islands), `view/battleView.ts` (the
+drawing), `questPlay.ts` (an island played in the page) and
+`ui/islands.ts` (the Quests window).
+
+**How a battle works**, read from the Flash client (our notes, our words):
+
+- **The clock.** Everything counts frames of the Flash client, 30 a
+  second, on one clock, so a swordsman's `attack_interval` of 35 is a hit
+  every 35 frames. The page steps the battle 30 times a second whatever
+  the screen's rate (more for the Speed button). A unit's mind works every
+  61 frames (about 2 seconds); it looks at its attack every 5 frames, each
+  unit on its own one of the 5 (picked at random), and hits on its
+  interval's beat. Towers fire when the clock is a multiple of their
+  interval.
+- **The numbers** are the config's `life`, `attack`, `defense` (1 for
+  everything), `attack_range` (tiles), `attack_interval` and `velocity`.
+- **Damage.** The attack, plus or minus 4 at random; 1 hit in 10 is a
+  critical, half again (the 4 counted up); less the defense; rounded,
+  and at least 1. Siege engines do half to units, and units a quarter more
+  to siege engines. Nothing else: no unit beats another by kind.
+- **Who fights whom.** Soldiers (footmen, archers, knights, siege, animals,
+  bosses) look for the nearest enemy within 10 tiles, by straight-line
+  distance, those that can't fight counted a little further off (fighters
+  first), and go for it. Villagers, farm animals and healers don't fight;
+  hit, they run 5 tiles towards the middle of the map. Hit, a soldier turns
+  on the attacker if it had no target, if its target can't fight, or if the
+  attacker is less than half as far. Allies with nothing to do within 4
+  tiles of anything hit come to help. When its target dies, a soldier looks
+  around where it fell.
+- **Reaching.** "In range" is the most tiles across or down between the two
+  footprints (1: side by side, diagonals too). A unit sent to attack walks
+  to the free tile nearest it on the ring at its range around the target,
+  so archers and siege stop at their full range; one that can't get there
+  (walled off) gives up. Ranged units shoot while walking; others only hit
+  standing. A unit walking where it was told ignores enemies until it
+  arrives.
+- **Shots** fly at their own speed (arrows 30 pixels a frame, axes 20,
+  rocks 18, cannonballs 40; others about 33) and hurt only when they land,
+  if the target is still within 100 pixels of where they were aimed: a
+  unit can walk out of an arrow's way. No splash: the blast is only a
+  picture.
+- **Towers, castles and town halls** (from Town Hall II) shoot the nearest
+  enemy in range, keep it while it's within half their range, and turn on
+  whoever hits them. Healing springs heal the nearest hurt unit of their
+  side. Walls, houses and the rest never fight back.
+- **Death.** A unit plays its death and lies 4 seconds, then fades; a
+  building is gone at once and its ground can be walked.
+- **The kamikaze** doesn't hit: it blows up, 500 to itself and to whatever
+  stands on the 25 tiles around it, friend or foe (a building once for
+  each of its tiles there), and sets off any kamikaze there within half a
+  second.
+- **Sounds**, the game's own: a sword for a hit up close (one of two at
+  random), the shots (arrows, ballista bolts, cannon and rocks), and four
+  death cries (a man, a woman, a troll or a boss, a machine). Quests play
+  the game's quest music.
+
+**The quests**, the same way:
+
+- The Quests window lists the 28 islands in the game's order
+  (`ISLE_ORDER`), from level 6: the first open, each win opening the next
+  (`privateState.unlockedQuestIndex`), the last two from level 40, the god
+  islands always. An island rests 4 hours after it's attacked
+  (`map.questTimes`). Stars won are `privateState.questsRank`.
+- **Sailing:** the whole army goes, every unit but villagers, farm animals,
+  settlers and carts. The island loads (`get_player_info.php` with `user`
+  the quest's id, a town save) and shows behind the start window, which
+  offers the stars: 1, 2 after winning 1, 3 after winning 2. The island's
+  own rules (`rules/islands.json`) say which of its things are enemies and
+  which nobody's, which units it lends the player (a High Elf on the first
+  island), where the army lands, and its ground (a picture per block of 20
+  x 20 tiles; sea blocks can't be walked). Start battle: 2 stars add a
+  copy of every enemy unit beside it, 3 stars two, then the army lands.
+  `game_status` ("LOAD_MAP", "NORM", "QUEST") when the island is shown,
+  `start_quest` (island, town) on Start.
+- **Playing:** tap a unit to select it (Shift adds or takes away), Select
+  all (or Space) for the whole army; tap the ground to send them there,
+  spread out, or an enemy to attack it. Escape lets go. Nothing is sent to
+  the server while fighting.
+- **Winning:** the troll islands light their treasure chest once every
+  enemy unit is dead, and opening it wins; the civilization islands are won
+  with their town hall; the hardcore and god islands by killing every
+  enemy unit. The boss islands and the Hero Isle open the classic game for
+  now (their keys and doors come with the bosses' slice). All the
+  player's units dead, or leaving (the home button), loses. The results
+  come 3 seconds after the end (7 after the chest).
+- **What it pays:** each enemy half the price of a fighter bought with gold
+  (a quarter with stone), else 5, times the island's share (a quarter on
+  most civilization islands), and a twentieth of that in experience
+  (rounded up); the win adds the island's prize for its stars, and a tenth
+  of it in experience. Each island caps the gold (25,000, 30,000 hardcore,
+  35,000 god) and the experience (7,500; 8,500 god); at the end the
+  experience is cut to half the gold.
+- **The fallen:** 60% of them come home (70% on boss islands), rounded up;
+  which are lost is picked at random. Lent units always come home.
+- `end_quest` with the report (gold, experience, the units as [unit, sent,
+  killed, recovered], won, seconds, left early, the island, the stars) is
+  sent as soon as the results show; Back home sends `game_status`
+  ("LOAD_MAP", "QUEST", "NORM") and opens the town with the Quests window.
+  The server pays it, removes the units lost, and opens the next island.
+
+**Not the same as the Flash client:** chance comes from a function given
+in, so the same seed plays the same battle (tests use it; the page still
+plays at random); the battle's timers count frames, not seconds, so the
+Speed button speeds them too. The report goes as the results show, not
+when the player shares or skips them, so closing the page then loses
+nothing.
+
+**Not yet** (Beta 2's next slices): the island map's pictures, the team
+picker for the last islands, the boss islands and the Hero Isle, spells
+and the heroes' special moves, collection pieces dropped by enemies, and
+defending the town.
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

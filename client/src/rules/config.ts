@@ -56,6 +56,19 @@ export interface ConfigItem {
   /** How many of it a town may have (0: no limit), and what it costs in cash instead. */
   units_limit?: string;
   cost_unit_cash?: string;
+  /** Battles (rules/battle.ts): hit points, damage a hit, taken off each hit,
+   * reach in tiles, frames between hits (30 a second). */
+  life?: string;
+  attack?: string;
+  defense?: string;
+  attack_range?: string;
+  attack_interval?: string;
+  /** Units: 2 for big ones, which take more room in a formation. */
+  size?: string;
+  /** 0: can be walked over (crops, flowers). */
+  elevation?: string;
+  /** Tags like "god", "colossus", "dragon". */
+  groups?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -131,6 +144,18 @@ export interface ItemInfo {
   xp: number;
   /** Whose it is: "h", "t", "a" anyone's, "n" nobody's (trees, rocks), "e" enemies'. */
   race: string;
+  /** Battles: the config's life, attack, defense, attack_range (tiles) and
+   * attack_interval (frames of the Flash client, 30 a second). */
+  life: number;
+  attack: number;
+  defense: number;
+  attackRange: number;
+  attackInterval: number;
+  /** Units: 1, or 2 for big ones. */
+  size: number;
+  /** 0: something units walk over (crops, flowers); buildings are 1. */
+  elevation: number;
+  groups: string;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -166,6 +191,14 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     isNew: item.new_item === "1",
     xp: Number(item.xp) || 0,
     race: item.race ?? "",
+    life: Number(item.life) || 0,
+    attack: Number(item.attack) || 0,
+    defense: Number(item.defense) || 0,
+    attackRange: Number(item.attack_range) || 0,
+    attackInterval: Number(item.attack_interval) || 0,
+    size: Number(item.size) || 1,
+    elevation: item.elevation === undefined ? 1 : Number(item.elevation),
+    groups: item.groups ?? "",
   };
 }
 

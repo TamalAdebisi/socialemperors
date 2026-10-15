@@ -1,0 +1,1003 @@
+// Battles, as the Flash client fights them (our notes, our words; CLIENT.md,
+// "Battles"): who attacks whom, how hard, how often, how units walk to
+// their spot and how shots fly. No drawing here: the view reads the
+// fighters and the events this leaves, and draws them.
+//
+// Everything is counted in frames of the Flash client, 30 a second, on one
+// clock, as the original does: a swordsman's attack_interval of 35 means a
+// hit every 35 frames. The view steps the battle 30 times a second (more to
+// play it faster). Chance comes from a random function given in, so a test
+// (or one day the server) can play the same battle twice and get the same
+// result.
+
+import type { ItemInfo } from "./config.ts";
+import { MAP_TILES, TILE_HEIGHT, buildingPoint, tileUnder, unitPoint, type Point } from "./geometry.ts";
+import { findPath, headingTo, isWalkable, type WalkGrid } from "./walking.ts";
+
+/** Frames a second, as the Flash client counts them. */
+export const FPS = 30;
+/** A unit's mind works every 61 frames (about 2 seconds): looking for enemies, turning. */
+export const THINK_EVERY = 61;
+/** How far a unit looks for enemies, in tiles. */
+export const AGGRO_RANGE = 10;
+/** A unit looks at its attack every 5 frames; hits land on its attack_interval's beat. */
+const ATTACK_CHECK_EVERY = 5;
+/** Allies this many tiles around something hit come to help. */
+const HELP_RINGS = 4;
+/** A dead unit lies 4 seconds, then fades for 1, then is gone. */
+export const DEAD_FRAMES = 5 * FPS;
+/** Re-planning a chase waits at least 300 ms. */
+const REPLAN_FRAMES = 9;
+/** A shot hurts its target only if the target is within 100 pixels of where it lands. */
+const BLAST_PIXELS = 100;
+/** A wandering defender goes home past 20 tiles (across plus down). */
+const DEFENSIVE_LEASH = 20;
+/** Damage: plus or minus 4 at random; 1 hit in 10 is a critical, half again. */
+const VARIANCE = 8;
+const CRIT_PERCENT = 10;
+const CRIT_MULTIPLIER = 1.5;
+
+export const SUBCAT = {
+  peasant: 71, cleric: 72, settler: 73, cow: 74, sheep: 75, cart: 76, special: 77, footman: 78, mounted: 79,
+  archer: 80, siege: 81, animal: 82, boss: 84, bossAdd: 85, eagle: 86, pet: 87, horse: 88, kamikaze: 89, boar: 90,
+  farm: 122, townHall: 135, healing: 137, tower: 211, wall: 221, door: 222, castle: 231, deco: 411,
+  treasure: 811, activator: 812, atrezzo: 1011, dragonKiller: 1711,
+} as const;
+
+export const SELF = 1;
+export const ENEMY = 2;
+export const NEUTRAL = 3;
+export type Side = typeof SELF | typeof ENEMY | typeof NEUTRAL;
+
+/**
+ * How a unit behaves on its own: aggressive ones look for enemies; defensive
+ * ones too, but go home if they stray; passive ones only do as told; the
+ * ones that survive (villagers, animals, healers) run when hit.
+ */
+export type Condition = "aggressive" | "defensive" | "passive" | "survive";
+
+/** The units that heal their own side instead of attacking. */
+const HEALERS = new Set([502, 590, 866, 886]);
+/** Units with range that still hit up close (bosses, the Juggernaut, the Angel Mecha). */
+const RANGED_MELEE = new Set([538, 545, 650, 702]);
+/** The level 1 town hall never shoots (its attack is 0 anyway). */
+const TOWN_HALL_1 = 26;
+const ICE_TOWER = 384;
+/** The kamikaze blows up instead of hitting: 500 to itself and to everything in the 5 x 5 tiles around. */
+const KAMIKAZE = 575;
+const BLAST = 500;
+
+export interface Fighter {
+  /** A number of its own, in the order fighters were added. */
+  readonly key: number;
+  readonly item: ItemInfo;
+  side: Side;
+  readonly isUnit: boolean;
+  /** Units: the tile under them, as they walk; buildings: the tile the save names (their last). */
+  tx: number;
+  ty: number;
+  /** Units: where they are on the map, in pixels (their feet). */
+  at: Point;
+  life: number;
+  maxLife: number;
+  attack: number;
+  readonly range: number;
+  readonly interval: number;
+  velocity: number;
+  readonly flying: boolean;
+  /** 0 to 4: spreads the units' attack checks over the 5 frames, as the Flash client does. */
+  readonly offset: number;
+  condition: Condition;
+  target: Fighter | null;
+  /** Wants to fight its target (walking to it, or hitting it). */
+  attacking: boolean;
+  /** Walking where it was told: it ignores enemies until it gets there. */
+  forced: boolean;
+  /** The tiles still to walk; `next` is the one it's heading for. */
+  path: Point[];
+  next: Point | null;
+  dead: boolean;
+  /** The frame it died on. */
+  diedAt: number;
+  /** Which way it faces (1 to 8, rules/geometry.ts) and what it's doing, for the drawing. */
+  facing: number;
+  /** The frame its last attack started, for the drawing (-1: none yet). */
+  struckAt: number;
+  /** Not before this frame may it re-plan a chase. */
+  replanAt: number;
+  /** Where it started: a defensive unit goes back there. */
+  readonly home: Point;
+  /** Lent by the island, or summoned by a spell: neither counted as lost nor rewarded. */
+  free?: boolean;
+  summoned?: boolean;
+  /** The island's chest and such: can be collected once lit. */
+  collectable?: boolean;
+  /** What the battle's owner keeps with it (the town's PlacedItem, for the drawing). */
+  tag?: unknown;
+}
+
+export type BattleEvent =
+  | { kind: "hit"; fighter: Fighter; amount: number; crit: boolean; heal?: boolean; by?: Fighter | null }
+  | { kind: "shot"; shot: Shot }
+  | { kind: "landed"; shot: Shot }
+  | { kind: "died"; fighter: Fighter; by: Fighter | null }
+  | { kind: "gone"; fighter: Fighter };
+
+/** A projectile on its way. */
+export interface Shot {
+  readonly from: Point;
+  /** Where it will land: where the target stood when it was fired. */
+  readonly to: Point;
+  readonly target: Fighter;
+  readonly by: Fighter;
+  /** The picture: the game's projectile number (1 arrow, 3 cannonball...). */
+  readonly type: number;
+  /** How high it arcs, relative to its flight. */
+  readonly arc: number;
+  readonly frames: number;
+  frame: number;
+}
+
+export interface BattleOptions {
+  /** Which tiles can be walked on (rules/walking.ts); buildings are added by the battle. */
+  ground: WalkGrid;
+  random?: () => number;
+  /** Told of each death, before units look for new targets (the quest counts and pays). */
+  onDeath?: (fighter: Fighter, by: Fighter | null) => void;
+}
+
+export class Battle {
+  frame = 0;
+  readonly fighters: Fighter[] = [];
+  readonly shots: Shot[] = [];
+  /** What happened since the view last looked: it takes them with takeEvents(). */
+  private events: BattleEvent[] = [];
+  private readonly random: () => number;
+  private readonly onDeath: (fighter: Fighter, by: Fighter | null) => void;
+  /** Ground the battle can walk on, without buildings. */
+  private readonly ground: WalkGrid;
+  /** The same with the standing buildings' footprints taken out. */
+  private grid: WalkGrid;
+  private gridStale = true;
+  private nextKey = 1;
+  /** Things due on a later frame (a kamikaze set off by another). */
+  private later: { frame: number; run: () => void }[] = [];
+
+  constructor(options: BattleOptions) {
+    this.ground = options.ground;
+    this.grid = options.ground;
+    this.random = options.random ?? Math.random;
+    this.onDeath = options.onDeath ?? (() => {});
+  }
+
+  /** Put an item on the field: a unit on its tile, a building on its footprint. */
+  add(item: ItemInfo, tx: number, ty: number, side: Side, extra: Partial<Fighter> = {}): Fighter {
+    const fighter: Fighter = {
+      key: this.nextKey++,
+      item, side, isUnit: item.isUnit, tx, ty,
+      at: item.isUnit ? unitPoint(tx, ty) : buildingPoint(tx, ty),
+      life: item.life, maxLife: item.life, attack: item.attack,
+      range: item.attackRange, interval: item.attackInterval, velocity: item.velocity, flying: item.flying,
+      offset: Math.floor(this.random() * 5),
+      condition: conditionOf(item),
+      target: null, attacking: false, forced: false, path: [], next: null,
+      dead: false, diedAt: -1, facing: [4, 5, 8][Math.floor(this.random() * 3)], struckAt: -1, replanAt: 0,
+      home: { x: tx, y: ty },
+      ...extra,
+    };
+    this.fighters.push(fighter);
+    if (!fighter.isUnit) {
+      this.gridStale = true;
+    }
+    return fighter;
+  }
+
+  /** The events since the last call, oldest first. */
+  takeEvents(): BattleEvent[] {
+    const events = this.events;
+    this.events = [];
+    return events;
+  }
+
+  /** One frame of the battle. */
+  step(): void {
+    this.frame++;
+    const frame = this.frame;
+    for (const fighter of [...this.fighters]) {
+      if (fighter.dead) {
+        if (frame - fighter.diedAt >= DEAD_FRAMES && fighter.isUnit) {
+          this.fighters.splice(this.fighters.indexOf(fighter), 1);
+          this.events.push({ kind: "gone", fighter });
+        }
+        continue;
+      }
+      if (fighter.isUnit) {
+        this.stepUnit(fighter, frame);
+      } else {
+        this.stepBuilding(fighter, frame);
+      }
+    }
+    for (const due of this.later.filter((d) => d.frame <= frame)) {
+      this.later.splice(this.later.indexOf(due), 1);
+      due.run();
+    }
+    for (const shot of [...this.shots]) {
+      shot.frame++;
+      if (shot.frame >= shot.frames) {
+        this.shots.splice(this.shots.indexOf(shot), 1);
+        this.land(shot);
+      }
+    }
+  }
+
+  // --- Orders from the player -------------------------------------------
+
+  /** Send units to a tile, spread out around it; they ignore enemies on the way. */
+  moveTo(units: Fighter[], tile: Point): void {
+    const spots = this.spotsAround(tile, units.length);
+    units.forEach((unit, i) => {
+      unit.target = null;
+      unit.attacking = false;
+      const spot = spots[i] ?? tile;
+      if (this.walk(unit, spot)) {
+        unit.forced = true;
+      }
+    });
+  }
+
+  /** Send units to attack something: each to its own spot at its range from it. */
+  attackWith(units: Fighter[], target: Fighter): void {
+    // The longest reach first, as the Flash client shares out the spots.
+    const order = [...units].sort((a, b) => b.range - a.range);
+    const taken = new Set<number>();
+    for (const unit of order) {
+      if (unit.dead || target.dead || target.side === unit.side) {
+        continue;
+      }
+      unit.target = target;
+      unit.attacking = true;
+      if (distance(unit, target) <= unit.range) {
+        this.stop(unit);
+        continue;
+      }
+      const spot = this.attackSpot(unit, target, taken);
+      if (spot && this.walk(unit, spot)) {
+        unit.forced = true;
+        taken.add(spot.y * MAP_TILES + spot.x);
+      } else {
+        unit.target = null;
+        unit.attacking = false;
+      }
+    }
+  }
+
+  // --- Units ------------------------------------------------------------
+
+  private stepUnit(unit: Fighter, frame: number): void {
+    if (frame % THINK_EVERY === 0) {
+      this.tidy(unit);
+      this.think(unit);
+    }
+    if (unit.attacking && (frame + unit.offset) % ATTACK_CHECK_EVERY === 0) {
+      this.updateAttack(unit, frame);
+    }
+    this.stepWalk(unit);
+  }
+
+  /** Every 61 frames, before thinking: forget dead targets; take up a fight with a living one. */
+  private tidy(unit: Fighter): void {
+    if (unit.target && (unit.target.dead || !this.fighters.includes(unit.target))) {
+      unit.target = null;
+    }
+    if (unit.target && unit.target.side !== unit.side && unit.target.side !== NEUTRAL) {
+      unit.attacking = true;
+    }
+    // Two units standing on one tile: this one steps aside.
+    if (!this.isMoving(unit) && !unit.flying) {
+      const other = this.fighters.find((f) => f !== unit && f.isUnit && !f.dead && !this.isMoving(f) && f.tx === unit.tx && f.ty === unit.ty);
+      if (other && !(unit.side === ENEMY && other.side === SELF)) {
+        const free = this.freeTileNear({ x: unit.tx, y: unit.ty }, true);
+        if (free && this.walk(unit, free)) {
+          unit.forced = true;
+        }
+      }
+    }
+  }
+
+  private think(unit: Fighter): void {
+    if (!this.isMoving(unit) && !unit.attacking && this.random() < 0.04) {
+      // Looking around now and then.
+      const dx = Math.round(this.random() * 2) - 1;
+      const dy = Math.round(this.random() * 2) - 1;
+      unit.facing = headingTo(unitPoint(unit.tx, unit.ty), unitPoint(unit.tx + dx, unit.ty + dy), unit.facing);
+    }
+    if (unit.condition === "defensive" && Math.abs(unit.home.x - unit.tx) + Math.abs(unit.home.y - unit.ty) > DEFENSIVE_LEASH) {
+      unit.target = null;
+      unit.attacking = false;
+      if (this.walk(unit, unit.home)) {
+        unit.forced = true;
+      }
+    }
+    if ((unit.condition === "aggressive" || unit.condition === "defensive") && !unit.target && !unit.forced && !HEALERS.has(unit.item.id)) {
+      const target = this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, AGGRO_RANGE);
+      if (target) {
+        this.attack(unit, target);
+      }
+    }
+    if (HEALERS.has(unit.item.id)) {
+      this.thinkHealer(unit);
+    }
+  }
+
+  /** A healer drops a target that's whole or not its side's, and picks the most hurt nearby. */
+  private thinkHealer(unit: Fighter): void {
+    if (unit.target && (unit.target.side !== unit.side || unit.target.life >= unit.target.maxLife)) {
+      unit.target = null;
+      unit.attacking = false;
+    }
+    if (unit.forced) {
+      return;
+    }
+    if (!unit.target) {
+      const near = this.nearby(unit, unit.range, 30, (f) => f.isUnit && f.side === unit.side && f !== unit
+        && f.life < f.maxLife && f.item.subcategory !== SUBCAT.siege);
+      let weakest: Fighter | null = null;
+      for (const f of near) {
+        if (!weakest || f.life < weakest.life) {
+          weakest = f;
+        }
+      }
+      if (weakest) {
+        unit.target = weakest;
+        this.chase(unit, weakest);
+      }
+    } else if (!this.isMoving(unit) && !unit.attacking) {
+      this.chase(unit, unit.target);
+    }
+  }
+
+  /** Go and fight something (the Flash client's IA_Attack). */
+  private attack(unit: Fighter, target: Fighter): void {
+    if (unit.dead) {
+      return;
+    }
+    unit.target = target;
+    unit.attacking = true;
+    if (distance(unit, target) > unit.range) {
+      const spot = this.attackSpot(unit, target, new Set());
+      if (!spot || !this.walk(unit, spot)) {
+        unit.target = null;
+      }
+    }
+  }
+
+  /** A healer goes to its patient the same way. */
+  private chase(unit: Fighter, target: Fighter): void {
+    unit.attacking = true;
+    if (distance(unit, target) > unit.range) {
+      const spot = this.attackSpot(unit, target, new Set());
+      if (!spot || !this.walk(unit, spot)) {
+        unit.target = null;
+        unit.attacking = false;
+      }
+    }
+  }
+
+  private updateAttack(unit: Fighter, frame: number): void {
+    const target = unit.target;
+    const healer = HEALERS.has(unit.item.id);
+    if (!target) {
+      unit.attacking = false;
+      return;
+    }
+    if (!healer && target.side === unit.side) {
+      unit.target = null;
+      unit.attacking = false;
+      return;
+    }
+    if (target.dead) {
+      unit.target = null;
+      unit.attacking = false;
+      return;
+    }
+    const inRange = distance(unit, target) <= unit.range;
+    const standing = !this.isMoving(unit) || this.atTileMiddle(unit);
+    if (inRange && (unit.range >= 2 || standing)) {
+      // In reach: stop at the next tile, and hit on the beat.
+      unit.path = [];
+      if ((frame + unit.offset) % unit.interval === 0) {
+        unit.facing = headingTo(unit.at, pointOf(target), unit.facing);
+        unit.struckAt = frame;
+        if (healer) {
+          this.heal(target, unit.attack);
+        } else if (unit.item.subcategory === SUBCAT.cleric) {
+          // Other clerics (the engineer, the monk) have work of their own, not done here yet.
+        } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
+          this.shoot(unit, target);
+        } else if (unit.item.id === KAMIKAZE) {
+          this.explode(unit);
+        } else {
+          this.hurt(target, unit.attack, unit);
+        }
+      }
+      return;
+    }
+    // Out of reach: plan again, at most every 300 ms.
+    if (frame >= unit.replanAt && (!this.isMoving(unit) || (target.isUnit && this.isMoving(target)))) {
+      unit.replanAt = frame + REPLAN_FRAMES;
+      if (healer) {
+        this.chase(unit, target);
+      } else {
+        this.attack(unit, target);
+      }
+    }
+  }
+
+  // --- Buildings --------------------------------------------------------
+
+  private stepBuilding(building: Fighter, frame: number): void {
+    if (building.side === NEUTRAL || building.interval <= 0 || frame % building.interval !== 0) {
+      return;
+    }
+    const sub = building.item.subcategory;
+    if (sub === SUBCAT.healing) {
+      const hurt = this.nearestOf(building, building.range, (f) => f.isUnit && f.side === building.side && f.life < f.maxLife);
+      if (hurt) {
+        this.heal(hurt, building.attack);
+      }
+      return;
+    }
+    const shoots = (sub === SUBCAT.tower || sub === SUBCAT.castle || sub === SUBCAT.dragonKiller || sub === SUBCAT.townHall)
+      && building.item.id !== TOWN_HALL_1 && building.attack > 0;
+    if (!shoots) {
+      return;
+    }
+    // It keeps a target only while it's within half its range.
+    if (building.target && (building.target.dead || distance(building, building.target) > building.range / 2)) {
+      building.target = null;
+    }
+    if (building.target && building.item.id === ICE_TOWER && building.target.isUnit && this.isFrozen(building.target)) {
+      building.target = null;
+    }
+    if (!building.target) {
+      building.target = this.nearestEnemy(building, { x: building.tx, y: building.ty }, building.range,
+        building.item.id === ICE_TOWER ? (f) => !this.isFrozen(f) : undefined);
+    }
+    if (building.target) {
+      building.struckAt = frame;
+      this.shoot(building, building.target);
+    }
+  }
+
+  /** Spells come later (Beta 2's spells slice): nothing is frozen yet. */
+  private isFrozen(_fighter: Fighter): boolean {
+    return false;
+  }
+
+  // --- Hits -------------------------------------------------------------
+
+  /** Fire at a target: the shot flies, and hurts it when it lands if it's still there. */
+  private shoot(by: Fighter, target: Fighter): void {
+    if (distance(by, target) > by.range) {
+      return;
+    }
+    const kind = projectileOf(by.item);
+    const from = muzzleOf(by);
+    const to = pointOf(target);
+    const length = Math.hypot(to.x - from.x, to.y - from.y);
+    // A random head start of up to one frame's flight, as the Flash client gives each shot.
+    const frames = Math.max(1, Math.ceil(length / kind.speed - this.random()));
+    const shot: Shot = { from, to, target, by, type: kind.type, arc: kind.arc, frames, frame: 0 };
+    this.shots.push(shot);
+    this.events.push({ kind: "shot", shot });
+  }
+
+  private land(shot: Shot): void {
+    this.events.push({ kind: "landed", shot });
+    const target = shot.target;
+    if (target.dead) {
+      return;
+    }
+    const where = pointOf(target);
+    if (Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS) {
+      this.hurt(target, shot.by.attack, shot.by);
+    }
+  }
+
+  /** Damage, as the Flash client works it out (CLIENT.md, "Battles"). */
+  hurt(target: Fighter, attack: number, by: Fighter | null): void {
+    if (target.dead || !attack) {
+      return;
+    }
+    let amount = attack;
+    // Siege engines do half to units; units do a quarter more to siege engines.
+    if (by && target.isUnit && by.isUnit && by.item.subcategory === SUBCAT.siege) {
+      amount = Math.ceil(amount / 2);
+    }
+    if (by && target.isUnit && by.isUnit && target.item.subcategory === SUBCAT.siege) {
+      amount = Math.ceil(amount * 1.25);
+    }
+    const crit = this.random() * 100 < CRIT_PERCENT;
+    const variance = this.random() * VARIANCE - VARIANCE / 2;
+    const dealt = crit ? (amount + Math.abs(variance)) * CRIT_MULTIPLIER : amount + variance;
+    const damage = Math.max(1, Math.round(dealt - target.item.defense));
+    target.life = Math.max(0, target.life - damage);
+    this.events.push({ kind: "hit", fighter: target, amount: damage, crit, by });
+    if (target.life <= 0) {
+      this.kill(target, by);
+      return;
+    }
+    if (!by) {
+      return;
+    }
+    if (target.isUnit) {
+      this.beingAttacked(target, by);
+    } else if (target.attack > 0 && (!target.target || target.target.attack === 0)) {
+      target.target = by;
+    }
+    this.callForHelp(target, by);
+  }
+
+  /**
+   * A kamikaze goes off: 500 to itself, and 500 to whatever stands on each
+   * of the 25 tiles around it, friend or foe (a building once for each of
+   * its tiles there). Other kamikazes there go off too, within half a second.
+   */
+  explode(unit: Fighter): void {
+    if (unit.dead) {
+      return;
+    }
+    this.hurt(unit, BLAST, unit);
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const x = unit.tx + dx;
+        const y = unit.ty + dy;
+        const there = this.standingAt(x, y, unit);
+        if (!there || there.dead) {
+          continue;
+        }
+        if (there.isUnit && there.item.id === KAMIKAZE) {
+          this.later.push({ frame: this.frame + Math.floor(this.random() * 15), run: () => this.explode(there) });
+        } else {
+          this.hurt(there, BLAST, unit);
+        }
+      }
+    }
+  }
+
+  /** What stands on a tile: a unit there, or a building covering it. */
+  private standingAt(x: number, y: number, except: Fighter): Fighter | null {
+    for (const f of this.fighters) {
+      if (f === except || f.dead) {
+        continue;
+      }
+      if (f.isUnit ? f.tx === x && f.ty === y
+        : x > f.tx - f.item.width && x <= f.tx && y > f.ty - f.item.height && y <= f.ty) {
+        return f;
+      }
+    }
+    return null;
+  }
+
+  heal(target: Fighter, amount: number): void {
+    if (target.dead || amount <= 0) {
+      return;
+    }
+    const healed = Math.min(amount, target.maxLife - target.life);
+    target.life += healed;
+    this.events.push({ kind: "hit", fighter: target, amount: healed, crit: false, heal: true });
+  }
+
+  /** Hit back: a unit turns on whoever hit it, unless it's busy with a closer fight. */
+  private beingAttacked(unit: Fighter, by: Fighter): void {
+    if (unit.condition === "survive") {
+      // Run 5 tiles towards the middle of the map.
+      const dx = MAP_TILES / 2 - unit.tx;
+      const dy = MAP_TILES / 2 - unit.ty;
+      const length = Math.hypot(dx, dy) || 1;
+      const to = { x: Math.round(unit.tx + (5 * dx) / length), y: Math.round(unit.ty + (5 * dy) / length) };
+      unit.target = null;
+      unit.attacking = false;
+      const free = this.freeTileNear(to, false);
+      if (free) {
+        this.walk(unit, free);
+      }
+      return;
+    }
+    if (unit.condition === "passive" || unit.forced || HEALERS.has(unit.item.id)) {
+      return;
+    }
+    const current = unit.target;
+    if (!current || current.attack === 0 || 2 * distance(unit, by) < distance(unit, current)) {
+      this.attack(unit, by);
+    }
+  }
+
+  /** Allies on the 4 rings of tiles around something hit, with nothing to do, join in. */
+  private callForHelp(hit: Fighter, by: Fighter): void {
+    for (const ally of this.fighters) {
+      if (ally === hit || ally.dead || !ally.isUnit || ally.side !== hit.side) {
+        continue;
+      }
+      const ring = Math.max(Math.abs(ally.tx - hit.tx), Math.abs(ally.ty - hit.ty));
+      if (ring < 1 || ring > HELP_RINGS || ally.target || ally.forced) {
+        continue;
+      }
+      if (ally.condition === "aggressive" || ally.condition === "defensive") {
+        if (!HEALERS.has(ally.item.id)) {
+          this.attack(ally, by);
+        }
+      }
+    }
+  }
+
+  /** Something's life ran out. */
+  kill(fighter: Fighter, by: Fighter | null): void {
+    if (fighter.dead) {
+      return;
+    }
+    fighter.life = 0;
+    fighter.dead = true;
+    fighter.diedAt = this.frame;
+    fighter.path = [];
+    fighter.next = null;
+    fighter.target = null;
+    fighter.attacking = false;
+    if (!fighter.isUnit) {
+      // A building is gone at once (the view takes it away); its ground is free.
+      this.fighters.splice(this.fighters.indexOf(fighter), 1);
+      this.gridStale = true;
+    }
+    this.events.push({ kind: "died", fighter, by });
+    this.onDeath(fighter, by);
+    // Whoever was after it looks around where it fell.
+    for (const hunter of this.fighters) {
+      if (hunter.target !== fighter) {
+        continue;
+      }
+      hunter.target = null;
+      if (!hunter.isUnit) {
+        continue;
+      }
+      hunter.attacking = false;
+      if (hunter.condition === "aggressive" && !hunter.forced && !HEALERS.has(hunter.item.id)) {
+        const next = this.nearestEnemy(hunter, { x: fighter.tx, y: fighter.ty }, AGGRO_RANGE);
+        if (next) {
+          this.attack(hunter, next);
+        }
+      }
+    }
+  }
+
+  // --- Looking for things -----------------------------------------------
+
+  /**
+   * The nearest living enemy within `range` tiles of a tile, as the Flash
+   * client looks: by the straight-line distance between the tiles the save
+   * names, things that can't fight counted a little further (fighters
+   * first). Units inside buildings and neutral things don't count.
+   */
+  nearestEnemy(of: Fighter, from: Point, range: number, also?: (f: Fighter) => boolean): Fighter | null {
+    const other = of.side === SELF ? ENEMY : SELF;
+    let best: Fighter | null = null;
+    let bestSort = Infinity;
+    for (const f of this.fighters) {
+      if (f.dead || f.side !== other || (also && !also(f))) {
+        continue;
+      }
+      const squared = (f.tx - from.x) ** 2 + (f.ty - from.y) ** 2;
+      if (squared > range * range) {
+        continue;
+      }
+      const sort = squared + (f.item.attack === 0 ? AGGRO_RANGE : 0);
+      if (sort < bestSort) {
+        best = f;
+        bestSort = sort;
+      }
+    }
+    return best;
+  }
+
+  private nearestOf(of: Fighter, range: number, which: (f: Fighter) => boolean): Fighter | null {
+    return this.nearby(of, range, 1, which)[0] ?? null;
+  }
+
+  /** Up to `count` living fighters within `range` tiles that pass `which`, nearest first. */
+  private nearby(of: Fighter, range: number, count: number, which: (f: Fighter) => boolean): Fighter[] {
+    return this.fighters
+      .filter((f) => !f.dead && which(f) && (f.tx - of.tx) ** 2 + (f.ty - of.ty) ** 2 <= range * range)
+      .sort((a, b) => ((a.tx - of.tx) ** 2 + (a.ty - of.ty) ** 2) - ((b.tx - of.tx) ** 2 + (b.ty - of.ty) ** 2))
+      .slice(0, count);
+  }
+
+  /**
+   * Where a unit goes to attack something: the free tile nearest the unit on
+   * the square ring at its range around the target's middle; when that ring
+   * has none, the next ring out.
+   */
+  attackSpot(unit: Fighter, target: Fighter, taken: Set<number>): Point | null {
+    const w = target.isUnit ? 1 : target.item.width;
+    const h = target.isUnit ? 1 : target.item.height;
+    const even = w % 2 === 0;
+    const cx = target.tx - Math.floor(w / 2);
+    const cy = target.ty - Math.floor(h / 2);
+    const grid = this.walkGrid();
+    for (let ring = Math.max(1, unit.range) + Math.floor(w / 2); ring < MAP_TILES; ring++) {
+      let best: Point | null = null;
+      let bestDistance = Infinity;
+      const low = even ? 1 : 0;
+      for (let x = cx - ring + low; x <= cx + ring; x++) {
+        for (let y = cy - ring + low; y <= cy + ring; y++) {
+          const onRing = x === cx - ring + low || x === cx + ring || y === cy - ring + low || y === cy + ring;
+          if (!onRing || taken.has(y * MAP_TILES + x)) {
+            continue;
+          }
+          if (!(unit.flying ? inMap(x, y) : isWalkable(grid, x, y)) || this.standingOn(x, y, unit)) {
+            continue;
+          }
+          const d = (x - unit.tx) ** 2 + (y - unit.ty) ** 2;
+          if (d < bestDistance) {
+            best = { x, y };
+            bestDistance = d;
+          }
+        }
+      }
+      if (best) {
+        return best;
+      }
+      if (ring > Math.max(1, unit.range) + Math.floor(w / 2) + 10) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /** Free tiles around a tile for a group to stand on: the tile itself, then outwards. */
+  spotsAround(tile: Point, count: number): Point[] {
+    const grid = this.walkGrid();
+    const spots: Point[] = [];
+    for (let ring = 0; ring < 12 && spots.length < count; ring++) {
+      for (let x = tile.x - ring; x <= tile.x + ring && spots.length < count; x++) {
+        for (let y = tile.y - ring; y <= tile.y + ring && spots.length < count; y++) {
+          const onRing = Math.max(Math.abs(x - tile.x), Math.abs(y - tile.y)) === ring;
+          if (onRing && isWalkable(grid, x, y) && !this.standingOn(x, y, null)) {
+            spots.push({ x, y });
+          }
+        }
+      }
+    }
+    return spots;
+  }
+
+  /** The nearest walkable tile with nobody standing on it; `around` skips the tile itself. */
+  freeTileNear(tile: Point, around: boolean): Point | null {
+    const grid = this.walkGrid();
+    for (let ring = around ? 1 : 0; ring < 20; ring++) {
+      const options: Point[] = [];
+      for (let x = tile.x - ring; x <= tile.x + ring; x++) {
+        for (let y = tile.y - ring; y <= tile.y + ring; y++) {
+          if (Math.max(Math.abs(x - tile.x), Math.abs(y - tile.y)) === ring && isWalkable(grid, x, y) && !this.standingOn(x, y, null)) {
+            options.push({ x, y });
+          }
+        }
+      }
+      if (options.length) {
+        return options[Math.floor(this.random() * options.length)];
+      }
+    }
+    return null;
+  }
+
+  /** Whether a unit other than `except` stands still on a tile. */
+  private standingOn(x: number, y: number, except: Fighter | null): boolean {
+    return this.fighters.some((f) => f !== except && f.isUnit && !f.dead && f.tx === x && f.ty === y && !this.isMoving(f));
+  }
+
+  // --- Walking ----------------------------------------------------------
+
+  /** Where units can walk now: the ground, less the standing buildings (fields and open doors aside). */
+  walkGrid(): WalkGrid {
+    if (this.gridStale) {
+      const grid = new Uint8Array(this.ground);
+      for (const f of this.fighters) {
+        if (f.isUnit || f.dead || f.item.elevation === 0 || f.item.subcategory === SUBCAT.farm) {
+          continue;
+        }
+        for (let x = f.tx - f.item.width + 1; x <= f.tx; x++) {
+          for (let y = f.ty - f.item.height + 1; y <= f.ty; y++) {
+            if (inMap(x, y)) {
+              grid[y * MAP_TILES + x] = 0;
+            }
+          }
+        }
+      }
+      this.grid = grid;
+      this.gridStale = false;
+    }
+    return this.grid;
+  }
+
+  /** Start a unit walking to a tile; false when there's no way. */
+  walk(unit: Fighter, to: Point): boolean {
+    if (unit.dead || unit.velocity <= 0) {
+      return false;
+    }
+    const from = { x: unit.tx, y: unit.ty };
+    const path = findPath(this.walkGrid(), from, to, unit.flying);
+    if (path === null) {
+      return false;
+    }
+    if (path.length === 0) {
+      return true;
+    }
+    unit.path = path;
+    if (!unit.next) {
+      this.nextTile(unit);
+    }
+    return true;
+  }
+
+  stop(unit: Fighter): void {
+    unit.path = [];
+  }
+
+  isMoving(unit: Fighter): boolean {
+    return unit.next !== null;
+  }
+
+  private atTileMiddle(unit: Fighter): boolean {
+    const middle = unitPoint(unit.tx, unit.ty);
+    return unit.at.x === middle.x && unit.at.y === middle.y;
+  }
+
+  private nextTile(unit: Fighter): void {
+    const tile = unit.path.shift() ?? null;
+    unit.next = tile;
+    if (!tile) {
+      // Arrived.
+      unit.forced = false;
+      return;
+    }
+    // A ground unit stepping onto a building stops where it is.
+    if (!unit.flying && !isWalkable(this.walkGrid(), tile.x, tile.y)) {
+      unit.path = [];
+      unit.next = null;
+      unit.forced = false;
+      return;
+    }
+    unit.facing = headingTo(unit.at, unitPoint(tile.x, tile.y), unit.facing);
+  }
+
+  private stepWalk(unit: Fighter): void {
+    if (!unit.next) {
+      return;
+    }
+    const to = unitPoint(unit.next.x, unit.next.y);
+    const speed = unit.velocity;
+    const dx = to.x - unit.at.x;
+    const dy = to.y - unit.at.y;
+    const longest = Math.max(Math.abs(dx), Math.abs(dy));
+    unit.at = longest <= speed ? to : { x: unit.at.x + (dx * speed) / longest, y: unit.at.y + (dy * speed) / longest };
+    const under = tileUnder(unit.at);
+    unit.tx = under.x;
+    unit.ty = under.y;
+    if (unit.at.x === to.x && unit.at.y === to.y) {
+      unit.tx = unit.next.x;
+      unit.ty = unit.next.y;
+      this.nextTile(unit);
+    }
+  }
+}
+
+/** How a unit behaves on its own, by what it is (the Flash client's per-unit mind). */
+export function conditionOf(item: ItemInfo): Condition {
+  if (!item.isUnit) {
+    return "passive";
+  }
+  switch (item.subcategory) {
+    case SUBCAT.peasant: case SUBCAT.cow: case SUBCAT.sheep: case SUBCAT.horse: case SUBCAT.boar: case SUBCAT.cart:
+    case SUBCAT.settler: case SUBCAT.pet:
+      return "survive";
+    case SUBCAT.kamikaze: case SUBCAT.eagle:
+      return "passive";
+    case SUBCAT.cleric:
+      return item.id === 569 ? "aggressive" : "survive";  // the monk converts; the others heal or repair
+    default:
+      if (item.id === 575 || item.id === 582) {
+        return "passive";  // the kamikaze, the boat
+      }
+      if (item.id === 604 || item.id === 866 || item.id === 886) {
+        return "survive";  // the troll drummer, the healers
+      }
+      return "aggressive";
+  }
+}
+
+/**
+ * How far apart two fighters are for reaching: the most tiles across or
+ * down between their nearest footprint tiles (1: next to each other,
+ * diagonals too).
+ */
+export function distance(a: Fighter, b: Fighter): number {
+  const [aw, ah] = a.isUnit ? [1, 1] : [a.item.width, a.item.height];
+  const [bw, bh] = b.isUnit ? [1, 1] : [b.item.width, b.item.height];
+  const gapX = gap(a.tx - aw + 1, a.tx, b.tx - bw + 1, b.tx);
+  const gapY = gap(a.ty - ah + 1, a.ty, b.ty - bh + 1, b.ty);
+  return Math.max(gapX, gapY);
+}
+
+function gap(aLow: number, aHigh: number, bLow: number, bHigh: number): number {
+  if (aHigh < bLow) {
+    return bLow - aHigh;
+  }
+  if (bHigh < aLow) {
+    return aLow - bHigh;
+  }
+  return 0;
+}
+
+function inMap(x: number, y: number): boolean {
+  return x >= 0 && y >= 0 && x < MAP_TILES && y < MAP_TILES;
+}
+
+/** Where a fighter is hit: a unit's feet, a building's footprint middle. */
+export function pointOf(f: Fighter): Point {
+  if (f.isUnit) {
+    return f.at;
+  }
+  const p = buildingPoint(f.tx, f.ty);
+  return { x: p.x + 27 * (f.item.height - f.item.width), y: p.y - (TILE_HEIGHT / 4) * (f.item.width + f.item.height) };
+}
+
+/** Where a shot leaves from: a little above the shooter's feet. */
+function muzzleOf(f: Fighter): Point {
+  const p = pointOf(f);
+  return { x: p.x, y: p.y - (f.isUnit ? 30 : 60) };
+}
+
+/**
+ * What a fighter shoots, how fast (pixels a frame) and how high it arcs.
+ * The Flash client's newer shots fly at a set speed (arrows 30, axes 20,
+ * rocks 18, cannonballs 40); the older ones take a second for 1,000 pixels
+ * (about 33 a frame).
+ */
+export function projectileOf(item: ItemInfo): { type: number; speed: number; arc: number } {
+  const type = item.isUnit ? UNIT_SHOTS.get(item.id) ?? 1 : BUILDING_SHOTS.get(item.id) ?? 1;
+  return { type, ...(SHOT_FLIGHT.get(type) ?? { speed: 33, arc: 0.2 }) };
+}
+
+/** Flight of the newer shots, by projectile number. */
+const SHOT_FLIGHT = new Map<number, { speed: number; arc: number }>([
+  [1, { speed: 30, arc: 0.3 }], [2, { speed: 30, arc: 0.3 }], [3, { speed: 40, arc: 0.5 }], [4, { speed: 18, arc: 0.6 }],
+  [5, { speed: 20, arc: 0.6 }], [13, { speed: 30, arc: 1 }], [17, { speed: 30, arc: 0.3 }], [18, { speed: 30, arc: 0.3 }],
+  [20, { speed: 30, arc: 0.3 }],
+]);
+
+/** Which projectile each shooting unit fires (the rest fire arrows). */
+const UNIT_SHOTS = new Map<number, number>([
+  [646, 20], [675, 20], [633, 18], [520, 2], [586, 2], [602, 2], [634, 19], [521, 4], [587, 4], [605, 13],
+  [767, 3], [522, 3], [588, 3], [542, 3], [583, 3], [568, 9], [638, 9], [672, 9], [530, 5], [551, 5], [598, 5],
+  [607, 11], [657, 23], [566, 10], [637, 10], [696, 10], [548, 6], [624, 6], [546, 7], [693, 8], [550, 8], [692, 8],
+  [553, 8], [689, 15], [620, 15], [680, 14], [622, 14], [635, 13], [653, 21], [698, 27], [707, 30], [711, 26],
+]);
+
+/** Which projectile each shooting building fires. */
+const BUILDING_SHOTS = new Map<number, number>([
+  [29, 1], [30, 1], [31, 1], [243, 1], [291, 1], [303, 1], [304, 1], [1318, 72], [1309, 72], [1501, 25],
+  [32, 2], [376, 2], [347, 2], [27, 3], [28, 3], [323, 3], [324, 3], [181, 3], [33, 3], [348, 3], [270, 3],
+  [1230, 3], [1231, 3], [1234, 3], [1443, 3], [199, 9], [395, 9], [198, 9], [412, 9], [414, 9], [413, 9],
+  [474, 9], [1251, 9], [214, 8], [1258, 8], [384, 7], [426, 14], [1238, 41], [1407, 17], [447, 17],
+  [1219, 17], [1374, 17], [1426, 1],
+]);
+
+/** A small, fast random number generator with a seed: the same seed, the same battle. */
+export function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

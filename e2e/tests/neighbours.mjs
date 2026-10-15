@@ -53,9 +53,9 @@ export default async function neighbours({ newPlayer }) {
   await helped.shot("cart");
   const food = theirs.map.food;
   await helped.press("Let it in");
-  // The cart walks to the farm, then the share goes with the next batch: wait for it in the save (a slow machine takes longer).
+  // The cart walks to the farm, unloads, and the delivery goes with the next batch: wait for it to show.
   let delivered = await info(helped);
-  for (let tries = 0; tries < 30 && delivered.map.food === food; tries++) {
+  for (let waited = 0; delivered.map.food === food && waited < 20_000; waited += 1000) {
     await helped.wait(1000);
     delivered = await info(helped);
   }

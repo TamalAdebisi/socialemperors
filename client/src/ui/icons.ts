@@ -44,6 +44,10 @@ export const ICONS = {
   store: new URL("./art/store.webp", import.meta.url).href,
   remove: new URL("./art/remove.webp", import.meta.url).href,
   close: new URL("./art/close.webp", import.meta.url).href,
+  // The way home from an island (the game bar's), and the quest window's stars.
+  "my-town": new URL("./art/my-town.webp", import.meta.url).href,
+  "star-on": new URL("./art/star-on.webp", import.meta.url).href,
+  "star-off": new URL("./art/star-off.webp", import.meta.url).href,
 } as const;
 
 export type IconName = keyof typeof ICONS;

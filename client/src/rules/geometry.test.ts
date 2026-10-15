@@ -20,7 +20,8 @@ import {
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "", isUnit: false, art: "x", width: 1, height: 1, category: 0, subcategory: 0, flying: false, velocity: 0, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 0, unitsLimit: 0, cashCost: 0,
     cost: 0, costType: "g", facings: 2, production: null,
-    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h", ...fields };
+    inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
+    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", ...fields };
 }
 
 test("one tile along x is 54 px right and 27 down; along y, 54 left and 27 down", () => {
