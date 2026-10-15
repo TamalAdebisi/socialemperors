@@ -27,7 +27,7 @@ test("a step starts a six-hour wait; the wait can be bought off", () => {
   assert.equal(takeStep(DRAGON_NEST, stepped.state, NOW + 60), null, "one at a time");
   assert.equal(stepsDone(stepped.state, NOW + STEP_SECONDS + 1), 8);
   const bought = speedUp(DRAGON_NEST, stepped.state, NOW + 60)!;
-  assert.deepEqual(bought.commands, [{ cmd: "dragon_buy_step_cash", args: [3] }]);
+  assert.deepEqual(bought.commands, [{ cmd: "buy_step_cash", args: [3] }]);
   assert.equal(bought.cash, 3);
   assert.equal(secondsLeft(bought.state, NOW + 60), 0);
   assert.equal(speedUp(DRAGON_NEST, { ...start, number: 1, since: NOW }, NOW)!.cash, 15, "a fed dragon costs more");
@@ -63,7 +63,7 @@ test("friends' help: two steps each without a wait, up to ten, then the help is 
   const helped = friendsHelped({ active: true, number: 0, step: 3, since: 0 }, ["111", "222"]);
   assert.equal(helped.state.step, 7);
   assert.equal(helped.commands.filter((c) => c.cmd === "next_step").length, 4);
-  assert.deepEqual(helped.commands.at(-1), { cmd: "clear_dragon_hires", args: ['["111","222"]'] });
+  assert.deepEqual(helped.commands.at(-1), { cmd: "finish_dragon_help", args: ['["111","222"]'] });
   const capped = friendsHelped({ active: true, number: 0, step: 8, since: NOW }, ["1", "2", "3"]);
   assert.deepEqual(capped.state, { active: true, number: 0, step: 10, since: 0 }, "the last wait goes too");
 });

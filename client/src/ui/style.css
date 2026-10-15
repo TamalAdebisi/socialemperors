@@ -2678,15 +2678,27 @@ body {
   white-space: pre-line;
 }
 
-/* The six (or four), one after another, arrows between: the one in training framed and marked. */
+/* The six (or four), one after another, in the original's six places (a picture each and a narrow gap),
+   the game's arrows over the gaps between those used; the one in training framed and marked. */
 .nest-row {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--ones), 1fr);
-  gap: 3%;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 1.7%;
   margin: 0;
   padding: 0 0 26px;
   list-style: none;
-  background: 50% 26% / 70% auto no-repeat;
+}
+
+.nest-row::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 26px;
+  left: 15.1%;
+  width: var(--arrows-width, 70%);
+  background: var(--arrows) left center / var(--arrows-size, 100%) auto no-repeat;
+  pointer-events: none;
 }
 
 .nest-one {
@@ -2701,9 +2713,19 @@ body {
 }
 
 .nest-one > img:first-child {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.nest-frame {
+  position: absolute;
+  inset: -3%;
+  width: 106%;
+  height: 106%;
+  pointer-events: none;
 }
 
 .nest-one.locked > img:first-child {

@@ -4,7 +4,7 @@
 // wait, Speed up buys it off for 3 cash, Get Dragon! puts the Draggy
 // beside the nest and the next one starts (Feed). Hire friends lists the
 // friends to ask (none here). The monster nest opens for 50 cash. The
-// server's save follows each step.
+// server's save follows each step. On a phone the window fits the screen.
 
 import assert from "node:assert/strict";
 
@@ -54,6 +54,7 @@ export default async function nests({ newPlayer }) {
   let saved = await info();
   assert.equal(saved.privateState.stepNumber, 10);
   assert.ok(Number(saved.privateState.timeStampTakeCare) > 0, "the server's wait");
+  await page.waitForFunction(() => [...document.querySelectorAll(".nest-one > img:first-child")].every((i) => i.naturalWidth > 0), null, { timeout: 15_000 });
   await player.shot("waiting");
 
   // Speed up for 3 cash: Get Dragon!
@@ -92,9 +93,20 @@ export default async function nests({ newPlayer }) {
   await window.locator(".nest-button").waitFor();
   assert.equal(await window.locator(".nest-one").count(), 4);
   assert.equal(await window.locator(".nest-help").count(), 0, "no help or friends here, as in the original");
+  await page.waitForFunction(() => [...document.querySelectorAll(".nest-one > img:first-child")].every((i) => i.naturalWidth > 0), null, { timeout: 15_000 });
   await player.shot("monsters");
   await player.wait(1500);
   saved = await info();
   assert.equal(saved.privateState.monsterNestActive, 1);
   assert.equal(Number(saved.playerInfo.cash), cash - 53);
+
+  // On a phone: the window is a sheet, and the row of dragons fits across it.
+  const phone = await player.onPhone();
+  await phone.select(NEST_AT, "Dragon Breeding Nest");
+  await phone.press("Open");
+  const sheet = phone.page.locator(".nest-window");
+  await sheet.waitFor();
+  const last = await sheet.locator(".nest-one").last().boundingBox();
+  assert.ok(last && last.x + last.width <= 390, `the sixth dragon fits on the screen: ${JSON.stringify(last)}`);
+  await phone.shot("phone");
 }

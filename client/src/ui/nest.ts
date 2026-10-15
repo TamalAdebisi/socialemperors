@@ -242,8 +242,13 @@ export class NestWindow {
   private row(kind: NestKind, state: NestState): HTMLElement {
     const row = document.createElement("ol");
     row.className = "nest-row";
-    row.style.setProperty("--ones", String(kind.ones.length));
-    row.style.backgroundImage = `url("${ICONS["nest-arrows"]}")`;
+    // The game's five arrows span the six places; with four, only the first three show.
+    row.style.setProperty("--arrows", `url("${ICONS["nest-arrows"]}")`);
+    if (kind.ones.length < 6) {
+      const share = (kind.ones.length - 1) / 5;
+      row.style.setProperty("--arrows-width", `${70 * share}%`);
+      row.style.setProperty("--arrows-size", `${100 / share}%`);
+    }
     kind.ones.forEach((id, i) => {
       const item = this.parts.items.get(id);
       const slot = document.createElement("li");
@@ -268,7 +273,11 @@ export class NestWindow {
         slot.append(lock);
       }
       if (i === state.number) {
-        slot.style.backgroundImage = `url("${ICONS["nest-frame"]}")`;
+        const frame = document.createElement("img");
+        frame.className = "nest-frame";
+        frame.src = ICONS["nest-frame"];
+        frame.alt = "";
+        slot.append(frame);
         const marker = document.createElement("span");
         marker.className = "nest-marker";
         marker.innerHTML = `<img src="${ICONS["nest-marker"]}" alt="">`;

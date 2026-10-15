@@ -39,7 +39,7 @@ export const DRAGON_NEST: NestKind = {
   building: 1233,
   ones: [638, 649, 651, 684, 698, 695],
   fields: { number: "dragonNumber", step: "stepNumber", since: "timeStampTakeCare", active: "dragonNestActive" },
-  commands: { step: "next_step", buyStep: "dragon_buy_step_cash", next: "next_dragon", activate: "activate_dragon", deactivate: "desactivate_dragon" },
+  commands: { step: "next_step", buyStep: "buy_step_cash", next: "next_dragon", activate: "activate_dragon", deactivate: "desactivate_dragon" },
   speedUp: [3, 15],
   friends: true,
   strip: "popupDragonProgress",
@@ -52,7 +52,7 @@ export const MONSTER_NEST: NestKind = {
   building: 1255,
   ones: [717, 713, 742, 653],
   fields: { number: "monsterNumber", step: "stepMonsterNumber", since: "timeStampTakeCareMonster", active: "monsterNestActive" },
-  commands: { step: "next_monster_step", buyStep: "monster_buy_step_cash", next: "next_monster", activate: "activate_monster", deactivate: "desactivate_monster" },
+  commands: { step: "next_monster_step", buyStep: "buy_monster_step_cash", next: "next_monster", activate: "activate_monster", deactivate: "desactivate_monster" },
   speedUp: [7, 7],
   friends: false,
   strip: "popupMonsterProgress",
@@ -193,7 +193,7 @@ export function friendsHelped(state: NestState, friends: string[]): Change {
     step++;
     commands.push({ cmd: "next_step", args: [0] });
   }
-  commands.push({ cmd: "clear_dragon_hires", args: [JSON.stringify(friends)] });
+  commands.push({ cmd: "finish_dragon_help", args: [JSON.stringify(friends)] });
   return { state: { ...state, step, since }, commands };
 }
 

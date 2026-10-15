@@ -1183,7 +1183,7 @@ rules in `rules/nest.ts`, with tests):
   (the others): a step, `next_step [0]` (the monster nest's
   `next_monster_step`), and a six-hour wait, with its countdown and
   **Speed up** for 3 cash (15 for the fed dragons, 7 for any monster):
-  `dragon_buy_step_cash`.
+  `buy_step_cash`.
 - At ten, **Get Dragon!**: the grown one stands free on the nearest free
   tile to the nest (`buy`, free), `next_dragon "0"`, and the next one
   starts. The row of them shows those open in colour, the rest locked,
@@ -1192,7 +1192,7 @@ rules in `rules/nest.ts`, with tests):
   ask, as the classic page's Ask friends window does (`ui/askFriends.ts`,
   the server's `/help/game`). Each friend who answers gives two steps
   without their wait: when the window next opens, a "Congratulations!!"
-  takes them (`next_step [0]` each, then `clear_dragon_hires`).
+  takes them (`next_step [0]` each, then `finish_dragon_help`).
 - **The ?** shows the original's help, its picture and words.
 - Once all are raised the nest closes (`desactivate_dragon`); its window
   then offers **Start again** for 100,000 gold or 50 cash
