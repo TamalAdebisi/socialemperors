@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 23 built, 10 partly, 75 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 29 built, 11 partly, 68 not yet, 23 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -98,17 +98,17 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupInactiveNest.as` | 164 | A dragon or monster nest not yet woken: 100,000 gold or 50 cash (`activate_dragon`, `activate_monster`). | not yet |
-| `popups/PopupDragons.as` | 643 | The dragon nest: six dragons in turn, ten steps each (care and feed), one step every 6 hours, the wait skipped for 3 or 15 cash; friends' help counts as steps (`finish_dragon_help`). Sends `next_step`, `buy_step_cash`, `next_dragon`; after the sixth the nest goes back to sleep (`desactivate_dragon`). | not yet; the server handles it (`command.py`, `helps.py`) |
-| `popups/PopupHireFriendsGeneric.as` | 120 | The friends who helped at the nest, shown inside the nest's window. | not yet |
-| `popups/PopupMonstersNest.as` | 500 | The monster nest: four monsters, ten steps each, 6 hours apart, 7 cash to skip; no friends' help. | not yet |
+| `popups/PopupInactiveNest.as` | 164 | A dragon or monster nest not yet woken: 100,000 gold or 50 cash (`activate_dragon`, `activate_monster`). | built: `client/src/ui/nest.ts` |
+| `popups/PopupDragons.as` | 643 | The dragon nest: six dragons in turn, ten steps each (care and feed), one step every 6 hours, the wait skipped for 3 or 15 cash; friends' help counts as steps (`finish_dragon_help`). Sends `next_step`, `buy_step_cash`, `next_dragon`; after the sixth the nest goes back to sleep (`desactivate_dragon`). | built: `client/src/ui/nest.ts`, rules in `client/src/rules/nest.ts` |
+| `popups/PopupHireFriendsGeneric.as` | 120 | The friends who helped at the nest, shown inside the nest's window. | partly: a "Congratulations!!" with OK takes the steps, without the friends' pictures (`client/src/ui/nest.ts`) |
+| `popups/PopupMonstersNest.as` | 500 | The monster nest: four monsters, ten steps each, 6 hours apart, 7 cash to skip; no friends' help. | built: `client/src/ui/nest.ts` |
 | `popups/PopupDragonRiders.as` | 317 | Choose one of three dragon riders (from levels 35, 40 and 45); hovering shows the dragons each can ride and what riding adds (attack +15/20/25, life +100/150/200). Sends `rider_select`. | not yet |
 | `popups/PopupDragonRiderTraining.as` | 342 | Training the rider: 5 to 7 steps, each a mini-game, 15 hours apart, 15 cash to skip; then the rider comes out (`rider_next_step`, `rider_buy_step_cash`). After one paid skip a "Fast train" button lets every later step skip the mini-game. | not yet |
 | `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | not yet |
 | `popups/PopupBahamutSupremeInvocationTemple.as` | 816 | The Supreme Bahamut temple: 12 offerings (100,000 each of gold, stone, wood and food; 50 mana; 50 cash; five big dragons sacrificed; one finished collection), one every 48 hours, the wait skipped for 5 cash; then the final dragon is placed free and the temple starts over. Sends `next_temple_step`, `buy_temple_step_cash`, `reset_temple`. | not yet; `temple.py` |
 | `popups/invocationtemple/InvocationStep.as` | 227 | One offering on the temple's strip: its picture or prices, a tick when done. | not yet |
-| `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | not yet (with the tutorial) |
-| `popups/SelectYourDragonReminderNestPopup.as` | 93 | Then a pointer to the dragon nest. | not yet |
+| `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | built: `client/src/ui/draggy.ts`, `client/src/lessons.ts` |
+| `popups/SelectYourDragonReminderNestPopup.as` | 93 | Then a pointer to the dragon nest. | built: `client/src/ui/draggy.ts` |
 
 ## Social buildings and neighbours
 
@@ -226,7 +226,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/PopupRaceSelector.as` | 199 | A second town from level 20: human or troll, 100,000 gold or 22 cash (`buy_map`); later, travel between towns. | not yet (PARITY.md: the troll town, in Beta 1) |
 | `popups/PopupNewTown.as` | 119 | "Congratulations" on the first town, to share. | not needed: Facebook share |
 | `popups/PopupNewMap.as` | 105 | "Congratulations" on a new town, to share. | not needed: Facebook share |
-| `popups/TutorialPopup.as` | 105 | A tutorial lesson, page by page (`game_status` "Tutorial Popup Created"). | not yet: the tutorial comes at the switch |
+| `popups/TutorialPopup.as` | 105 | A tutorial lesson, page by page (`game_status` "Tutorial Popup Created"). | built: `client/src/ui/lessons.ts` |
 | `popups/PopupMotivation.as` | 91 | The tutorial's opening and closing words. | not yet |
 | `popups/PopupInstall.as` | 42 | "Add the app" on Facebook. | not needed: Facebook |
 

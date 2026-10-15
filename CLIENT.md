@@ -1190,6 +1190,46 @@ reported, the nest, the draggy, the egg's steps); `e2e/tests/classic.mjs`
 opens the lessons in the classic game instead; `tests/test_commands.py`
 checks the gift steps on the server.
 
+### The nests
+
+Built with "The switch". The dragon nest (1233, the lessons' gift, or 6,000
+gold in the shop) and the monster nest (1255) raise a row of dragons or
+monsters, one after another: the dragon nest six, the monster nest four
+(their ids are in `rules/nest.ts`). The nest's **Open** button shows its window, in the panel like
+every window here, with the original window's parts (`ui/nest.ts`; the
+rules in `rules/nest.ts`, with tests):
+
+- **Progress n/10** and its bar, and this step's picture, from egg to
+  grown: eleven per dragon, from the game's own Flash files
+  (`tools/art/export_progress.py` makes a strip of them for each,
+  `client/src/ui/art/nest/`).
+- **Take care** (the first, third and fifth hatch from eggs) or **Feed**
+  (the others): a step, `next_step [0]` (the monster nest's
+  `next_monster_step`), and a six-hour wait, with its countdown and
+  **Speed up** for 3 cash (15 for the fed dragons, 7 for any monster):
+  `buy_step_cash`.
+- At ten, **Get Dragon!**: the grown one stands free on the nearest free
+  tile to the nest (`buy`, free), `next_dragon "0"`, and the next one
+  starts. The row of them shows those open in colour, the rest locked,
+  the one in training framed and marked.
+- **Hire friends** (the dragon nest only) lists the player's friends to
+  ask, as the classic page's Ask friends window does (`ui/askFriends.ts`,
+  the server's `/help/game`). Each friend who answers gives two steps
+  without their wait: when the window next opens, a "Congratulations!!"
+  takes them (`next_step [0]` each, then `finish_dragon_help`).
+- **The ?** shows the original's help, its picture and words.
+- Once all are raised the nest closes (`desactivate_dragon`); its window
+  then offers **Start again** for 100,000 gold or 50 cash
+  (`activate_dragon`). A new empire's monster nest starts closed, as in
+  the original's save.
+
+The save's privateState keeps where each nest is (`dragonNumber`,
+`stepNumber`, `timeStampTakeCare`; the monster nest's own); the client
+changes its copy as the server does, so the window is right without a
+reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
+the dragon got, the friends' list and the monster nest opened, with checks
+on the server's save.
+
 ### Step 4: battles
 
 Beta 2. Code: `rules/battle.ts` (the fighting, with tests), `rules/quest.ts`

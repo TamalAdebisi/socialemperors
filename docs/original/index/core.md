@@ -8,7 +8,7 @@ sending raiders and camps). Around them sit the fixed numbers (`Config`,
 `Constants`), the words (`Language`), and small helpers the windows and the
 map engine (see [engine.md](engine.md)) lean on.
 
-**Count:** 18 built, 12 partly, 8 not yet, 3 not needed, 1 library (42 classes).
+**Count:** 19 built, 12 partly, 7 not yet, 3 not needed, 1 library (42 classes).
 
 **How deep this was read.** `Base`, `MapInitializer` and `Config` were read
 through. `Constants` and `Language` were surveyed by kind, not value by value.
@@ -125,7 +125,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 |---|---|---|---|
 | `core/Scene.as` | 389 | Short camera trips with black bars top and bottom (to a camp's chest, a quest's start), optionally zooming and coming back; Escape skips. The game pauses meanwhile. | partly: `camera.lookAt` for alerts; no trips with bars |
 | `core/Key.as` | 108 | Which keys are down; any key let go ends a pause; two hidden key sequences show a joke message. | partly: keys in `view/camera.ts`, `editor.ts`, `ui/pause.ts`; no hidden sequences |
-| `core/TutorialMain.as` | 786 | Arthur's lessons in the first town: steps with an arrow and a window, `complete_tutorial` at each, the last 15. The finale (three trees chopped) ends it, gives the Dragon Breeding Nest and offers a dragon. Skimmed. | not yet: we offer the classic game's lessons or skipping (`rules/lessons.ts`) |
+| `core/TutorialMain.as` | 786 | Arthur's lessons in the first town: steps with an arrow and a window, `complete_tutorial` at each, the last 15. The finale (three trees chopped) ends it, gives the Dragon Breeding Nest and offers a dragon. Skimmed. | built: `client/src/lessons.ts`, rules in `client/src/rules/lessons.ts` |
 | `core/AprilFools.as` | 285 | On 1 April from level 5: villagers walk round the town hall complaining, and trees creep towards the middle and fight. Nothing calls it in this build. | not needed: switched off |
 
 ## Loading pictures and libraries

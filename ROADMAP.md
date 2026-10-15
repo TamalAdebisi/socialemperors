@@ -355,7 +355,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))
-  - [ ] The dragon nest's own window: raising its dragons
+  - [x] The dragon and monster nests' window: raising them step by step,
+        speeding up, friends' help, opening a closed nest again
+        ([CLIENT.md](CLIENT.md#the-nests))
 
 ## How we add a missing feature
 
