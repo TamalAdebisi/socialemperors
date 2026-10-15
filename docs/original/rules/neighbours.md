@@ -288,7 +288,8 @@ things only until the page is reloaded).
   friend in `dragonSocialHelp` counts for 2 steps, taken when the nest's
   window opens (a list of their pictures first, then the steps, never past
   the dragon's 10), then `finish_dragon_help` with the list. *Ours:
-  missing (the nest is not built yet).*
+  different: a "Congratulations!!" with OK, without their pictures, then
+  the same steps and command (`client/src/ui/nest.ts`).*
 - The graveyard has an ask-friends-for-potions handler, but no button is
   wired to it: it never runs. *Ours: same (none).*
 
@@ -458,8 +459,8 @@ things only until the page is reloaded).
   under whatever window opens. *Ours: different: they wait for the
   message's OK.*
 - After the tutorial ends, its own short sequence offers the choice of a
-  dragon (`POPUP_CHOOSE_YOUR_DRAGON`, on). Skimmed. *Ours: not checked
-  (the lessons are in the classic game).*
+  dragon (`POPUP_CHOOSE_YOUR_DRAGON`, on). Skimmed. *Ours: same
+  (`client/src/lessons.ts`, `client/src/ui/draggy.ts`).*
 
 ## Differences
 
@@ -516,5 +517,6 @@ Most serious first.
     building taking an hour off (`hc`, `accept_collect_help`). (checked
     twice)
 16. **The dragon nest's friends' help** (with the nest). (checked twice)
+    Built with the nest's window, without the friends' pictures.
 17. **Attack and Send gift** on a neighbour. (checked twice)
 18. **The "need allies?" window** five minutes in. (checked twice)

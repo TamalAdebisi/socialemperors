@@ -109,9 +109,9 @@ another.
     finished it, the tutorial starts and the map is locked; many of the
     steps below are then skipped. Otherwise, unless it was already shown
     today (by the computer's date), a 5-minute timer is set for the "add
-    neighbours" window. *Tutorial: partly (Arthur's lessons are offered
-    and played in the classic game; recorded); the neighbours window: not
-    needed (it invited Facebook friends).*
+    neighbours" window. *Tutorial: built (`client/src/lessons.ts`; the map
+    isn't locked, DECISIONS.md); the neighbours window: not needed (it
+    invited Facebook friends).*
 14. **Attacks received while away:** if any is marked as not yet seen, the
     attack history window opens at once and `clean_attacks` is sent.
     *Not yet (attacks on players come with the switch).*
@@ -414,8 +414,7 @@ window to close before the next is looked at.
     true): on, so harvests finish on their own and villagers move on to
     the touching ones. *Built.*
 81. **The dragon picker after the tutorial**
-    (`Config.POPUP_CHOOSE_YOUR_DRAGON` true): on. *Not needed here (the
-    tutorial is in the classic game).*
+    (`Config.POPUP_CHOOSE_YOUR_DRAGON` true): on. *Built (`client/src/ui/draggy.ts`).*
 82. **The Moroccan dealer** (`SPAWN_MOROCCO_DEALER` 1, but only for gold
     members) and the adverts and offer buildings (page settings): off in
     practice on our pages. *Not needed.*
