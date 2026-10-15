@@ -1380,9 +1380,13 @@ camps players reach, our own notes on the original's tables) and
 
 - **Which:** twenty of the thirty camps are stories. They stand in the
   map's four corners, always in the same places. Camps 9 and 11 are never
-  reached by any player, as in the original. Played here so far: camp 7
-  (the burning mill) and camp 13 (the skeleton statue); the others are put
-  up by the classic game for now, in the same empire.
+  reached by any player, as in the original. Played here so far: 7 (the
+  burning mill), 13 (the skeleton statue), 15 (the golden golem), 17 (the
+  black yeti), 19 (the giant viper), 21 (the mummy), 22 (the evil
+  rockdriller), 26 (the Atlantis treasure), 27 (the Balrog), 28 (the demon
+  portals) and 29 (the corrupted wizards). The others (the four festival
+  camps with chests that fill up step by step, the Chinese dragon, Neptune
+  and the Ent) are put up by the classic game for now, in the same empire.
 - **How:** each key (a well, a statue) is guarded by the enemy units
   standing within 7 tiles of it when the camp is read (border trolls
   there too). When they've all fallen it lights up; one tap takes it: it
@@ -1394,7 +1398,18 @@ camps players reach, our own notes on the original's tables) and
   next camp comes in 4 hours.
 - **Reloading:** camps 7 and 13 save nothing of their own: how far one
   has got is read from the pieces still standing (keys left, the chest,
-  the wave), as in the original.
+  the wave), as in the original. The newer camps (14 to 29) save their
+  progress with `set_quest_var` (started, the keys taken, the bosses
+  beaten). Each time the town opens, they clear the four corners and put
+  back what isn't done: the guards of the keys left come back whole, and
+  so does a boss not yet beaten.
+- **Bosses and prizes:** a boss comes when the last key is taken (or at
+  once, when the camp has no keys); the chest lights up when it falls, or
+  the camp ends there when it has no chest (the Balrog), or when the last
+  key is taken (the treasure, the portals, the wizards). A camp's helpers
+  join the player by the town hall when it starts. Its prizes come with
+  the chest: units beside it (or beside the last key), buildings to
+  storage (`store_add_items`).
 
 **Not yet** (Beta 2's next slices): sixteen of the scripted camps, monks at
 home, collection pieces dropped by enemies (they come with the

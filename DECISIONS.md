@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, scripted camps (part 2)
+
+- **A camp's helpers stand by the town hall.** The original put them in
+  the map's top-left corner (its search for a spot came back empty), from
+  where they walked to the town hall.
+- **A camp's progress is saved before it ends.** Three camps (the
+  Atlantis treasure, the portals, the wizards) saved their last key after
+  ending in the original; the server now ignores that too (part 1).
+- **No messenger speech or camera flight** when a camp's window closes;
+  the original flew the camera to a helper who said a line, or to the
+  chest.
+- **Kept from the original:** each time the town opens, a newer camp's
+  corners are cleared and put back, its guards and boss whole again.
+
 ## 15 October 2026: Beta 2, scripted camps (part 1)
 
 - **Camp 13 reloaded in its last stage keeps the chest shut** until the
