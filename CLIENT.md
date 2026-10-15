@@ -674,7 +674,6 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 - The tidy-up as the town opens keeps a unit on the land when it moves it
   off a building, and moves one off a gate (gates are shut then).
 - A raid stops units' walks where they are; the server hears where.
-- With units selected, tapping land for sale offers it.
 
 **Wall gates** open and close, as in the Flash client: the gate's card has
 Open door (the game's button); open, the gate shows its open picture,

@@ -462,20 +462,19 @@ export class TownEditor {
       }
       return;
     }
+    if (units.length > 0 && !placed) {
+      if (this.sendTo(units, this.tileAt(at))) {
+        this.sound("place");  // the Flash client's sound for units sent off
+      }
+      return;
+    }
     if (!placed) {
-      // Land for sale tapped (its sign is on it): offered, units selected or not (they can't go there).
       const tile = this.tileAt(at);
       const block = landForSale(this.town, tile.x, tile.y);
       if (block !== null) {
         this.offerLand(block);
         return;
       }
-    }
-    if (units.length > 0 && !placed) {
-      if (this.sendTo(units, this.tileAt(at))) {
-        this.sound("place");  // the Flash client's sound for units sent off
-      }
-      return;
     }
     const repairers = placed ? units.filter((unit) => this.canRepair(unit, placed)) : [];
     if (placed && repairers.length > 0) {
