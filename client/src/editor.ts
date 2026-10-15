@@ -29,7 +29,7 @@ import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
 import { CURSORS, ICONS, type IconName } from "./ui/icons.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
-import { skipLessons } from "./rules/lessons.ts";
+import { skipLessons, type LessonEvent } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
@@ -212,6 +212,7 @@ export class TownEditor {
         readyNow.add(placed);
         if (!this.readyBefore.has(placed)) {
           this.sound("ready");
+          this.emit({ kind: "ready", item: placed.item });
         }
       }
       this.view.sign(placed, state.status === "ready" ? { kind: "ready", resource }
@@ -273,6 +274,14 @@ export class TownEditor {
     }
     this.select(null);
     this.shop.toggle(category);
+    if (this.shop.isOpen && category === undefined) {
+      this.emit({ kind: "shop" });
+    }
+  }
+
+  /** The shop open at the page that sells an item. */
+  showInShop(item: ItemInfo): void {
+    this.shop.showItem(item);
   }
 
   openStorage(): void {
@@ -321,6 +330,7 @@ export class TownEditor {
     if (fromStorage) {
       this.bar.prompt(`Tap where ${item.name} goes`, [{ label: "Cancel", run: () => this.stopBuilding() }]);
     } else {
+      this.emit({ kind: "choose", item });
       const price = priceOf(item);
       this.bar.prompt(`Tap where ${item.name} goes (${price.amount} ${price.resource} each)`,
         [{ label: "Done", run: () => this.stopBuilding() }]);
@@ -351,6 +361,7 @@ export class TownEditor {
     this.send([bought.command]);
     this.sound("place");
     void this.view.redraw(bought.placed);
+    this.emit({ kind: "placed", item, x: tile.x, y: tile.y });
     const price = priceOf(item);
     const lines = [{ text: `−${price.amount} ${price.resource}`, colour: RESOURCE_COLOURS[price.resource] }];
     if (item.xp > 0) {
@@ -463,6 +474,7 @@ export class TownEditor {
     if (units.length > 0 && !placed) {
       if (this.sendTo(units, this.tileAt(at))) {
         this.sound("place");  // the Flash client's sound for units sent off
+        this.emit({ kind: "walk" });
       }
       return;
     }
@@ -483,11 +495,13 @@ export class TownEditor {
     const workers = placed ? units.filter((unit) => canHarvest(unit.item, placed.item)) : [];
     if (placed && workers.length === 1 && units.length === 1) {
       this.lineUp(workers[0], placed, touch);
+      this.emit({ kind: "harvest", resource: placed.item });
       return;
     }
     if (placed && workers.length > 0) {
       // Several villagers: each lines it up, and those free set off together, each to a tile of its own beside it.
       workers.forEach((unit, i) => this.lineUp(unit, placed, touch, { first: i === 0 }));
+      this.emit({ kind: "harvest", resource: placed.item });
       return;
     }
     const goers = placed ? units.filter((unit) => canGoInside(this.town, unit.item, placed)) : [];
@@ -497,6 +511,7 @@ export class TownEditor {
       this.sound("place");
       this.showWhatItDoes(unit, placed, touch);
       this.goInto(unit, placed);
+      this.emit({ kind: "inside", unit: unit.item, building: placed.item });
       return;
     }
     if (placed && goers.length > 0) {
@@ -509,6 +524,7 @@ export class TownEditor {
       this.sound("place");
       this.showWhatItDoes(goers[0], placed, touch);
       this.select(placed);
+      this.emit({ kind: "inside", unit: goers[0].item, building: placed.item });
       return;
     }
     const state = placed ? workState(placed, this.clock()) : null;
@@ -518,6 +534,9 @@ export class TownEditor {
       this.askWorkTime(placed);
     } else {
       this.select(placed);
+      if (placed) {
+        this.emit({ kind: "selected", item: placed.item });
+      }
     }
   }
 
@@ -984,6 +1003,16 @@ export class TownEditor {
     this.refresh();
   }
 
+  /** Who hears what the player does: Arthur's lessons (lessons.ts). */
+  readonly listeners: ((event: LessonEvent) => void)[] = [];
+
+  /** Something the player did, for whoever listens (a fight at home tells of its own: an attack, a death). */
+  emit(event: LessonEvent): void {
+    for (const listener of this.listeners) {
+      listener(event);
+    }
+  }
+
   /** Gold and experience won in a raid: a level may come with them. */
   gained(): void {
     this.levelUp();
@@ -1223,6 +1252,7 @@ export class TownEditor {
     }
     const done = harvested(this.town, resource, work.workers.size, this.clock(), this.items);
     this.send(done.commands);
+    this.emit({ kind: "felled", resource: resource.item });
     this.doings.collected(resource.item);
     this.view.rise(resource, [
       { text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] },
@@ -1319,6 +1349,7 @@ export class TownEditor {
     }
     const price = payForTraining(this.town, unit, withCash);
     this.training.set(building, { unit, done: performance.now() + TRAINING_MS, price, withCash });
+    this.emit({ kind: "training", unit });
     const lines = withCash ? [{ text: `−${unit.cashCost} cash`, colour: RESOURCE_COLOURS.cash }]
       : [{ text: `−${price.amount} ${price.resource}`, colour: RESOURCE_COLOURS[price.resource] },
         ...(price.food ? [{ text: `−${price.food} food`, colour: RESOURCE_COLOURS.food }] : [])];
@@ -1427,6 +1458,7 @@ export class TownEditor {
     this.doings.collected(placed.item);
     this.send(done.commands);
     this.sound("collect");
+    this.emit({ kind: "collected", item: placed.item });
     const lines = [{ text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] }];
     if (done.xp > 0) {
       lines.push({ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp });
@@ -1605,12 +1637,12 @@ export class TownEditor {
     } }]);
   }
 
-  offerLessons(classicUrl: string): void {
-    this.bar.prompt("Arthur teaches the first steps: a villager, a farm, a house, a knight and a first battle. "
-      + "His lessons are in the classic game for now.", [
+  offerLessons(take: () => void): void {
+    this.bar.prompt("Arthur teaches the first steps: a villager, a house, a knight and a first battle, then a farm. "
+      + "At the end he gives you the dragon nest and a draggy of your choice (skipping them, you don't get those).", [
       { label: "Take the lessons", run: () => {
         this.bar.hide();
-        void this.commands.flush().finally(() => location.assign(classicUrl));
+        take();
       } },
       { label: "Skip them", run: () => {
         this.bar.hide();

@@ -1,11 +1,12 @@
 // The new client and the classic game play the same empire (CLAUDE.md, rule
 // 5), and Arthur's lessons (CLIENT.md, "Arthur's lessons"). A new player is
 // asked about the lessons; plays a little in the new client first (a farm
-// from the shop, a unit walked somewhere), is asked again
-// on reloading, then takes the lessons: the classic game, Ruffle, opens the
-// same empire and asks for the farm's picture, so it found the farm the new
-// client built. No server errors on the way. Another player skips them: the
-// save has the lessons done, and the question doesn't come back.
+// from the shop, a unit walked somewhere), is asked again on reloading,
+// then opens the classic game: Ruffle opens the same empire and asks for
+// the farm's picture, so it found the farm the new client built. No server
+// errors on the way. Another player skips them: the save has the first half
+// done, and the question doesn't come back. (The lessons themselves:
+// lessons.mjs.)
 
 import assert from "node:assert/strict";
 
@@ -29,7 +30,7 @@ export default async function classic({ newPlayer }) {
   const saved = await player.saved();
   assert.ok(saved.items.some((i) => i[0] === 10 && i[1] === FARM_AT[0] && i[2] === FARM_AT[1]), "the farm is in the save");
 
-  // Asked again; the lessons are in the classic game, on the same empire.
+  // Asked again; then the classic game, on the same empire.
   await player.reload();
   assert.match(await player.bar(), /^Arthur teaches the first steps/);
   const asked = [];
@@ -39,7 +40,7 @@ export default async function classic({ newPlayer }) {
     if (response.url().startsWith(player.base) && response.status() >= 500) failed.push(`${response.status()} ${response.url()}`);
   });
   const started = Date.now();
-  await player.press("Take the lessons");
+  await page.getByRole("link", { name: "Classic game" }).click();
   await page.waitForURL(/\/ruffle\.html$/);
   while (!asked.some((url) => url.includes("/granja3.")) && Date.now() - started < 240_000) {
     await player.wait(2000);

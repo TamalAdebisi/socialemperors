@@ -43,6 +43,8 @@ export interface CampParts {
   /** The game's words by localisation id, and where the windows' pictures are. */
   line: (id: number) => string;
   pictureUrl: (name: string) => string;
+  /** Arthur's lessons are on: a camp put up doesn't tell its story, as in the original. */
+  quiet?: () => boolean;
   /** Units sent at an enemy: the town becomes a battlefield. */
   engage: (units: PlacedItem[], target: PlacedItem) => void;
   /** During a fight: the fighter standing for a thing of the town, and the battle. */
@@ -165,7 +167,7 @@ export class Camps {
       this.put(troll);
     }
     const texts = campTexts(id, town.race);
-    if (texts) {
+    if (texts && !this.parts.quiet?.()) {
       notice(this.title(id, texts.start[0]), this.parts.line(texts.start[1]), this.parts.pictureUrl(texts.picture));
     }
     this.watch();

@@ -18,6 +18,11 @@ export function onPanelChange(listener: Listener): void {
   listeners.push(listener);
 }
 
+/** Put away whichever window is open (Arthur's lessons do, to show the town). */
+export function closePanel(): void {
+  current?.close();
+}
+
 function changed(): void {
   // What sits on the right of the screen makes way for an open panel (style.css).
   document.body.classList.toggle("panel-open", current !== null);

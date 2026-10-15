@@ -94,9 +94,11 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.cash(), 200)
 
     def test_the_tutorial_gives_the_nest_seven_steps(self):
+        self.pState["timeStampTakeCare"] = 0
         for _ in range(7):
             self.send("next_step", "0")
         self.assertEqual(self.pState["stepNumber"], 7)
+        self.assertEqual(self.pState["timeStampTakeCare"], 0, "no wait after the lessons' gift, as the Flash client showed")
 
     def test_skipping_a_dragon_wait_with_cash(self):
         self.send("next_step", 0)

@@ -70,7 +70,12 @@ export default async function sound({ newPlayer }) {
   await player.reload();
   assert.equal(await page.getByRole("button", { name: "Music: off" }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Sounds: off" }).count(), 1);
-  await player.select(KNIGHT_AT, "Light Knight");
+  // The knight is where its walk was saved, which may be either end of it.
+  const knight = await page.evaluate(() => {
+    const unit = window.seHome.parts.town.items.find((p) => p.item.name === "Light Knight");
+    return [unit.tx, unit.ty];
+  });
+  await player.select(knight, "Light Knight");
   assert.equal(await music(), false, "no music");
   await player.press("Music: off");
   assert.equal(await music(), true, "music on again");
