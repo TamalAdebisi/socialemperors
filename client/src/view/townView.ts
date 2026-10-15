@@ -477,7 +477,7 @@ function pictureOf(slot: Container): Container | undefined {
   return slot.children.find((child) => child.label !== OUTLINE);
 }
 
-export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): Container {
+export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, still?: number): Container {
   // Its frame is the way it faces; past the last, the game shows the last.
   const facing = Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
@@ -485,6 +485,8 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number): 
   if (isTree(placed.item) && textures.length > 1) {
     // A tree's frames are its looks for each island skin (snow on ice...).
     textures = [textures[Math.min(skin, textures.length - 1)]];
+  } else if (still !== undefined && textures.length > 1) {
+    textures = [textures[Math.min(still, textures.length - 1)]];
   }
   const sprite = animated(textures, art.fps);
   const bounds = art.boundsOf(name);

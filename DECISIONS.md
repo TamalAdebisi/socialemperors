@@ -4,6 +4,42 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the Yeti and the Golem
+
+- **The Stone Golem's life at levels 15 to 19 stays the original's 1,900**
+  (3,800 at 2 and 3 stars), though it was surely meant to be 19,000. That's
+  how those levels played it.
+- **A lit key is collected the moment it's tapped.** The original filled
+  a short bar first (two thirds of a second).
+- **The last key's penguins count like the others:** they keep the battle
+  going and aren't lost. The original forgot them, so it could call the
+  battle lost while they still stood. Penguins that fall are never taken
+  from the player's own.
+- **The bosses think like the other fighters.** The original gave them a
+  mind of their own that differs in small ways: it picked a new target a
+  little later, and looked around only every two seconds.
+- **The yeti's and golem's moves are close, not exact:** the rain of
+  stones falls around its target (the original's fell in a square ahead
+  of the boss), and the small yetis appear around it (the original's at
+  four corners 3 tiles off).
+
+## 15 October 2026: Beta 2, Hero Isle
+
+- **Kept from the original:** an enemy that stands in none of the
+  island's seven parts (the nine by the landing, and every copy at 2 and 3
+  stars) counts against the first part, so its door can open before its
+  own heroes are all dead.
+- **Monks now turn units on every island** (4 each, 24 seconds apart, none
+  with 500 life or more, no boss): an enemy turned counts as beaten and
+  pays; one of the player's turned counts as lost. At home they don't
+  turn anyone yet.
+- **An enemy a monk turned that then falls isn't reported as the
+  player's loss.** The original reported it, so the server took one of the
+  player's own units of that kind (their own Warrior Princess, say).
+- **An enemy counts towards the win once,** even if monks turn it back
+  and forth. The original could count it twice and pay the win's bonus
+  twice.
+
 ## 15 October 2026: Beta 2, troll camps
 
 - **Ten of the thirty camps are built in the new client:** those the

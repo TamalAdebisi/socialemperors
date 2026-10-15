@@ -21,11 +21,12 @@ export type Move =
   | { kind: "storm"; count: number; radius: number; factor: number; minDelay: number; maxDelay: number; around: Around; fx: string | null }
   | { kind: "whirl"; radius: number; max: number; factor: number; every: number; duration: number; around: Around; push: number; stun: boolean;
     poison: { damage: number; ticks: number } | null; fx: string | null }
-  | { kind: "blast"; radius: number; max: number; factor: number; around: Around; push: number; stun: boolean; fx: string | null }
+  | { kind: "blast"; radius: number; max: number; factor: number; around: Around; push: number; stun: boolean; fx: string | null; skipCross?: boolean }
   | { kind: "line"; length: number; factor: number; push: number; stun: boolean; fx: string | null }
   | { kind: "diagonal"; factor: number }
   | { kind: "hit"; factor: number; push: number; stun: boolean; fx: string | null }
   | { kind: "heal"; who: "self" | "allies" | "target"; radius: number; max: number; amount: number; factor: number }
+  /** maxAlive 0: no limit (the bosses' small yetis and golems). */
   | { kind: "spawn"; minion: number; count: number; maxAlive: number; egg: boolean }
   | { kind: "swallow"; radius: number; max: number; around: Around; maxLife: number }
   | { kind: "freeze"; radius: number; max: number; frames: number; around: Around }
@@ -38,7 +39,8 @@ export type Move =
   | { kind: "duplicate" }
   | { kind: "other"; note: string };
 
-export interface AutoEntry { ids: number[]; name: string; interval: number; length: number; animation: number; moves: Move[] }
+/** `animations`: each move its own (the bosses' three), else `animation` for all. */
+export interface AutoEntry { ids: number[]; name: string; interval: number; length: number; animation: number; animations?: number[]; moves: Move[] }
 export interface Button { slot: number; name: string; picture: string; animation: number; needsTarget: boolean; move: Move }
 export interface Limit { max: number; fill: "damage" | "heal"; name: string; animation: number; move: Move }
 export interface UnitEntry { ids: number[]; name: string; cooldown: number; buttons: Button[]; limit: Limit | null; giant: boolean }
@@ -168,7 +170,7 @@ export class Specials {
         state.counter++;
         if (state.counter >= entry.interval) {
           state.windowFrom = frame;
-          f.special = { animation: entry.animation, until: frame + entry.length };
+          f.special = { animation: entry.animations?.[state.turn % entry.moves.length] ?? entry.animation, until: frame + entry.length };
         }
       }
     }
@@ -236,7 +238,7 @@ export class Specials {
     if (button.needsTarget && !this.targetOf(f)) {
       return "No enemy in reach";
     }
-    if (button.move.kind === "spawn" && this.minions(f).length >= button.move.maxAlive) {
+    if (button.move.kind === "spawn" && button.move.maxAlive > 0 && this.minions(f).length >= button.move.maxAlive) {
       return `${button.move.maxAlive} at most at once`;
     }
     return "";
@@ -397,7 +399,9 @@ export class Specials {
       case "blast": {
         const centre = centreOf(move.around);
         this.show(move.fx, centre);
-        for (const o of enemies(centre, move.radius, move.max)) {
+        // The bosses' pound leaves out the row and column it stands on.
+        const off = (o: Fighter) => !move.skipCross || (o.tx !== centre.x && o.ty !== centre.y);
+        for (const o of enemies(centre, move.radius, move.max, off)) {
           this.strike(f, o, move.factor, move.push, move.stun, centre);
         }
         break;
@@ -450,7 +454,7 @@ export class Specials {
           break;
         }
         for (let i = 0; i < move.count; i++) {
-          if (this.minions(f).length >= move.maxAlive) {
+          if (move.maxAlive > 0 && this.minions(f).length >= move.maxAlive) {
             break;
           }
           let near = self();

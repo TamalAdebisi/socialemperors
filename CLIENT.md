@@ -1031,8 +1031,31 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
 - **Winning:** the troll islands light their treasure chest once every
   enemy unit is dead, and opening it wins; the civilization islands are won
   with their town hall; the hardcore and god islands by killing every
-  enemy unit. The boss islands and the Hero Isle open the classic game for
-  now (their keys and doors come with the bosses' slice). All the
+  enemy unit. The Hero Isle too: its heroes wait in seven parts walled
+  off by doors (`doorZones` in `rules/islands.json`), and a part's door
+  opens (its open picture; units walk through) once that part's last enemy
+  is dead. As in the original, an enemy in no part (the nine by the
+  landing, and every 2 and 3 star copy) counts against the first part, so
+  its door can open before its own heroes are all dead.
+- **Boss islands** (`rules/bosses.ts`): the Arctic Isle and the Desert
+  Isle so far; the Mineral, Nest and Dangerous Isles open the classic game
+  for now. The island lends a few units; its guards stand in four groups
+  (by the nearest of four points, or by quarter of the map), and a
+  group's key (a power gem on the Desert Isle) lights up once its last
+  guard is dead. One tap collects a lit key (no unit has to go there).
+  The fourth takes away the gate (or altar), and the boss comes out (or
+  appears in its place). Its life comes from the player's level, doubled
+  at 2 and 3 stars; at 3 stars there are two. Only the guards pay; the
+  win pays the island's prize for its stars, and the island's reward
+  unit. On the Arctic Isle each key brings three penguins to the player's
+  side, and the gate's picture steps on for each of the first three. The
+  bosses' three special moves take turns: a ground pound that throws
+  units back, a rain of stones, and four small yetis (golems) at a time.
+  Monks (either side's) turn a unit within 10 tiles to their side instead
+  of hitting: 4 each, 24 seconds apart, none with 500 life or more, no
+  boss; a turned unit shows lighter, and a monk that has turned its 4
+  redder. An enemy turned counts as beaten (it pays); one of the player's
+  turned counts as lost. All the
   player's units dead, or leaving (the home button), loses. The results
   come 3 seconds after the end (7 after the chest).
 - **What it pays:** each enemy half the price of a fighter bought with gold
@@ -1245,7 +1268,7 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   healers... The next camp comes 4 hours later.
 
 **Not yet** (Beta 2's next slices): the twenty scripted camps, the boss
-islands and the Hero Isle, the rarer special moves (shape-shifting, flying, ghosts, shields
+islands, the monk's conversions, the rarer special moves (shape-shifting, flying, ghosts, shields
 and the like: their buttons don't show yet), collection pieces dropped by
 enemies, the battle music and the "under attack" alert at home, and the
 original's repair pointer.

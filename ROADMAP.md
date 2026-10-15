@@ -321,7 +321,13 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         lays out by code, their chests and prisoners every 4 hours, and
         the trolls on the border ([CLIENT.md](CLIENT.md#step-4-battles))
   - [ ] The twenty scripted troll camps
-  - [ ] The boss islands and the Hero Isle
+  - [x] The Hero Isle: its seven parts behind doors that open as each is
+        cleared, and the monks turning units to their side
+        ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [x] The boss islands, part 1: the Arctic Isle (the Giant Yeti) and
+        the Desert Isle (the Stone Golem): guards, keys, the gate, the
+        boss by level ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] The boss islands, part 2: the Rockdriller, the dragons
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with
       the Flash game one tap away for a while.

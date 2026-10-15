@@ -28,6 +28,9 @@ const COLOUR_HEAL = 0x6fe36f;
 /** Spells' tints: frozen units blue, poisoned ones green. */
 const TINT_FROZEN = 0x8ec8ff;
 const TINT_POISONED = 0xa8e07a;
+/** As the original marks them: a unit a monk turned shows lighter, a monk that has turned its last redder. */
+const CONVERTED = brighter([0.25, 0.25, 0.25]);
+const MONK_SPENT = brighter([0.25, 0, 0]);
 /** The spell marker's picture (the game's AOEMC), and its width in the game: it's drawn (area + 1) / 5 times that. */
 const SPELL_AREA = new URL("../ui/art/spell-area.webp", import.meta.url).href;
 const SPELL_AREA_WIDTH = 406;
@@ -349,7 +352,13 @@ export class BattleView {
     } else {
       drawn.slot.zIndex = 20000 + buildingPoint(fighter.tx, fighter.ty).y - 27 * (fighter.item.width + fighter.item.height) / 2;
     }
-    drawn.slot.filters = fighter === this.hovered || fighter.collectable || this.lit.has(fighter) ? [this.glow] : [];
+    const glow = fighter === this.hovered || fighter.collectable || this.lit.has(fighter) ? this.glow : null;
+    const mark = fighter.converted ? CONVERTED : (fighter.conversions ?? 0) >= 4 ? MONK_SPENT : null;
+    const filters = [glow, mark].filter((f) => f !== null);
+    const now = drawn.slot.filters ?? [];
+    if (filters.length !== now.length || filters.some((f, i) => now[i] !== f)) {
+      drawn.slot.filters = filters;
+    }
     this.drawBar(fighter, drawn);
     this.drawRing(fighter, drawn);
   }
@@ -387,7 +396,7 @@ export class BattleView {
 
   /** What picture a fighter shows: its pose and way, or a special move's animation. */
   private keyOf(fighter: Fighter, pose: Pose, special: number): string {
-    return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)}`
+    return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)} ${fighter.still ?? ""}`
       : special ? `s${special} ${fighter.facing}` : `${pose} ${fighter.facing}`;
   }
 
@@ -418,7 +427,7 @@ export class BattleView {
     } else if (fighter.isUnit) {
       drawn.slot.addChild(unitSprite(art, fighter.facing, pose, fighter.at, pose === "MUERTE"));
     } else {
-      const sprite = buildingSprite(art, asPlaced(fighter), this.skin);
+      const sprite = buildingSprite(art, asPlaced(fighter), this.skin, fighter.still);
       drawn.slot.addChild(sprite);
       // Losing life: the game's flames over it.
       const stage = fireStage(fighter.life, fighter.maxLife);
@@ -537,3 +546,10 @@ function outline(fighter: Fighter): Graphics {
 
 /** The whole island, in tiles: for keeping the camera over it. */
 export const ISLAND_TILES = MAP_TILES;
+
+/** A filter that adds to the red, green and blue of every pixel (0 to 1). */
+function brighter([r, g, b]: [number, number, number]): ColorMatrixFilter {
+  const filter = new ColorMatrixFilter();
+  filter.matrix = [1, 0, 0, 0, r, 0, 1, 0, 0, g, 0, 0, 1, 0, b, 0, 0, 0, 1, 0];
+  return filter;
+}
