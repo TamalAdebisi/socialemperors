@@ -1344,7 +1344,16 @@
      1
     ],
     "secondBossAt3": true,
-    "secondBossNear": "boss tile + (3, 0)"
+    "lifeBase": 25000,
+    "groupRaces": [
+     "t",
+     "e"
+    ],
+    "secondBossOffset": [
+     3,
+     0
+    ],
+    "secondBossFrom": "boss"
    },
    "neutral": [
     411,

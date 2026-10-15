@@ -1037,9 +1037,9 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   is dead. As in the original, an enemy in no part (the nine by the
   landing, and every 2 and 3 star copy) counts against the first part, so
   its door can open before its own heroes are all dead.
-- **Boss islands** (`rules/bosses.ts`): the Arctic Isle and the Desert
-  Isle so far; the Mineral, Nest and Dangerous Isles open the classic game
-  for now. The island lends a few units; its guards stand in four groups
+- **Boss islands** (`rules/bosses.ts`, and `rules/bossMinds.ts` for the
+  bosses that choose for themselves). On the Arctic, Desert and Mineral
+  Isles the island lends a few units; its guards stand in four groups
   (by the nearest of four points, or by quarter of the map), and a
   group's key (a power gem on the Desert Isle) lights up once its last
   guard is dead. One tap collects a lit key (no unit has to go there).
@@ -1051,6 +1051,27 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   side, and the gate's picture steps on for each of the first three. The
   bosses' three special moves take turns: a ground pound that throws
   units back, a rain of stones, and four small yetis (golems) at a time.
+  - The Mineral Isle's guards are its trolls and undead, their huts too;
+    the human fort and the Ravager Trolls fight but pay nothing. The
+    fourth brazier brings the Rockdriller (20,000 life, 50,000 at 2 and 3
+    stars). It holds a grudge against whoever hurts it most and shoots
+    from 20 tiles. Once it has fought, it burrows and comes up in turns of
+    15 seconds; burrowed it wanders, can still be hit, and sends up a
+    Sanddriller. Its shots leave slime for 40 seconds, which kills a
+    Sanddriller standing in it. After 5 minutes it rages: up for good,
+    100 every 5 frames, drawn redder. If everyone it could go for is more
+    than 20 tiles off, it goes home to the middle at 25,000 life.
+  - On the Nest Isle the egg is broken first; rocks close the way back,
+    then the Crimson Scale comes (life, attack and speed by the stars). It
+    fights for 20 seconds, then flies one bombing run a star along the
+    arena, setting fires that kill whatever stands in them, lands and lays
+    two eggs a star that hatch draggies, and fights again.
+  - On the Dangerous Isle two golden dragons (two shots a beat, and a
+    quake) guard a path closed by two rocks, which go once both are dead.
+    The black dragon can't be hurt: each of the eight eggs broken wounds
+    it, and hitting an egg calls it onto whoever hit it. The eighth egg
+    kills it and wins. Nothing on the Nest and Dangerous Isles pays but
+    the prize.
   Monks (either side's) turn a unit within 10 tiles to their side instead
   of hitting: 4 each, 24 seconds apart, none with 500 life or more, no
   boss; a turned unit shows lighter, and a monk that has turned its 4
@@ -1267,8 +1288,8 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
   healers... The next camp comes 4 hours later.
 
-**Not yet** (Beta 2's next slices): the twenty scripted camps, the boss
-islands, the monk's conversions, the rarer special moves (shape-shifting, flying, ghosts, shields
+**Not yet** (Beta 2's next slices): the twenty scripted camps, monks at
+home, the rarer special moves (shape-shifting, flying, ghosts, shields
 and the like: their buttons don't show yet), collection pieces dropped by
 enemies, the battle music and the "under attack" alert at home, and the
 original's repair pointer.

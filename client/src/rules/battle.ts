@@ -79,6 +79,9 @@ const KAMIKAZE = 575;
  * life or more, no boss, boss guard or eagle.
  */
 const MONK = 569;
+/** The golden dragons fire twice a beat, the second shot half a second later. */
+const DOUBLE_SHOT = new Set([739]);
+const SECOND_SHOT = 15;
 /** The bosses' small golems and yetis have their own life, whatever the config says (the boss mind sets it). */
 const LIFE_OF = new Map([[537, 100], [544, 120]]);
 const CONVERT_RANGE = 10;
@@ -151,6 +154,14 @@ export interface Fighter {
   sinkingSince?: number;
   /** A summoned unit whose time is up, fading since this frame. */
   fadingSince?: number;
+  /** A boss in a rage (the Rockdriller after 5 minutes): drawn redder. */
+  enraged?: boolean;
+  /** How far it looks for enemies (10 tiles if not set). */
+  aggro?: number;
+  /** Hits don't hurt it (the Dangerous Isle's black dragon): only its island's own wounds do. */
+  invulnerable?: boolean;
+  /** Drawn this many times its size. */
+  scale?: number;
   /** At home: a building of the player's burnt out at 0 life (it counts as dead until repaired in full). */
   ruined?: boolean;
   /** Units with a LIMIT move: how full its bar is, and full (heroes and special units). */
@@ -274,6 +285,14 @@ export class Battle {
    * listens: on the islands, not at home yet.
    */
   onConvert: ((unit: Fighter, by: Fighter) => void) | null = null;
+  /**
+   * The bosses with a mind of their own (rules/bossMinds.ts): the battle
+   * moves them and fires their shots, but leaves the choosing to them.
+   * They hear every hit, and every shot that lands.
+   */
+  readonly ownMind = new WeakSet<Fighter>();
+  readonly onHurt: ((target: Fighter, damage: number, by: Fighter | null) => void)[] = [];
+  readonly onLanded: ((shot: Shot, hit: boolean) => void)[] = [];
 
   constructor(options: BattleOptions) {
     this.ground = options.ground;
@@ -419,7 +438,7 @@ export class Battle {
     if (this.isStilled(unit)) {
       return;
     }
-    if (frame % THINK_EVERY === 0) {
+    if (frame % THINK_EVERY === 0 && !this.ownMind.has(unit)) {
       this.tidy(unit);
       this.think(unit);
     }
@@ -467,7 +486,7 @@ export class Battle {
       // A monk looks only for units it can turn.
       const target = unit.item.id === MONK
         ? (this.canConvert(unit) ? this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, CONVERT_RANGE, (f) => this.convertible(f)) : null)
-        : this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, AGGRO_RANGE);
+        : this.nearestEnemy(unit, { x: unit.tx, y: unit.ty }, unit.aggro ?? AGGRO_RANGE);
       if (target) {
         this.attack(unit, target);
       }
@@ -597,6 +616,14 @@ export class Battle {
           // The engineer has work of its own (repairing siege units), not done here yet.
         } else if (unit.range > 1 && !RANGED_MELEE.has(unit.item.id)) {
           this.shoot(unit, target);
+          if (DOUBLE_SHOT.has(unit.item.id)) {
+            // A second shot from its second mouth.
+            this.after(SECOND_SHOT, () => {
+              if (!unit.dead && !target.dead) {
+                this.shootAt(unit, target);
+              }
+            });
+          }
         } else if (unit.item.id === KAMIKAZE) {
           this.explode(unit);
         } else {
@@ -778,14 +805,18 @@ export class Battle {
       return;
     }
     const where = pointOf(target);
-    if (Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS) {
+    const hit = Math.hypot(where.x - shot.to.x, where.y - shot.to.y) <= BLAST_PIXELS;
+    if (hit) {
       this.hurt(target, shot.damage ?? shot.by.attack, shot.by);
+    }
+    for (const listen of this.onLanded) {
+      listen(shot, hit);
     }
   }
 
   /** Damage, as the Flash client works it out (CLIENT.md, "Battles"). */
-  hurt(target: Fighter, attack: number, by: Fighter | null): void {
-    if (target.dead || !attack) {
+  hurt(target: Fighter, attack: number, by: Fighter | null, force = false): void {
+    if (target.dead || !attack || (target.invulnerable && !force)) {
       return;
     }
     let amount = attack;
@@ -811,6 +842,9 @@ export class Battle {
     if (by) {
       this.onDealt(by, damage, false);
     }
+    for (const listen of this.onHurt) {
+      listen(target, damage, by);
+    }
     if (target.life <= 0) {
       this.kill(target, by);
       return;
@@ -818,7 +852,7 @@ export class Battle {
     if (!by) {
       return;
     }
-    if (target.isUnit) {
+    if (target.isUnit && !this.ownMind.has(target)) {
       this.beingAttacked(target, by);
     } else if (target.attack > 0 && (!target.target || target.target.attack === 0)) {
       target.target = by;

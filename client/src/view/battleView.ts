@@ -28,9 +28,9 @@ const COLOUR_HEAL = 0x6fe36f;
 /** Spells' tints: frozen units blue, poisoned ones green. */
 const TINT_FROZEN = 0x8ec8ff;
 const TINT_POISONED = 0xa8e07a;
-/** As the original marks them: a unit a monk turned shows lighter, a monk that has turned its last redder. */
+/** As the original marks them: a unit a monk turned shows lighter; a monk that has turned its last, and a boss in a rage, redder. */
 const CONVERTED = brighter([0.25, 0.25, 0.25]);
-const MONK_SPENT = brighter([0.25, 0, 0]);
+const REDDER = brighter([0.25, 0, 0]);
 /** The spell marker's picture (the game's AOEMC), and its width in the game: it's drawn (area + 1) / 5 times that. */
 const SPELL_AREA = new URL("../ui/art/spell-area.webp", import.meta.url).href;
 const SPELL_AREA_WIDTH = 406;
@@ -353,7 +353,7 @@ export class BattleView {
       drawn.slot.zIndex = 20000 + buildingPoint(fighter.tx, fighter.ty).y - 27 * (fighter.item.width + fighter.item.height) / 2;
     }
     const glow = fighter === this.hovered || fighter.collectable || this.lit.has(fighter) ? this.glow : null;
-    const mark = fighter.converted ? CONVERTED : (fighter.conversions ?? 0) >= 4 ? MONK_SPENT : null;
+    const mark = fighter.converted ? CONVERTED : (fighter.conversions ?? 0) >= 4 || fighter.enraged ? REDDER : null;
     const filters = [glow, mark].filter((f) => f !== null);
     const now = drawn.slot.filters ?? [];
     if (filters.length !== now.length || filters.some((f, i) => now[i] !== f)) {
@@ -369,6 +369,10 @@ export class BattleView {
    * ground swallows it.
    */
   private sizeOf(fighter: Fighter): number {
+    return this.grownSize(fighter) * (fighter.scale ?? 1);
+  }
+
+  private grownSize(fighter: Fighter): number {
     if (fighter.sinkingSince !== undefined) {
       return Math.max(0, 1 - (this.battle.frame - fighter.sinkingSince) / 15);
     }

@@ -327,7 +327,8 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] The boss islands, part 1: the Arctic Isle (the Giant Yeti) and
         the Desert Isle (the Stone Golem): guards, keys, the gate, the
         boss by level ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] The boss islands, part 2: the Rockdriller, the dragons
+  - [x] The boss islands, part 2: the Rockdriller, the Crimson Scale, the
+        golden and black dragons ([CLIENT.md](CLIENT.md#step-4-battles))
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with
       the Flash game one tap away for a while.

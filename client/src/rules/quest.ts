@@ -161,6 +161,7 @@ export class Quest {
     this.setUp(parts.items, parts.layout);
     if (this.island.boss && bossPlayedHere(this.island.quest)) {
       this.boss = new BossIsland(this.battle, this.island.boss, parts.items, parts.level ?? 1);
+      this.boss.onWin = (capped) => this.win(this.island.endDelay, capped);
       this.remaining = this.boss.keysLeft;
     }
     this.battle.onConvert = (unit) => this.converted(unit);
@@ -355,9 +356,6 @@ export class Quest {
         paid = this.pay(fighter);
       }
       this.boss.fell(fighter);
-      if (this.boss.beaten()) {
-        this.win(this.island.endDelay, true);
-      }
     } else if (fighter.side === ENEMY && !fighter.summoned) {
       paid = this.pay(fighter);
       this.zoneKill(fighter);
@@ -421,12 +419,6 @@ export class Quest {
     }
   }
 
-  /** A boss island's keys by name: "keys", "power gems"... */
-  keyName(count: number): string {
-    const name = (this.boss && this.items.get(this.boss.setup.key)?.name.toLowerCase()) || "key";
-    return count === 1 ? name : `${name}s`;
-  }
-
   /** Whether a tap on this collects it: the lit chest, or a boss island's lit key. */
   canCollect(fighter: Fighter | null): boolean {
     return fighter !== null && Boolean(fighter.collectable) && this.state === "fighting"
@@ -479,6 +471,11 @@ export class Quest {
       this.state = "lost";
       this.endsAt = this.battle.frame;
     }
+  }
+
+  /** Every frame, after the battle's: the bosses with a mind of their own choose. */
+  step(): void {
+    this.boss?.minds.step();
   }
 
   /** Whether the results are due. */

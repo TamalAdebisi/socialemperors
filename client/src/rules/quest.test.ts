@@ -6,6 +6,7 @@ import { Battle, ENEMY, NEUTRAL, SELF, seededRandom } from "./battle.ts";
 import { itemsById, type GameConfig } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
 import islandData from "./islands.json" with { type: "json" };
+import { Dragon } from "./bossMinds.ts";
 import { Quest, armyOf, difficulties, islandGround, islandLock, lastTeam, teamArmy, teamChoices, teamProblem, teamSlots, type Island } from "./quest.ts";
 import type { PlacedItem, SaveItem, Town } from "./town.ts";
 
@@ -313,4 +314,107 @@ test("Desert Isle: by quarters; the last gem takes the altar and brings the gole
   assert.equal(run.state, "fighting");
   for (const golem of boss.bosses) run.battle.kill(golem, null);
   assert.equal(run.state, "won");
+});
+
+test("Mineral Isle: troll and undead guards, huts too, by quarter; the last brazier brings the Rockdriller", () => {
+  const run = start(100000011, 1, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  assert.deepEqual(boss.groups.map((g) => [...g].filter((f) => !f.isUnit).map((f) => f.item.id)), [[134, 134], [], [], []], "the two huts");
+  assert.ok(boss.groups.every((g) => [...g].every((f) => f.item.race === "t" || f.item.race === "e")));
+  const ravager = run.battle.fighters.find((f) => f.item.id === 564)!;
+  assert.equal(ravager.side, ENEMY);
+  assert.ok(!boss.pays(ravager), "the Ravager Trolls fight but pay nothing");
+  assert.equal(run.remaining, 4);
+  for (const group of boss.groups) for (const guard of [...group]) run.battle.kill(guard, null);
+  for (const key of [...boss.keys]) assert.ok(run.collect(key!));
+  assert.equal(boss.bosses.length, 1);
+  const [drill] = boss.bosses;
+  assert.ok(Math.abs(drill.tx - 49) <= 1 && Math.abs(drill.ty - 49) <= 1);
+  assert.equal(drill.maxLife, 20000, "25,000 x 0.8 at 1 star");
+  assert.equal(boss.minds.minds.length, 1, "it chooses for itself");
+  const three = start(100000011, 3, [[510, 3]], 1, 30);
+  for (const group of three.boss!.groups) for (const guard of [...group]) three.battle.kill(guard, null);
+  for (const key of [...three.boss!.keys]) three.collect(key!);
+  assert.deepEqual(three.boss!.bosses.map((b) => b.maxLife), [50000, 50000]);
+  run.battle.kill(drill, null);
+  assert.equal(run.state, "won");
+});
+
+/** A few frames of the battle with the bosses' minds, as the game runs them. */
+function play(run: Quest, frames: number, until?: () => boolean): void {
+  for (let i = 0; i < frames && !until?.(); i++) {
+    run.battle.step();
+    run.step();
+  }
+}
+
+test("Nest Isle: the egg breaks, five rocks close the way, then the Crimson Scale comes, by the stars", () => {
+  const run = start(100000028, 2, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  const egg = run.battle.fighters.find((f) => f.item.id === 437)!;
+  assert.equal(egg.side, ENEMY);
+  assert.equal(boss.goal(), "", "the counter is hidden");
+  const gold = run.gold;
+  run.battle.kill(egg, null);
+  assert.equal(run.gold, gold, "nothing here pays");
+  play(run, 80);
+  // The island's own rocks close the arena's far side; these close the near one.
+  const rocks = run.battle.fighters.filter((f) => f.item.id === 946 && f.tx === 61 && f.ty <= 29).map((f) => f.ty).sort((a, b) => b - a);
+  assert.deepEqual(rocks, [29, 27, 25, 23, 21]);
+  assert.equal(boss.bosses.length, 0, "not yet");
+  play(run, 15);
+  assert.equal(boss.bosses.length, 1);
+  const [dragon] = boss.bosses;
+  assert.deepEqual([dragon.maxLife, dragon.attack, dragon.velocity], [20000, 40, 13], "2 stars");
+  assert.equal(boss.goal(), "Beat the boss!");
+  run.battle.kill(dragon, null);
+  assert.equal(run.state, "won");
+});
+
+test("the Crimson Scale fights 20 seconds, flies its bombing runs setting fires, then lays eggs that hatch draggies", () => {
+  const run = start(100000028, 1, [[510, 3]], 1, 30);
+  run.battle.kill(run.battle.fighters.find((f) => f.item.id === 437)!, null);
+  play(run, 100);
+  const dragon = run.boss!.bosses[0];
+  const mind = run.boss!.minds.minds[0] as Dragon;
+  // Someone for it to fight, close by and hard to kill.
+  run.battle.add(items.get(514)!, dragon.tx + 2, dragon.ty, SELF, { condition: "passive", velocity: 0, life: 1e9, maxLife: 1e9 });
+  play(run, 200, () => mind.engaged);
+  assert.ok(mind.engaged);
+  play(run, 600, () => mind.phase !== "fight");
+  assert.notEqual(mind.phase, "fight", "off on its runs");
+  play(run, 3000, () => mind.phase === "lay");
+  assert.equal(mind.phase, "lay");
+  play(run, 40);
+  assert.equal(mind.draggies.length, 2, "2 eggs at 1 star");
+  assert.ok(mind.draggies.every((d) => d.summoned && d.side === ENEMY));
+  play(run, 30);
+  assert.equal(mind.phase, "fight", "back to fighting");
+});
+
+test("Dangerous Isle: the dragons and eggs by the stars; eggs wound the black dragon; the eighth wins", () => {
+  const run = start(100000033, 1, [[510, 3]], 1, 30);
+  const boss = run.boss!;
+  assert.ok(run.battle.fighters.filter((f) => !boss.bosses.includes(f) && !boss.eggs.has(f) && f.side !== SELF).every((f) => f.side === NEUTRAL),
+    "everything in the file is nobody's");
+  assert.deepEqual(boss.bosses.map((b) => [b.item.id, b.maxLife, b.attack, b.aggro]), [[739, 8000, 40, 20], [739, 8000, 40, 20], [740, 30000, 100, 20]]);
+  assert.equal(boss.eggs.size, 8);
+  assert.ok([...boss.eggs].every((e) => e.maxLife === 5000 && e.side === ENEMY));
+  const black = boss.black!;
+  run.battle.hurt(black, 5000, null);
+  assert.equal(black.life, 30000, "no hit hurts it");
+  const rocks = () => run.battle.fighters.filter((f) => f.item.id === 945 && f.ty === 43).length;
+  assert.equal(rocks(), 2);
+  for (const golden of boss.bosses.filter((b) => b.item.id === 739)) run.battle.kill(golden, null);
+  play(run, 110);
+  assert.equal(rocks(), 0, "the path opens");
+  const eggs = [...boss.eggs];
+  for (const egg of eggs.slice(0, 7)) run.battle.kill(egg, null);
+  assert.ok(black.life < 30000 - 7 * 3000, `wounded: ${black.life}`);
+  assert.equal(run.state, "fighting");
+  run.battle.kill(eggs[7], null);
+  play(run, 50);
+  assert.ok(black.dead);
+  assert.equal(run.state, "won");
+  assert.equal(run.gold, 10000, "the prize, uncut; nothing else pays");
 });

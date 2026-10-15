@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, the Rockdriller and the dragons
+
+- **Kept from the original:** the Rockdriller goes back to 25,000 life when
+  it gives up, whatever the stars (at 2 and 3 stars that's half its life).
+- **The Crimson Scale's bombing runs follow the path finder,** so they're
+  straight lines only where the arena is open, as in the original.
+- **Its eggs hatch where they land without a flight on screen;** the
+  original drew the egg flying.
+- **The Dangerous Isle's sea isn't turned black.** The original darkened
+  the background there; here the island looks like the others.
+- **Each hit on the Rockdriller counts towards its grudge,** and the
+  grudge list forgets the fallen at once (the original kept dead
+  attackers on the list unless they were at the top).
+
 ## 15 October 2026: Beta 2, the Yeti and the Golem
 
 - **The Stone Golem's life at levels 15 to 19 stays the original's 1,900**

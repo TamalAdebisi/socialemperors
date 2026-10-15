@@ -42,7 +42,7 @@
   {"ids":[724],"name":"Avenging Paladin","interval":100,"length":30,"animation":6,"moves":[{"kind":"hit","factor":2,"push":0,"stun":false,"fx":null},{"kind":"whirl","radius":2,"max":20,"factor":0.4545,"every":30,"duration":150,"around":"self","push":1,"stun":false,"poison":null,"fx":null},{"kind":"heal","who":"self","radius":0,"max":1,"amount":100,"factor":0}]},
   {"ids":[727],"name":"Water Wizard hurricane","interval":105,"length":35,"animation":6,"moves":[{"kind":"spawn","minion":728,"count":1,"maxAlive":1,"egg":false}]},
   {"ids":[735],"name":"Werewolf curse","interval":200,"length":70,"animation":6,"moves":[{"kind":"other","note":"its target unit (not a boss) is replaced by a werewolf on its side with 300 life, poisoned for good (attack/2 every 3 s)"}]},
-  {"ids":[739],"name":"Golden Dragon Boss quake","interval":126,"length":42,"animation":6,"moves":[{"kind":"blast","radius":-1,"max":6,"factor":1.5,"around":"self","push":1,"stun":false,"fx":null}]},
+  {"ids":[739],"name":"Golden Dragon Boss quake","interval":126,"length":42,"animation":6,"moves":[{"kind":"blast","radius":-1,"max":6,"factor":1.5,"around":"self","push":2,"stun":false,"fx":null}]},
   {"ids":[740],"name":"Deadly Dragon Boss eggs","interval":35,"length":16,"animation":6,"moves":[{"kind":"spawn","minion":725,"count":1,"maxAlive":3,"egg":true}]},
   {"ids":[753],"name":"Scorpion","interval":105,"length":30,"animation":6,"moves":[{"kind":"hit","factor":1,"push":0,"stun":false,"fx":null},{"kind":"swallow","radius":4,"max":2,"around":"self","maxLife":350}]},
   {"ids":[759],"name":"Valkyr war cry","interval":140,"length":70,"animation":6,"moves":[{"kind":"haste","radius":2,"max":10,"cut":10,"frames":140}]},
