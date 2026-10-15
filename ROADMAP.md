@@ -25,7 +25,7 @@ GitHub Secrets or Railway variables.
 
 | What | Where |
 | --- | --- |
-| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`, in Singapore (moved 14 October 2026). It keeps its data in SQLite on its volume until the move to Supabase ([DEPLOY.md](DEPLOY.md#64-connect-the-servers-to-supabase)) |
+| Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`, in Singapore (moved 14 October 2026). Its data is in Supabase (schema `game`) since 15 October 2026, a fresh start; the old SQLite file stays on its volume as a backup ([DEPLOY.md](DEPLOY.md#64-connect-the-servers-to-supabase)) |
 | Live game data | Supabase project `socialemperors` (Singapore), schema `game`, login `se_game` ([DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)). Railway volume `game-data` at `/data`: the secret key, and the SQLite database from before the move |
 | Staging server | Same Railway project, service `game-server-staging`, deploys the working branch, volume `staging-data`, sleeps when idle; its data in the same Supabase project, schema `staging`, login `se_staging` |
 | Art, sounds, SWFs | Cloudflare R2 bucket `socialempires-assets` at `assets.socialemperors.me`, uploaded by the *Upload assets to R2* GitHub Action |

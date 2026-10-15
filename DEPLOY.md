@@ -404,16 +404,21 @@ backup is kept for 6 days).
 
 ### 6.4 Connect the servers to Supabase
 
+> **Done on 15 October 2026:** staging copied its 23 accounts; the live
+> server started empty.
+>
 > **The live server starts fresh.** The owner wants nothing copied over
 > at Beta 1's launch (ROADMAP, Beta 1), so step 5 adds `SE_COPY_SQLITE=0`,
 > which switches off step 3's automatic copy. Staging copies its players,
 > as the steps say.
 
-1. Supabase → **Connect** (top of the page) → **Session pooler**. Copy the
-   address. It looks like:
+1. Supabase → **Connect** (top of the page) → **Direct** (connection
+   string) → change the method from *Direct connection* to **Session
+   pooler**. Copy the address. It looks like this (the host is `aws-0-…`;
+   trust what Supabase shows):
 
    ```
-   postgresql://postgres.mosoygwxatxkhndasqfp:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   postgresql://postgres.mosoygwxatxkhndasqfp:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    ```
 
    *Why the session pooler?* Railway can only reach addresses of the older
@@ -429,7 +434,7 @@ backup is kept for 6 days).
    brackets). Keep the part after `@` exactly as Supabase gave it:
 
    ```
-   SE_DATABASE_URL=postgresql://se_staging.mosoygwxatxkhndasqfp:SECOND-PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_DATABASE_URL=postgresql://se_staging.mosoygwxatxkhndasqfp:SECOND-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    SE_DATABASE_SCHEMA=staging
    ```
 
@@ -444,7 +449,7 @@ backup is kept for 6 days).
    is the default), and `SE_COPY_SQLITE=0` for the fresh start:
 
    ```
-   SE_DATABASE_URL=postgresql://se_game.mosoygwxatxkhndasqfp:FIRST-PASSWORD@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_DATABASE_URL=postgresql://se_game.mosoygwxatxkhndasqfp:FIRST-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    SE_COPY_SQLITE=0
    ```
 
