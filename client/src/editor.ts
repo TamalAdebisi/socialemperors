@@ -68,6 +68,8 @@ export interface EditorParts {
   sound?: (effect: Effect) => void;
   /** A building's own window, if it has one (the Wizardry Academy's spells): its button on the card. */
   windowOf?: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
+  /** Told when the town goes up a level (the welcome-back chest shows from level 4). */
+  levelled?: () => void;
 }
 
 export class TownEditor {
@@ -87,6 +89,7 @@ export class TownEditor {
   private readonly doings: Doings;
   private readonly sound: (effect: Effect) => void;
   private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
+  private readonly levelled: () => void;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -133,6 +136,7 @@ export class TownEditor {
       camera: this.camera, clock: this.clock, levels: this.levels, shop: this.shop, items: this.items } = parts);
     this.waiting = parts.waiting ?? (() => {});
     this.windowOf = parts.windowOf ?? (() => null);
+    this.levelled = parts.levelled ?? (() => {});
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -1120,6 +1124,7 @@ export class TownEditor {
       this.sound("level-up");
       const prizes = reached.filter((r) => r.prize).map((r) => `${r.prize!.amount} ${r.prize!.resource}`);
       this.say(`Level ${last.level}: ${last.name}!${prizes.length ? ` You get ${prizes.join(", ")}.` : ""}`);
+      this.levelled();
     }
   }
 

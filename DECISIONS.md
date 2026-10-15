@@ -4,6 +4,23 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the welcome-back chest, in both games
+
+- **Your call: the chest stays in both games.** The classic game has
+  offered it since Phase 2 (we switched it on in our copy of the Flash
+  client); the new client had removed it because the original had it off.
+  It's back in the new client, so a new empire gets it whichever it plays.
+- **As the classic game does it:** from level 4, on the empire's first
+  three days, three chests to pick on the 2nd and 3rd day; on the first
+  day (or once the 2nd day's is opened) the window says what tomorrow's
+  holds. Our earlier version had no window on the first day and one chest
+  instead of three.
+- **Its button is the game's own "Reward" box** (exported from the Flash
+  file), where Monday's chest uses the game bar's gift box.
+- **The daily bonus is decided as the town opens,** as in the original:
+  reaching level 5 mid-visit shows it on the next. The chest does show on
+  reaching level 4, as the original's did.
+
 ## 15 October 2026: what's selected is marked
 
 - **The glow is gone:** a selected thing is marked only as in the Flash
@@ -262,7 +279,8 @@ Calls made on the way:
 - **No welcome-back chest.** The Flash client has one, but it is switched
   off inside the game as it was built, by a setting nothing turns on, so
   players never saw it. The new client had offered it, giving prizes the
-  game didn't: removed. (The server still knows the chest's command.)
+  game didn't: removed. (The server still knows the chest's command.) *Reversed 15 October 2026:* our classic game has it switched on, so
+  the owner chose to keep it in both (above).
 - **No skipping goals for cash,** for the same reason: the original's Pay
   button was switched off.
 - **The Sacrifice Altar lets nobody in** from the new client for now,

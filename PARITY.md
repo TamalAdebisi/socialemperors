@@ -36,7 +36,10 @@ changes the save, not just the look.
       town. Ours carry on. S
 - [x] **The welcome-back chest** was switched off inside the Flash client
       as it was built (a setting nothing turns on), so it never showed.
-      Ours offered it: removed. S
+      Ours offered it, and was removed. But our classic game switches it on
+      (`tools/patch_client.py`), so the two clients differed: the owner
+      chose to keep it in both, and ours now offers it as the patched
+      classic game does (from level 4, days 0 to 2, three chests). S
 - [x] **Visiting shows the neighbour's** name, level, gold, wood, food and
       stone in the top bar, and the helps left. Ours shows your own
       numbers (and DECISIONS.md said, wrongly, that the original did). S
