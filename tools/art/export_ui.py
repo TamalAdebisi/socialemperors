@@ -92,6 +92,9 @@ PICTURES = {
     "open-graveyard": ("EP_Graveyard_MC/btnAbrir", 0),
     "open-harbour": ("EP_Harbour_MC/btnAbrir", 0),
     "open-zeppelin": ("EP_Zeppelin_MC/btnAbrir", 0),
+    # The wall gate's card: open it (units pass), close it.
+    "open-gate": ("EP_Wall_MC/btnAbrir", 0),
+    "close-gate": ("EP_Wall_MC/btnAbrir", 1),
     # Pausing: the options panel's pause button, the words GAME PAUSED (the picture's second layer) and RESUME.
     "pause": ("GuiMC/options_panel/bp", 0),
     "game-paused": ("GamePausedMC@1", 0, 1040),

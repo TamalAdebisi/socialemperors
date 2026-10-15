@@ -655,6 +655,32 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
   animals they caught); wild animals and trolls on the island don't
   answer.
 
+**Getting unstuck** (after the owner found villagers stuck; test
+`e2e/tests/stuck.mjs`):
+
+- A unit standing off the bought land (left on the wild ring after a fight
+  at a troll camp, or freed from one) walks back when sent: its way may
+  cross land that isn't bought, but where it's sent must be on the land. A
+  unit standing in a building (a gate shut on it) walks out across it.
+  (`unitPath` and `reachable` in `rules/walking.ts`.)
+- A unit stopped short by something built in its way, on its way to work,
+  repair or go inside, sets off once more from where it stopped. It used to
+  start working from wherever it had stopped.
+- Where a unit stands by a tree, a building or an animal skips tiles other
+  units are walking to, and is chosen by one sweep of what it can reach
+  (a search for each tile could freeze the game for a quarter of a second).
+- A villager done with a tree goes on to the nearest one touching it that
+  it can reach, not just the nearest.
+- The tidy-up as the town opens keeps a unit on the land when it moves it
+  off a building, and moves one off a gate (gates are shut then).
+- A raid stops units' walks where they are; the server hears where.
+- With units selected, tapping land for sale offers it.
+
+**Wall gates** open and close, as in the Flash client: the gate's card has
+Open door (the game's button); open, the gate shows its open picture,
+units walk through it, and Move, Turn, Store and Sell are hidden until
+Close door. It isn't saved: gates are shut each time the town opens.
+
 **Not yet:** the speech bubbles units say now and then, and a mark on the
 ground where a unit is going. (Units sent to a building or a tree: "Villagers
 at work"; wild animals following a unit home: "The living map".)

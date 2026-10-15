@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: villagers getting stuck
+
+- **A unit off the bought land may cross land that isn't bought to get
+  back.** Ours otherwise keep units on the land. The Flash client's path
+  finder doesn't seem to look at the land at all (from reading its code),
+  so its units could walk back from a fight at a camp.
+- **A unit stopped short by something built in its way tries once more**
+  from where it stopped, instead of working from there (the original
+  checked it was close enough first).
+- **The tidy-up keeps units on the land, and no longer leaves one standing
+  on a gate,** where it couldn't move while the gate was shut.
+- **Left as in the original:** trees growing back can still surround a
+  villager (it can chop its way out), and a unit let out of a building or
+  trained may still be put in a closed-off gap.
+
 ## 15 October 2026: selecting several units
 
 - **A group sent to the ground only gets tiles it can walk to.** The

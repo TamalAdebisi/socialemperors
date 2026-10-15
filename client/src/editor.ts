@@ -6,7 +6,7 @@
 
 import type { Command, CommandSender } from "./net/commands.ts";
 import type { ItemInfo } from "./rules/config.ts";
-import { choices, fits, move, refund, sell, store, turn } from "./rules/editing.ts";
+import { choices, fits, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level } from "./rules/levels.ts";
 import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
@@ -21,7 +21,7 @@ import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
 import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
-import { canWalk, findPath, gridFor, isWalkable, unitMoved, walkGrid } from "./rules/walking.ts";
+import { canWalk, isWalkable, tilesUnder, unitMoved, unitPath, walkGrid } from "./rules/walking.ts";
 import { DOUBLE_CLICK_MS, MAX_SELECTED, sameKindNear, squareTiles } from "./rules/group.ts";
 import { takenTiles } from "./rules/editing.ts";
 import { lifeShare } from "./view/selected.ts";
@@ -45,6 +45,7 @@ const MOST_WAITING = 3;
 /** How long "Captured!" shows over a wild animal just caught, as in the Flash client. */
 const CAUGHT_MS = 5000;
 const TOWN_HALL = 135;
+const GATE = 222;
 
 export interface EditorParts {
   town: Town;
@@ -461,19 +462,20 @@ export class TownEditor {
       }
       return;
     }
-    if (units.length > 0 && !placed) {
-      if (this.sendTo(units, this.tileAt(at))) {
-        this.sound("place");  // the Flash client's sound for units sent off
-      }
-      return;
-    }
     if (!placed) {
+      // Land for sale tapped (its sign is on it): offered, units selected or not (they can't go there).
       const tile = this.tileAt(at);
       const block = landForSale(this.town, tile.x, tile.y);
       if (block !== null) {
         this.offerLand(block);
         return;
       }
+    }
+    if (units.length > 0 && !placed) {
+      if (this.sendTo(units, this.tileAt(at))) {
+        this.sound("place");  // the Flash client's sound for units sent off
+      }
+      return;
     }
     const repairers = placed ? units.filter((unit) => this.canRepair(unit, placed)) : [];
     if (placed && repairers.length > 0) {
@@ -575,6 +577,11 @@ export class TownEditor {
    */
   private standingTile(unit: PlacedItem, target: PlacedItem): Point | null {
     return standingTile(this.town, unit, target, this.view.destinations(unit));
+  }
+
+  /** Whether a unit got to the tile it set off for (not stopped short by something built in its way). */
+  private reached(unit: PlacedItem, tile: Point): boolean {
+    return unit.tx === tile.x && unit.ty === tile.y;
   }
 
   /** The player's units selected, to send: the group, or the one selected. */
@@ -688,20 +695,43 @@ export class TownEditor {
     }
     const can = choices(this.town, placed);
     const back = refund(placed.item);
+    // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
+    const shut = !placed.open;
     this.bar.show({
       name: placed.item.name,
       detail: this.detail(placed),
-      move: can.move ? () => this.startMove(placed) : null,
-      turn: can.turn ? () => this.turn(placed) : null,
-      store: can.store ? () => this.store(placed) : null,
-      sell: can.sell ? () => this.sell(placed) : null,
+      move: can.move && shut ? () => this.startMove(placed) : null,
+      turn: can.turn && shut ? () => this.turn(placed) : null,
+      store: can.store && shut ? () => this.store(placed) : null,
+      sell: can.sell && shut ? () => this.sell(placed) : null,
       refund: back ? `${back.amount} ${back.resource}` : "",
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       train: this.trainChoice(placed),
       hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
-      open: this.windowOf(placed),
+      open: this.gateButton(placed) ?? this.windowOf(placed),
       close: () => this.select(null),
     });
+  }
+
+  /** A wall gate of the player's: its button to open it for units to pass, or shut it. */
+  private gateButton(placed: PlacedItem): { label: string; icon: IconName; run: () => void } | null {
+    if (placed.item.subcategory !== GATE || !isTheirs(this.town, placed.item)) {
+      return null;
+    }
+    return placed.open
+      ? { label: "Close door", icon: "close-gate", run: () => this.openGate(placed, false) }
+      : { label: "Open door", icon: "open-gate", run: () => this.openGate(placed, true) };
+  }
+
+  /**
+   * Open a wall gate, so units walk through it, or shut it again. As in the
+   * Flash client it isn't saved: gates are shut each time the town opens.
+   */
+  private openGate(gate: PlacedItem, open: boolean): void {
+    gate.open = open;
+    void this.view.redraw(gate);
+    this.sound("place");
+    this.select(gate);
   }
 
   /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
@@ -754,7 +784,7 @@ export class TownEditor {
    * 25 life back every 61 frames of the Flash client (about 2 seconds)
    * until it's whole, the flames going down as it goes.
    */
-  private repair(unit: PlacedItem, building: PlacedItem): void {
+  private repair(unit: PlacedItem, building: PlacedItem, tries = 2): void {
     const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
@@ -762,6 +792,12 @@ export class TownEditor {
     }
     this.walkTo(unit, tile, () => {
       this.unitStopped(unit);
+      if (!this.reached(unit, tile)) {
+        if (tries > 1 && building.health !== undefined) {
+          this.repair(unit, building, tries - 1);
+        }
+        return;
+      }
       this.view.pose(unit, "PICAR", { x: building.tx, y: building.ty });
       const timer = setInterval(() => {
         if (!this.town.items.includes(unit) || building.health === undefined) {
@@ -816,6 +852,10 @@ export class TownEditor {
       this.clearLine(unit);
     }
     this.headingTo.clear();
+    // Walks stop where they are: the fight moves the units now, and a walk left going would finish unseen and undo it.
+    for (const unit of this.view.stopWalks()) {
+      this.unitStopped(unit);  // the server hears where it got to
+    }
     this.paused = true;
     this.bar.prompt(why, []);
   }
@@ -872,7 +912,7 @@ export class TownEditor {
    */
   private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit), work?: PlacedItem): boolean {
     const from = this.view.headingFor(unit);
-    const path = findPath(gridFor(this.town, unit), from, tile, unit.item.flying);
+    const path = unitPath(this.town, unit, from, tile);
     if (path === null) {
       this.say(`${unit.item.name} can't get there.`);
       return false;
@@ -887,9 +927,12 @@ export class TownEditor {
     if (!this.savedAt.has(unit)) {
       this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
     }
+    // A unit standing in a building (a gate shut on it) walks out across it.
+    const under = tilesUnder(this.town, from);
     this.view.walk(unit, path, (next) => {
-      // Something built in the way since it set off: it stops before it.
-      if (!unit.item.flying && !isWalkable(gridFor(this.town, unit), next.x, next.y)) {
+      // Something built in the way since it set off: it stops before it. (Its path may cross
+      // unbought land when it's on its way back to its own: only buildings count here.)
+      if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isWalkable(walkGrid(this.town, true), next.x, next.y)) {
         return false;
       }
       unit.tx = next.x;
@@ -1020,14 +1063,20 @@ export class TownEditor {
       // Out of reach: work() took it off the line; the one after.
     }
     this.lines.delete(unit);
-    const touching = nextResources(this.town, { x: done.tx, y: done.ty }, done.item.subcategory, (placed) => this.working.has(placed))[0];
-    if (touching) {
-      this.work(unit, touching);
+    // The nearest touching it that it can get to (one walled in by others is passed over).
+    for (const touching of nextResources(this.town, { x: done.tx, y: done.ty }, done.item.subcategory, (placed) => this.working.has(placed))) {
+      if (this.work(unit, touching)) {
+        break;
+      }
     }
   }
 
-  /** A villager sent to a tree or rock: it walks beside it, then works it until it's done. False when it can't get there. */
-  private work(unit: PlacedItem, resource: PlacedItem): boolean {
+  /**
+   * A villager sent to a tree or rock: it walks beside it, then works it
+   * until it's done. False when it can't get there. `tries`: stopped short
+   * on the way (something built in it), it sets off again once from there.
+   */
+  private work(unit: PlacedItem, resource: PlacedItem, tries = 2): boolean {
     const tile = this.standingTile(unit, resource);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${resource.item.name}.`);
@@ -1037,6 +1086,12 @@ export class TownEditor {
       this.unitStopped(unit);
       if (!this.town.items.includes(resource)) {
         this.goOn(unit, resource);  // gone while it walked (another villager finished it)
+        return;
+      }
+      if (!this.reached(unit, tile)) {
+        if (tries <= 1 || !this.work(unit, resource, tries - 1)) {
+          this.goOn(unit, resource);
+        }
         return;
       }
       const work = this.working.get(resource) ?? { since: this.clock(), workers: new Set<PlacedItem>() };
@@ -1105,8 +1160,8 @@ export class TownEditor {
     }
   }
 
-  /** A unit sent into a building: it walks to its door and goes in, if there's still room. */
-  private goInto(unit: PlacedItem, building: PlacedItem): void {
+  /** A unit sent into a building: it walks to its door and goes in, if there's still room (stopped short, it tries once more). */
+  private goInto(unit: PlacedItem, building: PlacedItem, tries = 2): void {
     const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
@@ -1115,6 +1170,13 @@ export class TownEditor {
     this.walkTo(unit, tile, () => {
       if (!this.town.items.includes(building) || !canGoInside(this.town, unit.item, building)) {
         this.unitStopped(unit);
+        return;
+      }
+      if (!this.reached(unit, tile)) {
+        this.unitStopped(unit);
+        if (tries > 1) {
+          this.goInto(unit, building, tries - 1);
+        }
         return;
       }
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };

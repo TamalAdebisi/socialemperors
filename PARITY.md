@@ -74,7 +74,7 @@ changes the save, not just the look.
 - [x] **On the map when selected:** a golden ring under a unit, a golden
       outline of a building's ground, a small life bar over either. Ours
       only glowed. S
-- [ ] **The wall gate opens and closes,** for units to pass (not saved). S
+- [x] **The wall gate opens and closes,** for units to pass (not saved). S
 
 The card's look is the owner's pick (CLIENT.md, "The menus: rail and
 dock"), so these come with a mockup first.
