@@ -4,6 +4,51 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: progress as the original keeps it
+
+- **No more opening buildings early.** The original has a price for it
+  but never wired the shop's "Level N" tag to it, so players couldn't; ours
+  offered Unlock on every locked card. Unlocks already in a save still
+  count.
+- **Reaching level 35 stops the goals** and gives a free Wizardry Academy,
+  with a short message of ours ("Your goals are done!...") where the
+  original showed its notice about the spell book. **The spell box** that
+  takes the goals' place from level 35 is still missing (it's missing on
+  loading too).
+- **Goal doings count only while a goal of their kind is open,** the
+  working-time goals keep the last time chosen, and goal 18 counts the
+  nearest 20 units within a 3-tile circle, as in the original. Island goals
+  still read the stars from the save (a call kept from 15 October).
+
+## 15 October 2026: units walk the whole map, trees grow in the wild
+
+- **Units walk anywhere on the map but under buildings, as in the
+  original.** This client kept them on the bought land; the map of the
+  original showed its paths take the wild ring and land not yet bought
+  too. It reverses "the player's own units still go only on their land"
+  (wild animals, 15 October) and makes "A unit off the bought land may
+  cross land that isn't bought to get back" (villagers getting stuck)
+  simply true of every unit. Tapping land for sale with a unit selected
+  sends it there, as in the original; without one, the land is offered.
+- **Trees, rocks and animals grow in the wild ring and on land not yet
+  bought, never aimed at the player's own,** and after the camp is up.
+  Villagers walk out to them. A town's own land gets no new trees: as in
+  the original.
+
+## 15 October 2026: town rules from the map of the original
+
+- **Moving a building now lets its units out, as in the Flash client.**
+  This reverses "Moving a building keeps its units inside", further down:
+  the map of the original showed it changes the save (their work stops),
+  and PARITY.md asked for the original's rule.
+- **A harbour still waiting for its crew isn't staffed by the client.**
+  The original sends 20 free helpers to one; our server opens the harbour
+  and the zeppelin tower on the next load without a crew list (social.py
+  keeps staff only for the six that fill up again), so none ever waits.
+- **The Nursery's own work is still missing** (with two of a kind inside,
+  a copy comes out when it's collected). It wasn't on the parity list; it
+  stays with the classic game for now.
+
 ## 15 October 2026: Arthur's lessons in the new client
 
 - **Skipping the lessons gives no nest and no draggy**, as in the
@@ -45,51 +90,6 @@ them can be found and reversed. The big, agreed decisions are in
   to the list of rules to fix with the others the map found.
 - **The rules that change the save went to PARITY.md;** those that only
   look or feel different stay in the rule books for their slices.
-
-## 16 October 2026: progress as the original keeps it
-
-- **No more opening buildings early.** The original has a price for it
-  but never wired the shop's "Level N" tag to it, so players couldn't; ours
-  offered Unlock on every locked card. Unlocks already in a save still
-  count.
-- **Reaching level 35 stops the goals** and gives a free Wizardry Academy,
-  with a short message of ours ("Your goals are done!...") where the
-  original showed its notice about the spell book. **The spell box** that
-  takes the goals' place from level 35 is still missing (it's missing on
-  loading too).
-- **Goal doings count only while a goal of their kind is open,** the
-  working-time goals keep the last time chosen, and goal 18 counts the
-  nearest 20 units within a 3-tile circle, as in the original. Island goals
-  still read the stars from the save (a call kept from 15 October).
-
-## 16 October 2026: units walk the whole map, trees grow in the wild
-
-- **Units walk anywhere on the map but under buildings, as in the
-  original.** This client kept them on the bought land; the map of the
-  original showed its paths take the wild ring and land not yet bought
-  too. It reverses "the player's own units still go only on their land"
-  (wild animals, 15 October) and makes "A unit off the bought land may
-  cross land that isn't bought to get back" (villagers getting stuck)
-  simply true of every unit. Tapping land for sale with a unit selected
-  sends it there, as in the original; without one, the land is offered.
-- **Trees, rocks and animals grow in the wild ring and on land not yet
-  bought, never aimed at the player's own,** and after the camp is up.
-  Villagers walk out to them. A town's own land gets no new trees: as in
-  the original.
-
-## 16 October 2026: town rules from the map of the original
-
-- **Moving a building now lets its units out, as in the Flash client.**
-  This reverses "Moving a building keeps its units inside", further down:
-  the map of the original showed it changes the save (their work stops),
-  and PARITY.md asked for the original's rule.
-- **A harbour still waiting for its crew isn't staffed by the client.**
-  The original sends 20 free helpers to one; our server opens the harbour
-  and the zeppelin tower on the next load without a crew list (social.py
-  keeps staff only for the six that fill up again), so none ever waits.
-- **The Nursery's own work is still missing** (with two of a kind inside,
-  a copy comes out when it's collected). It wasn't on the parity list; it
-  stays with the classic game for now.
 
 ## 15 October 2026: the pointer's tools
 
