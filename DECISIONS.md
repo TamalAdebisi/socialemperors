@@ -11,6 +11,43 @@ them can be found and reversed. The big, agreed decisions are in
   owner asked for the original's look). This reverses "Selected units
   glow", further down.
 
+## 15 October 2026: Beta 2, the harbour, the zeppelin and pausing
+
+- **The new client gives the harbour and the zeppelin tower,** as the
+  Flash client does when the town opens, rather than the server. So a
+  town played only here gets them too.
+- **They're placed where they fit whole.** The original checked a 3 by 3
+  space for these 4 by 4 buildings, so they could overlap something.
+- **"Dock operative!" is a line at the top,** not a window with a
+  picture, so it doesn't stand in front of the camp's window as the town
+  opens.
+- **A monk's turning lasts the fight at home.** When a fight in the town
+  ends, a unit of the player's still turned is the player's again, and a
+  turned enemy that isn't in the save (a raider) goes with the fight. The
+  original kept them turned until the page was opened again.
+- **Pausing pauses whatever is open.** The original didn't pause on
+  losing focus while one of its windows was open; ours don't stop the
+  town beside them, so the game pauses anyway.
+
+## 15 October 2026: Beta 2, the graveyards
+
+- **A list, not pages of six.** The Graveyard's units and the heroes show
+  as rows in our side window, like every other window here, rather than
+  six (or four) at a time with arrows.
+- **In the shop's order.** The original listed the fallen in no set
+  order; ours follow the shop.
+- **The potion pack is 100 cash for one potion,** the price this server
+  already used (from the project we forked). Social Point's real price
+  isn't known.
+- **Our own words when there isn't the cash for potions:** the game's
+  text for it is missing from its files.
+- **The original's quirks kept:** a unit brought back for gold costs its
+  whole price in food too; a hero comes back, or is bought at the altar,
+  without a check on room for people, and its experience comes again.
+- **The Altar of Heroes needs the altar:** its window opens from the
+  altar's card, so a hero always stands beside it (the original could
+  also send one to storage).
+
 ## 15 October 2026: Beta 2, scripted camps (part 3)
 
 - **A festival's steps show in order:** two keys taken show the first two

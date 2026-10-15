@@ -56,6 +56,8 @@ export interface ConfigItem {
   /** How many of it a town may have (0: no limit), and what it costs in cash instead. */
   units_limit?: string;
   cost_unit_cash?: string;
+  /** How many potions bring the unit back from the graveyard. */
+  potion?: string;
   /** Battles (rules/battle.ts): hit points, damage a hit, taken off each hit,
    * reach in tiles, frames between hits (30 a second). */
   life?: string;
@@ -129,6 +131,10 @@ export interface ItemInfo {
   cashCost: number;
   cost: number;
   costType: string;
+  /** Units: how many potions bring it back from the graveyard. */
+  potion?: number;
+  /** A social building (the config's social_items: staffed by friends or helpers, like the harbour). */
+  social?: boolean;
   /** How many ways it can face: turning it goes round these. */
   facings: number;
   /** What it produces and how, or null when it doesn't (rules/production.ts). */
@@ -181,6 +187,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     cashCost: Number(item.cost_unit_cash) || 0,
     cost: Number(item.cost) || 0,
     costType: item.cost_type ?? "g",
+    potion: Number(item.potion) || 0,
     facings: Math.max(Number(item.max_frame) || 1, 1),
     production: productionOf(item, chosenTime),
     inStore: Number(item.in_store) || 0,
@@ -205,9 +212,14 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
 /** The config's items by id. */
 export function itemsById(config: GameConfig): Map<number, ItemInfo> {
   const chosenTime = new Set((config.globals?.COLLECT_VARIABLE_IDS ?? []).map(Number));
+  const social = new Set(((config.social_items ?? []) as { id: number | string }[]).map((s) => Number(s.id)));
   const items = new Map<number, ItemInfo>();
   for (const item of config.items) {
-    items.set(Number(item.id), itemInfo(item, chosenTime));
+    const info = itemInfo(item, chosenTime);
+    if (social.has(info.id)) {
+      info.social = true;
+    }
+    items.set(info.id, info);
   }
   return items;
 }

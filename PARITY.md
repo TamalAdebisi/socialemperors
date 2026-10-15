@@ -148,9 +148,10 @@ carts; Arthur. These were checked against the original line by line.
 
 ## Not for Beta 1
 
-**Beta 2:** health and fighting numbers in battle, defending the town
-(raids, sieges, the enemy camp), fire and repair, spells, heroes and their
-graveyard, the dock and zeppelin, pausing.
+**Beta 2 (now in the new client, still to check side by side):** health
+and fighting numbers in battle, defending the town (raids, sieges, the
+enemy camp), fire and repair, spells, heroes and their graveyard, the dock
+and zeppelin, pausing.
 
 **Later:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit

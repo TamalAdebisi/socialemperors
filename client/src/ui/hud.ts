@@ -31,6 +31,8 @@ export interface HudActions {
   sound?: SoundSwitches;
   /** The town's people and the room for them. */
   population?: (town: Town) => { current: number; max: number };
+  /** Pausing (ui/pause.ts): its button goes before the music's. */
+  pause?: { button(): HTMLButtonElement };
 }
 
 export interface Hud {
@@ -134,6 +136,10 @@ export function showHud(town: Town, actions: HudActions): Hud {
     sound.onChange(show);
     show();
     music.hidden = effects.hidden = false;
+  }
+
+  if (actions.pause) {
+    bar.querySelector("[data-music]")!.before(actions.pause.button());
   }
 
   const fullscreen = bar.querySelector<HTMLButtonElement>("[data-fullscreen]")!;

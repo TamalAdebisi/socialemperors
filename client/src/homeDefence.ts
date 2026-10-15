@@ -47,6 +47,7 @@ const REPAIR_EVERY = 61;
 const KILL_GOLD = 5;
 /** Heroes and villagers (500, 501) don't go to the graveyard when they fall at home; heroes are counted apart. */
 const NOT_BURIED = new Set([500, 501, 533, 534, 535, 550, 554, 555, 556, 557]);
+const VILLAGERS = new Set([500, 501]);
 
 export interface DefenceParts {
   town: Town;
@@ -64,6 +65,8 @@ export interface DefenceParts {
   /** The game's clock (the server's time, seconds), and the save's troll camp (homeCamps.ts). */
   clock: () => number;
   camp: { id: number; last: number; vars?: Record<string, unknown> };
+  /** One of the player's units fell and is counted in the graveyard (heroes too), for the windows. */
+  buried?: (id: number) => void;
   random?: () => number;
 }
 
@@ -203,6 +206,9 @@ class Fight {
     const { town, items } = parts;
     this.battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random, home: true,
       onDeath: (fighter) => this.died(fighter) });
+    // Monks turn units at home too. As in the Flash client the server isn't told: a unit turned
+    // and then killed dies as an enemy (kill), and a raider turned fights for the player until it's gone.
+    this.battle.onConvert = () => {};
     for (const placed of town.items) {
       const side = sideOf(town, placed);
       const fighter = this.battle.add(placed.item, placed.tx, placed.ty, side, { tag: placed });
@@ -383,6 +389,9 @@ class Fight {
       // As the Flash client: sold as killed, where the server last had it; to the graveyard but for villagers and heroes.
       const from = this.saved(placed);
       commands.add("sell", from.x, from.y, placed.item.id, town.id, 1, "KILL", NOT_BURIED.has(placed.item.id) ? 0 : 1);
+      if (!VILLAGERS.has(placed.item.id)) {
+        this.parts.buried?.(placed.item.id);  // heroes are sent 0 but counted all the same, as in the Flash client
+      }
       town.items.splice(town.items.indexOf(placed), 1);
       this.placedOf.delete(fighter);
       this.parts.view.remove(placed);

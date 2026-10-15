@@ -1454,8 +1454,63 @@ camps players reach, our own notes on the original's tables) and
   doors, and the festivals' buildings, are nobody's (they can't be
   attacked, and their towers don't shoot).
 
-**Not yet:** monks turning units at home, and the collection pieces
-dropped by enemies (they come with the collections, in the last stop).
+**The graveyard**, the same way. Code: `rules/graveyard.ts` (the rules,
+with tests) and `ui/graveyard.ts` (the three windows).
+
+- **Who goes there:** every unit of the player's that falls, at home or
+  on an island, is counted in the save (`privateState.deadHeroes`, unit:
+  how many). At home the client counts it as it sends the death (`sell`
+  ... "KILL"); after an island the server has counted the losses. Villagers
+  aren't kept. Heroes are kept apart, for their own graveyard.
+- **The Graveyard** (its card's Open): the fallen of the town's race
+  bought with gold or cash, by the shop's order. Each comes back for its
+  potions, or for half its price: half the cash, or half the gold and its
+  whole price in food, as in the original. Room for people and the units
+  limit are checked first. It stands on the nearest free tile to the
+  graveyard (`resurrect_hero`, the last argument "1" for potions). The
+  window stays open. Potions are bought below (`graveyard_buy_potions`,
+  100 cash for one, from `config/patch/graveyard.json`).
+- **The Heroes' Graveyard:** the eight heroes, how many have fallen, and
+  their price: 500 gold for each cash of the hero's price. The hero's
+  experience comes again, and the window closes after each.
+- **The Altar of Heroes:** the eight heroes for cash (`buy_cash`), each
+  from its level; it stands beside the altar.
+- **Not yet:** the Blue Phoenix's egg (it would hatch the phoenix again
+  if it lasts five seconds); a phoenix that falls goes to the graveyard.
+
+**The harbour and the zeppelin**, the same way. Code: `rules/dock.ts`
+(with tests).
+
+- **Given:** each time a human town opens, a harbour it hasn't got (on the
+  map or in storage) is put down for free on the player's land nearest
+  tile (59, 59), unless the Prisoner Princess still waits in the town;
+  from level 30 the zeppelin tower too. A new one is staffed at once by 20
+  free helpers and opened (`buy` free, `buy_si_help` 20 times,
+  `finish_si`), and the message at the top says so. Troll towns get
+  neither.
+- **Open:** the harbour's card opens the island map at its first page,
+  the zeppelin tower's at its third (with no army, a line says why not).
+  Neither is needed to sail: the Quests button opens the map without
+  them, as in the original.
+- **Drawn open:** the harbour's picture, like other social buildings'
+  (the Church, the second mill...), has two frames: open, and in
+  scaffolding while it waits for its staff. They're drawn open, as the
+  server opens them for good; they used to flicker between the two.
+
+**Pausing**, the same way. Code: `ui/pause.ts`. The game stops when the
+page loses the player (another window, another tab), or from the pause
+button by the music and sound buttons, at home and on an island. A
+dark curtain and the game's GAME PAUSED say so; RESUME, or any key let go,
+starts it again. While paused nothing moves (the drawing's clock stops);
+work and training go on, as they're the server's clock.
+
+**Monks at home** turn units as on the islands (four each, one every 24
+seconds). As in the Flash client the server isn't told: a unit of the
+player's turned and then killed dies as an enemy (`kill`, so it's gone,
+not buried), and an enemy turned fights for the player.
+
+**Not yet:** the collection pieces dropped by enemies (they come with the
+collections, in the last stop).
 
 ### Making the art look better
 

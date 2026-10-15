@@ -109,10 +109,19 @@ export class IslandsWindow {
     this.showFurthest();
   }
 
-  open(): void {
+  /** Open it; `page` (from 1) shows that page of the map, as the harbour (1) and the zeppelin tower (3) do. */
+  open(page?: number): void {
     this.fill();
     this.panel.open();
-    this.showFurthest();
+    if (page === undefined) {
+      this.showFurthest();
+      return;
+    }
+    requestAnimationFrame(() => {
+      this.size();
+      const width = Number.parseFloat(this.sea.style.getPropertyValue("--page")) || NARROWEST_PAGE;
+      this.sea.scrollLeft = (Math.min(Math.max(page, 1), PAGES) - 1) * width;
+    });
   }
 
   /** Sized to the window, and scrolled to the furthest island open. */
