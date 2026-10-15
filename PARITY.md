@@ -94,7 +94,7 @@ dock"), so these come with a mockup first.
       seconds, with a bar and its sounds, and can't be used meanwhile. M
 - [ ] **Turning while placing** (Space), and on phones seeing where a
       building will go before it's bought. S
-- [ ] **Clean-up on load:** overlapping buildings go to storage, units on
+- [x] **Clean-up on load:** overlapping buildings go to storage, units on
       a taken tile step aside, a town with no villager gets one. S
 - [ ] **Small things:** "for sale" signs on closed land; tapping the ready
       bubble collects; the refund rises as a number when selling; a name
