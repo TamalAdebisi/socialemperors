@@ -164,6 +164,13 @@ export class Camera {
     this.apply();
   }
 
+  /** Put a point of the map in the middle of the screen. */
+  lookAt(point: Point): void {
+    this.centre = { ...point };
+    this.velocity = { x: 0, y: 0 };
+    this.apply();
+  }
+
   /** How big the map is drawn: 1 is the art's own size. */
   get scale(): number {
     return this.zoom;

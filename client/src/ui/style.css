@@ -1695,3 +1695,237 @@ body {
   color: #b3261e;
   font-weight: 800;
 }
+
+/* ---- Spells (ui/spells.ts) ----------------------------------------------- */
+/* The spell book in battle: bottom left, as in the Flash client, the book
+   with the mana left beside it, its spells in a row above when open. */
+.spell-book {
+  position: fixed;
+  z-index: 3;
+  left: max(var(--edge), env(safe-area-inset-left));
+  bottom: max(var(--edge), env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: end;
+  gap: 4px 6px;
+  font-family: var(--round);
+}
+
+.spell-book-button {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.spell-book-button:hover {
+  transform: scale(1.07);
+}
+
+.spell-book-button .icon {
+  width: 64px;
+  height: auto;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+.spell-book-label {
+  position: relative;
+  z-index: 1;
+  margin-top: -14px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #23408f;
+  color: #fff;
+  font: 800 13px var(--round);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.spell-book-button.cancel .spell-book-label {
+  background: #c8321f;
+}
+
+.spell-mana {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.spell-mana .icon,
+.mana-pill .icon {
+  height: 22px;
+}
+
+.spell-list {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: min(420px, calc(100vw - 32px));
+  margin: 0 0 4px;
+  padding: 6px;
+  list-style: none;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: var(--parchment);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.spell-list[hidden] {
+  display: none;
+}
+
+.spell-empty {
+  max-width: 260px;
+  padding: 4px;
+  font-size: 14px;
+}
+
+.spell-button {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border: 2px solid var(--wood);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.spell-button:hover {
+  outline: 3px solid var(--gold-edge);
+}
+
+.spell-button.short {
+  filter: grayscale(0.7);
+}
+
+.spell-button-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spell-cost {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  min-width: 18px;
+  padding: 0 3px;
+  border-radius: 9px;
+  background: #1c6c9a;
+  color: #fff;
+  font: 800 12px/18px var(--round);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* The Wizardry Academy's window: the mana bank on top, then every spell. */
+.mana-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.mana-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mana-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mana-bank .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0;
+}
+
+.mana-bank .icon {
+  height: 18px;
+}
+
+.spell-said {
+  min-height: 1.3em;
+  font-weight: 700;
+}
+
+.spell-row {
+  align-items: flex-start;
+}
+
+.spell-row .row-text strong {
+  white-space: normal;
+}
+
+.spell-picture {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.spell-facts {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.spell-facts .icon {
+  height: 16px;
+}
+
+.spell-learn,
+.spell-known {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+  text-align: right;
+}
+
+.spell-learn .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 90px;
+  justify-content: center;
+  margin: 0;
+}
+
+.spell-learn .icon {
+  height: 16px;
+}
+
+.spell-known small {
+  max-width: 120px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.spell-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.spell-stars .icon {
+  height: 20px;
+}

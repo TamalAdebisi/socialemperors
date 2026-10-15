@@ -4,6 +4,44 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, spells
+
+Where the original had a bug, the spell does what it was plainly meant to:
+
+- **Fire Havoc falls where the marker is.** The original's random square
+  sat two tiles up and left of the marker (it took half the area off
+  twice), and its aimed fireballs looked a tile off too.
+- **Ether Shield covers the marker's square at every rank.** The original
+  read the wrong area, so rank 1 covered 7 x 7, rank 2 covered 9 x 9 and
+  rank 3 covered nothing at all.
+- **2x Range works on units, with its timer.** The original tried towers
+  too, stopped with an error at the first one, and left the units before
+  it with doubled range for good.
+- **Summoned units' life is their own.** The original wrote the spell's
+  life into the item's shared data, which would also have changed your
+  own Bahamut dragons of that kind.
+
+And where it wasn't a bug, the original stands:
+
+- **Poison doesn't spread,** as in the original (its spreading code never
+  worked, so players never saw it), though the code meant it to at ranks
+  2 and 3.
+- **A freeze or knock-down lasts until the later of the two ends;** the
+  original freed a unit when the first one ended. The original's 10-point
+  hit when a freeze ended on a tile your unit shared is left out.
+- **No "spell cast" banner:** the game's banner has one spell's name
+  painted into it ("Age of Colossus"), so it can't show the others. The
+  spell's name and its mana float up from the tile instead, as they also
+  do in the original.
+- **The spell book's spells are in one row** (all you know, up to 15)
+  instead of the original's fan of three with arrows; it's quicker, and
+  fits a phone.
+- **Extras:** Escape cancels aiming; on a touch screen the first tap shows
+  the marker and a second casts (the original needed a mouse); the
+  Academy's window shows how many casts are left to the next rank.
+- **The island's ground no longer shows a thin blue line** where its
+  blocks meet: each block is drawn a few pixels bigger from its middle.
+
 ## 15 October 2026: Beta 2, the island map
 
 - **The Quests window is the game's own island map,** in the panel on the

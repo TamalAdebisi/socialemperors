@@ -306,7 +306,10 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] The island map: the game's own painted map, its ribbons, stars,
         padlocks and Enter Now; the team of 20 for the last islands
-  - [ ] Spells and the heroes' special moves
+  - [x] Spells: the fifteen spells as the Flash client casts them, the
+        Wizardry Academy's window, the mana bank and the spell book in
+        battle ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] The heroes' and special units' moves
   - [ ] Defending the town (troll camps, bandits, sieges)
   - [ ] The boss islands and the Hero Isle
 - [ ] **The switch** (steps 5 and 6): battles against players, the long

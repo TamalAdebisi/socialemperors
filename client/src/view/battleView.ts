@@ -2,17 +2,17 @@
 // has it (walking, fighting, falling), the shots in the air, life bars and
 // the damage that rises from a hit. It only draws: the battle decides.
 
-import { ColorMatrixFilter, Container, Graphics, Sprite } from "pixi.js";
+import { Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
-import { DEAD_FRAMES, ENEMY, SELF, type Battle, type BattleEvent, type Fighter, type Shot } from "../rules/battle.ts";
+import { DEAD_FRAMES, ENEMY, SELF, type Battle, type BattleEvent, type Effect, type Fighter, type Shot } from "../rules/battle.ts";
 import type { ItemInfo } from "../rules/config.ts";
-import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, type Point } from "../rules/geometry.ts";
+import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitPoint, type Point } from "../rules/geometry.ts";
 import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
 import { isOpaqueAt } from "./hit.ts";
 import { Markers } from "./markers.ts";
 import { buildingSprite, unitSprite, type Pose } from "./townView.ts";
-import type { Effect } from "../sound.ts";
+import type { Effect as SoundEffect } from "../sound.ts";
 
 /** The units whose death cry is a woman's: villager women, healers, the princess, the valkyrie. */
 const WOMEN = new Set([501, 502, 590, 533, 554]);
@@ -24,6 +24,21 @@ const BAR_WIDTH = 44;
 const COLOUR_HURT_MINE = 0xff5a4a;
 const COLOUR_HURT_THEIRS = 0xffe35a;
 const COLOUR_HEAL = 0x6fe36f;
+/** Spells' tints: frozen units blue, poisoned ones green. */
+const TINT_FROZEN = 0x8ec8ff;
+const TINT_POISONED = 0xa8e07a;
+/** The spell marker's picture (the game's AOEMC), and its width in the game: it's drawn (area + 1) / 5 times that. */
+const SPELL_AREA = new URL("../ui/art/spell-area.webp", import.meta.url).href;
+const SPELL_AREA_WIDTH = 406;
+/** A lasting effect fades over a second when its time is up. */
+const EFFECT_FADE = 30;
+
+interface Playing {
+  effect: Effect;
+  sprite: Sprite;
+  frames: Texture[] | null;
+  lastPart: number;
+}
 
 interface Drawn {
   slot: Container;
@@ -49,19 +64,31 @@ export class BattleView {
   private readonly drawn = new Map<Fighter, Drawn>();
   private readonly shots = new Map<Shot, Sprite>();
   private readonly glow = new ColorMatrixFilter();
+  /** Spells' pictures: on the ground (under the fighters) and in the air. */
+  private readonly floor = new Container();
+  private readonly playing: Playing[] = [];
+  /** The spell marker while aiming, and what it lights up. */
+  private readonly marker = new Sprite();
+  private lit = new Set<Fighter>();
   /** The units the player has picked, outlined on the ground. */
   selected = new Set<Fighter>();
   private hovered: Fighter | null = null;
 
-  private readonly sound: (effect: Effect) => void;
+  private readonly sound: (effect: SoundEffect) => void;
 
-  constructor(art: ArtLibrary, battle: Battle, sound: (effect: Effect) => void = () => {}) {
+  constructor(art: ArtLibrary, battle: Battle, sound: (effect: SoundEffect) => void = () => {}) {
     this.art = art;
     this.battle = battle;
     this.sound = sound;
     this.things.sortableChildren = true;
     this.glow.brightness(1.4, false);
-    this.root.addChild(this.ground, this.rings, this.things, this.air, this.bars, this.markers.layer);
+    this.marker.visible = false;
+    this.marker.anchor.set(0.5);
+    this.marker.alpha = 0.85;
+    void Assets.load<Texture>(SPELL_AREA).then((texture) => {
+      this.marker.texture = texture;
+    });
+    this.root.addChild(this.ground, this.rings, this.marker, this.floor, this.things, this.air, this.bars, this.markers.layer);
   }
 
   /** The island's ground: one terrain picture per block of 20 x 20 tiles, the sea's included. */
@@ -83,9 +110,14 @@ export class BattleView {
         const sprite = new Sprite(texture);
         sprite.anchor.copyFrom(anchorOf(texture));
         const at = buildingOrigin(buildingPoint(BLOCK_TILES * gx + BLOCK_TILES - 1, BLOCK_TILES * gy + BLOCK_TILES - 1), bounds);
-        sprite.position.set(at.x, at.y);
-        // A few pixels bigger, so the sea doesn't show through the seams between blocks.
-        sprite.scale.set(1 + 4 / Math.max(texture.width, 1));
+        // A few pixels bigger all round, grown from its middle, so the sea doesn't show
+        // through the seams where blocks meet (their edges are soft, half see-through).
+        const grow = 1 + 24 / Math.max(texture.width, 1);
+        const middle = sprite.getLocalBounds();
+        const cx = middle.x + middle.width / 2;
+        const cy = middle.y + middle.height / 2;
+        sprite.scale.set(grow);
+        sprite.position.set(at.x + cx * (1 - grow), at.y + cy * (1 - grow));
         this.ground.addChild(sprite);
       }
     }
@@ -119,6 +151,89 @@ export class BattleView {
     for (const [shot, sprite] of this.shots) {
       this.placeShot(shot, sprite);
     }
+    for (const playing of [...this.playing]) {
+      this.playEffect(playing);
+    }
+  }
+
+  /**
+   * The spell marker over a square of tiles (its bottom corner `tile`, `area`
+   * tiles a side), lighting up `lit`; null hides it.
+   */
+  aim(aiming: { tile: Point; area: number; lit: Fighter[] } | null): void {
+    this.lit = new Set(aiming?.lit ?? []);
+    this.marker.visible = aiming !== null;
+    if (!aiming) {
+      return;
+    }
+    const half = (aiming.area - 1) / 2;
+    const middle = unitPoint(aiming.tile.x - half, aiming.tile.y - half);
+    this.marker.position.set(middle.x, middle.y);
+    const width = (SPELL_AREA_WIDTH * (aiming.area + 1)) / 5;
+    this.marker.scale.set(width / Math.max(1, this.marker.texture.width));
+  }
+
+  private async addEffect(effect: Effect): Promise<void> {
+    const sprite = new Sprite();
+    sprite.visible = false;
+    sprite.alpha = effect.alpha ?? 1;
+    sprite.scale.set(effect.scale ?? 1);
+    sprite.position.set(effect.at.x, effect.at.y);
+    (effect.above ? this.air : this.floor).addChild(sprite);
+    const playing: Playing = { effect, sprite, frames: null, lastPart: 0 };
+    this.playing.push(playing);
+    const art = await this.art.get(effect.art);
+    if (sprite.destroyed) {
+      return;
+    }
+    if (!art) {
+      this.stopEffect(playing);
+      return;
+    }
+    const { frames, lastPart } = art.timeline();
+    playing.frames = frames;
+    playing.lastPart = lastPart;
+  }
+
+  /** An effect at the battle's frame: one picture a frame, going round its last part while it lasts. */
+  private playEffect(playing: Playing): void {
+    const { effect, sprite, frames } = playing;
+    if (!frames) {
+      return;
+    }
+    const age = this.battle.frame - effect.start;
+    if (age < 0) {
+      return;
+    }
+    let index = age;
+    if (effect.until === undefined) {
+      if (age >= frames.length) {
+        this.stopEffect(playing);
+        return;
+      }
+    } else {
+      if (this.battle.frame >= effect.until + EFFECT_FADE) {
+        this.stopEffect(playing);
+        return;
+      }
+      if (index >= frames.length) {
+        const loop = Math.max(1, frames.length - playing.lastPart);
+        index = playing.lastPart + ((index - frames.length) % loop);
+      }
+      const fade = Math.max(0, this.battle.frame - effect.until);
+      sprite.alpha = (effect.alpha ?? 1) * (1 - fade / EFFECT_FADE);
+    }
+    const texture = frames[index];
+    if (sprite.texture !== texture) {
+      sprite.texture = texture;
+      sprite.anchor.copyFrom(anchorOf(texture));
+    }
+    sprite.visible = true;
+  }
+
+  private stopEffect(playing: Playing): void {
+    playing.sprite.destroy();
+    this.playing.splice(this.playing.indexOf(playing), 1);
   }
 
   private event(event: BattleEvent): void {
@@ -162,12 +277,20 @@ export class BattleView {
       case "gone":
         this.remove(event.fighter);
         break;
+      case "effect":
+        void this.addEffect(event.effect);
+        break;
     }
   }
 
   /** Words or numbers rising from a fighter (what a kill paid). */
   rise(fighter: Fighter, lines: { text: string; colour: number }[]): void {
     this.markers.rise(this.topOf(fighter), lines);
+  }
+
+  /** Words or numbers rising from a point of the map (a spell's name and its mana). */
+  riseAt(at: Point, lines: { text: string; colour: number }[]): void {
+    this.markers.rise({ x: at.x, y: at.y - 40 }, lines);
   }
 
   private remove(fighter: Fighter): void {
@@ -200,6 +323,11 @@ export class BattleView {
     if (fighter.isUnit) {
       const picture = drawn.slot.children[0];
       picture?.position.set(fighter.at.x, fighter.at.y);
+      picture?.scale.set(this.sizeOf(fighter));
+      drawn.slot.tint = this.battle.isFrozen(fighter) ? TINT_FROZEN : fighter.poison ? TINT_POISONED : 0xffffff;
+      if (fighter.fadingSince !== undefined) {
+        drawn.slot.alpha = Math.max(0, 1 - (this.battle.frame - fighter.fadingSince) / 15);
+      }
       // Further down the screen is nearer: drawn later.
       drawn.slot.zIndex = 20000 + fighter.at.y;
       if (fighter.dead) {
@@ -210,9 +338,26 @@ export class BattleView {
     } else {
       drawn.slot.zIndex = 20000 + buildingPoint(fighter.tx, fighter.ty).y - 27 * (fighter.item.width + fighter.item.height) / 2;
     }
-    drawn.slot.filters = fighter === this.hovered || fighter.collectable ? [this.glow] : [];
+    drawn.slot.filters = fighter === this.hovered || fighter.collectable || this.lit.has(fighter) ? [this.glow] : [];
     this.drawBar(fighter, drawn);
     this.drawRing(fighter, drawn);
+  }
+
+  /**
+   * How big a unit is drawn: twice its size while Age of Colossus lasts
+   * (growing and shrinking over half a second), smaller and smaller as the
+   * ground swallows it.
+   */
+  private sizeOf(fighter: Fighter): number {
+    if (fighter.sinkingSince !== undefined) {
+      return Math.max(0, 1 - (this.battle.frame - fighter.sinkingSince) / 15);
+    }
+    const until = fighter.enlargedUntil ?? 0;
+    const frame = this.battle.frame;
+    if (frame >= until) {
+      return Math.max(1, 2 - (frame - until) / 15);
+    }
+    return Math.min(2, 1 + Math.max(0, frame - (fighter.grewAt ?? frame - 15)) / 15);
   }
 
   /** What a unit is doing, for its picture. */

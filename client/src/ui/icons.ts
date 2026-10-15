@@ -44,6 +44,9 @@ export const ICONS = {
   "my-town": new URL("./art/my-town.webp", import.meta.url).href,
   "star-on": new URL("./art/star-on.webp", import.meta.url).href,
   "star-off": new URL("./art/star-off.webp", import.meta.url).href,
+  // Spells: the book that opens them in battle, and mana.
+  "spell-book": new URL("./art/spell-book.webp", import.meta.url).href,
+  mana: new URL("./art/mana.webp", import.meta.url).href,
 } as const;
 
 export type IconName = keyof typeof ICONS;

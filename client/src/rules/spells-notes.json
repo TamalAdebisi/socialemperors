@@ -1,0 +1,619 @@
+{
+  "_about": "The 15 spells (config table 'magics', ids 2 to 16), as rules in our own words from reading the Flash client (core/magic/, MagicManager, MagicParticle, MagicParticleSpell, IsoUnit, IsoFightingElement, IsoEngine). Times are frames at 30 a second, counted from the click that casts. A is the rank's area (the 'area' list, side of the square in tiles); (tx, ty) is the tapped tile. 'Circle of radius R around (x, y)' means fighters whose own tile (tx, ty; a building's last tile) has (dx*dx + dy*dy) <= R*R, the way the client's getNearestUnits picks, sorted nearest first and cut to the given maximum. 'Battle.hurt(target, n, null)' means the client's normal damage with no attacker: amount plus or minus 4 at random, 1 in 10 a critical ((amount + |variance|) * 1.5), then the shield factor, then minus defence, rounded, at least 1; with no attacker nobody hits back or calls for help. 'spared' lists subcategories (subcat_functional) that are immune; other immunities are in the rules. Subcategories: 84 boss, 135 town hall, 811 treasure, 812 activator, 71 villager. Item 630 Summoned Golem, 631 Summoned Yeti. Fields: 'target' only says which side is highlighted while aiming (2 enemies, 1 own, 0 none). 'byRank' durations and gaps are frames; 'radius' and 'max' are the circle's radius and the most fighters taken; 'lasts' 0 means no time limit.",
+  "ranks": {
+    "uses2": 25,
+    "uses3": 50,
+    "rules": "A spell's rank comes from how many times the player has cast it (privateState.magics[id]): rank 1 below 25, rank 2 from 25, rank 3 from 50. The client adds one to the count before the spell works out its numbers, so the 25th cast is already a rank 2 cast and the 50th a rank 3 one; the marker drawn while aiming still uses the count before the cast. The server counts use_magic the same way."
+  },
+  "casting": {
+    "tile": "The tile under the mouse (the same pick as everywhere else on the map). It is not the centre of the square: it is its bottom corner, the tile with the largest x and y. While aiming, the client highlights fighters of side 'target' on the A x A tiles x from tx-A+1 to tx and y from ty-A+1 to ty, and draws the marker (the AOE diamond, scaled (A+1)/5) so that it hangs above and behind the tapped tile. The centre of that square is (tx - floor(A/2), ty - floor(A/2)). Each spell then uses its own geometry, given in its 'rules': some use that centre, some the tapped tile itself, some an (A+1) x (A+1) square ending at the tapped tile.",
+    "steps": "Clicking a spell with too little mana opens the buy-mana window. Otherwise the cursor becomes the magic cursor and the marker follows the mouse; clicking the book again cancels. Clicking a tile casts: the spell's name and '-mana' float up from the tile, mana drops at once, the spell's effect starts, the command {cmd: 'use_magic', args: [spell id]} is queued, and the 'spell cast' banner (magic_cast.swf, its colour picked per spell) plays for 67 frames. Nothing checks that there is anything in the area: a cast on empty ground still costs mana and counts towards the rank."
+  },
+  "shield": {
+    "getShieldFactor": "MagicManager.getShieldFactor(x, y) starts at 1, walks the live shields and multiplies by the factor of the first one whose zone holds (x, y), then stops: shields never stack, only one counts. It is asked with the tile of the fighter being hit (a building's tx/ty).",
+    "where": "It is used in one place, the client's damage formula (IsoFightingElement.calculateDamage), so it affects every hit worked out there: unit and tower hits, Fire Havoc, Ultimate Hail, poison ticks. It does not check sides.",
+    "formula": "d = amount plus variance (or the critical); absorbed = round(d - d * factor); d = d - absorbed; damage = max(1, round(d - defence)). The absorbed amount is shown next to the damage as a second number. In Battle.hurt this goes between the critical and the defence.",
+    "zone": "Tiles x from sx-Z+1 to sx and y from sy-Z+1 to sy, where (sx, sy) is the tapped tile and Z the zone side (see Ether Shield, id 9)."
+  },
+  "spells": [
+    {
+      "id": 2,
+      "name": "Fire Havoc",
+      "mana": 5,
+      "level": 35,
+      "gold": 1000,
+      "cash": 35,
+      "art": "magic_fire",
+      "target": 2,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "fireballs",
+      "byRank": [
+        {
+          "damage": 150,
+          "count": 30,
+          "gap": 3,
+          "aimedEvery": 3
+        },
+        {
+          "damage": 200,
+          "count": 30,
+          "gap": 3,
+          "aimedEvery": 3
+        },
+        {
+          "damage": 250,
+          "count": 30,
+          "gap": 3,
+          "aimedEvery": 3
+        }
+      ],
+      "who": "all",
+      "spared": [],
+      "timing": "30 balls. Ball i (0 to 29) appears 3*i frames after the cast and lands 10 frames after it appears (the 'attack' label of magic_fire is frame 10), so hits fall on frames 10, 13, ... 97.",
+      "rules": "At the cast, with A the rank's area and (tx, ty) the tapped tile: (1) the random square is the A x A tiles x from tx-A-1 to tx-2 and y from ty-A-1 to ty-2 (the original subtracts half the area twice, so the square sits two tiles up-left of the marker; copy it or centre it on the marker, a judgment call). (2) The aimed tiles are the tiles, taken now, of enemy battle units (side ENEMY, attack > 0, not villagers, not dead, not inside a building) whose tile is within a circle of radius floor(A/2) around (tx - ceil(A/2), ty - ceil(A/2)), nearest first, at most 30. Ball i aims at a random aimed tile when i % 3 == 0 and there is one, otherwise at a random tile of the square (pick uniformly). When a ball lands it hits whatever fighter stands on that tile at that moment (a unit on it, or any building covering it), whatever its side: your own units and buildings get hurt too, and nothing is spared. The hit goes through the normal damage formula with no attacker (Battle.hurt(target, damage, null): plus or minus 4, 1 in 10 crits for half again, the Ether Shield factor, minus defence, at least 1). A unit that walked off its tile is missed. A big building can be hit by several balls."
+    },
+    {
+      "id": 3,
+      "name": "Ultimate Hail",
+      "mana": 7,
+      "level": 45,
+      "gold": 60000,
+      "cash": 55,
+      "art": "magic_stone",
+      "target": 2,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "hail",
+      "byRank": [
+        {
+          "damage": 800,
+          "unitShare": 0.1,
+          "maxDelay": 100
+        },
+        {
+          "damage": 1000,
+          "unitShare": 0.1,
+          "maxDelay": 100
+        },
+        {
+          "damage": 1500,
+          "unitShare": 0.1,
+          "maxDelay": 100
+        }
+      ],
+      "who": "enemies",
+      "spared": [
+        135,
+        811,
+        812
+      ],
+      "timing": "One boulder per tile. Each starts after its own random delay of floor(random * 100) frames (0 to 99) and lands 18 frames later (the 'attack' label of magic_stone).",
+      "rules": "Tiles: x from tx-A to tx and y from ty-A to ty, so (A+1) x (A+1) tiles with the tapped tile as the bottom corner. When a boulder lands, look at the fighter standing on its tile. Nothing happens unless it is on side ENEMY (2). A building takes the full damage unless it is a town hall (135), a treasure (811) or an activator (812). A unit is first stunned, then takes a tenth (80/100/150). Damage goes through Battle.hurt(target, amount, null) with variance, crit, shield and defence. A building takes one boulder for every one of its tiles inside the area. Stun: skipped if the unit is enlarged, already unable to act, a boss (84), or has population 4 or more; otherwise it can't act for 75 frames (0.5 s up, 0.5 s down, 1.5 s on the floor)."
+    },
+    {
+      "id": 4,
+      "name": "Deadly Frostbite",
+      "mana": 5,
+      "level": 43,
+      "gold": 15000,
+      "cash": 35,
+      "art": "magic_frozen",
+      "target": 2,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "freeze",
+      "byRank": [
+        {
+          "duration": 450,
+          "maxDelay": 60
+        },
+        {
+          "duration": 600,
+          "maxDelay": 60
+        },
+        {
+          "duration": 900,
+          "maxDelay": 60
+        }
+      ],
+      "who": "enemies",
+      "spared": [
+        84
+      ],
+      "timing": "One ice effect per tile, each after its own random delay of floor(random * 60) frames (0 to 59); it takes hold 1 frame later (the 'attack' label of magic_frozen is frame 1). The freeze lasts 450/600/900 frames (15/20/30 s) from then.",
+      "rules": "Tiles: x from tx-A to tx, y from ty-A to ty ((A+1) x (A+1)). When the ice lands on a tile, a unit on side ENEMY standing there, unless a boss (84), stops walking and can't act (no moving, no attacking) and is tinted blue. Buildings and your own units are untouched. No damage: the 50/60/70 in the description is never dealt. Stacking: nothing stops a second freeze on the same unit, and whichever ends first frees it (the original just sets 'can act' back to true; so does the end of a stun). Original quirk you can drop: when the freeze ends, a player fighter standing on exactly the same tile takes a 10-point hit."
+    },
+    {
+      "id": 5,
+      "name": "Sacred Rain",
+      "mana": 3,
+      "level": 36,
+      "gold": 10000,
+      "cash": 38,
+      "art": "magic_heal",
+      "target": 1,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "heal",
+      "byRank": [
+        {
+          "heal": 100,
+          "perSecond": 0,
+          "seconds": 0,
+          "maxDelay": 30
+        },
+        {
+          "heal": 100,
+          "perSecond": 20,
+          "seconds": 5,
+          "maxDelay": 30
+        },
+        {
+          "heal": 100,
+          "perSecond": 20,
+          "seconds": 10,
+          "maxDelay": 30
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "One drop per tile, each after a random delay of floor(random * 30) frames, healing 30 frames later (the 'attack' label of magic_heal). Ranks 2 and 3 then add 20 life every 30 frames (1 s), 5 or 10 times, the first one 30 frames after the heal.",
+      "rules": "Tiles: x from tx-A to tx, y from ty-A to ty ((A+1) x (A+1)). When a drop lands, a living unit of side SELF (1) on that tile gets 100 life at once (capped at its maximum, Battle.heal). Buildings and enemies are not healed. At rank 2 or 3 the same unit then gets 20 life each second for 5 or 10 seconds while it is alive. Casts stack: each one starts its own extra healing."
+    },
+    {
+      "id": 6,
+      "name": "Golem's Wrath",
+      "mana": 15,
+      "level": 40,
+      "gold": 25000,
+      "cash": 45,
+      "art": "magic_golem",
+      "target": 0,
+      "area": [
+        1,
+        1,
+        1
+      ],
+      "kind": "summon",
+      "byRank": [
+        {
+          "life": 4000,
+          "item": 630,
+          "lasts": 0
+        },
+        {
+          "life": 5000,
+          "item": 630,
+          "lasts": 0
+        },
+        {
+          "life": 7000,
+          "item": 630,
+          "lasts": 0
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "The summoning animation appears at once and the golem arrives on frame 57 (the 'attack' label of magic_golem).",
+      "rules": "Area 1: only the tapped tile counts. The golem (item 630, Summoned Golem) goes on the tapped tile if it is free, otherwise on the nearest free tile in the square rings 1, 2, 3, 4 around it (the first ring with a free tile wins; within it, the closest to the tapped tile). No free tile within 4: no golem, and the mana is still spent. It joins side SELF with life and maximum life 4000/5000/7000 (instead of the item's 1000), is flagged summoned (not counted as lost, no graveyard, no rewards), and stays until killed or the battle ends ('lasts' 0 = no time limit). (The original writes the new life into the item's shared data; set it on this unit only.)"
+    },
+    {
+      "id": 7,
+      "name": "Hell Abyss",
+      "mana": 10,
+      "level": 38,
+      "gold": 15000,
+      "cash": 40,
+      "art": "magic_crack",
+      "target": 2,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "swallow",
+      "byRank": [
+        {
+          "radius": 3,
+          "max": 25
+        },
+        {
+          "radius": 4,
+          "max": 49
+        },
+        {
+          "radius": 5,
+          "max": 81
+        }
+      ],
+      "who": "enemies",
+      "spared": [
+        84,
+        135,
+        811,
+        812
+      ],
+      "timing": "The crack appears 10 frames after the cast and opens 18 frames later (the 'attack' label of magic_crack), so frame 28. Swallowed elements shrink and sink for 15 frames (0.5 s), then die.",
+      "rules": "Centre c = (tx - floor(A/2), ty - floor(A/2)), the middle of the marker. When the crack opens, take enemy fighters (side ENEMY, units and buildings, not dead) whose own tile (a building's tx/ty, its last tile) is within a circle of radius ceil(A/2) (3/4/5) around c, nearest first, at most A*A. Skip bosses (84), town halls (135), treasures (811), activators (812), and units that can't be swallowed (life 500 or more when placed). Each of the rest is killed outright after the 15-frame sink: Battle.kill(target, null), no damage formula, so the shield and defence don't help. Rewards and the server's kill command follow as for any kill. Your own fighters are never touched."
+    },
+    {
+      "id": 8,
+      "name": "Poisonous Flood",
+      "mana": 10,
+      "level": 43,
+      "gold": 10000,
+      "cash": 30,
+      "art": "magic_poison",
+      "target": 2,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "poison",
+      "byRank": [
+        {
+          "damage": 15,
+          "ticks": 5,
+          "spread": 0
+        },
+        {
+          "damage": 20,
+          "ticks": 7,
+          "spread": 1
+        },
+        {
+          "damage": 25,
+          "ticks": 10,
+          "spread": 2
+        }
+      ],
+      "who": "enemies",
+      "spared": [
+        84
+      ],
+      "timing": "The flood appears 10 frames after the cast and strikes 17 frames later (the 'attack' label of magic_poison), so frame 27. A poisoned unit then takes damage every 90 frames (3 s), the first 90 frames after it is poisoned.",
+      "rules": "When it strikes, take enemy units (side ENEMY, not dead, not bosses; buildings never) whose tile is within a circle of radius A (5/7/9, the whole area, not half) around the tapped tile (tx, ty) itself, nearest first, at most A*A. Each one not already poisoned is poisoned (tinted) for 'ticks' ticks: each tick is Battle.hurt(unit, damage, null) with variance, crit, shield and defence (so at least 1). Poison ends after the last tick or when the unit dies; a poisoned unit can't be poisoned again until then. Spread: at ranks 2 and 3 each tick was meant to pass the poison to 1 or 2 units within 1 tile, with one tick fewer; in the original it never happens, because the spell gives no caster and the spreading code reads the caster's side and fails right after the tick's damage. Following the original means no spread (a judgment call: write it down if you add it)."
+    },
+    {
+      "id": 9,
+      "name": "Ether Shield",
+      "mana": 6,
+      "level": 38,
+      "gold": 50000,
+      "cash": 40,
+      "art": "magic_shield",
+      "target": 1,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "shield",
+      "byRank": [
+        {
+          "factor": 0.7,
+          "duration": 600,
+          "zone": 7
+        },
+        {
+          "factor": 0.55,
+          "duration": 900,
+          "zone": 9
+        },
+        {
+          "factor": 0.4,
+          "duration": 1200,
+          "zone": 0
+        }
+      ],
+      "who": "all",
+      "spared": [],
+      "timing": "The shield works from the very frame of the cast and is removed 600/900/1200 frames (20/30/40 s) later; its picture (magic_shield at 30% opacity, scaled area/3, on the tapped tile) then fades over 1 s.",
+      "rules": "The cast registers a zone with MagicManager: the tiles x from tx-Z+1 to tx and y from ty-Z+1 to ty, where Z is 'zone' in byRank, and a damage factor. Z is not the rank's area: the original reads the area list one place too far, so rank 1 gets 7, rank 2 gets 9 and rank 3 gets nothing (no tile is inside, so a rank 3 shield protects nothing). Copy that, or use the rank's own area (5/7/9): a judgment call to write down. While the zone lasts, every hit on a fighter whose own tile (a building's tx/ty) is inside it is reduced as in 'shield' at the top: on both sides, enemies inside your shield are protected too. Heals are not affected. Swallowing and spells that kill outright ignore it."
+    },
+    {
+      "id": 10,
+      "name": "Yeti's Trail",
+      "mana": 8,
+      "level": 45,
+      "gold": 70000,
+      "cash": 60,
+      "art": "magic_yeti",
+      "target": 0,
+      "area": [
+        1,
+        1,
+        1
+      ],
+      "kind": "summon",
+      "byRank": [
+        {
+          "life": 4000,
+          "item": 631,
+          "lasts": 0
+        },
+        {
+          "life": 5000,
+          "item": 631,
+          "lasts": 0
+        },
+        {
+          "life": 7000,
+          "item": 631,
+          "lasts": 0
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "As Golem's Wrath: the yeti arrives on frame 57 (the 'attack' label of magic_yeti).",
+      "rules": "Exactly as Golem's Wrath (id 6) with the yeti, item 631 (Summoned Yeti, item life 1000): tapped tile or the nearest free tile within 4 rings, else nothing; side SELF; life and maximum 4000/5000/7000; summoned; stays for the battle."
+    },
+    {
+      "id": 11,
+      "name": "Age of Colossus",
+      "mana": 8,
+      "level": 40,
+      "gold": 25000,
+      "cash": 45,
+      "art": "magic_enlarge",
+      "target": 1,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "enlarge",
+      "byRank": [
+        {
+          "duration": 900,
+          "attackFactor": 1.5,
+          "radius": 5,
+          "max": 25
+        },
+        {
+          "duration": 1350,
+          "attackFactor": 1.5,
+          "radius": 7,
+          "max": 49
+        },
+        {
+          "duration": 1800,
+          "attackFactor": 1.5,
+          "radius": 9,
+          "max": 81
+        }
+      ],
+      "who": "own",
+      "spared": [
+        84
+      ],
+      "timing": "Units are picked at the cast. Each gets its own effect on its tile 10 frames later, and grows 10 frames after that (magic_enlarge has no 'attack' label, so frame 10): frame 20. The growth lasts 900/1350/1800 frames (30/45/60 s) and takes 15 frames to show (scale tween 0.5 s).",
+      "rules": "At the cast, take your units (side SELF, units only, not dead, not bosses) whose tile is within a circle of radius A (5/7/9) around the tapped tile, nearest first, at most A*A. Each one not already enlarged grows: drawn twice as big, and every hit it deals is multiplied by 1.5 (applied to its attack before the siege rules, the variance and the rest: in Battle.hurt, amount *= 1.5 when 'by' is enlarged). While enlarged it can't be stunned (Ultimate Hail's stun, other stuns) and can't be thrown in the air. A unit already enlarged is left alone: casting again doesn't renew it. At the end it shrinks back and loses the bonus."
+    },
+    {
+      "id": 12,
+      "name": "Summon Dragon",
+      "mana": 18,
+      "level": 53,
+      "gold": 300000,
+      "cash": 80,
+      "art": "magic_dragon",
+      "target": 0,
+      "area": [
+        1,
+        1,
+        1
+      ],
+      "kind": "summon",
+      "byRank": [
+        {
+          "life": 4000,
+          "items": [
+            862,
+            853,
+            875,
+            891,
+            846
+          ],
+          "lasts": 900
+        },
+        {
+          "life": 5000,
+          "items": [
+            862,
+            853,
+            875,
+            891,
+            846
+          ],
+          "lasts": 1800
+        },
+        {
+          "life": 7000,
+          "items": [
+            862,
+            853,
+            875,
+            891,
+            846
+          ],
+          "lasts": 0
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "The dragon arrives on frame 57 (the 'attack' label of magic_dragon). At rank 1 it leaves 900 frames (30 s) later, at rank 2 1800 frames (60 s) later: it fades for 15 frames and is then removed. At rank 3 it stays.",
+      "rules": "Area 1. Same placing as Golem's Wrath (tapped tile or nearest free within 4 rings, else nothing and the mana is spent). The dragon is one of five, picked with equal chance: 862 Electric, 853 Red, 875 Golden, 891 Black, 846 Green Bahamut Dragon. Side SELF, life and maximum 4000/5000/7000 (instead of the item's 2200 to 2600), summoned. When its time is up it is removed without dying: no death, no graveyard, no rewards; the Flash client sells it to the server with reason SUMMON and no resources. (The original writes the life into the item's shared data, which would also change your own Bahamuts of that kind; set it on the summoned one only.)"
+    },
+    {
+      "id": 13,
+      "name": "Instant Limit",
+      "mana": 14,
+      "level": 49,
+      "gold": 250000,
+      "cash": 70,
+      "art": "magic_full_limit",
+      "target": 0,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "fullLimit",
+      "byRank": [
+        {
+          "radius": 3,
+          "max": 20
+        },
+        {
+          "radius": 4,
+          "max": 20
+        },
+        {
+          "radius": 5,
+          "max": 20
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "Units are picked at the cast; the effect (magic_full_limit, scaled area/3, on the tapped tile) appears 10 frames later and works 10 frames after that (no 'attack' label): frame 20.",
+      "rules": "At the cast, take your units (side SELF, units only, not dead) that have a limit bar (heroes and other units with a special attack driven by the limit) whose tile is within a circle of radius ceil(A/2) (3/4/5) around c = (tx - floor(A/2), ty - floor(A/2)), nearest first, at most 20. On frame 20 each one's limit bar is set to full, so its special can be used at once; they flash white briefly. Nothing to undo. Units without a limit bar are ignored."
+    },
+    {
+      "id": 14,
+      "name": "2x Speed",
+      "mana": 10,
+      "level": 47,
+      "gold": 150000,
+      "cash": 60,
+      "art": "magic_speed_increaser",
+      "target": 0,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "speed",
+      "byRank": [
+        {
+          "factor": 2,
+          "duration": 450,
+          "radius": 3,
+          "max": 20
+        },
+        {
+          "factor": 2,
+          "duration": 900,
+          "radius": 4,
+          "max": 20
+        },
+        {
+          "factor": 2,
+          "duration": 1350,
+          "radius": 5,
+          "max": 20
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "Units are picked at the cast; the effect appears on the tapped tile 10 frames later and works 10 frames after that (no 'attack' label): frame 20. It wears off 450/900/1350 frames (15/30/45 s) after that.",
+      "rules": "At the cast, take your units (side SELF, units only, not dead) whose tile is within a circle of radius ceil(A/2) (3/4/5) around c = (tx - floor(A/2), ty - floor(A/2)), nearest first, at most 20. On frame 20, for each one: if a previous 2x Speed is still on it, undo that first (back to the item's velocity, and that older timer forgets the unit); then velocity = floor(velocity * 2). When the time is up, velocity goes back to the item's own velocity (it is reset, not halved). So casting again on a sped-up unit renews the time rather than doubling twice. (The original also writes the new speed into the item's shared data; keep it on the unit.)"
+    },
+    {
+      "id": 15,
+      "name": "2x Range",
+      "mana": 12,
+      "level": 47,
+      "gold": 200000,
+      "cash": 60,
+      "art": "magic_range_increaser",
+      "target": 0,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "range",
+      "byRank": [
+        {
+          "factor": 2,
+          "duration": 450,
+          "radius": 3,
+          "max": 20
+        },
+        {
+          "factor": 2,
+          "duration": 900,
+          "radius": 4,
+          "max": 20
+        },
+        {
+          "factor": 2,
+          "duration": 1350,
+          "radius": 5,
+          "max": 20
+        }
+      ],
+      "who": "own",
+      "spared": [],
+      "timing": "As 2x Speed: units picked at the cast, effect on frame 20, wears off 450/900/1350 frames (15/30/45 s) later.",
+      "rules": "As 2x Speed (id 14) but for attack range: range = floor(range * 2), reset to the item's own attack_range at the end, and a new cast on the same unit undoes the old one first and renews the time. Who: the code means to include your buildings (towers) too, but its 'double the range' step only works on units and stops with an error at the first building it meets: units processed before that keep the doubled range for good (their timer is never set), the rest get nothing. That can only happen where you have buildings, at home against raids; in attacks your side is all units. Recommended: your units only, with the timer (call it a judgment call)."
+    },
+    {
+      "id": 16,
+      "name": "Black Hole",
+      "mana": 16,
+      "level": 49,
+      "gold": 300000,
+      "cash": 80,
+      "art": "magic_black_hole",
+      "target": 0,
+      "area": [
+        5,
+        7,
+        9
+      ],
+      "kind": "blackHole",
+      "byRank": [
+        {
+          "ticks": 15,
+          "radius": 3,
+          "max": 25
+        },
+        {
+          "ticks": 20,
+          "radius": 4,
+          "max": 49
+        },
+        {
+          "ticks": 30,
+          "radius": 5,
+          "max": 81
+        }
+      ],
+      "who": "enemies",
+      "spared": [
+        84,
+        135,
+        811,
+        812
+      ],
+      "timing": "The hole appears on the tapped tile 10 frames after the cast and first swallows 45 frames after appearing (frame 55). Then it swallows again every 30 frames (1 s), 15/20/30 more times, so 16/21/31 swallows in all. Each swallowed element is pulled into the hole for 15 frames (0.5 s), then dies. The hole fades 45 frames after its last swallow, over 30 frames.",
+      "rules": "Each swallow: centre c = (tx - floor(A/2), ty - floor(A/2)); take enemy fighters (side ENEMY, units and buildings, not dead) whose own tile is within a circle of radius ceil(A/2) (3/4/5) around c, nearest first, at most A*A; skip bosses (84), town halls (135), treasures (811), activators (812) and units that can't be swallowed (life 500 or more when placed); every other one is pulled in and killed outright (Battle.kill(target, null), no damage formula, normal rewards). Fighters that walk in later are swallowed by a later tick. In tournaments the button is greyed out."
+    }
+  ]
+}
