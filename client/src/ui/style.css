@@ -2018,3 +2018,19 @@ body {
   height: 100%;
   background: #ffd84a;
 }
+
+/* A window with the game's words and picture (ui/notice.ts): a camp arriving, a chest opened. */
+.notice-picture {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  margin: 0 auto 8px;
+  border-radius: 10px;
+}
+
+.notice-text {
+  margin: 0;
+  white-space: pre-line;
+  font-family: var(--text);
+  font-size: 15px;
+}

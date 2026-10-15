@@ -9,7 +9,7 @@ export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 
 /** A new account with a new town, open in the new client. Its own browser window, as its own visitor. */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, camp = false } = {}) {
   const context = await browser.newContext({
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
@@ -22,6 +22,14 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
+  if (!camp) {
+    // A new town gets its first troll camp at once (homeCamps.ts); most tests start
+    // as if its chest had just been opened instead (1 point of experience), which
+    // starts the 4-hour wait for the next.
+    const page = await player.page.request.get(base + "/client.html");
+    player.settings = JSON.parse((await page.text()).match(/<script id="se-settings" type="application\/json">([^<]*)<\/script>/)[1]);
+    await player.send([{ cmd: "collect_treasure", args: [0, 1, 3, 0, 0, 0] }]);
+  }
   await player.open();
   // A new player is asked about Arthur's lessons first; most tests skip them, as a player may.
   if (!lessons) {

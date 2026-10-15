@@ -22,7 +22,8 @@ import type { PageSettings } from "./net/server.ts";
 import { Battle, ENEMY, FPS, NEUTRAL, SELF, SUBCAT, distance, type Fighter, type Side } from "./rules/battle.ts";
 import type { GameConfig, ItemInfo } from "./rules/config.ts";
 import { MAP_TILES } from "./rules/geometry.ts";
-import { isTheirs } from "./rules/editing.ts";
+import { sideAtHome } from "./rules/camps.ts";
+import { Camps } from "./homeCamps.ts";
 import { Raid, planRaids, type RaidPlan } from "./rules/raids.ts";
 import { Specials, type SpecialsTable } from "./rules/specials.ts";
 import specialsTable from "./rules/specials-table.json" with { type: "json" };
@@ -35,6 +36,8 @@ import { BattleView } from "./view/battleView.ts";
 import type { Camera } from "./view/camera.ts";
 import type { TownView } from "./view/townView.ts";
 
+/** A fight with no raid in it ends after this long with nobody fighting. */
+const QUIET_FRAMES = 150;
 /** A villager's repair in battle, as at home: 25 life every 61 frames. */
 const REPAIR_LIFE = 25;
 const REPAIR_EVERY = 61;
@@ -56,6 +59,9 @@ export interface DefenceParts {
   world: Container;
   camera: Camera;
   editor: TownEditor;
+  /** The game's clock (the server's time, seconds), and the save's troll camp (homeCamps.ts). */
+  clock: () => number;
+  camp: { id: number; last: number };
   random?: () => number;
 }
 
@@ -79,7 +85,25 @@ export class HomeDefence {
     this.random = parts.random ?? Math.random;
     this.due = planRaids(parts.town.level, parts.town.race, this.random).sort((a, b) => a.startsAt - b.startsAt);
     this.lines = new Map(((parts.config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
+    this.camps = new Camps({
+      town: parts.town, items: parts.items, commands: parts.commands, view: parts.view, editor: parts.editor,
+      clock: parts.clock, camp: parts.camp, random: this.random,
+      line: (id) => this.lines.get(id) ?? "",
+      pictureUrl: (name) => `${parts.settings.assetsUrl}/images_new/${name}`,
+      engage: (units, target) => this.engage(units, target),
+    });
+    this.camps.arrive();
     (window as unknown as Record<string, unknown>).seHome = this;
+  }
+
+  readonly camps: Camps;
+
+  /** Units of the player's sent at an enemy in town: a fight, if there isn't one, and the order. */
+  engage(units: PlacedItem[], target: PlacedItem): void {
+    if (!this.fight) {
+      this.fight = new Fight(this.parts, this.random, (line) => this.lines.get(line) ?? "", () => this.kills++);
+    }
+    this.fight.order(units, target);
   }
 
   /** The raids still to come (for the browser tests). */
@@ -122,7 +146,10 @@ export class HomeDefence {
         if (this.fight.over) {
           this.fight.end();
           this.fight = null;
+          this.camps.watch();
         }
+      } else if (this.clock % 30 === 0) {
+        this.camps.watch();
       }
     }
     this.fight?.update(ms);
@@ -148,6 +175,8 @@ class Fight {
   private readonly killedOne: () => void;
   /** The town's things on the battlefield, and back. */
   private readonly placedOf = new Map<Fighter, PlacedItem>();
+  /** Frames since anyone last fought: a fight with no raid ends after a while of quiet. */
+  private quiet = 0;
   /** Villagers repairing: which building, and their last repair's frame. */
   private readonly repairs = new Map<Fighter, { building: Fighter; last: number }>();
 
@@ -159,7 +188,7 @@ class Fight {
     this.battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random, home: true,
       onDeath: (fighter) => this.died(fighter) });
     for (const placed of town.items) {
-      const side = sideOf(town, placed.item);
+      const side = sideOf(town, placed);
       const fighter = this.battle.add(placed.item, placed.tx, placed.ty, side, { tag: placed });
       if (!placed.item.isUnit) {
         fighter.facing = placed.orientation;
@@ -206,11 +235,27 @@ class Fight {
     void this.view.load(() => {});
   }
 
+  /** The fighting's over: no raid left, and nobody fighting for 5 seconds. */
   get over(): boolean {
-    return this.raids.every((raid) => raid.done);
+    return this.raids.every((raid) => raid.done) && this.quiet >= QUIET_FRAMES;
+  }
+
+  /** The player's units (from the town) at an enemy (from the town). */
+  order(units: PlacedItem[], target: PlacedItem): void {
+    const fighterOf = (placed: PlacedItem) => [...this.placedOf].find(([, p]) => p === placed)?.[0];
+    const at = fighterOf(target);
+    const mine = units.map(fighterOf).filter((f): f is Fighter => Boolean(f) && !f!.dead);
+    if (at && mine.length) {
+      this.battle.attackWith(mine, at);
+      this.controls.select(mine);
+      this.parts.sound.play("place");
+    }
+    this.quiet = 0;
   }
 
   step(): void {
+    const fighting = this.battle.fighters.some((f) => !f.dead && f.side !== NEUTRAL && f.attacking && f.target && !f.target.dead);
+    this.quiet = fighting ? 0 : this.quiet + 1;
     this.battle.step();
     this.specials.step();
     for (const raid of this.raids) {
@@ -289,6 +334,23 @@ class Fight {
         this.placedOf.set(thrown, out.unit);
         this.parts.editor.remember([out.unit]);
       }
+    } else if (fighter.side === ENEMY && placed) {
+      // An enemy of the save (a camp's, the border's): where the server has it, and gone from the town.
+      commands.add("kill", placed.tx, placed.ty, placed.item.id, town.id, placed.item.isUnit ? "u" : "b");
+      town.items.splice(town.items.indexOf(placed), 1);
+      this.placedOf.delete(fighter);
+      this.parts.view.remove(placed);
+      if (fighter.isUnit) {
+        this.killedOne();
+      }
+      const gold = fighter.isUnit && fighter.attack > 0 ? KILL_GOLD : 0;
+      const xp = fighter.item.collectXp;
+      town.gold += gold;
+      town.xp += xp;
+      if (gold || xp) {
+        this.view.rise(fighter, [...(gold ? [{ text: `+${gold}`, colour: 0xf2c14e }] : []), ...(xp ? [{ text: `+${xp} XP`, colour: 0x7fb2ff }] : [])]);
+      }
+      this.parts.editor.gained();
     } else if (fighter.side === ENEMY && fighter.isUnit) {
       commands.add("kill", fighter.tx, fighter.ty, fighter.item.id, town.id, "u");
       this.killedOne();
@@ -311,7 +373,12 @@ class Fight {
     this.controls.stop();
     const moved: PlacedItem[] = [];
     for (const [fighter, placed] of this.placedOf) {
-      if (fighter.side !== SELF && fighter.side !== NEUTRAL) {
+      if (fighter.side === ENEMY) {
+        // Where the fight left them, for now: the server keeps where they were, as in the original.
+        if (fighter.isUnit && !fighter.dead) {
+          placed.tx = fighter.tx;
+          placed.ty = fighter.ty;
+        }
         continue;
       }
       if (placed.item.isUnit) {
@@ -338,10 +405,14 @@ class Fight {
   }
 }
 
-/** Whose a thing in the town is in a fight: the player's, or nobody's (trees, rocks, scenery that can't be hit). */
-function sideOf(town: Town, item: ItemInfo): Side {
-  if (!isTheirs(town, item) || item.life <= 0) {
+/**
+ * Whose a thing in the town is in a fight: as the original decides when the
+ * town loads (rules/camps.ts), with what can't be hit (life 0) nobody's.
+ */
+function sideOf(town: Town, placed: PlacedItem): Side {
+  const side = sideAtHome(town.race, placed.item, placed.tx, placed.ty);
+  if (side === "nobody" || placed.item.life <= 0) {
     return NEUTRAL;
   }
-  return SELF;
+  return side === "self" ? SELF : ENEMY;
 }

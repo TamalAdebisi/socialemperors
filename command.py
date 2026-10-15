@@ -189,6 +189,7 @@ def do_command(USERID, cmd, args, previous=None):
             if item[0] == id and item[1] == x and item[2] == y:
                 apply_collect_xp(map, id)
                 map["items"].remove(item)
+                print("  Enemy:", raiders.killed(map, id, type, with_xp=False))
                 break
         else:
             # Not in the save: a raider the client sent at the town.

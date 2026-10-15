@@ -1169,9 +1169,49 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   by the server (`raiders.py`, up to 300 a day). When the raid is over the
   units stay where the fight left them (`move`, as after a walk).
 
-**Not yet** (Beta 2's next slices): the troll camps with their chest
-every 4 hours and the trolls on the border, the boss islands and the Hero
-Isle, the rarer special moves (shape-shifting, flying, ghosts, shields
+**Troll camps**, the same way. Code: `rules/camps.ts` (with tests),
+`rules/camps.json` (the layouts, as data in our own schema),
+`homeCamps.ts`, and `ui/notice.ts` for the camp's window.
+
+- **When:** 4 hours after the last chest was opened
+  (`map.timestampLastTreasure`; a new town gets its first camp at once).
+  Which camp is `map.idCurrentTreasure` (0 to 29), each chest moving it
+  on; a camp the player's race doesn't get moves on as in the original
+  (and the server hears `collect_treasure` with nothing to give).
+- **The ten camps built here** are those the original lays out by its own
+  code: the princess's village, the archers, the kidnapped units, the
+  treasure village, the prisoners, the rebel troll, Prince Arthur and the
+  three "Kaspar" camps. Three are 15 x 15 walled squares with things
+  placed at random inside, by level; seven are 20 x 20 layouts drawn in
+  the original, whose walls, towers, houses and soldiers become the enemy
+  race's own for the player's level. The other twenty are scripted
+  stories, put up by the classic game for now.
+- **Putting one up:** the border ring is cleared (`sell` ... `CLEAN_<camp>`
+  for what was there; the player's units there walk to the town hall),
+  every piece goes on the map with a free `buy`, as the Flash client saves
+  them, and trolls are topped up about the border (a few clusters, fewer
+  the more enemies there are). The camp's window tells its story in the
+  game's words, with its picture. As in the original, a camp still
+  standing is put up afresh, somewhere else, each time the game opens.
+- **Whose things are:** as the original decides when the town loads: by
+  race (the other race's are enemies), and on the border every building
+  is an enemy but chests, fields, nature and scenery.
+- **Beating it:** a unit selected, tap an enemy: the town becomes a
+  battlefield as in a raid, and it's over once nobody has fought for 5
+  seconds. Each enemy unit killed pays 5 gold and its experience (kept by
+  the server); `kill` (x, y, id, town, "u" or "b") removes it from the
+  save.
+- **The chest** (or prison) lights up once no enemy unit is left anywhere
+  on the map, the border's trolls and any raiders included; until then a
+  tap says how many are left. Tapping it open: `sell` ... "TREAS", then
+  `collect_treasure` (gold, experience, the next camp): 250 gold and 50
+  experience up to level 5, rising by 100 and 10 every five levels to 750
+  and 100 from level 26. A prison frees its prisoners beside it (a free
+  `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
+  healers... The next camp comes 4 hours later.
+
+**Not yet** (Beta 2's next slices): the twenty scripted camps, the boss
+islands and the Hero Isle, the rarer special moves (shape-shifting, flying, ghosts, shields
 and the like: their buttons don't show yet), collection pieces dropped by
 enemies, the battle music and the "under attack" alert at home, and the
 original's repair pointer.

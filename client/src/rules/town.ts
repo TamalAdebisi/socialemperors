@@ -26,6 +26,9 @@ export interface SaveMap {
   store?: Box;
   /** The Great Church's steps done: each adds room for people. */
   increasedPopulation?: number;
+  /** The troll camps (rules/camps.ts): which comes next, and when the last chest was opened (seconds). */
+  idCurrentTreasure?: number;
+  timestampLastTreasure?: number;
   /** Help from neighbours waiting for their donkey carts: { "u<pid>": [[x, y, building], ...] }. */
   receivedAssists?: Record<string, unknown>;
 }

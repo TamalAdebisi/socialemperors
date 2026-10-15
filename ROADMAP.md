@@ -317,8 +317,10 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         from 25, the town as a battlefield, towers, burning and repairs,
         and the raiders' gold kept by the server
         ([CLIENT.md](CLIENT.md#step-4-battles))
-  - [ ] Defending the town, camps: the troll camp and its chest every 4
-        hours, and the trolls on the border
+  - [x] Defending the town, camps: the ten troll camps the original
+        lays out by code, their chests and prisoners every 4 hours, and
+        the trolls on the border ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [ ] The twenty scripted troll camps
   - [ ] The boss islands and the Hero Isle
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
       tail, the tutorial and polish. The new client becomes the default, with

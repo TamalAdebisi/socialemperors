@@ -45,11 +45,14 @@ class RaidersTest(unittest.TestCase):
         self.kill(HOUSE, "b")
         self.assertEqual(self.map["coins"], 100)
 
-    def test_a_saved_enemy_is_removed_as_before(self):
+    def test_a_saved_enemy_is_removed_and_pays_5_gold_and_its_experience_once(self):
         self.map["items"].append([SMALL_TROLL, 3, 50, 0, 0, 0])
         self.kill(SMALL_TROLL)
+        xp = self.map["xp"]
         self.assertFalse([i for i in self.map["items"] if i[0] == SMALL_TROLL and i[1] == 3])
-        self.assertEqual(self.map["coins"], 100, "only raiders, who were never saved, pay gold")
+        self.assertEqual(self.map["coins"], 105)
+        self.kill(SMALL_TROLL)  # now a raider: never saved
+        self.assertEqual(self.map["xp"], 2 * xp, "the experience once each")
 
     def test_at_most_300_a_day(self):
         self.map["raiderKills"] = {"day": raiders._today(), "count": raiders.MOST_A_DAY}

@@ -4,6 +4,29 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: Beta 2, troll camps
+
+- **Ten of the thirty camps are built in the new client:** those the
+  original lays out by its own code. The other twenty are scripted
+  stories (with their own steps and bosses); while one is due, the new
+  client leaves it to the classic game, which puts it up in the same
+  empire.
+- **A chest at level 26 pays like level 27** (750 gold, 100 experience).
+  The original's table skipped level 26, so its chest paid nothing.
+- **Kept from the original:** a camp still standing is put up afresh,
+  somewhere else, each time the game opens (its window shows again); the
+  border is cleared for it, trees included; every enemy unit on the map
+  must be beaten before the chest opens, the border's trolls included.
+- **A fight with a camp starts when units are sent at it.** In the
+  original, camp and border trolls also attacked anything that strayed
+  within 10 tiles; here walking near them doesn't start a fight.
+- **Each enemy unit killed at home pays 5 gold**, camp and border trolls
+  too, kept by the server (the original showed it and never saved it), on
+  top of the experience the server already gave for them.
+- **A fight with no raid ends after 5 seconds without fighting;** enemies
+  that chased the player's units stay where they stopped until the next
+  visit, when they're back where the save has them (as in the original).
+
 ## 15 October 2026: Beta 2, defending the town (raids)
 
 - **Raiders pay what they showed.** The original showed 5 gold and some
