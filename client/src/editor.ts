@@ -29,6 +29,7 @@ import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
 import { skipLessons } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
+import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
@@ -112,6 +113,12 @@ export class TownEditor {
   private readonly cartsWaiting = new Map<PlacedItem, () => void>();
   /** What each villager at work is working. */
   private readonly workingOn = new Map<PlacedItem, PlacedItem>();
+  /** The tree or rock each villager is walking to, to work it. */
+  private readonly headingTo = new Map<PlacedItem, PlacedItem>();
+  /** Each villager's line of trees and rocks to work, one after another (rules/villagers.ts). */
+  private readonly lines = new Map<PlacedItem, PlacedItem[]>();
+  /** Trees and rocks in a line, and whose: they glow while any villager has them. */
+  private readonly markedBy = new Map<PlacedItem, Set<PlacedItem>>();
 
   constructor(parts: EditorParts) {
     ({ town: this.town, view: this.view, bar: this.bar, commands: this.commands, hud: this.hud,
@@ -147,6 +154,8 @@ export class TownEditor {
   refresh(): void {
     const now = this.clock();
     let ready = 0;
+    // Villagers' speed and name go with the town hall: built, upgraded or stored since the last look.
+    applyVillagers(this.town, this.items);
     const readyNow = new Set<PlacedItem>();
     for (const placed of this.town.items) {
       const state = workState(placed, now);
@@ -172,7 +181,7 @@ export class TownEditor {
       }
     }
     for (const [resource, work] of this.working) {
-      if (now - work.since >= harvestSeconds(resource.item)) {
+      if (now - work.since >= harvestSeconds(resource.item, this.town)) {
         this.finishHarvest(resource);
       }
     }
@@ -375,6 +384,7 @@ export class TownEditor {
     // A unit of theirs selected: the ground tapped, it walks there; a tree or rock, a villager works it; a building with room, in it goes.
     const unit = this.selected && canWalk(this.town, this.selected) ? this.selected : null;
     if (unit && !placed) {
+      this.clearLine(unit);
       if (this.walkTo(unit, this.tileAt(at))) {
         this.sound("place");  // the Flash client's sound for a unit sent off
       }
@@ -394,12 +404,11 @@ export class TownEditor {
       return;
     }
     if (unit && placed && canHarvest(unit.item, placed.item)) {
-      this.sound("place");
-      this.showWhatItDoes(unit, placed, touch);
-      this.work(unit, placed);
+      this.lineUp(unit, placed, touch);
       return;
     }
     if (unit && placed && canGoInside(this.town, unit.item, placed)) {
+      this.clearLine(unit);
       this.sound("place");
       this.showWhatItDoes(unit, placed, touch);
       this.goInto(unit, placed);
@@ -502,8 +511,11 @@ export class TownEditor {
       return `${placed.unitsInside} of ${placed.item.capacity} inside`;
     }
     if (isResource(placed.item) && this.working.has(placed)) {
-      const left = harvestSeconds(placed.item) - (this.clock() - this.working.get(placed)!.since);
+      const left = harvestSeconds(placed.item, this.town) - (this.clock() - this.working.get(placed)!.since);
       return `Being worked: ${duration(Math.max(left, 0))} left`;
+    }
+    if (placed.item.subcategory === SUBCAT.villager && canWalk(this.town, placed)) {
+      return `Tap the ground where it should go, or up to ${villagers(this.town).line} trees or rocks to work`;
     }
     if (canWalk(this.town, placed)) {
       return "Tap the ground where it should go";
@@ -581,6 +593,10 @@ export class TownEditor {
     for (const unit of [...this.workingOn.keys()]) {
       this.stopWorking(unit);
     }
+    for (const unit of [...this.lines.keys()]) {
+      this.clearLine(unit);
+    }
+    this.headingTo.clear();
     this.paused = true;
     this.bar.prompt(why, []);
   }
@@ -617,8 +633,12 @@ export class TownEditor {
     this.hud.update(this.town);
   }
 
-  /** Send a unit walking to a tile, round what's in the way, as the Flash client does; `then` when it gets there. */
-  private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit)): boolean {
+  /**
+   * Send a unit walking to a tile, round what's in the way, as the Flash
+   * client does; `then` when it gets there. `work`: the tree or rock it's
+   * going to work.
+   */
+  private walkTo(unit: PlacedItem, tile: Point, then: () => void = () => this.unitStopped(unit), work?: PlacedItem): boolean {
     const from = this.view.headingFor(unit);
     const path = findPath(walkGrid(this.town), from, tile, unit.item.flying);
     if (path === null) {
@@ -627,6 +647,11 @@ export class TownEditor {
     }
     this.stopWorking(unit);
     this.stopRepair(unit);
+    if (work) {
+      this.headingTo.set(unit, work);
+    } else {
+      this.headingTo.delete(unit);
+    }
     if (!this.savedAt.has(unit)) {
       this.savedAt.set(unit, { x: unit.tx, y: unit.ty });
     }
@@ -642,17 +667,118 @@ export class TownEditor {
     return true;
   }
 
-  /** A villager sent to a tree or rock: it walks beside it, then works it until it's done, then the next one touching it. */
-  private work(unit: PlacedItem, resource: PlacedItem): void {
+  /**
+   * A tree or rock tapped with a villager selected: it joins the villager's
+   * line and glows, and the villager sets off for it if it isn't busy. The
+   * line full, the tree or rock is selected instead, as in the Flash client.
+   */
+  private lineUp(unit: PlacedItem, resource: PlacedItem, touch: boolean): void {
+    const line = this.lines.get(unit) ?? [];
+    const room = villagers(this.town).line;
+    const joined = lineUp(line, resource, room, this.workingOn.has(unit) || this.headingTo.has(unit));
+    if (!joined) {
+      this.say(`${unit.item.name} has ${room} lined up already.`);
+      this.select(resource);
+      return;
+    }
+    this.lines.set(unit, line);
+    if (joined.marked) {
+      this.mark(resource, unit);
+    }
+    this.sound("place");
+    this.showWhatItDoes(unit, resource, touch);
+    if (joined.goNow && this.workingOn.get(unit) !== resource && this.headingTo.get(unit) !== resource) {
+      this.work(unit, resource);
+    }
+  }
+
+  /** A tree or rock in a villager's line glows until it's worked, or no villager has it in line. */
+  private mark(resource: PlacedItem, unit: PlacedItem): void {
+    const by = this.markedBy.get(resource) ?? new Set<PlacedItem>();
+    by.add(unit);
+    this.markedBy.set(resource, by);
+    this.view.lineUp(resource, true);
+  }
+
+  /** Off one villager's line (or everyone's, when it's been worked). */
+  private unmark(resource: PlacedItem, unit?: PlacedItem): void {
+    const by = this.markedBy.get(resource);
+    if (!by) {
+      return;
+    }
+    if (unit) {
+      by.delete(unit);
+    } else {
+      by.clear();
+    }
+    if (by.size === 0) {
+      this.markedBy.delete(resource);
+      this.view.lineUp(resource, false);
+    }
+  }
+
+  private dropFromLine(unit: PlacedItem, resource: PlacedItem): void {
+    const line = this.lines.get(unit) ?? [];
+    if (line.includes(resource)) {
+      line.splice(line.indexOf(resource), 1);
+      this.unmark(resource, unit);
+    }
+  }
+
+  /** A villager sent anywhere but to a tree or rock forgets its line, as in the Flash client. */
+  private clearLine(unit: PlacedItem): void {
+    for (const resource of this.lines.get(unit) ?? []) {
+      this.unmark(resource, unit);
+    }
+    this.lines.delete(unit);
+  }
+
+  /** A villager sold or stored: it stops whatever it was doing. */
+  private letGo(unit: PlacedItem): void {
+    this.stopWorking(unit);
+    this.clearLine(unit);
+    this.headingTo.delete(unit);
+  }
+
+  /**
+   * A villager done with a tree or rock (worked, or gone before it got
+   * there): on to the next in its line; with none left, the nearest of the
+   * same kind touching it, and on through those.
+   */
+  private goOn(unit: PlacedItem, done: PlacedItem): void {
+    this.unmark(done, unit);
+    const line = this.lines.get(unit) ?? [];
+    const free = (placed: PlacedItem) => this.town.items.includes(placed) && !this.working.has(placed);
+    for (;;) {
+      const { next, dropped } = nextInLine(line, done, free);
+      dropped.forEach((placed) => this.unmark(placed, unit));
+      if (!next) {
+        break;
+      }
+      if (this.work(unit, next)) {
+        return;
+      }
+      // Out of reach: work() took it off the line; the one after.
+    }
+    this.lines.delete(unit);
+    const touching = nextResources(this.town, { x: done.tx, y: done.ty }, done.item.subcategory, (placed) => this.working.has(placed))[0];
+    if (touching) {
+      this.work(unit, touching);
+    }
+  }
+
+  /** A villager sent to a tree or rock: it walks beside it, then works it until it's done. False when it can't get there. */
+  private work(unit: PlacedItem, resource: PlacedItem): boolean {
     const tile = standingTile(this.town, unit, resource);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${resource.item.name}.`);
-      return;
     }
-    this.walkTo(unit, tile, () => {
+    const going = tile !== null && this.walkTo(unit, tile, () => {
+      this.headingTo.delete(unit);
       this.unitStopped(unit);
       if (!this.town.items.includes(resource)) {
-        return;  // gone while it walked (another villager finished it)
+        this.goOn(unit, resource);  // gone while it walked (another villager finished it)
+        return;
       }
       const work = this.working.get(resource) ?? { since: this.clock(), workers: new Set<PlacedItem>() };
       work.workers.add(unit);
@@ -662,7 +788,11 @@ export class TownEditor {
       this.view.pose(unit, tree ? "ATAQUE" : "PICAR", { x: resource.tx, y: resource.ty });
       this.sound(tree ? "lumber" : "stone");
       this.refresh();
-    });
+    }, resource);
+    if (!going) {
+      this.dropFromLine(unit, resource);
+    }
+    return going;
   }
 
   /** A unit leaves the tree or rock it was working; nobody left at it, its work is lost. */
@@ -684,6 +814,7 @@ export class TownEditor {
   private finishHarvest(resource: PlacedItem): void {
     const work = this.working.get(resource)!;
     this.working.delete(resource);
+    this.unmark(resource);
     if (!this.town.items.includes(resource)) {
       // Removed while being worked (the bulldozer): the villagers just stop.
       for (const unit of work.workers) {
@@ -708,14 +839,10 @@ export class TownEditor {
     }
     this.levelUp();
     this.hud.update(this.town);
-    const busy = (placed: PlacedItem) => this.working.has(placed);
     for (const unit of work.workers) {
       this.workingOn.delete(unit);
       this.view.pose(unit, null);
-      const next = nextResources(this.town, { x: resource.tx, y: resource.ty }, resource.item.subcategory, busy)[0];
-      if (next) {
-        this.work(unit, next);
-      }
+      this.goOn(unit, resource);
     }
   }
 
@@ -750,7 +877,7 @@ export class TownEditor {
       this.say(`There's no room around ${building.item.name}.`);
       return;
     }
-    this.send([out.command]);
+    this.send(out.commands);
     this.doings.letOut(building.item);
     void this.view.redraw(out.unit);
     this.select(building);
@@ -824,7 +951,7 @@ export class TownEditor {
   /** Before a building is sold or stored, everybody inside comes out, as in the Flash client. */
   private emptyOut(building: PlacedItem): void {
     for (const out of letAllOut(this.town, building, this.items)) {
-      this.send([out.command]);
+      this.send(out.commands);
       void this.view.redraw(out.unit);
     }
   }
@@ -898,6 +1025,10 @@ export class TownEditor {
     }
     if (done.wood > 0) {
       lines.push({ text: `−${done.wood} wood`, colour: RESOURCE_COLOURS.wood });
+    }
+    if (done.usedUp !== undefined) {
+      // The animal the harvest used up (the Flash client shows it flying off).
+      lines.push({ text: `−1 ${this.items.get(done.usedUp)?.name ?? "animal"}`, colour: 0xffffff });
     }
     this.view.rise(placed, lines);
     this.levelUp();
@@ -984,6 +1115,7 @@ export class TownEditor {
   }
 
   private sell(placed: PlacedItem): void {
+    this.letGo(placed);
     this.emptyOut(placed);
     this.send([sell(this.town, placed)]);
     this.view.remove(placed);
@@ -992,6 +1124,7 @@ export class TownEditor {
   }
 
   private store(placed: PlacedItem): void {
+    this.letGo(placed);
     this.emptyOut(placed);
     this.send([store(this.town, placed)]);
     this.doings.stored(placed.item);

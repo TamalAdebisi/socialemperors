@@ -183,6 +183,24 @@ body {
   font-size: 15px;
 }
 
+/* Visiting: the helps left, as the Flash client's rays; used ones fade. */
+.hud-rays {
+  display: inline-flex;
+  gap: 1px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.hud-rays img {
+  width: 14px;
+  height: 18px;
+  transition: opacity 0.4s;
+}
+
+.hud-rays img.used {
+  opacity: 0.25;
+}
+
 .hud-level .icon {
   height: 26px;
 }
@@ -524,6 +542,11 @@ body {
   transform: translate(-50%, 0);
   visibility: visible;
   transition: transform 0.25s ease-out;
+}
+
+/* Visiting, the neighbour's name and helps reach the middle of the top bar: messages go below it. */
+.visiting .message {
+  top: calc(max(var(--edge), env(safe-area-inset-top)) + 58px);
 }
 
 /* ---- The selected thing's card, bottom middle ----------------------------- */
@@ -1059,7 +1082,8 @@ body {
     height: 52px;
   }
 
-  .message {
+  .message,
+  .visiting .message {
     top: calc(max(6px, env(safe-area-inset-top)) + 64px);
   }
 

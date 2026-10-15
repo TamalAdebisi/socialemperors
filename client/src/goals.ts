@@ -1,7 +1,7 @@
 // Keeps the goals: every 2 seconds, as the Flash client does, checks the
 // open goals, tells the server of those reached and pays the first done
-// one's gold; and skips a goal for cash. The rules are in rules/goals.ts,
-// the cards and window in ui/goals.ts.
+// one's gold. The rules are in rules/goals.ts, the cards and window in
+// ui/goals.ts. (No skipping for cash: the Flash client had it switched off.)
 
 import type { ItemInfo } from "./rules/config.ts";
 import { Doings, completeGoal, openGoals, payGoal, progress, type Goal } from "./rules/goals.ts";
@@ -20,8 +20,6 @@ export interface GoalKeeperParts {
   /** Goals done, and paid, as the save has them (privateState). */
   done: number[];
   paid: number[];
-  /** What skipping costs, in cash (the config's PRICE_COMPLETE_GOAL). */
-  skipPrice: number;
   send: (cmd: string, ...args: unknown[]) => void;
   /** The town's people now. */
   people: () => number;
@@ -46,7 +44,7 @@ export class GoalKeeper {
     this.doings = parts.doings;
     this.done = new Set(parts.done.map(Number));
     this.paid = new Set(parts.paid.map(Number));
-    this.view = new GoalsView((goal) => this.skip(goal), parts.skipPrice);
+    this.view = new GoalsView();
     this.startZoom = parts.zoom();
     this.lastCash = parts.town.cash;
     setInterval(() => this.check(), CHECK_MS);
@@ -71,7 +69,7 @@ export class GoalKeeper {
       }
       const now = progress(town, goal, this.doings, this.parts.people(), this.parts.items);
       if (now && now.done >= now.of) {
-        this.complete(goal, false);
+        this.complete(goal);
       }
     }
     const toPay = open.find((goal) => this.done.has(goal.id) && !this.paid.has(goal.id));
@@ -85,23 +83,10 @@ export class GoalKeeper {
     this.show();
   }
 
-  private complete(goal: Goal, skipped: boolean): void {
-    const command = completeGoal(goal, skipped);
+  private complete(goal: Goal): void {
+    const command = completeGoal(goal, false);
     this.parts.send(command.cmd, ...command.args);
     this.done.add(goal.id);
-  }
-
-  /** Skip a goal for cash: it's done, and paid at the next check. */
-  private skip(goal: Goal): void {
-    const { town, skipPrice } = this.parts;
-    if (town.cash < skipPrice) {
-      this.parts.say(`Not enough cash: skipping takes ${skipPrice}.`);
-      return;
-    }
-    town.cash -= skipPrice;
-    this.complete(goal, true);
-    this.parts.changed();
-    this.check();
   }
 
   private show(): void {

@@ -32,6 +32,9 @@ export interface Goal {
   need: Need | null;
 }
 
+/** The game's host, who stands in the goals' texts. */
+const HOST = "Arthur";
+
 /** The config's missions with what each asks. */
 export function readGoals(missions: { id: number | string; title: string; description?: string; reward?: number | string }[],
   needs: Record<string, Need>): Map<number, Goal> {
@@ -41,9 +44,22 @@ export function readGoals(missions: { id: number | string; title: string; descri
     if (goals.has(id)) {
       continue;  // the server's config adds a stand-in for goal 1 after the real one (config/patch): the first counts
     }
-    goals.set(id, { id, title: mission.title, description: mission.description ?? "", reward: Number(mission.reward) || 0, need: needs[id] ?? null });
+    // "#0#" stands for the host, as in the Flash client: Arthur (it said Guinevere to players who were women; we don't keep that).
+    const host = (text: string) => text.replaceAll("#0#", HOST);
+    goals.set(id, { id, title: host(mission.title), description: host(mission.description ?? ""), reward: Number(mission.reward) || 0, need: needs[id] ?? null });
   }
   return goals;
+}
+
+/** From this level a human town has the spells box instead of goals (Beta 2). */
+const GOALS_UNTIL_LEVEL = 35;
+
+/**
+ * Whether the town has goals at all, decided when it loads, as the Flash
+ * client does: only a human town, below level 35.
+ */
+export function goalsRun(town: Town): boolean {
+  return town.race === "h" && town.level < GOALS_UNTIL_LEVEL;
 }
 
 /** The open goals, in order: the first 15 not both done and paid. */
@@ -82,6 +98,9 @@ export class Doings {
   placedStored = false;
   /** The daily bonus's day collected (1 to 5), 0 for none. */
   dailyBonusDay = 0;
+  /** The neighbour visited last (their pid), and how many of neighbours' buildings were helped. */
+  lastVisited = "";
+  helpedBuildings = 0;
 
   collected(item: ItemInfo): void {
     add(this.collectedKind, item.subcategory);
@@ -190,6 +209,10 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.placedStored ? 1 : 0, 1);
     case "daily-bonus":
       return of(doings.dailyBonusDay >= n(0) ? 1 : 0, 1);
+    case "visited":
+      return of((args[0] as string[]).includes(doings.lastVisited) ? 1 : 0, 1);
+    case "helped":
+      return of(doings.helpedBuildings, n(0));
     case "spend":
       return of(doings.spent.get(String(args[0])) ?? 0, n(1));
     case "people":

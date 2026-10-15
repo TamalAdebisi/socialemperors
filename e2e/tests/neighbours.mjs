@@ -1,6 +1,7 @@
 // Neighbours (CLIENT.md, "Neighbours"): one player visits another, sees
-// their own numbers in the top bar, and helps the other's farm (10 gold and
-// 3 XP); the help goes on leaving. The other player's next visit home brings
+// the other's numbers in the top bar with five rays for the helps left, as
+// in the Flash client, and helps the other's farm (10 gold and 3 XP for the
+// visitor; a ray fades); the help goes on leaving. The other player's next visit home brings
 // a donkey cart, let in, with a quarter of the farm's harvest. Arthur is
 // always last among the neighbours, and his town opens.
 
@@ -27,17 +28,23 @@ export default async function neighbours({ newPlayer }) {
   await page.getByRole("link", { name: `Visit ${helped.name}` }).click();
   await helper.loaded();
   assert.match(await page.locator(".hud-visiting").textContent(), new RegExp(`Visiting ${helped.name}`));
-  assert.equal(await gold(helper), goldBefore, "the top bar shows the visitor's own gold");
+  const theirGold = (await info(helped)).map.coins;
+  assert.equal(await gold(helper), theirGold, "the top bar shows the neighbour's gold");
+  const rays = () => page.locator(".hud-rays img:not(.used)").count();
+  assert.equal(await rays(), 5, "five helps left");
   await helper.said(/Tap their farms, mills and mines to help/);
 
   // Help the farm: 10 gold; not twice.
   const farm = findFarm(helper);
   await helper.click(farm);
   await helper.said(/Helped! 4 more today/);
-  assert.equal(await gold(helper), goldBefore + 10);
+  assert.equal(await rays(), 4, "a ray fades");
+  assert.equal(await gold(helper), theirGold, "still their gold: the visitor's 10 rise from the farm");
   await helper.click(farm);
   await helper.said(/already/);
   await helper.shot("helping");
+  await helper.wait(3500);
+  await helper.shot("helping-rays");
 
   // Home: the help goes on the way out.
   await page.getByRole("link", { name: "Back home" }).click();

@@ -326,7 +326,9 @@ class Fight {
     } else if (fighter.side === SELF && !fighter.isUnit && placed && fighter.ruined) {
       // Burnt out: its workers are thrown out, as the server hears.
       for (const out of letAllOut(town, placed, items)) {
-        commands.add(out.command.cmd, ...out.command.args);
+        for (const command of out.commands) {
+          commands.add(command.cmd, ...command.args);
+        }
         const thrown = this.battle.add(out.unit.item, out.unit.tx, out.unit.ty, SELF, { tag: out.unit });
         if (out.unit.item.attack === 0) {
           thrown.condition = "survive";

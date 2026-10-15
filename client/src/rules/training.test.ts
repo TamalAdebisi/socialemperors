@@ -45,7 +45,8 @@ test("no more than 175 from buildings; wonders on top, as in the Flash client", 
   assert.equal(population(town(houses), ITEMS).max, 175);
   assert.equal(population(town([...houses, placed(WONDER, 58, 58)]), ITEMS).max, 175 + 25);
   const church = { ...town([placed(item({ id: 470, name: "Great Church", category: 5, population: 10 }), 50, 50)]), increasedPopulation: 3 };
-  assert.equal(population(church, ITEMS).max, 10 + 10 + 30);
+  // Its own 10 once, and 3 steps of 10 on top: not its 10 a second time, as other wonders.
+  assert.equal(population(church, ITEMS).max, 10 + 30);
 });
 
 test("training costs its price and twice that in food; villagers need no food; a blacksmith takes a tenth off soldiers", () => {

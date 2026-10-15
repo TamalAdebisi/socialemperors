@@ -23,6 +23,8 @@ export const SUBCAT = {
 const RESOURCE_KINDS = new Set([SUBCAT.tree, SUBCAT.stone, SUBCAT.gold]);
 /** What a villager can go into to work. */
 const WORKPLACES = new Set([SUBCAT.mill, SUBCAT.mine, SUBCAT.farm]);
+/** The Sacrifice Altar: a mine by its kind, but it sacrifices whoever goes in (in the classic game for now). */
+const SACRIFICE_ALTAR = 225;
 /** A cleared rock leaves one growing back; after its time it's a new rock of a kind picked at random. */
 export const REGROWING = { stone: 81, gold: 80 };
 const NEW_ROCKS = { [REGROWING.stone]: 69, [REGROWING.gold]: 73 };
@@ -40,8 +42,9 @@ export function canHarvest(unit: ItemInfo, target: ItemInfo): boolean {
 
 /**
  * Whether a unit can go into a building: one of the player's, with room;
- * villagers into mills, mines and farms; any unit but siege engines into a
- * refuge. (Animals into ranches, and the special buildings, come later.)
+ * villagers into mills, mines and farms; any unit into a refuge, siege
+ * engines too, as in the Flash client. (Animals into ranches, and the
+ * special buildings such as the Sacrifice Altar, come later.)
  */
 export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): boolean {
   const target = building.item;
@@ -52,9 +55,9 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem): b
     return false;
   }
   if (target.subcategory === SUBCAT.refuge) {
-    return unit.subcategory !== SUBCAT.siege;
+    return true;
   }
-  return unit.subcategory === SUBCAT.villager && WORKPLACES.has(target.subcategory);
+  return unit.subcategory === SUBCAT.villager && WORKPLACES.has(target.subcategory) && target.id !== SACRIFICE_ALTAR;
 }
 
 /**
@@ -89,8 +92,21 @@ function distance2(a: Point, unit: PlacedItem): number {
   return (a.x - unit.tx) ** 2 + (a.y - unit.ty) ** 2;
 }
 
-/** How long a villager works a tree or rock: the config's activation, counted in whole seconds. */
-export function harvestSeconds(resource: ItemInfo): number {
+/** The academies that make harvesting quick: the Forestry Academy for trees, the Minery Academy for rocks. */
+const FORESTRY_ACADEMY = 223;
+const MINERY_ACADEMY = 222;
+
+/**
+ * How long a tree or rock takes to work, in whole seconds, from the first
+ * villager's arrival. With the town's Forestry Academy (trees) or Minery
+ * Academy (stone and gold) it's done in a second, as in the Flash client.
+ */
+export function harvestSeconds(resource: ItemInfo, town?: Town): number {
+  const academy = resource.subcategory === SUBCAT.tree ? FORESTRY_ACADEMY
+    : resource.subcategory === SUBCAT.stone || resource.subcategory === SUBCAT.gold ? MINERY_ACADEMY : 0;
+  if (academy && town?.items.some((placed) => placed.item.id === academy)) {
+    return 1;
+  }
   return Math.max(Math.ceil(resource.activation), 1);
 }
 
@@ -210,10 +226,13 @@ export function goInside(town: Town, unit: PlacedItem, building: PlacedItem, fro
 
 /**
  * Let the last unit in a building out, onto the nearest free tile around it
- * (anywhere on the map, nearest first). The unit, and the command; null when
- * nobody's inside, the config doesn't know them, or there's no room.
+ * (anywhere on the map, nearest first). The unit, and the commands; null when
+ * nobody's inside, the config doesn't know them, or there's no room. The last
+ * one out ends the building's work, as in the Flash client: a mill or mine
+ * whose time is chosen forgets the choice too (`activate`, 0), and asks again
+ * when the next worker comes in.
  */
-export function letOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>): { unit: PlacedItem; command: Command } | null {
+export function letOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>): { unit: PlacedItem; commands: Command[] } | null {
   const id = building.units?.at(-1);
   const item = id === undefined ? undefined : items.get(id);
   if (!item) {
@@ -227,11 +246,19 @@ export function letOut(town: Town, building: PlacedItem, items: Map<number, Item
   building.unitsInside = Math.max(building.unitsInside - 1, 0);
   const unit: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
   town.items.push(unit);
-  return { unit, command: { cmd: "pop_unit", args: [building.tx, building.ty, town.id, item.id, tile.x, tile.y, 0] } };
+  const commands: Command[] = [{ cmd: "pop_unit", args: [building.tx, building.ty, town.id, item.id, tile.x, tile.y, 0] }];
+  if (building.unitsInside === 0) {
+    building.startedAt = null;
+    if (building.item.production?.kind === "chosen") {
+      building.workTime = 0;
+      commands.push({ cmd: "activate", args: [building.tx, building.ty, town.id, building.item.id, 0] });
+    }
+  }
+  return { unit, commands };
 }
 
 /** Everybody out, as the Flash client does before a building is sold or stored. */
-export function letAllOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>): { unit: PlacedItem; command: Command }[] {
+export function letAllOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>): { unit: PlacedItem; commands: Command[] }[] {
   const out = [];
   while ((building.units?.length ?? 0) > 0) {
     const one = letOut(town, building, items);
