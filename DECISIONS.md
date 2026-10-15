@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the map of the original
+
+- **The notes name the original's classes and files** (and its server
+  commands and config keys), so a reader can find the code again on their
+  own computer. Nothing else of it: no code, no line-by-line translation,
+  no long quotes of the game's text.
+- **A rule only counts as a difference once a second reader has checked
+  it.** Of 113 claimed, 110 held and are marked "(checked twice)"; the 3
+  that didn't were corrected in place, not dropped.
+- **"Already the same" in PARITY.md was wrong about opening buildings
+  early:** it's switched off in the original. Corrected there, and added
+  to the list of rules to fix with the others the map found.
+- **The rules that change the save went to PARITY.md;** those that only
+  look or feel different stay in the rule books for their slices.
+
 ## 15 October 2026: the pointer's tools
 
 - **Collect all stays,** beside the original's glove: one press collects

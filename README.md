@@ -63,6 +63,7 @@ node e2e/run.mjs                     # the new client in a real browser (e2e/run
 | [ROADMAP.md](ROADMAP.md) | Where the project is going, how changes reach players, and the decisions so far |
 | [CLIENT.md](CLIENT.md) | The new game client: why, how it's built, and how the game works underneath |
 | [DECISIONS.md](DECISIONS.md) | Smaller calls made along the way, so any of them can be found and undone |
+| [docs/original/](docs/original/README.md) | The map of the original: every class of the Flash client, rule books for running a town, and the rules with no button, in our own words |
 | [PARITY.md](PARITY.md) | What the new client still lacks or does differently from the Flash game, for running a town |
 | [DEPLOY.md](DEPLOY.md) | Putting the game online, step by step: Railway, Cloudflare R2, Supabase |
 | [MULTIPLAYER.md](MULTIPLAYER.md) | The server's settings |
