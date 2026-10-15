@@ -359,7 +359,8 @@ the server.
   client: it's bought, placed or moved facing that way (cancelling a move
   turns it back). The server keeps the facing a `move` sends (it didn't).
 - Selling gives back a twentieth of the price, in what it was bought with,
-  rounded down; nothing for things bought with cash.
+  rounded down; nothing for things bought with cash. What comes back rises
+  from it as it goes ("+3 gold"), as in the Flash client.
 - Whose things are: an item's `race` in the config says. The player's own
   people's ("h" or "t") and anyone's ("a") are the player's; trees, rocks,
   scenery, treasures and lost things are nobody's ("n"). Only the player's
@@ -377,8 +378,8 @@ the server.
   `store_item` (place, town, item).
 
 **Collecting.** A building that's ready has a bubble over it in the colour
-of what it gives; tap it to collect, and the harvest and experience rise
-from it. Mills and mines whose workers wait for orders show "zz": tapping
+of what it gives; tap it, or its bubble (part of the building, as in the
+Flash client), to collect, and the harvest and experience rise from it. Mills and mines whose workers wait for orders show "zz": tapping
 asks how long they should work, with what each choice gives. Selecting a
 producing building shows when it will be ready.
 

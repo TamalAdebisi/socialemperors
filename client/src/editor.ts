@@ -1200,6 +1200,11 @@ export class TownEditor {
 
   private sell(placed: PlacedItem): void {
     this.letGo(placed);
+    // What comes back rises from it, as in the Flash client.
+    const back = refund(placed.item);
+    if (back) {
+      this.view.rise(placed, [{ text: `+${back.amount} ${back.resource}`, colour: RESOURCE_COLOURS[back.resource as keyof typeof RESOURCE_COLOURS] }]);
+    }
     this.emptyOut(placed);
     this.send([sell(this.town, placed)]);
     this.view.remove(placed);

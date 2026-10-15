@@ -274,6 +274,11 @@ export class TownView {
 
   /** The thing whose picture is under a point of the screen, the one in front. */
   itemAt(screen: Point): PlacedItem | null {
+    // A sign over a building first: it stands in front of everything on the map.
+    const signed = this.markers.signAt(screen);
+    if (signed) {
+      return signed;
+    }
     const slots = this.things.children;
     for (let i = slots.length - 1; i >= 0; i--) {
       const slot = slots[i];
