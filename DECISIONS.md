@@ -21,6 +21,13 @@ them can be found and reversed. The big, agreed decisions are in
   reaching level 5 mid-visit shows it on the next. The chest does show on
   reaching level 4, as the original's did.
 
+## 15 October 2026: what's selected is marked
+
+- **The glow is gone:** a selected thing is marked only as in the Flash
+  client, a golden ring or outline under it and its life bar over it (the
+  owner asked for the original's look). This reverses "Selected units
+  glow", further down.
+
 ## 15 October 2026: Beta 2, the harbour, the zeppelin and pausing
 
 - **The new client gives the harbour and the zeppelin tower,** as the

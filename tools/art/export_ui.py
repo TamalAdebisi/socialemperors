@@ -133,6 +133,13 @@ MAP_PICTURES = {
     "fire-2": ("FireMC", 1),
     "fire-3": ("FireMC", 2),
     "fire-4": ("FireMC", 3),
+    # Under what's selected, as in the Flash client: a golden ring under a unit (the same
+    # whichever way it faces), the outline of a building's ground (a picture for each size).
+    "selected-unit": ("PeanaMC", 0),
+    **{f"selected-{n}x{n}": (f"PeanaBuilding{n}x{n}MC", 0) for n in range(1, 7)},
+    # And over it, its life bar: the back (red, edged in black), and the green on it.
+    "life-bar": ("BarraVidaMC@0", 0),
+    "life-bar-green": ("BarraVidaMC@1", 0),
 }
 MAP_OUT = os.path.join(ROOT, "client", "src", "view", "art")
 
