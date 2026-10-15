@@ -152,7 +152,7 @@ These sit in the library folders but are Social Point's, so each has its own row
 | `PastillaSubcategoriaMC.as` | 15 | The little badge on a shop subcategory. | art |
 | `StarsRankMC.as` | 15 | The stars won on an island. | art |
 | `StoreButtonGraphic.as` | 15 | The shop button's picture. | art |
-| `Symbol1.as` | 53 | The bar at the bottom (`GuiMC`'s `bgBar`): shop, storage, bulldozer, pointer, home, the menus, missions, friends, troll timer, mass collect, the selection panel. | art |
+| `Symbol1.as` | 53 | The bar at the bottom (`GuiMC`'s `bgBar`): shop, storage, bulldozer, pointer, home, the menus, missions, friends, troll timer, mass collect, the selection panel. | art; ours uses its buttons' pictures, among them the pointer and its Cancel, the bulldozer, the glove and the square tool (`ui/art/pointer*.webp`, `remove`, `fast-collect`, `square-tool*`) |
 | `TabMC.as` | 19 | A coloured tab with an icon, for windows with tabs. | art |
 | `tooltipColMC.as` | 18 | A collectible's tooltip. | art |
 | `ToolTipMC.as` | 22 | A tooltip box with a pointer. | art |
@@ -200,7 +200,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `EP_TimeMachine_MC.as` | 37 | The selection panel for the time machine. | art |
 | `EP_TOWNHALL_MC.as` | 50 | The selection panel for the town hall, with the unit it trains. | art |
 | `EP_UnitMC.as` | 30 | The selection panel for a unit: attack, defence, range, speed. | art |
-| `EP_Wall_MC.as` | 40 | The selection panel for a wall, with its open/close button. | art |
+| `EP_Wall_MC.as` | 40 | The selection panel for a wall, with its open/close button. | art; ours uses it: its open and close buttons (`ui/art/open-gate.webp`, `close-gate.webp`) |
 | `EP_WarehouseMC.as` | 36 | The selection panel for the unit warehouse. | art |
 | `EP_Weather_MC.as` | 37 | The selection panel for the weather building. | art |
 | `EP_Zeppelin_MC.as` | 33 | The selection panel for the zeppelin. | art; ours uses it: its open button (`ui/art/open-zeppelin.webp`) |
@@ -432,7 +432,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `BubbleSpeech.as` | 15 | The speech bubble's outline. | art |
 | `BubbleSpeechText.as` | 18 | The speech bubble's words. | art |
 | `CortinaMC.as` | 15 | The curtain drawn over the map when paused. | art |
-| `CursorMC.as` | 15 | The mouse pointers, one frame each (axe, pick, go inside, repair...). | art; ours uses it: the work pointers (`ui/art/cursor-*.png`, `axe`, `pick`, `inside`) |
+| `CursorMC.as` | 15 | The mouse pointers, one frame each (axe, pick, go inside, repair...). | art; ours uses it: the work pointers (`ui/art/cursor-*.png`, `axe`, `pick`, `inside`, `repair`) and the tools' (`square`, `remove`, `collect`) |
 | `DebugTile.as` | 15 | A debug tile mark. | art |
 | `DebugTileBlue.as` | 15 | A blue debug tile mark. | art |
 | `DebugTileEnemy.as` | 15 | An enemy debug tile mark. | art |

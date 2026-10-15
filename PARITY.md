@@ -259,7 +259,7 @@ in [DECISIONS.md](DECISIONS.md).
       in town. Units in a refuge sail with the army in the original. M
 - [ ] **Domes:** the Protection Dome halves hits within 9 tiles; the Tower
       Enhancer doubles nearby towers' rate (shop, levels 42 and 47). M
-- [ ] **The Wall Door** can be opened and shut by its owner in the
+- [x] **The Wall Door** can be opened and shut by its owner in the
       original. M
 - [ ] **Squads:** units sent together re-form round a walking target, and
       archers step back from closer than 3 tiles. M

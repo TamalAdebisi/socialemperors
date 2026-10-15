@@ -118,8 +118,9 @@ another.
 15. **The tidy-up:** the player's buildings that overlap something go to
     storage (`store_item_frombug`); others off the map are sold free
     ("OUTOB"); as the drawing finishes, units on a taken tile move to the
-    nearest free one (`move` ... "Colisio #n"). *Built:
-    `client/src/rules/cleanup.ts`.*
+    nearest free one (`move` ... "Colisio #n"). *Built, with small
+    differences: ours also moves a unit off a gate, and keeps one on the
+    player's land (`client/src/rules/cleanup.ts`, [town.md](rules/town.md)).*
 16. **Drawing,** 150 things a frame behind a progress bar; then the top
     bar's clock is added and the game loop starts. *Built
     (`client/src/view/townView.ts`); the top bar's clock: not yet (section

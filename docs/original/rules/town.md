@@ -102,7 +102,7 @@ of the original's searches measure from.
   searches. *Same: `client/src/rules/editing.ts` (`fits`); the Phoenix Egg's exception: not checked.*
 - **What blocks a path.** Buildings, trees and rocks block; fields
   (farms) don't, nor units, nor terrain; an open wall gate doesn't. A
-  tree's tile opens as soon as it's cut. *Same: `client/src/rules/walking.ts` (`walkGrid`); gates never open in town here (see "Other buildings").*
+  tree's tile opens as soon as it's cut. *Same: `client/src/rules/walking.ts` (`walkGrid`), open gates included (see "Academies, wonders and other buildings").*
 - **Whose things are.** By the item's `race`: the player's own people's
   and anyone's ("a") are the player's; "n" nobody's; the other people's are
   enemies. In the wild ring, buildings are enemies except farms, chests,
@@ -134,7 +134,7 @@ of the original's searches measure from.
 - **Turning while placing.** Space flips the building between its first
   two facings only (0 and 1), whatever it has; it's bought or moved facing
   that way. With nothing being placed, Space switches on the square tool
-  for picking units. *Different: ours steps through all its facings (the Oil and Water Towers have four), and Space does nothing else, `client/src/editor.ts` (`turnWhilePlacing`).*
+  for picking units. *Different: ours steps through all its facings (the Oil and Water Towers have four), `client/src/editor.ts` (`turnWhilePlacing`); same: with nothing being placed, Space takes up the square tool (`takeSquareTool`).*
 - **A tap or a drag.** A press that moved the map more than 25 pixels
   (scaled by the zoom) is a drag, not a tap. *Different: ours takes 8 pixels and half a second, `client/src/view/camera.ts`.*
 
@@ -170,12 +170,12 @@ of the original's searches measure from.
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
   the player's except gold and stone rocks, and rocks in the wild ring.
-  (The panel's sell slot is wired as the Upgrade button.) *Different: ours sells from a button on the card; what can be sold is the same, `client/src/rules/editing.ts` (`choices`). CLIENT.md's "red ✕ for Sell" is our own use of that slot.*
+  (The panel's sell slot is wired as the Upgrade button.) *Same: ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); different: the card keeps a Sell button as well, and hovering with the bulldozer lights nothing up. CLIENT.md's "red ✕ for Sell" is our own use of that slot.*
 - **What a sale gives, and when it asks.** A twentieth of the `cost`,
   rounded down, in its `cost_type`; things bought with cash give nothing.
   Free things go at once; wonders and units bought with resources go at
   once; other things ask first; cash things ask, showing 0. `sell` (x, y,
-  item, town, 0, "BLDZE"). *Same refund and command: `client/src/rules/editing.ts` (`refund`, `sell`); different: ours always asks, `client/src/ui/actions.ts`.*
+  item, town, 0, "BLDZE"). *Same refund and command: `client/src/rules/editing.ts` (`refund`, `sell`); different: the card's Sell always asks (`client/src/ui/actions.ts`), and our bulldozer lets only free things go at once, so it asks for wonders (`client/src/editor.ts`, `bulldoze`).*
 - **Selling or storing a building lets its units out first** (`pop_unit`
   each). *Same: `client/src/editor.ts` (`emptyOut`).*
 
@@ -228,7 +228,7 @@ of the original's searches measure from.
   Altar finish on their own). *Same: `client/src/editor.ts` (`refresh`).*
 - **Collecting.** Tapping a ready building runs a short bar (about two
   thirds of a second), then collects. The glove is a mode in which
-  hovering collects each ready building, without the bar. *Missing: the bar (PARITY.md, "Small things"); different: our glove collects all at once (a recorded call), `client/src/editor.ts` (`collectAll`).*
+  hovering collects each ready building, without the bar. *Missing: the bar (PARITY.md, "Small things"); same: the glove (Fast collect, in the pointer's menu) collects each ready building it's swept over, `client/src/editor.ts` (`sweep`); ours keeps Collect all beside it, which collects everything ready at once (a recorded call, `collectAll`).*
 - **The harvest** is the config's `collect`, rounded down, times the gold
   multiplier (1 for buildings). With more than one worker: the harvest
   plus a fifth of it for each worker after the first, rounded down, then
@@ -327,7 +327,7 @@ of the original's searches measure from.
 - **Where a villager stands** to work or go in: the first of up to four
   rings round the target's tile with a free tile, or a field tile, the
   one nearest the villager; already within one tile, it stays. The path
-  isn't checked first. *Different, slightly: ours leaves out field tiles and picks one it can reach, `client/src/rules/work.ts` (`standingTile`).*
+  isn't checked first. *Different, slightly: ours leaves out field tiles and tiles other units are walking to (a recorded call), and picks one it can reach, `client/src/rules/work.ts` (`standingTile`).*
 - **The work.** The tree's or rock's clock starts with the first
   villager there (a tree's `activation` 3.24 needs 4 ticks, a rock's 6.48
   needs 7); more villagers don't speed it; if all leave, the work is
@@ -343,7 +343,7 @@ of the original's searches measure from.
 - **Next:** the next in its line that's still there and nobody's at; with
   none, the group of the same kind touching the last one (and touching
   those), ordered by tiles across plus tiles down, the first taken even if
-  another villager is at it. *Different, slightly: ours orders by the larger of the two and skips busy ones, `client/src/rules/work.ts` (`nextResources`).*
+  another villager is at it. *Different, slightly: ours orders by the larger of the two, skips busy ones and passes over one it can't reach, `client/src/rules/work.ts` (`nextResources`), `client/src/editor.ts` (`goOn`).*
 - **Forgetting the line:** a villager sent to the ground forgets it. *Same: `client/src/editor.ts` (`clearLine`).*
 - **Repair:** a villager sent to the player's building below full life
   puts 25 back every 61 frames (about 2 seconds). *Same: `client/src/editor.ts` (`repair`).*
@@ -355,7 +355,7 @@ of the original's searches measure from.
 - **Who answers:** the player's units (their people's, anyone's, caught
   animals). *Same: `client/src/rules/walking.ts` (`canWalk`).*
 - **Where they can go:** any tile of the 100 x 100 map not under a
-  building, the wild ring and unbought land included. *Different: ours keeps the player's units on owned land (a recorded call, DECISIONS.md, wild animals); CLIENT.md ("Units walking") gives it as the original's rule, which it isn't. `client/src/rules/walking.ts` (`gridFor`).*
+  building, the wild ring and unbought land included. *Different: ours keeps the player's units on owned land (a recorded call, DECISIONS.md, wild animals); CLIENT.md ("Units walking") gives it as the original's rule, which it isn't. Only a unit already standing off it (left by a fight at a camp, say) may cross land not bought to get back, and it can still only be sent onto owned land (recorded, DECISIONS.md, 15 October 2026). `client/src/rules/walking.ts` (`gridFor`, `unitPath`).*
 - **Paths.** Eight directions, never squeezing between two corners; a
   tile cut off from the start is refused at once. A slip in the
   original's sums means the way so far isn't added up, so paths can
@@ -367,12 +367,12 @@ of the original's searches measure from.
   tile, from a square growing from the tapped tile towards higher x and
   y; the tapped tile is used only if free. Idle units recheck their tile
   every 61 frames, and one sharing it with something else (not a field)
-  steps to a free tile within 5. *Different: ours sends one unit, to the tapped tile even if another unit stands there, and units don't step off, `client/src/editor.ts`.*
+  steps to a free tile within 5. *Same for several units: each gets its own free tile from a square grown from the tapped tile, `client/src/editor.ts` (`sendTo`), `client/src/rules/group.ts` (`squareTiles`). Different: ours hands out only tiles they can walk to (a recorded call); one unit alone still goes to the tapped tile even if another unit stands there; and units don't step off a shared tile.*
 - **Speed:** `velocity` pixels a frame, along the longer of the screen's
   two directions, the other in proportion; a villager at 3 takes about 0.6
   seconds a tile. *Same: `client/src/rules/walking.ts` (`stepTowards`).*
 - **A tile that became a building** since the unit set off stops it
-  there (flying units fly on). *Same: `client/src/editor.ts` (`walkTo`).*
+  there (flying units fly on). *Different, slightly: ours stops it there too, then sets off once more from there, where the original works from there if it's close enough (a recorded call), `client/src/editor.ts` (`walkTo`, `work`, `goInto`, `repair`).*
 - **Facing and looking about:** a walking unit faces its next tile; a
   standing one has a 4% chance every 61 frames to turn to a tile beside
   it. *Same: `client/src/rules/walking.ts`.*
@@ -381,7 +381,7 @@ of the original's searches measure from.
   "Unitat"). *Different: ours sends it as the unit stops (DECISIONS.md, units walking), `client/src/rules/walking.ts` (`unitMoved`).*
 - **Picking several:** the square tool (up to 20 of the player's units)
   and a double tap within a second on a unit (up to 20 within 10 tiles of
-  the same sort: melee, ranged, siege, healers, workers and so on). *Missing (PARITY.md, "Selecting several units").*
+  the same sort: melee, ranged, siege, healers, workers and so on). *Same: `client/src/editor.ts` (`takeSquareTool`, `dragBox`, `selectGroup`), `client/src/rules/group.ts` (`sameKindNear`); the card shows their portraits with life bars (`client/src/ui/actions.ts`, `showGroup`). Escape puts the square tool down here (a recorded call).*
 
 ## Units going into buildings
 
@@ -474,7 +474,7 @@ of the original's searches measure from.
   someone else's here. *Same: `client/src/rules/cleanup.ts`.*
 - **Units:** one on a taken tile (but a field or a gate) moves to the
   nearest free tile, toward the far corner: `move` (…, 0, town, "Colisio
-  #n"), n counting every unit that collided. *Same: `client/src/rules/cleanup.ts` (ours counts only those moved).*
+  #n"), n counting every unit that collided. *Different, slightly: ours moves a unit off a gate too, and one on the player's land only to a free tile on it (a recorded call); ours counts only those moved, `client/src/rules/cleanup.ts`.*
 - **A free villager:** with no villager on the map or inside a farm,
   mill, mine, tree or rock, the town gets a man or woman of its people for
   nothing, on a random free tile up to 5 out from (54, 54) (with none, on
@@ -507,7 +507,7 @@ of the original's searches measure from.
   helper, one with exactly one and a crew of 7 or more a second
   (`buy_si_help`, x, y, town, item, 1). *Missing (the classic game; ROADMAP).*
 - **The wall gate** opens and closes from its panel, so units can pass;
-  not saved. *Missing (PARITY.md, "The building card").*
+  not saved. *Same: Open door and Close door on the card, the open picture while it's open, `client/src/editor.ts` (`gateButton`, `openGate`), `client/src/rules/walking.ts`, `client/src/view/townView.ts`.*
 - **The Unit Warehouse** takes units off the map up to its capacity
   (`add_unit_warehouse`) and has its own window. *Missing.*
 - **Buildings with their own window** (the spell academy, weather and
@@ -576,7 +576,8 @@ serious first. "Recorded" means DECISIONS.md already has it as a call.
 starting from the places named in it: the original's code and ours (and
 `command.py` for the `move` command). All 47 held up, so each is marked
 "(checked twice)"; a few gained a detail on the way, noted in the item and
-its rule. How deep: the code behind each claim was read through; the
+its rule. Items 48 and 49 came with later changes to our client and were
+not read twice. How deep: the code behind each claim was read through; the
 missing features (28 to 44) were checked only far enough to see that the
 original has them and our client doesn't, not in every detail. One quirk
 was seen but not followed up: when a villager's line runs out after a
@@ -621,17 +622,27 @@ tree of the kind wasn't checked.
 11. **Units stay on owned land.** In the original they can walk the whole
     map but under buildings (`client/src/rules/walking.ts`; recorded, but
     CLIENT.md gives it as the original's rule). (checked twice)
+    *Since "Unstick units, and open and shut wall gates":* a unit
+    already off the land may cross land not bought to get back; the rest
+    holds.
 12. **Selling from a card.** The original sells only with the bulldozer
     tool, and doesn't ask for free things, for wonders and units bought
     with resources, or (in storage) for anything but cash things; ours
     always asks (`client/src/rules/editing.ts`, `client/src/ui/actions.ts`,
     `client/src/rules/storage.ts`). (checked twice)
+    *Partly fixed since "The pointer's tools: Remove and Fast collect, as
+    in the Flash client":* ours has the bulldozer too, which doesn't ask
+    for free things. Still
+    different: the card's Sell stays and always asks, the bulldozer asks
+    for wonders, and storage always asks.
 13. **Placing over a taken tile.** The original hides the outline there
     and ends placing on a tap; ours shows red and stays (`client/src/editor.ts`).
     (checked twice)
 14. **Space while placing** flips only the first two facings in the
     original; ours steps through all, and Space starts no square tool
     (`client/src/editor.ts`). (checked twice)
+    *Partly fixed since "Select several units, as in the Flash
+    client":* Space takes up the square tool; the facings still differ.
 15. **A ready building tapped with a villager selected** is collected in
     the original; ours sends the villager in if there's room
     (`client/src/editor.ts`). (checked twice)
@@ -651,13 +662,22 @@ tree of the kind wasn't checked.
 21. **Group moves and shared tiles.** The original spreads units over free
     tiles and steps units off shared tiles; ours sends one unit, onto any
     tile (`client/src/editor.ts`). (checked twice)
+    *Partly fixed since "Select several units, as in the Flash
+    client":* several units spread over free tiles (only tiles they can
+    walk to, recorded).
+    Still different: one unit alone goes onto any tile, and nobody steps
+    off a shared tile.
 22. **The next tree** is picked by tiles across plus down in the original,
     busy ones included; ours by the larger of the two, skipping busy ones
-    (`client/src/rules/work.ts`). (checked twice)
+    (`client/src/rules/work.ts`). (checked twice) Ours also passes over
+    one it can't reach.
 23. **Where a villager stands** may be a field in the original; ours skips
     fields and checks the path (`client/src/rules/work.ts`). (checked twice)
+    Ours also skips tiles other units are walking to (recorded).
 24. **The glove** is a hover mode in the original, one press here
-    (`client/src/editor.ts`; recorded). (checked twice)
+    (`client/src/editor.ts`; recorded). (checked twice) *Fixed since:*
+    "The pointer's tools: Remove and Fast collect, as in the Flash
+    client". Collect all stays beside the glove (recorded).
 25. **The land window** shows the gold button only with enough neighbours
     in the original (`client/src/editor.ts`; recorded). (checked twice)
 26. **Tap or drag:** 25 pixels in the original, 8 pixels and half a second
@@ -679,11 +699,13 @@ tree of the kind wasn't checked.
 36. Social buildings' staff and their free helpers on opening. (checked twice)
 37. Lost things on each opening. (checked twice)
 38. Picking several units (square tool, double tap) and group moves.
-    (checked twice)
+    (checked twice) *Fixed since:* "Select several units, as in the
+    Flash client".
 39. The next-harvest clock on the bar. (checked twice)
 40. Collection pieces from trees and rocks. (checked twice)
 41. The no-town-hall window. (checked twice)
-42. The wall gate opening. (checked twice)
+42. The wall gate opening. (checked twice) *Fixed since:* "Unstick
+    units, and open and shut wall gates".
 43. The map centring on a villager's training. (checked twice)
 44. The flying animal from a ranch (a rising line instead; recorded).
     (checked twice)
@@ -698,6 +720,15 @@ tree of the kind wasn't checked.
 47. **The original's tile (0, 0) bug** (a single tree, an animal, a lost
     thing or a free villager with no free tile near is dropped there)
     isn't copied. (checked twice)
+48. **The tidy-up and gates.** Since "Unstick units, and open and shut
+    wall gates", ours moves a unit standing on a gate off it, and keeps a unit on the
+    player's land when it moves it; the original leaves a unit on a gate
+    and looks anywhere (`client/src/rules/cleanup.ts`; recorded). (new
+    since the second reading)
+49. **A unit stopped short** by something built in its way sets off once
+    more here; the original works from there if it's close enough
+    (`client/src/editor.ts`; recorded, same commit). (new since the second
+    reading)
 
 ### Where CLIENT.md and our index are wrong
 

@@ -17,8 +17,8 @@ update its status here.
 | File | What it is |
 | --- | --- |
 | [index/](index/) | **The index.** All 1,505 classes of the client, one line each: what it does, and the new client's status. Seven files by area (below) |
-| [rules/town.md](rules/town.md) | **Rule book: running a town.** The map, land, placing and moving, construction, upgrading, production, houses, training, villagers, walking, wild animals, what grows back, tidying, special buildings, storage, the troll town. 104 rules |
-| [rules/progress.md](rules/progress.md) | **Rule book: levels, goals, bonuses and the shop.** Experience, level ups, how every kind of goal is counted and paid, the three bonuses, the shop and its prices, the market, the second town. 127 rules |
+| [rules/town.md](rules/town.md) | **Rule book: running a town.** The map, land, placing and moving, construction, upgrading, production, houses, training, villagers, walking, wild animals, what grows back, tidying, special buildings, storage, the troll town. 127 rules |
+| [rules/progress.md](rules/progress.md) | **Rule book: levels, goals, bonuses and the shop.** Experience, level ups, how every kind of goal is counted and paid, the three bonuses, the shop and its prices, the market, the second town. 113 rules |
 | [rules/neighbours.md](rules/neighbours.md) | **Rule book: neighbours and messages.** The neighbours bar, visiting, helping, the carts, asking friends, gifts, social buildings, Arthur, and the windows that open as the game starts. 76 rules |
 | [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 83 rules |
 

@@ -293,15 +293,18 @@ check counts the player's own things.
   the game sets its flag, renaming included. It stays in the open list
   for good. *Ours: marked "classic", which says it's played in the
   classic game, where it can't be done either.*
+- **The square selection tool** (goal 41): taking it up this session.
+  *Ours: same (`selection-tool`: its button or Space, `rules/goals.ts`),
+  since "Select several units, as in the Flash client"; until then the
+  goal was left to the classic game.*
 - Other kinds played only in the classic game for now: the market's
-  trades (65, 66, 72) and its friends (51), the square selection tool
-  (41), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
+  trades (65, 66, 72) and its friends (51), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
   129, 142, 152, 162, 164, 172, 185, 192, 205, 209), player battles and
   spying (59, 67, 78, 79, 94, 132, 161), the defence plan (60), social
   buildings staffed (53, 71, 90, 96, 104, 115, 122, 150, 159, 170, 176,
   189, 203, 204, 214), repairing (101), the coordinated attack (77), and
   the special moves (124, 171, 177, 195). *Ours: missing; the list says
-  "Played in the classic game for now" (62 of goals 1 to 226; CLIENT.md
+  "Played in the classic game for now" (61 of goals 1 to 226; CLIENT.md
   says 72).*
 - A hard-coded check for the coordinated attack reads goal 78's done flag
   where the goal is 77 (the drift above); it only stops counting archers
@@ -550,7 +553,8 @@ check counts the player's own things.
   only while a goal of that kind is open.
 - Same section: "Goals about battles, quests, the market, the social
   buildings and capturing animals ... (72 of the 226)": capturing and most
-  island goals are done in the new client now; 62 of 1 to 226 say
+  island goals are done in the new client now, and the square tool's
+  (41); 61 of 1 to 226 say
   "classic".
 - Same section: goals stop at level 35 also mid-session in the original,
   with a free Wizardry Academy; CLIENT.md only mentions the load.
