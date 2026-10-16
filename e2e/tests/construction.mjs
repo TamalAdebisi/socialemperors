@@ -36,7 +36,7 @@ export default async function construction({ newPlayer }) {
 
   // Its card: how far along, no buttons. A villager sent at it stays out.
   const card = await player.select(FARM_AT, "Farm Land");
-  assert.match(card.text, /Being built… \d+%/);
+  assert.match(card.text, /Farm Land.*\d+%.*Ready in 0:0\d/s, "its bar and time left, as the game's");
   const buttons = await player.barButtons();
   for (const name of ["Move", "Store", "Sell", "Turn"]) assert.ok(!buttons.some((b) => b.includes(name)), `no ${name} yet`);
   await player.press("Close");
@@ -58,7 +58,7 @@ export default async function construction({ newPlayer }) {
     FARM_AT, { timeout: 15_000 });
   const done = await player.select(FARM_AT, "Farm Land");
   assert.ok((await player.barButtons()).some((b) => b.includes("Move")), "Move now");
-  assert.doesNotMatch(done.text, /Being built/);
+  assert.match(done.text, /CAPACITY 1\/1/, "built: who's inside, as the game's farm card");
 
   // Stored and placed again: built again.
   await player.press("Store");

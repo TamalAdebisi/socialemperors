@@ -259,6 +259,23 @@ export class Player {
   }
 
   /**
+   * Sells what's at a point with the bulldozer (the pointer's Remove), as
+   * the original does: it asks first for most things ("Sell" or "Remove"
+   * then confirms), then the tool is put down again.
+   */
+  async bulldoze(point, confirm = /^(Sell|Remove)$/) {
+    await this.page.locator(".pointer-tool").click();
+    await this.page.locator('.tool-menu [data-tool="remove"]').click();
+    await this.click(point);
+    if (confirm) {
+      const asked = this.page.locator(".actions.asking button", { hasText: confirm });
+      if (await asked.count()) await asked.first().click();
+    }
+    await this.wait(300);
+    await this.page.locator(".pointer-tool").click();
+  }
+
+  /**
    * The screen's colours in a box ({ x, y, width, height }), as [r, g, b]
    * for each pixel: a screenshot, read back by the page (no picture library here).
    */

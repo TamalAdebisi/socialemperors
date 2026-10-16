@@ -147,7 +147,7 @@ of the original's searches measure from.
   time machines, warehouse and allies' panels have no Upgrade. Units have
   no buttons. Trees, rocks, regrowing rocks, treasures and keys show their
   numbers only; scenery, isles, lost things and special-collection pieces
-  have no panel (scenery can't even be selected). *Same, but upgrading: `client/src/rules/editing.ts` (`choices`).*
+  have no panel (scenery can't even be selected). *Same: `client/src/rules/editing.ts` (`choices`), Upgrade with `client/src/rules/upgrade.ts` (CLIENT.md, "The building card").*
 - **Move** is refused while a bar runs on the building (collecting,
   training, building). The building is lifted off the grid and follows
   the pointer; a tap on a free tile where it fits sends `move` (old x, old
@@ -170,7 +170,7 @@ of the original's searches measure from.
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
   the player's except gold and stone rocks, and rocks in the wild ring.
-  (The panel's sell slot is wired as the Upgrade button.) *Same (hovering with it too, `client/src/editor.ts`, `hover`): ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); different: the card keeps a Sell button as well. CLIENT.md's "red ✕ for Sell" is our own use of that slot.*
+  (The panel's sell slot is wired as the Upgrade button.) *Same (hovering with it too, `client/src/editor.ts`, `hover`): ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); and the card has no Sell, as here.* *Fixed since "The building card" (ours had kept a Sell on the card).*
 - **What a sale gives, and when it asks.** A twentieth of the `cost`,
   rounded down, in its `cost_type`; things bought with cash give nothing.
   Free things go at once; wonders and units bought with resources go at
@@ -188,7 +188,7 @@ of the original's searches measure from.
   in the 1x1 scaffold. The scaffold's picture: the ranch
   one for ranches (not the nursery), the field one for farms, the trolls'
   by width in a troll town, else by width 1, 2, 3 or 4. It isn't saved: a
-  reload shows the building finished. *Same: `client/src/rules/construction.ts`, `client/src/view/construction.ts` (CLIENT.md, "Construction"); the trolls' and upgrading's: missing with those parts.*
+  reload shows the building finished. *Same: `client/src/rules/construction.ts`, `client/src/view/construction.ts` (CLIENT.md, "Construction"), upgrading's too; the trolls': missing with that part.*
   *Fixed since "Construction: scaffolding for 10 seconds".*
 - **Meanwhile** the building has no buttons, takes no units, can't be
   bulldozed, isn't lit when hovered, and a tower doesn't shoot. Its
@@ -206,7 +206,8 @@ of the original's searches measure from.
   cost cash) and gives the next item's `xp`. Then `sell` (x, y, item, town,
   0, "UPGR") and `buy` of the next on the same tile (facing 1, not free).
   Its units come out, and the new building gets the scaffold. A separate
-  `upgrade` command exists but nothing sends it. *Missing (PARITY.md, "The building card").*
+  `upgrade` command exists but nothing sends it. *Same: `client/src/rules/upgrade.ts` (with tests), `TownEditor.upgrade` (CLIENT.md, "The building card"); different: on a touch screen the first tap shows the bubble with the price, the second upgrades; the new building faces as one from the shop (our shop's facing).*
+  *Fixed since "The building card".*
 
 ## Production
 
@@ -523,7 +524,7 @@ of the original's searches measure from.
 - **Trains villagers** and sets their speed, line and name. *Same: `client/src/rules/villagers.ts`.*
 - **Can't be sold or stored:** the bulldozer refuses it, its panel has no
   Store, storage has no Sell for it. It can be moved, turned and upgraded
-  (Town Hall II to IV). *Same: `client/src/rules/editing.ts`, `client/src/rules/storage.ts`; upgrading: missing.*
+  (Town Hall II to IV). *Same: `client/src/rules/editing.ts`, `client/src/rules/storage.ts`, `client/src/rules/upgrade.ts`.*
 - **No town hall at the start** opens a window saying so. *Missing.*
 - **Things head for it:** caught animals with no ranch, and the
   player's units moved off the wild ring for a new camp. *Same: `client/src/editor.ts`, `client/src/homeCamps.ts`.*
@@ -701,6 +702,7 @@ tree of the kind wasn't checked.
 **Missing**
 
 28. Upgrading (and with it Town Hall II to IV). (checked twice)
+    *Fixed since "The building card".*
 29. The 10-second scaffold, and the building being out of use meanwhile.
     (checked twice)
     *Fixed since "Construction: scaffolding for 10 seconds".*

@@ -238,15 +238,16 @@ export function goInside(town: Town, unit: PlacedItem, building: PlacedItem, fro
 }
 
 /**
- * Let the last unit in a building out, onto the nearest free tile around it
+ * Let a unit in a building out (the last in, or the one at `index`, tapped
+ * on the card), onto the nearest free tile around it
  * (anywhere on the map, nearest first). The unit, and the commands; null when
  * nobody's inside, the config doesn't know them, or there's no room. The last
  * one out ends the building's work, as in the Flash client: a mill or mine
  * whose time is chosen forgets the choice too (`activate`, 0), and asks again
  * when the next worker comes in.
  */
-export function letOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>): { unit: PlacedItem; commands: Command[] } | null {
-  const id = building.units?.at(-1);
+export function letOut(town: Town, building: PlacedItem, items: Map<number, ItemInfo>, index = -1): { unit: PlacedItem; commands: Command[] } | null {
+  const id = building.units?.at(index);
   const item = id === undefined ? undefined : items.get(id);
   if (!item) {
     return null;
@@ -255,7 +256,8 @@ export function letOut(town: Town, building: PlacedItem, items: Map<number, Item
   if (!tile) {
     return null;
   }
-  building.units = building.units!.slice(0, -1);
+  const gone = index < 0 ? building.units!.length + index : index;
+  building.units = building.units!.filter((_, i) => i !== gone);
   building.unitsInside = Math.max(building.unitsInside - 1, 0);
   const unit: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
   town.items.push(unit);

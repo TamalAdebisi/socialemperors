@@ -1,6 +1,6 @@
 // Storage, and the original's rules for trees and rocks: store a tower and a
 // house, place the tower back elsewhere, sell the house from storage, and
-// remove a stone rock on bought land.
+// remove a stone rock on bought land with the bulldozer.
 
 import assert from "node:assert/strict";
 import { has, stored } from "../lib.mjs";
@@ -18,11 +18,11 @@ export default async function storage({ newPlayer }) {
   assert.deepEqual((await player.barButtons()).filter((label) => /Sell|Remove/.test(label)), [], "trees can't be sold");
   await player.press("Close");
 
-  // A rock on your own land: removed for nothing, after asking.
-  await player.select(ROCK.slice(1), "Stone");
-  await player.press("Remove");
-  assert.match(await player.bar(), /Remove/, "removing asks to confirm");
-  await player.press("Remove");
+  // A rock on your own land: the bulldozer removes it for nothing, at once.
+  const rock = await player.select(ROCK.slice(1), "Stone");
+  assert.deepEqual((await player.barButtons()).filter((label) => /Sell|Remove/.test(label)), [], "the card sells nothing");
+  await player.page.keyboard.press("Escape");
+  await player.bulldoze(rock.point, null);
 
   await player.select(TOWER_AT, "Tower I");
   await player.press("Store");

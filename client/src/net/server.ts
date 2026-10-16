@@ -23,6 +23,9 @@ export interface PageSettings {
   csrf?: string;
   /** Days since the empire was made (the welcome-back chest). */
   days?: number;
+  /** What waits on the site's Friends page, and who's signed in: the Menu's (ui/hud.ts). */
+  news?: number;
+  username?: string;
 }
 
 export function readPageSettings(doc: Document = document): PageSettings {

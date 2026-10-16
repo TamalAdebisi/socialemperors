@@ -261,6 +261,72 @@ body {
   margin-left: auto;
 }
 
+/* The site's Menu (Friends, Empires, Log out), as the classic page's bar, with its red count. */
+.site {
+  position: relative;
+}
+
+.site-button {
+  position: relative;
+}
+
+.site-button .menu-count {
+  top: -9px;
+  right: -9px;
+}
+
+.site-menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 6px;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: var(--parchment);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.site-menu[hidden] {
+  display: none;
+}
+
+.site-menu a,
+.site-menu button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: 800 14px var(--round);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-menu a:hover,
+.site-menu button:hover,
+.site-menu a:focus-visible,
+.site-menu button:focus-visible {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.site-menu .menu-count {
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+}
+
+.site-menu form {
+  margin: 0;
+}
+
 /* Music and sound: the game's own square buttons. */
 .hud-sound {
   display: grid;
@@ -871,6 +937,628 @@ body {
   transform: translateY(-2px) scale(1.06);
 }
 
+/* ---- The card as the Flash client's info panel (ui/actions.ts) -------------
+   On the game's parchment, left to right: the picture in its frame with the
+   life bar under it; the name, the numbers, what it earns, the time bar and
+   Hurry up; the tip, who's inside, the unit it trains; Move, Turn, Store and
+   Upgrade two by two. The parchment is the game's 580 by 146 panel, its edge
+   kept whole as the card grows. */
+.actions.card {
+  grid-template-columns: 92px minmax(150px, 1fr) auto auto;
+  align-items: start;
+  gap: 0 14px;
+  width: 580px;
+  max-width: calc(100% - var(--rail-w) - 48px);
+  min-height: 146px;
+  padding: 4px 6px 4px 4px;
+  border: 14px solid transparent;
+  border-radius: 0;
+  border-image: url("./art/card.webp") 29 fill / 14px stretch;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+}
+
+.card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+/* A picture in the game's brown frame. */
+.card-frame {
+  display: grid;
+  place-items: center;
+  width: 86px;
+  aspect-ratio: 1;
+  padding: 6px;
+  background: url("./art/card-frame.webp") center / 100% 100% no-repeat;
+}
+
+.card-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.card-picture.missing {
+  visibility: hidden;
+}
+
+/* Its life: the game's bar, green over red. */
+.card-life {
+  width: 84px;
+  height: 10px;
+  background: url("../view/art/life-bar.webp") center / 100% 100% no-repeat;
+}
+
+.card-life-fill {
+  display: block;
+  height: 100%;
+  background: url("../view/art/life-bar-green.webp") left center / 84px 100% no-repeat;
+}
+
+.card-life-text::after {
+  content: attr(data-life);
+  font: 900 12px var(--round);
+}
+
+.card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.actions.card .actions-name {
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.card-stat,
+.card-earns {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 14px var(--round);
+}
+
+.card-stat-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.card-earns .icon {
+  height: 20px;
+}
+
+/* The numbers' tooltips, in the game's words, as its black-edged boxes. */
+.card-stat,
+.card-train-cash {
+  position: relative;
+}
+
+.card-stat[data-tip]:hover::after,
+.card-stat[data-tip]:focus-visible::after,
+.card-train-cash[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: 800 12px var(--round);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The time bar: the game's white back, its yellow filling from the left, the share on it. */
+.card-bar {
+  position: relative;
+  width: 180px;
+  height: 26px;
+  background: url("./art/card-bar.webp") center / 100% 100% no-repeat;
+}
+
+.card-bar[hidden] {
+  display: none;
+}
+
+.card-bar-fill {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  background: url("./art/card-bar-fill.webp") left center / 172px 100% no-repeat;
+}
+
+.card-bar-percent {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #333;
+  font: 900 14px var(--round);
+}
+
+.actions.card .actions-detail {
+  font-size: 12px;
+}
+
+.card-hurry {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.card-hurry img {
+  display: block;
+  height: 24px;
+}
+
+.card-hurry:hover {
+  transform: scale(1.05);
+}
+
+.card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 190px;
+  text-align: center;
+}
+
+.card-tip {
+  margin: 0;
+  font: 800 12px/1.25 var(--round);
+  white-space: pre-line;
+}
+
+.card-inside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.card-capacity {
+  font: 900 11px var(--round);
+  text-transform: uppercase;
+}
+
+/* Up to six, three to a row, as the game's. */
+.card-units {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 140px;
+}
+
+/* A unit inside, in the game's frame; it grows under the mouse, as there. */
+.card-unit {
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  border: 0;
+  background: url("./art/portrait-frame.webp") center / 100% 100% no-repeat;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.card-unit:hover:not(:disabled) {
+  transform: scale(1.2);
+}
+
+.card-unit-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+/* Train: BUY with cash, the unit on the TRAIN box, the price under. */
+.card-train {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-train-name,
+.card-train-cost {
+  font: 900 13px var(--round);
+  white-space: nowrap;
+}
+
+.card-train-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-train-cost .icon {
+  height: 18px;
+}
+
+.card-train-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-train-cash,
+.card-train-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.card-train-cash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font: 900 12px var(--round);
+}
+
+.card-train-cash img {
+  display: block;
+  width: 44px;
+}
+
+.card-train-cash:hover,
+.card-train-button:hover {
+  transform: scale(1.05);
+}
+
+.card-train-holder {
+  position: relative;
+}
+
+.card-train-button {
+  position: relative;
+  display: block;
+  width: 116px;
+  height: 58px;
+}
+
+.card-train-box {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The unit's picture on the box's grey half. */
+.card-train-unit {
+  position: absolute;
+  left: 5%;
+  top: 9%;
+  width: 41%;
+  height: 82%;
+  object-fit: cover;
+  background: #fff;
+}
+
+/* Over the unit, as the game's: the white bubble with what it trains. */
+.card-train-bubble,
+.card-upgrade-bubble {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: center / 100% 100% no-repeat;
+  text-align: center;
+  pointer-events: none;
+}
+
+.card-train-bubble {
+  width: 168px;
+  padding: 12px 10px 30px;
+  background-image: url("./art/train-bubble.webp");
+  font: 800 12px var(--round);
+}
+
+.card-train-bubble strong {
+  color: #000066;
+  font-size: 13px;
+}
+
+.card-train-numbers {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 900;
+}
+
+.card-train-holder:hover .card-train-bubble {
+  display: flex;
+}
+
+/* Move, Turn, Store and Upgrade: the game's tiles two by two, their names for screen readers. */
+.card-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 52px);
+  gap: 4px;
+  align-self: center;
+}
+
+.card-buttons .picture-button {
+  padding: 0;
+}
+
+/* Each in its own place, as the game's: an empty one leaves a gap. */
+.card-buttons [data-slot="move"] { grid-area: 1 / 1; }
+.card-buttons [data-slot="turn"] { grid-area: 1 / 2; }
+.card-buttons [data-slot="store"] { grid-area: 2 / 1; }
+.card-buttons .card-upgrade { grid-area: 2 / 2; }
+
+.card-buttons .picture-button img {
+  width: 52px;
+  height: 52px;
+}
+
+.card-buttons .picture-button span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Upgrade, and over it the next building: its name, its picture, then UNLOCK AT its level or what it costs. */
+.card-upgrade {
+  position: relative;
+}
+
+.card-upgrade-bubble {
+  width: 132px;
+  padding: 12px 8px 30px;
+  background-image: url("./art/upgrade-bubble.webp");
+  font: 900 13px var(--round);
+}
+
+.card-upgrade-bubble .card-frame {
+  width: 72px;
+  padding: 5px;
+}
+
+.card-upgrade:hover .card-upgrade-bubble,
+.card-upgrade.showing .card-upgrade-bubble {
+  display: flex;
+}
+
+.card-unlock {
+  position: relative;
+  width: 112px;
+}
+
+.card-unlock-badge {
+  display: block;
+  width: 100%;
+}
+
+/* The level on the badge's star. */
+.card-unlock-level {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  width: 24%;
+  transform: translateY(-50%);
+  text-align: center;
+  font: 900 13px var(--round);
+}
+
+.card-upgrade-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-upgrade-price .icon {
+  height: 18px;
+}
+
+.actions.card .actions-close {
+  position: absolute;
+  top: -22px;
+  right: -22px;
+}
+
+/* Hurry up's window, over the card: the game's parchment and band, the building, then the two ways. */
+.card-hurry-box {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(420px, calc(100vw - 24px));
+  padding: 30px 22px 18px;
+  background: url("./art/hurry-window.webp") center / 100% 100% no-repeat;
+  color: #000033;
+  font: 800 13px var(--round);
+  text-align: center;
+}
+
+.card-hurry-band {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72%;
+  padding: 6px 0 8px;
+  background: url("./art/hurry-band.webp") center / 100% 100% no-repeat;
+  color: #000;
+  font: 900 17px var(--round);
+}
+
+.card-hurry-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.card-hurry-close img {
+  display: block;
+  width: 30px;
+}
+
+.card-hurry-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-hurry-head .card-frame {
+  width: 64px;
+  padding: 5px;
+}
+
+.card-hurry-name {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.card-hurry-name strong {
+  font-size: 17px;
+}
+
+.card-hurry-ways {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-hurry-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.card-hurry-or {
+  font: 900 17px var(--round);
+}
+
+.card-hurry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 140px;
+  padding: 7px 14px 9px;
+  border: 0;
+  background: url("./art/hurry-button.webp") center / 100% 100% no-repeat;
+  color: #000;
+  font: 900 13px var(--round);
+  cursor: pointer;
+}
+
+.card-hurry-button .icon {
+  height: 18px;
+}
+
+.card-hurry-button:hover {
+  filter: brightness(1.06);
+}
+
+/* On a phone the card stacks as the phone mockup has it: the picture, name
+   and time bar on top; under them the tip, who's inside or the unit it
+   trains, with Move, Turn, Store and Upgrade in a row beside. */
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  .actions.card {
+    grid-template-columns: 76px 1fr auto;
+    gap: 6px 8px;
+    width: auto;
+    min-height: 0;
+  }
+  .card-main {
+    grid-column: 2 / -1;
+  }
+  .card-frame {
+    width: 72px;
+  }
+  .card-life {
+    width: 70px;
+  }
+  .card-life-fill {
+    background-size: 70px 100%;
+  }
+  .card-side {
+    grid-column: 1 / 3;
+    align-self: center;
+    max-width: none;
+  }
+  .card-buttons {
+    grid-column: 3;
+    grid-template-columns: repeat(4, 40px);
+  }
+  .card-buttons .picture-button img {
+    width: 40px;
+    height: 40px;
+  }
+  .card-buttons [data-slot="move"] { grid-area: 1 / 1; }
+  .card-buttons [data-slot="turn"] { grid-area: 1 / 2; }
+  .card-buttons [data-slot="store"] { grid-area: 1 / 3; }
+  .card-buttons .card-upgrade { grid-area: 1 / 4; }
+  .card-bar {
+    width: min(180px, 100%);
+  }
+  .card-train-button {
+    width: 100px;
+    height: 50px;
+  }
+  .card-train-cash img {
+    width: 36px;
+  }
+  .actions.card .actions-close {
+    top: -20px;
+    right: -16px;
+  }
+  .card-upgrade-bubble {
+    left: auto;
+    right: -8px;
+    transform: none;
+  }
+}
+
 /* ---- The shop in its panel ------------------------------------------------- */
 .shop-categories,
 .shop-tabs {
@@ -1286,9 +1974,6 @@ body {
     left: 8px;
     bottom: max(8px, env(safe-area-inset-bottom));
   }
-  .actions-tiles {
-    justify-content: space-around;
-  }
 
   .corner {
     bottom: calc(var(--dock-h) + 10px);
@@ -1320,27 +2005,6 @@ body {
   }
 }
 
-/* Train: the unit's picture, as on the Flash client's info panel, with its price under it. */
-.picture-button.train img {
-  border: 2px solid var(--parchment-edge);
-  border-radius: 9px;
-  background: #fff;
-}
-
-.train-cash {
-  align-self: center;
-}
-
-.actions-quick {
-  display: flex;
-  flex-direction: column;
-  align-self: center;
-  gap: 4px;
-}
-
-.train-cash .icon {
-  height: 18px;
-}
 
 /* The + on the gold and cash pills: the bank, as the game's own green + by its cash. */
 .pill-plus {

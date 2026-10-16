@@ -284,7 +284,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
       (land, hurrying, the bank); missions and bonuses
       (goals, the daily bonus, Monday's chest); neighbours
       (visiting and helping, Arthur, the donkey carts); sound and speed (the
-      town's music and sounds, compressed downloads); and a run-through
+      town's music and sounds, compressed downloads); the building card,
+      the original's info panel with Upgrade (the owner's pick of the
+      mockups, 16 October 2026); and a run-through
       against the Flash game (`e2e/tests/classic.mjs`: an empire played in
       the new client opens in the classic game, and Arthur's lessons are
       offered there). Players can use the new client for everything but

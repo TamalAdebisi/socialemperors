@@ -9,15 +9,17 @@ import type { ItemInfo } from "./rules/config.ts";
 import { choices, fits, footprintSize, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level, type LevelUp } from "./rules/levels.ts";
-import { HURRY_CASH, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
+import { HURRY_CASH, RESOURCES, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
 import { lights, popupOf } from "./rules/hover.ts";
 import { useHelp } from "./rules/friendsHelp.ts";
 import { addPiece, harvestLoot, pieceFrame, pieceLines, type Piece } from "./rules/collections.ts";
+import { CAPACITY, STAT_WORDS, cardFacts, fill, type Words } from "./rules/card.ts";
+import { cantUpgrade, upgrade, upgradeOf, upgradePrice } from "./rules/upgrade.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
-import type { ActionBar } from "./ui/actions.ts";
+import type { ActionBar, ActionChoices } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
 import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
@@ -39,7 +41,7 @@ import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
 import { caught, homeFor } from "./rules/animals.ts";
-import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
+import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, goldMultiplier, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -91,6 +93,8 @@ export interface EditorParts {
   friendHelp?: { ask: (placed: PlacedItem) => void; name: (empire: string) => string; words: FriendWords & { hour: string }; seconds: number };
   /** Collection pieces (rules/collections.ts): the game's sheet of their pictures, and its text lines for their names. */
   pieces?: { sheet: string; line: (id: number) => string };
+  /** A line of the game's words (config localization_strings) by its id, or ours when it hasn't it: the card's tips. */
+  line?: (id: number, fallback: string) => string;
 }
 
 export class TownEditor {
@@ -114,6 +118,7 @@ export class TownEditor {
   private readonly showLevels: ((reached: LevelUp[]) => void) | null;
   private readonly friendHelp: EditorParts["friendHelp"] | null;
   private readonly pieces: EditorParts["pieces"] | null;
+  private readonly line: (id: number, fallback: string) => string;
   /** The roll for a collection piece as a harvest ends (Math.random; the browser tests set it). */
   lootRoll: () => number = Math.random;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
@@ -181,6 +186,7 @@ export class TownEditor {
     this.showLevels = parts.showLevels ?? null;
     this.friendHelp = parts.friendHelp ?? null;
     this.pieces = parts.pieces ?? null;
+    this.line = parts.line ?? ((_, fallback) => fallback);
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -283,7 +289,8 @@ export class TownEditor {
     }
     this.waiting([...this.town.gifts.values()].reduce((sum, n) => sum + n, 0));
     if (this.selected && !this.moving) {
-      this.bar.describe(this.detail(this.selected));
+      const state = this.state(this.selected);
+      this.bar.describe(state.detail, state.bar);
     }
     if (this.lit) {
       // The popup's time goes down, as the game's does.
@@ -916,35 +923,127 @@ export class TownEditor {
       this.bar.hide();
       return;
     }
+    const card = this.cardOf(placed);
+    const close = () => this.select(null);
     if (inConstruction(placed, Date.now())) {
-      // Being built: its name and how far along, no buttons, as in the Flash client (finishConstruction shows them).
-      this.bar.show({
-        name: placed.item.name, detail: this.detail(placed), move: null, turn: null, store: null, sell: null, refund: "",
-        letOut: null, train: null, hurry: null, open: null, close: () => this.select(null),
-      });
+      // Being built: its picture, name and how far along, no buttons, as in the Flash client (finishConstruction shows them).
+      this.bar.show({ ...card, move: null, turn: null, store: null, close });
       return;
     }
     const can = choices(this.town, placed);
-    const back = refund(placed.item);
     // An open gate can only be shut again, as in the Flash client (its other buttons come back then).
     const shut = !placed.open;
-    // Nor can a building training a unit be moved or stored until it's done, as there.
+    // Nor can a building training a unit be moved, stored or upgraded until it's done, as there.
     const free = shut && !this.training.has(placed);
+    const hurries = can.move && canHurry(placed, this.clock());
     this.bar.show({
-      name: placed.item.name,
-      detail: this.detail(placed),
+      ...card,
       move: can.move && free ? () => this.startMove(placed) : null,
       turn: can.turn && shut ? () => this.turn(placed) : null,
       store: can.store && free ? () => this.store(placed) : null,
-      sell: can.sell && shut ? () => this.sell(placed) : null,
-      refund: back ? `${back.amount} ${back.resource}` : "",
-      letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
+      upgrade: can.move && free ? this.upgradeChoice(placed) : null,
+      hurry: hurries ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
+      ask: this.friendHelp && hurries ? () => this.friendHelp!.ask(placed) : null,
       train: this.trainChoice(placed),
-      hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
-      ask: this.friendHelp && choices(this.town, placed).move && canHurry(placed, this.clock()) ? () => this.friendHelp!.ask(placed) : null,
       open: this.gateButton(placed) ?? this.windowOf(placed),
-      close: () => this.select(null),
+      close,
     });
+  }
+
+  /**
+   * What the card shows of a thing, as the Flash client's info panel
+   * (rules/card.ts): its picture and life, its numbers, its tip, what it
+   * earns with its time bar, who's inside.
+   */
+  private cardOf(placed: PlacedItem): Omit<ActionChoices, "move" | "turn" | "store" | "close"> {
+    const { item } = placed;
+    const state = this.state(placed);
+    const card = { name: item.name, detail: state.detail, bar: state.bar, picture: this.thumbnail(item),
+      life: item.life > 0 ? { now: Math.max(0, Math.round(placed.health ?? item.life)), most: item.life } : null };
+    if (inConstruction(placed, Date.now())) {
+      return card;
+    }
+    const facts = cardFacts(item);
+    const words = (w: Words | null | undefined): string => w ? fill(this.line(w.id, w.fallback), w.args).trim() + (w.then ? ` ${words(w.then)}` : "") : "";
+    let earns: ActionChoices["earns"] = null;
+    if (facts.harvest && item.collect > 0) {
+      const multiplier = item.subcategory === SUBCAT.gold ? goldMultiplier(this.town.level) : 1;
+      earns = { resource: RESOURCES[item.collectType] ?? "wood", amount: Math.floor(item.collect) * multiplier };
+    } else if (facts.earns && item.production && (item.production.kind === "always" || placed.unitsInside > 0)) {
+      earns = { resource: item.production.resource, amount: harvest(placed) };
+    }
+    let inside: ActionChoices["inside"] = null;
+    if (item.capacity > 0 && !item.isUnit) {
+      const units = (placed.units ?? []).map((id) => this.items.get(id)).filter((unit): unit is ItemInfo => unit !== undefined);
+      inside = {
+        capacity: fill(this.line(CAPACITY.id, CAPACITY.fallback), [placed.unitsInside, item.capacity]),
+        units: units.map((unit) => ({ name: unit.name, picture: this.thumbnail(unit) })),
+        letOut: choices(this.town, placed).move ? (index) => this.letOne(placed, index) : null,
+      };
+    }
+    return {
+      ...card,
+      stats: facts.stats.map(({ stat, value }) => ({ stat, value, words: words(STAT_WORDS[stat]) })),
+      tip: words(facts.tip),
+      earns,
+      inside,
+    };
+  }
+
+  /** Upgrade on the card: the next building, and the level it waits for or what it costs. */
+  private upgradeChoice(placed: PlacedItem): ActionChoices["upgrade"] {
+    const next = upgradeOf(placed.item, this.items);
+    if (!next) {
+      return null;
+    }
+    const locked = this.town.level < next.minLevel;
+    return {
+      name: next.name,
+      picture: this.thumbnail(next),
+      level: locked ? next.minLevel : null,
+      price: locked ? null : upgradePrice(next),
+      run: () => this.upgrade(placed),
+    };
+  }
+
+  /**
+   * Upgrade a building, as the Flash client's Upgrade (rules/upgrade.ts):
+   * whoever's inside comes out, the old one goes and the next stands in its
+   * place in scaffolding; what it cost, what came back and the experience
+   * rise from it, and the card closes.
+   */
+  private upgrade(placed: PlacedItem): void {
+    const next = upgradeOf(placed.item, this.items);
+    if (!next || !this.town.items.includes(placed)) {
+      return;
+    }
+    const why = cantUpgrade(this.town, next);
+    if (why) {
+      this.say(why.kind === "level"
+        ? fill(this.line(161, "You need to be level #0# to upgrade this building."), [why.level]).trim()
+        : `Not enough ${why.resource}: ${next.name} costs ${why.amount.toLocaleString("en")} ${why.resource}.`);
+      return;
+    }
+    this.letGo(placed);
+    this.emptyOut(placed);
+    const done = upgrade(this.town, placed, next, this.clock())!;
+    this.send(done.commands);
+    this.view.remove(placed);
+    this.startConstruction(done.placed);
+    void this.view.redraw(done.placed);
+    const lines = [];
+    if (done.back) {
+      lines.push({ text: `+${done.back.amount} ${done.back.resource}`, colour: RESOURCE_COLOURS[done.back.resource] });
+    }
+    lines.push({ text: `−${done.price.amount} ${done.price.resource}`, colour: RESOURCE_COLOURS[done.price.resource] });
+    if (done.xp > 0) {
+      lines.push({ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp });
+    }
+    this.view.rise(done.placed, lines);
+    this.select(null);
+    this.levelUp();
+    this.hud.update(this.town);
+    this.refresh();
   }
 
   /** A wall gate of the player's: its button to open it for units to pass, or shut it. */
@@ -968,46 +1067,48 @@ export class TownEditor {
     this.select(gate);
   }
 
-  /** What a thing is doing: "ready in 2 h 13 min". Its work comes first, then why it can't be changed. */
-  private detail(placed: PlacedItem): string {
-    if (inConstruction(placed, Date.now())) {
-      return `Being built… ${Math.floor(builtShare(placed, Date.now()) * 100)}%`;
+  /**
+   * What a thing is doing ("Ready in 2 h 13 min") and how far along its time
+   * bar is (null: no bar). Being built, training, working come first; then
+   * what to do with it, or why it can't be changed.
+   */
+  private state(placed: PlacedItem): { detail: string; bar: number | null } {
+    const now = Date.now();
+    if (inConstruction(placed, now)) {
+      return { detail: `Ready in ${duration(Math.max(0, (placed.builtAt! - now) / 1000))}`, bar: builtShare(placed, now) };
     }
     const training = this.training.get(placed);
     if (training) {
-      return `Training ${training.unit.name}… ${duration((training.done - performance.now()) / 1000)}`;
+      const left = (training.done - performance.now()) / 1000;
+      return { detail: `Training ${training.unit.name}… ${duration(Math.max(0, left))}`, bar: 1 - Math.max(0, left) / (TRAINING_MS / 1000) };
     }
     const state = workState(placed, this.clock());
     switch (state?.status) {
       case "working":
-        return `Ready in ${duration(state.secondsLeft)}`;
+        return { detail: `Ready in ${duration(state.secondsLeft)}`, bar: state.done };
       case "ready":
-        return "Ready: tap it to collect";
+        return { detail: "Ready: tap it to collect", bar: 1 };
       case "asleep":
-        return "Tap it to choose how long it works";
+        return { detail: "Tap it to choose how long it works", bar: null };
       case "idle":
-        if (placed.item.production!.kind !== "always") {
-          return "No workers inside: select a villager, then tap it";
-        }
-    }
-    if (placed.unitsInside > 0) {
-      return `${placed.unitsInside} of ${placed.item.capacity} inside`;
+        return { detail: "", bar: null };  // the card's tip says what to do
     }
     if (isResource(placed.item) && this.working.has(placed)) {
-      const left = harvestSeconds(placed.item, this.town) - (this.clock() - this.working.get(placed)!.since);
-      return `Being worked: ${duration(Math.max(left, 0))} left`;
+      const length = harvestSeconds(placed.item, this.town);
+      const left = Math.max(length - (this.clock() - this.working.get(placed)!.since), 0);
+      return { detail: `Being worked: ${duration(left)} left`, bar: 1 - left / length };
     }
     if (placed.wild) {
-      return "In the wild: bring one of your units near to catch it";
+      return { detail: "In the wild: bring one of your units near to catch it", bar: null };
     }
     if (placed.item.subcategory === SUBCAT.villager && canWalk(this.town, placed)) {
-      return `Tap the ground where it should go, or up to ${villagers(this.town).line} trees or rocks to work`;
+      return { detail: `Tap the ground where it should go, or up to ${villagers(this.town).line} trees or rocks to work`, bar: null };
     }
     if (canWalk(this.town, placed)) {
-      return "Tap the ground where it should go";
+      return { detail: "Tap the ground where it should go", bar: null };
     }
     const why = choices(this.town, placed).why;
-    return why ? why[0].toUpperCase() + why.slice(1) : "";
+    return { detail: why ? why[0].toUpperCase() + why.slice(1) : "", bar: null };
   }
 
   /** Only villagers repair, and only the player's buildings that burn. */
@@ -1462,9 +1563,9 @@ export class TownEditor {
     });
   }
 
-  /** Let one unit out of the selected building, beside it. */
-  private letOne(building: PlacedItem): void {
-    const out = letOut(this.town, building, this.items);
+  /** Let one unit out of the selected building, beside it: the one tapped on the card. */
+  private letOne(building: PlacedItem, index = -1): void {
+    const out = letOut(this.town, building, this.items, index);
     if (!out) {
       this.say(`There's no room around ${building.item.name}.`);
       return;
@@ -1476,20 +1577,28 @@ export class TownEditor {
     this.refresh();
   }
 
-  /** What the card offers a building that trains a unit (its own, of the player's people): Train, with the price. */
-  private trainChoice(building: PlacedItem): NonNullable<Parameters<ActionBar["show"]>[0]["train"]> | null {
+  /**
+   * What the card offers a building that trains a unit (its own, of the
+   * player's people): Train with the price, BUY with cash, and the bubble's
+   * words about the unit (a villager's line of trees, as the game's).
+   */
+  private trainChoice(building: PlacedItem): ActionChoices["train"] {
     const unit = this.items.get(building.item.trains);
     if (!unit || !unit.isUnit || !choices(this.town, building).move) {
       return null;
     }
     const price = trainingPrice(this.town, unit);
-    const label = `${price.amount} ${price.resource}${price.food ? ` + ${price.food} food` : ""}`;
+    const line = villagers(this.town).line;
+    const note = unit.subcategory === SUBCAT.villager
+      ? fill(line === 1 ? this.line(306, "They can collect #0# tree in a row") : this.line(307, "They can collect #0# trees in a row"), [line])
+      : "";
     return {
       unit: unit.name,
       picture: this.thumbnail(unit),
-      price: label,
+      price: [{ resource: price.resource, amount: price.amount }, ...(price.food ? [{ resource: "food" as const, amount: price.food }] : [])],
       run: () => this.train(building, unit, false),
-      cash: unit.cashCost > 0 ? { price: String(unit.cashCost), run: () => this.train(building, unit, true) } : null,
+      cash: unit.cashCost > 0 ? { price: unit.cashCost, run: () => this.train(building, unit, true) } : null,
+      about: { life: unit.life, attack: unit.attack, note },
     };
   }
 

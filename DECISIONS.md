@@ -4,6 +4,39 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: the site's links in the new client
+
+The owner left where they go to me ("whatever is optimal").
+
+- **One gold Menu, after Full screen** (after Classic game on a phone),
+  holding Friends, Empires and Log out: three more buttons would crowd the
+  top bar on a phone, and these are used now and then, not while playing.
+- **The Friends count shows on the Menu itself,** so a request or a gift
+  is seen without opening it; Friends opens in a new tab, as on the
+  classic page, so the game plays on.
+- **Classic game and Full screen stay where they were.**
+
+## 16 October 2026: the building card
+
+- **The card is the original's info panel,** the owner's pick (mockup
+  A): its parchment, frames, bars, buttons and words from the game's file.
+- **No Sell on the card,** as in the original (its slot there was
+  Upgrade): selling is the bulldozer's, in the pointer's menu, which asks
+  first as before. Ours had added Sell to the card.
+- **Upgrade on a touch screen:** the first tap shows the bubble with the
+  next building and its level or price (a mouse sees it by hovering), the
+  second upgrades. The original upgraded at once, its price shown only
+  on hover.
+- **Hurry up opens the game's hurry window** (Ask for help, or Buy for 2
+  cash), as the original's; ours had both buttons on the card itself.
+- **The time bar also shows training and building,** with the time left
+  under it: the original showed those only on the map.
+- **A wonder's tip has its numbers filled in** ("increases the 175
+  population limit by 20"): the original's card left the blanks showing,
+  its shop filled them.
+- **A tap on a unit inside lets that one out,** as the original's
+  portraits; the bar's single Let out button went with the old card.
+
 ## 16 October 2026: gifts
 
 - **Gifts sits first in the Neighbours window,** as the original's Send
@@ -12,7 +45,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **One Gifts row, not Send gift on each neighbour:** the window lets
   the player pick the friend, as the classic page's does.
 - **The site's bar (Empires, Friends, Log out) isn't in the new client
-  yet:** where it goes on the owner's layout is theirs to say.
+  yet:** where it goes on the owner's layout is theirs to say. (Since: a
+  Menu, "the site's links in the new client" above.)
 
 ## 16 October 2026: the troll town
 

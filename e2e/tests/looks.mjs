@@ -40,9 +40,9 @@ export default async function looks({ newPlayer }) {
   assert.ok(await changes(), "a villager at work in the farm");
   await player.shot("at-work");
 
-  // Let out, and sent off, out of the picture.
+  // Let out (its picture tapped on the card), and sent off, out of the picture.
   await player.select(FARM.slice(1), "Farm Land");
-  await player.press("Let out");
+  await player.press("Let out Villager I");
   await player.press("Close");
   const out = (await player.saved()).items.find((i) => i[0] === VILLAGER);
   await player.select([out[1], out[2]], "Villager I");

@@ -59,14 +59,14 @@ changes the save, not just the look.
 
 ## The building card
 
-- [ ] **Upgrade.** 104 buildings upgrade to the next one (houses, farms,
+- [x] **Upgrade.** 104 buildings upgrade to the next one (houses, farms,
       mills, ranches, towers, walls, barracks, the town hall...). It needs
       the next one's level, costs its full price, gives back 1/20 of the
       old one's (none if it cost cash), and gives its XP: `sell` (reason
       "UPGR") then `buy` on the same spot. Town Hall II to IV (levels 12,
       25 and 35) can only be had this way, so three goals can't be done
       now. The server already handles it. M
-- [ ] **What it shows:** the building's picture with its health, its
+- [x] **What it shows:** the building's picture with its health, its
       numbers (attack, speed, range; the room a house gives), what the next
       collect brings and a time bar, how full it is, the units inside (tap
       one to let it out), the unit a barracks trains with its name and
@@ -76,8 +76,8 @@ changes the save, not just the look.
       only glowed. S
 - [x] **The wall gate opens and closes,** for units to pass (not saved). S
 
-The card's look is the owner's pick (CLIENT.md, "The menus: rail and
-dock"), so these come with a mockup first.
+The card's look is the owner's pick: mockup A, the original's panel
+(CLIENT.md, "The building card").
 
 ## The living map
 
@@ -124,8 +124,8 @@ dock"), so these come with a mockup first.
       "New mission!" notices. M
 - [x] **Gifts:** the gifts window (taking gifts in, giving from storage,
       the free gift), as on the classic page. M
-- [ ] **The site's bar:** Empires, Friends and Log out, as on the classic
-      page (where it goes is the owner's call). S
+- [x] **The site's bar:** Empires, Friends and Log out, as on the classic
+      page: a Menu by Full screen, with the Friends count (CLIENT.md). S
 - [x] **Neighbours:** sorted by XP, with their XP and a mark on those you
       can help; Send gift. M
 - [x] **Friends' help on a building** shows their picture over it;
