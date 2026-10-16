@@ -743,9 +743,36 @@ Open door (the game's button); open, the gate shows its open picture,
 units walk through it, and Move, Turn, Store and Upgrade are hidden until
 Close door. It isn't saved: gates are shut each time the town opens.
 
-**Not yet:** the speech bubbles units say now and then, and a mark on the
-ground where a unit is going. (Units sent to a building or a tree: "Villagers
-at work"; wild animals following a unit home: "The living map".)
+**Not yet:** the speech bubbles units say now and then, and a persistent
+mark at a unit's destination (ground clicks now get brief feedback below).
+Units sent to a building or a tree: "Villagers at work"; wild animals
+following a unit home: "The living map".
+
+### Click feedback and unit targets
+
+Units keep their original appearance, with an eight-pixel click margin
+and at least a 44-pixel target at every zoom. Exact picture hits and ready
+bubbles keep priority; a nearby unit is considered before an empty-ground
+move. This applies in town and battle (`view/hit.ts`, `townView.ts`,
+`battleView.ts`). A ground click briefly shows the original gold ring at
+the exact click position, fixed in screen size while following the map,
+then fades; it cannot intercept another click (`view/markers.ts`).
+Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs`.
+
+Building previews snapshot their drawing origin before loading art, so
+pointer movement during loading cannot offset the picture twice. Old
+hover state is cleared on entering placement or Move, keeping its refresh
+from erasing the footprint.
+`e2e/tests/building-overlay.mjs` checks house, tower and Town Hall selection
+leave distant ground unchanged. Delayed house, farm, ranch, mine and tower
+previews check alignment, footprint refresh, cancellation and the save.
+For Safari reports, `node e2e/run.mjs --webkit building-overlay` runs the
+same check in WebKit, with separate output under `work/e2e-webkit/`.
+Install that engine with `npx playwright install webkit` first. Linux
+WebKit covers the browser engine, but does not reproduce a Mac's GPU.
+The Friends page and other site forms use root-relative CSS and image
+URLs; `site-menu.mjs` checks the actual submitted Friends page on desktop
+and phone, including loaded images and styles.
 
 ### Selecting several units
 
@@ -754,8 +781,8 @@ Battles now show selected units' portraits and a **Deselect** button
 group; Shift adds/removes units and Escape clears the selection. A single
 selection shows name, health and attack. Scenery and friendly buildings
 can be inspected without moving the army; clicking bare ground clears an
-inspected object. The feet of units are also tappable when the animated
-picture has a transparent gap. Covered on desktop and phone by
+inspected object. The enlarged click targets described above also apply
+in battles. Covered on desktop and phone by
 `battle-selection`, and on an island by `quest`.
 
 Built after Beta 1's run-through, at the owner's request. Code:
@@ -1879,9 +1906,10 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
 (the game's flames, `FireMC`, exported by `tools/art/export_ui.py`), and
 `raiders.py` on the server.
 
-- **What comes:** after the tutorial and first rescue, a band attacks after
-  five minutes of active town time, including low-level towns. Once a fight
-  ends, there are seven minutes to rebuild below level 10, five from level
+- **What comes:** attacks unlock after the tutorial and first rescue, even
+  at low levels. Opening a rescued town gives five minutes of preparation.
+  Once any fight ends (including the first camp), there are seven minutes
+  to rebuild below level 10, five from level
   10. The schedule repeats all session, rechecking the town's current level;
   raids never pile onto an existing camp fight. Bands have at least two units,
   otherwise a quarter of the level (half for a troll town), from a
@@ -2070,12 +2098,17 @@ with tests) and `ui/graveyard.ts` (the three windows).
   scaffolding while it waits for its staff. They're drawn open, as the
   server opens them for good; they used to flicker between the two.
 
-**Pausing**, the same way. Code: `ui/pause.ts`. The game stops when the
-page loses the player (another window, another tab), or from the pause
-button by the music and sound buttons, at home and on an island. A
-dark curtain and the game's GAME PAUSED say so; RESUME, or any key let go,
-starts it again. While paused nothing moves (the drawing's clock stops);
-work and training go on, as they're the server's clock.
+**Pausing and background play.** Code: `gameLoop.ts`, `ui/pause.ts`.
+At the owner's request, switching tabs or windows keeps the game running.
+Drawing uses the screen's ticker; hidden-tab walking and battles use an
+independent timer, replaying elapsed time in small steps when the browser
+throttles it. A fully frozen page catches up when it can run again, in
+bounded batches. Returning cannot count the same interval twice.
+The Pause button still stops simulation and drawing under GAME PAUSED;
+RESUME, or any key let go, starts it again without replaying paused time.
+Work and training keep their server-clock behavior. Closing the browser
+does not run a client simulation. Tests: `gameLoop.test.ts`,
+`e2e/tests/playthrough-controls.mjs` and `e2e/tests/dock.mjs`.
 
 **Monks at home** turn units as on the islands (four each, one every 24
 seconds). As in the Flash client the server isn't told: a unit of the

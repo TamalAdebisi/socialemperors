@@ -28,7 +28,7 @@
 
 	{% if helps %}
 	<section class="section">
-		<h2><img src="img/villager.png" alt=""> Friends asking for help</h2>
+		<h2><img src="/img/villager.png" alt=""> Friends asking for help</h2>
 		{% for help in helps %}
 		<div class="row">
 			<span class="what"><span><b>{{ help.asker }}</b> asks for {{ help.what }}{% if help.empire_name %} <span class="muted">in {{ help.empire_name }}</span>{% endif %}</span></span>
@@ -51,7 +51,7 @@
 
 	{% if waiting %}
 	<section class="section">
-		<h2><img src="img/gift.png" alt=""> Gifts for you</h2>
+		<h2><img src="/img/gift.png" alt=""> Gifts for you</h2>
 		{% if not empires %}<p class="muted">Make an empire first: gifts go into one.</p>{% endif %}
 		{% for gift in waiting %}
 		<div class="row">
@@ -79,7 +79,7 @@
 	{% endif %}
 
 	<section class="section">
-		<h2><img src="img/villager.png" alt=""> Everybody</h2>
+		<h2><img src="/img/villager.png" alt=""> Everybody</h2>
 		<p class="hint">Everybody with an account is your neighbour. Visit their empires, send gifts and help each other. No friend requests needed.</p>
 
 		{% if requests.to_me %}
@@ -107,7 +107,7 @@
 	</section>
 
 	<section class="section">
-		<h2><img src="img/knight.png" alt=""> Everybody <span class="muted">({{ friends | length }})</span></h2>
+		<h2><img src="/img/knight.png" alt=""> Everybody <span class="muted">({{ friends | length }})</span></h2>
 		{% for friend in friends %}
 		<div class="row">
 			<div>
@@ -126,7 +126,7 @@
 					<select name="item" aria-label="Free gift for {{ friend.username }}">
 						{% for item in free %}<option value="{{ item.id }}">{{ item.name }}</option>{% endfor %}
 					</select>
-					<button class="button small gold" type="submit"><img src="img/gift.png" alt="" class="icon"> Send</button>
+					<button class="button small gold" type="submit"><img src="/img/gift.png" alt="" class="icon"> Send</button>
 				</form>
 				{% endif %}
 

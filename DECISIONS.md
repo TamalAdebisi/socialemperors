@@ -7,9 +7,10 @@ them can be found and reversed. The big, agreed decisions are in
 ## 16 October 2026: playthrough feedback — active defense and everybody
 
 - **Recurring pressure with recovery.** The owner asked for meaningful troll
-  attacks. Start five minutes after lessons and the first rescue, even at
-  low levels. Use the original level/race soldier tables, at least two per
-  band. Repeat after seven minutes of recovery below level 10, five above.
+  attacks. Enable them after lessons and the first rescue, even at low
+  levels. Opening a rescued town gives five minutes to prepare. Use the original level/race soldier tables, at least two per
+  band. After any completed fight, including the first camp, give seven
+  minutes of recovery below level 10, five from level 10.
   Do not stack raids onto camp fights. Retreat after four minutes and remove
   blocked retreaters by five, so a town without troops can recover. Try
   reachable defenses when a protected unit cannot be reached. Other siege
@@ -24,8 +25,9 @@ them can be found and reversed. The big, agreed decisions are in
   unit always selects it; Shift changes the group, with the modifier passed
   directly from the pointer event. Neutral objects and friendly buildings are
   inspected without a move order; empty ground dismisses object inspection.
-  Keep left-click ground movement for selected troops. Accept taps at a unit's
-  feet to avoid tiny transparent gaps in moving pictures.
+  Keep left-click ground movement for selected troops. Preserve #94's
+  enlarged unit targets, with exact artwork hits taking priority. Dialogs
+  keep their own Escape key while a battle is active.
 - **Everybody is a neighbor.** All accounts appear in the directory, including
   those without an empire; all other accounts' empires appear in Neighbours,
   without the old limit or friend priority. Gifts and help use the same account
@@ -35,11 +37,62 @@ them can be found and reversed. The big, agreed decisions are in
   pending requests compatible, but remove the add/remove-friend UI. Do not
   delete or rename TAKTAK: no built-in account by that name was found, and no
   live account inspection was performed.
+- **Integrate the concurrent controls update.** Merge #94 without rebasing.
+  Retain its click feedback, background simulation, explicit Pause, building
+  previews and root-relative site assets. Everybody removes the Add Friend
+  form; a fixture form retains coverage of the legacy nested POST response
+  and its desktop/phone styling. Keep #94's raid-test acceleration and its
+  unchanged completion deadline, with the requested new raid cadence.
 - **Browser fixtures.** Existing feature checks explicitly hold automatic raids;
   a new check opts into the ordinary scheduler and verifies four waves and
   recovery. Other combat checks still force their chosen raids. No assertions
   are skipped; old cap/friend-gate assertions now check the requested community
   behavior and still check ownership, daily limits and saved rewards.
+
+## 16 October 2026: playthrough controls and site repairs
+
+- **No auto-collect.** The owner withdrew it; collection and production
+  rules stay as they were.
+- **Bigger unit targets, original art sizes.** Exact visible picture hits
+  keep priority. A near miss can select the closest unit within its
+  picture plus eight screen pixels, with at least a 44-pixel target at
+  every zoom, at home and in battles. Signs and buildings retain their
+  existing hit tests. This avoids redirecting the previously selected
+  villager when a click just misses another one.
+- **A visible ground click.** Reuse the original gold unit ring, centred
+  on the actual click, about 52 screen pixels wide, fading over 650 ms.
+  It follows the map and never captures input. No extra order is sent.
+- **Switching tabs no longer pauses the game.** Requested by the owner.
+  A separate simulation timer advances walking and fights while drawing
+  is suspended, replaying throttled time in steps of at most 100 ms.
+  Long suspensions are processed in bounded batches; returning cannot
+  count that time twice. Explicit Pause still stops simulation and
+  drawing; its elapsed time is excluded. Work and training retain their
+  existing server-clock behavior. Closing the browser does not run a
+  client simulation; a browser that freezes the page catches up when it
+  can run again.
+- **Fix the Friends form's asset URLs at their source.** Shared site
+  styles and page images use root paths, so nested form-result URLs
+  cannot turn them into /friends/css or /settings/img requests.
+- **Keep placement art on its footprint while loading.** Snapshot the
+  preview's drawing origin before awaiting its art; pointer movement is
+  already applied by the preview container and must not be applied twice.
+  Clear old hover state on entering placement or Move, so its periodic
+  refresh cannot erase the new footprint.
+  Browser checks cover immediate selection of several buildings without
+  distant ground changes, delayed loading of five preview types,
+  cancellation and the save. The owner reports Safari on a Mac, so the
+  runner also supports WebKit with separate results. This checks the
+  engine locally; it does not claim to reproduce a Mac's GPU.
+- **Browser checks wait for gameplay, not fixed sleeps.** The full run
+  exposed slow-renderer waits for a summon, spy flight, neighbour delivery
+  and a villager's repair. Wait for the same outcomes with bounded
+  deadlines, and close independent fixture pages after their assertions.
+  The raid check uses the existing siege check's four-times simulation
+  setting for the long random approach, retaining its completion deadline
+  and every kill/reward/repair/save assertion. WebKit screenshots wait for
+  the canvas frame and on-demand card art before visual review. These are
+  test-only changes.
 
 ## 16 October 2026: closing the public-art repair
 

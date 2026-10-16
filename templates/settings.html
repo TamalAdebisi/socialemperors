@@ -17,7 +17,7 @@
 	{{ ui.messages(error, done) }}
 
 	<section class="section">
-		<h2><img src="img/villager.png" alt=""> Empires</h2>
+		<h2><img src="/img/villager.png" alt=""> Empires</h2>
 		{% for empire in empires %}
 		<div class="row">
 			<div>
@@ -44,7 +44,7 @@
 	</section>
 
 	<section class="section">
-		<h2><img src="img/knight.png" alt=""> Ways to sign in</h2>
+		<h2><img src="/img/knight.png" alt=""> Ways to sign in</h2>
 		{% for provider, name in providers.items() %}
 		{% if provider in linked or provider in available %}
 		<div class="row">

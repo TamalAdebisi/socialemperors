@@ -10,7 +10,7 @@ import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitFaci
 import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt } from "./hit.ts";
+import { isOpaqueAt, unitHitDistance } from "./hit.ts";
 import { Markers } from "./markers.ts";
 import { animated, buildingSprite, unitSprite, type Pose } from "./townView.ts";
 import type { Effect as SoundEffect } from "../sound.ts";
@@ -304,6 +304,10 @@ export class BattleView {
     this.markers.rise({ x: at.x, y: at.y - 40 }, lines);
   }
 
+  groundClick(at: Point): void {
+    this.markers.groundClick(at);
+  }
+
   private remove(fighter: Fighter): void {
     const drawn = this.drawn.get(fighter);
     if (drawn) {
@@ -518,14 +522,18 @@ export class BattleView {
         return fighter;
       }
     }
-    // The selection ring is a stable target even between animation frames
-    // or when a finger lands in the transparent space between a unit's legs.
-    for (const [fighter] of slots) {
-      if (!fighter.isUnit || fighter.dead) continue;
-      const feet = this.root.toGlobal(fighter.at);
-      if (Math.hypot(screen.x - feet.x, screen.y - feet.y) <= 14) return fighter;
+    let nearest: Fighter | null = null;
+    let distance = Infinity;
+    for (const [fighter, drawn] of slots) {
+      const picture = drawn.slot.children[0];
+      if (fighter.dead || !fighter.item.isUnit || !picture) continue;
+      const d = unitHitDistance(picture.getBounds(), screen);
+      if (d < distance) {
+        nearest = fighter;
+        distance = d;
+      }
     }
-    return null;
+    return nearest;
   }
 
   hover(fighter: Fighter | null): void {

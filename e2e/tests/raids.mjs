@@ -23,8 +23,13 @@ export default async function raids({ newPlayer }) {
   // test town) is done as the town opens, and pays its 10 gold then.
   const before = await player.saved();
 
-  // The band comes now.
-  await player.page.evaluate(() => window.seHome.hurry());
+  // As in the siege check, run the long trip from a random map edge at
+  // four simulation steps per frame. Keep the same completion deadline;
+  // slow software drawing must not turn it into a test of the GPU's speed.
+  await player.page.evaluate(() => {
+    window.seHome.speed = 4;
+    window.seHome.hurry();
+  });
   await player.wait(1500);
   assert.ok(await player.page.evaluate(() => Boolean(window.seHome.fighting)));
   assert.match(await player.bar(), /under attack/, "building waits");
@@ -125,9 +130,11 @@ export default async function raids({ newPlayer }) {
   const cursor = await player.page.evaluate(() => document.querySelector("canvas").style.cursor);
   assert.ok(cursor.includes(bucket) || cursor.includes("cursor-repair"), "the bucket pointer");
   await player.click(onHouse);
+  // Wait for the walk to the house and its first repair tick, not a fixed
+  // sleep that can expire while the villager is still on the way.
   await player.page.waitForFunction(([x, y]) => (window.seHome.parts.town.items
     .find((p) => !p.item.isUnit && p.tx === x && p.ty === y).health ?? 0) >= 25,
-  HOUSE, { timeout: 30000 });
+    HOUSE, { timeout: 30_000 });
   assert.ok((await health()) >= 25, `repairing (${await health()})`);
   assert.equal(await room(), roomBefore - 3, "no room until it's repaired in full");
   await player.shot("repairing");

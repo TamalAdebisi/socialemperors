@@ -1,17 +1,19 @@
 // Browser tests for the new game client. Starts a game server on this
 // computer, on a free port with a throwaway data folder, then plays each
-// test in e2e/tests/ in Chromium and says which passed.
+// test in e2e/tests/ in Chromium (or WebKit) and says which passed.
 //
 //   node e2e/run.mjs              every test (builds the client first)
 //   node e2e/run.mjs shop edit    only these
 //   --no-build                    use client/dist as it is
 //   --keep                        keep the data folder, and say where it is
+//   --webkit                      use Safari's engine; output in work/e2e-webkit/
 //
 // Needs the server's Python packages (pip install -r requirements.txt; set
 // PYTHON to use a particular python), Node 22, and Playwright with Chromium
 // (npm i -g playwright, then npx playwright install chromium). Screenshots
 // and the server's log go to e2e/out/. It makes accounts, so it only ever
 // runs against its own server, never the live site.
+// For --webkit, also install that engine: npx playwright install webkit.
 
 import { execSync, spawn, spawnSync } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -24,12 +26,13 @@ import { newPlayer } from "./lib.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TESTS = join(ROOT, "e2e", "tests");
-const OUT = join(ROOT, "e2e", "out");
 // The art sheets: made on this computer by tools/export_art.sh, or else the live ones.
 const LIVE_ASSETS = "https://assets.socialemperors.me";
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((arg) => arg.startsWith("--")));
+const output = flags.has("--webkit") ? "work/e2e-webkit" : "e2e/out";
+const OUT = join(ROOT, output);
 const names = args.filter((arg) => !arg.startsWith("--"));
 const all = readdirSync(TESTS).filter((file) => file.endsWith(".mjs")).map((file) => basename(file, ".mjs")).sort();
 const chosen = names.length ? names : all;
@@ -112,9 +115,10 @@ let browser;
 try {
   await waitForServer(base, server, log);
   console.log(`Server on ${base}, data in ${data}${env.SE_ASSETS_URL ? `, art from ${env.SE_ASSETS_URL}` : ""}`);
-  const { chromium } = await playwright();
+  const { chromium, webkit } = await playwright();
   // Software WebGL: works without a graphics card.
-  browser = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+  browser = flags.has("--webkit") ? await webkit.launch()
+    : await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   let visitors = 0;
   for (const name of chosen) {
     const out = join(OUT, name);
@@ -157,5 +161,5 @@ try {
 }
 
 const failed = results.filter((result) => !result.ok);
-console.log(`\n${results.length - failed.length} of ${results.length} passed${failed.length ? `; failed: ${failed.map((r) => r.name).join(", ")}` : ""}. Screenshots: e2e/out/`);
+console.log(`\n${results.length - failed.length} of ${results.length} passed${failed.length ? `; failed: ${failed.map((r) => r.name).join(", ")}` : ""}. Screenshots: ${output}/`);
 process.exit(failed.length ? 1 : 0);

@@ -46,7 +46,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 | The grid | 100 x 100 tiles in 25 blocks of 20 x 20; the outer 16 blocks are the wild ring (negative numbers). Path finding skips units, terrain and fields, so units walk over farms. | built: `rules/geometry.ts`, `rules/walking.ts` |
 | Each frame | A speed-hack check (switched off by the config's `SPEED_HACK_CONTROL` 0). Arrow keys scroll 50 pixels; with a ship, boat, eagle or zeppelin selected they also steer it a tile. Goals are checked every 60 frames (2 seconds). | partly: arrows scroll (`view/camera.ts`); no steering by keys |
 | The second's tick | Every building's clock, and the countdowns to the next raid and spy allowed. | built: `editor.ts` refresh |
-| Pausing | The game stops when the window loses focus; the button or any key let go resumes it. | built: `ui/pause.ts` |
+| Pausing | The game stops when the window loses focus; the button or any key let go resumes it. | owner-requested difference: explicit Pause remains; tab changes keep simulation running (`gameLoop.ts`, 16 October 2026) |
 | The clock | Server time plus seconds counted since loading; a first check gives 0 if the two drift over a minute apart. | built: the clock in `main.ts` |
 | Taps and tools | Look, build, move, sell, collect-all (the glove), cast, place units. A press that moved more than 25 pixels is a drag, not a tap. Space turns the building being placed, or else switches on the square selection: up to 20 of the player's units, never walls, paths or deco. | partly: the tools (the bulldozer, the glove), Space and the square selection in `editor.ts`, `rules/group.ts`, `ui/hud.ts`; a drag starts at 8 pixels here and Space turns through every facing ([town.md](../rules/town.md)); group recall (`saveGroup`, `loadGroup`) is never called in the original: not needed |
 | Building | Checks money, room for people (at most 175 plus wonders' extra, then housing), the unit's own limit (`units_limit`; the Mummy and the Ent are let through) and the building limits below. Sends `buy`. The first of a kind built may offer a Facebook share. | built: `rules/shop.ts`, `rules/training.ts`; the share is not needed |
@@ -99,7 +99,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 | `core/CommandPacket.as` | 28 | One batch of commands: first number, when, tries. | built: `net/commands.ts` |
 | `core/BBox.as` | 49 | The box round all the player's units; an enemy building only acts when its range meets the box. | partly: towers wake by range in `rules/battle.ts`, not by this box |
 | `core/LargeTile.as` | 29 | Draws each block as owned ground or land for sale. | built: `view/townView.ts` |
-| `core/BuildOutline.as` | 235 | The see-through building and its footprint while placing, green where it fits and red where not; the white outline of the hovered building. | built: `editor.ts`, `view/selected.ts` |
+| `core/BuildOutline.as` | 235 | The see-through building and its footprint while placing, green where it fits and red where not; the white outline of the hovered building. | built: `editor.ts`, `view/selected.ts`; delayed placement art keeps its captured origin (`view/townView.ts`, 16 October 2026) |
 
 ## Rising numbers, tokens and bars
 

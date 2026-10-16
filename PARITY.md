@@ -1,7 +1,7 @@
 # Parity: the new client against the Flash game
 
 **16 October playthrough follow-up:** recurring raids after lessons/rescue,
-with five minutes to prepare and five to seven minutes to recover; camps
+with five minutes on opening town and five to seven to recover after fights; camps
 return after ten minutes and show a countdown. Shared battle controls expose
 individual inspection and Deselect. Everybody is listed without friend
 requests, including for gifts and help. These owner-requested changes override
@@ -153,6 +153,11 @@ The card's look is the owner's pick: mockup A, the original's panel
       after another) and Fast collect (the glove, collecting what it's
       swept over). S
 - [x] **Renaming the town** from the game. S
+
+- [x] **Owner playthrough conveniences:** larger unit click targets, a
+      fading ground-click ring, and background simulation across tab
+      changes while retaining explicit Pause. Collection is unchanged.
+      Friends form styles and delayed building-preview alignment repaired.
 
 ## Your calls (15 October 2026)
 

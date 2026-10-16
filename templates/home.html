@@ -18,7 +18,7 @@
 
 	<form method="post" action="/play">
 		<input type="hidden" name="csrf" value="{{ csrf_token() }}">
-		<h2><img src="img/villager.png" alt=""> Your empires</h2>
+		<h2><img src="/img/villager.png" alt=""> Your empires</h2>
 		{% if not saves_info %}<p>You don't have an empire yet. Make your first one:</p>{% endif %}
 		<div class="empires">
 			{% for save in saves_info %}
