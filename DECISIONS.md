@@ -30,6 +30,11 @@ them can be found and reversed. The big, agreed decisions are in
   remains in classic, including its empty/short-team warnings.
 - **No tournament goals change yet.** This slice does not play or win
   tournaments; those goals keep their classic-game guidance.
+- **Keep unrelated browser repairs outside this slice.** The full run's
+  four failures (`construction`, `scripted-bosses`, `siege`, `walk`) all
+  reproduce on unchanged main. Record those results and preserve every
+  assertion. The successful `team` run here does not close the separate
+  art follow-up owned by #90.
 
 ## 16 October 2026: the team test's oversized art
 
