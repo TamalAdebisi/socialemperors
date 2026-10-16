@@ -16,8 +16,14 @@ export default async function selected({ newPlayer }) {
   ]);
   await player.reload();
 
-  // How many golden pixels round a unit's feet (the middle of its tile), or along a building's front corner.
-  const gold = async (box) => (await player.pixels(box)).filter(([r, g, b]) => r > 190 && g > 140 && b < 90 && r > g).length;
+  // How many golden pixels round a unit's feet (the middle of its tile), or along a building's front corner,
+  // looked at with the card out of the way (it covers the bottom of the map, as the original's did).
+  const gold = async (box) => {
+    await player.page.evaluate(() => document.querySelector(".actions").style.visibility = "hidden");
+    const pixels = await player.pixels(box);
+    await player.page.evaluate(() => document.querySelector(".actions").style.removeProperty("visibility"));
+    return pixels.filter(([r, g, b]) => r > 190 && g > 140 && b < 90 && r > g).length;
+  };
   const feet = ([tx, ty]) => {
     const p = player.screenOf(tx, ty, 27);
     return { x: Math.round(p.x - 45), y: Math.round(p.y - 25), width: 90, height: 50 };

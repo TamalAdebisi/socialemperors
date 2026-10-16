@@ -955,8 +955,8 @@ body {
   border-radius: 0;
   border-image: url("./art/card.webp") 29 fill / 14px stretch;
   background: none;
+  /* No shadow: the parchment has its own edge, and a filter over the moving map costs every frame. */
   box-shadow: none;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
 }
 
 .card-left {
