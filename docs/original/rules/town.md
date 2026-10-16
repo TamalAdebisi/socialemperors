@@ -256,7 +256,7 @@ of the original's searches measure from.
   house nobody, whenever their earnings show: working, ready or asleep.
   2 cash collects at once, the cash in `collect_new`'s last place.
   Hurrying a sleeping mill reads a working time that isn't there (a bug
-  that spoils the harvest). The window also had "ask friends". *Different: ours offers it only while working and has no "ask friends", `client/src/rules/production.ts` (`canHurry`).*
+  that spoils the harvest). The window also had "ask friends". *Different: ours offers it only while working, `client/src/rules/production.ts` (`canHurry`); "ask friends" sits beside it on the card.*
 - **Friends' help.** Neighbours who helped a building (the save's `hc`)
   show as pictures stacked over it; tapping takes one off and an hour
   (`COLLECT_HELP_SECONDS`) off the work: `accept_collect_help` (x, y,

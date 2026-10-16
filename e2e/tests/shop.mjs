@@ -34,6 +34,7 @@ export default async function shop({ newPlayer }) {
   await player.press("Build");
   await player.press("Resources");
   assert.ok(await player.card("Mill I").isDisabled(), "only one Mill I per town");
+  await player.closeLevelUps();  // the farms took the town to level 2: its window is in front, and Escape would close it first
   await player.page.keyboard.press("Escape");
   assert.ok(await player.page.locator(".shop").isHidden(), "Escape closes the shop");
 

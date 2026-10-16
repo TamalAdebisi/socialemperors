@@ -576,6 +576,7 @@ export class TownView {
         }
       }
       this.hovered = placed;
+      this.markers.highlight(placed);
       if (placed) {
         this.markHover(placed);
       }

@@ -10,6 +10,7 @@ import type { Point } from "../rules/geometry.ts";
 import type { Resource } from "../rules/production.ts";
 import type { PlacedItem } from "../rules/town.ts";
 import { ICONS } from "../ui/icons.ts";
+import { friendBubble, type FriendWords } from "./friendBubble.ts";
 
 /** The resources' colours, from their icons (food: our carrot's orange). */
 export const RESOURCE_COLOURS: Record<Resource | "xp", number> = {
@@ -32,7 +33,8 @@ function texture(url: string): Promise<Texture | null> {
   return loading;
 }
 
-export type Sign = { kind: "ready"; resource: Resource } | { kind: "asleep" } | { kind: "caught" };
+export type Sign = { kind: "ready"; resource: Resource } | { kind: "asleep" } | { kind: "caught" }
+  | { kind: "friend"; name: string; words: FriendWords };
 
 /** How far signs bob up and down (pixels), and how long one bob takes (ms). */
 const BOB = 4;
@@ -49,14 +51,15 @@ const SMALLEST_SCALE = 0.75;
 
 export class Markers {
   readonly layer = new Container();
-  private readonly signs = new Map<PlacedItem, { sign: Container; key: string; phase: number }>();
+  private readonly signs = new Map<PlacedItem, { sign: Container; key: string; phase: number; light?: (on: boolean) => void }>();
+  private lit: PlacedItem | null = null;
   private readonly rising: { text: Container; age: number; from: number; rise: number; ms: number }[] = [];
   private clock = 0;
   private scale = 1;
 
   /** Put a sign over a building at `top` (its picture's top middle), or take it away (null). */
   set(placed: PlacedItem, sign: Sign | null, top: Point | null): void {
-    const key = sign === null ? "" : sign.kind === "ready" ? `ready ${sign.resource}` : sign.kind;
+    const key = sign === null ? "" : sign.kind === "ready" ? `ready ${sign.resource}` : sign.kind === "friend" ? `friend ${sign.name}` : sign.kind;
     const current = this.signs.get(placed);
     if (current && current.key === key && top) {
       current.sign.position.x = top.x;
@@ -70,13 +73,15 @@ export class Markers {
     if (sign === null || top === null) {
       return;
     }
-    const drawn = sign.kind === "caught" ? picture(ICONS.caught, CAUGHT_SIZE)
+    const friend = sign.kind === "friend" ? friendBubble(sign.name, sign.words) : null;
+    const drawn = friend ? friend.sign : sign.kind === "caught" ? picture(ICONS.caught, CAUGHT_SIZE)
       : signWith(sign.kind === "ready" ? ICONS[sign.resource] : ICONS.asleep);
     drawn.position.set(top.x, top.y);
     drawn.scale.set(this.scale);
     this.layer.addChild(drawn);
-    // Each sign starts its bob somewhere else, so a row of mills doesn't move in step.
-    this.signs.set(placed, { sign: drawn, key, phase: Math.random() * BOB_MS });
+    friend?.light(this.lit === placed);
+    // Each sign starts its bob somewhere else, so a row of mills doesn't move in step. A friend's doesn't bob, as in the game.
+    this.signs.set(placed, { sign: drawn, key, phase: friend ? NaN : Math.random() * BOB_MS, light: friend?.light });
   }
 
   /** Numbers rising from `at` and fading: what a collect gave. */
@@ -126,7 +131,7 @@ export class Markers {
     this.scale = Math.max(1, SMALLEST_SCALE / zoom);
     for (const { sign, phase } of this.signs.values()) {
       sign.scale.set(this.scale);
-      sign.pivot.y = BOB * Math.sin(((this.clock + phase) / BOB_MS) * 2 * Math.PI);
+      sign.pivot.y = Number.isNaN(phase) ? 0 : BOB * Math.sin(((this.clock + phase) / BOB_MS) * 2 * Math.PI);
     }
     for (let i = this.rising.length - 1; i >= 0; i--) {
       const r = this.rising[i];
@@ -156,6 +161,20 @@ export class Markers {
       }
     }
     return found;
+  }
+
+  /** The mouse is on this thing (or none): a friend's bubble over it shows the hand and "Accept". */
+  highlight(placed: PlacedItem | null): void {
+    if (placed === this.lit) {
+      return;
+    }
+    if (this.lit) {
+      this.signs.get(this.lit)?.light?.(false);
+    }
+    this.lit = placed;
+    if (placed) {
+      this.signs.get(placed)?.light?.(true);
+    }
   }
 
   remove(placed: PlacedItem): void {

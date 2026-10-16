@@ -87,11 +87,23 @@ export const ICONS = {
   "tutor-marker": new URL("./art/tutor-marker.webp", import.meta.url).href,
   "draggy-window": new URL("./art/draggy-window.webp", import.meta.url).href,
   "draggy-title": new URL("./art/draggy-title.webp", import.meta.url).href,
+  // The level-up window: its parchment in a wooden frame, and its title band.
+  "level-window": new URL("./art/level-window.webp", import.meta.url).href,
+  "level-band": new URL("./art/level-band.webp", import.meta.url).href,
+  // The window that names the empire: its parchment, band, Save and Cancel.
+  "name-window": new URL("./art/name-window.webp", import.meta.url).href,
+  "name-band": new URL("./art/name-band.webp", import.meta.url).href,
+  "name-save": new URL("./art/name-save.webp", import.meta.url).href,
+  "name-cancel": new URL("./art/name-cancel.webp", import.meta.url).href,
   "draggy-frame": new URL("./art/draggy-frame.webp", import.meta.url).href,
   "reminder-ok": new URL("./art/reminder-ok.webp", import.meta.url).href,
   "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,
   "open-gate": new URL("./art/open-gate.webp", import.meta.url).href,
   "close-gate": new URL("./art/close-gate.webp", import.meta.url).href,
+  // The market (ui/market.ts): its card's button, a trade's card and its button.
+  "open-market": new URL("./art/open-market.webp", import.meta.url).href,
+  "market-card": new URL("./art/market-card.webp", import.meta.url).href,
+  "market-button": new URL("./art/market-button.webp", import.meta.url).href,
   // The nests' window (ui/nest.ts).
   "nest-button": new URL("./art/nest-button.webp", import.meta.url).href,
   "nest-marker": new URL("./art/nest-marker.webp", import.meta.url).href,

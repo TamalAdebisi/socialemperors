@@ -428,6 +428,15 @@ producing building shows when it will be ready.
   table, the town goes up one level at a time, each paying its prize, and
   sends `rt_level_up` with the new level (the server pays the same prize
   into the save).
+- **The level-up window** (`ui/levelUp.ts`, test `e2e/tests/levelup.mjs`),
+  as the Flash client's: one for each level reached, one after another,
+  with the level-up sound; the game's parchment in its wooden frame and its
+  title band, "LEVEL 7!", "You've reached Cadet rank", "You can now buy:"
+  and up to four buildings first sold at that level for the town's people
+  (the game's thumbnails, `rules/levels.ts`, `unlockedAt`), and "Level
+  reward:" with the prize (and from level 36 "+2" mana). An open shop
+  redraws its cards for the new level. The original's Share and Skip both
+  only closed it; ours has OK (DECISIONS.md).
 - Not the same as the Flash client: a farm collected without enough wood is
   left as it is, with a message; the Flash client lets it go to waste.
 
@@ -440,6 +449,9 @@ experience, and what stops buying it ("From level 11", "You have one",
 "Not enough wood").
 Choosing one closes the window and the building follows the pointer,
 see-through, with its footprint green or red; each tap buys one, until Done.
+On a phone there's no pointer to follow, so a tap shows it there and a tap
+on it then buys it (a tap elsewhere shows it there instead); moving a
+building works the same way (test `e2e/tests/phone-place.mjs`).
 
 **How the shop works**, read from the Flash client (our notes, our words):
 
@@ -637,6 +649,11 @@ real town; a monitor on the left, a phone on the right):
   on the glove.
 - Shortcuts on a keyboard: B build, S storage, A army, Q quests, W world
   (phones), N neighbours, C collect all, Escape to close.
+- **Naming the empire:** the level at the top carries the town's name in
+  its tip; tapping it opens the game's "NAME YOUR EMPIRE" window, as the
+  town's name in the Flash client's top bar did (`ui/rename.ts`, test
+  `e2e/tests/rename.mjs`). A name needs 3 letters or more (30 at most);
+  Save or Enter sends `name_map` (town, name), Cancel or Escape closes.
 
 ### Units walking
 
@@ -1033,9 +1050,11 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   open goals' kinds only).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
-- Goals about battles, quests, the market, the social buildings and
-  capturing animals say they're played in the classic game for now (57 of
-  the 227); the server keeps them done whichever client does them.
+- Goals about battles, quests, the social buildings and the like say
+  they're played in the classic game for now (55 of the 227); the server
+  keeps them done whichever client does them. The market's three (buy 200
+  stone, buy 100 wood, sell 100 wood) count the trades made while they're
+  open, in any number of trades, as the original counts them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`, `comeback_bonus.py`):
@@ -1106,6 +1125,21 @@ neighbours, Arthur last; Visit opens their town. Code:
   once: OK tells the server it's read (`clear_message`), as the Flash client
   does. Before, the new client left it, and it waited for the classic game.
   Test: `e2e/tests/messages.mjs`.
+- **Friends' help at a building at work** (`rules/friendsHelp.ts`, with
+  tests; `view/friendBubble.ts`): the card of a mill, mine or bakery at
+  work has **Ask friends** beside finishing it for cash (the original's
+  hurry window had both). It opens the site's ask window in the panel
+  (`ui/askFriends.ts`, the server's `helps.py`, kind "collect"). Each friend
+  who answers on their Friends page waits over the building when the town
+  next opens, in the game's bubble (FotoNeighbourMC: "Hurry Up?", and
+  "Accept" with the game's hand while the mouse is on it). A tap on the
+  building takes the top one: an hour off its work
+  (`COLLECT_HELP_SECONDS`), the collect sound, "-1 hour" rising, and
+  `accept_collect_help` (x, y, town, building, friend). As in the
+  original, the bubbles go once the building is ready, until the town
+  opens again, and only at home. The site has no pictures of friends, so a
+  friend's is their initial on a colour, as in the neighbours' list.
+  Test: `e2e/tests/friends-help.mjs`.
 
 **Not yet:** gifts and requests between neighbours, and adding neighbours
 from inside the game (the site's friends page does it).
@@ -1304,6 +1338,39 @@ changes its copy as the server does, so the window is right without a
 reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
 the dragon got, the friends' list and the monster nest opened, with checks
 on the server's save.
+
+### The market
+
+Built with Beta 1's parity list. A market (the first, second or third,
+the trolls' too; not the Allies' Market, a social building with its own
+window) has **Visit Market** on its card, the original's button. Its
+window, in the panel like every window here (`ui/market.ts`; the rules in
+`rules/market.ts`, with tests), has six of the game's trade cards: buying
+wood, stone and food along the top, selling them below, as the original
+lays them out. Each card has the lot (100, 200 or 300 by the market's
+level), the good, the price in gold and the button, with the game's words
+("Buy", "sell", "Trades left today:"). Below them, the trades left.
+
+- **Prices**, as the original and the server's `market.py` work them out:
+  the config's base for 100 (wood and food 100 gold, stone 150) times the
+  lot, plus 2% of that for each purchase so far (each sale takes 2% off),
+  rounded; a sale pays three quarters of the price. The count is kept
+  between 25 sales and 200 purchases, by good.
+- **20 trades**, then the game's "Market resources have been exhausted"
+  until 20 hours after the last trade; the count starts again then (as the
+  town loads, as in the original, or at the next trade if the window has
+  stayed open that long, as the server does).
+- A trade is at once: the town's gold and goods change, every card's price
+  changes, and `trade_resource_b` (town, good, 1 sell or 0 buy, lot) goes
+  with the town's other commands. Selling more than the town has gives the
+  game's "You don't have enough wood to sell!", naming the right good;
+  buying without the gold opens the bank, as the original opened its gold
+  window.
+- The save keeps the counts in the town (`resourcesTraded`,
+  `numTradesDone`, `timestampLastTrade`), so a reload shows the same.
+
+Test: `e2e/tests/market.mjs` trades until no trades are left, with both
+warnings, the server's save, the three goals done, a reload and a phone.
 
 ### Step 4: battles
 

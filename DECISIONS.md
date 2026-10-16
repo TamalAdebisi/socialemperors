@@ -18,6 +18,41 @@ them can be found and reversed. The big, agreed decisions are in
   that fell, summoned ones too, towards the next wave; here only those
   the arena sent count.
 
+## 16 October 2026: friends' help at a building
+
+- **Ask friends sits on the card,** beside finishing the work for cash.
+  The original showed both in a small hurry window; our card already
+  offers the cash one directly, so the ask joined it.
+- **A friend's picture is their initial on a colour,** as in the
+  neighbours' list: the site keeps no pictures of players (the original
+  showed their Facebook photo).
+
+## 16 October 2026: the market
+
+- **In the panel, not a window in the middle.** The original's market
+  was a window over the town; ours opens in the panel like every other
+  building's window (the menus' layout the owner picked), with the
+  game's own trade cards and words inside.
+- **The warning names the right good.** The game's line for selling
+  more than the town has always said "wood" (the text had no place for
+  the good); ours says food or stone when it's those.
+- **Buying without the gold opens the bank,** with "Not enough gold: it
+  takes ...", as every purchase here does; the original opened its own
+  gold window.
+- **A day's trades can start again while the window is open,** if 20
+  hours pass since the last trade: the server already counts that way;
+  the original waited for the next load.
+
+## 16 October 2026: naming the empire
+
+- **The way in is the level at the top.** The Flash client's top bar
+  showed the town's name and opened the window when tapped; our top bar
+  (the owner's pick) has no room for the name, so the level, whose tip
+  names the town, opens it.
+- **Save works.** In the original only Enter saved (the button's action
+  was removed in that build); here both do.
+- **30 letters at most,** so the name fits where it shows.
+
 ## 16 October 2026: spying
 
 - **The continents keep counting up from 1** (the owner's call): the
@@ -80,6 +115,22 @@ them can be found and reversed. The big, agreed decisions are in
   islands do).
 - **Bought attack packs aren't offered:** the server has never sold
   them, so nothing opens that window.
+
+## 15 October 2026: placing on a phone
+
+- **A tap shows where it would go; a tap on it puts it there.** The Flash
+  client never ran on phones: a mouse showed the building under the
+  pointer before a click bought it. On a phone the first tap now does
+  what the pointer did, and the prompt says "then tap it again". Moving a
+  building works the same. A mouse still buys with one click.
+
+## 15 October 2026: the level-up window
+
+- **One button, OK.** The original's window had Share (posting to
+  Facebook) and Skip, and both only closed it here; Facebook is gone.
+- **The prizes are paid as the levels are reached,** then the windows
+  follow one by one; the original paid each as its window opened. The
+  totals and the save are the same.
 
 ## 15 October 2026: hovering and the collecting bar
 
