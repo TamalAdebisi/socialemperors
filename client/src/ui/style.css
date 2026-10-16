@@ -2849,6 +2849,7 @@ body {
 /* The Neighbours window's "ASSIST!", the original's mark for a neighbour to help today. */
 .assist-mark {
   display: block;
+  align-self: flex-start;  /* not stretched across the row's column */
   height: 20px;
   width: auto;
   margin-top: 2px;
