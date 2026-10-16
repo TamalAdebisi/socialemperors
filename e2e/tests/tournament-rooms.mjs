@@ -152,6 +152,7 @@ export default async function tournamentRooms({ newPlayer }) {
   await open(host);
   await host.button("Your own").click();
   await host.button("Create tournament").click();
+  await page.getByRole("button", { name: "Choose type", exact: true }).first().waitFor();
   assert.equal(await page.locator(".tournament-card[data-tournament]").count(), 7, "only everyday types can be created");
   assert.ok(await host.button("Create tournament").isDisabled());
   await page.locator('[data-tournament="1"]').getByRole("button", { name: "Choose type", exact: true }).click();
