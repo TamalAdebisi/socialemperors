@@ -22,18 +22,18 @@ next agent knows where to start.
 - **The first tournament slice is complete in #89:** everyday, weekly
   and friends' lists, help and the saved team box. Entry and later stages
   keep classic links. Task 7 below records its checks and the next slice.
-- **Task 1 is complete in #86**, with a separate art-loading failure
-  recorded below for follow-up. All **nine stale art bundles have now
-  been exported**, under the owner's subsequent authorization. The CDN
-  mismatch was also resolved: all 20 images verified at 11:24 UTC in
-  both plain and Origin-header requests. A cold-cache `team` run passed;
-  the subsequent full browser run is in progress. The
-  owner requested merging the two wait
-  fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
-  those are implemented but still awaiting browser verification and merge.
-  #87 also has conflicts with `main`; its delivery task is below. Leave
-  those tasks with that pull request, and start dependent work from the
-  latest `main` after it lands.
+- **Task 1 is complete in #86; its art follow-up is closed in #91.**
+  All nine stale bundles were exported under the owner's authorization,
+  and the owner purged the 20 image URLs. At 11:24 UTC, both plain and
+  Origin-header checks passed for every image. Cold-cache `team` passed,
+  then the full suite finished **61/65**, including `team`; the four
+  existing unrelated failures remain documented below. No further
+  export, purge or owner-operated step remains for the art repair.
+- **Draft #87 contains tasks 2, 3 and 5;** those are implemented but
+  still awaiting browser verification and merge. #87 also has conflicts
+  with `main`; its delivery task is below. Leave those tasks with that
+  pull request, and start dependent work from the latest `main` after
+  it lands.
 - **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
   client's 324 passed, and 63 of 64 browser tests passed. The two flaky
   tests passed; `team` failed and prompted the separate art repair
@@ -115,8 +115,9 @@ Run the server tests, client type check and unit tests, then all browser
 tests (66 at #87's current head). Inspect desktop and phone screenshots
 and the server log. Fix failures without weakening assertions. Record
 the tested commit, counts, duration and any unresolved failure in the PR.
-The existing `team` art-memory failure is documented under task 1; if it
-recurs, establish whether it is the same accepted unrelated failure.
+The `team` art repair is closed under task 1. If it fails again, refresh
+the nine affected local cache entries as documented and rule out stale
+art before deciding whether a new regression exists.
 Merge once verification is complete and regressions are resolved, using
 the standing authorization. Keep tasks 1, 2, 3 and 5 ticked in the merged
 handoff. Update the status at the top instead of restoring #87's stale
@@ -169,7 +170,7 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate follow-up: export and public files verified; browser run ongoing.**
+**Separate art follow-up closed in [#91](https://github.com/TamalAdebisi/socialemperors/pull/91).**
 For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
 army loaded. It failed on its own too, in a fresh browser, reaching this
 machine's 8 GiB memory limit.
@@ -232,8 +233,30 @@ build/startup). All 40 cache hashes match and each file was requested
 once. Screenshots show the original artwork and the server log has no
 HTTP errors or exceptions. Peak anonymous/shared/kernel memory was
 **3.55 GiB** (5.75 GiB including file cache); no memory-limit/OOM events
-occurred. The full **65-test** browser suite started afterwards at 11:26
-UTC; its result is pending.
+occurred. The full browser suite then ran **11:26:30–12:44:15 UTC**:
+**61/65 passed in 77m 45s**, including `team` (41 seconds), `market`,
+`survival` and `tournaments`. Peak anonymous/shared/kernel memory was
+**3.74 GiB** (7.35 GiB including file cache); no memory-limit/OOM events
+occurred. All **176 screenshots** were reviewed, the server log has no
+HTTP errors or exceptions, and all 40 repaired cache hashes still match.
+Server checks also passed: **428 run, 419 passed, 9 existing skips**;
+client types, build and **333 unit tests passed**.
+
+The four full-suite failures are `construction` (line 46, nine-second
+interaction deadline), `scripted-bosses` (line 120, fight-completion
+wait), `siege` (line 32, building targets) and `walk` (line 33, saved
+position). #89 independently reproduced all four test names on unchanged
+main `2918c71f`. This run's boss timeout came from line 65, an earlier
+battle than #89's recorded portal case. A separate isolated check on
+unchanged `2918c71f` at **12:44–12:51 UTC** reproduced that later case
+(line 88 → 120): **0/1 passed**, 6m 56s with build/startup, **2.16 GiB**
+peak anonymous/shared/kernel memory (6.05 GiB with file cache), no memory
+limit/OOM events. None of its 706 art requests used the nine repaired
+items. Captured state showed the fight still active after all enemy
+units were marked dead; artwork and server log were checked. Keep this
+combat-completion failure separate. These results are not an all-green
+suite, and no assertion or gameplay rule was changed. **No owner-operated
+step remains for the art repair.**
 
 The earlier cache-busted-files `team` pass (41 seconds, 3.44 GiB peak)
 and the stopped full run are historical evidence, not the final ordered
@@ -323,8 +346,8 @@ commit, the server ran **428 tests: 419 passed, 9 existing skips**; client
 types and **333 tests passed**. Final focused browser checks at that
 commit passed **2/2** (`tournaments`, `menus`) in **4m 14s**.
 Desktop/phone screenshots and local server logs were inspected.
-The `team` pass in this run does not close #90's separate public-art
-repair and verification. Browser checks used local throwaway accounts;
+The `team` pass in this run did not close #90's separate public-art
+repair; #91 subsequently completed that verification (task 1 above). Browser checks used local throwaway accounts;
 an uncommitted environment proxy preload allowed uncached public art to
 load. No production game accounts or live writes were used.
 

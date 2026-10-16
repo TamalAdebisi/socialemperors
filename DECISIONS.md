@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: closing the public-art repair
+
+- **Close this operational repair without a code change.** All 20 images
+  match in plain and Origin requests; the nine-item cache was refreshed,
+  then `team` passed alone and in the full browser suite. No further
+  export, bucket deletion or purge is needed. #91 records the hashes,
+  dimensions, cache headers, screenshots, test counts and memory.
+- **Keep the four unrelated browser failures visible.** The full run was
+  61/65, with the same four failing test names already reproduced by #89
+  on main. The boss timeout occurred at an earlier battle in this run;
+  an independent unchanged-main check reproduced the later case and
+  requested none of the repaired art. Record both locations accurately.
+  Gameplay, original artwork and every test assertion remain unchanged.
+
 ## 16 October 2026: tournament list and team selection
 
 - **This slice browses and prepares; entry stays in classic.** The list
@@ -62,10 +76,9 @@ them can be found and reversed. The big, agreed decisions are in
 - **Verify image bytes as well as new manifests.** The authorized export
   succeeded, but Cloudflare kept old WebPs at all 20 ordinary image URLs
   while serving new JSON. Revalidation requests did not refresh them;
-  cache-busted requests proved the uploaded images were correct. Finish
-  this operational repair with a targeted purge of the documented URLs
-  or cache expiry, and keep the ordinary-URL verification open until
-  their bytes agree. Tests using freshly downloaded, cache-busted images
+  cache-busted requests proved the uploaded images were correct. Recovery
+  required a targeted purge of the documented URLs or cache expiry;
+  ordinary-URL verification remained open until their bytes agreed. Tests using freshly downloaded, cache-busted images
   are identified separately. No Cloudflare access is available here; the
   owner confirmed purging only those 20 URLs. At 11:24 UTC, all 20
   ordinary images byte-matched their `?repair=38885093455` versions both
