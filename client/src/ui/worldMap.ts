@@ -238,7 +238,7 @@ export class WorldMapWindow {
       attacks.classList.add("none");
     }
     const eagles = document.createElement("span");
-    eagles.className = "world-attacks";
+    eagles.className = "world-eagles";
     eagles.textContent = `${this.word(WORDS.eagles)} ${this.parts.spyingsLeft().left}`;
     eagles.hidden = !this.parts.eagles();
     const results = button("world-art results", "Battle Results", picture("results", ""), () => this.parts.results());

@@ -100,7 +100,8 @@ export default async function world({ newPlayer }) {
   assert.match(await theirs.locator("img").getAttribute("src"), /island-10/);
   assert.equal(await page.locator(".world-tint").count(), 2, "their land coloured too");
   await theirs.click();
-  assert.match(await page.locator(".world-why").textContent(), /wait 4 hours/);
+  assert.equal(await page.locator(".world-why", { hasText: "wait 4 hours" }).count(), 1);
+  assert.equal(await page.locator(".world-why", { hasText: "Build Eagles to spy" }).count(), 1, "no Eagles here");
   assert.match(await page.locator(".world-attacks").textContent(), /2/, "one attack used");
   await player.shot("beaten");
 
