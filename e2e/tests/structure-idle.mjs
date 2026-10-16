@@ -110,6 +110,24 @@ export default async function structureIdle({ newPlayer }) {
     if (name in BLANK_BUILDING_ENDS) {
       assert.ok(result.faces.every((f) => f.frames === BLANK_BUILDING_ENDS[name] - 1 && f.unique > 1 && !f.blank), `${name} cannot blink out at the loop boundary`);
     }
+    if (name === "workshop5") {
+      const live = await page.evaluate(async () => {
+        const slot = window.seHome.parts.view.ghost.slot;
+        const picture = slot.children.find((c) => c.texture);
+        const halo = slot.getChildByLabel("outline");
+        const seen = new Set([picture.texture]);
+        let synchronized = true;
+        picture.play();
+        for (let frame = 0; frame < 20; frame++) {
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+          seen.add(picture.texture);
+          synchronized &&= halo.children.every((copy) => copy.texture === picture.texture);
+        }
+        picture.stop();
+        return { changed: seen.size > 1, synchronized };
+      });
+      assert.ok(live.changed && live.synchronized, "the real ticker advances nested motion and its halo together");
+    }
     if (["adiestramientocaballos", "rancho1_2", "rancho1_3"].includes(name)) {
       const occupied = await page.evaluate(async ({ name, states }) => {
         const { view, items } = window.seHome.parts;
