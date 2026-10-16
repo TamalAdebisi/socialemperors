@@ -36,6 +36,15 @@ async function check(player, touch) {
     assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.key)), [point.key]);
   }
   assert.match(await page.locator(".battle-selection").textContent(), /health.*attack/);
+  if (!touch) {
+    // Dialogs keep their own Escape while the town is being defended.
+    await page.locator(".hud-level.renames").click();
+    await page.locator(".name-input").fill("Keep my selection");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator(".name-window").count(), 0, "Escape closes the dialog");
+    assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.key)), [point.key],
+      "dialog Escape leaves the army selection alone");
+  }
   if (touch) {
     const box = await page.locator(".battle-selection").boundingBox();
     const tools = await page.locator(".corner").boundingBox();

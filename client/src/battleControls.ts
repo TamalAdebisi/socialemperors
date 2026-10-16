@@ -195,11 +195,10 @@ export class BattleControls {
 
   private key(e: KeyboardEvent): void {
     if (e.ctrlKey || e.metaKey || e.altKey || document.body.classList.contains("panel-open")) return;
+    if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
     if (e.key === "Escape") {
       e.stopImmediatePropagation();
       this.select([]);
-    } else if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) {
-      return;
     } else if (e.key === " " || e.key.toLowerCase() === "a") {
       if (e.key === " " && e.target instanceof HTMLButtonElement) return;
       e.preventDefault();
