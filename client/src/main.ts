@@ -346,24 +346,34 @@ async function start(): Promise<void> {
       } else void tournamentWindow.open();
     });
     const tournamentConfig = tournamentRules(config);
+    let tournamentTown = town;
+    let tournamentWarehouse = (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
+    let tournamentFriends = (info.neighbors ?? []).map((neighbor) => String(neighbor.pid));
+    const tournamentRefreshGuard = () => JSON.stringify([town.cash, town.gold, town.level, [...town.gifts], attackState.teams,
+      tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig)]);
     const tournamentWindow = new TournamentWindow({
       rules: tournamentConfig, items,
       me: settings.userId,
-      level: () => town.level,
+      level: () => tournamentTown.level,
       balance: (resource) => resource === "c" ? town.cash : town.gold,
       refreshTown: async () => {
         // The town remains playable beside the panel. Do not overwrite a
         // collection, purchase or gift placement made while this read waited.
         for (let attempt = 0; attempt < 3; attempt++) {
           if (!await commands.flush()) throw new Error("Your changes couldn't be saved.");
-          const before = JSON.stringify([town.cash, town.gold, [...town.gifts], attackState.teams]);
+          const before = tournamentRefreshGuard();
           const fresh = await server.playerInfo({ town: town.id });
-          if (commands.pending || before !== JSON.stringify([town.cash, town.gold, [...town.gifts], attackState.teams])) continue;
+          if (commands.pending || before !== tournamentRefreshGuard()) continue;
           town.cash = Number(fresh.playerInfo.cash);
           town.gold = Number(fresh.map.coins);
           town.gifts = readBox(fresh.privateState?.gifts);
           const savedTeams = (fresh.privateState as Record<string, unknown> | undefined)?.teams;
           if (savedTeams && typeof savedTeams === "object") attackState.teams = savedTeams;
+          // Ownership and saved selection must come from the same read. A
+          // second tab may have acquired units since this town was drawn.
+          tournamentTown = readTown(fresh, items);
+          tournamentWarehouse = (fresh.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
+          tournamentFriends = (fresh.neighbors ?? []).map((neighbor) => String(neighbor.pid));
           menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
           hud.update(town);
           return;
@@ -374,7 +384,7 @@ async function start(): Promise<void> {
       spent: (resource, amount) => doings.spend(resource, amount),
       now: clock,
       join: (type, category, team, room) => server.joinTournament(type, category, team, room),
-      create: (type, team) => server.createTournament(type, team, (info.neighbors ?? []).map((n) => String(n.pid))),
+      create: (type, team) => server.createTournament(type, team, tournamentFriends),
       leave: (room) => server.leaveTournament(room),
       cancel: (room) => server.cancelTournament(room),
       clean: () => server.cleanTournament(),
@@ -384,7 +394,7 @@ async function start(): Promise<void> {
         location.assign(`/client.html?tournament=${encodeURIComponent(room)}&victim=${encodeURIComponent(victim)}`);
       },
       info: () => server.tournamentInfo(),
-      choices: () => tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig),
+      choices: () => tournamentChoices(tournamentTown, tournamentWarehouse, items, tournamentConfig),
       savedTeam: () => (attackState.teams as Record<string, unknown> | undefined)?.tournament,
       saveTeam: async (team) => {
         // Keep the queued choice locally too: closing/reopening while the

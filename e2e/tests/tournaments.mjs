@@ -181,6 +181,19 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Weekly");
   assert.equal(await page.locator(".tournament-card").count(), 0, "an entered weekly tournament stays hidden after leaving");
 
+  // The phone acquires another copy after the desktop loaded. Its saved team
+  // must be checked against fresh ownership, not pruned by the old town view.
+  await phone.send([
+    { cmd: "store_add_items", args: [JSON.stringify([KNIGHT])] },
+    { cmd: "set_attack_team", args: ["tournament", JSON.stringify(padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT))] },
+  ]);
+  await page.keyboard.press("Escape");
+  await open();
+  await page.waitForSelector(".tournament-team-box");
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT),
+    "new ownership and the saved team from another tab are refreshed together");
+  assert.equal(await page.locator(".tournament-team-box .tournament-team img").count(), 4);
+
   // Follow the real link only after a new team save: the classic page has the same empire.
   await player.press("Your own");
   await page.getByRole("link", { name: "Open tournaments in classic", exact: true }).click();
