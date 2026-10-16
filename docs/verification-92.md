@@ -27,6 +27,32 @@ alphabetically. #95's original full and later focused results remain in
 in [its own record](verification-94.md). Neither is relabelled as a test
 of the final integrated tournament code.
 
+## Focused #95 integration check at 6f7a5ae6
+
+Exact tested code: `6f7a5ae67035ee2fd93b3a2c0fa9fdad89ec6939`.
+The focused browser run passed **1/2 in 7m 34.66s**: `tournament-rooms`
+passed in 212s; `tournament-battle` failed in 232s. Its new phone assertion
+expected the paused army's three selected units to remain selected after
+touching the surrender backdrop and pressing Escape. The selection was
+empty instead: body focus bypassed the shared keyboard target guard.
+This is an integration regression, not a fixture failure. The local archive
+is `tournament-evidence-review-focus-6f7a5ae6`. The 41 focused tournament
+server tests passed in 1.493s at the same code.
+
+Owners reviewed all seven room captures and nine battle captures. Desktop
+and phone inspection controls, statistics, Deselect and three portraits fit
+without overlap. One formed desktop knight is clipped at the right edge.
+The failure capture shows the paused desktop home page because the test's
+capture helper uses its original page; it does not illustrate the phone
+failure itself.
+
+The correction checks for any rendered `dialog` or `alertdialog` before
+handling shared battle shortcuts, including when focus has moved to the
+body. Hidden mounted panels are ignored; modifier/form guards and dialog
+focus behavior remain unchanged. Types passed with this correction, but
+its unchanged browser assertion and the full 77-case run are pending.
+The failed run above does not verify the correction.
+
 ## Completed pre-#95 checks at 5d220abf
 
 Exact tested code: `5d220abfa562877ca346b205455f9554e15d497e`.

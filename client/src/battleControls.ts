@@ -201,6 +201,10 @@ export class BattleControls {
   private key(e: KeyboardEvent): void {
     if (e.ctrlKey || e.metaKey || e.altKey || document.body.classList.contains("panel-open")) return;
     if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
+    // A backdrop click can move focus to body. The visible dialog still
+    // owns shortcuts; mounted panels hidden directly or by an ancestor do not.
+    if ([...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')]
+      .some((dialog) => dialog.getClientRects().length > 0)) return;
     if (e.key === "Escape") {
       e.stopImmediatePropagation();
       this.select([]);

@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: visible dialogs keep battle shortcuts
+
+- **A backdrop touch must not bypass a dialog.** The focused #95
+  integration check at `6f7a5ae6` found that touching behind the phone
+  surrender dialog moved focus to the body, so Escape cleared the paused
+  army selection. The shared battle keyboard handler now also checks for
+  a rendered dialog or alert dialog. Hidden mounted panels do not block
+  shortcuts; existing modifier/form guards and dialog focus behavior stay
+  unchanged. Keep the failing assertion intact. Types pass; the focused
+  browser rerun and full 77-case integration check are still pending.
+
 ## 16 October 2026: tournaments join Everybody
 
 - **Use the community the owner requested in #95.** Tournament creation
