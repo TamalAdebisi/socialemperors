@@ -60,5 +60,6 @@
   .tournament-battle-army { padding: 4px 8px; line-height: 1.15; }
   .tournament-battle-army strong { font-size: 13px; }
   .tournament-battle-hud .button.small { min-height: 44px; }
+  .tournament-battle-hud .hud-sound { min-width: 44px; min-height: 44px; }
   .tournament-match-result > img { max-height: 25vh; object-fit: contain; }
 }
