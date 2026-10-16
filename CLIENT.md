@@ -1304,7 +1304,9 @@ and what its popup says), `view/bars.ts` (the popup and the bars),
 The outline copies follow the source picture immediately before each
 render, including its current animation texture. They no longer keep a
 snapshot of an earlier frame, which could leave an oversized silhouette
-behind an animated building.
+behind an animated building. Walking also moves the outline's wrapper;
+the synchronization clears that offset before copying the current picture
+position, so unit movement is applied once.
 
 As the Flash client does it, with a mouse (our notes, our words):
 

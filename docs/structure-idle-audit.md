@@ -36,7 +36,10 @@ The browser regression renders all **86 stateful files, seven repaired
 blank-ending loops, four genuine-motion controls and one static tower**,
 98 art files in every facing.
 It traverses every resulting frame, checks allowed state samples and
-matching hover textures, and captures each structure. Its test pages
+matching hover textures, and captures every facing directly from the Pixi
+renderer with a visible-pixel assertion. Real selected-building screenshots
+check the normal UI too. The shared outline is also checked with live
+animation and walking, so movement cannot be applied twice. Its test pages
 reload every six art files to release large decoded atlases. This is
 separate from the source/manifest pass over all 900 files: the record does
 not claim a manual browser playthrough of unavailable art.
@@ -84,6 +87,8 @@ quest states remain higher priority than idle selection.
 Hover outlines use the picture's current texture, anchor, scale and
 position immediately before rendering. Eight fixed copies share that
 frame; they do not run independent animation clocks or retain snapshots.
+The wrapper's walking offset is cleared before synchronizing, since the
+source picture's current position already includes that movement.
 
 Seven loops end in a fully transparent picture of the entire structure:
 `retretetrol` (frame 382) and `1448_chained_chest`, `1449_chained_chest`,
