@@ -305,10 +305,13 @@ frees its unit.
 ## Tournaments
 
 All five parts are built in #89 and #92. The
-[delivery record](docs/verification-92.md) preserves the completed pre-#95
-75/75 browser run and the later interrupted cc run (19 passes, one
-raid-fixture failure reproduced on unchanged main). Verification of the
-merged 78-case suite, including #97, is pending.
+[delivery record](docs/verification-92.md) records all five tournament
+checks passing at `47db7f44`, including #97: the complete suite was
+77/78 in 90m 46.59s. The sole quest reload failure did not recur in ordinary
+main or tested-code repeats. A forced baseline diagnostic establishes an
+existing save/read weakness, not the exact full-run cause; the quest issue
+remains a follow-up. Tournament implementation and verification are
+complete, ready for review and merge. Earlier results are retained.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.

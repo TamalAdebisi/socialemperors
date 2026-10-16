@@ -84,19 +84,20 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament integration verification after #97 is pending.** The
-  completed pre-#95 run at
-  `5d220abfa562877ca346b205455f9554e15d497e` passed **75/75 browser tests
-  in 92m 46.83s**, including #94, all five tournament cases and shared
-  spells. Server: **440 run (431 passed, 9 existing skips)**; client
-  types and **385 tests passed**. The later `cc218b7e` unit checks passed:
-  **442 server run (433 passed, 9 existing skips)**, types and **388 client
-  tests**. Its browser run stopped after **19 passes and one raid-fixture
-  failure**; classic was incomplete. The failure reproduces on unchanged
-  main. Main `8f8c57ab` (#97), merged at `36f61871`, adds contact coverage
-  and Menu stacking; the combined **78-case** suite needs fresh checks.
-  [The delivery record](docs/verification-92.md) preserves the baseline,
-  interrupted runs, proof, screenshot review and all earlier failures.
+- **Tournament implementation and verification are complete; #92 is ready for review and merge.** Exact
+  clean `47db7f4446e957ab8d65ef8892799649abedf9a6`, including latest
+  main `8f8c57ab` (#97), ran all 78 browser cases: **77 passed, 1 failed
+  in 90m 46.59s**. All five tournament cases, shared spells and `team`
+  passed. The sole `scripted-bosses` mummy-gem reload failure did not
+  recur in ordinary main or tested-code repeats. A forced baseline
+  diagnostic shows an existing save/read weakness, but the exact full-run
+  cause remains unproven and is retained as a separate quest follow-up.
+  Server: **448 run (439 passed, 9 existing
+  skips)**; types and **388 client tests passed**. Screenshot review
+  covered 79 full-run images plus 14 integration-focus and four quest-focus
+  images; 256 full-run images were archived and the full server log is clean.
+  [The delivery record](docs/verification-92.md) preserves exact evidence,
+  the earlier 75/75 and 73/73 baselines, interrupted runs and fixes.
 - **Playthrough verification (#95):** server 436 run (427 passed,
   9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including

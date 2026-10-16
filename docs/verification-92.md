@@ -10,30 +10,255 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Final verification after #97
+## Full integrated verification at 47db7f44
 
-Pending. Main `8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged
-without rebasing at `36f618710ba9b4efceb9bd81b70d22bb5867fc09` after
-the interrupted `cc218b7e` run below. #97 adds contact links, one browser
-case and an independent Menu stacking fix. The merge keeps that fix and
-removes the now-redundant countdown-hiding rule. The hit-target regression stays
-and covers all four Menu links with Discord configured. The combined
-runtime needs fresh server, client and full **78-case** browser checks;
-no final verification or delivery is claimed yet.
+Exact tested code: `47db7f4446e957ab8d65ef8892799649abedf9a6`.
+The checkout was clean and pushed before checks. A fresh fetch confirmed
+main `8f8c57abe132c5b0ff805159e276e668403fb5ef` (#97) as an ancestor;
+main remained at that commit when the run finished. The merged code
+preserves #97's Menu stacking and contact links, #95's Everybody and
+inspection controls, and all earlier integrations. The redundant
+countdown-hiding rule is removed; the hit-target regression checks all
+four configured Menu links. Tournament rules and command formats remain
+as documented, with the owner's community policy preserved.
 
-The next full run starts with site-menu, contact and recurring-raids,
-then the five tournament cases, shared spells, building-overlay,
+The final documentation update changes only AGENTS.md, CLIENT.md,
+DECISIONS.md, HANDOFF.md, PARITY.md, ROADMAP.md, this record and the
+Everybody wording in `docs/original/index/windows.md`: eight Markdown
+files relative to `47db7f44`. Client/server code, configuration, artwork, tools and tests
+remain identical to that tested commit. This identity covers the
+documentation update, not any unrecorded later change.
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| `.venv/bin/python -m unittest discover tests` | 448 run: 439 passed, 9 existing PostgreSQL skips | 30.81 seconds |
+| `cd client && npm run check` | Types passed | 1.97 seconds |
+| `cd client && npm test` | All 388 tests passed | 7.49 seconds |
+| Full Chromium browser suite | 78 run: 77 passed, 1 failed | 90m 46.59s |
+
+Every scenario ran once. All five tournament cases, shared spells, the
+Menu/contact/raid integrations and `team` passed; `team` took 41s. The
+sole failure was `scripted-bosses`, whose mummy-gem reload assertion
+found three remaining gems instead of two. Ordinary reruns passed; the
+controlled diagnostic and its limits are recorded below. The full result
+remains **77/78**. Implementation and verification are complete, with
+this unresolved quest issue retained as a follow-up; #92 is ready for
+review and merge, not yet recorded as merged or deployed.
+
+The run started with site-menu, contact and recurring-raids, then the
+five tournament cases, shared spells, building-overlay,
 playthrough-controls and battle-selection, followed by the other 66
-alphabetically. The focused Menu/contact/raid check is also pending.
+alphabetically. The local archive `tournament-evidence-full-47db7f44`
+contains **256 screenshots across 73 populated folders**, with 78
+directories created by the runner. The full local server log has zero
+Python tracebacks, HTTP 5xx replies or unhandled commands.
 
-Tournament Invite still points to Everybody at `/friends`; the
-three-player-neighbour minimum, owner/room restrictions and fees remain
-unchanged. The raid fixture correction below keeps the real movement
-assertion and its timeout. #95's original full and later focused results
-remain in
-[its delivery record](verification-95.md), and #94's full/focused history
-in [its own record](verification-94.md). Neither is relabelled as a test
-of the final integrated tournament code.
+The focused Menu/contact/raid check at the same commit passed **3/3 in
+3m 30.75s** (57s, 115s and 27s). Its separate archive contains 14 images,
+all reviewed, and its local server log also has zero tracebacks, HTTP
+5xx replies or unhandled commands. The focus verified the saved raid
+fixture move, retained movement deadline and all four Menu destinations.
+
+Accounts and game writes were local and disposable; remote access read
+public artwork through the environment proxy. The existing nine optional
+PostgreSQL tests require their separate database. Environment: 2-CPU
+quota, 8 GiB memory, Python 3.13.5, Node 24.19.0, Playwright 1.56.1 and
+Chromium with software rendering; one browser runner at a time.
+
+### Quest failure: unresolved intermittent reload, separate follow-up
+
+`scripted-bosses` failed in 91s at its immediate mummy-gem reload check:
+the assertion expected two gems and found three. It remains a failed
+case. An ordinary unchanged-main run and two additional traced baseline
+runs passed; the exact failure has not been reproduced naturally on
+main. An ordinary repeat on the tested tournament code passed too.
+No assertion, deadline, quest runtime or test has been changed to get
+these passes. They do not change the full-run result.
+
+The first unchanged-main attempt ended when the execution-service
+transport disconnected and its processes vanished. It produced no
+assertion or completed-case outcome, so it is recorded as interrupted,
+not as a gameplay failure. Its log, screenshots and status were archived
+under `tournament-main-8f8c57ab-scripted-bosses-interrupted`. The ordinary
+retry passed. The completed 47 run and its archive predate this
+disconnect and are unaffected.
+
+| Follow-up | Result | Timing |
+| --- | --- | --- |
+| Ordinary unchanged main `8f8c57ab` | 1/1 passed, all camp scenarios | Scenario 148s; total 153.1088s |
+| Natural baseline trace 1, intercepted art without a gate | Passed | Harness start to test pass 149.163s; including cleanup 150.607s |
+| Natural baseline trace 2, intercepted art without a gate | Passed | Harness start to test pass 147.182s; including cleanup 148.480s |
+| Ordinary tested code `47db7f44` | 1/1 passed, all camp scenarios | Scenario 147s; total 152.2461s |
+
+Trace-harness times include setup and are not pure scenario times. The
+ordinary 47 repeat had only seven documentation files dirty; runtime,
+art and tests matched the exact full-run commit. Its server log had zero
+tracebacks, HTTP 5xx replies or unhandled commands. Its four fresh
+1280×800 captures were reviewed: completion dialogs, text and OK buttons
+fit, with original town art, HUD and dock intact. These desktop stills
+do not establish reward storage, gem persistence, reload behavior or
+phone layout; the ordinary test assertions supply the behavioral evidence.
+
+Fourteen relevant camp, command, mission, helper and test files have
+identical git blobs on main and tested code. The immediate tap/reload
+assertion and command-sender behavior predate this tournament work.
+This narrows the investigation but does not prove the exact failure's
+cause or exclude every timing interaction. The failed full-run map
+retains three gems, and its server log has no gem-collection commands.
+The tap result and network events were not recorded during that run,
+so an accepted tap followed by lost saving remains a hypothesis.
+
+Both successful natural traces show a valid tap with two gems locally,
+an in-flight save, a browser-reported aborted request at pagehide and an
+immediate retry. Both original and retry command sequences reached the
+server. A browser abort therefore does not establish lost server delivery;
+these traces show successful recovery, not the original failure.
+
+A one-request diagnostic gate also passed because the retry bypassed it;
+its 145.587s start-to-pass and 147.268s including cleanup are diagnostic
+timings, not another ordinary baseline result. The corrected cohort gate
+held the original request and its retries until the reload's info reply,
+releasing them after 1.400s rather than its 10-second cap. On unchanged
+main it forced the same three-versus-two assertion: the accepted tap had
+two gems and activator 1 locally, but the reload read old progress and
+restored three guarded gems. Late commands then reached the server,
+leaving activator 1 alongside three physical gems. That differs from the
+full-run failure, which had no gem commands or saved activator update.
+The diagnostic took 94.376s from harness start to assertion failure and
+98.270s including cleanup; these are not pure scenario timings.
+
+This forced diagnostic establishes an existing save/read ordering
+weakness, not natural baseline reproduction or the exact full-run cause.
+No tournament regression was identified. Keep the unresolved intermittent
+quest reload failure as a separate follow-up: capture the accepted tap,
+request/retry delivery, reload snapshot and final saved gem/activator state
+before choosing a repair. Preserve the immediate-reload assertion and
+original quest rules. No quest runtime, deadline or assertion was changed;
+trace/interception/replay code remains outside the repository. Artifacts
+remain local under `tournament-mummy-investigation` and associated records.
+
+### Screenshot review at 47db7f44
+
+Screenshot review covered **79 fresh full-run images**: all 50
+tournament/shared-spell captures, contact 8, raids 2, Menu 4, building
+previews 8, playthrough controls 2, shared selection 2 and three captures
+from the failed quest. These are separate from the focused run's 14.
+The 76 tournament/integration images showed original art and reachable
+desktop/phone/720px controls, saved room and result states, unobstructed
+Menu destinations, readable inspection and raid recovery. No new
+persistent layout defect was observed.
+
+Troops can overlap or move outside the camera; the weekly advance image
+is mostly empty terrain with a sprite edge, so assertions establish
+motion. The golem capture shows its glow only. Academy rows, room/team
+content and weekly ranks 9–10 need scrolling. Ten of twenty result slots
+are fully visible on desktop, with all twenty loads asserted; the phone
+heading is visible while one desktop heading is above its retained
+scroll offset. The phone Everybody Discord footer is below the image.
+Temporary Draggy/raid toasts cover some chrome; stills do not establish
+duration. Shared-spell images are desktop views; classic images show
+only the bar. Links, timing, recurrence, fees, saves, frozen/idempotent
+prizes and Done behavior are established by assertions.
+
+The three quest captures show completion notices from preceding
+scenarios and the reloaded mummy town. Its corner gems are offscreen,
+so the images cannot establish gem count or tap/save timing. The failing
+assertion supplies that evidence; screenshot review does not make it pass.
+This Chromium run does not establish Safari on a Mac GPU or a repair of
+the unreproduced wide terrain streak.
+
+Together with the 14 Menu/contact/raid focus images and four quest-focus
+images reviewed above, **97 images from three runs at the same tested
+runtime were reviewed**. Their separate archives and outcomes remain
+distinct; the focused passes do not relabel the full-run failure.
+
+### Full browser results at 47db7f44
+
+| Test | Result | Time |
+| --- | --- | ---: |
+| `site-menu` | Passed | 57s |
+| `contact` | Passed | 108s |
+| `recurring-raids` | Passed | 26s |
+| `tournament-weekly` | Passed | 128s |
+| `tournament-rooms` | Passed | 204s |
+| `tournaments` | Passed | 107s |
+| `tournament-battle` | Passed | 268s |
+| `tournament-results` | Passed | 144s |
+| `spells` | Passed | 43s |
+| `building-overlay` | Passed | 81s |
+| `playthrough-controls` | Passed | 35s |
+| `battle-selection` | Passed | 45s |
+| `animals` | Passed | 26s |
+| `attack` | Passed | 134s |
+| `bonus` | Passed | 30s |
+| `bosses` | Passed | 34s |
+| `bubble` | Passed | 62s |
+| `camp` | Passed | 48s |
+| `camp-again` | Passed | 26s |
+| `card` | Passed | 113s |
+| `cash` | Passed | 40s |
+| `classic` | Passed | 48s |
+| `collect` | Passed | 103s |
+| `collections` | Passed | 31s |
+| `construction` | Passed | 55s |
+| `defence` | Passed | 25s |
+| `dock` | Passed | 48s |
+| `dragons` | Passed | 84s |
+| `edit` | Passed | 44s |
+| `friends-help` | Passed | 57s |
+| `gifts` | Passed | 42s |
+| `goal-window` | Passed | 49s |
+| `graveyard` | Passed | 26s |
+| `group` | Passed | 84s |
+| `heroes` | Passed | 35s |
+| `hover` | Passed | 47s |
+| `keys` | Passed | 37s |
+| `lessons` | Passed | 180s |
+| `lessons-phone` | Passed | 210s |
+| `lessons-recovery` | Passed | 82s |
+| `levelup` | Passed | 51s |
+| `look` | Passed | 61s |
+| `looks` | Passed | 105s |
+| `market` | Passed | 62s |
+| `menus` | Passed | 103s |
+| `messages` | Passed | 19s |
+| `monks` | Passed | 18s |
+| `nature` | Passed | 22s |
+| `neighbours` | Passed | 99s |
+| `nests` | Passed | 62s |
+| `phone-place` | Passed | 55s |
+| `pointers` | Passed | 69s |
+| `quest` | Passed | 120s |
+| `raids` | Passed | 50s |
+| `rename` | Passed | 29s |
+| `scripted` | Passed | 114s |
+| `scripted-bosses` | Failed | 91s |
+| `scripted-stories` | Passed | 240s |
+| `selected` | Passed | 92s |
+| `shop` | Passed | 42s |
+| `siege` | Passed | 36s |
+| `sound` | Passed | 27s |
+| `specials` | Passed | 25s |
+| `speed` | Passed | 16s |
+| `spy` | Passed | 40s |
+| `storage` | Passed | 37s |
+| `stuck` | Passed | 45s |
+| `survival` | Passed | 50s |
+| `team` | Passed | 41s |
+| `tidy` | Passed | 35s |
+| `tools` | Passed | 65s |
+| `town-rules` | Passed | 37s |
+| `train` | Passed | 38s |
+| `troll-town` | Passed | 37s |
+| `villagers` | Passed | 75s |
+| `walk` | Passed | 42s |
+| `work` | Passed | 52s |
+| `world` | Passed | 125s |
+
+Individual times are rounded scenario seconds; the total also includes
+build, startup and cleanup. #95's original full and later focused results
+remain in [its delivery record](verification-95.md), and #94's history
+in [its own record](verification-94.md), attached to their original code.
 
 ## Focused #95 integration check at 6f7a5ae6
 
@@ -47,7 +272,7 @@ This is an integration regression, not a fixture failure. The local archive
 is `tournament-evidence-review-focus-6f7a5ae6`. The 41 focused tournament
 server tests passed in 1.493s at the same code.
 
-Owners reviewed all seven room captures and nine battle captures. Desktop
+Screenshot review covered all seven room captures and nine battle captures. Desktop
 and phone inspection controls, statistics, Deselect and three portraits fit
 without overlap. One formed desktop knight is clipped at the right edge.
 The failure capture shows the paused desktop home page because the test's
@@ -104,7 +329,7 @@ The partial archive `tournament-evidence-partial-3b5da9e9` contains
 scenario. Before interruption, the local server log had zero Python
 tracebacks, HTTP 5xx replies or unhandled commands.
 
-Owners reviewed **68 fresh captures**: 50 tournament/shared-spell
+Screenshot review covered **68 fresh captures**: 50 tournament/shared-spell
 images (weekly 6, rooms 7, list/help/team 10, battle 9, results 12 and
 spells 6), 14 #94 integration images and four #95 integration images.
 Tournament art and controls passed review. Review also exposed the
@@ -218,8 +443,9 @@ first scheduled wave use the previously trapped edge. Later waves remain
 random. The four-wave, recovery, reward and movement assertions and
 15-second movement deadline remain intact; runtime raid/pathfinding rules
 are unchanged. Local proof is retained in `tournament-raid-pocket-replay`
-artifacts. The modified browser fixture and combined #97 runtime still
-need fresh checks; the replay is not a browser pass.
+artifacts. The modified fixture and combined #97 runtime passed the
+47db7f44 focus and full-run raid scenario recorded above. The replay
+remains separate evidence, not a browser pass by itself.
 
 ## Completed pre-#95 checks at 5d220abf
 
@@ -254,7 +480,7 @@ Chromium with software rendering; one browser runner at a time.
 
 ## Pre-#95 visual inspection at 5d220abf
 
-Owners reviewed **61 captures**: all 47 fresh tournament/spell images
+Screenshot review covered **61 captures**: all 47 fresh tournament/spell images
 (weekly 6, rooms 7, list/help/team 10, battle 6, results 12 and spells 6)
 and 14 integration images (building previews 8, playthrough controls 2,
 site Menu/Friends 4). Original art, layout and reachable controls passed
@@ -440,7 +666,7 @@ the resulting integrated test and runtime state.
 
 ## Pre-#94 visual inspection at 67d2e02a
 
-Owners reviewed all **47 tournament/spell screenshots**: weekly 6,
+Screenshot review covered all **47 tournament/spell screenshots**: weekly 6,
 rooms 7, list/help/team 10, battle 6, results 12 and spells 6. A separate
 review covered **11 shared screenshots**: card 8, dock 1 and site Menu 2.
 Original art, layout and control fit passed review. This includes the
@@ -537,7 +763,7 @@ waits for all twenty enrolled-team images to load.
 Individual times are the runner's rounded seconds. Total elapsed also
 includes build, startup and cleanup. This completed pre-#94 run has no
 failures. The #94 integration was subsequently verified at `5d220abf`;
-latest-main verification remains pending above.
+latest-main results and the quest-failure investigation are recorded above.
 
 ## Pre-review full checks at 49b5685e
 
@@ -554,8 +780,8 @@ that client, server, configuration, artwork, tools and tests were
 unchanged; that merge contained documentation and audit records only.
 This identity claim ends at `8dccab0d`. Subsequent review fixes changed
 the runtime and tests and were verified separately at `67d2e02a` above.
-The later #94 integration passed separately at `5d220abf`; the #95
-integration still needs its own complete checks.
+The later #94 integration passed separately at `5d220abf`. Combined
+#95/#97 checks at `47db7f44` and their sole quest failure are recorded above.
 
 | Check | Result | Elapsed, including startup/build |
 | --- | --- | --- |
@@ -758,8 +984,15 @@ includes build, startup and cleanup. This pre-review run had no failures.
 
 The list/team slice is in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89);
 [#92](https://github.com/TamalAdebisi/socialemperors/pull/92) implements
-every remaining tournament stage. The #94 integration passed all 75
-cases at `5d220abf`; final verification after merging #97 is pending.
+every remaining tournament stage. Integrated code at `47db7f44` passed
+all tournament checks and 77/78 cases overall. The sole quest failure did
+not recur in ordinary main/tested-code repeats. A forced baseline
+diagnostic establishes an existing save/read weakness but does not prove
+the full-run cause; that quest issue remains a separate follow-up.
+Implementation and verification are complete, and #92 is ready for
+review and merge. This record does not yet claim merge or deployment.
+The earlier #94 integration passed all 75 cases at
+`5d220abf` and remains a separate historical result.
 The other chats' #87, #91, #93, #94, #95 and #97 work is preserved. Merging #92
 uses the owner's
 standing authorization for automatic deployment after the required checks.

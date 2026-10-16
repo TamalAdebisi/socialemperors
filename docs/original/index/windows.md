@@ -192,7 +192,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/tournament/TournamentRankingUserRow.as` | 102 | The player's own ranking row. | built: separate own rank, including outside the top ten, in `ui/tournamentResults.ts` |
 | `popups/tournament/TournamentPlayerData.as` | 116 | A tournament player's data (no window). | built: typed rooms/matches and score helpers in `rules/tournaments.ts` |
 | `popups/tournament/RecuadroTeamTournament.as` | 98 | The team box in the tournament window. | built: twenty-place team box in `ui/tournaments.ts` |
-| `popups/tournament/AlertInviteTournament.as` | 47 | A tournament invitation, yes or no. | built/adapted: neighbours accept by entering from Your own; Invite uses the site's existing Friends-page notice, without Facebook start-up delivery |
+| `popups/tournament/AlertInviteTournament.as` | 47 | A tournament invitation, yes or no. | built/adapted: neighbours accept by entering from Your own; Invite opens the site's Everybody community page, without Facebook start-up delivery |
 
 ## Shop offers, collections and news
 

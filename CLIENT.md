@@ -2465,10 +2465,13 @@ against saved rooms, matches and resources. Rule and protocol tests sit
 beside their modules; `tests/test_tournaments.py` covers the server's
 fees, state transitions, prizes and idempotency. The pre-#95 suite,
 including #94 and all five tournament checks, passed all 75 cases.
-The later cc run passed all five tournament checks but stopped after
-19 passes and one existing raid-fixture obstruction. Main #97's contact
-and Menu stacking changes are preserved; verification of the combined
-78-case suite is pending. See
+Exact integrated `47db7f44`, including #97, ran all 78 browser cases:
+77 passed, including all five tournament checks and shared spells.
+The sole mummy-gem quest reload failure did not recur on ordinary main
+or tested-code repeats. A controlled baseline diagnostic exposes an
+existing save/read ordering weakness but does not establish the exact
+full-run cause. That quest issue remains a separate follow-up; tournaments
+are implemented and verified, ready for review and merge. See
 [the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in
 `docs/original/rules/tournaments.md`. No dedicated tournament goal exists
 in the shipped missions, so the count of unfinished goals does not change;

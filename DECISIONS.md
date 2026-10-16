@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: retain the exact full-run result
+
+- **Record 77/78 accurately.** Exact integrated `47db7f44` completed all
+  78 cases in 90m 46.59s. All tournament checks passed; the sole failure
+  is the mummy-gem immediate-reload assertion in `scripted-bosses`.
+  Ordinary unchanged-main and tested-code repeats passed, as did two
+  traced baseline runs; none naturally reproduced the exact failure.
+  Fourteen relevant source/test blobs are unchanged. Keep the full-run
+  failure and assertion intact, and do not call this an all-passing suite.
+  The first baseline attempt ended in an execution-service disconnect,
+  with no completed-case outcome. Successful traces show an aborted
+  browser request can still reach the server, followed by a retry, so
+  abort is not proof of lost saving. A one-request gate was bypassed by
+  retry. The corrected cohort gate forced the assertion on unchanged
+  main by holding all attempts until the reload read old progress. Late
+  commands reached the server, unlike the full-run failure's missing gem
+  commands. This proves an existing ordering weakness, not the original
+  failure's exact cause or a natural baseline reproduction. No quest
+  runtime, assertion or deadline changed; diagnostics stay outside the
+  repository. No tournament regression was identified. Keep the quest
+  save/read boundary as an explicit follow-up rather than invent a fix
+  from incomplete evidence. Tournament implementation and verification
+  are complete, ready for review and merge with the documented failure.
+  [The record](docs/verification-92.md) keeps the exact
+  unit, browser, screenshot and log evidence alongside earlier histories.
+
 ## 16 October 2026: preserve #97 and correct the raid fixture
 
 - **Keep main's Menu stacking fix.** Main #97 landed during the `cc218b7e`
@@ -23,8 +49,9 @@ them can be found and reversed. The big, agreed decisions are in
 - **Keep the interrupted evidence.** At cc, 19 cases passed and one
   failed; classic was interrupted. Unit checks and the earlier Menu focus
   passed, but no full 77-case pass occurred. The merged contact case
-  brings the fresh suite to 78; final verification and delivery remain
-  pending in [the record](docs/verification-92.md).
+  brought the suite to 78. The later `47db7f44` focus passed 3/3 in
+  3m 30.75s; Menu, contact and raids also passed in its full 77/78 run.
+  The separate quest failure and pending delivery remain recorded above.
 
 ## 16 October 2026: getting in touch, and who can join
 
@@ -74,7 +101,8 @@ them can be found and reversed. The big, agreed decisions are in
   shortcuts; existing modifier/form guards and dialog focus behavior stay
   unchanged. The unchanged assertion and shared selection passed a
   two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final integration
-  verification remains pending, now with 78 cases after #97.
+  verification at `47db7f44` passed the tournament cases within the
+  completed 77/78 suite after #97; delivery remains pending.
 
 ## 16 October 2026: tournaments join Everybody
 
@@ -87,8 +115,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **Keep each completed run attached to its code.** The 75/75 run at
   `5d220abf` is a completed pre-#95 baseline, alongside the earlier 67 and
   49 records. #95 changed runtime and added two cases; its later partial
-  runs remain recorded. #97 adds another case, so verify all 78 on the
-  new integrated code before delivery.
+  runs remain recorded. #97 added another case; all 78 ran at `47db7f44`,
+  with the sole quest failure and pending delivery recorded above.
 
 ## 16 October 2026: playthrough feedback — active defense and everybody
 
@@ -162,8 +190,8 @@ them can be found and reversed. The big, agreed decisions are in
   match advancing. Explicit Pause still stops simulation and excludes
   paused time. Army, scoring, spell and command rules stay unchanged.
   The integrated code at `5d220abf` passed all 75 cases. Later #95
-  attempts and #97 integration are recorded above; the fresh combined
-  78-case verification remains pending.
+  attempts and #97 integration are recorded above; the combined run at
+  `47db7f44` completed 77/78 with all tournament checks passing.
 
 ## 16 October 2026: playthrough controls and site repairs
 

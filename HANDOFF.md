@@ -84,18 +84,18 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); verification after integrating #97 is pending.**
+- **All tournament stages are implemented and verified in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92), ready for review and merge.**
   Following #89's lists, help and team box, this adds rooms, copied-army
-  battles, results/prizes and friends' tournaments. Integrated #94 code at
-  `5d220abfa562877ca346b205455f9554e15d497e` passed **75/75 browser tests
-  in 92m 46.83s**; server **440 run, 431 passed, 9 existing skips**; client
-  types and **385 tests passed**. The later `cc218b7e` unit checks passed
-  (442 server run, 433 passed and 9 existing skips; types and 388 client
-  tests); its browser run stopped after 19 passes and one raid-fixture
-  failure reproduced on unchanged main, with classic incomplete. #97 is
-  now merged, preserving its contact links and Menu stacking. Fresh
-  verification of the combined 78-case suite is pending. Tournament
-  creation retains three real player neighbours
+  battles, results/prizes and friends' tournaments. Exact integrated code
+  `47db7f4446e957ab8d65ef8892799649abedf9a6`, including main #97,
+  completed **77/78 browser cases in 90m 46.59s**. All five tournament
+  cases, shared spells and team passed. The sole mummy-gem quest reload
+  failure did not recur in ordinary main/tested-code repeats. A forced
+  baseline diagnostic proves an existing save/read weakness, not that
+  full-run cause; the quest issue remains a separate follow-up.
+  Server **448 run: 439
+  passed, 9 existing skips**; types and **388 client tests passed**.
+  Tournament creation retains three real player neighbours
   and its fees, now using Everybody's community list. The
   [delivery record](docs/verification-92.md) preserves each completed
   baseline and earlier check. No further tournament slice remains.
@@ -128,7 +128,8 @@ next agent knows where to start.
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
     Arthur's lessons, the nests and all tournament stages are built;
-    tournament verification after #97 is pending. Left: the long tail of
+    tournaments are ready for review and merge, with the quest reload
+    follow-up recorded below. Left: the long tail of
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
@@ -233,9 +234,11 @@ These focused checks help locate failures; the complete suite still
 needs coverage on the final code. Server tests and the client's type/unit
 checks can run alongside browser checks. Task 4 (shop details) can now
 build on the delivered card. Task 7's implementation is in #92; its
-pre-#95 75/75 pass and later interrupted runs are recorded, with fresh
-verification of the merged 78-case suite after #97 pending in
-[the delivery record](docs/verification-92.md).
+pre-#95 75/75 pass and later interrupted runs are recorded, alongside
+the merged 77/78 result after #97 in
+[the delivery record](docs/verification-92.md). All tournament checks
+passed; the sole quest failure did not recur in ordinary repeats. Its
+save/read diagnostic and separate follow-up remain recorded.
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -527,9 +530,11 @@ the original, play a town from the start in both clients on this computer
 and tell the owner it's ready to play. They test by playing, at that
 point, not before.
 
-### 7. The switch: tournaments in the new client (L, in slices) - [ ]
+### 7. The switch: tournaments in the new client (L, in slices) - [x]
 
-**Complete implementation in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); final verification after #97 pending.**
+**Implementation and verification complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); ready for review and merge.**
+The completion mark records the implemented and verified task; merge and
+automatic deployment are not yet claimed in this handoff.
 The owner expanded the task to finish all remaining tournament parts.
 The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
@@ -539,14 +544,45 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Final verification after #97: pending.** Main
+**Integrated verification after #97: 77/78.** Main
 `8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged at
 `36f618710ba9b4efceb9bd81b70d22bb5867fc09`. Preserve its contact links
 and Menu stacking, alongside #95's recurring raids, shared inspection
 and Everybody. The now-redundant countdown-hiding rule is removed; the
 real hit-target regression covers all four configured Menu destinations.
-Run fresh server/client checks and all 78 browser cases on the new exact
-code. No final result or delivery is claimed yet.
+Exact clean, pushed `47db7f4446e957ab8d65ef8892799649abedf9a6` ran
+all 78 cases: **77 passed, one failed in 90m 46.59s**. All five tournament
+checks, shared spells and team passed. Server **448 run: 439 passed,
+9 existing skips** (30.81s), types (1.97s) and client **388/388** (7.49s)
+passed. Menu/contact/raid focus passed **3/3 in 3m 30.75s** first.
+The archive has 256 screenshots in 73 populated folders; 79 images were
+reviewed, separate from the 14 integration-focus and four quest-focus
+images reviewed afterward. The complete local
+server log has no tracebacks, HTTP 5xx or unhandled commands.
+
+The sole failure is `scripted-bosses`: the immediate mummy-gem reload
+expected two and found three. Ordinary unchanged main passed 1/1
+(148s scenario, 153.1088s total), followed by two passing natural traces.
+Ordinary tested code at 47 also passed 1/1 (147s scenario, 152.2461s
+total), with runtime/art/tests unchanged and only docs dirty. The first
+baseline attempt was interrupted by an execution-service disconnect,
+with no completed-case result. The exact failure has not been naturally
+reproduced. Fourteen relevant source/test blobs are identical; traces show
+an aborted request can still reach the server before a retry. A corrected
+gate held all attempts until the reload read old progress and forced the
+assertion on unchanged main. Late commands reached the server, unlike
+the full-run failure. This establishes an existing save/read weakness,
+not a natural reproduction or the exact full-run cause. Do not infer
+lost saving from abort alone or report 78/78. No tournament regression
+was identified; #92 is ready for review and merge with that failure
+documented. The final eight-file documentation update leaves runtime,
+art and tests identical to exact tested `47db7f44`.
+
+**Separate quest follow-up:** investigate the intermittent immediate-reload
+save/read boundary. Capture the accepted tap, request/retry delivery,
+reload snapshot and final saved gem/activator state before choosing a
+repair. Keep the existing immediate-reload assertion and original quest
+rules. No runtime quest fix or diagnostic gate is shipped in #92.
 
 **Interrupted pre-#97 checks:** exact `cc218b7e9c046d83d915d5bd43a5048168356450`
 passed server **442 run: 433 passed, 9 existing skips** (31.05s), types
@@ -564,7 +600,8 @@ stone through the normal command opens an exit, retaining all 24 stone
 and 24 gold resources. The fixture now pins its first scheduled wave to
 that edge and checks the saved move; later waves stay random. All
 movement/recovery/reward assertions and the 15-second deadline remain.
-This test-only correction needs browser verification. The
+This test-only correction passed focus and the full-run raid case at 47.
+The
 [delivery record](docs/verification-92.md) preserves the replay evidence,
 Menu/dialog regressions and fixes, all partial timings and visual limits.
 
@@ -610,7 +647,7 @@ read-only public art; no production game state was changed. Main
 `8dccab0d` without runtime, test or source-art changes from the tested
 code. Subsequent review fixes are outside that identity claim. See
 [the delivery record](docs/verification-92.md) for this run's timings,
-screenshot and log review, and the pending latest-main integration checks.
+screenshot and log review, and the latest-main result and quest investigation.
 
 **Pre-#93 integration checks:** at
 `47471ff44126cad5707a601365beb904d70d23ad`, the server ran **434 tests:
@@ -679,7 +716,9 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 4. Results, the ranking and prizes — built.
 5. Friends' tournaments: create, invite, call off — built.
 
-All five parts are implemented; final verification after #97 is pending.
+All five parts are implemented and their checks passed at `47db7f44`;
+the task is complete and ready for review and merge, with the separate
+quest reload follow-up recorded above.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.
 
