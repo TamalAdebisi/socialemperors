@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: survival
+
+- **Each arena's prizes are listed on its card,** not only while the
+  mouse is over it, so they read on a phone too (an extra).
+- **Speed works in the arena** (an extra), and the time held is the
+  game's own, so playing faster changes nothing but the wait: the waves
+  come faster too, and pausing stops the clock, as in the original.
+- **Every enemy keeps at the relic.** In the original, one could turn on
+  whoever hit it, but its next thought sent it straight back to the
+  relic, so in play they never left it.
+- **Losing count of summoned enemies:** the original counted every enemy
+  that fell, summoned ones too, towards the next wave; here only those
+  the arena sent count.
+
 ## 16 October 2026: friends' help at a building
 
 - **Ask friends sits on the card,** beside finishing the work for cash.

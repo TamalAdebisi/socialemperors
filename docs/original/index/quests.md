@@ -43,7 +43,7 @@ ones an island gives the player for the fight.
 | `battle/IADragon.as` | 369 | The Crimson Scale on the Nest Isle: fights 20 seconds, then flies a bombing run a star along the arena setting deadly fires, lands, and lays two eggs a star that hatch draggies, then fights again. | built: `rules/bossMinds.ts` |
 | `battle/IAPet.as` | 60 | A pet (dog or cat): told to follow one of the player's villagers or soldiers, it keeps within 2 tiles of it; otherwise it idles. | not yet |
 | `battle/IACartAlly.as` | 269 | The donkey cart that brings a neighbour's help: it drives to each building the neighbour helped, throws a box onto it (`assist_receive`, town and building), shows the share and the experience, then says goodbye and fades. | built: `editor.ts` (`welcomeCarts`), `rules/neighbours.ts`, `assists.py` |
-| `battle/IASurvival.as` | 129 | A survival enemy's mind: it heads for the relic and attacks it, fighting back only when hit (a boss doesn't even then); once the relic falls it fights like any unit. | not yet (survival opens the classic game) |
+| `battle/IASurvival.as` | 129 | A survival enemy's mind: it heads for the relic and attacks it, fighting back only when hit (a boss doesn't even then); once the relic falls it fights like any unit. | built: the minds in `rules/survival.ts` (`Survival`) |
 | `battle/Squad.as` | 99 | Units sent together. When their target walks off, the ones out of reach (and archers closer than 3 tiles) follow it again, at most every 300 ms. | built: chasing a moving target re-plans every 300 ms in `rules/battle.ts`; groups aren't kept as such |
 | `battle/Speech.as` | 109 | Short lines units say in a bubble: when they appear, kill, die, are hit, see a friend hit, finish a job, are told to move, are clicked too often, or now and then while idle (a unit idling turns about 1 time in 25 per mind tick, and speaks 1 time in 5 of those). The lines are written in the class, in English. | not yet |
 | `battle/Maps.as` | 125 | The ground: one picture per block of 20 x 20 tiles, from the island's ground item and its table of block pictures; a sea block can't be walked. At home, the town's ground skin. | built: `rules/quest.ts` (`islandGround`), `view/battleView.ts`, `view/townView.ts` |
@@ -143,12 +143,12 @@ The rules of each island, number by number, are in
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `quest/QuestSurvival.as` | 588 | The survival arena: the player's army guards a relic while waves come from eight points round the edge, every so many seconds, faster as it goes, with a boss wave between (two short waves of 5 while a boss lives, and a 5-second pause after it falls); the last stage never ends, with at most 80 enemies at once. Survival enemies can't be turned by monks, and bosses can't be frozen, swallowed or shocked. The relic's fall ends it; the prize is the unit for the longest stand passed. The clock counts only while the game isn't paused. | not yet (opens the classic game; `survival.py` on the server) |
-| `quest/survival/QuestSurvivalMap1.as` | 103 | The first arena's waves: which units, how many, how often. | not yet |
-| `quest/survival/QuestSurvivalMap2.as` | 103 | The second arena's waves. | not yet |
-| `quest/survival/QuestSurvivalMap3.as` | 103 | The third arena's waves. | not yet |
-| `quest/survival/QuestSurvivalMap4.as` | 103 | The fourth arena's waves. | not yet |
-| `quest/survival/QuestSurvivalMap5.as` | 103 | The fifth arena's waves. | not yet |
+| `quest/QuestSurvival.as` | 588 | The survival arena: the player's army guards a relic while waves come from eight points round the edge, every so many seconds, faster as it goes, with a boss wave between (two short waves of 5 while a boss lives, and a 5-second pause after it falls); the last stage never ends, with at most 80 enemies at once. Survival enemies can't be turned by monks, and bosses can't be frozen, swallowed or shocked. The relic's fall ends it; the prize is the unit for the longest stand passed. The clock counts only while the game isn't paused. | built: `rules/survival.ts` and `survivalPlay.ts` |
+| `quest/survival/QuestSurvivalMap1.as` | 103 | The first arena's waves: which units, how many, how often. | built: its waves in `rules/survival.json` |
+| `quest/survival/QuestSurvivalMap2.as` | 103 | The second arena's waves. | built: its waves in `rules/survival.json` |
+| `quest/survival/QuestSurvivalMap3.as` | 103 | The third arena's waves. | waves kept in `rules/survival.json`; not played: "Coming soon" there too, and its map never shipped |
+| `quest/survival/QuestSurvivalMap4.as` | 103 | The fourth arena's waves. | waves kept in `rules/survival.json`; not played: "Coming soon" there too, and its map never shipped |
+| `quest/survival/QuestSurvivalMap5.as` | 103 | The fifth arena's waves. | waves kept in `rules/survival.json`; not played: "Coming soon" there too, and its map never shipped |
 
 ## Troll camps at home
 

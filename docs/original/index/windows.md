@@ -158,9 +158,9 @@ Player battles are for the last stop ("The switch"); the World window sends play
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupSurvival.as` | 591 | The survival arena: five maps (two open, three "coming soon"), three lives that come back one every 3 hours, more for 3 cash (`add_survival_vida_extra`), maps unlocked for cash (`buy_survival_map`); the army is the 30 strongest units, picked by attack. | not yet; `survival.py` |
-| `popups/PopupLoadingSurvival.as` | 80 | Survival's loading window; Start sends `start_survival`. | not yet |
-| `popups/PopupSurvivalResults.as` | 126 | How long the army lasted and the prizes; closing stores them and sends `end_survival`. | not yet |
+| `popups/PopupSurvival.as` | 591 | The survival arena: five maps (two open, three "coming soon"), three lives that come back one every 3 hours, more for 3 cash (`add_survival_vida_extra`), maps unlocked for cash (`buy_survival_map`); the army is the 30 strongest units, picked by attack. | built: `ui/survival.ts` (the unlock button hidden, as there) |
+| `popups/PopupLoadingSurvival.as` | 80 | Survival's loading window; Start sends `start_survival`. | built: the start window in `survivalPlay.ts` |
+| `popups/PopupSurvivalResults.as` | 126 | How long the army lasted and the prizes; closing stores them and sends `end_survival`. | built: the results in `survivalPlay.ts` |
 | `popups/survival/WindowSelectionUnitsSurvival.as` | 485 | A window to pick the survival army by hand. | not needed: nothing opens it (the army is picked automatically) |
 | `popups/survival/ThumbUnit.as` | 119 | A unit card in that window. | not needed (with it) |
 | `popups/survival/ThumbSelectedUnit.as` | 82 | A chosen unit in that window. | not needed (with it) |
