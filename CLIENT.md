@@ -1404,6 +1404,9 @@ level), the good, the price in gold and the button, with the game's words
 
 Test: `e2e/tests/market.mjs` trades until no trades are left, with both
 warnings, the server's save, the three goals done, a reload and a phone.
+Before asking for either warning, it waits for the earlier messages to
+finish: goal rewards share the queue, and a full queue drops new messages.
+The wait has a 30-second limit; the warning and save checks stay the same.
 
 ### The troll town
 
@@ -2152,6 +2155,11 @@ server's side was already there (`survival.py`).
   the seconds, the unit), which keeps the best time and puts the unit in
   storage, and goes home. Leaving early asks first, and sends nothing
   more: the life is spent, as in the original.
+
+The browser test waits for the displayed arena clock to reach three
+seconds, with a 30-second limit. Game time can run behind real time when
+Chromium draws without a graphics card; the saved stand must still be at
+least three seconds long.
 
 ### Making the art look better
 

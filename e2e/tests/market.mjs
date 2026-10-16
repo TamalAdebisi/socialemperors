@@ -70,6 +70,8 @@ export default async function market({ newPlayer }) {
     sold++;
   }
   const empty = await goods();
+  // Goal rewards share the message queue; let them finish before asking for a warning.
+  await page.locator(".message.shown").waitFor({ state: "hidden", timeout: 30_000 });
   await window.locator(".market-trade.sells .market-do").nth(2).click();
   await player.said(/You don't have enough food to sell!/);
   assert.deepEqual(await goods(), empty, "nothing sold");
@@ -81,6 +83,8 @@ export default async function market({ newPlayer }) {
   }
   assert.equal(await left(), "Trades left today: 0");
   const spent = await goods();
+  // The queue holds only three messages: a warning sent while full is dropped.
+  await page.locator(".message.shown").waitFor({ state: "hidden", timeout: 30_000 });
   await window.locator(".market-trade.buys .market-do").nth(2).click();
   await player.said(/Market resources have been exhausted/);
   assert.deepEqual(await goods(), spent, "no 21st trade");
