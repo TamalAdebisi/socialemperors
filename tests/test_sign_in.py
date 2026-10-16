@@ -194,6 +194,16 @@ class SignInTest(unittest.TestCase):
         reply = send_form(self.web, "/welcome", page="/welcome", username=username.lower())
         self.assertIn("That username is taken", text(reply))
 
+    def test_the_welcome_page_says_where_to_ask_for_a_code(self):
+        self.player()
+        self.sign_in_with(self.web)
+        with mock.patch.object(config_env, "INVITE_CODE", "letmein"), \
+                mock.patch.object(config_env, "DISCORD_URL", "https://discord.gg/example"):
+            page = text(self.web.get("/welcome"))
+        self.assertIn('name="invite"', page)
+        self.assertIn('href="https://discord.gg/example"', page)
+        self.assertIn("Ask for one on Discord", page)
+
     # What can go wrong on the way
 
     def test_a_code_from_another_browser_gets_nothing(self):

@@ -19,6 +19,11 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Getting in touch:** `SE_DISCORD_URL` (DEPLOY.md) puts a Discord link
+  on the pages around the game, the classic bar, the new client's Menu and
+  by the invite code. It is off until the owner sets it on Railway, with
+  `SE_INVITE_CODE`, to keep new sign-ups to people they invite. No in-game
+  chat for now (DECISIONS.md). Test: `e2e/tests/contact.mjs`.
 - **Playthrough follow-up in [#95](https://github.com/TamalAdebisi/socialemperors/pull/95):**
   recurring low-level raids and recovery, ten-minute camps with a countdown,
   shared battle inspection/Deselect, and Everybody without friend requests.
