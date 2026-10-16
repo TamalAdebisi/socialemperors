@@ -109,6 +109,11 @@ PICTURES = {
     # The level-up window: its parchment in a wooden frame, and its title band.
     "level-window": ("PopupLevelMC@1", 0, 1200),
     "level-band": ("PopupLevelMC@2", 0, 900),
+    # The window that names the empire: its parchment with the name's field, its band, Save and Cancel.
+    "name-window": ("PopUpNameTownMC@1", 0, 1200),
+    "name-band": ("PopUpNameTownMC@2", 0, 800),
+    "name-save": ("PopUpNameTownMC/saveButt", 0, 300),
+    "name-cancel": ("PopUpNameTownMC/cancelButt", 0, 300),
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),

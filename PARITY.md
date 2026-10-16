@@ -135,7 +135,7 @@ dock"), so these come with a mockup first.
       of tools: Remove (the bulldozer, which stays on to remove one thing
       after another) and Fast collect (the glove, collecting what it's
       swept over). S
-- [ ] **Renaming the town** from the game. S
+- [x] **Renaming the town** from the game. S
 
 ## Your calls (15 October 2026)
 

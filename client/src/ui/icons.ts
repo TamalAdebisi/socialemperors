@@ -79,6 +79,11 @@ export const ICONS = {
   // The level-up window: its parchment in a wooden frame, and its title band.
   "level-window": new URL("./art/level-window.webp", import.meta.url).href,
   "level-band": new URL("./art/level-band.webp", import.meta.url).href,
+  // The window that names the empire: its parchment, band, Save and Cancel.
+  "name-window": new URL("./art/name-window.webp", import.meta.url).href,
+  "name-band": new URL("./art/name-band.webp", import.meta.url).href,
+  "name-save": new URL("./art/name-save.webp", import.meta.url).href,
+  "name-cancel": new URL("./art/name-cancel.webp", import.meta.url).href,
   "draggy-frame": new URL("./art/draggy-frame.webp", import.meta.url).href,
   "reminder-ok": new URL("./art/reminder-ok.webp", import.meta.url).href,
   "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,

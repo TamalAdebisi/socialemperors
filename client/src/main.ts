@@ -17,6 +17,7 @@ import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
 import { readLevels, unlockedAt } from "./rules/levels.ts";
 import { LevelUpWindows } from "./ui/levelUp.ts";
+import { renameWindow } from "./ui/rename.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
@@ -302,6 +303,14 @@ async function start(): Promise<void> {
       } });
     hud.offerCollectAll(() => editor.collectAll());
     hud.offerSquareTool(() => editor.takeSquareTool());
+    // Naming the empire, from the top bar as in the Flash client: `name_map` (town, name).
+    hud.offerRename(() => renameWindow(town.townName || "My Empire",
+      { title: line(614, "NAME YOUR EMPIRE"), save: line(612, "Save"), cancel: line(613, "Cancel") },
+      (name) => {
+        commands.add("name_map", town.id, name);
+        town.townName = name;
+        hud.update(town);
+      }));
     hud.offerTools((tool) => editor.chooseTool(tool));
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));

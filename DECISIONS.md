@@ -4,6 +4,16 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: naming the empire
+
+- **The way in is the level at the top.** The Flash client's top bar
+  showed the town's name and opened the window when tapped; our top bar
+  (the owner's pick) has no room for the name, so the level, whose tip
+  names the town, opens it.
+- **Save works.** In the original only Enter saved (the button's action
+  was removed in that build); here both do.
+- **30 letters at most,** so the name fits where it shows.
+
 ## 15 October 2026: placing on a phone
 
 - **A tap shows where it would go; a tap on it puts it there.** The Flash

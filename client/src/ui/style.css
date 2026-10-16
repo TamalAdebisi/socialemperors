@@ -2541,6 +2541,88 @@ body {
   min-width: 120px;
 }
 
+/* Naming the empire (ui/rename.ts): the game's window, laid out as the
+   Flash client's: the band over its top edge, the name in the parchment's
+   field, Save and Cancel on its bottom edge. */
+.name-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 950;
+  width: min(532px, 94vw);
+  aspect-ratio: 532 / 205;
+  transform: translate(-50%, -50%);
+  background: center / 100% 100% no-repeat;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
+}
+
+.name-band {
+  position: absolute;
+  left: 16.5%;
+  top: -9%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  width: 68%;
+  height: 29%;
+  background: center / 100% 100% no-repeat;
+  color: #000;
+  font: 900 clamp(15px, 4.4vw, 24px) var(--round);
+}
+
+.name-input {
+  position: absolute;
+  left: 12.4%;
+  top: 25%;
+  box-sizing: border-box;
+  width: 77%;
+  height: 32%;
+  padding: 0 0.6em;
+  border: 0;
+  background: transparent;
+  color: #222;
+  font: 800 clamp(16px, 4.6vw, 26px) var(--round);
+}
+
+.name-input:focus {
+  outline: 2px solid #3466b5;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.name-window.short .name-buttons button:first-child {
+  opacity: 0.5;
+}
+
+.name-buttons {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 85%;
+  display: flex;
+  justify-content: center;
+  gap: 13%;
+}
+
+.name-buttons button {
+  width: 25%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.name-buttons img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hud-level.renames {
+  cursor: pointer;
+}
+
 /* ---- Special moves (ui/specialButtons.ts) ---------------------------------- */
 /* A special unit's buttons, bottom middle, as on the Flash client's
    portrait panel: the game's pictures, the seconds left, the LIMIT bar. */

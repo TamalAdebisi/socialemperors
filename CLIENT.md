@@ -649,6 +649,11 @@ real town; a monitor on the left, a phone on the right):
   on the glove.
 - Shortcuts on a keyboard: B build, S storage, A army, Q quests, W world
   (phones), N neighbours, C collect all, Escape to close.
+- **Naming the empire:** the level at the top carries the town's name in
+  its tip; tapping it opens the game's "NAME YOUR EMPIRE" window, as the
+  town's name in the Flash client's top bar did (`ui/rename.ts`, test
+  `e2e/tests/rename.mjs`). A name needs 3 letters or more (30 at most);
+  Save or Enter sends `name_map` (town, name), Cancel or Escape closes.
 
 ### Units walking
 

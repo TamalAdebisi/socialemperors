@@ -529,15 +529,15 @@ check counts the player's own things.
 ## Renaming
 
 - At home, tapping the town's name in the top bar opens the rename window
-  with the current name. *Ours: missing (PARITY.md).*
+  with the current name. *Same, from the level at the top, whose tip names the town (`client/src/ui/hud.ts`, `offerRename`).*
 - The Save button never works in this build (its action is always
   removed); Enter saves when the name has 3 or more characters. Cancel
-  closes. *Ours: missing.*
+  closes. *Different: ours saves with Save too (a recorded call), `client/src/ui/rename.ts`.*
 - Saving sends `name_map` (town, name) and shows the new name in the top
   bar. It also writes the name to the wrong place in the player's data,
   so reopening the window shows the old name until the game reloads. The
   name "My Empire" is shown in the player's language. Renaming doesn't
-  complete goal 33. *Ours: missing; the server sets `map_names`.*
+  complete goal 33. *Same: `name_map`, and the top bar's tip has the new name at once (reopening shows it too); the server sets `map_names`.*
 
 ## Where CLIENT.md is wrong or short
 
@@ -658,6 +658,7 @@ so.
 22. **The second town and travelling** (missing). (checked twice; the
     warnings below level 20 skimmed)
 23. **Renaming** (missing). (checked twice)
+    *Fixed since "Naming the empire".*
 24. **Level 5 and level 20 hints** (missing): the princess helper and the
     town button. (checked twice; whether the level 20 one shows anything
     is still not verified in the bar's art)
