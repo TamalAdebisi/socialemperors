@@ -147,8 +147,8 @@ async function start(): Promise<void> {
     autoDensity: true,
     antialias: false,
     preference: "webgl",
-    // One clock for everything: the camera, the drawing and the animations
-    // (animated sprites follow the shared one).
+    // Animated sprites share the drawing ticker; GameLoop also advances
+    // simulation when the browser suspends drawing in a hidden tab.
     sharedTicker: true,
   });
   const loop = new GameLoop(app.ticker);
