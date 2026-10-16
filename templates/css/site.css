@@ -198,6 +198,29 @@ input:not([type]) {
 .icon.discord { color: #5865f2; }
 .provider .icon.discord { color: #fff; }
 
+/* Under the card: where to reach the people running the game (SE_DISCORD_URL). */
+.contact {
+    margin: 16px 0 0;
+    text-align: center;
+}
+
+.contact a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 6px 14px;
+    border: 2px solid var(--parchment-edge);
+    border-radius: 999px;
+    background: var(--parchment);
+    color: var(--ink);
+    font: 600 14px var(--text);
+    text-decoration: none;
+}
+
+.contact a:hover,
+.contact a:focus-visible { text-decoration: underline; }
+
 .provider.discord {
     border-color: #4752c4;
     background: #5865f2;
