@@ -13,13 +13,15 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **`main` is at `e9d7902c`**, including the handoff in #85. Draft #86
-  contains task 1's two wait fixes, with an art-loading blocker recorded
-  below. Draft #87 contains tasks 2, 3 and 5; those are implemented but
-  still awaiting testing and merge. Leave those tasks with that pull
+- **Task 1 is complete in #86**, with a separate art-loading failure
+  recorded below for follow-up. The owner requested merging the two wait
+  fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
+  those are implemented but still awaiting testing and merge. Leave those
+  tasks with that pull
   request, and start new work from the latest `main` after it lands.
-- **Tests on `main`:** the server's 427 pass (9 skipped), the client's 324
-  pass, and of the 64 browser tests two are flaky (task 1).
+- **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
+  client's 324 passed, and 63 of 64 browser tests passed. The two flaky
+  tests now pass; `team` needs the separate art repair described in task 1.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Nothing in the queue needs the live server, the database or the art
@@ -88,10 +90,11 @@ Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
 ask, then build.
 
-### 1. Mend the two flaky browser tests (S) - [ ]
+### 1. Mend the two flaky browser tests (S) - [x]
 
-The two fixes are in **draft [#86](https://github.com/TamalAdebisi/socialemperors/pull/86)**,
-not merged. Keep this task unticked until it is merged.
+Completed in **[#86](https://github.com/TamalAdebisi/socialemperors/pull/86)**.
+The owner requested merging on 16 October with the separate `team`
+failure below documented for follow-up.
 
 - **`e2e/tests/survival.mjs`** waits for three seconds on the displayed
   game clock, with a 30-second limit. Drawing without a graphics card can
@@ -109,7 +112,7 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Before merging #86: repair one existing art bundle.** `team` times out
+**Separate follow-up: repair one existing art bundle.** `team` times out
 at `e2e/tests/team.mjs:38` while the selected army loads. It fails on its
 own too, in a fresh browser, reaching this machine's 8 GiB memory limit.
 The current public `art/2075_elemental_red_god.json` names **76 sheets**:

@@ -6,6 +6,10 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 16 October 2026: browser test waits
 
+- **The owner requested merging #86 with the separate `team` failure
+  documented.** Both changed tests pass. The oversized art bundle still
+  needs the repair and verification recorded in HANDOFF.md; no test was
+  skipped or weakened.
 - **Survival waits for three seconds on the displayed game clock,** so
   the existing check for at least three seconds in the save still holds
   on a computer that draws slowly.
