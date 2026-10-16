@@ -44,7 +44,7 @@ export default async function tournaments({ newPlayer }) {
     { cmd: "buy", args: [SWORD, 46, 48, 0, 0, 0, 1] },
     { cmd: "push_unit", args: [46, 48, SWORD, 59, 49, 0] },
     { cmd: "store_add_items", args: [JSON.stringify([KNIGHT, ...Array(21).fill(SWORD), BANNED, ...Array(6).fill(LIMITED), ...dragons])] },
-    { cmd: "collect_treasure", args: [10000, 0, 3, 0, 0, 0] },
+    { cmd: "collect_treasure", args: [750, 0, 3, 0, 0, 0] },
     { cmd: "set_attack_team", args: ["quest", JSON.stringify(padded(SWORD))] },
     { cmd: "set_attack_team", args: ["tournament", JSON.stringify([0, BANNED, KNIGHT, KNIGHT, KNIGHT, KNIGHT, 999999, SWORD])] },
   ]);
@@ -278,9 +278,17 @@ export default async function tournaments({ newPlayer }) {
   const gift = await learner.page.request.post(`${learner.base}/gifts/game?empire=${encodeURIComponent(learner.settings.userId)}`,
     { form: { action: "free", friend: String(recipient.id), item: String(giftState.free[0].id), csrf: await learner.csrf() } });
   assert.ok((await gift.json()).ok);
+  // The earlier weekly entry spent its fee. Fund this separate room through
+  // a real command; one treasure is capped at 750 gold by the server.
+  const returnFee = Number(config.tournament_type["1"].cost);
+  const beforeReturnFunding = (await getInfo()).map.coins;
+  await player.send([{ cmd: "collect_treasure", args: [returnFee, 0, 3, 0, 0, 0] }]);
+  const beforeReturnEntry = (await getInfo()).map.coins;
+  assert.equal(beforeReturnEntry, beforeReturnFunding + returnFee, "the welcome-return fixture funds its entry fee");
   const returnRoom = await service("join_tournament", { tournament_type_id: "1", category: 1, tournament_id: "", team: padded(SWORD), flashSubResources: 1 });
   assert.equal(returnRoom.result, "OK");
   const returnBalance = (await getInfo()).map.coins;
+  assert.equal(returnBalance, beforeReturnEntry - returnFee, "creating the return room charges its fee exactly once");
   let releaseWelcome, welcomeRead;
   const welcomeHeld = new Promise((resolve) => { releaseWelcome = resolve; });
   const welcomeReading = new Promise((resolve) => { welcomeRead = resolve; });
