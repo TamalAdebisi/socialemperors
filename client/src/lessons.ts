@@ -61,6 +61,7 @@ export class Lessons {
   private recovering = false;
   private transitioning = false;
   private rewardQueued = false;
+  private resumeAfterTraining: number | null = null;
   private guidance = "";
   private foundTarget: PlacedItem | null = null;
   /** Where a unit half hidden behind something can still be tapped, found again twice a second (`tappable`). */
@@ -164,6 +165,8 @@ export class Lessons {
     }
     if (moves(this.step, event)) {
       const from = this.step;
+      const returning = [3, 24].includes(from) ? this.resumeAfterTraining : null;
+      if (returning !== null) this.resumeAfterTraining = null;
       this.transitioning = true;
       // Placement/training/collection finish their commands after emitting.
       // Checkpoint only after that work, in the same ordered command batch.
@@ -171,7 +174,7 @@ export class Lessons {
         this.transitioning = false;
         if (this.step !== from) return;
         if (event.kind === "placed") this.parts.editor.lessonReset();
-        this.go(this.step + 1);
+        this.go(returning ?? from + 1);
       });
     }
   }
@@ -191,15 +194,20 @@ export class Lessons {
       target = { kind: "villager" };
       text = "Select a villager first, then follow the arrow to the next action.";
     }
+    if ([3, 4, 5, 6, 24, 25, 30, 31].includes(this.step) && !this.thing({ kind: "villager" }) && !this.parts.editor.lessonTraining) {
+      target = { kind: "none" };
+      text = "No villager is available outside. Press Show me to train one and continue.";
+    }
     const farm = this.step === 25 ? this.thing({ kind: "farm" }) : null;
     if (farm && inConstruction(farm, Date.now())) {
       target = { kind: "none" };
       text = "Your farm is being built. Keep your villager selected; I'll point to the farm when it is ready.";
     }
+    if (this.resumeAfterTraining !== null && [2, 23].includes(this.step)) text = "Train a villager to continue your unfinished task. Your progress is kept.";
     const guidance = `${target.kind}:${text}`;
     if (guidance !== this.guidance) {
       this.guidance = guidance;
-      this.view.say(String(lesson.title), text, pageOf(this.step), lesson.next);
+      this.view.say(String(lesson.title), text, pageOf(this.resumeAfterTraining ?? this.step), lesson.next);
       const map = this.mapPoint(target);
       if (map) this.parts.lookAt(map);
     }
@@ -435,6 +443,7 @@ export class Lessons {
       const item = this.parts.items.get(target.id);
       if (item && editor.lessonBuilding !== item.id) editor.startBuilding(item);
     }
+    if (this.step === 25 && this.thing({ kind: "farm" })?.unitsInside) this.go(26);
     // Walking orders aren't saved until the worker arrives inside.
     if (this.step === 26 && !this.thing({ kind: "farm" })?.unitsInside) {
       this.go(25);
@@ -469,7 +478,11 @@ export class Lessons {
       }
       editor.lessonReset();
       // A training timer lost on reload needs its Train button again.
-      if ([3, 24, 30].includes(this.step) && !this.thing({ kind: "villager" }) && !editor.lessonTraining) this.go(this.step < 20 ? 2 : 23);
+      if ([3, 4, 5, 6, 24, 25, 30, 31].includes(this.step) && !this.thing({ kind: "villager" }) && !editor.lessonTraining) {
+        const from = this.step;
+        this.resumeAfterTraining = from === 3 ? 4 : from === 6 ? 5 : from === 24 ? 25 : from >= 30 ? 31 : from;
+        this.go(from < 20 ? 2 : 23);
+      }
       if ([12, 13].includes(this.step)) this.go(11);
       if (this.step === 6) this.go(5);
       this.restore();

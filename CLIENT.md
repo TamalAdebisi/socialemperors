@@ -1316,6 +1316,8 @@ notices and level-up windows wait until the reward is saved.
 
 `rules/lessons.ts` describes objectives and matching editor events;
 `lessons.ts` restores selections, reopens placement and provides Show me.
+If a villager is lost, it offers replacement training and returns to the
+unfinished objective, retaining the chapter and tree count.
 Construction must finish before the farm is a click target. Its lesson
 advances after the worker enters, rather than when a walking order starts.
 A ready crop is recognised after reload. Combat targets fighting units,
@@ -1340,7 +1342,8 @@ This is the owner's temporary UI change, not removal of the old client.
 
 Tests: `lessons`, `lessons-phone` play the full tutorial on fresh towns,
 including reloads and reward persistence; `lessons-recovery` covers a lost
-army, saved tree progress and a lost reward response. Camera and tutorial
+army or villager, replacement training, saved tree progress and a lost
+reward response. Camera and tutorial
 rules have unit tests; `tests/test_tutorial.py` verifies checkpoint ordering,
 reward retries, storage and legacy compatibility. `classic` still checks
 that the old route reads buildings saved by the new client.

@@ -24,6 +24,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **Recovery should not require starting over.** Restore selections and
   placement after reload, provide Show me, wait for construction, and
   advance the farming lesson only after its worker actually enters.
+  Lost villagers can be trained again without repeating completed lessons
+  or losing the current chapter and tree count.
   Only an enemy defeat advances combat. If the player has no soldier left
   during that lesson, offer one free training knight; villagers never
   qualify, existing soldiers prevent another, and later steps cannot claim
