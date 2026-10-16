@@ -356,7 +356,7 @@ What's selected is marked as in the Flash client, with its own pictures: a
 unit stands on a golden ring (that walks with it), a building's ground gets
 a golden outline of its size (1x1 to 6x6), and a small life bar shows over
 either, green, red for what a raid took (`view/selected.ts`, test
-`e2e/tests/selected.mjs`). Selling asks first and says what it gives back. While moving, the footprint
+`e2e/tests/selected.mjs`). Selling (with the bulldozer) asks first and says what it gives back. While moving, the footprint
 under the pointer shows green where it fits and red where it doesn't; tap
 the new place, or Cancel (Escape). Tapping picks the picture actually under
 the finger, not its box, so a tree in front of a house doesn't steal the tap.
@@ -567,8 +567,8 @@ the first tap, without the green/red preview a mouse gets.
 frame, gold buttons, a round font) and the Flash client's own pictures:
 its resource icons with each number in the top bar, its experience star
 with a bar to the next level, its Build and gift-box buttons at the bottom
-right (Storage), its info panel's tiles for Move, Turn, Store and the
-red ✕ for Sell or Remove, its resource icons and "zZ" in the bubbles over
+right (Storage), its info panel's tiles for Move, Turn, Store and
+Upgrade (and the whole panel since: "The building card"), its resource icons and "zZ" in the bubbles over
 buildings, and in the shop's prices. `tools/art/export_ui.py` draws them
 from the game's file (`tools/art/RenderSymbols.java`, which finds a picture
 by its class or by the names the game's code gives its parts, like
@@ -606,8 +606,8 @@ using the game's own button pictures (`client/src/ui/art/`).
   - Neighbours: a list, one row each (picture, name, level, Visit).
   - Battle: a row per mode (Attack a player, Survival, Tournament), each
     with its icon, a line on what it is, and Play.
-- A **selected building's card** sits at the bottom middle: its name, what
-  it's doing, and the info panel's tiles (Move, Turn, Store, Sell).
+- A **selected building's card** sits at the bottom middle: the original's
+  info panel on its parchment ("The building card", below).
 
 **Phones held upright** (or any narrow screen):
 
@@ -623,7 +623,16 @@ using the game's own button pictures (`client/src/ui/art/`).
 **In both:** messages slide in at the top instead of over the middle of
 the town; red counts on buttons for what's waiting (gifts, ready
 buildings); and a **Collect all** button, like the original's fast-collect
-glove. Until Beta 2, Quests, Battle and World's battle modes open the
+glove. The site's own links, the classic page's bar, are in a gold
+**Menu** after Full screen (on a phone, after Classic game): Friends,
+opening the site's Friends page in a new tab, with a red count of what
+waits there (requests, gifts, help; the Menu carries it too, asked again
+every two minutes and when the tab comes back into view, as the classic
+page does); Empires, the front page; and Log out, a form, as the site's
+(`ui/hud.ts`; test `e2e/tests/site-menu.mjs`). Read-only server responses
+do not renew the login cookie, so an image arriving after logout cannot
+sign the browser back in. The 30-day expiry starts at signing in or the
+last session change (`tests/test_accounts.py`). Until Beta 2, Quests, Battle and World's battle modes open the
 classic game. The mockups are the reference for the look (drawn over a
 real town; a monitor on the left, a phone on the right):
 [neighbours](docs/menus/neighbours.webp), [the shop](docs/menus/shop.webp),
@@ -723,7 +732,7 @@ tests), `TownView.walk` (the drawing), `TownEditor.walkTo` (the taps).
 
 **Wall gates** open and close, as in the Flash client: the gate's card has
 Open door (the game's button); open, the gate shows its open picture,
-units walk through it, and Move, Turn, Store and Sell are hidden until
+units walk through it, and Move, Turn, Store and Upgrade are hidden until
 Close door. It isn't saved: gates are shut each time the town opens.
 
 **Not yet:** the speech bubbles units say now and then, and a mark on the
@@ -781,12 +790,13 @@ Built with selecting several units, at the owner's request. Code:
 - With a tool on, the button reads CANCEL (the game's picture) and puts it
   down; so does Escape, and taking up the square tool. Taking up a tool
   clears the selection.
-- **Remove:** the bulldozer's pointer. Tapping a thing removes it, if its
-  card would offer Sell or Remove: never the town hall, units, trees or
-  other people's things, but gold and stone rocks on the player's land.
+- **Remove:** the bulldozer's pointer, the only way to sell, as in the
+  original. Tapping a thing removes it if it can be sold: never the town
+  hall, units, trees or other people's things, but gold and stone rocks on
+  the player's land.
   Something that cost nothing goes at once; anything else asks first, with
   what it gives back. It stays on for the next one, and a drag still moves
-  the map. The server hears `sell` as from the card.
+  the map. The server hears `sell` (reason "BLDZE").
 - **Fast collect:** the glove's pointer. A ready building it passes over is
   collected; nothing is selected. On a phone, which has no pointer to move
   without pressing, dragging a finger sweeps it.
@@ -958,8 +968,8 @@ doesn't take what just grew); catching in `TownEditor.caught`. Tests: `e2e/tests
 
 Built (Beta 1's fourth slice). A building that trains a unit (the town hall
 villagers, barracks spearmen, stables knights...) shows the unit's picture
-on its card with the price: tap it to train one, or the cash button to pay
-in cash. The top bar counts the town's people against the room for them,
+on its card's TRAIN box with the price: tap it to train one, or BUY to pay
+in cash ("The building card"). The top bar counts the town's people against the room for them,
 and so does the Army window. Units in storage can be placed when there's
 room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
 
@@ -1159,9 +1169,9 @@ neighbours, Arthur last; Visit opens their town. Code:
   does. Before, the new client left it, and it waited for the classic game.
   Test: `e2e/tests/messages.mjs`.
 - **Friends' help at a building at work** (`rules/friendsHelp.ts`, with
-  tests; `view/friendBubble.ts`): the card of a mill, mine or bakery at
-  work has **Ask friends** beside finishing it for cash (the original's
-  hurry window had both). It opens the site's ask window in the panel
+  tests; `view/friendBubble.ts`): the Hurry up of a mill, mine or bakery
+  at work opens the game's hurry window, with **Ask for help** beside
+  finishing it for cash, as the original's. It opens the site's ask window in the panel
   (`ui/askFriends.ts`, the server's `helps.py`, kind "collect"). Each friend
   who answers on their Friends page waits over the building when the town
   next opens, in the game's bubble (FotoNeighbourMC: "Hurry Up?", and
@@ -1185,9 +1195,8 @@ neighbours, Arthur last; Visit opens their town. Code:
   Test: `e2e/tests/gifts.mjs`.
 
 **Not yet:** requests between neighbours, and adding neighbours from
-inside the game (the site's friends page does it); the site's own bar
-(Empires, Friends with its count, Log out) waits for the owner's say on
-where it goes.
+inside the game (the site's friends page does it). The site's links are
+available in Menu ("The menus: rail and dock", above).
 
 ### Sound and speed
 
@@ -1273,8 +1282,8 @@ As the Flash client builds (our notes, our words):
 - **The bar** at its foot fills with the percentage on it, the game's own
   pictures; a 1x1 thing has the percentage alone, edged in white. It keeps
   its size on the screen whatever the zoom, as the Flash client's.
-- **Meanwhile** it takes nobody in, its card has its name and "Being
-  built… 40%" but no buttons, the bulldozer and the glove pass it by, a
+- **Meanwhile** it takes nobody in, its card has its picture, name and
+  time bar (the share built and the time left) but no buttons, the bulldozer and the glove pass it by, a
   tower doesn't shoot in a raid, and a unit can't be sent anywhere. Its
   work clock runs all the same.
 - **Sounds:** hammering, then a sound of its own when it's done (both the
@@ -1310,7 +1319,8 @@ both clients agree on how far a player got.
   a line or two (DECISIONS.md).
 - **On screen** (`ui/lessons.ts`): Arthur and his speech bubble at the
   right, the game's yellow arrow on what to tap, the screen dimmed around
-  it, red markers over the trees to cut and their count. All the game's
+  it, red markers over the trees to cut and their count inside the
+  instruction bubble. All the game's
   own pictures (`tools/art/export_ui.py`, the `tutor-*` entries). The
   camera goes to each thing on the map, and again if it walks under
   Arthur; an open goals window is closed by the player before going on.
@@ -1457,6 +1467,86 @@ which keeps it in `privateState.collections`. The original dropped it on
 the ground to tap, as it did the wood; ours gives it at once, like the
 wood. The collections' window, to trade a full set for its prize, is for
 later; until then the classic game has it. Test: `e2e/tests/collections.mjs`.
+
+### The building card
+
+The card for the thing selected is the Flash client's info panel
+(RecuadroInfo), the owner's pick of the mockups (design A): the game's
+parchment at the bottom middle, 580 by 146 as there, and on a phone the
+same parts stacked above the dock, with room below for the pointer tools.
+The phone test checks those tools stay tappable and checks both upgrade
+taps against the save. Code: `ui/actions.ts` (the card),
+`rules/card.ts` (what each kind shows) and `rules/upgrade.ts` (both with
+tests), `TownEditor.select`. Test: `e2e/tests/card.mjs`.
+Full integrated verification: [#87 delivery record](docs/verification-87.md).
+
+**What it shows**, left to right, as the original (our notes, our words):
+
+- **The picture** (the shop's) in the game's brown frame, and under it the
+  life bar with "life/most" for anything that fights: buildings and units,
+  not trees or rocks.
+- **The name**, then **the numbers** by the game's own pictures, each
+  with the game's words as its tooltip ("Attack Damage", "Attack Delay",
+  "Attack Range", "Unit Speed", "Population Capacity"). Which ones depends
+  on the kind, as there: a unit has attack, delay, range and speed; a
+  house attack, delay and its room for people (a decoration no room);
+  towers, walls, gates, the town hall and the castle add their range;
+  barracks, stables and the market attack and delay. Producing buildings
+  show none.
+- **What it earns** ("Earns: 15" with the resource's picture) and **the
+  time bar** (the game's white bar filling yellow, its percentage on it,
+  the time left under it) for a farm, mill, mine or ranch with someone
+  inside, or a building that works on its own; for a tree or rock, what a
+  villager's harvest brings (gold times the level's multiplier). The bar
+  also shows a building going up, and a unit training (our extra: the
+  original showed training only on the map).
+- **Hurry up** (the game's red picture) on a mill, mine or bakery at work
+  and on wonders that house no one, as there; never on farms and ranches.
+  It opens the game's hurry window over the card ("WORK IN PROGRESS"):
+  the building and its time left, **Ask for help** (friends, when the
+  player has any) or **Buy for 2** cash.
+- **The tip,** in the game's words, by kind: "Put peasants inside to
+  produce resources" (the farm panel's own words), "Put sheeps inside to
+  produce food" for sheep ranches and so on, the blacksmith's tenth off,
+  the eagles' line and their life, what a tree or rock needs. A building
+  with room for units shows its tip only while it's empty.
+- **Who's inside:** "CAPACITY 1/3", then each one's picture in the game's
+  frame; a tap lets that one out beside the building (`letOut` with its
+  place in the list), as the original's portraits.
+- **The unit it trains** (town hall, barracks, stables...): its name, its
+  picture on the game's TRAIN box (a tap trains one), "COST:" with the
+  price and the food it also takes, and the game's BUY button to pay in
+  cash. With the mouse on the unit, the game's bubble: "Allows you to
+  train:", the unit, its life and attack, and for villagers how many trees
+  they line up ("They can collect 5 trees in a row").
+- **The building's own window** where it has one (Visit Market, the
+  harbour, the graveyard, a gate's door...).
+- **Move, Turn, Store and Upgrade,** the game's tiles two by two, each in
+  its own place (the town hall has no Store, so its corner stays empty).
+
+**Upgrade.** 104 buildings in the config name the next one (`upgrades_to`):
+houses, farms, mills, ranches, towers, walls, barracks, the town hall
+(Town Hall II to IV are had only this way)... With the mouse on Upgrade, the
+game's bubble shows the next building's name and picture, then "UNLOCK AT"
+with its level on the star or "Cost" with its price. Pressed:
+
+- below the next one's level: the game's words, "You need to be level 28
+  to upgrade this building.";
+- without its price: "Not enough wood" and the price;
+- else the old building goes and the next stands on its tile in scaffolding:
+  whoever was inside comes out first; the next one's whole price is paid, a
+  twentieth of the old one's comes back (nothing if it cost cash, as when
+  selling) and its experience is gained, each rising from it; the server
+  hears `sell` (x, y, item, town, 0, "UPGR") and `buy` of the next on the
+  same tile. The card closes, as the original's did.
+
+The original upgraded at the first click. On a touch screen, with no mouse
+to show the bubble, ours shows it at the first tap and upgrades at the
+second.
+
+**Selling** is the bulldozer's (the pointer's Remove), as in the original:
+the card has no Sell. Someone looking at another player's things sees the
+card without its buttons.
 
 ### Step 4: battles
 

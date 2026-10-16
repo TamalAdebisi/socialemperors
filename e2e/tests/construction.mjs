@@ -30,21 +30,22 @@ export default async function construction({ newPlayer }) {
   await player.tapTile(FARM_AT);
   await player.press("Done");
   const boughtAt = Date.now();
-  await player.wait(1500);
-  await player.shot("building");
   assert.deepEqual(await farm(FARM_AT), { building: true, inside: 0 }, "in scaffolding");
 
   // Its card: how far along, no buttons. A villager sent at it stays out.
   const card = await player.select(FARM_AT, "Farm Land");
-  assert.match(card.text, /Being built… \d+%/);
+  assert.match(card.text, /Farm Land.*\d+%.*Ready in [1-9] s/s, "its bar and time left, in the client's seconds format");
   const buttons = await player.barButtons();
-  for (const name of ["Move", "Store", "Sell", "Turn"]) assert.ok(!buttons.some((b) => b.includes(name)), `no ${name} yet`);
+  for (const name of ["Move", "Store", "Sell", "Turn", "Upgrade"]) assert.ok(!buttons.some((b) => b.includes(name)), `no ${name} yet`);
   await player.press("Close");
   await player.click(villager);
   await player.click(card.point);
   await player.wait(1000);
   assert.ok(Date.now() - boughtAt < 9000, "all that while it was being built");
-  assert.equal((await farm(FARM_AT)).inside, 0, "nobody goes into a farm being built");
+  assert.deepEqual(await farm(FARM_AT), { building: true, inside: 0 }, "nobody goes into a farm being built");
+  // Capturing the software-rendered canvas can take seconds. Do it after
+  // checking the inputs that must happen inside the ten-second build.
+  await player.shot("building");
   assert.ok(has(await player.saved(), FARM, FARM_AT), "the save has the farm all the same");
 
   // Ten seconds on: finished, with its buttons, and in the villager goes.
@@ -58,7 +59,7 @@ export default async function construction({ newPlayer }) {
     FARM_AT, { timeout: 15_000 });
   const done = await player.select(FARM_AT, "Farm Land");
   assert.ok((await player.barButtons()).some((b) => b.includes("Move")), "Move now");
-  assert.doesNotMatch(done.text, /Being built/);
+  assert.match(done.text, /CAPACITY 1\/1/, "built: who's inside, as the game's farm card");
 
   // Stored and placed again: built again.
   await player.press("Store");

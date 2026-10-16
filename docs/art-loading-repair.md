@@ -5,7 +5,24 @@ the separate failure recorded under HANDOFF.md, task 1, not a regression
 from #87 or the tournament work. The original source art, game code and
 test assertions stay unchanged.
 
-**The repair needs nine targeted exports.** The earlier proposal to
+**Status update, 16 October at 12:07 UTC:** the owner-operated
+[Export art to R2 run](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+completed successfully at 10:41 UTC. Ordinary public GETs now show all
+nine main manifests at the expected two or three pages, 20 in total.
+The main bundle's new SHA-256 is
+`c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c`,
+with scale 0.25 and step 2. This checkout still has the old 76-page main
+manifest cached; the other eight cached manifests match the public ones.
+The cache was left unchanged during #87's integrated run. Its result is
+recorded in [the delivery report](verification-87.md).
+
+**The separate follow-up remains open:** verify consistent new images,
+refresh these cached bundles and run `team` plus the full suite. A pass
+with the old cached main bundle does not verify the public repair. #87
+verification did not operate the workflow or bucket. The investigation
+and exact post-export checks below remain applicable.
+
+**The repair covers nine targeted exports.** The earlier proposal to
 refresh only `2075_elemental_red_god` does not cover the oversized art
 loaded by the island before the team picker appears.
 

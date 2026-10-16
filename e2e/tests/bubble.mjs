@@ -1,6 +1,6 @@
 // Small things (CLIENT.md, "Step 3"): a ready farm's bubble, tapped where
 // only grass is behind it, collects the farm, as in the Flash client (the
-// bubble was part of its building); a house sold shows its refund rising;
+// bubble was part of its building); a house sold with the bulldozer shows its refund rising;
 // and the land below, for sale, has its sign, and tapping there offers it
 // (the last two looked at in the screenshots).
 
@@ -30,11 +30,10 @@ export default async function bubble({ newPlayer }) {
   const after = await player.saved();
   assert.equal(after.food, before.food + 15, "the bubble collected the farm");
 
-  // A house sold: its refund rises from it.
-  await player.select(HOUSE.slice(1), "House I");
-  await player.press("Sell");
-  await player.press("Sell");  // confirmed
-  await player.wait(300);
+  // A house sold (with the bulldozer, as in the original): its refund rises from it.
+  const house = await player.select(HOUSE.slice(1), "House I");
+  await player.page.keyboard.press("Escape");
+  await player.bulldoze(house.point);
   await player.shot("sold");
 
   // The land around the middle, zoomed out: each block has its sign in its middle.
