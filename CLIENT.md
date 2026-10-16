@@ -1907,7 +1907,8 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
 `raiders.py` on the server.
 
 - **What comes:** attacks unlock after the tutorial and first rescue, even
-  at low levels. Opening a rescued town gives five minutes of preparation.
+  at low levels. Opening a rescued town gives five minutes of preparation
+  for every automatically rolled first attack, including the larger sieges.
   Once any fight ends (including the first camp), there are seven minutes
   to rebuild below level 10, five from level
   10. The schedule repeats all session, rechecking the town's current level;
@@ -1923,7 +1924,11 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   and killed one unit (2 from level 6, 3 from 11, 4 from 16), then walks back to its
   edge and leaves. Bands retreat after four minutes even if their quotas
   cannot be met, and leave by five if their exit is blocked. Unreachable
-  targets lead them to reachable defenses instead. A siege waits a minute, its captain riding up and down
+  targets lead them to reachable defenses instead. They search beyond the
+  first twenty buildings in batches of twenty route checks per second and
+  reject waiting spots outside their weapon range. The threat button locates
+  an active raider before looking for a camp. A siege waits a minute, its
+  captain riding up and down
   calling out (the game's own lines, from the config), then sends its
   engines at the nearest building, its first squad 5 seconds later, its
   second squad and the captain 15 seconds after that, and retreats 2

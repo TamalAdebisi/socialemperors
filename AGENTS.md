@@ -91,8 +91,9 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   **4/4 in 2m 37.96s**. Test-only rendering/save waits and a central click
   target follow the full run: card passed in Chromium (111s), and final
   selection passed in Chromium (50.22s total) and WebKit (21.77s total).
-  Review corrections at `ad9adfd7` have fresh server/client passes; affected
-  browser checks are running. [The delivery record](docs/verification-95.md)
+  Review corrections at `ad9adfd7` have fresh server/client passes, affected
+  Chromium **8/8 in 7m 2.97s**, and WebKit **3/3 in 1m 31.96s**.
+  Automated re-review found zero new issues. [The delivery record](docs/verification-95.md)
   retains the initial results, failures, screenshot review and engine limits.
 - **Previous playthrough verification (#94):** server 435 run (426 passed,
   9 existing skips), client types and all 354 passed. Full Chromium suite:

@@ -8,9 +8,36 @@ was accessed.
 
 Runtime `ad9adfd7` addresses the automated review after the complete run.
 Server: **436 run, 427 passed, 9 existing skips**, 32.335 seconds. Client:
-types and **357/357 passed**, 8.238 seconds. Eight affected Chromium checks
-are running: battle selection, recurring raids, raids, siege, friends-help,
-spells, spy and site-menu. Focused WebKit follow-up is pending.
+types and **357/357 passed**, 8.238 seconds. Affected Chromium checks passed
+**8/8 in 7m 2.97s**, including the build. WebKit selection, recurring raids
+and help passed **3/3 in 1m 31.96s**, using that same game bundle. The WebKit
+run's HEAD was documentation-only `50cacf08`; its runtime remained `ad9adfd7`.
+
+| Check | Chromium seconds | WebKit seconds | Result |
+| --- | ---: | ---: | --- |
+| battle-selection | 50 | 23 | Passed |
+| recurring-raids | 29 | 16 | Passed |
+| raids | 69 | — | Passed |
+| siege | 36 | — | Passed |
+| friends-help | 70 | 52 | Passed |
+| spells | 46 | — | Passed |
+| spy | 39 | — | Passed |
+| site-menu | 74 | — | Passed |
+
+Commands: `PYTHON=.venv/bin/python node e2e/run.mjs battle-selection
+recurring-raids raids siege friends-help spells spy site-menu`, followed by
+`PYTHON=.venv/bin/python node e2e/run.mjs --webkit --no-build battle-selection
+recurring-raids friends-help`. WebKit uses the local dependency setup below.
+No suites overlapped. The complete 73-case run below remains attributed to
+its pre-review runtime; these results verify the later affected behavior.
+
+Screenshots were inspected for the active-raider camera focus, phone unit
+inspection and Deselect in both engines, and WebKit's help-recipient list.
+The controls fit and remain accessible. Both final server logs have zero
+HTTP 5xx responses, Python tracebacks or unhandled commands. The environment
+memory high-water mark remains 5.70 GiB, with no memory-limit or OOM events.
+Automated re-review of `50cacf08` completed successfully with zero new issues
+across 17 changed files. All 14 original findings are fixed or explained below.
 
 The added dense-town rule test initially failed: the battle rule could
 choose a reachable waiting spot outside weapon range, leaving a raider
@@ -75,7 +102,7 @@ explicit Pause, placement fixes and root-relative site assets, alongside
 
 Game code stayed at `10507be4` through browser-test waits/diagnostics at
 `4f049001` and the central click target at `20ba5058`. The later review
-corrections at `ad9adfd7` receive separate checks below; the full 73-case
+corrections at `ad9adfd7` receive separate checks above; the full 73-case
 result remains attributed to its actual commit.
 
 Environment: 3 CPUs, 8 GiB memory limit, Python 3.13.5, Node 24.19.0,
@@ -156,7 +183,7 @@ relabel earlier failing runs as passes.
 Command: `PYTHON=.venv/bin/python node e2e/run.mjs --webkit --no-build
 battle-selection recurring-raids card site-menu`, with the local browser
 cache and dependency setup below. The existing bundle is from the complete
-integrated run; no game source changed afterward.
+integrated run; no game source changed during these pre-review checks.
 
 Before those actual cases, two local browser launches aborted before running
 any tests: first a dependency-cache check, then the bundle wrapper replacing
