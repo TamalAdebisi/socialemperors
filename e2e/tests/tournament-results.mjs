@@ -37,6 +37,10 @@ export default async function tournamentResults({ newPlayer }) {
   assert.equal(await page.locator(".tournament-team img").count(), 1, "the selected player's enrolled army is shown");
   assert.equal(await page.locator(".tournament-team button").count(), 0);
   await page.locator(".tournament-player-tabs").getByRole("button", { name: "Your matches", exact: true }).click();
+  await page.waitForFunction(() => {
+    const images = [...document.querySelectorAll(".tournament-team img")];
+    return images.length === 20 && images.every((image) => image.complete && image.naturalWidth > 0);
+  }, undefined, { timeout: 30_000 });
   await winner.shot("matches-desktop");
   await page.locator(`[data-victim="${loser.settings.userId}"] .tournament-player`).getByRole("button", { name: loser.name, exact: true }).click();
   await page.waitForSelector(".tournament-profile");
