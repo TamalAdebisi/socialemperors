@@ -45,12 +45,12 @@ export default async function menus({ newPlayer }) {
   assert.ok(names.includes(neighbour.name), `the other player is a neighbour: ${names}`);
   await player.shot("neighbours");
 
-  // Battle: the three ways to fight, played in the classic game for now, and the attacks' results.
+  // Battle: the three ways to fight, and the attacks' results.
   await player.menu("Battle");
   assert.deepEqual(await lit(), ["Battle"], "one window at a time");
   assert.deepEqual(await page.locator(".panel:not([hidden]) .row strong").allTextContents(), ["Attack a player", "Survival", "Tournament", "Battle Results"]);
-  // Attack a player opens the world map here; the others, the classic game.
-  assert.equal(await page.locator(".panel:not([hidden]) .row a").nth(1).getAttribute("href"), "/ruffle.html");
+  // Attack a player and Survival are played here; Tournament, in the classic game.
+  assert.equal(await page.locator(".panel:not([hidden]) .row a").nth(2).getAttribute("href"), "/ruffle.html");
   await page.keyboard.press("Escape");
   assert.equal(await panel().count(), 0, "Escape closes the window");
   assert.deepEqual(await lit(), []);

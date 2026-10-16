@@ -1055,7 +1055,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they're played in the classic game for now (55 of the 227); the server
+  they're played in the classic game for now (50 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
@@ -2114,6 +2114,44 @@ island's menu has Spy; without, it says to build Eagles.
 - **Goals:** spying, winning two and three attacks (the save's count),
   and attacking two players of the player's level and two above it, now
   count here.
+
+### Survival
+
+"The switch". The Survival Arena is played in the new client
+(`ui/survival.ts` for the window, `survivalPlay.ts` for the battle, the
+rules in `rules/survival.ts` with the arenas' numbers in
+`rules/survival.json`; the browser test `e2e/tests/survival.mjs`). The
+server's side was already there (`survival.py`).
+
+- **The window** opens from the Battle and World windows' Survival from
+  level 20, as the Flash client's world button, or at any level from the
+  Survival Arena's own Enter Survival. It has the lives (three hearts,
+  each back 3 hours after its use, and bought ones on top: Buy life, 3
+  cash, `add_survival_vida_extra`), the next life's countdown, and the
+  five arenas with their pictures, best times and the units won for
+  holding out 5, 8, 12 and 15 minutes (or 12 to 25). Two can be played;
+  the other three say Coming soon, as in the original, whose maps for
+  them never shipped. Its help shows by itself the first time
+  (`set_help_map`), and again from "?".
+- **The army** is the town's 30 strongest units by attack, picked by
+  itself as the original did. They're copies: nothing that falls in the
+  arena is lost from the town.
+- **The stand:** the game's start window, then Start uses a life
+  (`start_survival`). The army stands round the relic (5,000 life) in the
+  middle; the arena's walls and statues are nobody's. Waves come from
+  eight points round the edge: four of eight units, then a boss (who
+  can't be frozen or swallowed) with two waves of five from every point
+  while it lives, five times over, faster each time; then the last stage
+  sends five from every point every 3 seconds, up to 80 at once, for
+  ever. Every enemy goes for the relic, and no monk can turn one. The
+  bar shows the time held, the enemies killed and the relic's life, with
+  the game's lines ("ENEMY WAVE 1 IS COMING!!!", "BOSS 1 IS COMING!!!",
+  the relic attacked).
+- **The end:** when the relic falls, the results 3 seconds later: the
+  time held, and the unit won if any. OK sends `end_survival` (the arena,
+  the seconds, the unit), which keeps the best time and puts the unit in
+  storage, and goes home. Leaving early asks first, and sends nothing
+  more: the life is spent, as in the original.
 
 ### Making the art look better
 

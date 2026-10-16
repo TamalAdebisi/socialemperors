@@ -215,6 +215,10 @@ export interface Fighter {
   still?: number;
   /** Turned to the other side by a monk (and back again, if a monk turns it twice). */
   converted?: boolean;
+  /** A monk can't turn it (survival's enemies). */
+  noConvert?: boolean;
+  /** Can't be frozen or swallowed (survival's bosses). */
+  steadfast?: boolean;
   /** A monk: how many it has turned, and the frame it can turn the next. */
   conversions?: number;
   convertReadyAt?: number;
@@ -597,7 +601,7 @@ export class Battle {
   /** Units a monk can turn: under 500 life, and no boss, boss guard, eagle or giant. */
   private convertible(f: Fighter): boolean {
     const sub = f.item.subcategory;
-    return f.isUnit && !f.dead && f.item.life < CONVERT_MAX_LIFE && !f.giant
+    return f.isUnit && !f.dead && f.item.life < CONVERT_MAX_LIFE && !f.giant && !f.noConvert
       && sub !== SUBCAT.boss && sub !== SUBCAT.bossAdd && sub !== SUBCAT.eagle;
   }
 
@@ -799,6 +803,9 @@ export class Battle {
 
   /** Stop a unit where it is, unable to act for `frames`. */
   still(unit: Fighter, frames: number, frozen = false): void {
+    if (frozen && unit.steadfast) {
+      return;
+    }
     unit.stilledUntil = Math.max(unit.stilledUntil ?? 0, this.frame + frames);
     if (frozen) {
       unit.frozenUntil = Math.max(unit.frozenUntil ?? 0, this.frame + frames);
@@ -808,6 +815,9 @@ export class Battle {
 
   /** The ground takes it: it sinks for half a second, then dies (no damage, so nothing protects it). */
   swallow(fighter: Fighter): void {
+    if (fighter.steadfast) {
+      return;
+    }
     if (fighter.dead || fighter.sinkingSince !== undefined) {
       return;
     }

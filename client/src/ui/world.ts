@@ -2,9 +2,9 @@
 // way to fight, with its icon, a line on what it is, and Play. On a wide
 // screen Quests and Battle are separate rail buttons; on a phone World holds
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
-// on players from the world map (ui/worldMap.ts, attackPlay.ts); survival
-// and tournaments still open the classic game, which plays them on the
-// same empire.
+// on players from the world map (ui/worldMap.ts, attackPlay.ts), and
+// survival (ui/survival.ts, survivalPlay.ts); tournaments still open the
+// classic game, which plays them on the same empire.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -33,14 +33,16 @@ export class WorldWindows {
   private readonly world: Panel;
 
   /**
-   * `attack`: opens the world map (ui/worldMap.ts); `results`: the Battle Results window (ui/attackHistory.ts);
-   * `towns`: the towns' window (ui/towns.ts), when the town has its button; on a phone it's a row here.
+   * `attack`: opens the world map (ui/worldMap.ts); `survival`: the Survival window (ui/survival.ts);
+   * `results`: the Battle Results window (ui/attackHistory.ts); `towns`: the towns' window (ui/towns.ts),
+   * when the town has its button (on a phone it's a row here).
    */
   constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void,
-    towns: (() => void) | null = null) {
+    survival: () => void, towns: (() => void) | null = null) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
-    const battles = BATTLES.map((mode) => mode.name === "Attack a player" ? { ...mode, run: attack } : mode);
+    const runs: Record<string, () => void> = { "Attack a player": attack, "Survival": survival };
+    const battles = BATTLES.map((mode) => runs[mode.name] ? { ...mode, run: runs[mode.name] } : mode);
     const history = { ...RESULTS, run: results };
     this.battles = window_("battle", "Battles", [...battles, history], classicUrl);
     const travel: Mode[] = towns ? [{ name: "Towns", about: "Your towns, and travelling between them", icon: ICONS.towns, verb: "Go", run: towns }] : [];
@@ -97,7 +99,7 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Survival and tournaments open in the classic game for now, on the same empire.";
+  note.textContent = "Tournaments open in the classic game for now, on the same empire.";
   panel.body.append(list, note);
   return panel;
 }
