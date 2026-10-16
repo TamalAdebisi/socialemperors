@@ -1051,7 +1051,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they're played in the classic game for now (55 of the 227); the server
+  they're played in the classic game for now (50 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
