@@ -1613,6 +1613,15 @@ body {
     padding: 3px 8px 4px 5px;
     font-size: 12px;
   }
+  /* "New Mission!" above the goal chip: to its right are the tools' buttons. (".goal-cards" first:
+     the general rule comes later in this file.) */
+  .goal-cards .goal-notice {
+    left: 4px;
+    bottom: calc(100% + 4px);
+  }
+  .goal-cards .goal-new-mission img {
+    width: 140px;
+  }
   .offers {
     top: calc(max(6px, env(safe-area-inset-top)) + 96px);
     right: 8px;
