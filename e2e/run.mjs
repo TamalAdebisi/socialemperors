@@ -22,7 +22,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { newPlayer } from "./lib.mjs";
+import { DISCORD, newPlayer } from "./lib.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TESTS = join(ROOT, "e2e", "tests");
@@ -96,7 +96,9 @@ const port = await freePort();
 const base = `http://127.0.0.1:${port}`;
 const env = { ...process.env, SE_DATA_DIR: data, SE_PORT: String(port), SE_BIND_HOST: "127.0.0.1",
   // Each test player says it's a different visitor, so the five new accounts an hour per visitor don't run out.
-  SE_CLIENT_IP_HEADER: "X-E2E-Visitor" };
+  SE_CLIENT_IP_HEADER: "X-E2E-Visitor",
+  // Where players get in touch (SE_DISCORD_URL): every page shows its links (e2e/tests/contact.mjs).
+  SE_DISCORD_URL: DISCORD };
 // Never the real database, whatever this shell has set.
 for (const name of ["SE_DATABASE_URL", "SE_SUPABASE_URL", "SE_SUPABASE_KEY", "SE_SECRET_KEY", "SE_PUBLIC_URL", "SE_INVITE_CODE"]) {
   delete env[name];

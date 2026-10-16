@@ -4,6 +4,30 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: getting in touch, and who can join
+
+- **No in-game chat for now.** The original had none: players talked
+  through Facebook. Free chat between strangers needs blocking, reporting,
+  moderation and spam limits first. The owner chose an invite code for new
+  players and Discord for getting in touch instead.
+- **One setting, off until set.** `SE_DISCORD_URL` takes only `https://`
+  links (anything else could run code on our pages). Set, it shows a line
+  under the card on the pages around the game, a Discord button by Empires
+  on the classic game's bar, Discord before Log out in the new client's
+  Menu, "No code? Ask for one on Discord" under the invite code, and
+  "Questions? Ask on Discord" when sign-ups are closed. Each opens a new
+  tab, so the game plays on. Unset, the pages are as before.
+- **The classic bar on phones.** With the extra button, the bar's buttons
+  sit closer on phones so Log out still fits at 390 and 360 pixels. On
+  phones narrower than 360 the bar hides its logo, which went to the same
+  page as Empires; it already overflowed there before this change.
+- **The open Menu goes over the countdown.** #95's camp and raid countdown
+  sat on the open Menu on a computer and hid Empires. The top bar now goes
+  over it while the Menu is open.
+- **TAKTAK and Taka stay.** They are a real player who found the site
+  before it was shared, not an agent or a test account. The owner keeps
+  the accounts.
+
 ## 16 October 2026: the home countdown must leave Menu usable
 
 - **Check the visible control, not just its presence.** Screenshot review

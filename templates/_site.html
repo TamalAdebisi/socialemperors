@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {# The pages around the game (signing in, your empires, settings): the game's
    sky and hills behind a parchment card. Each page fills in "card". #}
+{% import "_macros.html" as ui %}
 <html lang="en">
 	<head>
 		<meta charset="utf-8"/>
@@ -26,6 +27,9 @@
 			<div class="card">
 				{% block card %}{% endblock %}
 			</div>
+			{% if discord_url %}
+			<p class="contact"><a href="{{ discord_url }}" target="_blank" rel="noopener">{{ ui.provider_icon("discord") }} Questions or a problem? Get in touch on Discord</a></p>
+			{% endif %}
 		</main>
 	</body>
 </html>
