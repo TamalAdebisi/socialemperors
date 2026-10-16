@@ -30,7 +30,25 @@ export default async function keys({ newPlayer }) {
   const tower = await player.select(TOWER, "Tower I");
   await player.press("Close");
   // The arrow keys do move it: the tower isn't there any more.
-  await hold("ArrowRight");
+  const cameraAt = () => page.evaluate(() => {
+    const camera = window.seHome.parts.camera;
+    return { ...camera.toMap({ x: 0, y: 0 }), scale: camera.scale };
+  });
+  const before = await cameraAt();
+  await page.keyboard.down("ArrowRight");
+  try {
+    // Wait for the intended 360 screen pixels of movement. Software drawing
+    // can leave the old 400ms hold without enough frames to move the camera.
+    await page.waitForFunction((start) => {
+      const camera = window.seHome.parts.camera;
+      return (camera.toMap({ x: 0, y: 0 }).x - start.x) * camera.scale >= 360;
+    }, before, { timeout: 30_000 });
+  } finally {
+    await page.keyboard.up("ArrowRight");
+  }
+  const after = await cameraAt();
+  assert.equal(after.scale, before.scale, "the arrow does not zoom");
+  assert.ok(Math.abs(after.y - before.y) < 0.01, "the right arrow does not move vertically");
   await player.click(tower.point);
   assert.ok(!(await player.bar()).startsWith("Tower I"), "→ moved the map");
   await player.reload();

@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: wait for keyboard movement in the browser check
+
+- **Measure the movement the test intended to exercise.** The complete
+  tournament run passed 70 of 71 checks at `47471ff4`; the keyboard check
+  failed its old 400ms arrow hold. The unchanged check also failed twice
+  in three repeated runs on main `6c2fa146`, after an initial pass there.
+  It now holds Right until the camera has moved the intended 360 screen
+  pixels, bounded by 30 seconds. The original click-at-the-old-position
+  assertion and both saved building-rotation assertions remain. Extra
+  assertions check that Right neither zooms nor moves vertically. No
+  gameplay timing or keyboard behavior changes.
+
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 
 - **The owner explicitly asked for a clearer tutorial over exact fidelity.**
