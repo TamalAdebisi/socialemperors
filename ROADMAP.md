@@ -372,9 +372,9 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         progress, browsing, relocating, profiles and the prize for a new
         continent ([CLIENT.md](CLIENT.md#attacking-players))
   - [x] Spying with the eagles, and the goals about spying and attacks
-  - [ ] The world map's first-time help, once the owner decides which way
-        the continents run: the original counted down from 50 to 1, the
-        server counts up from 1 (CLIENT.md, "Attacking players")
+  - [x] Left out on purpose: the world map's first-time help, whose words
+        assume the original's continents counting down to 1 (the owner
+        kept ours counting up)
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))

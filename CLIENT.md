@@ -1953,12 +1953,10 @@ sits on each of the five pictures (`tools/art/Placements.java`) into
 - **Names:** the server now names each island, and each profile, by its
   player's username, as the neighbours list does; it sent the town's
   name before, which is "My Empire" for nearly everyone.
-- **Not yet:** the help page the original showed the first time. Its
-  words ("Try to make it to Island 1") show the original's continents
-  ran from 50 down to 1, as do its prize table (the biggest prize at 1)
-  and its "King of the World" on reaching 1; the server's run from 1 up
-  (`worlds.py`). Which to keep is the owner's to decide (ROADMAP.md), as
-  changing it renumbers players' continents; the help waits for it.
+- **Left out:** the help page the original showed the first time. Its
+  words ("Try to make it to Island 1") show the original's continents ran
+  from 50 down to 1; the server's run from 1 up (`worlds.py`), and the
+  owner chose to keep that, so the page would mislead.
 
 Sixth slice, spying (in `attackPlay.ts`, `e2e/tests/spy.mjs`). With an
 Eagles building built, the world map's bar shows the eagles left (3 in

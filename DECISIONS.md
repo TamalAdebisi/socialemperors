@@ -6,6 +6,10 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 16 October 2026: spying
 
+- **The continents keep counting up from 1** (the owner's call): the
+  original counted down from 50 to 1, its "King of the World" at 1. So
+  the map's first-time help, which says "Try to make it to Island 1",
+  is left out.
 - **The eagle sets off from the top-left corner,** with no corner to
   pick, as the original's spy start showed none.
 - **Spying is offered from the world map only,** as in the original (the
