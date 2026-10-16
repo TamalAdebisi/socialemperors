@@ -25,8 +25,15 @@ explicit Pause, placement fixes and root-relative site assets, alongside
 
 - Server: **436 run, 427 passed, 9 existing skips**, 32.184 seconds.
 - Client: type check and **356/356 passed**, 9.928 seconds.
-- Complete integrated Chromium run: **73 cases, in progress**, with the
-  overlapping controls and community checks first.
+- Complete integrated Chromium run: **73/73 passed in 1h 23m 18.88s**,
+  including the build, with the overlapping controls and community checks first.
+- Focused WebKit: **4/4 passed in 2m 37.96s** on test revision `4f049001`,
+  covering battle selection, recurring raids, object cards and Everybody/Menu.
+
+No game-code changes follow the verified integration commit. Browser-test
+waits/diagnostics at `4f049001`, a central click target at `20ba5058`, and
+delivery documentation follow it. Those test changes receive focused checks
+in both engines.
 
 Environment: 3 CPUs, 8 GiB memory limit, Python 3.13.5, Node 24.19.0,
 Playwright 1.56.1, Chromium with software WebGL. Browser suites run one
@@ -62,13 +69,167 @@ at a time.
 - Earlier focused failures remain historical failures; they are not counted
   as passes. #94's separate results and limitations remain in its own record.
 
+## WebKit setup and focused follow-up
+
+The first actual four-case WebKit run was **2/4 in 2m 47.16s**: recurring
+raids (20s) and Everybody/Menu (29s) passed; battle selection (12s) and the
+phone card upgrade (102s) failed. These remain recorded failures.
+
+A diagnostic selection rerun reproduced the failure. The intended unit was
+under both pointer events, but pointerdown to pointerup took 1,104 ms while
+the software renderer drew the first hover. That exceeded the existing
+500 ms tap limit. The test now waits for battle art and the hover frames
+before clicking; no game input rule or selection assertion changes. The
+focused follow-up passed **1/1 in 29.07s** (28s for the case).
+
+The upgrade failure occurred after a fixed four-second save wait; the local
+server log confirms the House III purchase arrived. Its test now waits for
+the upgraded house and an empty command queue (30-second limit), then checks
+the same saved replacement and exact resource cost. The combined four-case
+WebKit rerun passed **4/4 in 2m 37.96s** on `4f049001`, with unchanged game
+code at `10507be4`.
+
+The first Chromium follow-up on `4f049001` was **1/2 in 2m 33.60s**: card
+passed (111s), while the phone selection failed (33s). Its pointer events
+were a short tap, but the scanned point on the animated edge no longer hit
+the unit. At `20ba5058` the test chooses the visible body center and checks
+that the canvas owns that point. Selection assertions are unchanged. Final
+selection checks on `20ba5058` passed in Chromium **1/1 in 50.22s** (45s
+case time) and WebKit **1/1 in 21.77s** (21s case time). Together with the
+111s card pass, both revised Chromium checks have passing follow-ups.
+
+Final commands: `PYTHON=.venv/bin/python node e2e/run.mjs --no-build
+battle-selection` and the same command with `--webkit`. These follow-ups
+retain the complete 73/73 integrated game-code result above; they do not
+relabel earlier failing runs as passes.
+
+| WebKit check | Seconds | Result |
+| --- | ---: | --- |
+| battle-selection | 26 | Passed |
+| recurring-raids | 17 | Passed |
+| card | 89 | Passed |
+| site-menu | 24 | Passed |
+
+Command: `PYTHON=.venv/bin/python node e2e/run.mjs --webkit --no-build
+battle-selection recurring-raids card site-menu`, with the local browser
+cache and dependency setup below. The existing bundle is from the complete
+integrated run; no game source changed afterward.
+
+Before those actual cases, two local browser launches aborted before running
+any tests: first a dependency-cache check, then the bundle wrapper replacing
+`LD_LIBRARY_PATH`. Debian graphics/font/input libraries are unpacked under
+`work/` and linked into the browser bundle's local library directories.
+Both browser variants have no missing `ldd` dependencies; an actual loader
+probe confirms `libGLESv2.so.2` loads. Playwright's system `ldconfig`-cache
+preflight cannot see this local library, so that host-only preflight is
+bypassed after those checks. No browser test or gameplay assertion is skipped.
+This is Linux WebKit engine coverage, not a reproduction of a Mac's GPU.
+
 ## Screenshot and log review
 
 Initial full-run review included desktop/phone battle inspection, raid
 recovery and repair, the next-camp countdown, phone building cards, help
 recipients, neighbors, phone tutorial guidance, special-move controls and
 spell aiming. The selection panel leaves pointer and special-move buttons
-clear, and hides while aiming a spell. Integrated review is pending.
+clear, and hides while aiming a spell.
+
+Integrated review covers desktop/phone unit inspection, the Everybody page
+after its legacy nested POST, recurring-raid recovery, repair, tower preview
+and selection, gift/help lists, phone town cards and tutorial guidance,
+special-move buttons and spell aiming. The new controls fit and leave the
+existing actions accessible. Both the initial and integrated server logs
+have zero HTTP 5xx responses, Python tracebacks or unhandled commands; the
+integrated log contains 60,263 lines.
+
+At completion, the environment memory high-water mark is 5.70 GiB including
+file cache (6,120,783,872 bytes), below the 8 GiB limit. Memory-limit and OOM
+event counters are all zero. This is the environment high-water mark, not
+a browser-only memory measurement.
+
+Final WebKit phone screenshots were inspected for unit selection, the saved
+upgrade and Everybody styling. All fit their screens. Its server log also
+has zero HTTP 5xx responses, Python tracebacks or unhandled commands.
+
+## Integrated full-run order and timings
+
+Command: `PYTHON=.venv/bin/python node e2e/run.mjs` with all 73 names
+in the order below, using the browser cache specified for the initial run.
+
+| Check | Seconds | Result |
+| --- | ---: | --- |
+| battle-selection | 43 | Passed |
+| site-menu | 76 | Passed |
+| recurring-raids | 32 | Passed |
+| playthrough-controls | 40 | Passed |
+| building-overlay | 88 | Passed |
+| raids | 77 | Passed |
+| card | 121 | Passed |
+| camp | 48 | Passed |
+| quest | 140 | Passed |
+| friends-help | 57 | Passed |
+| gifts | 53 | Passed |
+| nests | 66 | Passed |
+| neighbours | 109 | Passed |
+| lessons | 185 | Passed |
+| lessons-phone | 233 | Passed |
+| lessons-recovery | 90 | Passed |
+| siege | 40 | Passed |
+| animals | 32 | Passed |
+| attack | 139 | Passed |
+| bonus | 34 | Passed |
+| bosses | 37 | Passed |
+| bubble | 64 | Passed |
+| camp-again | 28 | Passed |
+| cash | 44 | Passed |
+| classic | 50 | Passed |
+| collect | 103 | Passed |
+| collections | 32 | Passed |
+| construction | 59 | Passed |
+| defence | 28 | Passed |
+| dock | 51 | Passed |
+| dragons | 92 | Passed |
+| edit | 45 | Passed |
+| goal-window | 52 | Passed |
+| graveyard | 31 | Passed |
+| group | 97 | Passed |
+| heroes | 42 | Passed |
+| hover | 49 | Passed |
+| keys | 38 | Passed |
+| levelup | 52 | Passed |
+| look | 66 | Passed |
+| looks | 118 | Passed |
+| market | 71 | Passed |
+| menus | 112 | Passed |
+| messages | 20 | Passed |
+| monks | 19 | Passed |
+| nature | 23 | Passed |
+| phone-place | 59 | Passed |
+| pointers | 71 | Passed |
+| rename | 32 | Passed |
+| scripted | 114 | Passed |
+| scripted-bosses | 156 | Passed |
+| scripted-stories | 259 | Passed |
+| selected | 95 | Passed |
+| shop | 47 | Passed |
+| sound | 33 | Passed |
+| specials | 26 | Passed |
+| speed | 17 | Passed |
+| spells | 51 | Passed |
+| spy | 37 | Passed |
+| storage | 37 | Passed |
+| stuck | 47 | Passed |
+| survival | 54 | Passed |
+| team | 36 | Passed |
+| tidy | 37 | Passed |
+| tools | 76 | Passed |
+| tournaments | 90 | Passed |
+| town-rules | 39 | Passed |
+| train | 40 | Passed |
+| troll-town | 40 | Passed |
+| villagers | 77 | Passed |
+| walk | 47 | Passed |
+| work | 52 | Passed |
+| world | 134 | Passed |
 
 ## Initial full-run order and timings
 

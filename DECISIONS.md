@@ -8,8 +8,8 @@ them can be found and reversed. The big, agreed decisions are in
 
 - **Recurring pressure with recovery.** The owner asked for meaningful troll
   attacks. Enable them after lessons and the first rescue, even at low
-  levels. Opening a rescued town gives five minutes to prepare. Use the original level/race soldier tables, at least two per
-  band. After any completed fight, including the first camp, give seven
+  levels. Opening a rescued town gives five minutes to prepare. Use the
+  original level/race soldier tables, at least two per band. After any completed fight, including the first camp, give seven
   minutes of recovery below level 10, five from level 10.
   Do not stack raids onto camp fights. Retreat after four minutes and remove
   blocked retreaters by five, so a town without troops can recover. Try
@@ -33,8 +33,9 @@ them can be found and reversed. The big, agreed decisions are in
   without the old limit or friend priority. Gifts and help use the same account
   eligibility. Exclude the viewer's other empires and unclaimed legacy imports;
   label Arthur as the game's guide. Select help recipients explicitly instead
-  of preselecting every account in the community. Keep old friendship endpoints and existing
-  pending requests compatible, but remove the add/remove-friend UI. Do not
+  of preselecting every account in the community. Keep old friendship
+  endpoints and existing pending requests compatible, but remove the
+  add/remove-friend UI. Do not
   delete or rename TAKTAK: no built-in account by that name was found, and no
   live account inspection was performed.
 - **Integrate the concurrent controls update.** Merge #94 without rebasing.
@@ -48,6 +49,10 @@ them can be found and reversed. The big, agreed decisions are in
   recovery. Other combat checks still force their chosen raids. No assertions
   are skipped; old cap/friend-gate assertions now check the requested community
   behavior and still check ownership, daily limits and saved rewards.
+  WebKit checks wait for battle art/hover drawing before a click and for
+  the upgraded building plus completed save batch. Click the visible unit
+  center instead of a changing animation edge. Keep the same selection,
+  replacement and resource-cost assertions, and retain the initial failures.
 
 ## 16 October 2026: playthrough controls and site repairs
 

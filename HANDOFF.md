@@ -19,14 +19,19 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **Current playthrough follow-up:** recurring low-level raids and recovery,
-  ten-minute camps with a countdown, shared battle inspection/Deselect, and
-  Everybody without friend requests. Decisions are recorded in DECISIONS.md.
-  Before #94 integration, server 436 run (427 passed, 9 existing skips),
-  client types and 352 tests passed; all 71 browser checks passed in
-  1h 24m 33.56s on `1c978b47`. #94 is now merged into this branch, retaining
-  its controls and site fixes. The integrated checks and final merge are
-  pending on `codex/playthrough-defence-selection`.
+- **Playthrough follow-up in [#95](https://github.com/TamalAdebisi/socialemperors/pull/95):**
+  recurring low-level raids and recovery, ten-minute camps with a countdown,
+  shared battle inspection/Deselect, and Everybody without friend requests.
+  Main #94 is integrated, retaining its controls and site fixes. Decisions
+  are recorded in DECISIONS.md. Server: 436 run (427 passed, 9 existing skips);
+  client types and 356 tests passed. Complete integrated Chromium: **73/73
+  in 1h 23m 18.88s** on `10507be4`. WebKit: **4/4 in 2m 37.96s**. Test-only
+  rendering/save waits at `4f049001` and a central click target at `20ba5058`
+  follow the full run. Card passed in Chromium (111s); final selection passed
+  in Chromium (50.22s total) and WebKit (21.77s total). No game-code changes
+  follow `10507be4`. [The delivery record](docs/verification-95.md)
+  retains the initial 71/71 run, WebKit failures and their corrections,
+  screenshot/log review and the Linux WebKit/Mac GPU distinction.
 
 - **Owner playthrough controls in [#94](https://github.com/TamalAdebisi/socialemperors/pull/94):**
   Friends forms keep their CSS/images after nested POSTs; unit targets

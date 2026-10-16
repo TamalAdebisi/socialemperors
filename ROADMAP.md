@@ -6,7 +6,8 @@ return after ten minutes and show a countdown. Shared battle controls expose
 individual inspection and Deselect. Everybody is listed without friend
 requests, including for gifts and help. These owner-requested changes override
 the original pacing and friend gates described below; see CLIENT.md and
-DECISIONS.md. Verification is recorded in the delivery notes.
+DECISIONS.md. [The delivery record](docs/verification-95.md) includes the
+73/73 integrated Chromium run and the server/client checks.
 
 Tutorial repair in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93): mandatory home-town lessons, clearer guidance,
 smooth camera movement, recoverable progress and a confirmed first-dragon
