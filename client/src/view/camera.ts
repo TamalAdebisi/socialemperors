@@ -47,8 +47,8 @@ export class Camera {
   private pinchDistance = 0;
   private readonly keys = new Set<string>();
   private press: { x: number; y: number; t: number; moved: number; pinched: boolean; box: boolean } | null = null;
-  /** A tap on the map (a click, or a short touch: `touch`), and the mouse moving over it. Screen points. */
-  onTap: ((at: Point, touch: boolean) => void) | null = null;
+  /** A tap on the map and its input timestamp, and the mouse moving over it. Screen points. */
+  onTap: ((at: Point, touch: boolean, time?: number) => void) | null = null;
   onHover: ((at: Point) => void) | null = null;
   /** The mouse left the map (onto a window, or off the page). */
   onLeave: (() => void) | null = null;
@@ -98,7 +98,9 @@ export class Camera {
       if (this.pointers.size === 1) {
         const at = { x: e.offsetX, y: e.offsetY };
         const touch = e.pointerType === "touch" || e.pointerType === "pen";
-        this.press = { ...at, t: performance.now(), moved: 0, pinched: false, box: this.onPress?.(at, touch) ?? false };
+        // A slow render or pixel hit test may delay these handlers. Measure
+        // the actual gesture, not the time spent waiting for JavaScript.
+        this.press = { ...at, t: e.timeStamp, moved: 0, pinched: false, box: this.onPress?.(at, touch) ?? false };
       } else if (this.press) {
         this.press.pinched = true;
         if (this.press.box) {
@@ -130,12 +132,12 @@ export class Camera {
         const press = this.press;
         this.press = null;
         if (e.type === "pointerup" && press && !press.pinched && press.moved < TAP_MOVE
-            && performance.now() - press.t < TAP_MS) {
+            && e.timeStamp - press.t < TAP_MS) {
           this.velocity = { x: 0, y: 0 };
           if (press.box) {
             this.onBox?.(press, press, true);  // no box after all, just a tap
           }
-          this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen");
+          this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen", e.timeStamp);
           return;
         }
         if (press?.box) {

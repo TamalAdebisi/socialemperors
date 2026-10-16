@@ -45,11 +45,23 @@ export default async function playthroughControls({ newPlayer }) {
     return { x: box.x - 5, y: box.y + box.height / 2 };
   }, SECOND);
   assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, near), "CANVAS");
+  await page.evaluate(() => {
+    const camera = window.seHome.parts.camera;
+    const press = camera.onPress;
+    camera.onPress = (at, touch) => {
+      camera.onPress = press;
+      // A slow first pixel read must not turn a short native click into
+      // a rejected long press. Keep the real browser down/up events.
+      const until = performance.now() + 650;
+      while (performance.now() < until) { /* emulate the stalled render thread */ }
+      return press?.(at, touch) ?? false;
+    };
+  });
   await page.mouse.click(near.x, near.y);
   assert.deepEqual(await page.evaluate(() => {
     const unit = window.seHome.parts.editor.lessonSelected;
     return [unit.tx, unit.ty];
-  }), SECOND, "a near miss selects the second villager instead of redirecting the first");
+  }), SECOND, "a near miss selects the second villager even when input handling stalls");
 
   await page.evaluate(() => {
     window.dispatchEvent(new Event("blur"));
