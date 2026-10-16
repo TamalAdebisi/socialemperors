@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 
 // A villager and a house in the open in the middle of the screen, and a tile to walk to.
-const VILLAGER = 500, SPOT = [52, 58], HOUSE = [1, 47, 55], WALK_TO = [55, 57];
+const VILLAGER = 500, SPOT = [49, 55], HOUSE = [1, 44, 52], WALK_TO = [52, 54];
 
 export default async function selected({ newPlayer }) {
   const player = await newPlayer();
@@ -17,11 +17,9 @@ export default async function selected({ newPlayer }) {
   await player.reload();
 
   // How many golden pixels round a unit's feet (the middle of its tile), or along a building's front corner,
-  // looked at with the card out of the way (it covers the bottom of the map, as the original's did).
+  // with both the map and the selected thing's card visible.
   const gold = async (box) => {
-    await player.page.evaluate(() => document.querySelector(".actions").style.visibility = "hidden");
     const pixels = await player.pixels(box);
-    await player.page.evaluate(() => document.querySelector(".actions").style.removeProperty("visibility"));
     return pixels.filter(([r, g, b]) => r > 190 && g > 140 && b < 90 && r > g).length;
   };
   const feet = ([tx, ty]) => {

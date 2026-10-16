@@ -117,5 +117,15 @@ async function strikeAll(player) {
     const fight = window.seHome.fighting;
     for (const f of fight.battle.fighters.filter((f) => f.side === 2 && f.isUnit)) fight.battle.kill(f, null);
   });
-  await player.page.waitForFunction(() => !window.seHome.fighting, null, { timeout: 30_000 });
+  try {
+    await player.page.waitForFunction(() => !window.seHome.fighting, null, { timeout: 30_000 });
+  } catch (error) {
+    console.log("fight at timeout", await player.page.evaluate(() => {
+      const fight = window.seHome.fighting;
+      return fight && { frame: fight.battle.frame, quiet: fight.quiet,
+        active: fight.battle.fighters.filter((f) => !f.dead && f.side !== 3 && f.attacking && f.target && !f.target.dead)
+          .map((f) => ({ id: f.item.id, target: f.target.item.id })) };
+    }));
+    throw error;
+  }
 }

@@ -78,9 +78,9 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 427 tests, under a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 324 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 64 tests
+.venv/bin/python -m unittest discover tests          # the server: 428 tests, about a minute
+(cd client && npm run check && npm test)             # the client's types and rules: 339 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 66 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 

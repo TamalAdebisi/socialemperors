@@ -617,7 +617,10 @@ opening the site's Friends page in a new tab, with a red count of what
 waits there (requests, gifts, help; the Menu carries it too, asked again
 every two minutes and when the tab comes back into view, as the classic
 page does); Empires, the front page; and Log out, a form, as the site's
-(`ui/hud.ts`; test `e2e/tests/site-menu.mjs`). Until Beta 2, Quests, Battle and World's battle modes open the
+(`ui/hud.ts`; test `e2e/tests/site-menu.mjs`). Read-only server responses
+do not renew the login cookie, so an image arriving after logout cannot
+sign the browser back in. The 30-day expiry starts at signing in or the
+last session change (`tests/test_accounts.py`). Until Beta 2, Quests, Battle and World's battle modes open the
 classic game. The mockups are the reference for the look (drawn over a
 real town; a monitor on the left, a phone on the right):
 [neighbours](docs/menus/neighbours.webp), [the shop](docs/menus/shop.webp),
@@ -1180,9 +1183,8 @@ neighbours, Arthur last; Visit opens their town. Code:
   Test: `e2e/tests/gifts.mjs`.
 
 **Not yet:** requests between neighbours, and adding neighbours from
-inside the game (the site's friends page does it); the site's own bar
-(Empires, Friends with its count, Log out) waits for the owner's say on
-where it goes.
+inside the game (the site's friends page does it). The site's links are
+available in Menu ("The menus: rail and dock", above).
 
 ### Sound and speed
 

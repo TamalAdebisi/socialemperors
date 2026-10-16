@@ -60,6 +60,9 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",          # other sites can't submit our forms as you
     SESSION_COOKIE_SECURE=config_env.SECURE_COOKIES,  # only sent over HTTPS when hosted
     PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+    # A late image/news response must not restore the cookie cleared by
+    # logout. Renew it when the session changes, not on every read.
+    SESSION_REFRESH_EACH_REQUEST=False,
 )
 if config_env.TRUSTED_PROXIES:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=config_env.TRUSTED_PROXIES, x_proto=config_env.TRUSTED_PROXIES)

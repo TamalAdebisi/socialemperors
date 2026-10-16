@@ -21,6 +21,14 @@ them can be found and reversed. The big, agreed decisions are in
   Playwright does not pick it up itself; art requests otherwise fail in
   this cloud environment. The throwaway game server stays on localhost.
   No assertion or game rule changes for this setup.
+- **Read-only responses do not renew the login cookie.** The Menu's
+  logout check caught a late image response restoring the cookie after
+  logout. It is now renewed when the session changes; the 30-day expiry
+  runs from signing in or the last session change, not every image or
+  news request. A server regression test reproduces the old behavior.
+- **Map checks keep the card visible.** Test targets move into the open
+  or use a visible part of the selected picture. They keep the other
+  agent's selection checks without hiding controls to click through them.
 
 ## 16 October 2026: standing authorization to build and merge
 

@@ -213,22 +213,9 @@ export class Player {
     };
   }
 
-  /**
-   * Clicks the map at a point. Where the selected thing's card covers the
-   * map (the original's panel covered the same strip), the click reaches the
-   * map behind it, as a player would after moving the map a little: the
-   * tests' tiles stay where they were. Buttons on the card are pressed with
-   * press() and locators, never with this.
-   */
+  /** Clicks at a screen point, with the same visible controls as a player. */
   async click(point) {
-    const covered = await this.page.evaluate(({ x, y }) => {
-      const card = document.querySelector(".actions.card:not([hidden])");
-      if (!card || !card.contains(document.elementFromPoint(x, y))) return false;
-      card.style.visibility = "hidden";
-      return true;
-    }, point);
     await this.page.mouse.click(point.x, point.y);
-    if (covered) await this.page.evaluate(() => document.querySelector(".actions")?.style.removeProperty("visibility"));
     await this.wait(250);
   }
 

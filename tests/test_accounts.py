@@ -145,6 +145,18 @@ class AccountsTest(unittest.TestCase):
         self.assertEqual(send_form(self.web, "/logout").status_code, 302)
         self.assertIn(SIGNED_OUT, self.home(self.web))
 
+    def test_late_read_responses_cannot_restore_a_logged_out_cookie(self):
+        # An image or news request can start before logout and finish after
+        # it. Such a response must not send the old login cookie back.
+        late = server.app.test_client()
+        late.set_cookie("session", self.web.get_cookie("session").value)
+        self.assertEqual(send_form(self.web, "/logout").status_code, 302)
+        for path in ("/img/logo.png", "/friends/news"):
+            reply = late.get(path)
+            self.assertEqual(reply.status_code, 200, path)
+            self.assertNotIn("Set-Cookie", reply.headers, path)
+        self.assertIn(SIGNED_OUT, self.home(self.web))
+
     # Limits
 
     def test_five_new_accounts_an_hour(self):
