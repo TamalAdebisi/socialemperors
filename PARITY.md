@@ -310,9 +310,11 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 ## Not for Beta 1
 
-**Later:** collections, the units book, offer packs, markets for allies,
+**Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
+Survival, tournaments and the tutorial are now built; ROADMAP.md tracks
+the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.

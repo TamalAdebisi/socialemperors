@@ -186,9 +186,11 @@ The server's additive stale-id guard is covered in
 - Reopening an unfinished match recreates the saved armies and starts
   a fresh attempt; original health/positions are not saved. Its start
   timestamp resets on Start, as in the existing server and original
-  client. Unfinished starts time out after an hour. A locally completed
-  result can be retried after a lost reply, including a reload in the
-  same tab; a previously recorded result cannot be overwritten.
+  client. Unfinished starts time out after an hour. Once queued spell
+  and battle commands are saved, a locally completed result can be retried
+  after a lost reply, including a reload in the same tab; a previously
+  recorded result cannot be overwritten. A failed command save instead
+  requires reloading the saved state without submitting that local result.
 
 *Built:* `tournamentPlay.ts` and `rules/tournamentBattle.ts`, reusing
 `Battle`, `Specials`, `BattleView` and `BattleControls`. Rule tests cover

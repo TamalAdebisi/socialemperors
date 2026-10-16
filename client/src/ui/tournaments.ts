@@ -184,22 +184,13 @@ export class TournamentWindow {
     if (!cards.length) list.append(text("li", this.tab === "weekly" ? "No weekly tournament available." : "No friends' tournaments waiting for you."));
     if (this.tab === "own") {
       const create = text("li", "", "tournament-card");
-      create.append(this.picture("tournament_friends.jpg"), text("strong", this.word(1263)), text("p", this.word(1266)), button("Create tournament", () => {
-        if (!this.validate(false)) return;
-        if (tournamentEntryWarning(this.team) === "short" && !confirm(this.word(1214))) return;
-        this.creating = true;
-        this.selectedKind = "";
-        this.render(true);
-      }, "button small gold"));
+      create.append(this.picture("tournament_friends.jpg"), text("strong", this.word(1263)), text("p", this.word(1266)),
+        button("Create tournament", () => void this.beginCreation(), "button small gold"));
       list.append(create);
     }
     const box = text("section", "", "tournament-team-box");
     box.setAttribute("aria-label", this.word(1211));
-    box.append(text("h3", this.word(1211)), this.slots(false), button("Edit team", () => {
-      this.team = restoredTournamentTeam(this.parts.savedTeam(), this.parts.choices());
-      this.editing = true;
-      this.render(true);
-    }));
+    box.append(text("h3", this.word(1211)), this.slots(false), button("Edit team", () => void this.openEditor()));
     this.panel.body.append(bar, tabs, list, box, this.classic("Open tournaments in classic"));
     this.countdowns();
   }
@@ -290,6 +281,41 @@ export class TournamentWindow {
     this.panel.body.append(text("p", "Choose a tournament for your friends. At least three player neighbours are needed."), list, actions);
   }
 
+  private async beginCreation(): Promise<void> {
+    if (this.busy) return;
+    const generation = this.generation;
+    this.setBusy(true);
+    try {
+      await this.parts.refreshTown();
+      if (generation !== this.generation || !this.validate(false)) return;
+      if (tournamentEntryWarning(this.team) === "short" && !confirm(this.word(1214))) return;
+      this.creating = true;
+      this.selectedKind = "";
+      this.render(true);
+    } catch {
+      if (generation === this.generation) this.error("Couldn't refresh your available units. Please try again before creating a tournament.");
+    } finally {
+      this.setBusy(false);
+    }
+  }
+
+  private async openEditor(): Promise<void> {
+    if (this.busy) return;
+    const generation = this.generation;
+    this.setBusy(true);
+    try {
+      await this.parts.refreshTown();
+      if (generation !== this.generation) return;
+      this.team = restoredTournamentTeam(this.parts.savedTeam(), this.parts.choices());
+      this.editing = true;
+      this.render(true);
+    } catch {
+      if (generation === this.generation) this.error("Couldn't refresh your available units. Please try opening the team box again.");
+    } finally {
+      this.setBusy(false);
+    }
+  }
+
   private validate(weekly: boolean): boolean {
     const problem = tournamentEntryProblem(this.team, this.parts.choices(), this.parts.items, this.parts.rules, weekly);
     if (problem) {
@@ -301,23 +327,28 @@ export class TournamentWindow {
 
   /** The service takes the fee. The original command is bookkeeping only. */
   private async enter(card: TournamentCard, create = false): Promise<void> {
-    if (this.busy || !this.validate(!!card.weekly)) return;
-    const warning = tournamentEntryWarning(this.team, card.weekly ? card.weekly.seconds - (Date.now() - this.fetchedAt) / 1000 : undefined);
-    if (!create && warning && !confirm(this.word(warning === "short" ? 1214 : 1298))) return;
+    if (this.busy) return;
     const { kind } = card;
-    if (this.parts.balance(kind.resource_type) < Number(kind.cost)) {
-      this.error(`Not enough ${kind.resource_type === "c" ? "cash" : "gold"} for this tournament.`);
-      return;
-    }
     const generation = this.generation;
     this.setBusy(true);
     try {
+      await this.parts.refreshTown();
+      if (generation !== this.generation || !this.validate(!!card.weekly)) return;
+      const warning = tournamentEntryWarning(this.team, card.weekly ? card.weekly.seconds - (Date.now() - this.fetchedAt) / 1000 : undefined);
+      if (!create && warning && !confirm(this.word(warning === "short" ? 1214 : 1298))) return;
+      if (this.parts.balance(kind.resource_type) < Number(kind.cost)) {
+        this.error(`Not enough ${kind.resource_type === "c" ? "cash" : "gold"} for this tournament.`);
+        return;
+      }
       this.parts.command("tournament_substract_resources", kind.resource_type, Number(kind.cost), String(kind.id), create || this.tab === "own" ? 1 : 0);
       if (!await this.parts.flush()) throw new Error("Your team couldn't be saved. Reload before entering.");
+      if (generation !== this.generation) return;
       let reply: TournamentEntryReply;
+      let confirmedEntry = false;
       try {
         reply = create ? await this.parts.create(String(kind.id), [...this.team])
           : await this.parts.join(String(kind.id), tournamentCategory(this.parts.level()), [...this.team], this.tab === "own" ? card.key : "");
+        confirmedEntry = reply.result === "OK";
       } catch {
         // An entry may have succeeded before its answer was lost. Read the
         // saved room instead of repeating the fee or assuming it failed.
@@ -328,7 +359,9 @@ export class TournamentWindow {
       if (reply.result !== "OK" && reply.resources?.refund) {
         this.parts.command("tournament_refund_resources", kind.resource_type, Number(kind.cost));
       }
-      if (reply.result === "OK") this.parts.spent(kind.resource_type, Number(kind.cost));
+      // A reconciled room might have been joined in another tab. Only the
+      // service's own success confirms this particular entry fee was paid.
+      if (confirmedEntry) this.parts.spent(kind.resource_type, Number(kind.cost));
       let balanceFailed = false;
       try { await this.parts.refreshTown(); } catch { balanceFailed = true; }
       if (generation !== this.generation) return;
@@ -341,6 +374,7 @@ export class TournamentWindow {
       } else {
         this.info = await this.parts.info();
         if (generation !== this.generation) return;
+        this.fetchedAt = Date.now();
         this.creating = false;
         this.render(true);
         this.error(reply.result === "NOFRIENDS" ? this.word(1252) : reply.result === "NOTEAM" ? "Your team is not eligible. Edit your team and try again." : "This tournament is no longer available, or you cannot afford its entry fee. Please check the refreshed list.");
@@ -560,20 +594,24 @@ export class TournamentWindow {
 
   private async save(): Promise<void> {
     if (this.busy) return;
-    const problem = tournamentTeamProblem(this.team, this.parts.choices(), this.parts.items, this.parts.rules);
-    if (problem) {
-      this.error(problem === "complex" ? this.word(1233, this.parts.rules.complexLimit) : problem === "empty" ? this.word(1213) : "Your available units have changed. Reopen the team box and choose again.");
-      return;
-    }
-    this.busy = true;
     const generation = this.generation;
-    this.render();
+    this.setBusy(true);
     try {
+      await this.parts.refreshTown();
+      if (generation !== this.generation) return;
+      // Keep the edited selection while updating the available copies. A
+      // sale in this town or another tab must be caught before it is saved.
+      this.render();
+      const problem = tournamentTeamProblem(this.team, this.parts.choices(), this.parts.items, this.parts.rules);
+      if (problem) {
+        this.error(problem === "complex" ? this.word(1233, this.parts.rules.complexLimit) : problem === "empty" ? this.word(1213) : "Your available units have changed. Reopen the team box and choose again.");
+        return;
+      }
       if (await this.parts.saveTeam([...this.team])) {
         if (generation === this.generation) { this.editing = false; this.render(true); }
-      } else this.error("Your team couldn't be saved. Reload and try again.");
+      } else if (generation === this.generation) this.error("Your team couldn't be saved. Reload and try again.");
     } catch {
-      this.error("Your team couldn't be saved. Reload and try again.");
+      if (generation === this.generation) this.error("Your available units or team couldn't be saved. Reload and try again.");
     } finally {
       this.setBusy(false);
     }

@@ -193,6 +193,24 @@ export default async function tournaments({ newPlayer }) {
   assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT),
     "new ownership and the saved team from another tab are refreshed together");
   assert.equal(await page.locator(".tournament-team-box .tournament-team img").count(), 4);
+  await phone.send([{ cmd: "sell_stored_item", args: [KNIGHT, 0] }]);
+  const goldAfterSale = (await getInfo()).map.coins;
+  await player.press("Everyday");
+  await page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
+  await page.waitForSelector(".tournament-error");
+  assert.match(await page.locator(".tournament-error").textContent(), /available units have changed/);
+  assert.equal((await service("get_tournament_info")).tournament, null, "entry rechecks ownership changed while the list stayed open");
+  assert.equal((await getInfo()).map.coins, goldAfterSale, "rejected ownership takes no entry fee");
+  await player.press("Edit team");
+  await page.waitForSelector(".tournament-selected");
+  assert.match(await page.locator(".tournament-selected").textContent(), /3 \/ 20/);
+  await phone.send([{ cmd: "sell_stored_item", args: [KNIGHT, 0] }]);
+  await player.press("Save team");
+  await page.waitForSelector(".tournament-error");
+  assert.match(await page.locator(".tournament-error").textContent(), /available units have changed/);
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT),
+    "the editor does not save a team invalidated while it was open");
+  await player.press("Cancel");
 
   // Follow the real link only after a new team save: the classic page has the same empire.
   await player.press("Your own");

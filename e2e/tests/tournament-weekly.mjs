@@ -31,6 +31,8 @@ export default async function tournamentWeekly({ newPlayer }) {
     assert.equal(await page.locator(".tournament-battle-army.enemy").textContent(), `${opponent.user_name}20 units left`);
     assert.equal(await page.locator(".tournament-battle-hud").evaluate((el) => el.scrollWidth <= el.clientWidth), true);
     assert.ok((await page.locator(".tournament-battle-hud").boundingBox()).height <= 160, "the phone controls leave room to play");
+    assert.ok(await page.locator(".tournament-battle-hud button").evaluateAll((buttons) =>
+      buttons.every((button) => button.getBoundingClientRect().height >= 44)), "phone battle controls have full touch targets");
     await page.locator(".tournament-battle-army.enemy").click();
     await page.waitForFunction(() => {
       const { enemy, screenOf } = window.seTournament;

@@ -88,8 +88,16 @@ export default async function tournamentBattle({ newPlayer }) {
   const target = await page.evaluate(() => window.seTournament.screenOf(window.seTournament.enemy[0]));
   await page.mouse.click(target.x, target.y);
   await page.waitForFunction(() => window.seTournament.player.some((unit) => unit.target?.side === 2));
+  await player.press("Spell book");
+  await player.press("Open book");
+  await page.waitForSelector(".panel.spells:not([hidden])");
+  await page.locator(".spell-mana").click();
+  await page.getByRole("heading", { name: "Wizard's Resources Bank", exact: true }).waitFor();
   await page.waitForFunction(() => window.seTournament.match.result?.won === true, null, { timeout: 120_000 });
   await page.getByRole("button", { name: "Retry saving", exact: true }).waitFor({ state: "visible", timeout: 20_000 });
+  assert.equal(await page.locator(".panel.spells:not([hidden])").count(), 0, "a finished battle closes its spell academy");
+  assert.equal(await page.getByRole("heading", { name: "Wizard's Resources Bank", exact: true }).count(), 0,
+    "a finished battle closes its mana bank before saving the result");
   assert.ok(await player.button("Back to tournament").isDisabled(), "an unconfirmed result is not presented as saved");
   const first = (await service(player, "get_tournament_info")).tournament.players[0].matches.find((m) => m.victim_id === opponents[0].settings.userId);
   assert.equal(first.finished, true);

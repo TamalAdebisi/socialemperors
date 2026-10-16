@@ -2209,7 +2209,10 @@ connects the town and command queue; `net/server.ts` uses the existing
   with zeros for empty places. It never changes `teams.quest` or removes
   owned units. An enrolled room displays its frozen team. Closing a
   panel leaves enrollment and results intact; opening it rereads the
-  saved state. Classic links flush pending commands before navigating.
+  saved state. Ownership and the saved selection refresh together, so
+  units acquired in another tab are not pruned using an old town view.
+  Editing, saving and entry also refresh their ownership checks.
+  Classic links flush pending commands before navigating.
 - **Entry and waiting:** empty teams are refused, short teams ask first;
   a full weekly team entering in the last ten minutes also gets a
   warning. Public rooms match five level brackets. The service takes
@@ -2259,9 +2262,11 @@ the graveyard and the saved team do not suffer battle losses.
   report or battle-gold payment.
 - **Coming back:** an unfinished match restarts from the enrolled armies,
   as the original did; health and positions are not saved. The server's
-  one-hour unfinished-match timeout still applies. A completed result
-  awaiting confirmation stays available for Retry, including a reload
-  in the same tab; the server's recorded result always wins. The client
+  one-hour unfinished-match timeout still applies. Once queued spell
+  and battle commands are saved, a completed result awaiting confirmation
+  stays available for Retry, including a reload in the same tab. If
+  those commands fail, the client requires a reload from saved state
+  without submitting the local result. The server's recorded result always wins. The client
   does not announce a saved result until it has read that result back.
 
 Matches and Results remain available until Done. Public/friends' results
