@@ -4,6 +4,7 @@
 
 import type { GameConfig } from "../rules/config.ts";
 import type { PlayerInfo } from "../rules/town.ts";
+import type { Continent } from "../rules/world.ts";
 
 /** What the game page (templates/client.html) tells the client. */
 export interface PageSettings {
@@ -57,6 +58,40 @@ export class GameServer {
       fields.user = options.user;
     }
     return this.post("get_player_info.php", fields);
+  }
+
+  /** The world map: the town's continent (or `continent`, another to look at), as the Flash client asks (worlds.py). */
+  continent(options: { town: number; continent?: number; relocate?: boolean; moveOn?: boolean }): Promise<Continent> {
+    const fields: Record<string, string> = { map: String(options.town) };
+    if (options.continent !== undefined) {
+      fields.level_id = String(options.continent);
+    }
+    if (options.relocate) {
+      fields.relocate = "1";
+    }
+    if (options.moveOn) {
+      fields.worldChange = "1";
+    }
+    return this.get("get_continent_ranking.php", fields);
+  }
+
+  /** What the world map's Profile shows of a player, or null. */
+  async publicProfile(pid: string): Promise<Record<string, unknown> | null> {
+    try {
+      return await this.get("get_public_player_info.php", { USERID: pid });
+    } catch {
+      return null;
+    }
+  }
+
+  /** The two world map pages answer a GET, as the Flash client asked them. */
+  private async get<T>(endpoint: string, fields: Record<string, string>): Promise<T> {
+    const query = new URLSearchParams({ USERID: this.settings.userId, user_key: this.settings.userKey, ...fields });
+    const response = await fetch(`${this.settings.dynamicUrl}/${endpoint}?${query}`);
+    if (!response.ok) {
+      throw new Error(`${endpoint}: ${response.status} ${await response.text()}`);
+    }
+    return (await response.json()) as T;
   }
 
   private async post<T>(endpoint: string, fields: Record<string, string>): Promise<T> {

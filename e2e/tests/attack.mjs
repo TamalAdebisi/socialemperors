@@ -4,7 +4,9 @@
 // with their defence plan. The army is sent at the town hall until it falls,
 // and the results say the attack is won. The server has the attack, its
 // report, the gold, and the attack in the defender's history; Back home
-// goes home.
+// goes home. The Battle Results window has the attack and its report, with
+// Take Revenge!!; the defender, coming home, finds their attacks received
+// open by themselves with the "Attacked!" notice, and they're seen.
 
 import assert from "node:assert/strict";
 
@@ -104,4 +106,32 @@ export default async function attack({ newPlayer }) {
   await player.page.waitForURL(/client\.html$/);
   await player.loaded();
   await player.shot("home");
+
+  // Battle Results: the attack made, won, with its gold; its report; Take Revenge!! goes for them again.
+  await player.menu("Battle");
+  await player.page.locator(".panel:not([hidden]) .row", { hasText: "Battle Results" }).locator("a").click();
+  const rows = player.page.locator(".attack-row");
+  assert.equal(await rows.count(), 1);
+  assert.match(await rows.first().textContent(), new RegExp(`${victim.name}YOU WON${gold}`));
+  await rows.first().getByRole("button").click();
+  assert.match(await player.page.locator(".attack-result").textContent(), /You win!/);
+  assert.match(await player.page.locator(".attack-army").first().textContent(), /Units Alive: \d+ · Units Dead: \d+/);
+  assert.match(await player.page.locator(".attack-revenge").getAttribute("href"), new RegExp(`attack=${victim.settings.userId}`));
+  await player.shot("results");
+
+  // The defender, home: their attacks received open by themselves, with the notice, the attack new; then seen.
+  await victim.reload();
+  await victim.page.waitForSelector(".attack-notice", { timeout: 15_000 });
+  assert.match(await victim.page.locator(".attack-notice").textContent(), /Attacked!/);
+  const theirRow = victim.page.locator(".attack-row");
+  assert.match(await theirRow.first().textContent(), /YOU LOST/);
+  assert.equal(await theirRow.first().locator(".attack-new").count(), 1);
+  assert.equal(await victim.page.getByRole("button", { name: "Attacks received" }).getAttribute("aria-pressed"), "true");
+  await victim.shot("attacked");
+  await victim.wait(4500);  // the next batch of commands carries clean_attacks
+  const later = await victim.page.request.post(`${victim.base}${victim.settings.dynamicUrl}/get_player_info.php`,
+    { form: { USERID: victim.settings.userId, user_key: victim.settings.userKey } });
+  assert.equal((await later.json()).privateState.attacksReceived[0].viewPending, undefined, "seen");
+  await victim.reload();
+  assert.equal(await victim.page.locator(".attack-notice").count(), 0, "not again");
 }

@@ -64,6 +64,12 @@ export const ICONS = {
   mana: new URL("./art/mana.webp", import.meta.url).href,
   // The graveyard's potions.
   potion: new URL("./art/potion.webp", import.meta.url).href,
+  // The army window's defence plans, and the tick on the one chosen.
+  "plan-defensive": new URL("./art/plan-defensive.webp", import.meta.url).href,
+  "plan-mid-defensive": new URL("./art/plan-mid-defensive.webp", import.meta.url).href,
+  "plan-mid-aggressive": new URL("./art/plan-mid-aggressive.webp", import.meta.url).href,
+  "plan-aggressive": new URL("./art/plan-aggressive.webp", import.meta.url).href,
+  "plan-picked": new URL("./art/plan-picked.webp", import.meta.url).href,
   // The cards' buttons for a building's window: the graveyards' and the altar's, the harbour's, the zeppelin tower's.
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,

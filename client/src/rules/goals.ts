@@ -113,6 +113,13 @@ export class Doings {
   /** The market's trades, by good (w, s, f): what was bought, and what was sold (as a negative count). */
   bought = new Map<string, number>();
   sold = new Map<string, number>();
+  /** A defence plan picked in the army window (while its goal is open, as the Flash client counted it). */
+  planPicked = false;
+  /** Attacks on players fought to the end (not left), and the neighbours attacked, since the page opened. */
+  attacksMade = 0;
+  neighboursAttacked = new Set<string>();
+  /** The Battle Results window opened. */
+  historyOpened = false;
   /**
    * The goal kinds listened for: the open goals' (GoalKeeper sets them before
    * each check), or null for all. As in the Flash client, most doings count
@@ -208,6 +215,22 @@ export class Doings {
     if (this.hears("market-trade")) {
       const counts = amount > 0 ? this.bought : this.sold;
       counts.set(good, (counts.get(good) ?? 0) + amount);
+    }
+  }
+
+  pickedPlan(): void {
+    if (this.hears("defence-plan")) {
+      this.planPicked = true;
+    }
+  }
+
+  /** An attack on a player, played on its own page: told here when the player comes home (attackPlay.ts). */
+  attacked(victim: string, voluntary: boolean, neighbour: boolean): void {
+    if (!voluntary) {
+      this.attacksMade++;
+    }
+    if (neighbour) {
+      this.neighboursAttacked.add(victim);
     }
   }
 
@@ -311,6 +334,14 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.islandsFromMenu ? 1 : 0, 1);
     case "market-trade":
       return of(marketTraded(doings, args[0] as unknown[]) ? 1 : 0, 1);
+    case "attack-player":
+      return of(doings.attacksMade, n(0));
+    case "attack-neighbour":
+      return of(doings.neighboursAttacked.size ? 1 : 0, 1);
+    case "history-opened":
+      return of(doings.historyOpened ? 1 : 0, 1);
+    case "defence-plan":
+      return of(doings.planPicked ? 1 : 0, 1);
     case "near-hall":
       return of(nearHall(town, args[0] as number[]) ? 1 : 0, 1);
     default:

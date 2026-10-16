@@ -2,9 +2,9 @@
 // way to fight, with its icon, a line on what it is, and Play. On a wide
 // screen Quests and Battle are separate rail buttons; on a phone World holds
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
-// on neighbours from the Neighbours window (attackPlay.ts); the world map of
-// players, survival and tournaments still open the classic game, which
-// plays them on the same empire.
+// on players from the world map (ui/worldMap.ts, attackPlay.ts); survival
+// and tournaments still open the classic game, which plays them on the
+// same empire.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -19,6 +19,8 @@ interface Mode {
 }
 
 const QUESTS: Mode = { name: "Quests", about: "The islands and their bosses", icon: ICONS.quests, verb: "Go" };
+/** The attacks made and received (the Flash client's Battle Results, from the world map's bar). */
+const RESULTS: Mode = { name: "Battle Results", about: "The last attacks you made and received", icon: ICONS.pvp, verb: "Open" };
 const BATTLES: Mode[] = [
   { name: "Attack a player", about: "Send your army against another empire", icon: ICONS.pvp, verb: "Play" },
   { name: "Survival", about: "Hold out against wave after wave", icon: ICONS.survival, verb: "Play" },
@@ -30,11 +32,14 @@ export class WorldWindows {
   private readonly battles: Panel;
   private readonly world: Panel;
 
-  constructor(classicUrl: string, islands: { toggle(): void; open(): void }) {
+  /** `attack`: opens the world map (ui/worldMap.ts); `results`: the Battle Results window (ui/attackHistory.ts). */
+  constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
-    this.battles = window_("battle", "Battles", BATTLES, classicUrl);
-    this.world = window_("world", "World", [quests, ...BATTLES], classicUrl);
+    const battles = BATTLES.map((mode) => mode.name === "Attack a player" ? { ...mode, run: attack } : mode);
+    const history = { ...RESULTS, run: results };
+    this.battles = window_("battle", "Battles", [...battles, history], classicUrl);
+    this.world = window_("world", "World", [quests, ...battles, history], classicUrl);
   }
 
   toggleQuests(): void {
@@ -87,7 +92,7 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Attack a neighbour from Neighbours. The world map, survival and tournaments open in the classic game for now, on the same empire.";
+  note.textContent = "Survival and tournaments open in the classic game for now, on the same empire.";
   panel.body.append(list, note);
   return panel;
 }

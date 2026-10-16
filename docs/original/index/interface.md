@@ -154,7 +154,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `newTowns/ExplorationsManager.as` | 1061 | The world map for attacking players: continents of islands by level, attack (`attack_player`) and spy (`spy_player`) with their counters, profiles, history and the army. Opening it can move the player's own island and clear the "next continent" flag without a button (see Surprises). Relocating sends `reset_position_univers`. Drawing and tweens skimmed. | not yet: attacks on players are the classic game's; `worlds.py` serves the map |
+| `newTowns/ExplorationsManager.as` | 1061 | The world map for attacking players: continents of islands by level, attack (`attack_player`) and spy (`spy_player`) with their counters, profiles, history and the army. Opening it can move the player's own island and clear the "next continent" flag without a button (see Surprises). Relocating sends `reset_position_univers`. Drawing and tweens skimmed. | partly: `ui/worldMap.ts` and `rules/world.ts` (the map, islands, menu, attack, profile, browsing, relocating, the prize); no spying or first-time help yet; `worlds.py` serves the map |
 | `minigames/WindowMiniGameDragonRider.as` | 96 | Loads a separate minigame for a dragon rider's training level and reports won or lost. | not yet |
 | `managers/offers/KompuManager.as` | 354 | The timed potion offer: on from `KOMPU_MIN_LEVEL` (10) while the config has an offer, a try every so often through `kompu_try.php`, a prize (into storage) at certain potion counts, done when all are brewed. | not yet: our server sends no offer, so neither game shows it |
 | `managers/offers/KompuReward.as` | 83 | One potion prize: its count and unit. | not yet |

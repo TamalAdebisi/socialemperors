@@ -39,6 +39,37 @@ them can be found and reversed. The big, agreed decisions are in
   was removed in that build); here both do.
 - **30 letters at most,** so the name fits where it shows.
 
+## 15 October 2026: the world map
+
+- **Each island shows its owner's name and level** under it, not only in
+  its menu as in the original, so the map reads on a phone too (an
+  extra).
+- **The map is a panel beside the town,** like the quests' map, not a
+  screen over everything; its pieces are the game's own.
+- **The island menu explains itself in our words** ("Already attacked:
+  wait 4 hours...", "You need an army..."); the original's own labels
+  for these were drawn into its art, not in the game's texts.
+- **Attack is the menu's link to the battle page,** so the attack is
+  counted when the battle opens, as from Neighbours.
+- **Islands and profiles show the player's username,** not the town's
+  name ("My Empire" for nearly everyone): the original showed the
+  Facebook name, and the username is ours.
+
+## 15 October 2026: the defence plan and the battle results
+
+- **The plan is a tab of the Army window** ("My Defensive Strategy"), as
+  the Flash client's options window had the army and the plans side by
+  side.
+- **A defender's report shows no units lost for good,** since this
+  server never takes them (see 15 October), even though the report the
+  attacker's game sent counts some as lost.
+- **"Attack a neighbour" counts any neighbour that's a player or one of
+  the villages that ship with the game,** not only friends from the
+  Friends page: the client can't tell those apart, and the original's
+  "friends" were simply the people in the neighbour bar.
+- **The attacker's username goes in the defender's history,** not
+  "Emperor", so the defender knows who it was.
+
 ## 15 October 2026: attacking players in the new client
 
 - **Attack is in the Neighbours window, from level 6.** The original's

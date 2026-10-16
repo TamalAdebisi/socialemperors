@@ -142,6 +142,32 @@ test("island goals: by the stars the save keeps; the map seen, and from the menu
   assert.deepEqual(progress(t, goals.get(85)!, doings, 0, ITEMS), { done: 0, of: 1 }, "not from a harbour's button");
 });
 
+test("a defence plan picked in the army window, while its goal is open", () => {
+  const goals = readGoals([{ id: 60, title: "Defensive Strategy" }], data.goals as unknown as Record<string, Need>);
+  const doings = new Doings();
+  doings.listen(["build"]);
+  doings.pickedPlan();
+  assert.deepEqual(progress(town(), goals.get(60)!, doings, 0, ITEMS), { done: 0, of: 1 }, "not while the goal is shut");
+  doings.listen(["defence-plan"]);
+  doings.pickedPlan();
+  assert.deepEqual(progress(town(), goals.get(60)!, doings, 0, ITEMS), { done: 1, of: 1 });
+});
+
+test("attacks on players: fought to the end, a neighbour's town; the Battle Results opened", () => {
+  const goals = readGoals([59, 67, 68].map((id) => ({ id, title: `Goal ${id}` })), data.goals as unknown as Record<string, Need>);
+  const doings = new Doings();
+  const t = town();
+  doings.attacked("abc", true, false);
+  assert.deepEqual(progress(t, goals.get(59)!, doings, 0, ITEMS), { done: 0, of: 1 }, "left before the end");
+  assert.deepEqual(progress(t, goals.get(67)!, doings, 0, ITEMS), { done: 0, of: 1 }, "not a neighbour");
+  doings.attacked("def", false, true);
+  assert.deepEqual(progress(t, goals.get(59)!, doings, 0, ITEMS), { done: 1, of: 1 });
+  assert.deepEqual(progress(t, goals.get(67)!, doings, 0, ITEMS), { done: 1, of: 1 });
+  assert.deepEqual(progress(t, goals.get(68)!, doings, 0, ITEMS), { done: 0, of: 1 });
+  doings.historyOpened = true;
+  assert.deepEqual(progress(t, goals.get(68)!, doings, 0, ITEMS), { done: 1, of: 1 });
+});
+
 test("doings count only while a goal of their kind is open, as in the Flash client; collecting always", () => {
   const doings = new Doings();
   doings.listen(["collect-kind"]);
