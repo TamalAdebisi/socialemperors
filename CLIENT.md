@@ -280,8 +280,16 @@ pages, about 3.79 GiB decoded, enough to exhaust the browser test machine.
 The unchanged current exporter makes two pages, about 124 MiB, for that
 item. A guarded browser check also found eight oversized bundles loaded
 by the island before the team picker; refreshing the selected unit alone
-is insufficient. The owner needs a targeted **Export art to R2** run for
-all nine; the workflow inputs, cache refresh and verification are in
+is insufficient. With subsequent owner authorization, Codex ran the
+targeted **Export art to R2** workflow for all nine. Cloudflare initially
+served old cached WebP images alongside the new manifests. After the
+owner purged the 20 image URLs, all images verified against the fresh
+export at 11:24 UTC, both without Origin and with
+`Origin: https://socialemperors.me`; their dimensions match the JSON.
+The refreshed-cache `team` check now passes alone and in the full suite;
+the art follow-up is closed in #91. No further export or purge is pending
+for these items. The workflow
+inputs, purge list, cache refresh and verification are in
 [the art repair notes](docs/art-loading-repair.md). A browser test's disk
 cache in `.tools/art-cache/` does not expire by itself.
 

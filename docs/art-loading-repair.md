@@ -3,32 +3,327 @@
 Investigation on 16 October 2026, starting from main `002fcbeb`. This is
 the separate failure recorded under HANDOFF.md, task 1, not a regression
 from #87 or the tournament work. The original source art, game code and
-test assertions stay unchanged.
+test assertions stay unchanged by this art repair.
 
-**Status update, 16 October at 12:07 UTC:** the owner-operated
-[Export art to R2 run](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
-completed successfully at 10:41 UTC. Ordinary public GETs now show all
-nine main manifests at the expected two or three pages, 20 in total.
-The main bundle's new SHA-256 is
-`c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c`,
-with scale 0.25 and step 2. This checkout still has the old 76-page main
-manifest cached; the other eight cached manifests match the public ones.
-The cache was left unchanged during #87's integrated run. Its result is
-recorded in [the delivery report](verification-87.md).
-
-**The separate follow-up remains open:** verify consistent new images,
-refresh these cached bundles and run `team` plus the full suite. A pass
-with the old cached main bundle does not verify the public repair. #87
-verification did not operate the workflow or bucket. The investigation
-and exact post-export checks below remain applicable.
-
-**The repair covers nine targeted exports.** The earlier proposal to
+**The repair required nine targeted exports.** The earlier proposal to
 refresh only `2075_elemental_red_god` does not cover the oversized art
 loaded by the island before the team picker appears.
 
+The owner subsequently authorized Codex to perform the reserved live
+step. [Export run 38885093455](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+was dispatched on main `2918c71f` at 10:07 UTC on 16 October, using the
+nine names below and `redo=false`. All eight jobs finished successfully
+at 10:42 UTC. Every requested SWF render and packed sheet has an `ok`
+entry in its shard log, and final uploads succeeded. The unrelated empty
+`1410_bahamut_heart.swf` still failed, as in the preceding workflow and as
+already documented in CLIENT.md.
+
+**Art follow-up closed on 16 October 2026, with final verification in #91.**
+All 20 public images pass both request modes. The owner confirmed
+purging exactly the listed URLs in Cloudflare's dashboard. On 16 October
+at **11:24:20–11:24:40 UTC**, each ordinary image URL was compared with
+its `?repair=38885093455` version, first without Origin and then with
+`Origin: https://socialemperors.me` on both requests. All **40 comparisons
+passed**: SHA-256 bytes and actual WebP dimensions agree, dimensions match
+the freshly fetched JSON, and all files match the verified published
+export. After merging #87, the cache was refreshed again: `team` passed
+alone in **52 seconds** and in the full suite in **42 seconds**. The pre-#93
+suite finished **66/67 in 79m 48.48s**, with a separate tutorial-arrow
+failure described below. No memory-limit or OOM event occurred. No
+additional export, bucket change or purge was made after the owner's
+purge report. No owner-operated step remains. The earlier 61/65 result
+below predates #87 and is retained as historical evidence. After the
+later #93 merge, all five focused team/tutorial/tournament checks passed
+on current main; #93's own 69/69 full-suite record is attributed below.
+
+## Publication and CDN verification
+
+All nine public main manifests and their sidecars have the expected
+scale, step and page counts. Fetching their images with
+`?repair=38885093455` verifies **40 files, 20 pages and 1,035,821,932
+decoded RGBA bytes (987.84 MiB)**. Actual WebP dimensions match the new
+JSON, all animation references exist, and sequence lengths, bounds,
+origins and frame rates match the original exports. The red god is two
+pages, 4094 × 4036 and 4093 × 3932, as in the local reproduction.
+
+The ordinary URLs initially failed this check: all 20 images were older cached
+files with dimensions different from the new manifests. For example, at
+10:38 UTC the red-god manifest was new (Last-Modified 16 October,
+10:37:51), while its WebP was a Cloudflare `HIT` from 14 October,
+17:32:01, sized 3698 × 3278. A `Cache-Control: no-cache` request still
+returned that old image, with an observed age of 11,274 seconds. The
+cache-busted request returned the correct 4094 × 4036 image, a `MISS`
+with Last-Modified 16 October, 10:37:51. A new export does not invalidate
+Cloudflare's cached copy of an existing image URL.
+
+The workflow sets a 24-hour cache lifetime. The owner purged only the
+**20 exact URLs in [team-art-cache-purge.txt](team-art-cache-purge.txt)**,
+using **socialemperors.me → Caching → Configuration → Custom Purge**.
+No bucket objects were deleted. Dashboard URL purges can leave a distinct
+cache entry for requests with an Origin header, so a plain request alone
+is insufficient to close this repair.
+
+The final read-only audit is
+[team-art-cdn-verification-2026-10-16.json](team-art-cdn-verification-2026-10-16.json).
+It records each URL, request mode and time, SHA-256, actual dimensions,
+JSON dimensions, and **CF-Cache-Status, Age and Last-Modified for every
+ordinary and query response** (and the fetched JSON). Null means the
+header was absent. All 20 ordinary plain responses were `HIT` with ages
+369–400 seconds; all 20 ordinary Origin responses were `MISS`, with Age
+absent. Query responses were plain `HIT` and Origin `MISS` too. Every
+image's Last-Modified was on 16 October, between 10:11:45 and 10:37:51 UTC.
+Both modes returned the correct export. The earlier 11:18 plain-only
+check passed too, but did not cover the Origin variant.
+
+Had either mode returned stale bytes, the owner's instruction was to
+wait for expiry and recheck the affected URLs after about **10:45 UTC
+on 17 October**, with no further purge or workaround. No stale response
+remains in this audit, so that deferred check is unnecessary. Existing
+browsers may still need a reload that refreshes their own cached images.
+
+To repeat the check, GET each listed URL and the same URL with
+`?repair=38885093455`, saving response headers and bodies. Repeat both
+GETs with `Origin: https://socialemperors.me`. Fetch the corresponding
+`.json` in each mode. Compare SHA-256 hashes, read the WebP's actual
+width and height, and compare those with `meta.size`; all checks must
+pass. The query identifies this export. If another export has replaced
+it, inspect that run and establish its expected files first. Refresh the
+local test cache only after both modes pass. A browser pass using
+cache-busted bodies does not verify ordinary URLs.
+
+## Verification after #87, before #93
+
+#87 merged as main `6c2fa146` at 12:51 UTC, while #91's final documentation
+was being prepared. It includes the card/Menu changes and repairs for
+all four unrelated browser failures in the pre-#87 run below. Its own
+full suite passed 67/67, but retained a stale 76-page red-god test cache:
+`team` took 121 seconds, reaching 8.00 GiB and 886,334 memory-limit events
+without an OOM. At 12:07 its independent public-manifest check confirmed
+the new two-page red-god JSON (SHA-256
+`c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c`),
+and the eight other cached main manifests matched the new public ones.
+See [#87's delivery record](verification-87.md). Those observations belong
+to its checkout; this art-repair checkout has the fully verified 40 files.
+
+All #87 changes are preserved. Tested integrated runtime: main
+`6c2fa146`, merged at `4f2f969ad6125444aadc88e018c7a80556067822`; the full
+run started at `a2cfe59a` after a documentation-only clarification.
+The native #87 browser helper now supports this environment's proxy, so
+the earlier networking preload is no longer used. A scratch observer
+only logged requests during the focused `team` check; the full suite
+uses the standard `node e2e/run.mjs` command.
+
+At **12:58:41 UTC**, all 40 active cache files for the nine items were
+moved to another evidence backup, with no `art/sheets/` override. `team`
+then fetched ordinary live files and **passed 1/1 in 52 seconds**
+(**57.2 seconds with build/startup**). Every repaired file was requested
+once and all 40 hashes match the CDN audit. The three screenshots show
+the selected army with its original artwork; the server log has no HTTP
+errors or exceptions. Peak anonymous/shared/kernel memory was **3.56
+GiB** (3,827,306,496 bytes), or **7.52 GiB** including file cache, from a
+4.18-GiB whole-environment baseline. No memory-limit/OOM events occurred.
+
+The pre-#93 suite ran **13:00:41–14:20:30 UTC**: all **67 tests** ran once,
+**66 passed and `lessons` failed**, in **79m 48.48s** including build,
+startup and cleanup. `team` passed in **42 seconds**. Construction,
+scripted-bosses, siege and walking all passed with #87's fixes; market,
+survival and tournaments passed too. All **188 screenshots** were
+reviewed. The server log has no HTTP errors or exception markers. All
+40 repaired cache files still have the verified public hashes, and no
+local `art/sheets/` exists.
+
+Peak anonymous/shared/kernel memory was **3.76 GiB** (4,039,917,568 bytes),
+or **7.75 GiB** including file cache (8,325,226,496 bytes), from a
+4.26-GiB whole-environment baseline. Memory was sampled every 0.5 seconds
+across the environment; this is not a per-browser RSS figure. All cgroup
+memory-event deltas were zero, including memory-limit, OOM and OOM-kill
+events. The 6.5-GiB anonymous/shared/kernel guard did not fire.
+
+Server checks passed **429 run: 420 passed, 9 existing skips**, 66.3
+seconds (67.8 with startup). Client types and **348 unit tests passed**,
+25.4 seconds together; the browser-runner build passed. The earlier
+results below retain their original commits; 61/65 is not relabelled as
+the final result, and this 66/67 run is not described as all green.
+
+### Separate tutorial observation on pre-#93 code
+
+`lessons` failed after 22 seconds at `e2e/tests/lessons.mjs:30`, called
+from line 49: **the arrow points somewhere (step 3)**. The test was at
+its Train-button call, while the game had already advanced to step 3.
+The failure screenshot shows the villager still training (three seconds
+remaining), with its artwork loaded. This is a different failure from
+the art-loading memory problem and from the four pre-#87 failures.
+The runtime and test match main `6c2fa146`; this repair changes only
+documentation. At **14:21:16–14:24:22 UTC**, the unchanged focused test
+**passed 1/1 in 179 seconds** (3m 6.45s including build/startup). None of
+its **104 art requests** used the nine repaired items. All three
+screenshots and the clean server log were inspected. Peak
+anonymous/shared/kernel memory was **1.00 GiB** (5.23 GiB with file
+cache, 4.54-GiB baseline), with no memory-limit/OOM events. The exact
+cause of the intermittent arrow/step mismatch was not established.
+No assertion, timeout or gameplay behavior was changed for this check.
+
+#93 merged as main `73998ffc` at 14:03:36 UTC, while the 67-test run was
+still using `6c2fa146`. It replaces the tutorial flow and its browser
+checks. The old arrow observation is historical evidence, not a claimed
+failure of #93. Its separate verification records 69/69 with refreshed
+ordinary art, followed by 4/4 checks for its final tutorial corrections.
+The final documentation merge preserves that work and checks its team,
+tutorial and tournament integration separately.
+
+## Final documentation integration with #93
+
+Latest main `73998ffc49900d99916eef5a4276058b1c12c045` was merged at
+`3bd0c7dfc9e3296612ea8d094a215aee475eea7d`. Only documentation differs
+from that main; the owner-authorized tutorial and classic-visibility
+changes are preserved in full. There is no art-repair code change.
+
+[#93's own verification](https://github.com/TamalAdebisi/socialemperors/pull/93)
+records **69/69 browser tests in 64m 32.58s** on game code `20a87d8d`,
+with the nine-item cache refreshed and ordinary public art. Its `team`
+test passed in 34 seconds and memory-limit/OOM counters did not increase.
+Its final recovery/review corrections at `6754695a` passed all four
+affected tutorial/tournament checks in 8m 15.30s. These are #93's results,
+not an additional full run performed by this art-repair checkout.
+
+That completed full-suite and affected-check evidence covers the newly
+merged tutorial. The team and affected checks were repeated locally
+after the documentation-only merge; the two full runs recorded here
+retain their original code versions and counts. At **14:27:51 UTC**, all 40
+files for the nine items were moved out of the active cache again, and
+there was still no `art/sheets/`.
+
+On this merged code, the cold-cache `team` run at **14:28:57–14:30:10
+UTC passed 1/1 in 66 seconds** (72.2 seconds with build/startup). All 40
+ordinary live files were fetched once and hash-verified. All three
+screenshots and the clean server log were reviewed. Peak
+anonymous/shared/kernel memory was **3.68 GiB** (3,950,903,296 bytes),
+or **7.99 GiB** including file cache, from a 4.55-GiB whole-environment
+baseline. All memory-event deltas were zero; the guard did not fire.
+The high total includes accumulated reclaimable file cache, not another
+oversized decoded bundle.
+
+Current unit verification passed: **435 server tests run, 426 passed,
+9 existing skips**, 33.6 seconds (34.6 with startup); client types and
+**350 unit tests passed**, 13.1 seconds together.
+
+The four affected browser checks then ran **14:30:36–14:41:05 UTC** and
+**passed 4/4 in 10m 28.77s** including build/startup: desktop tutorial
+190s, phone tutorial 239s, recovery 96s and tournaments 97s. All **20
+screenshots** and the clean server log were reviewed. Peak
+anonymous/shared/kernel memory was **1.30 GiB** (1,395,441,664 bytes),
+or **5.62 GiB** including file cache, from a 4.63-GiB baseline. All
+memory-event deltas were zero and the guard did not fire. All 40 repaired
+cache hashes still match; no local sheet override exists. Together with
+the cold `team` pass, this is **5/5 final focused checks** on current main.
+No further export, bucket write or purge was involved. The art follow-up
+is closed; no owner-operated step remains.
+
+## Browser verification with the fresh published files
+
+The isolated test cache's 146 old or locally substituted files for these
+nine items were moved aside before publication checks. There is no local
+`art/sheets/` override. After the CDN mismatch was found, the **40 verified
+published files** described above were placed in that cache; their image
+bodies came from the cache-busted public URLs, not from the local export.
+
+On the unchanged runtime at main `2918c71f`, `team` **passed 1/1 in 41
+seconds** (43.6 seconds including startup). Every repaired JSON and WebP
+was requested once, and all 40 cached file hashes match the verified
+downloads. The picker, selected-team and landed screenshots were inspected;
+the landed unit renders with its artwork. The server log contains no
+HTTP errors or exceptions. Peak anonymous/shared/kernel memory was
+**3.44 GiB**, or **4.84 GiB** including filesystem cache, from a 1.59-GiB
+whole-environment baseline. No memory-limit, OOM or OOM-kill events
+occurred, and the guard did not fire.
+
+That initial full run was stopped when the owner requested the explicit
+Origin check and the order **CDN audit → cache refresh → team → full
+suite**. It is a partial run, not a completed suite: 33 tests passed and
+`construction` failed its existing nine-second interaction deadline before
+the stop. The remaining reported failures were caused by stopping the
+browser. It took 36m 30s; peak anonymous/shared/kernel memory was 1.91 GiB
+(3.44 GiB including file cache), with no memory events. Its output and
+screenshots were preserved separately.
+
+### Ordinary-URL verification before #87 merged
+
+Tested commit: `efcb4d242760d273f20ab0c36d20052cbd17a7f1`, which merges
+main `36b2f277` (including #89's tournament slice). The runtime matches
+that main; this branch changes documentation only. Environment: 2 CPUs,
+8 GiB, Python 3.13.5, Node 24.19.0 and Playwright 1.56.1. An uncommitted
+proxy preload routes external asset GETs through this environment's
+required outbound proxy while keeping the local game server direct.
+It changes neither asset URLs nor test assertions.
+
+After the two-mode audit passed, at **11:25:07 UTC** all 40 active
+JSON/WebP cache files for the nine items were moved to an evidence backup.
+No matching files remained in `.tools/art-cache/art/`, and there was no
+`art/sheets/` override. The normal test helper then fetched all 40 files
+from ordinary live URLs, without manually populating the cache.
+
+`team` **passed 1/1 in 48 seconds**, or **53.7 seconds including build
+and startup**. Every repaired JSON/WebP was requested once and its
+cache SHA-256 matches the audited export. The picker, selected-team and
+landed screenshots show the original artwork; the local server log has
+no HTTP errors or exceptions. Peak anonymous/shared/kernel memory was
+**3.55 GiB**, or **5.75 GiB** including filesystem cache, from a 2.35-GiB
+whole-environment baseline. No memory-limit, OOM or OOM-kill events
+occurred, and the guard did not fire.
+
+The full suite ran afterwards from **11:26:30 to 12:44:15 UTC**, using
+those same ordinary-URL files. It finished **61/65 in 77m 45s**, including
+build/startup; `team` passed in **41 seconds**, `market` in 68 seconds,
+`survival` in 54 seconds and `tournaments` in 134 seconds. Peak
+anonymous/shared/kernel memory was **3.74 GiB** (4,019,245,056 bytes),
+or **7.35 GiB** including filesystem cache (7,894,482,944 bytes), from a
+2.43-GiB whole-environment baseline. No memory-limit, OOM or OOM-kill
+events occurred, and the guard did not fire. Whole-environment file
+cache includes earlier downloads, exports and checkout files; it is
+reclaimable and is reported separately from anonymous/shared/kernel use.
+
+All **176 screenshots** generated by that full run were inspected,
+including the picker, selected team and landed artwork. The local server
+log has no HTTP errors or exception/error markers. All 40 repaired cache
+files still match the audited hashes after the full run. One early
+`menus/shop.png` snapshot has blank shop thumbnails, as in the preserved
+previous run; the dedicated `shop` screenshots render those same images.
+Those separate `buildingthumbs` images are not the repaired sprite sheets.
+
+The four failures below were separate from the art repair and were later
+fixed by #87. They are historical failures of the pre-#87 runtime. #89 already recorded
+these four failing test names and reproduced them on unchanged main
+`2918c71f`; no game code, test assertion or time limit was changed here:
+
+| Test | Result in this full run | Relationship to the baseline |
+| --- | --- | --- |
+| `construction` | 33s; nine-second interaction deadline, line 46 | Same assertion as #89's baseline and this investigation's stopped run on `2918c71f`. |
+| `scripted-bosses` | 198s; 30-second fight-completion wait, line 120, called from line 65 | Same wait as #89's baseline, but at an earlier battle; independent baseline reproduction below confirms the later case too. |
+| `siege` | 36s; engines targeting a building, line 32 | Same assertion documented and reproduced by #89. |
+| `walk` | 42s; saved position at the second destination, line 33 | Same assertion documented and reproduced by #89. |
+
+An independent isolated `scripted-bosses` check on unchanged main
+`2918c71f` ran afterwards, **12:44–12:51 UTC**, in a separate checkout.
+It reproduced the same 30-second wait at line 120, called from line 88
+(the later portal case documented by #89). **0/1 passed**: 404 seconds in
+the test, **6m 56s including build/startup**. Peak anonymous/shared/kernel
+memory was **2.16 GiB** (6.05 GiB including file cache), with no memory
+limit/OOM events. All **706 art requests** excluded the nine repaired
+items. A scratch observer captured the original failure without changing
+its predicate or timeout: the fight remained active with all 30 enemy
+units marked dead. The captured failing page shows loaded artwork; the
+local server log has no HTTP errors or exceptions. This confirms a
+separate combat-completion failure; this art-only repair does not change
+that gameplay or relax the wait. The earlier-stage variation in the full
+run is retained in the table, not relabelled as an identical call site.
+
+On the integrated runtime, the server ran **428 tests in 62.5 seconds:
+419 passed, 9 existing skips**. Client type checking and **333 unit tests
+passed**; the browser runner's client build passed too.
+
 ## Findings
 
-An ordinary GET of
+At the initial investigation, an ordinary GET of
 `https://assets.socialemperors.me/art/2075_elemental_red_god.json` still
 returned the old export: 76 pages, `meta.scale: "1"`, no `meta.step`,
 1,340 distinct pictures and 55 animation sequences. Reading all 76 JSON
@@ -98,10 +393,13 @@ This can keep the known failure around after a successful owner export.
 The public manifest itself was still oversized, so the test cache was not
 the cause of the stale public art.
 
-## The owner-operated repair
+## The targeted repair
 
-AGENTS.md reserves the live workflow and bucket for the owner. No live
-workflow was started and no bucket file was changed during this work.
+AGENTS.md normally reserves the live workflow and bucket for the owner.
+The initial investigation and #90 made no live changes. The owner's
+subsequent request authorized Codex to run this targeted repair; it does
+not change the general rule for future exports. The dispatched inputs
+were:
 
 1. In GitHub Actions, open **Export art to R2** on **main**.
 2. Set **Make these again** to this space-separated list (all nine names):
@@ -137,7 +435,10 @@ other missing items; its input is a targeted redo, not an exclusive filter.
 2. Wait until the ordinary public URLs serve a consistent new bundle.
    The workflow sets `Cache-Control: public, max-age=86400`; browsers or
    intervening caches can retain old files for a day. A cache-busting URL
-   alone does not prove the URLs used by the game have refreshed.
+   alone does not prove the URLs used by the game have refreshed. Compare
+   ordinary/query hashes and actual dimensions both without Origin and
+   with `Origin: https://socialemperors.me`, recording cache headers as
+   in the audit above.
 3. In each test checkout, move only these items' old disk-cache files out
    of the active cache (keep them as evidence):
 
@@ -232,9 +533,8 @@ memory limit before the picker while loading the eight other old bundles;
 the guard stopped it with no OOM kill. No further identical failing runs
 were made. The test, assertions and game code were never edited.
 
-The previously recorded full-suite result remains **63/64**, with `team`
-failed. The runtime code at `002fcbeb` is unchanged from that #86 baseline;
-this documentation-only change does not repeat that known failing public
-art run. A full run on integrated main with the repaired **public** art
-is still required after the owner's workflow. The local replacement pass
-does not close that outstanding verification.
+The initial #90 investigation retained the earlier **63/64** result, with
+`team` failed. Its local replacement pass did not close the public-art
+follow-up. The subsequent authorized export, CDN findings and browser
+verification with the fresh published files are recorded above; the
+historical failed run is not relabelled as a pass.
