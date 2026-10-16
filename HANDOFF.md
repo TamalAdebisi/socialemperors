@@ -29,8 +29,9 @@ next agent knows where to start.
 
 
 - **The first tournament slice is complete in #89:** everyday, weekly
-  and friends' lists, help and the saved team box. Entry and later stages
-  keep classic links. Task 7 below records its checks and the next slice.
+  and friends' lists, help and the saved team box. The owner's later
+  playthrough request hides classic choices while later stages are built.
+  Task 7 below records its checks and the next slice.
 - **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
@@ -61,9 +62,9 @@ next agent knows where to start.
   the Flash client's 829 classes that hold the game's own behaviour, about
   47% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  12% not yet (mostly windows). 50 of the 227 goals still say they're
-  played in the classic game (CLIENT.md, "Missions and bonuses"); that
-  number falls as features land.
+  12% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  feature windows (CLIENT.md, "Missions and bonuses"); that number falls
+  as features land.
 
 ## How the work has been done
 
@@ -354,7 +355,8 @@ point, not before.
 
 **First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
 editor, with desktop/phone coverage (`CLIENT.md`, "Tournaments: list and
-team"). Entry and all later stages retain explicit classic links.
+team"). The owner's later playthrough request hides classic choices;
+unfinished stages say they are coming soon. Do not restore those links.
 `docs/original/rules/tournaments.md` records the local source reading,
 including the different complex-unit checks in editing and weekly entry.
 Next slice: the four-seat waiting room and countdown; only then connect
@@ -392,7 +394,8 @@ The last box in ROADMAP.md's switch list. The server side is done
 public rooms of four filled by bots after 30 minutes, the weekly
 tournament against three bots, friends' tournaments, prizes). The Battle
 window's Tournament row now opens the new list (`client/src/ui/world.ts`),
-with classic links for entry and the later stages. The Flash windows are listed in
+with unfinished entry and later stages marked as coming soon. The Flash
+windows are listed in
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
 classes). Suggested slices:
 
@@ -430,7 +433,7 @@ together:
       `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before
       showing these at all.
 
-As each lands, its goals stop saying "classic game": update the count in
+As each lands, its goals stop saying "Coming soon": update the count in
 CLIENT.md.
 
 ### 9. Beta 2's leftovers (S to M each) - [ ]
@@ -448,9 +451,10 @@ CLIENT.md.
 
 ### 10. The switch itself (*owner*) - [ ]
 
-The new client becomes the default, with the Flash game one tap away for
-a while. When is the owner's call: ask once Betas 1 and 2 are played and
-tournaments are in.
+The owner's playthrough follow-up makes Play open the new client and hides
+classic choices now. This is a temporary interface change: keep the classic
+routes and shared saves. Full retirement of that client remains a later
+owner decision once the outstanding feature work is complete.
 
 ### Later, not now
 
@@ -470,7 +474,8 @@ allows pictures when there's a decision), and carry on with something else
 meanwhile.
 
 - Offer packs and mystery boxes: in or out (task 8).
-- When the new client becomes the default (task 10).
+- Full retirement of the classic client (task 10); hiding its choices is
+  already authorized.
 - AI-upscaled art: still open.
 
 Already decided, don't reopen: the menus as a rail and dock (CLIENT.md);

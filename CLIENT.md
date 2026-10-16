@@ -958,8 +958,9 @@ doesn't take what just grew); catching in `TownEditor.caught`. Tests: `e2e/tests
   two units on one tile. Terrain (paths) takes no tile, as when placing.
 - A town with no villager on the map or at work in a farm, mill or mine
   (one sheltering in a refuge doesn't count) gets one, a man or a woman by
-  chance, on a free tile near the middle (54, 54), bought for nothing. Not before Arthur's lessons are taken or skipped, as the Flash
-  client doesn't during its tutorial. Test: `e2e/tests/tidy.mjs`.
+  chance, on a free tile near the middle (54, 54), bought for nothing. Not
+  before Arthur's mandatory lessons are finished; the Flash client likewise
+  waits during its tutorial. Test: `e2e/tests/tidy.mjs`.
 - The browser tests give each new town enough trees, rocks and animals
   first, in the wild corners at the top, so none grow on the land a test
   uses, and a villager far off (`e2e/lib.mjs`, `FULL_WILD`).
@@ -1077,7 +1078,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they're played in the classic game for now (50 of the 227); the server
+  their windows are coming soon (50 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
