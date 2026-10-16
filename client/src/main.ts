@@ -645,8 +645,16 @@ async function start(): Promise<void> {
             town, items, editor, view, commands,
             line: (id) => lines.get(id) ?? "",
             screenOf: (point) => mapLayer.toGlobal(point),
-            lookAt: (point) => camera.panTo(point, { x: innerWidth * (innerWidth < 720 ? 0.5 : 0.38), y: innerHeight * 0.53 },
-              matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700),
+            lookAt: (point) => {
+              const phone = matchMedia("(max-width: 720px), (orientation: portrait) and (max-width: 1000px)").matches;
+              const card = document.querySelector<HTMLElement>(".actions:not([hidden])")?.getBoundingClientRect();
+              const guide = document.querySelector<HTMLElement>(".lesson:not([hidden])")?.getBoundingClientRect();
+              let y = innerHeight * 0.53;
+              if (phone && card) y = Math.min(y, card.top - 50);
+              if (phone && guide) y = Math.max(y, guide.bottom + 35);
+              camera.panTo(point, { x: innerWidth * (phone ? 0.5 : 0.38), y },
+                matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700);
+            },
             clock, panning: () => camera.panning, fighting: () => fighting(),
             rewardSaved: async () => Number((await server.playerInfo()).playerInfo.completed_tutorial) === 33,
             thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,

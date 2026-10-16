@@ -62,6 +62,7 @@ export class Lessons {
   private transitioning = false;
   private rewardQueued = false;
   private guidance = "";
+  private foundTarget: PlacedItem | null = null;
   /** Where a unit half hidden behind something can still be tapped, found again twice a second (`tappable`). */
   private spotted: { unit: PlacedItem; at: Point; until: number } | null = null;
   /** Where the arrow points now (the browser tests tap there, as a player would). */
@@ -110,6 +111,7 @@ export class Lessons {
     this.pointing = null;
     this.spot = undefined;
     this.guidance = "";
+    this.foundTarget = null;
     this.view.helpLabel();
     this.checkpoint();
     if (step === REWARD_STEP) {
@@ -201,10 +203,19 @@ export class Lessons {
       const map = this.mapPoint(target);
       if (map) this.parts.lookAt(map);
     }
+    const placed = this.thing(target);
+    if (placed && placed !== this.foundTarget) {
+      // Training finishes after this step starts. Pan when its unit appears.
+      this.foundTarget = placed;
+      this.parts.lookAt(this.middle(placed));
+    }
     const at = this.screenPoint(target);
+    const mapTarget = this.mapPoint(target);
+    const blocked = at && mapTarget && (at.x < 20 || at.x > innerWidth - 20 || at.y < 20 || at.y > innerHeight - 20
+      || !document.elementFromPoint(at.x, at.y)?.closest("canvas"));
     // A thing that has walked (or come out) under Arthur: the camera goes to it, once a second at most.
     const now = performance.now();
-    if (at && !this.parts.panning() && this.view.covers(at) && now - this.uncovered > 1500) {
+    if (at && !this.parts.panning() && (this.view.covers(at) || blocked) && now - this.uncovered > 1500) {
       const map = this.mapPoint(target);
       if (map) {
         this.parts.lookAt(map);
@@ -303,7 +314,7 @@ export class Lessons {
       return body;
     }
     const now = performance.now();
-    if (this.spotted?.unit === unit && now < this.spotted.until) {
+    if (this.spotted?.unit === unit && now < this.spotted.until && !this.parts.panning()) {
       return this.spotted.at;
     }
     const box = view.screenBox(unit);

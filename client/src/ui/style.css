@@ -4897,7 +4897,7 @@ button.world-piece:hover img {
 .lesson-target::before { left: 31px; }
 .tutorial-active .menus button:not([aria-label="Build"]) { opacity: .5; }
 @media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
-  .lesson { top: 94px; right: 8px; left: 8px; justify-content: flex-end; }
+  .lesson { top: var(--lesson-top, 112px); right: 8px; left: 8px; justify-content: flex-end; }
   .lesson-bubble { width: min(330px, calc(100vw - 76px)); padding: 12px 18px 52px; }
   .lesson-arthur { width: 64px; margin-left: -10px; }
   .lesson-title { font-size: 17px; }

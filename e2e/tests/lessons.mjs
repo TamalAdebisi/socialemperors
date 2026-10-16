@@ -42,6 +42,12 @@ export default async function lessons({ newPlayer, phone = false }) {
   assert.equal(await page.getByRole("button", { name: "Skip them" }).count(), 0);
   assert.equal(await page.getByRole("link", { name: "Classic game" }).count(), 0);
   await reach(0);
+  if (phone) {
+    await page.waitForFunction(() => document.querySelector(".lesson").getBoundingClientRect().top >= document.querySelector(".hud").getBoundingClientRect().bottom);
+    await page.getByRole("button", { name: /^Menu/ }).click();
+    assert.ok(await page.locator(".site-menu").isVisible(), "Menu remains reachable during the mandatory tutorial");
+    await page.getByRole("button", { name: /^Menu/ }).click();
+  }
   assert.match(await page.locator(".lesson-title").textContent(), /Welcome to your empire/);
   await player.shot("welcome");
   await player.press("Next");

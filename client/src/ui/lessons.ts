@@ -19,6 +19,7 @@ export class LessonsView {
   private readonly help = document.createElement("button");
   private readonly target = document.createElement("div");
   private readonly markers: HTMLImageElement[] = [];
+  private readonly hudSize: ResizeObserver;
 
   constructor(onNext: () => void, onHelp: () => void = () => {}) {
     this.box.className = "lesson";
@@ -57,6 +58,11 @@ export class LessonsView {
     this.target.className = "lesson-target";
     this.target.hidden = true;
     document.body.append(this.hole, this.box, this.arrow, this.target);
+    const hud = document.querySelector<HTMLElement>(".hud");
+    const belowHud = () => this.box.style.setProperty("--lesson-top", `${(hud?.getBoundingClientRect().bottom ?? 104) + 8}px`);
+    this.hudSize = new ResizeObserver(belowHud);
+    if (hud) this.hudSize.observe(hud);
+    belowHud();
   }
 
   /** A step's words (none: the bubble goes) and whether it has a Next. */
@@ -134,6 +140,7 @@ export class LessonsView {
   }
 
   remove(): void {
+    this.hudSize.disconnect();
     for (const element of [this.box, this.arrow, this.hole, this.count, this.target, ...this.markers]) {
       element.remove();
     }

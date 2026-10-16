@@ -10,6 +10,8 @@ them can be found and reversed. The big, agreed decisions are in
   Keep Arthur, the game's pictures, the town actions and original reward.
   Rewrite instructions around one action at a time, remove repeated goal
   windows, pan smoothly, mark destinations and honour reduced motion.
+  Leave room for the new building card and the site Menu on phones; pan
+  when a trained unit appears, not just when its lesson starts.
   The tutorial is mandatory in the home town; there is no Skip choice.
   Other feature menus wait until the dragon is saved.
 - **Save objectives on the server, including the final tree count.** A
