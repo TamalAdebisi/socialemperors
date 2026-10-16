@@ -10,14 +10,18 @@
 import assert from "node:assert/strict";
 
 const KNIGHT = 514, TOWN_HALL = 135;
+// Rivals are picked nearest the town's level: both at one no other test uses, so the
+// rival is always on the map however many test players the server has.
+const LEVEL = 17;
 
 export default async function world({ newPlayer }) {
   const rival = await newPlayer();
+  await rival.send([{ cmd: "rt_level_up", args: [LEVEL] }]);
   const player = await newPlayer();
   const { page } = player;
   const army = [];
   for (let i = 0; i < 20; i++) army.push({ cmd: "buy", args: [KNIGHT, 44 + (i % 10), 44 + Math.floor(i / 10), 0, 0, 0, 1] });
-  await player.send([{ cmd: "rt_level_up", args: [10] }, ...army]);
+  await player.send([{ cmd: "rt_level_up", args: [LEVEL] }, ...army]);
   await player.reload();
 
   // Battle, Attack a player: the map of the town's continent.
