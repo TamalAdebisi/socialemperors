@@ -101,13 +101,14 @@ async function mapPoint(page, except = null) {
   await page.waitForFunction((except) => {
     const { fighting: fight } = window.seHome;
     const unit = fight.battle.fighters.find((u) => u.item.id === 514 && u.key !== except);
-    const p = fight.view.root.toGlobal(unit.at);
-    for (let dy = -70; dy <= 5; dy += 5) {
-      const at = { x: p.x, y: p.y + dy };
-      if (fight.view.fighterAt(at) === unit && at.y > 170 && at.y < innerHeight - 230) {
-        window.selectionPoint = { ...at, key: unit.key };
-        return true;
-      }
+    // Aim at the visible body, not the first hit at an animated edge.
+    const box = fight.view.drawn.get(unit)?.slot.children[0]?.getBounds();
+    if (!box || box.width <= 0 || box.height <= 0) return false;
+    const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    if (fight.view.fighterAt(at) === unit && at.y > 170 && at.y < innerHeight - 230
+        && document.elementFromPoint(at.x, at.y)?.tagName === "CANVAS") {
+      window.selectionPoint = { ...at, key: unit.key };
+      return true;
     }
     return false;
   }, except, { timeout: 30000 });
