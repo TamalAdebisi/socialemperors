@@ -10,25 +10,22 @@ art and music still belong to their owners ([Copyright](ROADMAP.md#copyright)).
 
 ## Play
 
-Make an account at [socialemperors.me](https://socialemperors.me), then
-choose how to play. All three play the same empire, so you can switch at any
-time.
+Make an account at [socialemperors.me](https://socialemperors.me), choose
+an empire and press **Play**. The new client runs on phones and computers.
+Arthur's tutorial starts automatically, saves your progress and ends with
+your first draggy. **Menu** opens Friends, Empires and Log out.
 
-- **Any modern browser:** the original game in [Ruffle](https://ruffle.rs),
-  a Flash emulator. Nothing to install; a few things don't work in it yet.
-- **A Flash browser:** the original game in Adobe's own Flash Player, the
-  most faithful way to play. How to get one: [FLASH.md](FLASH.md).
-- **The new game (preview):** our own game client, sharp and full screen on
-  phones and computers, being built to replace Flash
-  ([CLIENT.md](CLIENT.md)). For now you can build and run your town in it;
-  battles and quests come next.
+Town building, battles and quests are playable; development continues on
+the remaining features. [CLIENT.md](CLIENT.md) describes what is built,
+and [ROADMAP.md](ROADMAP.md) tracks what remains. The classic clients'
+launch choices are hidden; their routes and shared saves are retained.
 
 ## What's in here
 
 | Folder | What |
 | --- | --- |
 | *(the top folder)* | The game server, in Python with Flask: `server.py`, and a module for each part of the game (`shop.py`, `quests.py`, `pvp.py`, ...). Accounts and empires in SQLite, or Postgres on Supabase |
-| `templates/` | The website: signing in, choosing how to play, settings, the game pages |
+| `templates/` | The website: signing in, choosing an empire, settings, the game pages |
 | `client/` | The new game client, in TypeScript with PixiJS, built with Vite |
 | `config/` | The game's own settings (every unit, building and level), and our fixes to them in `config/patch/` |
 | `villages/` | The starting town, the built-in neighbours, and the quest maps |

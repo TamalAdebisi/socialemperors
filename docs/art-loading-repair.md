@@ -27,7 +27,7 @@ its `?repair=38885093455` version, first without Origin and then with
 passed**: SHA-256 bytes and actual WebP dimensions agree, dimensions match
 the freshly fetched JSON, and all files match the verified published
 export. After merging #87, the cache was refreshed again: `team` passed
-alone in **52 seconds** and in the full suite in **42 seconds**. The final
+alone in **52 seconds** and in the full suite in **42 seconds**. The pre-#93
 suite finished **66/67 in 79m 48.48s**, with a separate tutorial-arrow
 failure described below. No memory-limit or OOM event occurred. No
 additional export, bucket change or purge was made after the owner's
@@ -121,7 +121,7 @@ errors or exceptions. Peak anonymous/shared/kernel memory was **3.56
 GiB** (3,827,306,496 bytes), or **7.52 GiB** including file cache, from a
 4.18-GiB whole-environment baseline. No memory-limit/OOM events occurred.
 
-The final suite ran **13:00:41–14:20:30 UTC**: all **67 tests** ran once,
+The pre-#93 suite ran **13:00:41–14:20:30 UTC**: all **67 tests** ran once,
 **66 passed and `lessons` failed**, in **79m 48.48s** including build,
 startup and cleanup. `team` passed in **42 seconds**. Construction,
 scripted-bosses, siege and walking all passed with #87's fixes; market,

@@ -1,5 +1,11 @@
 # Roadmap
 
+Tutorial repair in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93): mandatory home-town lessons, clearer guidance,
+smooth camera movement, recoverable progress and a confirmed first-dragon
+reward. Classic-client choices are hidden at the owner's request; its
+routes remain available. See CLIENT.md and DECISIONS.md.
+
+
 **Goal:** make Social Empires a complete, playable, free online game at
 [socialemperors.me](https://socialemperors.me). We keep all the original art,
 music and content, finish the features that never got a server, and over time
@@ -395,9 +401,11 @@ merging the two wait fixes with that separate failure documented.
   - [ ] Tournaments in the new client: list, first-time help and team
         selection built ([CLIENT.md](CLIENT.md#tournaments-list-and-team));
         waiting rooms, matches, results/prizes and friends' creation later.
-        Those stages remain available through classic links.
-  - [x] Arthur's lessons in the new client, all 32 steps, ending with the
-        dragon nest and the choice of a draggy
+        Classic choices are hidden at the owner's request; unfinished stages
+        say they are coming soon.
+  - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
+        smooth guidance, saved progress and recovery, ending with the
+        saved dragon nest and chosen draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))
   - [x] The dragon and monster nests' window: raising them step by step,
         speeding up, friends' help, opening a closed nest again

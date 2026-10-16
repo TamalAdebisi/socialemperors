@@ -431,7 +431,7 @@ class Fight {
   private died(fighter: Fighter): void {
     const { town, commands, items } = this.parts;
     if (fighter.isUnit && fighter.attack > 0) {
-      this.parts.editor.emit({ kind: "death" });  // Arthur's first fight ends on the first one to fall
+      this.parts.editor.emit({ kind: "death", enemy: fighter.side === ENEMY });
     }
     for (const raid of this.raids) {
       raid.fell(fighter);

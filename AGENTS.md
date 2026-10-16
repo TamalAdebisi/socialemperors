@@ -78,9 +78,9 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 429 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 348 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 67 tests
+.venv/bin/python -m unittest discover tests          # the server: 435 tests, about a minute
+(cd client && npm run check && npm test)             # the client's types and rules: 350 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 69 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
@@ -92,6 +92,14 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   Peak anonymous/shared/kernel memory was 3.76 GiB, with no memory-limit
   or OOM events. The art follow-up is closed. Server: 429 run (420 passed,
   9 existing skips); client types and all 348 passed.
+- Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
+  **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
+  Later tutorial recovery/review corrections passed all three tutorial
+  checks and tournaments **4/4 in 8m 15.30s** on game code `6754695a`,
+  plus types and all 350 client tests. Server: 435 run, 426 passed,
+  9 existing skips; a later test-only assertion tightening passed all
+  14 tutorial server tests again. The full browser run used the repaired
+  ordinary public art with the old nine-item cache refreshed.
 - **Previous full verification (#87):** all 67 browser tests passed in
   **80m 30.65s**, including the build, on the machine below. Server:
   429 run (420 passed, 9 existing skips); client types and all 348 passed.

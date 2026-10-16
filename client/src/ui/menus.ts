@@ -49,7 +49,7 @@ export class Menus {
         return;
       }
       const spec = buttons.find((b) => b.shortcut === e.key.toLowerCase());
-      if (spec && this.buttons.get(spec.key)!.getClientRects().length > 0) {
+      if (spec && !this.buttons.get(spec.key)!.disabled && this.buttons.get(spec.key)!.getClientRects().length > 0) {
         spec.run();
       }
     });

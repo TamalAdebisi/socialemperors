@@ -1,7 +1,7 @@
 // What's always on screen, in HTML over the map (CLIENT.md, "The menus:
 // rail and dock"): the level with a bar to the next, and the resources as
 // dark pills with the game's own icons (short numbers on a phone: 12.4k);
-// the way back to the classic game and full screen; and in the bottom
+// full screen; and in the bottom
 // right corner, as on the Flash client's bar, the pointer with its tools
 // (the bulldozer and the fast-collect glove), the square tool (selecting
 // units with a box), and Collect all, which collects every ready building
@@ -100,7 +100,6 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <a class="button tiny gold" data-home href="/client.html" hidden>Back home</a>
       <button class="hud-sound" type="button" data-music hidden></button>
       <button class="hud-sound" type="button" data-effects hidden></button>
-      <a class="button tiny gold" data-classic href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
       <span class="site" hidden>
         <button class="button tiny gold site-button" type="button" aria-haspopup="menu" aria-expanded="false">Menu<span class="menu-count" data-site-news hidden></span></button>
@@ -147,7 +146,6 @@ export function showHud(town: Town, actions: HudActions): Hud {
     }
   };
   update(town);
-  bar.querySelector<HTMLAnchorElement>("[data-classic]")!.href = actions.classicUrl;
 
   // Music and sound: the Flash client's own buttons, a note and a speaker, crossed out when off.
   const sound = actions.sound;

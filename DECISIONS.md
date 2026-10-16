@@ -29,6 +29,51 @@ them can be found and reversed. The big, agreed decisions are in
   old failure as a #93 regression. Closing this art repair adds no
   gameplay, source-art or test-assertion changes.
 
+## 16 October 2026: mandatory tutorial and hiding the classic choices
+
+- **The owner explicitly asked for a clearer tutorial over exact fidelity.**
+  Keep Arthur, the game's pictures, the town actions and original reward.
+  Rewrite instructions around one action at a time, remove repeated goal
+  windows, pan smoothly, mark destinations and honour reduced motion.
+  Leave room for the new building card and the site Menu on phones; pan
+  when a trained unit appears, not just when its lesson starts.
+  The tutorial is mandatory in the home town; there is no Skip choice.
+  Other feature menus wait until the dragon is saved.
+- **Save objectives on the server, including the final tree count.** A
+  browser-local flag cannot complete an unsaved task. Step 32 is a pending
+  dragon choice; step 33 means its whole gift was saved. Claim the nest and
+  chosen dragon once in one server command, so a lost answer and retry do
+  not duplicate either. Put gifts in storage if the map has no room.
+  Preserve legacy reports and already completed old saves; old skipped or
+  interrupted tutorials resume. New-client checkpoints are not inherited by
+  another empire; legacy carry-over reports remain readable and resume in
+  the new client so that empire can still receive its gift.
+- **Recovery should not require starting over.** Restore selections and
+  placement after reload, provide Show me, wait for construction, and
+  advance the farming lesson only after its worker actually enters.
+  Lost villagers can be trained again without repeating completed lessons
+  or losing the current chapter and tree count.
+  Only an enemy defeat advances combat. If the player has no soldier left
+  during that lesson, offer one free training knight; villagers never
+  qualify, existing soldiers prevent another, and later steps cannot claim
+  it. Recovering an active fight reloads the saved town so the replacement
+  joins normally; recorded losses remain. This small rule change prevents
+  an impossible mandatory lesson.
+- **Hide the classic choices, without removing its routes or save support.**
+  Play on the empire page opens the new client. Remove classic links from
+  its HUD and unfinished feature windows. Features still being built say
+  so. Keep concurrent tournament and Menu work when integrating main.
+- **Keep the existing trusted-client command contract.** Mandatory means the
+  normal game flow cannot skip the lessons. Original Flash commands still
+  accept client-reported progress and placement; comprehensive server-side
+  action/footprint validation remains the existing later security work.
+  This slice checks reward choices and bounds, uses the client's normal
+  free-space/land rules, and prevents duplicate claims (including a nest
+  already held in Gifts). It does not claim to prevent forged commands.
+- **Fresh tutorial browser tests use real fresh towns.** Other feature
+  tests explicitly start with a completed tutorial fixture, rather than
+  relying on a Skip button that players no longer have.
+
 ## 16 October 2026: verifying the building card and Menu
 
 - **The phone card leaves a row for the pointer tools below it.** The
