@@ -38,7 +38,16 @@ export default async function recurringRaids({ newPlayer }) {
       });
       throw new Error(`${error.message}: ${JSON.stringify(state)}`);
     });
-    if (wave === 0) await player.shot("incoming");
+    if (wave === 0) {
+      await page.locator(".home-threats").click();
+      await page.waitForFunction(() => {
+        const home = window.seHome;
+        const attacker = home.fighting.raids[0].alive[0];
+        const centre = home.parts.camera.centre;
+        return Math.hypot(centre.x - attacker.at.x, centre.y - attacker.at.y) < 80;
+      });
+      await player.shot("incoming");
+    }
     killed += size;
     await page.evaluate(() => {
       const fight = window.seHome.fighting;

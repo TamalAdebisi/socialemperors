@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Battle, ENEMY, SELF, seededRandom } from "./battle.ts";
+import { Battle, ENEMY, NEUTRAL, SELF, seededRandom } from "./battle.ts";
 import type { ItemInfo } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
 import { FIRST_RAID, Raid, enemyIds, planBand, planRaids, raidRecovery } from "./raids.ts";
@@ -77,6 +77,10 @@ test("a band blocked from its chosen unit attacks a reachable wall", () => {
 });
 
 test("a siege 1 visit in 10, of the level's kind only", () => {
+  for (const level of [27, 32, 40]) {
+    assert.ok(planRaids(level, "h", () => 0.05).every((plan) => plan.startsAt === FIRST_RAID),
+      "every automatically rolled first raid allows preparation");
+  }
   const kinds = (level: number) => {
     const seen = new Set<string>();
     for (let seed = 0; seed < 300; seed++) {
@@ -96,6 +100,27 @@ test("a siege 1 visit in 10, of the level's kind only", () => {
   assert.ok(sieges > 140 && sieges < 260, `about 1 in 10 (${sieges} of 2000)`);
   const siege = planRaids(27, "h", () => 0.05).find((p) => p.kind === "siege")!;
   assert.equal(siege.units.length, 26, "20 soldiers, 5 engines, a captain");
+});
+
+test("a blocked band continues beyond twenty unreachable buildings", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: () => 0.99, home: true });
+  const wall = item({ ...HOUSE, id: 100, subcategory: 221, width: 1, height: 1, life: 10000 });
+  for (let x = 19; x <= 26; x++) {
+    for (let y = 19; y <= 26; y++) {
+      if ([19, 26].includes(x) || [19, 26].includes(y)) b.add(wall, x, y, NEUTRAL);
+    }
+  }
+  const house = item({ ...HOUSE, width: 1, height: 1, life: 10000 });
+  for (let x = 20; x <= 24; x++) {
+    for (let y = 20; y <= 24; y++) b.add(house, x, y, SELF);
+  }
+  b.add(VILLAGER, 25, 22, SELF).condition = "passive";
+  const reachable = b.add(house, 5, 22, SELF);
+  const plan = planBand(1, "h", seededRandom(1), 0);
+  plan.units = [{ id: 525, x: 17, y: 22, squad: "band" }];
+  const raid = new Raid(b, plan, ITEMS, 1, "h", quiet);
+  for (let i = 0; i < 120; i++) { b.step(); raid.step(); }
+  assert.equal(raid.alive[0].target?.key, reachable.key, "the reachable building outside the first twenty is found");
 });
 
 test("a band attacks the player's buildings and units, and leaves at its spawn once both quotas are met", () => {

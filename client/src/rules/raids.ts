@@ -2,7 +2,7 @@
 // recurring schedule: five minutes to prepare, then recovery between waves.
 // Camps keep their guards; these bands actively march into the town.
 
-import { ENEMY, SELF, type Battle, type Fighter } from "./battle.ts";
+import { ENEMY, SELF, distance, type Battle, type Fighter } from "./battle.ts";
 import type { ItemInfo } from "./config.ts";
 import type { Point } from "./geometry.ts";
 
@@ -86,6 +86,7 @@ export function planRaids(level: number, race: string, random: () => number): Ra
     }
   }
   plans.push(planBand(level, race, random, FIRST_RAID));
+  for (const plan of plans) plan.startsAt = Math.max(plan.startsAt, FIRST_RAID);
   return plans;
 }
 
@@ -181,6 +182,8 @@ export class Raid {
   private cried = 0;
   /** Stampede: re-sending the mounts at the town's units each time one of their targets falls. */
   private breaking = false;
+  /** Continue a blocked band's search on the next second, without freezing a large town. */
+  private readonly breachCursor = new Map<Fighter, number>();
 
   /**
    * `owns`: whether the player has opened a block of land (numbered as the
@@ -281,12 +284,14 @@ export class Raid {
       return;
     }
     for (const bandit of this.alive) {
-      if (bandit.target && !bandit.target.dead) {
+      if (bandit.target && !bandit.target.dead && (this.battle.isMoving(bandit) || distance(bandit, bandit.target) <= bandit.range)) {
         continue;
       }
       // Route searches can cross the whole map; retry once a second when
       // defenses block the way, rather than doing that work every frame.
       if (this.battle.frame % 30 !== bandit.offset % 30) continue;
+      bandit.target = null;
+      bandit.attacking = false;
       const needBuildings = this.burnt < this.quota;
       const needUnits = this.killed < this.quota;
       const building = needBuildings && (!needUnits || this.battle.random() < 0.5);
@@ -294,20 +299,35 @@ export class Raid {
       const target = this.nearestOfPlayer(bandit, building ? "building" : "unit")
         ?? this.nearestOfPlayer(bandit, building ? "unit" : "building");
       if (target) {
-        this.battle.attackWith([bandit], target);
-        if (!bandit.target) {
+        if (!this.attackBandTarget(bandit, target)) {
           // An enclosed town: break a reachable wall instead of repeatedly
           // ordering an impossible walk to the same protected unit.
-          const walls = this.battle.within({ x: bandit.tx, y: bandit.ty }, MAP * 2, 20,
+          const walls = this.battle.within({ x: bandit.tx, y: bandit.ty }, MAP * 2, this.battle.fighters.length,
             (f) => f.side === SELF && !f.dead && !f.isUnit);
-          for (const wall of walls) {
-            this.battle.attackWith([bandit], wall);
-            if (bandit.target) break;
+          const from = this.breachCursor.get(bandit) ?? 0;
+          for (let i = 0; i < Math.min(20, walls.length); i++) {
+            const index = (from + i) % walls.length;
+            this.breachCursor.set(bandit, (index + 1) % walls.length);
+            if (this.attackBandTarget(bandit, walls[index])) {
+              this.breachCursor.delete(bandit);
+              break;
+            }
           }
         }
         bandit.forced = false;
       }
     }
+  }
+
+  private attackBandTarget(bandit: Fighter, target: Fighter): boolean {
+    if (distance(bandit, target) > bandit.range) {
+      const spot = this.battle.attackSpot(bandit, target, new Set());
+      // The shared battle rule may offer a waiting spot outside weapon
+      // range when every adjacent tile is occupied. Keep searching instead.
+      if (!spot || distance({ ...bandit, tx: spot.x, ty: spot.y }, target) > bandit.range) return false;
+    }
+    this.battle.attackWith([bandit], target);
+    return bandit.target !== null;
   }
 
   /** The siege: wait a minute (the captain pacing), then the engines, the first squad, the second with the captain, and away. */

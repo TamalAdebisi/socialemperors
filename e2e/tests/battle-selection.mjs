@@ -82,6 +82,36 @@ async function check(player, touch) {
   assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 1);
   await page.keyboard.press("Escape");
   assert.ok(await page.locator(".battle-selection").isHidden());
+  assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 0);
+  if (!touch) {
+    await page.evaluate(() => {
+      const fight = window.seHome.fighting;
+      fight.controls.select([fight.battle.fighters.find((f) => f.side === 1 && !f.isUnit)]);
+    });
+    const own = await mapPoint(page);
+    await page.keyboard.down("Shift");
+    await clickUnit(page, own);
+    await page.keyboard.up("Shift");
+    assert.deepEqual(await page.evaluate(() => [...window.seHome.fighting.view.selected].map((f) => f.key)), [own.key],
+      "Shift starts a unit group without retaining the inspected building");
+    // A form change must update the selected group's portraits as well as its statistics.
+    const changed = await page.evaluate(() => {
+      const { fighting: fight, parts } = window.seHome;
+      const units = fight.battle.fighters.filter((f) => f.item.id === 514).slice(0, 2);
+      fight.controls.select(units);
+      const old = units[0].item;
+      const next = parts.items.get(510);
+      fight.specials.become(units[0], next, true);
+      window.selectionOriginalForm = { unit: units[0], old };
+      return next.name;
+    });
+    await page.getByRole("button", { name: `Inspect ${changed}`, exact: true }).waitFor();
+    await page.evaluate(() => {
+      const { unit, old } = window.selectionOriginalForm;
+      window.seHome.fighting.specials.become(unit, old, true);
+      window.seHome.fighting.controls.select([]);
+    });
+  }
 }
 
 async function clickUnit(page, point) {

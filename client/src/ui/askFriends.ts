@@ -74,7 +74,7 @@ export class AskFriends {
       const friends = reply.friends ?? [];
       status.textContent = said || problem || (friends.length ? `Each friend who answers gives you ${reply.what}.` : "");
       list.replaceChildren();
-      if (!problem && friends.length === 0) {
+      if (!problem && !reply.error && friends.length === 0) {
         const none = document.createElement("li");
         none.textContent = "No other accounts yet. New players will appear here automatically.";
         list.append(none);

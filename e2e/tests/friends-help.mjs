@@ -70,4 +70,13 @@ export default async function friendsHelp({ newPlayer }) {
   const after = await savedMill();
   assert.ok(!after[7]?.hc, "the server used it too");
   assert.equal(after[4], before[4] - HOUR, "the server's clock for the mill an hour back");
+  // A failed directory read is an error, not an empty community.
+  await page.route("**/help/game?**", (route) => route.fulfill({
+    contentType: "application/json", body: JSON.stringify({ error: "Help is temporarily unavailable." }),
+  }), { times: 1 });
+  await asker.select(MILL_AT, "Mill I");
+  await asker.press("Hurry up");
+  await asker.press("Ask for help");
+  await page.locator(".ask-status", { hasText: "Help is temporarily unavailable." }).waitFor();
+  assert.equal(await page.getByText("No other accounts yet. New players will appear here automatically.").count(), 0);
 }

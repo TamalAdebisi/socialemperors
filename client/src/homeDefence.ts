@@ -114,6 +114,12 @@ export class HomeDefence {
     this.status.type = "button";
     this.status.className = "home-threats button small plain";
     this.status.addEventListener("click", () => {
+      const attacker = this.fight?.raids.flatMap((raid) => raid.alive)[0]
+        ?? this.fight?.battle.fighters.find((f) => f.side === ENEMY && !f.dead && f.isUnit);
+      if (attacker) {
+        parts.camera.lookAt(attacker.at);
+        return;
+      }
       const target = parts.town.items.find((p) => p.item.subcategory === 811)
         ?? parts.town.items.find((p) => this.camps.sideOf(p) === "enemy" && p.item.isUnit);
       if (target) parts.camera.lookAt(unitPoint(target.tx, target.ty));

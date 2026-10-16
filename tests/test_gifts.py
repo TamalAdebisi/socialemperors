@@ -101,6 +101,9 @@ class GiftsTest(unittest.TestCase):
         reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=HOUSE)  # not a friend
         self.assertEqual(reply.status_code, 200)
         self.assertIn(f"House I is on its way to {carol[1]}", text(reply))
+        reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=TREE)
+        self.assertEqual(reply.status_code, 400)
+        self.assertIn("today's free gift already", text(reply))
         self.friends(alice, carol)
         reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=SCORPION)  # level 30
         self.assertIn("isn't open to you yet", text(reply))

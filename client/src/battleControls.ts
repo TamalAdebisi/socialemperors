@@ -146,7 +146,7 @@ export class BattleControls {
     if (!tapped) view.groundClick(camera.toMap(at));
     if (tapped && tapped.side === SELF && tapped.isUnit) {
       // A unit of the player's: it alone, or added to (or taken from) the others with Shift.
-      const now = new Set(shift ? view.selected : []);
+      const now = new Set(shift ? this.selected : []);
       if (shift && now.has(tapped)) {
         now.delete(tapped);
       } else {

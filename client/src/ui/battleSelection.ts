@@ -32,7 +32,7 @@ export class BattleSelection {
     this.summary.textContent = unit
       ? `${unit.item.name} · ${Math.ceil(unit.life)}/${unit.maxLife} health · ${unit.attack} attack`
       : `${units.length} units selected`;
-    const key = units.map((u) => u.key).join(",");
+    const key = units.map((u) => `${u.key}:${u.item.id}`).join(",");
     if (key === this.drawn) return;
     this.drawn = key;
     this.roster.replaceChildren();
