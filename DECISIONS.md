@@ -15,6 +15,11 @@ them can be found and reversed. The big, agreed decisions are in
   assertion and both saved building-rotation assertions remain. Extra
   assertions check that Right neither zooms nor moves vertically. No
   gameplay timing or keyboard behavior changes.
+- **Keep the tutorial return path consistent with #93.** A saved
+  tournament return URL waits for resumed mandatory lessons and their
+  welcome dialogs to finish. It then opens the tournament once, keeping
+  the saved team. This prevents a tournament panel from opening over
+  Arthur while the ordinary feature menus are locked.
 
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 

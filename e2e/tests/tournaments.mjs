@@ -224,4 +224,43 @@ export default async function tournaments({ newPlayer }) {
   // Their direct routes are covered separately by classic.mjs.
   await player.press("Your own");
   assert.equal(await page.getByRole("link", { name: /classic/i }).count(), 0);
+
+  // A saved battle-return URL must not open tournaments over mandatory
+  // lessons. Start from the saved final choice, then complete it normally.
+  for (const finished of [player, phone]) {
+    if (!await finished.page.locator(".pause-curtain").count()) await finished.press("Pause");
+  }
+  const learner = await newPlayer({ lessons: true });
+  await learner.page.waitForFunction(() => window.seLessons?.at === 0);
+  assert.equal(await learner.page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  await learner.send([
+    { cmd: "rt_level_up", args: [15] },
+    { cmd: "store_add_items", args: [JSON.stringify([SWORD])] },
+    { cmd: "set_attack_team", args: ["tournament", JSON.stringify(padded(SWORD))] },
+    { cmd: "complete_tutorial", args: [32, { trees: 3 }] },
+  ]);
+  let lessonTournamentRequests = 0;
+  learner.page.on("request", (request) => {
+    if (new URL(request.url()).pathname.includes("/tournaments/")) lessonTournamentRequests++;
+  });
+  await learner.page.goto(`${learner.base}/client.html?tournaments=1`);
+  await learner.loaded();
+  await learner.page.waitForSelector(".draggy-window.choose");
+  assert.ok(await learner.page.locator('.menus button[aria-label="Battle"]').isDisabled());
+  assert.equal(lessonTournamentRequests, 0, "the return URL makes no tournament service request during lessons");
+  assert.equal(await learner.page.locator(".tournament-window:not([hidden])").count(), 0);
+  assert.deepEqual((await getInfo(learner)).privateState.teams.tournament, padded(SWORD));
+  await learner.page.getByRole("button", { name: "Select Green Draggy", exact: true }).click();
+  await learner.page.waitForSelector(".draggy-window.reminder", { timeout: 30_000 });
+  assert.equal(lessonTournamentRequests, 0, "the final reminder still belongs to the tutorial");
+  assert.equal(await learner.page.locator(".tournament-window:not([hidden])").count(), 0);
+  await learner.page.locator(".draggy-ok").click();
+  await learner.closeLevelUps();
+  await learner.page.waitForSelector(".tournament-team-box", { timeout: 30_000 });
+  assert.equal(lessonTournamentRequests, 1, "the preserved return intent opens the tournament once after completion");
+  assert.ok(await learner.page.locator('.menus button[aria-label="Battle"]').isEnabled());
+  const learned = await getInfo(learner);
+  assert.equal(Number(learned.playerInfo.completed_tutorial), 33);
+  assert.deepEqual(learned.privateState.teams.tournament, padded(SWORD));
+  await learner.shot("after-mandatory-lessons");
 }

@@ -188,8 +188,26 @@ export default async function tournamentResults({ newPlayer }) {
   await winner.shot("weekly-prizes-desktop");
   await winner.button("Close prizes").click();
   const weeklyBefore = await playerInfo(winner);
-  await page.locator('[data-tournament="8"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
-  await page.waitForSelector(".tournament-results");
+  // The full team can trigger the original final-ten-minutes warning while
+  // asynchronous entry checks run. Accept only that message, even if the
+  // clock crosses the boundary after the card was displayed.
+  const weeklyWarning = config.localization_strings.find((word) => Number(word.id) === 1298)?.text.trim();
+  assert.ok(weeklyWarning, "the original weekly warning is configured");
+  const entryDialogs = [];
+  const acceptWeeklyWarning = async (dialog) => {
+    const prompt = { type: dialog.type(), message: dialog.message() };
+    entryDialogs.push(prompt);
+    if (prompt.type === "confirm" && prompt.message === weeklyWarning) await dialog.accept();
+    else await dialog.dismiss();
+  };
+  page.on("dialog", acceptWeeklyWarning);
+  try {
+    await page.locator('[data-tournament="8"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
+    await page.waitForSelector(".tournament-results");
+  } finally {
+    page.off("dialog", acceptWeeklyWarning);
+    for (const prompt of entryDialogs) assert.deepEqual(prompt, { type: "confirm", message: weeklyWarning });
+  }
   let weekly = (await service(winner, "get_tournament_info")).tournament;
   assert.equal(weekly.tournament_type_id, "8");
   assert.ok(weekly.date_ready);

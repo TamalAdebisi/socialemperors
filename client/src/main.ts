@@ -340,14 +340,9 @@ async function start(): Promise<void> {
         return;
       }
       survivalWindow.open();
-    }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => {
-      if (!tournamentConfig.enabled) {
-        editor.tell("Tournaments are not available right now.");
-      } else if (town.level < MIN_LEVEL_TOURNAMENT) {
-        editor.tell(`Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.`);
-      } else void tournamentWindow.open();
-    });
+    }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => openTournaments());
     const tournamentConfig = tournamentRules(config);
+    let tournamentAfterLessons = false;
     let tournamentTown = town;
     let tournamentWarehouse = (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
     let tournamentFriends = (info.neighbors ?? []).map((neighbor) => String(neighbor.pid));
@@ -417,6 +412,11 @@ async function start(): Promise<void> {
       flush: () => commands.flush(),
     });
     openTournaments = () => {
+      if (learning) {
+        tournamentAfterLessons = true;
+        return;
+      }
+      tournamentAfterLessons = false;
       if (tournamentConfig.enabled && town.level >= MIN_LEVEL_TOURNAMENT) void tournamentWindow.open();
       else editor.tell(tournamentConfig.enabled ? `Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.` : "Tournaments are not available right now.");
     };
@@ -686,14 +686,10 @@ async function start(): Promise<void> {
     afterDrawing = () => {
       defend();
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
-      const welcome = () => {
+      const welcome = async () => {
         editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
         // Gifts waiting on the site: their window, as the classic page opens it when the town is up.
-        void gifts?.waiting().then((waiting) => {
-          if (waiting > 0) {
-            void gifts.open();
-          }
-        });
+        if (gifts && await gifts.waiting() > 0) await gifts.open();
       };
       const startLessons = (from: number) => {
         learning = true;
@@ -719,7 +715,18 @@ async function start(): Promise<void> {
             finished: () => {
               learning = false;
               levelWindows.show(laterLevels.splice(0));
-              welcome();
+              const welcomed = welcome();
+              if (tournamentAfterLessons) {
+                // A saved battle-return URL must wait for Arthur and the
+                // welcome dialogs, then reopen the tournament only once.
+                const reopen = () => {
+                  if (!tournamentAfterLessons) return;
+                  if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window")) {
+                    requestAnimationFrame(reopen);
+                  } else openTournaments();
+                };
+                void welcomed.then(reopen, reopen);
+              }
             },
           }, from);
           (window as unknown as Record<string, unknown>).seLessons = lessons;
