@@ -14,6 +14,7 @@ import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
 import { lights, popupOf } from "./rules/hover.ts";
+import { useHelp } from "./rules/friendsHelp.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
@@ -21,6 +22,7 @@ import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
 import { STORAGE, type ShopWindow, type StorageCard } from "./ui/shop.ts";
 import type { Camera } from "./view/camera.ts";
 import { RESOURCE_COLOURS } from "./view/markers.ts";
+import type { FriendWords } from "./view/friendBubble.ts";
 import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
 import { canWalk, isWalkable, tilesUnder, unitMoved, unitPath, walkGrid } from "./rules/walking.ts";
@@ -80,6 +82,12 @@ export interface EditorParts {
   levelled?: (level: number) => void;
   /** The level-up window (ui/levelUp.ts) for levels just reached; without it, a short message. */
   showLevels?: (reached: LevelUp[]) => void;
+  /**
+   * Friends' help at a building at work (rules/friendsHelp.ts): asking them
+   * (the card's Ask friends), their names by empire, the bubble's words, and
+   * how much each takes off. Without it, no asking and no bubbles.
+   */
+  friendHelp?: { ask: (placed: PlacedItem) => void; name: (empire: string) => string; words: FriendWords & { hour: string }; seconds: number };
 }
 
 export class TownEditor {
@@ -101,6 +109,7 @@ export class TownEditor {
   private readonly windowOf: (placed: PlacedItem) => { label: string; run: () => void; icon?: IconName } | null;
   private readonly levelled: (level: number) => void;
   private readonly showLevels: ((reached: LevelUp[]) => void) | null;
+  private readonly friendHelp: EditorParts["friendHelp"] | null;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -164,6 +173,7 @@ export class TownEditor {
     this.windowOf = parts.windowOf ?? (() => null);
     this.levelled = parts.levelled ?? (() => {});
     this.showLevels = parts.showLevels ?? null;
+    this.friendHelp = parts.friendHelp ?? null;
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -229,8 +239,13 @@ export class TownEditor {
           this.emit({ kind: "ready", item: placed.item });
         }
       }
+      if (state.status === "ready") {
+        delete placed.helpers;  // friends' pictures go once it's ready, as in the Flash client (they wait in the save for the next load)
+      }
+      const friend = this.friendHelp && placed.helpers?.at(-1);
       this.view.sign(placed, state.status === "ready" ? { kind: "ready", resource }
-        : state.status === "asleep" ? { kind: "asleep" } : null);
+        : friend ? { kind: "friend", name: this.friendHelp!.name(friend), words: this.friendHelp!.words }
+          : state.status === "asleep" ? { kind: "asleep" } : null);
     }
     this.hud.ready(ready);
     this.readyBefore = readyNow;
@@ -597,6 +612,8 @@ export class TownEditor {
     const state = placed ? workState(placed, this.clock()) : null;
     if (placed && state?.status === "ready") {
       this.startCollecting(placed);
+    } else if (placed && this.friendHelp && placed.helpers?.length) {
+      this.takeFriendHelp(placed);
     } else if (placed && state?.status === "asleep") {
       this.askWorkTime(placed);
     } else {
@@ -912,6 +929,7 @@ export class TownEditor {
       letOut: placed.unitsInside > 0 && (placed.units?.length ?? 0) > 0 ? () => this.letOne(placed) : null,
       train: this.trainChoice(placed),
       hurry: choices(this.town, placed).move && canHurry(placed, this.clock()) ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
+      ask: this.friendHelp && choices(this.town, placed).move && canHurry(placed, this.clock()) ? () => this.friendHelp!.ask(placed) : null,
       open: this.gateButton(placed) ?? this.windowOf(placed),
       close: () => this.select(null),
     });
@@ -1542,6 +1560,25 @@ export class TownEditor {
     this.collected(placed, hurry(this.town, placed, this.clock()));
     if (this.town.cash < cashBefore) {
       this.view.rise(placed, [{ text: `−${cashBefore - this.town.cash} cash`, colour: RESOURCE_COLOURS.cash }]);
+      this.select(placed);
+    }
+  }
+
+  /**
+   * A building with a friend's help waiting tapped: the top friend's hour
+   * is taken off its work, as in the Flash client (its sound, "-1 hour"
+   * rising, the next friend's picture), and the server is told.
+   */
+  private takeFriendHelp(placed: PlacedItem): void {
+    const used = useHelp(this.town, placed, this.friendHelp!.seconds);
+    if (!used) {
+      return;
+    }
+    this.commands.add(used.command.cmd, ...used.command.args);
+    this.sound("collect");
+    this.view.rise(placed, [{ text: this.friendHelp!.words.hour.replace("#0#", "-1"), colour: 0xffffff }]);
+    this.refresh();
+    if (this.selected === placed) {
       this.select(placed);
     }
   }

@@ -28,6 +28,11 @@ export default async function market({ newPlayer }) {
     const { gold, wood, stone, food } = window.seHome.parts.town;
     return { gold, wood, stone, food };
   });
+  // The goods alone: the gold also gets the goals' rewards as they're paid.
+  const goods = async () => {
+    const { wood, stone, food } = await numbers();
+    return { wood, stone, food };
+  };
 
   await player.select(MARKET_AT, "Market");
   await player.press("Visit Market");
@@ -64,10 +69,10 @@ export default async function market({ newPlayer }) {
     await window.locator(".market-trade.sells .market-do").nth(2).click();
     sold++;
   }
-  const empty = await numbers();
+  const empty = await goods();
   await window.locator(".market-trade.sells .market-do").nth(2).click();
   await player.said(/You don't have enough food to sell!/);
-  assert.deepEqual(await numbers(), empty, "nothing sold");
+  assert.deepEqual(await goods(), empty, "nothing sold");
   assert.equal(await left(), `Trades left today: ${16 - sold}`);
 
   // Buy food until the trades run out, then once more: the game's warning.
@@ -75,10 +80,10 @@ export default async function market({ newPlayer }) {
     await window.locator(".market-trade.buys .market-do").nth(2).click();
   }
   assert.equal(await left(), "Trades left today: 0");
-  const spent = await numbers();
+  const spent = await goods();
   await window.locator(".market-trade.buys .market-do").nth(2).click();
   await player.said(/Market resources have been exhausted/);
-  assert.deepEqual(await numbers(), spent, "no 21st trade");
+  assert.deepEqual(await goods(), spent, "no 21st trade");
 
   // The server has the same: the goods, the counts, the trades. And the three goals are done.
   const saved = await player.saved();

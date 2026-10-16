@@ -4,6 +4,15 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: friends' help at a building
+
+- **Ask friends sits on the card,** beside finishing the work for cash.
+  The original showed both in a small hurry window; our card already
+  offers the cash one directly, so the ask joined it.
+- **A friend's picture is their initial on a colour,** as in the
+  neighbours' list: the site keeps no pictures of players (the original
+  showed their Facebook photo).
+
 ## 16 October 2026: the market
 
 - **In the panel, not a window in the middle.** The original's market

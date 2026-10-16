@@ -21,6 +21,8 @@ export interface ActionChoices {
   letOut?: (() => void) | null;
   /** Finish its work now, for cash (null when it can't be hurried). */
   hurry?: { price: number; run: () => void } | null;
+  /** Ask friends to help with its work, as the Flash client's hurry window did (null when there's no asking). */
+  ask?: (() => void) | null;
   /** Train its unit: the unit's picture and price, and the same for cash (null when it trains nothing). */
   train?: { unit: string; picture: string; price: string; run: () => void; cash: { price: string; run: () => void } | null } | null;
   /** The building's own window (the Wizardry Academy's spells), or null. */
@@ -64,6 +66,9 @@ export class ActionBar {
     tiles.className = "actions-tiles";
     this.tiles = tiles;
     this.bar.append(name, detail, tiles);
+    // Finishing the work for cash and asking friends, one above the other, as one of the card's tiles.
+    const quick = document.createElement("span");
+    quick.className = "actions-quick";
     if (choices.hurry) {
       const hurry = choices.hurry;
       const button = document.createElement("button");
@@ -73,7 +78,19 @@ export class ActionBar {
       button.append(`${hurry.price}: finish now`);
       button.setAttribute("aria-label", `Finish now for ${hurry.price} cash`);
       button.addEventListener("click", hurry.run);
-      (this.tiles ?? this.bar).append(button);
+      quick.append(button);
+    }
+    if (choices.ask) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "button tiny train-cash";
+      button.innerHTML = `<img class="icon" src="${ICONS.neighbours}" alt="">`;
+      button.append("Ask friends");
+      button.addEventListener("click", choices.ask);
+      quick.append(button);
+    }
+    if (quick.childElementCount > 0) {
+      tiles.append(quick);
     }
     if (choices.train) {
       this.trainButtons(choices.train);

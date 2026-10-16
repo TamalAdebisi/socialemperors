@@ -48,11 +48,13 @@ import { MarketWindow } from "./ui/market.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
 import { marketRules, readMarket } from "./rules/market.ts";
+import { helpSeconds } from "./rules/friendsHelp.ts";
 import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
 import { AskFriends } from "./ui/askFriends.ts";
+import { Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -253,6 +255,11 @@ async function start(): Promise<void> {
     let goalKeeper: GoalKeeper | undefined;
     // The level-up window, the game's words in it; from level 36 each level gives mana too.
     const line = (id: number, fallback: string) => lines.get(id) ?? fallback;
+    // Asking friends (ui/askFriends.ts): the dragon nest's Hire friends, and a working building's Ask friends,
+    // whose answers wait over it as their pictures (rules/friendsHelp.ts).
+    const asking = settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null;
+    const askPanel = new Panel("ask", "Ask friends", { className: "list-window" });
+    const friendNames = new Map((info.neighbors ?? []).map((n) => [String(n.pid), n.name?.trim() || "Friend"]));
     // The market (ui/market.ts): its numbers from the config, the town's trading so far from the save.
     const trading = marketRules((config.globals ?? {}) as Record<string, unknown>);
     const market = new MarketWindow({
@@ -280,6 +287,15 @@ async function start(): Promise<void> {
     (window as unknown as Record<string, unknown>).seLevels = levelWindows;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
+      friendHelp: asking ? {
+        ask: (placed) => {
+          askPanel.open();
+          asking.show(askPanel.body, { kind: "collect", town: town.id, x: placed.tx, y: placed.ty, item: placed.item.id }, () => askPanel.close());
+        },
+        name: (empire) => friendNames.get(empire) ?? "Friend",
+        words: { hurry: line(91, "Hurry Up?"), accept: line(90, "Accept"), hour: line(98, "#0# hour") },
+        seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
+      } : undefined,
       showLevels: (reached) => levelWindows.show(reached.map((r) => ({
         ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0,
       }))),
@@ -452,7 +468,7 @@ async function start(): Promise<void> {
         editor.tell(why);
         void bank.open();
       },
-      askFriends: settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null,
+      askFriends: asking,
     });
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;

@@ -126,9 +126,10 @@ dock"), so these come with a mockup first.
       giving from storage, the free gift) and Empires, Friends and Log out,
       as on the classic page. M
 - [ ] **Neighbours:** sorted by XP, with their XP and a mark on those you
-      can help; Send gift. Friends' help on a building shows their picture
-      over it; tapping takes an hour off. M
-- [ ] **Hurry:** the original's window adds "Ask friends". S
+      can help; Send gift. M
+- [x] **Friends' help on a building** shows their picture over it;
+      tapping takes an hour off. S
+- [x] **Hurry:** the original's window adds "Ask friends". S
 - [x] **Selecting several units** with the square tool (or Space), a box
       or a double click, and sending them as a group. M
 - [x] **The pointer's tools:** the original's pointer button opens a menu

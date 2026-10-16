@@ -456,8 +456,8 @@ check counts the player's own things.
   that houses nobody; the cash goes in the collect command's last place.
   It counts as a harvest for the goals. The window shows the time left,
   ticking, and an "ask friends" button that opened a Facebook request.
-  *Ours: same rule (`hurry`, `rules/production.ts`); no ask-friends
-  button (not needed).*
+  *Ours: same rule (`hurry`, `rules/production.ts`); Ask friends sits
+  beside it on the card.*
 - Speeding up a building under construction costs 10 cash (written into
   the info panel), but only for items with a build time, and no item in
   the config has one, so it never shows. *Ours: not applicable.*

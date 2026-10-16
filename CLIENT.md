@@ -1124,6 +1124,21 @@ neighbours, Arthur last; Visit opens their town. Code:
   once: OK tells the server it's read (`clear_message`), as the Flash client
   does. Before, the new client left it, and it waited for the classic game.
   Test: `e2e/tests/messages.mjs`.
+- **Friends' help at a building at work** (`rules/friendsHelp.ts`, with
+  tests; `view/friendBubble.ts`): the card of a mill, mine or bakery at
+  work has **Ask friends** beside finishing it for cash (the original's
+  hurry window had both). It opens the site's ask window in the panel
+  (`ui/askFriends.ts`, the server's `helps.py`, kind "collect"). Each friend
+  who answers on their Friends page waits over the building when the town
+  next opens, in the game's bubble (FotoNeighbourMC: "Hurry Up?", and
+  "Accept" with the game's hand while the mouse is on it). A tap on the
+  building takes the top one: an hour off its work
+  (`COLLECT_HELP_SECONDS`), the collect sound, "-1 hour" rising, and
+  `accept_collect_help` (x, y, town, building, friend). As in the
+  original, the bubbles go once the building is ready, until the town
+  opens again, and only at home. The site has no pictures of friends, so a
+  friend's is their initial on a colour, as in the neighbours' list.
+  Test: `e2e/tests/friends-help.mjs`.
 
 **Not yet:** gifts and requests between neighbours, and adding neighbours
 from inside the game (the site's friends page does it).

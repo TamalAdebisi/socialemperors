@@ -194,6 +194,11 @@ MAP_PICTURES = {
     # that fills it from the left.
     "progress-back": ("FauxBarMC@1", 0),
     "progress-fill": ("FauxBarMC@3", 0),
+    # A friend's help waiting over a building (FotoNeighbourMC): the white bubble, its blue
+    # label without words, and the hand that shows when the mouse is on it.
+    "friend-bubble": ("FotoNeighbourMC@1", 0),
+    "friend-label": ("FotoNeighbourMC/acceptText@1", 0),
+    "friend-hand": ("FotoNeighbourMC@3", 0),
 }
 MAP_OUT = os.path.join(ROOT, "client", "src", "view", "art")
 
