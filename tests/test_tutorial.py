@@ -136,7 +136,8 @@ class TutorialTest(unittest.TestCase):
         save["privateState"]["stepNumber"] = 9
         self.checkpoint(32, 3)
         do_command(self.first, "claim_tutorial_reward", [698, [53, 52], [54, 55]])
-        self.assertEqual(inventory.held(save, 0).get(1233), 1)
+        self.assertEqual(inventory._count(inventory.gifts(save), 1233), 1)
+        self.assertEqual(inventory._count(inventory.store(save, 0), 1233), 0)
         self.assertFalse(any(item[0] == 1233 for item in save["maps"][0]["items"]))
         self.assertEqual(save["privateState"]["stepNumber"], 9)
         self.assertEqual(self.where(self.first), 33)
