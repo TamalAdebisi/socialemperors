@@ -6,11 +6,18 @@ import { has } from "../lib.mjs";
 export default async function buildingOverlay({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
+  // WebKit can capture a canvas's previous frame after synchronous scene
+  // edits. Let the real drawing ticker present this state before comparing
+  // pixels or reviewing its screenshot.
+  const drawn = () => page.evaluate(() => new Promise((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const clearGround = { x: 800, y: 580, width: 80, height: 35 };
   await page.mouse.move(20, 10);
+  await drawn();
   const before = await player.pixels(clearGround);
   for (const [tile, name] of [[[44, 52], "House I"], [[51, 47], "Tower I"], [[52, 52], "Town Hall"]]) {
     await player.select(tile, name);
+    await drawn();
     const after = await player.pixels(clearGround);
     assert.deepEqual(after, before, `selecting ${name} cannot tint a distant strip of ground`);
     await player.shot(`selected-${name.replaceAll(" ", "-").toLowerCase()}`);
@@ -60,6 +67,7 @@ export default async function buildingOverlay({ newPlayer }) {
     await page.evaluate(() => window.seHome.parts.editor.refresh());
     assert.equal(await page.evaluate(() => window.seHome.parts.view.marks.children.length), 1,
       "the previous building's hover cannot erase the new placement footprint on refresh");
+    await drawn();
     await player.shot(`preview-${itemId}`);
     await page.keyboard.press("Escape");
     assert.equal(await page.evaluate(() => window.seHome.parts.view.ghost), null);
