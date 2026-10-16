@@ -19,6 +19,23 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Playthrough follow-up in [#95](https://github.com/TamalAdebisi/socialemperors/pull/95):**
+  recurring low-level raids and recovery, ten-minute camps with a countdown,
+  shared battle inspection/Deselect, and Everybody without friend requests.
+  Main #94 is integrated, retaining its controls and site fixes. Decisions
+  are recorded in DECISIONS.md. Server: 436 run (427 passed, 9 existing skips);
+  client types and 357 tests passed after review. Complete integrated Chromium: **73/73
+  in 1h 23m 18.88s** on `10507be4`. WebKit: **4/4 in 2m 37.96s**. Test-only
+  rendering/save waits at `4f049001` and a central click target at `20ba5058`
+  follow the full run. Card passed in Chromium (111s); final selection passed
+  in Chromium (50.22s total) and WebKit (21.77s total). Review corrections at
+  `ad9adfd7` have fresh server/client passes, affected Chromium **8/8 in
+  7m 2.97s**, and WebKit **3/3 in 1m 31.96s**. Automated re-review found zero
+  new issues. The full-suite result remains attributed to `10507be4`.
+  [The delivery record](docs/verification-95.md)
+  retains the initial 71/71 run, WebKit failures and their corrections,
+  screenshot/log review and the Linux WebKit/Mac GPU distinction.
+
 - **Owner playthrough controls in [#94](https://github.com/TamalAdebisi/socialemperors/pull/94):**
   Friends forms keep their CSS/images after nested POSTs; unit targets
   have an eight-pixel margin and a 44-pixel minimum, with original art

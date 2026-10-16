@@ -4,6 +4,71 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: playthrough feedback — active defense and everybody
+
+- **Recurring pressure with recovery.** The owner asked for meaningful troll
+  attacks. Enable them after lessons and the first rescue, even at low
+  levels. Opening a rescued town gives five minutes to prepare. Use the
+  original level/race soldier tables, at least two per band. After any
+  completed fight, including the first camp, give seven minutes of recovery
+  below level 10, five from level 10.
+  Do not stack raids onto camp fights. Retreat after four minutes and remove
+  blocked retreaters by five, so a town without troops can recover. Try
+  reachable defenses when a protected unit cannot be reached. Continue
+  across all buildings in batches of twenty route checks per second, and
+  reject waiting spots outside weapon range. All automatically rolled first
+  attacks allow five minutes; special sieges keep their combat stages.
+  Raid timers remain local to the session;
+  unit losses/rewards remain saved and buildings keep the original repair rules.
+- **A ten-minute camp wait.** Replace the four-hour cooldown with ten minutes,
+  using the existing saved chest timestamp. Show the next camp and raid on
+  screen, and let the player look at the current camp. Pause new camps during
+  lessons. Camp layouts, sequence and rewards keep their original rules.
+- **Selection should be visible and escapable.** Add portraits, individual
+  statistics and Deselect to the shared battle controls. Clicking one friendly
+  unit always selects it; Shift changes the group, with the modifier passed
+  directly from the pointer event. Neutral objects and friendly buildings are
+  inspected without a move order; empty ground dismisses object inspection.
+  Keep left-click ground movement for selected troops. Preserve #94's
+  enlarged unit targets, with exact artwork hits taking priority. Dialogs
+  keep their own Escape key while a battle is active.
+- **Everybody is a neighbor.** All accounts appear in the directory, including
+  those without an empire; all other accounts' empires appear in Neighbours,
+  without the old limit or friend priority. Gifts and help use the same account
+  eligibility. Exclude the viewer's other empires and unclaimed legacy imports;
+  label Arthur as the game's guide. Select help recipients explicitly instead
+  of preselecting every account in the community. Keep old friendship
+  endpoints and existing pending requests compatible, but remove the
+  add/remove-friend UI. Do not delete or rename TAKTAK: no built-in account by that name was found, and no
+  live account inspection was performed.
+- **Integrate the concurrent controls update.** Merge #94 without rebasing.
+  Retain its click feedback, background simulation, explicit Pause, building
+  previews and root-relative site assets. Everybody removes the Add Friend
+  form; a fixture form retains coverage of the legacy nested POST response
+  and its desktop/phone styling. Keep #94's raid-test acceleration and its
+  unchanged completion deadline, with the requested new raid cadence.
+- **Browser fixtures.** Existing feature checks explicitly hold automatic raids;
+  a new check opts into the ordinary scheduler and verifies four waves and
+  recovery. Other combat checks still force their chosen raids. No assertions
+  are skipped; old cap/friend-gate assertions now check the requested community
+  behavior and still check ownership, daily limits and saved rewards.
+  WebKit checks wait for battle art/hover drawing before a click and for
+  the upgraded building plus completed save batch. Click the visible unit
+  center instead of a changing animation edge. Keep the same selection,
+  replacement and resource-cost assertions, and retain the initial failures.
+
+- **Review decisions.** Shift groups contain commandable units only; a form
+  change refreshes group portraits; the threat button locates active raiders.
+  Error-only help replies do not claim the community is empty. Strengthen
+  daily-gift and Escape assertions. Keep own-eagle inspection consistent
+  with other friendly units; destination taps still fly it. Keep tournaments
+  on the all-account neighbor list: their existing rule already used neighbors,
+  not explicit friendship records, and the owner asked for everyone to be a
+  friend. Keep spell selection clearing the previous marker while preserving
+  its aiming state; the new preview is drawn on pointer movement or touch.
+  The new camp timing sentence follows the new client's English interface;
+  this change does not introduce a translation framework or invented string IDs.
+
 ## 16 October 2026: playthrough controls and site repairs
 
 - **No auto-collect.** The owner withdrew it; collection and production

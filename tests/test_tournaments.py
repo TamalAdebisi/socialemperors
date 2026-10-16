@@ -389,7 +389,8 @@ class TournamentsTest(unittest.TestCase):
 
     def test_friends_are_the_players_among_the_neighbours(self):
         sessions.friends = self.friends
-        other = self.player()
+        owner = sessions.storage().create_user(f"community{time.time_ns()}", "unused")
+        other = sessions.new_village(owner_id=owner)
         sessions.session(other)["playerInfo"]["last_logged_in"] = self.now  # one of the most recently active
         friends = sessions.friends(self.me)
         self.assertIn(other, friends)

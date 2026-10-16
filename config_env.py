@@ -37,7 +37,7 @@ SE_SUPABASE_KEY      The project's publishable key (sb_publishable_...). Not a
 SE_ALLOW_REGISTRATION  "1" (default) to let anyone sign up, "0" to close sign-ups
 SE_INVITE_CODE       If set, new accounts must enter this code (closed beta)
 SE_MAX_VILLAGES      Max empires per account (default 3)
-SE_MAX_NEIGHBORS     Max other players shown as neighbours (default 30)
+SE_MAX_NEIGHBORS     Legacy setting, ignored: Everybody includes all accounts
 SE_CDN_FALLBACK      "1" to fetch missing assets from Social Point's old CDN
                      (default 0 - off, because on a public server it lets
                      strangers make your server download files)

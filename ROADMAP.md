@@ -1,5 +1,14 @@
 # Roadmap
 
+**16 October playthrough follow-up:** recurring raids after lessons/rescue,
+with five minutes on opening town and five to seven to recover after fights; camps
+return after ten minutes and show a countdown. Shared battle controls expose
+individual inspection and Deselect. Everybody is listed without friend
+requests, including for gifts and help. These owner-requested changes override
+the original pacing and friend gates described below; see CLIENT.md and
+DECISIONS.md. [The delivery record](docs/verification-95.md) includes the
+73/73 integrated Chromium run and the server/client checks.
+
 Tutorial repair in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93): mandatory home-town lessons, clearer guidance,
 smooth camera movement, recoverable progress and a confirmed first-dragon
 reward. Classic-client choices are hidden at the owner's request; its

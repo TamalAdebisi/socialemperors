@@ -10,10 +10,7 @@ import assert from "node:assert/strict";
 export default async function gifts({ newPlayer }) {
   const player = await newPlayer();
   const friend = await newPlayer();
-  for (const [one, other] of [[player, friend], [friend, player]]) {
-    const asked = await one.page.request.post(`${one.base}/friends/ask`, { form: { username: other.name, csrf: await one.csrf() } });
-    assert.ok(asked.ok(), `${one.name} asks ${other.name}`);
-  }
+  // No friend requests: every account can exchange gifts.
   const giftsOf = async (who) => (await who.page.request.get(`${who.base}/gifts/game?empire=${encodeURIComponent(who.settings.userId)}`)).json();
 
   // The friend sends today's free gift.
@@ -51,6 +48,7 @@ export default async function gifts({ newPlayer }) {
   await page.locator(".panel:not([hidden])").getByRole("button", { name: "Gifts" }).click();
   await window.waitFor();
   await window.getByRole("tab", { name: "From storage" }).click();
+  await window.locator("select").first().selectOption({ label: friend.name });
   const item = window.locator("select").nth(1);
   const options = await item.locator("option").allTextContents();
   const index = options.findIndex((text) => text.startsWith(giftName));

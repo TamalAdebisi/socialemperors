@@ -1,9 +1,9 @@
 {% extends "_site.html" %}
 {% import "_macros.html" as ui %}
-{# Friends (server.py, "FRIENDS"; friends.py): add players by username, answer
-   requests, see your friends and their empires. #}
+{# Everybody (server.py, "FRIENDS"; friends.py): all accounts and empires,
+   gifts and help. Legacy pending friend requests remain answerable. #}
 
-{% block title %}Friends ~ Social Empires{% endblock %}
+{% block title %}Everybody ~ Social Empires{% endblock %}
 
 {% block card %}
 	<div class="topbar">
@@ -79,13 +79,8 @@
 	{% endif %}
 
 	<section class="section">
-		<h2><img src="/img/villager.png" alt=""> Friends</h2>
-		<form class="inline" method="post" action="/friends/ask">
-			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
-			<input name="username" placeholder="Their username" autocomplete="off" pattern="[A-Za-z0-9_]{3,20}" required aria-label="Username of the player to add">
-			<button class="button small" type="submit">Add friend</button>
-		</form>
-		<p class="hint">They'll see your request here and can accept it. Friends' empires come first among your neighbours in the game.</p>
+		<h2><img src="/img/villager.png" alt=""> Everybody</h2>
+		<p class="hint">Everybody with an account is your neighbour. Visit their empires, send gifts and help each other. No friend requests needed.</p>
 
 		{% if requests.to_me %}
 		<h3 style="margin-top: 18px;">Asking to be your friend</h3>
@@ -112,7 +107,7 @@
 	</section>
 
 	<section class="section">
-		<h2><img src="/img/knight.png" alt=""> Your friends <span class="muted">({{ friends | length }} of {{ max_friends }})</span></h2>
+		<h2><img src="/img/knight.png" alt=""> Everybody <span class="muted">({{ friends | length }})</span></h2>
 		{% for friend in friends %}
 		<div class="row">
 			<div>
@@ -134,14 +129,11 @@
 					<button class="button small gold" type="submit"><img src="/img/gift.png" alt="" class="icon"> Send</button>
 				</form>
 				{% endif %}
-				<details class="delete">
-					<summary>Remove…</summary>
-					<form method="post" action="/friends/remove/{{ friend.id }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="button small danger" type="submit">Remove {{ friend.username }}</button></form>
-				</details>
+
 			</span>
 		</div>
 		{% else %}
-		<p class="muted">No friends yet. Add someone by their username above.</p>
+		<p class="muted">No other accounts yet. New players will appear here automatically.</p>
 		{% endfor %}
 		{% if friends %}
 		<p class="hint">Each day, one free gift for each friend.{% if next_free %} More gifts open as you level up: next, a {{ next_free.name }} at level {{ next_free.level }}.{% endif %}

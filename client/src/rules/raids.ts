@@ -1,23 +1,20 @@
-// Raids on the player's town (CLIENT.md, "Defending the town"), as the
-// Flash client sends them: bandits from level 10, and from level 25 now and
-// then a siege. All of it is rolled afresh each time the town is opened, and
-// nothing of it is saved (the original saved nothing either): a band waits
-// at the map's edge, attacks after 7 minutes (14 and 21 for the second and
-// third bands), and leaves once it has burnt out enough buildings and killed
-// enough units. A siege lines up at the bottom of the map, its captain
-// calling out, and comes in stages.
-//
-// The plans are worked out here (planRaids), and each raid's mind (Raid)
-// runs on the battle (rules/battle.ts), frame by frame.
+// Raids use the original soldiers and battle rules, with the owner-requested
+// recurring schedule: five minutes to prepare, then recovery between waves.
+// Camps keep their guards; these bands actively march into the town.
 
-import { ENEMY, SELF, type Battle, type Fighter } from "./battle.ts";
+import { ENEMY, SELF, distance, type Battle, type Fighter } from "./battle.ts";
 import type { ItemInfo } from "./config.ts";
 import type { Point } from "./geometry.ts";
 
 /** Frames a minute. */
 const MINUTE = 1800;
-/** Bands from these levels, attacking this many minutes after the town opens. */
-const BANDS: [level: number, minutes: number][] = [[10, 7], [15, 14], [20, 21]];
+/** Recovery after a raid: small towns get longer to rebuild. */
+export function raidRecovery(level: number): number {
+  return (level < 10 ? 7 : 5) * MINUTE;
+}
+
+/** A new session gives the player five minutes to prepare. */
+export const FIRST_RAID = 5 * MINUTE;
 /** Sieges: one a visit at most, 1 chance in 10, by the level's band. */
 const SIEGE_CHANCE = 0.1;
 const SIEGE_LEVEL = 25;
@@ -88,23 +85,24 @@ export function planRaids(level: number, race: string, random: () => number): Ra
       plans.push(siege(troll, random));
     }
   }
-  // Then the bandits, always, one band for each step of level reached.
-  const ids = enemyIds(level, race);
-  for (const [from, minutes] of BANDS) {
-    if (level < from) {
-      continue;
-    }
-    const edge = Math.floor(random() * 4);
-    const along = Math.floor(random() * MAP);
-    const spawn = edge === 0 ? { x: 0, y: along } : edge === 1 ? { x: MAP - 1, y: along }
-      : edge === 2 ? { x: along, y: 0 } : { x: along, y: MAP - 1 };
-    const count = Math.max(Math.ceil(level / (troll ? 2 : 4)), 1);
-    plans.push({
-      kind: "bandits", startsAt: minutes * MINUTE, spawn,
-      units: Array.from({ length: count }, () => ({ id: pick(ids, random), x: spawn.x, y: spawn.y, squad: "band" as Squad })),
-    });
-  }
+  plans.push(planBand(level, race, random, FIRST_RAID));
+  for (const plan of plans) plan.startsAt = Math.max(plan.startsAt, FIRST_RAID);
   return plans;
+}
+
+/** One level-scaled band. HomeDefence schedules another after recovery. */
+export function planBand(level: number, race: string, random: () => number, startsAt: number): RaidPlan {
+  const troll = race === "t";
+  const ids = enemyIds(level, race);
+  const edge = Math.floor(random() * 4);
+  const along = Math.floor(random() * MAP);
+  const spawn = edge === 0 ? { x: 0, y: along } : edge === 1 ? { x: MAP - 1, y: along }
+    : edge === 2 ? { x: along, y: 0 } : { x: along, y: MAP - 1 };
+  const count = Math.max(Math.ceil(level / (troll ? 2 : 4)), 2);
+  return {
+    kind: "bandits", startsAt, spawn,
+    units: Array.from({ length: count }, () => ({ id: pick(ids, random), x: spawn.x, y: spawn.y, squad: "band" as Squad })),
+  };
 }
 
 /**
@@ -184,6 +182,8 @@ export class Raid {
   private cried = 0;
   /** Stampede: re-sending the mounts at the town's units each time one of their targets falls. */
   private breaking = false;
+  /** Continue a blocked band's search on the next second, without freezing a large town. */
+  private readonly breachCursor = new Map<Fighter, number>();
 
   /**
    * `owns`: whether the player has opened a block of land (numbered as the
@@ -273,26 +273,61 @@ export class Raid {
   /** The band: each bandit without a target picks the nearest building or unit of the player's, until the quotas are met. */
   private stepBandits(): void {
     if (this.retreating) {
+      if (this.battle.frame - this.stageFrom >= 5 * MINUTE) {
+        for (const bandit of this.alive) this.battle.remove(bandit);
+      }
       return;
     }
-    if (this.burnt >= this.quota && this.killed >= this.quota) {
+    // A raid must end even when a town has no units or reachable targets.
+    if (this.battle.frame - this.stageFrom >= 4 * MINUTE || (this.burnt >= this.quota && this.killed >= this.quota)) {
       this.retreat();
       return;
     }
     for (const bandit of this.alive) {
-      if (bandit.target && !bandit.target.dead) {
+      if (bandit.target && !bandit.target.dead && (this.battle.isMoving(bandit) || distance(bandit, bandit.target) <= bandit.range)) {
         continue;
       }
+      // Route searches can cross the whole map; retry once a second when
+      // defenses block the way, rather than doing that work every frame.
+      if (this.battle.frame % 30 !== bandit.offset % 30) continue;
+      bandit.target = null;
+      bandit.attacking = false;
       const needBuildings = this.burnt < this.quota;
       const needUnits = this.killed < this.quota;
       const building = needBuildings && (!needUnits || this.battle.random() < 0.5);
-      // As in the original: a kind with nothing left to hit means waiting for the next flip, not the other kind.
-      const target = this.nearestOfPlayer(bandit, building ? "building" : "unit");
+      // Prefer one kind, but still attack when the town has none of it.
+      const target = this.nearestOfPlayer(bandit, building ? "building" : "unit")
+        ?? this.nearestOfPlayer(bandit, building ? "unit" : "building");
       if (target) {
-        this.battle.attackWith([bandit], target);
+        if (!this.attackBandTarget(bandit, target)) {
+          // An enclosed town: break a reachable wall instead of repeatedly
+          // ordering an impossible walk to the same protected unit.
+          const walls = this.battle.within({ x: bandit.tx, y: bandit.ty }, MAP * 2, this.battle.fighters.length,
+            (f) => f.side === SELF && !f.dead && !f.isUnit);
+          const from = this.breachCursor.get(bandit) ?? 0;
+          for (let i = 0; i < Math.min(20, walls.length); i++) {
+            const index = (from + i) % walls.length;
+            this.breachCursor.set(bandit, (index + 1) % walls.length);
+            if (this.attackBandTarget(bandit, walls[index])) {
+              this.breachCursor.delete(bandit);
+              break;
+            }
+          }
+        }
         bandit.forced = false;
       }
     }
+  }
+
+  private attackBandTarget(bandit: Fighter, target: Fighter): boolean {
+    if (distance(bandit, target) > bandit.range) {
+      const spot = this.battle.attackSpot(bandit, target, new Set());
+      // The shared battle rule may offer a waiting spot outside weapon
+      // range when every adjacent tile is occupied. Keep searching instead.
+      if (!spot || distance({ ...bandit, tx: spot.x, ty: spot.y }, target) > bandit.range) return false;
+    }
+    this.battle.attackWith([bandit], target);
+    return bandit.target !== null;
   }
 
   /** The siege: wait a minute (the captain pacing), then the engines, the first squad, the second with the captain, and away. */

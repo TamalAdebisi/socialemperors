@@ -12,6 +12,8 @@ const DRAGON_NEST = 1233, MONSTER_NEST = 1255, DRAGGY = 638;
 const NEST_AT = [56, 52], MONSTERS_AT = [48, 58];
 
 export default async function nests({ newPlayer }) {
+  const neighbor = await newPlayer();
+  await neighbor.page.close();
   const player = await newPlayer();
   const { page } = player;
   await player.send([
@@ -79,7 +81,8 @@ export default async function nests({ newPlayer }) {
   assert.equal(await window.locator(".nest-count").textContent(), "0/10");
   assert.equal(await window.locator(".nest-one.locked").count(), 4);
   await window.locator(".nest-hire").click();
-  await page.waitForFunction(() => /Add friends/.test(document.querySelector(".ask-friends")?.textContent ?? ""));
+  await page.locator(".ask-friends label", { hasText: neighbor.name }).waitFor();
+  assert.equal(await page.locator(".ask-friends input:checked").count(), 0, "choose whom to ask from Everybody");
   await window.getByRole("button", { name: "Back" }).click();
   await window.locator(".nest-button").waitFor();
   await page.keyboard.press("Escape");

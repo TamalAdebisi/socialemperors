@@ -99,7 +99,11 @@ class GiftsTest(unittest.TestCase):
         self.assertIn("Today's gift sent", text(alice[0].get("/friends")))
 
         reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=HOUSE)  # not a friend
-        self.assertIn("Gifts go to friends", text(reply))
+        self.assertEqual(reply.status_code, 200)
+        self.assertIn(f"House I is on its way to {carol[1]}", text(reply))
+        reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=TREE)
+        self.assertEqual(reply.status_code, 400)
+        self.assertIn("today's free gift already", text(reply))
         self.friends(alice, carol)
         reply = send_form(alice[0], "/gifts/send", friend=carol[2], item=SCORPION)  # level 30
         self.assertIn("isn't open to you yet", text(reply))
@@ -158,12 +162,12 @@ class GiftsTest(unittest.TestCase):
         self.friends(alice, bob)
         state, status = self.window(alice)
         self.assertEqual(status, 200)
-        self.assertEqual([f["username"] for f in state["friends"]], [bob[1]])
+        self.assertIn(bob[1], [f["username"] for f in state["friends"]])
         self.assertIn("House I", [g["name"] for g in state["free"]])
 
         state, _ = self.window(alice, action="free", friend=bob[2], item=TREE)
         self.assertIn("Yellow Tree is on its way", state["ok"])
-        self.assertTrue(state["friends"][0]["sent_today"])
+        self.assertTrue(next(f for f in state["friends"] if f["id"] == bob[2])["sent_today"])
         state, status = self.window(alice, action="free", friend=bob[2], item=HOUSE)
         self.assertEqual(status, 400)
         self.assertIn("already", state["error"])
@@ -196,8 +200,9 @@ class GiftsTest(unittest.TestCase):
         inventory.add_gift(save, COW, 1)
         stranger = self.player()
         state, status = self.window(alice, action="give", friend=stranger[2], item=COW, count=1)
-        self.assertIn("Gifts go to friends", state["error"])
-        self.assertEqual(inventory.held(sessions.session(alice[3]), 0).get(COW), 1)  # still there
+        self.assertEqual(status, 200, state)
+        self.assertEqual([(g["item"], g["count"]) for g in gifts.waiting(stranger[2])], [(COW, 1)])
+        self.assertNotIn(COW, inventory.held(sessions.session(alice[3]), 0))  # delivered without a friend request
 
     def test_only_your_own_empires_window(self):
         alice, bob = self.player(), self.player()

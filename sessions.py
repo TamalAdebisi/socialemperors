@@ -317,25 +317,21 @@ def neighbor_session(USERID: str) -> dict:
 
 # Neighbours / friends
 #
-# The original showed every save on the computer as a neighbour. On a public
-# server that would mean sending every player's village summary to everyone,
-# so we show the static neighbours, then every empire of the player's friends
-# (friends.py), then the most recently active other players, up to
-# SE_MAX_NEIGHBORS players in all.
+# Every registered player is a neighbor. Unclaimed imported saves stay out
+# of the directory; Arthur is added separately by the client.
 
 def _last_seen(village) -> int:
     return village["playerInfo"].get("last_logged_in", 0) or 0
 
 
 def _neighbor_villages(USERID: str) -> list:
-    statics = [v for pid, v in __villages.items() if pid not in ARTHUR_PIDS]
     owner = __owners.get(USERID)
-    friend_ids = friendships.of(owner) if owner is not None else set()
-    theirs = [v for pid, v in __saves.items() if pid != USERID and __owners.get(pid) in friend_ids]
-    others = [v for pid, v in __saves.items() if pid != USERID and __owners.get(pid) not in friend_ids]
-    theirs.sort(key=_last_seen, reverse=True)
-    others.sort(key=_last_seen, reverse=True)
-    return statics + theirs + others[:max(config_env.MAX_NEIGHBORS - len(theirs), 0)]
+    # Every registered player's empires, without a friend gate or cap.
+    # Old unclaimed imports and the player's own other empires aren't neighbors.
+    others = [v for pid, v in __saves.items()
+              if pid != USERID and __owners.get(pid) is not None and __owners.get(pid) != owner]
+    others.sort(key=lambda v: (-_last_seen(v), str(v["playerInfo"]["pid"])))
+    return others
 
 
 def friends(USERID: str) -> list:

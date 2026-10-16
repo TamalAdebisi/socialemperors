@@ -3,7 +3,7 @@
    Hire friends (showPopupSEHelpNest) and a social building's empty places
    (showPopupSEHelpSocialItem) open this window, to pick friends to ask; the
    Round Table's own window picks neighbours one by one (showFeedSEHire),
-   and a note says how that went. Friends answer on their Friends page. #}
+   and a note says how that went. Friends answer on their Everybody page. #}
 <dialog id="help" class="frame" tabindex="-1" aria-labelledby="help-title">
     <form method="dialog" class="close"><button class="button tiny plain" aria-label="Close">✕</button></form>
     <h2 id="help-title"><img src="img/villager.png" alt=""> Ask friends</h2>
@@ -20,11 +20,11 @@
                 <button class="button small" type="button" data-reload>Load my town again</button>
             </div>
             <p class="gifts-empty" data-full></p>
-            <p class="gifts-empty" data-no-friends>Help comes from friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.</p>
+            <p class="gifts-empty" data-no-friends>No other accounts yet. New players appear here automatically.</p>
             <div data-pick>
                 <ul class="help-friends" data-friends></ul>
                 <button class="button small gold" type="button" data-ask>Ask</button>
-                <p class="bank-more">Friends answer on their Friends page. Their help shows when your town loads again.</p>
+                <p class="bank-more">Friends answer on their Everybody page. Their help shows when your town loads again.</p>
             </div>
         </div>
         <p class="bank-message" role="status" aria-live="polite"></p>
@@ -101,7 +101,7 @@
                 var box = document.createElement("input"), name = document.createElement("b");
                 box.type = "checkbox";
                 box.value = friend.id;
-                box.checked = friend.state === "can";
+                box.checked = false;
                 box.disabled = friend.state !== "can";
                 name.textContent = friend.username;
                 label.append(box, name);

@@ -45,6 +45,16 @@ def are_friends(a, b) -> bool:
         return b in _friends.get(a, ())
 
 
+def everybody(user_id) -> list:
+    """All other accounts: gifts and help no longer need a friend request."""
+    return _storage.community(user_id) if user_id is not None else []
+
+
+def can_help(a, b) -> bool:
+    """Only distinct, existing accounts can send gifts or help each other."""
+    return a is not None and b is not None and a != b and _storage.get_user(a) is not None and _storage.get_user(b) is not None
+
+
 def forget(user_id):
     """An account deleted (storage.delete_user removes its rows)."""
     with _lock:
