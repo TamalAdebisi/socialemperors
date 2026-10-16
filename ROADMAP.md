@@ -14,9 +14,11 @@ This is a non-commercial fan project. See [Copyright](#copyright) below.
    <https://game-server-staging-production.up.railway.app>. Staging has its own
    empty database, so testing there never touches real players' empires.
 3. The live game changes **only when a pull request is merged** into `main`:
-   by the owner, or by Claude for its own once all its tests pass, as the
-   owner allows. Railway then rebuilds `main` (about 2 minutes, then a short
-   reconnect for players).
+   **all agents have standing owner authorization to merge ready pull
+   requests**, including another agent's, after completing verification.
+   Do not ask for merge confirmation again. Railway then rebuilds `main`
+   (about 2 minutes, then a short reconnect for players); that automatic
+   deployment is authorized too. CLAUDE.md gives the delivery rules.
 
 Passwords, API keys and tokens never go in chat or in the repository, only in
 GitHub Secrets or Railway variables.
@@ -271,6 +273,13 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 slices, about one task each; every slice ends tested, documented and merged.
 The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
+**Browser checks, 16 October:** #86 fixes the survival and market
+tests' waits; both pass individually and in the full run. That run passed
+63 of 64 tests in 64 minutes 51 seconds. An oversized art bundle makes
+`team` hit the test machine's memory limit; [HANDOFF.md](HANDOFF.md)
+records the asset and the re-export still needed. The owner requested
+merging the two wait fixes with that separate failure documented.
+
 - [ ] **Beta 1, the town builder** (the rest of step 3), built 14 October
       2026, now closing the gaps a side-by-side check against the Flash game
       found ([PARITY.md](PARITY.md); the rules it got wrong are fixed, and
@@ -404,6 +413,7 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
 | Decision | Why |
 | --- | --- |
+| Agents complete and merge agreed work autonomously | The owner wants implementation, verification, docs and merging handled together, without repeated merge approval; authorized 16 October 2026 |
 | Railway, not Render | Persistent disk on the cheap plan, deploys from GitHub, usage-based price (about $5 a month). Comparison in [DEPLOY.md](DEPLOY.md#appendix-a-railway-vs-render) |
 | Assets on Cloudflare R2 | Free downloads (no egress fees); keeps 1.3 GB out of the server |
 | Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need them out of memory, not just a database server |

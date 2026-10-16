@@ -1,5 +1,12 @@
 # Working on Social Empires (Codex and other agents)
 
+> **Standing owner authorization, 16 October 2026: build and merge
+> autonomously.** Carry agreed work through implementation, checks,
+> documentation and merge. You may merge any ready project pull request,
+> including another agent's, without asking the owner again. Merging's
+> automatic live deployment is authorized too. Follow the testing rules
+> and the explicit owner decisions and holds in CLAUDE.md and HANDOFF.md.
+
 This file is for coding agents that read `AGENTS.md`, such as OpenAI's
 Codex. Claude did most of the work so far, so the project's rules are in
 [CLAUDE.md](CLAUDE.md). **They apply to you word for word:** where it says
@@ -78,9 +85,13 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
 - Run the tests for what you touched while you work, and the whole lot
-  before a pull request is merged. The browser suite is long, 30 to 50
-  seconds a test, so most of an hour: Chromium draws without a graphics
-  card here, so everything runs slower than on a player's computer.
+  before a pull request is merged. On 16 October 2026, the 64 browser
+  tests took **64 minutes 51 seconds**, including the build, on a cloud
+  machine with 2 CPUs and 8 GiB of memory (Python 3.13.5, Node 24.19.0,
+  Playwright 1.56.1). 63 passed; `team` hit the memory limit while loading
+  an oversized art bundle (HANDOFF.md, task 1). Several tests use multiple
+  towns and take three to five minutes. Chromium draws without a graphics
+  card here, so allow over an hour for the full run.
 - **Look at the screenshots** in `e2e/out/` (and the server's log there).
   A test can pass while the screen is wrong.
 - Every new feature gets a browser test that checks the screen and the
@@ -88,7 +99,10 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   marks each as a different visitor, so the limit of five new accounts an
   hour doesn't get in the way.
 - Wait for things to happen, not for a number of seconds: the slow drawing
-  makes fixed waits flaky (HANDOFF.md, task 1, has two of these to fix).
+  makes fixed waits flaky. The survival test waits for its displayed game
+  clock; the market test lets earlier messages finish before asking for
+  a warning, so the message queue has room for it. Both waits have a
+  30-second limit (HANDOFF.md, task 1).
 - Never skip, switch off or loosen a test to get a pass.
 
 ## Delivering work
@@ -107,12 +121,15 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   *What changed*, *Judgment calls (also in DECISIONS.md)*, *Tests* (what
   ran, how many passed, and any failure explained). Plain English: the
   owner reads it.
-- **Merging:** CLAUDE.md lets the agent merge its own pull request into
-  `main` once everything passes. **Merging deploys the live game**: Railway
-  rebuilds `main` in about two minutes. If you can't merge yourself (Codex
-  in the cloud usually leaves *Create PR* and *Merge* to the owner), finish
-  with the pull request ready and say in one line that it's tested and
-  ready to merge.
+- **Merging is part of the task:** the owner's standing authorization
+  covers your own pull requests and another agent's. Complete the checks,
+  resolve conflicts, mark the pull request ready and merge it without
+  asking for confirmation. **Merging deploys the live game**: Railway
+  rebuilds `main` in about two minutes; that deployment is authorized.
+  Fix regressions and record accepted unrelated failures accurately.
+  Never bypass required GitHub checks. If a real blocker prevents merging,
+  report what failed and the next concrete step; do not leave ready work
+  unmerged just to seek permission.
 - Never push to `main` directly, and never rewrite a branch someone else
   is working on.
 

@@ -4,6 +4,34 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: standing authorization to build and merge
+
+- **The owner authorizes autonomous delivery of the agreed roadmap,**
+  including merging any ready project pull request, whether written by
+  Codex, Claude or another agent. No further merge confirmation is needed;
+  the automatic deployment is authorized too.
+- **Verification stays part of delivery.** Resolve conflicts, fix
+  regressions, inspect screenshots and document results and accepted
+  unrelated failures. A ready draft should be marked ready and merged.
+- **Parallel checks use separate environments and the same commit.**
+  One coordinator owns integration and merging. Browser runs share too
+  little memory to overlap on the current 2-CPU, 8-GiB machine.
+- **Existing explicit holds remain in place,** including task 6's final
+  comparison against the Flash game.
+
+## 16 October 2026: browser test waits
+
+- **The owner requested merging #86 with the separate `team` failure
+  documented.** Both changed tests pass. The oversized art bundle still
+  needs the repair and verification recorded in HANDOFF.md; no test was
+  skipped or weakened.
+- **Survival waits for three seconds on the displayed game clock,** so
+  the existing check for at least three seconds in the save still holds
+  on a computer that draws slowly.
+- **Market warnings wait for earlier messages to finish first.** Goal
+  rewards use the same queue, which drops new messages when full. Both
+  warning checks wait for an empty queue, each with a 30-second limit.
+
 ## 16 October 2026: the site's links in the new client
 
 The owner left where they go to me ("whatever is optimal").

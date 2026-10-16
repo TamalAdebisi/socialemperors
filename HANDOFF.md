@@ -1,5 +1,11 @@
 # Handoff: where the work stands, 16 October 2026
 
+> **Standing owner authorization: build and merge autonomously.** Agents
+> should finish agreed work, test it, update the docs, and merge ready
+> pull requests without asking again, including another agent's work.
+> Automatic deployment on merge is authorized. See CLAUDE.md for the
+> full delivery rule. Explicit feature decisions and holds still apply.
+
 Claude built this project up to 16 October 2026; Codex picks it up from
 here, and Claude may come back later. This is a snapshot for whoever
 starts next. Read [AGENTS.md](AGENTS.md) (setting up, testing, delivering)
@@ -13,12 +19,17 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **`main` is at `43ac3c7`**, with everything merged: pull requests #70 to
-  #84 went in on 15 and 16 October. There are no open pull requests. The
-  `claude/*` branches on GitHub are all merged and old: don't build on
-  them, start from `main`.
-- **Tests on `main`:** the server's 427 pass (9 skipped), the client's 324
-  pass, and of the 64 browser tests two are flaky (task 1).
+- **Task 1 is complete in #86**, with a separate art-loading failure
+  recorded below for follow-up. The owner requested merging the two wait
+  fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
+  those are implemented but still awaiting browser verification and merge.
+  #87 now includes `main` with both agents' work retained; its delivery
+  task is below. Leave
+  those tasks with that pull request, and start dependent work from the
+  latest `main` after it lands.
+- **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
+  client's 324 passed, and 63 of 64 browser tests passed. The two flaky
+  tests now pass; `team` needs the separate art repair described in task 1.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Nothing in the queue needs the live server, the database or the art
@@ -83,26 +94,89 @@ and tests assume.
 
 ## The queue, in order
 
+**Immediate delivery task: verify and merge #87.** Read AGENTS.md,
+CLAUDE.md and this file. Continue #87 on `claude/charming-hamilton-jiyrk5`;
+merge the latest `origin/main` into it (do not rebase). Resolve conflicts
+by retaining both sets of work: #86's waits and art-failure notes, these
+standing instructions, and #87's card, upgrade, Menu and shop research.
+The owner already chose card mockup A and delegated the Menu's placement;
+do not ask those questions again. The PR description reports unit-test
+passes, but a completed full browser run has not been recorded.
+
+Run the server tests, client type check and unit tests, then all browser
+tests (66 at #87's current head). Inspect desktop and phone screenshots
+and the server log. Fix failures without weakening assertions. Record
+the tested commit, counts, duration and any unresolved failure in the PR.
+The existing `team` art-memory failure is documented under task 1; if it
+recurs, establish whether it is the same accepted unrelated failure.
+Merge once verification is complete and regressions are resolved, using
+the standing authorization. Keep tasks 1, 2, 3 and 5 ticked in the merged
+handoff. Update the status at the top instead of restoring #87's stale
+"no open pull requests" text.
+
+**Checks that different chats can run concurrently:** use separate
+machines or cloud environments and separate checkouts of the same commit
+after the coordinator has merged `main` into #87. Each chat records its
+commit, command, results, screenshots and failures. One coordinator owns
+changes to #87 and the final merge. Run browser checks one at a time on
+the shared 2-CPU, 8-GiB machine; separate chats or worktrees do not add RAM.
+The runner also overwrites `e2e/out/server.log`, so never share a checkout
+between simultaneous runs.
+
+| Check | Browser test names for `PYTHON=.venv/bin/python node e2e/run.mjs` |
+| --- | --- |
+| Building card, upgrades and building actions | `card edit storage train construction friends-help cash bubble looks` |
+| Site Menu and desktop/phone controls | `site-menu menus dock keys pointers phone-place` |
+| The two repaired timing checks | `survival market` |
+
+These focused checks help locate failures; the coordinator still ensures
+the complete suite is covered on the final code. Server tests and the
+client's type/unit checks can run alongside browser checks. Research for
+task 4 (shop details) and the first slice of task 7 (tournaments) can also
+proceed independently; task 4's implementation builds on #87.
+
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
 ask, then build.
 
-### 1. Mend the two flaky browser tests (S) - [ ]
+### 1. Mend the two flaky browser tests (S) - [x]
 
-Do this first, so a red test means something again. Both fail on `main`
-now and then; neither is a bug in the game.
+Completed in **[#86](https://github.com/TamalAdebisi/socialemperors/pull/86)**.
+The owner requested merging on 16 October with the separate `team`
+failure below documented for follow-up.
 
-- **`e2e/tests/survival.mjs`**: three seconds after the stand starts, it
-  expects the arena's clock at 0:02 or more, and sometimes reads 0:01. The
-  battle clock is game time, and Chromium without a graphics card runs it
-  slower than the wall clock. Wait (with a time limit) until the clock
-  passes 0:02, rather than a fixed three seconds.
-- **`e2e/tests/market.mjs`**, near line 85: after the 17th trade it waits
-  10 seconds for "Market resources have been exhausted", which can come
-  late when the whole suite is running. Find what the message waits on and
-  wait on that.
-- Keep what each test checks; only how it waits changes. Then run the
-  whole suite and note how long it takes, for AGENTS.md.
+- **`e2e/tests/survival.mjs`** waits for three seconds on the displayed
+  game clock, with a 30-second limit. Drawing without a graphics card can
+  make game time lag behind real time; the existing save check still
+  requires at least three seconds.
+- **`e2e/tests/market.mjs`** waits for earlier messages to finish before
+  triggering either warning. Goal rewards share a queue of three
+  messages; a full queue drops new messages. Each wait has a 30-second
+  limit. All existing warning, trade and save checks stay in place.
+
+**Verified on 16 October:** both tests pass on their own and in the full
+suite. The server ran 427 tests (418 passed, 9 existing skips); the
+client's type check and all 324 tests passed. Screenshots were inspected.
+The full browser run took **64 minutes 51 seconds**, including the build:
+**63 of 64 passed**, with `team` the only failure. AGENTS.md records the
+machine and timing.
+
+**Separate follow-up: repair one existing art bundle.** `team` times out
+at `e2e/tests/team.mjs:38` while the selected army loads. It fails on its
+own too, in a fresh browser, reaching this machine's 8 GiB memory limit.
+The current public `art/2075_elemental_red_god.json` names **76 sheets**:
+about **3.8 GiB** of decoded RGBA pixels, or **5.1 GiB** with mipmaps,
+before other graphics copies. This is separate from the two wait fixes;
+neither changes the team test, game code or art.
+
+The current packer (`tools/art/pack_sheet.py`) already limits an item to
+four sheets. The owner can run **Export art to R2**, with **Make these
+again** set to `2075_elemental_red_god` and **Make every sheet again** left
+off. Once the new manifest is served (the bucket's cache lasts up to a
+day), clear this item's old files from `.tools/art-cache/art/` on the
+test machine and rerun `team` and the full suite. The workflow is the
+owner's to start, as AGENTS.md says. No test was skipped or weakened to
+work around this failure.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [x]
 
@@ -120,7 +194,7 @@ Town Hall II to IV can only be had this way, so three goals open up with
 it. The button can join the card's tiles in their current style (say so in
 DECISIONS.md); the card's new look is task 3.
 
-### 3. Beta 1: what the building card shows (S each, *owner*) - [x]
+### 3. Beta 1: what the building card shows (S each) - [x]
 
 Done in #87: the owner picked mockup A, the original's info panel.
 
@@ -129,9 +203,8 @@ PARITY.md, "What it shows": the picture with its health, its numbers
 (attack, speed, range, the room a house gives), what the next collect
 brings with a time bar, how full it is, the units inside (tap one to let
 it out), what a barracks trains, and a tip per kind of building. **The
-card's look is the owner's pick:** make a mockup first (drawn over a real
-town, a computer screen and a phone, like `docs/menus/*.webp`), show it,
-and build what they choose.
+card's look was the owner's pick:** they chose mockup A, the original's
+info panel. It is implemented in #87, awaiting verification and merge.
 
 ### 4. Beta 1: the shop's details (M) - [ ]
 
@@ -184,18 +257,20 @@ Where to start in our code:
   the barracks bubble (`train-bubble`) are exported already.
 - A phone has no hover: give it a tap, and say so in DECISIONS.md.
 
-### 5. Beta 1: the site's bar (S, *owner*) - [x]
+### 5. Beta 1: the site's bar (S) - [x]
 
 Done in #87: the owner left the place to us; a Menu after Full screen
 (DECISIONS.md, "the site's links in the new client").
 
 
 The classic page has Empires, Friends and Log out; the new client has
-none of them yet. Where they go on the owner's layout is theirs to say
-(DECISIONS.md, 16 October, "gifts"). Offer two or three places, then
-build the one picked.
+none of them yet on `main`. The owner delegated their placement. #87
+implements a Menu after Full screen; verify and merge that work.
 
 ### 6. Beta 1: the run-through, and closing the beta (M) - [ ]
+
+**On hold at the owner's request.** Resume when they ask; the standing
+merge authorization does not change this hold.
 
 `e2e/tests/classic.mjs` already opens an empire played in the new client
 in the classic game. Go through PARITY.md's Beta 1 part once more against
@@ -293,6 +368,8 @@ meanwhile.
 - AI-upscaled art: still open.
 
 Already decided, don't reopen: the menus as a rail and dock (CLIENT.md);
+the building card's mockup A and the agent-chosen Menu placement (both
+implemented in #87, awaiting verification and merge);
 the continents counting up from 1, so the world map's first-time help is
 left out; the Daily News window left out; the welcome-back chest kept in
 both clients; the troll town and the market in Beta 1; a fresh start on
