@@ -34,17 +34,19 @@ export class WorldWindows {
 
   /**
    * `attack`: opens the world map (ui/worldMap.ts); `survival`: the Survival window (ui/survival.ts);
-   * `results`: the Battle Results window (ui/attackHistory.ts).
+   * `results`: the Battle Results window (ui/attackHistory.ts); `towns`: the towns' window (ui/towns.ts),
+   * when the town has its button (on a phone it's a row here).
    */
   constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void,
-    survival: () => void) {
+    survival: () => void, towns: (() => void) | null = null) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
     const runs: Record<string, () => void> = { "Attack a player": attack, "Survival": survival };
     const battles = BATTLES.map((mode) => runs[mode.name] ? { ...mode, run: runs[mode.name] } : mode);
     const history = { ...RESULTS, run: results };
     this.battles = window_("battle", "Battles", [...battles, history], classicUrl);
-    this.world = window_("world", "World", [quests, ...battles, history], classicUrl);
+    const travel: Mode[] = towns ? [{ name: "Towns", about: "Your towns, and travelling between them", icon: ICONS.towns, verb: "Go", run: towns }] : [];
+    this.world = window_("world", "World", [quests, ...battles, history, ...travel], classicUrl);
   }
 
   toggleQuests(): void {

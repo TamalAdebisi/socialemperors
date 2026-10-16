@@ -15,6 +15,7 @@ import { placeStored, sellStored, storageChoices, storageRefund, storedItems, ty
 import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
 import { lights, popupOf } from "./rules/hover.ts";
 import { useHelp } from "./rules/friendsHelp.ts";
+import { addPiece, harvestLoot, pieceFrame, pieceLines, type Piece } from "./rules/collections.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import type { ActionBar } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
@@ -88,6 +89,8 @@ export interface EditorParts {
    * how much each takes off. Without it, no asking and no bubbles.
    */
   friendHelp?: { ask: (placed: PlacedItem) => void; name: (empire: string) => string; words: FriendWords & { hour: string }; seconds: number };
+  /** Collection pieces (rules/collections.ts): the game's sheet of their pictures, and its text lines for their names. */
+  pieces?: { sheet: string; line: (id: number) => string };
 }
 
 export class TownEditor {
@@ -110,6 +113,9 @@ export class TownEditor {
   private readonly levelled: (level: number) => void;
   private readonly showLevels: ((reached: LevelUp[]) => void) | null;
   private readonly friendHelp: EditorParts["friendHelp"] | null;
+  private readonly pieces: EditorParts["pieces"] | null;
+  /** The roll for a collection piece as a harvest ends (Math.random; the browser tests set it). */
+  lootRoll: () => number = Math.random;
   /** Buildings ready to collect at the last look: one turning ready makes its sound. */
   private readyBefore = new Set<PlacedItem>();
   /** Buildings training a unit: which, when it's done (the page's clock, ms), and how it was paid. */
@@ -174,6 +180,7 @@ export class TownEditor {
     this.levelled = parts.levelled ?? (() => {});
     this.showLevels = parts.showLevels ?? null;
     this.friendHelp = parts.friendHelp ?? null;
+    this.pieces = parts.pieces ?? null;
     this.thumbnail = parts.thumbnail ?? (() => "");
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
@@ -895,6 +902,11 @@ export class TownEditor {
     this.selectGroup(this.view.unitsIn(from, to).filter((unit) => canWalk(this.town, unit)));
   }
 
+  /** Select a thing as a tap on it would (a goal's HELP! shows the town hall's card). */
+  focusOn(placed: PlacedItem): void {
+    this.select(placed);
+  }
+
   private select(placed: PlacedItem | null): void {
     this.camera.setCursor(this.toolCursor());  // the unit's pointer was for the one selected before
     this.selected = placed;
@@ -1381,6 +1393,10 @@ export class TownEditor {
       { text: `+${done.amount} ${done.resource}`, colour: RESOURCE_COLOURS[done.resource] },
       ...(done.xp > 0 ? [{ text: `+${done.xp} XP`, colour: RESOURCE_COLOURS.xp }] : []),
     ]);
+    const piece = harvestLoot(this.town.race, this.lootRoll);
+    if (piece) {
+      this.foundPiece(resource, piece);
+    }
     this.view.remove(resource);
     if (this.selected === resource) {
       this.select(null);
@@ -1394,6 +1410,24 @@ export class TownEditor {
       this.workingOn.delete(unit);
       this.view.pose(unit, null);
       this.goOn(unit, resource);
+    }
+  }
+
+  /**
+   * A collection piece from a harvest: the player's at once (the original's
+   * dropped it to tap, as it did the wood), its picture popping up, a word of
+   * what it is, and the server told.
+   */
+  private foundPiece(resource: PlacedItem, piece: Piece): void {
+    this.send([addPiece(piece)]);
+    if (!this.pieces) {
+      return;
+    }
+    this.view.pop(resource, this.pieces.sheet, pieceFrame(piece));
+    const lines = pieceLines(piece);
+    const name = lines && this.pieces.line(lines.piece);
+    if (name) {
+      this.tell(`You found a collection piece: ${name}, of ${this.pieces.line(lines.collection)}.`);
     }
   }
 

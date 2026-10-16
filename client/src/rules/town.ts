@@ -63,7 +63,7 @@ export interface PlayerInfo {
     neighborAssists?: Record<string, number>;
   };
   /** The neighbours shown in the game: their player info, with their home town's level. */
-  neighbors?: { pid: string | number; name?: string; level?: number | string }[];
+  neighbors?: { pid: string | number; name?: string; level?: number | string; xp?: number | string }[];
 }
 
 export interface PlacedItem {

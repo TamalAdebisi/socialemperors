@@ -4,6 +4,46 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: gifts
+
+- **Gifts sits first in the Neighbours window,** as the original's Send
+  gift sat on a neighbour's portrait; the window is the classic page's,
+  in the panel.
+- **One Gifts row, not Send gift on each neighbour:** the window lets
+  the player pick the friend, as the classic page's does.
+- **The site's bar (Empires, Friends, Log out) isn't in the new client
+  yet:** where it goes on the owner's layout is theirs to say.
+
+## 16 October 2026: the troll town
+
+- **Towns has its own button,** on the rail from level 20 (on a phone,
+  a row in World): the original's globe sat in its games menu, which our
+  rail split into Quests and Battle.
+- **Travelling opens the other town as a new page** (`?town=1`), the way
+  an island trip does here; the original swapped the town in place. The
+  page's address keeps the town, so reloading stays there.
+- **The other town shows its name and race only,** not its level or
+  resources: the original's window showed the two pictures alone.
+
+## 16 October 2026: a goal's window
+
+- **The goal card opens its goal's window,** as the original's goal
+  badges did; until now it opened the list. The list is a tap further:
+  the window's Goals button, in the place of the original's switched-off
+  "pay to skip".
+- **Opening a goal's window doesn't open the shop.** The original opened
+  its build menu too for goals 1 to 10; here the shop would cover the
+  window, so HELP! points at the Build menu instead.
+
+## 16 October 2026: collection pieces
+
+- **A piece is the player's at once,** as the wood and gold from a
+  harvest already are here; the original dropped it on the ground to be
+  tapped (and picked it up by itself when six things lay about).
+- **A message names the piece and its collection** (the game's names),
+  an extra: the original showed the name only with the mouse on the
+  dropped piece, and there's no collections window here yet to see it in.
+
 ## 16 October 2026: survival
 
 - **Each arena's prizes are listed on its card,** not only while the

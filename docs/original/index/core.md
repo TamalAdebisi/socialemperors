@@ -53,7 +53,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 | The tidy-up on open | Buildings first, the town hall first of all. The player's own buildings that overlap or stand off the map go to storage; anyone else's off the map are sold free ("OUTOB"). A unit on a taken tile (not a field or a gate) moves to the nearest free one ("Colisio #n"). | built: `rules/cleanup.ts` (ours also moves a unit off a gate, and keeps one on the player's land: DECISIONS.md) |
 | Social buildings' free helpers | On open, a social building still waiting for staff that has no helper yet, and whose crew list has 3 or more, gets one helper free (`buy_si_help`); one with exactly one helper and a crew of 7 or more gets a second. | not yet (social buildings are for later) |
 | Leaving a map | Sends what's queued, then `get_player_info` for the next map (with `privateState=1` for a player battle); on a neighbour, sends the visit's helps first. `game_status` "LOAD_MAP" with where from and to. | built: visits reload the page (`visit.ts`), quests in `questPlay.ts` |
-| Raid and spy counters | 3 player attacks in each 6 hours (or a bought pack), not the same player within 4 hours; 3 spyings a day; market trades reset after 20 hours. | not yet (player battles and the market come later; `pvp.py`, `market.py` on the server) |
+| Raid and spy counters | 3 player attacks in each 6 hours (or a bought pack), not the same player within 4 hours; 3 spyings a day; market trades reset after 20 hours. | partly: the market's in `rules/market.ts`; player battles' counts on the server (`pvp.py`) |
 | Fallen units | The save's dead list split into heroes (8 of them) and the rest, for the graveyard. | built: `rules/graveyard.ts` |
 | Facebook and tracking | Bookmark, like, invite, gifts page, buying cash, share windows, error reports, status tracking. | not needed |
 
@@ -102,12 +102,12 @@ resources" flag (`buy` or `sell` with 1 in that place).
 |---|---|---|---|
 | `core/NumberParticle.as` | 244 | The numbers and icons that rise after a purchase, a harvest or a sale. | built: `view/markers.ts` |
 | `core/ParticleSystem.as` | 71 | Runs the rising numbers; keeps no more than 7 at once. | built: `view/markers.ts` |
-| `core/Token.as` | 443 | Gold, experience, wood, food, stone and collection pieces dropped on the map to tap; they pick themselves up when 6 or more lie about. Gold and the rest only add to the top bar at home (the server counts them). | partly: values rise and count at once (DECISIONS.md); collection pieces not yet |
+| `core/Token.as` | 443 | Gold, experience, wood, food, stone and collection pieces dropped on the map to tap; they pick themselves up when 6 or more lie about. Gold and the rest only add to the top bar at home (the server counts them). | partly: values rise and count at once (DECISIONS.md), collection pieces too (`rules/collections.ts`) |
 | `core/FauxBar.as` | 98 | The short "collecting" bar (about two thirds of a second) before a harvest is counted; the glove skips it. | not yet (PARITY.md, "Small things") |
 | `core/FauxBar2.as` | 78 | The bar after accepting a neighbour's request on arrival: 10 gold and 3 experience (the config's `ASSIST_REWARD_*`), then `assist_neighbor` at once. | not yet: the arrival request isn't offered (the server has `assists.help_request`) |
 | `core/FauxBar3.as` | 103 | A timed bar over a building: the 10-second construction (a third as long in the tutorial) and other waits. | not yet (PARITY.md, "Construction") |
 | `core/ToolTip.as` | 83 | A small label with a pointer, used by the menus. | built: labels and titles in `ui/` |
-| `core/FotoNeighbour.as` | 43 | A friend's picture over a building they helped, to accept their help. | not yet (PARITY.md, "Neighbours") |
+| `core/FotoNeighbour.as` | 43 | A friend's picture over a building they helped, to accept their help. | built: `view/friendBubble.ts`, their initial for the picture |
 
 ## Spells and special moves
 
@@ -145,7 +145,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 | `core/LevelUnlock.as` | 65 | One card in the level-up window: a building that just became available. | not yet (PARITY.md, "Level-up window") |
 | `core/NoGifts.as` | 101 | The empty gift box picture, which opens the site's gifts page. | not needed |
 | `core/PromotionPacks.as` | 234 | Offer packs bought with game cash: resources, mana and items (fixed, by chance, or the super pack's three tiers), into storage; `buy_offer_pack`, `buy_super_offer_pack`. | not yet (later; the server has `shop.offer_pack`) |
-| `core/Collectible.as` | 40 | One collection piece: its collection, name, where it drops and how often. | not yet (collections are for later) |
+| `core/Collectible.as` | 40 | One collection piece: its collection, name, where it drops and how often. | partly: harvests' pieces in `rules/collections.ts`; the window is for later |
 
 ## Surprises
 

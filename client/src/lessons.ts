@@ -18,6 +18,7 @@ import {
 import { DRAGON_NEST as DRAGON_NEST_KIND, readNest, writeNest } from "./rules/nest.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import { chooseDraggy, nestReminder } from "./ui/draggy.ts";
+import { GOAL_WINDOW_EVENT } from "./ui/goalWindow.ts";
 import { LessonsView } from "./ui/lessons.ts";
 import { closePanel, onPanelChange } from "./ui/panel.ts";
 import type { TownView } from "./view/townView.ts";
@@ -75,6 +76,10 @@ export class Lessons {
         this.hear({ kind: "closed" });
       }
       goals = panel?.key === "goals";
+    });
+    // The goal card opens its goal's own window (ui/goalWindow.ts), as in the original's lessons: looked at, then closed.
+    document.addEventListener(GOAL_WINDOW_EVENT, (e) => {
+      this.hear({ kind: (e as CustomEvent<{ open: boolean }>).detail.open ? "goals" : "closed" });
     });
     this.go(from);
     const frame = () => {
@@ -204,7 +209,7 @@ export class Lessons {
       case "goals":
         return button(".goal-card");
       case "close":
-        return button(".panel:not([hidden]) .panel-close");
+        return button(".goal-window .goal-ok") ?? button(".panel:not([hidden]) .panel-close");
       case "card": {
         const name = this.parts.items.get(target.id)?.name;
         const card = [...document.querySelectorAll<HTMLElement>(".shop-card")].find((c) => c.querySelector(".shop-name")?.textContent === name);

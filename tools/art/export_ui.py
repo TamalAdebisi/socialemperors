@@ -53,6 +53,8 @@ PICTURES = {
     "square-tool": ("GuiMC/bgBar/herramientaCuadrado", 0),
     "square-tool-space": ("GuiMC/bgBar/herramientaCuadrado", 1),
     "my-town": ("GuiMC/bgBar/returnHome", 0),
+    "towns": ("GuiMC/bgBar/iconMenuGames/herramientaSelectorMundo", 0),  # the globe: the player's towns
+    "assist-mark": ("FriendButtonMC/mcassist", 0, 300),  # "ASSIST!": a neighbour who can be helped today
     "my-world": ("GuiMC/bgBar/returnHome", 2),
     "quests": ("GuiMC/bgBar/iconMenuWorld/questButton", 0),
     "pvp": ("GuiMC/bgBar/iconMenuWorld/pvpButton", 0),
@@ -124,6 +126,13 @@ PICTURES = {
     "plan-mid-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 2, 330),
     "plan-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 3, 330),
     "plan-picked": ("PopUpBattleOptionsMC/strat/s1/vist", 0),
+    # A goal's window: its parchment, band and blue button (OK, HELP!, Goals: the words are
+    # ours to write); "New Mission!" with its arrow, by the goal card.
+    "goal-window": ("popUpMissionsMC/popupInfo@2", 0, 1200),
+    "goal-band": ("popUpMissionsMC/popupInfo@3", 0, 900),
+    "goal-button": ("popUpMissionsMC/popupInfo/btnOk@1", 0, 400),
+    "new-mission": ("popUpMissionsMC/animMission", 10, 500),
+    "click-here": ("NewGoalMC@1", 0, 300),  # the yellow tag on goals 6 to 9, without its words
     # The Survival Arena: its card's Enter Survival, and the survival window's lives (full, used) and the padlock on an arena.
     "open-survival": ("EP_Survival_MC/btnAbrir", 0),
     "survival-life": ("PopupSurvivalMC/life1", 0, 120),

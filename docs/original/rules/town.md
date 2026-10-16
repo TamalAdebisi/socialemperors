@@ -342,7 +342,7 @@ of the original's searches measure from.
   town); `collect_new` (x,
   y, town, item, villagers, multiplier, 0) and `sell` (x, y, item, town,
   0, "HARV"). A stone or gold rock leaves a regrowing one (`buy` of 81 or
-  80, facing 1); a tree goes. *Same: `client/src/rules/work.ts` (`harvested`); the collection piece: missing.*
+  80, facing 1); a tree goes. *Same: `client/src/rules/work.ts` (`harvested`); the collection piece: `client/src/rules/collections.ts`, given at once.*
 - **Next:** the next in its line that's still there and nobody's at; with
   none, the group of the same kind touching the last one (and touching
   those), ordered by tiles across plus tiles down, the first taken even if
@@ -717,7 +717,7 @@ tree of the kind wasn't checked.
     (checked twice) *Fixed since:* "Select several units, as in the
     Flash client".
 39. The next-harvest clock on the bar. (checked twice)
-40. Collection pieces from trees and rocks. (checked twice)
+40. Collection pieces from trees and rocks. (checked twice) *Fixed since "Collection pieces".*
 41. The no-town-hall window. (checked twice)
 42. The wall gate opening. (checked twice) *Fixed since:* "Unstick
     units, and open and shut wall gates".

@@ -120,12 +120,13 @@ dock"), so these come with a mockup first.
 - [ ] **Shop:** what each item gives or houses (and a trained unit's
       numbers), shown on hover or tap; a confirmation before opening a
       building early for cash; the tabs' own pictures; "new" badges. M
-- [ ] **Goals:** a window per goal with its picture, text and a help arrow;
+- [x] **Goals:** a window per goal with its picture, text and a help arrow;
       "New mission!" notices. M
-- [ ] **Gifts and the site's bar:** the gifts window (taking gifts in,
-      giving from storage, the free gift) and Empires, Friends and Log out,
-      as on the classic page. M
-- [ ] **Neighbours:** sorted by XP, with their XP and a mark on those you
+- [x] **Gifts:** the gifts window (taking gifts in, giving from storage,
+      the free gift), as on the classic page. M
+- [ ] **The site's bar:** Empires, Friends and Log out, as on the classic
+      page (where it goes is the owner's call). S
+- [x] **Neighbours:** sorted by XP, with their XP and a mark on those you
       can help; Send gift. M
 - [x] **Friends' help on a building** shows their picture over it;
       tapping takes an hour off. S
@@ -140,7 +141,7 @@ dock"), so these come with a mockup first.
 
 ## Your calls (15 October 2026)
 
-- [ ] **The troll town** (a second town, from level 20): in Beta 1. L
+- [x] **The troll town** (a second town, from level 20): in Beta 1. L
 - [x] **The market** (trading wood, food and stone; three goals need it): in
       Beta 1. M
 - **The Daily News window**: left out. It showed Social Point's news,
@@ -184,7 +185,7 @@ The rule books list more that only look or feel different.
 - [x] **Social buildings get a free helper** as the town opens, when their
       list is empty and they have 3 or more places (or one helper and 7 or
       more). ([neighbours](docs/original/rules/neighbours.md#differences)) S
-- [ ] **Collection pieces** now and then drop from trees and rocks in a
+- [x] **Collection pieces** now and then drop from trees and rocks in a
       human town (`add_collectable`). ([no button](docs/original/no-button.md)) M
 - Kept as decided before (DECISIONS.md, "the rules the original plays
   by"): a farm collected without enough wood is kept, where the original
