@@ -62,7 +62,7 @@ next agent knows where to start.
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
   separate art repair below has verified the public files and the final
-  #87 integration. No owner-operated art step remains.
+  integration through #93. No owner-operated art step remains.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
@@ -339,6 +339,32 @@ full run used the older code and subsequently replaces this tutorial
 flow; this is not a claimed #93 failure. Do not confuse it with the
 closed memory failure or call the 66/67 run all green. No game rule or
 test assertion was changed by the art repair.
+
+**Final #93 integration and closure:** latest main `73998ffc` was merged
+at `3bd0c7dfc9e3296612ea8d094a215aee475eea7d`; this branch differs only
+in documentation. #93's separately recorded **69/69 full run** used
+refreshed ordinary art, followed by its **4/4** checks for the final
+tutorial corrections. Those results are attributed above; they are not
+another full run performed in this art-repair checkout.
+
+After moving all 40 files aside again at **14:27:51 UTC**, with no local
+`art/sheets/`, `team` **passed 1/1 in 66s** (72.2s with build/startup),
+**14:28:57–14:30:10 UTC**. Every repaired file was fetched once and
+hash-verified. Its three screenshots and clean server log were reviewed.
+Peak anonymous/shared/kernel memory was **3.68 GiB**, or **7.99 GiB**
+including accumulated file cache from a 4.55-GiB baseline. No memory-limit
+or OOM event occurred; the guard did not fire.
+
+The desktop/phone tutorial, recovery and tournaments then **passed 4/4
+in 10m 28.77s**, **14:30:36–14:41:05 UTC** (190s, 239s, 96s and 97s).
+All **20 screenshots** and the clean server log were reviewed. Peak
+anonymous/shared/kernel memory was **1.30 GiB** (5.62 GiB including file
+cache); no memory events occurred. All 40 repaired hashes still match.
+Current server checks: **435 run, 426 passed, 9 existing skips**, 34.6s
+with startup; client types and **350 tests passed**, 13.1s together.
+These **5/5 focused checks** verify the documentation merge alongside
+#93's full-suite record. **The art follow-up is closed. No further
+export, bucket operation, purge or owner-operated step remains.**
 
 ### 2. Beta 1: Upgrade on the building card (M) - [x]
 

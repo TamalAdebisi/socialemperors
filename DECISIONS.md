@@ -15,7 +15,7 @@ them can be found and reversed. The big, agreed decisions are in
   pre-#87 61/65 result was being recorded. Preserve all of its work and
   #89's tournament slice, refresh the nine-item cache again, then run
   `team` before the full suite. The four earlier failing checks now pass.
-  The final suite is 66/67 in 79m 48.48s, with no memory-limit/OOM events.
+  That suite was 66/67 in 79m 48.48s, with no memory-limit/OOM events.
   Both older verification records retain their original results.
 - **Keep the tutorial failure as a separate historical observation.**
   `lessons` checked an absent arrow at step 3 while the villager was
@@ -28,6 +28,14 @@ them can be found and reversed. The big, agreed decisions are in
   Preserve that work and check the final integration; do not describe the
   old failure as a #93 regression. Closing this art repair adds no
   gameplay, source-art or test-assertion changes.
+- **Use #93's completed full-suite evidence for its new tutorial.** Its
+  69/69 run used refreshed ordinary public art, and its final corrections
+  passed all four affected checks. After the documentation-only merge,
+  repeat the team and affected tutorial/tournament checks locally, plus
+  current unit checks: all five browser checks passed, with 435 server
+  tests run (9 existing skips), types and all 350 client tests passed.
+  Attribute #93's results explicitly; keep our two full runs and their
+  tested commits intact instead of relabelling them.
 
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 

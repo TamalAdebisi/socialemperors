@@ -32,7 +32,9 @@ suite finished **66/67 in 79m 48.48s**, with a separate tutorial-arrow
 failure described below. No memory-limit or OOM event occurred. No
 additional export, bucket change or purge was made after the owner's
 purge report. No owner-operated step remains. The earlier 61/65 result
-below predates #87 and is retained as historical evidence.
+below predates #87 and is retained as historical evidence. After the
+later #93 merge, all five focused team/tutorial/tournament checks passed
+on current main; #93's own 69/69 full-suite record is attributed below.
 
 ## Publication and CDN verification
 
@@ -168,6 +170,54 @@ failure of #93. Its separate verification records 69/69 with refreshed
 ordinary art, followed by 4/4 checks for its final tutorial corrections.
 The final documentation merge preserves that work and checks its team,
 tutorial and tournament integration separately.
+
+## Final documentation integration with #93
+
+Latest main `73998ffc49900d99916eef5a4276058b1c12c045` was merged at
+`3bd0c7dfc9e3296612ea8d094a215aee475eea7d`. Only documentation differs
+from that main; the owner-authorized tutorial and classic-visibility
+changes are preserved in full. There is no art-repair code change.
+
+[#93's own verification](https://github.com/TamalAdebisi/socialemperors/pull/93)
+records **69/69 browser tests in 64m 32.58s** on game code `20a87d8d`,
+with the nine-item cache refreshed and ordinary public art. Its `team`
+test passed in 34 seconds and memory-limit/OOM counters did not increase.
+Its final recovery/review corrections at `6754695a` passed all four
+affected tutorial/tournament checks in 8m 15.30s. These are #93's results,
+not an additional full run performed by this art-repair checkout.
+
+That completed full-suite and affected-check evidence covers the newly
+merged tutorial. The team and affected checks were repeated locally
+after the documentation-only merge; the two full runs recorded here
+retain their original code versions and counts. At **14:27:51 UTC**, all 40
+files for the nine items were moved out of the active cache again, and
+there was still no `art/sheets/`.
+
+On this merged code, the cold-cache `team` run at **14:28:57–14:30:10
+UTC passed 1/1 in 66 seconds** (72.2 seconds with build/startup). All 40
+ordinary live files were fetched once and hash-verified. All three
+screenshots and the clean server log were reviewed. Peak
+anonymous/shared/kernel memory was **3.68 GiB** (3,950,903,296 bytes),
+or **7.99 GiB** including file cache, from a 4.55-GiB whole-environment
+baseline. All memory-event deltas were zero; the guard did not fire.
+The high total includes accumulated reclaimable file cache, not another
+oversized decoded bundle.
+
+Current unit verification passed: **435 server tests run, 426 passed,
+9 existing skips**, 33.6 seconds (34.6 with startup); client types and
+**350 unit tests passed**, 13.1 seconds together.
+
+The four affected browser checks then ran **14:30:36–14:41:05 UTC** and
+**passed 4/4 in 10m 28.77s** including build/startup: desktop tutorial
+190s, phone tutorial 239s, recovery 96s and tournaments 97s. All **20
+screenshots** and the clean server log were reviewed. Peak
+anonymous/shared/kernel memory was **1.30 GiB** (1,395,441,664 bytes),
+or **5.62 GiB** including file cache, from a 4.63-GiB baseline. All
+memory-event deltas were zero and the guard did not fire. All 40 repaired
+cache hashes still match; no local sheet override exists. Together with
+the cold `team` pass, this is **5/5 final focused checks** on current main.
+No further export, bucket write or purge was involved. The art follow-up
+is closed; no owner-operated step remains.
 
 ## Browser verification with the fresh published files
 
