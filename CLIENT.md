@@ -759,7 +759,9 @@ then fades; it cannot intercept another click (`view/markers.ts`).
 Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs`.
 
 Building previews snapshot their drawing origin before loading art, so
-pointer movement during loading cannot offset the picture twice.
+pointer movement during loading cannot offset the picture twice. Old
+hover state is cleared on entering placement or Move, keeping its refresh
+from erasing the footprint.
 `e2e/tests/building-overlay.mjs` checks selection leaves distant ground
 unchanged, delayed preview alignment, cancellation and the saved building.
 The Friends page and other site forms use root-relative CSS and image

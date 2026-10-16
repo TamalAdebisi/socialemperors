@@ -52,6 +52,9 @@ export default async function buildingOverlay({ newPlayer }) {
   assert.ok(Math.abs(shifted.y - baseline.y - shifted.dy) < 1, "the picture follows the footprint vertically once");
   assert.ok(Math.abs(shifted.width - baseline.width) < 1);
   assert.ok(Math.abs(shifted.height - baseline.height) < 1);
+  await page.evaluate(() => window.seHome.parts.editor.refresh());
+  assert.equal(await page.evaluate(() => window.seHome.parts.view.marks.children.length), 1,
+    "the previous building's hover cannot erase the new placement footprint on refresh");
   await player.shot("preview");
   await page.keyboard.press("Escape");
   assert.equal(await page.evaluate(() => window.seHome.parts.view.ghost), null);

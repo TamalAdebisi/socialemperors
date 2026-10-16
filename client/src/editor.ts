@@ -369,6 +369,7 @@ export class TownEditor {
   /** The player chose something in the shop: place it, as many as they like, until Done. Or one from storage. */
   startBuilding(item: ItemInfo, fromStorage: Stored | null = null): void {
     this.select(null);
+    this.light(null);  // stale hover refreshes must not erase the placement footprint
     const centre = this.tileAt({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
     this.building = { item, tx: centre.x, ty: centre.y, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
     this.fromStorage = fromStorage;
@@ -1843,6 +1844,7 @@ export class TownEditor {
    * and that stays so if the move is cancelled.
    */
   private startMove(placed: PlacedItem): void {
+    this.light(null);
     this.emptyOut(placed);
     this.refresh();
     this.moving = placed;

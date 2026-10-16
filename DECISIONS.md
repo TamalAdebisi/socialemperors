@@ -32,6 +32,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **Keep placement art on its footprint while loading.** Snapshot the
   preview's drawing origin before awaiting its art; pointer movement is
   already applied by the preview container and must not be applied twice.
+  Clear old hover state on entering placement or Move, so its periodic
+  refresh cannot erase the new footprint.
   Browser checks cover immediate building selection without distant
   ground changes, delayed preview loading, cancellation and the save.
 
