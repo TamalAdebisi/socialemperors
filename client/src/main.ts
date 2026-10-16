@@ -39,7 +39,7 @@ import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
 import { GoalKeeper } from "./goals.ts";
 import { BonusDesk } from "./bonuses.ts";
-import { readTown, type Box, type Town } from "./rules/town.ts";
+import { readBox, readTown, type Box, type Town } from "./rules/town.ts";
 import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
@@ -93,6 +93,14 @@ const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
 async function start(): Promise<void> {
   const settings = readPageSettings();
   const server = new GameServer(settings);
+
+  const tournamentQuery = new URLSearchParams(location.search);
+  const tournament = tournamentQuery.get("tournament");
+  if (tournament) {
+    const { playTournament } = await import("./tournamentPlay.ts");
+    await playTournament(settings, server, tournament, tournamentQuery.get("victim") ?? "");
+    return;
+  }
 
   // ?quest=<id>: a quest island, played here (questPlay.ts).
   const quest = new URLSearchParams(location.search).get("quest");
@@ -181,6 +189,7 @@ async function start(): Promise<void> {
   let openIslands = () => {};
   let openAttacked = () => {};
   let openWorld = (_continent?: number) => {};
+  let openTournaments = () => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -339,6 +348,40 @@ async function start(): Promise<void> {
     const tournamentConfig = tournamentRules(config);
     const tournamentWindow = new TournamentWindow({
       rules: tournamentConfig, items,
+      me: settings.userId,
+      level: () => town.level,
+      balance: (resource) => resource === "c" ? town.cash : town.gold,
+      refreshTown: async () => {
+        // The town remains playable beside the panel. Do not overwrite a
+        // collection, purchase or gift placement made while this read waited.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (!await commands.flush()) throw new Error("Your changes couldn't be saved.");
+          const before = JSON.stringify([town.cash, town.gold, [...town.gifts], attackState.teams]);
+          const fresh = await server.playerInfo({ town: town.id });
+          if (commands.pending || before !== JSON.stringify([town.cash, town.gold, [...town.gifts], attackState.teams])) continue;
+          town.cash = Number(fresh.playerInfo.cash);
+          town.gold = Number(fresh.map.coins);
+          town.gifts = readBox(fresh.privateState?.gifts);
+          const savedTeams = (fresh.privateState as Record<string, unknown> | undefined)?.teams;
+          if (savedTeams && typeof savedTeams === "object") attackState.teams = savedTeams;
+          menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
+          hud.update(town);
+          return;
+        }
+        throw new Error("Your town changed while refreshing. Please refresh again.");
+      },
+      command: (name, ...args) => commands.add(name, ...args),
+      spent: (resource, amount) => doings.spend(resource, amount),
+      now: clock,
+      join: (type, category, team, room) => server.joinTournament(type, category, team, room),
+      create: (type, team) => server.createTournament(type, team, (info.neighbors ?? []).map((n) => String(n.pid))),
+      leave: (room) => server.leaveTournament(room),
+      cancel: (room) => server.cancelTournament(room),
+      clean: () => server.cleanTournament(),
+      play: async (room, victim) => {
+        if (!await commands.flush()) throw new Error("Your changes couldn't be saved. Reload before playing.");
+        location.assign(`/client.html?tournament=${encodeURIComponent(room)}&victim=${encodeURIComponent(victim)}`);
+      },
       info: () => server.tournamentInfo(),
       choices: () => tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig),
       savedTeam: () => (attackState.teams as Record<string, unknown> | undefined)?.tournament,
@@ -361,6 +404,10 @@ async function start(): Promise<void> {
       classicUrl: settings.classicUrl,
       flush: () => commands.flush(),
     });
+    openTournaments = () => {
+      if (tournamentConfig.enabled && town.level >= MIN_LEVEL_TOURNAMENT) void tournamentWindow.open();
+      else editor.tell(tournamentConfig.enabled ? `Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.` : "Tournaments are not available right now.");
+    };
     const survivalWindow = new SurvivalWindow({
       words: (id) => lines.get(id) ?? "",
       pictureUrl: (name) => `${settings.assetsUrl}/images_new/${name}.jpg`,
@@ -819,7 +866,9 @@ async function start(): Promise<void> {
   }
   afterDrawing();
   // Back from an island: the island window again, as the Flash client opens it.
-  if (new URLSearchParams(location.search).has("islands")) {
+  if (new URLSearchParams(location.search).has("tournaments")) {
+    openTournaments();
+  } else if (new URLSearchParams(location.search).has("islands")) {
     openIslands();
   } else if (new URLSearchParams(location.search).has("world")) {
     // Back from spying: the world map again, at the continent spied on, as the Flash client comes back.

@@ -7,16 +7,15 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 42 built, 15 partly, 51 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 63 built, 11 partly, 34 not yet, 23 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
 level-up, bonuses, darts, graveyards, nests, riders, temple, social
 buildings, quests, attacks, survival and the team window) were read through.
-The tournament list, team editor and public/weekly cards were reread in full
-for the first slice (see `rules/tournaments.md`). The room and results were
-read in their main parts, other cards, rows and tabs by their function names; the
-five picture classes in `popupKompuGacha/` by their fields. Whether a window
+The tournament list, team editor, room, results and all their cards, rows
+and tabs were reread for the complete feature (see `rules/tournaments.md`).
+The five picture classes in `popupKompuGacha/` were read by their fields. Whether a window
 is ever opened was checked by searching for who calls its `PopupManager`
 function. Prices and counts come from the classes and from
 `config/game_config_20120826.json`.
@@ -39,7 +38,7 @@ The plain boxes the rest of the game opens.
 | `popups/ConfirmPopup.as` | 86 | A yes-or-no question, with what to do on each answer. | built: the bar's prompts (`ui/actions.ts`, `editor.ts`) |
 | `popups/PopupAlerta.as` | 67 | A message with a title and one of the game's pictures; used for a camp's end and similar news. | built: `ui/notice.ts` (with a picture) |
 | `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: first-time survival and tournament help saved with `set_help_map`; other windows later |
-| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: our notices show prizes for camps and chests; the windows that use this one are classic |
+| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts and unit collections remain classic |
 | `popups/PopupLore.as` | 148 | A picture book, page by page: the story of the gods and colossi, opened from the news and from a gods icon at the side of the screen. | not yet |
 | `popups/PopupMoreCash.as` | 63 | "Not enough cash", with a button to the page that sold cash. | not needed: payments |
 | `popups/tournament/Alert.as` | 69 | A small yes/no or OK box drawn inside another window; used by the temple, the team window and tournaments. | built: our windows ask in their own way (`questPlay.ts`) |
@@ -172,28 +171,28 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/tournament/PopupTournament.as` | 439 | The tournament list: everyday, weekly and the player's own; the team at the bottom; its help shows by itself the first time. | partly: list, first-time help and team box in `ui/tournaments.ts`; entry stays classic |
-| `popups/tournament/CreateYourTournamentWindow.as` | 179 | Pick a kind of tournament to create for friends. | not yet |
-| `popups/tournament/ThumbTournament.as` | 308 | One tournament card: picture, entry cost, prizes, Enter. | partly: picture, fee and server-selected prize in `ui/tournaments.ts`; entry stays classic |
-| `popups/tournament/ThumbTournamentCreation.as` | 192 | One kind of tournament in the create window. | not yet |
-| `popups/tournament/ThumbFriendsTournament.as` | 228 | The card for creating a tournament with friends. | partly: original picture and classic creation link; creation later |
-| `popups/tournament/ThumbWeeklyTournament.as` | 234 | A weekly tournament's card, with its countdown when closed. | partly: weekly visibility/countdown and classic links; entry and prize info later |
-| `popups/tournament/ThumbWeeklyTournamentPrize.as` | 74 | One prize in a weekly tournament's list. | not yet |
-| `popups/tournament/WeeklyTournamentInfoWindow.as` | 110 | A weekly tournament's prizes by rank. | not yet |
-| `popups/tournament/PopupTournamentRoom.as` | 338 | The waiting room: four players, a minute's countdown, searching; the creator can cancel or invite. | not yet |
-| `popups/tournament/PlayerInfoTournament.as` | 87 | One player in the room (bots have their own picture). | not yet |
-| `popups/PopupLoadingTournament.as` | 131 | A tournament match loading; Start calls the tournament service. | not yet |
-| `popups/tournament/PopupTournamentFinished.as` | 63 | A match won or lost, with the score. | not yet |
-| `popups/tournament/PopupTournamentResults.as` | 345 | The tournament's matches and results, its end countdown, then the prize if won. | not yet |
-| `popups/tournament/TournamentResultTabMatches.as` | 128 | The matches tab: each player's team and Play. | not yet |
-| `popups/tournament/TournamentResultTabResults.as` | 126 | The results tab: score board and ranking with prizes. | not yet |
-| `popups/tournament/TournamentMatchRow.as` | 24 | One row of the matches tab. | not yet |
-| `popups/tournament/TournamentScoreBoardRow.as` | 18 | One row of the score board. | not yet |
-| `popups/tournament/TournamentRankingRow.as` | 93 | One row of the weekly ranking, with its prize. | not yet |
-| `popups/tournament/TournamentRankingUserRow.as` | 102 | The player's own ranking row. | not yet |
-| `popups/tournament/TournamentPlayerData.as` | 116 | A tournament player's data (no window). | not yet |
+| `popups/tournament/PopupTournament.as` | 439 | The tournament list: everyday, weekly and the player's own; the team at the bottom; its help shows by itself the first time. | built: list, help, team and entry in `ui/tournaments.ts` |
+| `popups/tournament/CreateYourTournamentWindow.as` | 179 | Pick a kind of tournament to create for friends. | built: public-type chooser in `ui/tournaments.ts` |
+| `popups/tournament/ThumbTournament.as` | 308 | One tournament card: picture, entry cost, prizes, Enter. | built: original picture, fee, server-selected prize and entry checks in `ui/tournaments.ts` |
+| `popups/tournament/ThumbTournamentCreation.as` | 192 | One kind of tournament in the create window. | built: original cards and selected type in `ui/tournaments.ts` |
+| `popups/tournament/ThumbFriendsTournament.as` | 228 | The card for creating a tournament with friends. | built: original picture, team checks and creation in `ui/tournaments.ts` |
+| `popups/tournament/ThumbWeeklyTournament.as` | 234 | A weekly tournament's card, with its countdown when closed. | built: weekly visibility/countdown, entry exceptions and prize information in `ui/tournaments.ts` |
+| `popups/tournament/ThumbWeeklyTournamentPrize.as` | 74 | One prize in a weekly tournament's list. | built: original icons and unit thumbnails in `ui/tournamentResults.ts` |
+| `popups/tournament/WeeklyTournamentInfoWindow.as` | 110 | A weekly tournament's prizes by rank. | built: ten-rank preview in `ui/tournamentResults.ts` |
+| `popups/tournament/PopupTournamentRoom.as` | 338 | The waiting room: four players, a minute until refresh, searching; the creator can cancel or invite. | built: seats, refresh clock, Start, leave/cancel and Invite in `ui/tournaments.ts` |
+| `popups/tournament/PlayerInfoTournament.as` | 87 | One player in the room (bots have their own picture). | built: names/levels and original bot portraits; human initials follow the site's neighbour pattern |
+| `popups/PopupLoadingTournament.as` | 131 | A tournament match loading; Start calls the tournament service. | built: original start step after art loading and fresh room validation in `tournamentPlay.ts` |
+| `popups/tournament/PopupTournamentFinished.as` | 63 | A match won or lost, with the score. | built: original result pictures, score and confirmed server save in `tournamentPlay.ts` |
+| `popups/tournament/PopupTournamentResults.as` | 345 | The tournament's matches and results, its end countdown, then the prize if won. | built: `ui/tournamentResults.ts`; server-paid prize stays visible until Done acknowledges it |
+| `popups/tournament/TournamentResultTabMatches.as` | 128 | The matches tab: each player's team and Play. | built: enrolled teams, outgoing matches, pending/played state and Start in `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentResultTabResults.as` | 126 | The results tab: score board and ranking with prizes. | built: public score board, weekly top ten/own rank and prizes in `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentMatchRow.as` | 24 | One row of the matches tab. | built: `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentScoreBoardRow.as` | 18 | One row of the score board. | built: points, played count and duration in `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentRankingRow.as` | 93 | One row of the weekly ranking, with its prize. | built: numerically ordered ranks and configured prizes in `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentRankingUserRow.as` | 102 | The player's own ranking row. | built: separate own rank, including outside the top ten, in `ui/tournamentResults.ts` |
+| `popups/tournament/TournamentPlayerData.as` | 116 | A tournament player's data (no window). | built: typed rooms/matches and score helpers in `rules/tournaments.ts` |
 | `popups/tournament/RecuadroTeamTournament.as` | 98 | The team box in the tournament window. | built: twenty-place team box in `ui/tournaments.ts` |
-| `popups/tournament/AlertInviteTournament.as` | 47 | A tournament invitation, yes or no. | not yet |
+| `popups/tournament/AlertInviteTournament.as` | 47 | A tournament invitation, yes or no. | built/adapted: neighbours accept by entering from Your own; Invite uses the site's existing Friends-page notice, without Facebook start-up delivery |
 
 ## Shop offers, collections and news
 

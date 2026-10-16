@@ -2173,18 +2173,25 @@ seconds, with a 30-second limit. Game time can run behind real time when
 Chromium draws without a graphics card; the saved stand must still be at
 least three seconds long.
 
-### Tournaments: list and team
+### Tournaments
 
-The first tournament slice opens from Battle (World on a phone), from
-level 15 and while `TOURNAMENT_ACTIVATED` is on. `rules/tournaments.ts`
-keeps the list and selection rules; `ui/tournaments.ts` draws the panel
-and phone sheet, and `main.ts` connects the town, saves and server.
+Tournaments open from Battle (World on a phone), from level 15 and while
+`TOURNAMENT_ACTIVATED` is on. The list, team editor, waiting room, three
+matches, results and friends' rooms all work in the new client. The
+classic game remains available and reads the same saved rooms and teams.
+
+`rules/tournaments.ts` keeps selection, entry and result rules;
+`ui/tournaments.ts` owns the panel and phone sheet, with
+`ui/tournamentResults.ts` for matches, rankings and prizes. `main.ts`
+connects the town and command queue; `net/server.ts` uses the existing
+`tournaments/<service>.php` request envelope.
 
 - **Everyday, Weekly and Your own** show the game's tournament pictures,
   entry costs, the server's chosen everyday/friends' prizes, weekly
   availability/countdown and friends' rooms. Already-entered weekly
   tournaments are hidden, as in Flash. Refresh asks the server again;
-  a failed request offers Retry and the classic link.
+  a failed request preserves the last room and offers another attempt.
+  Weekly prize information lists the ten places before entry.
 - **Help** uses the original words and current banned-unit names. It
   opens the first time, recorded as `set_help_map ["tournamentHelp"]`.
 - **Your Team** has twenty places. The editor offers owned units from
@@ -2194,27 +2201,89 @@ and phone sheet, and `main.ts` connects the town, saves and server.
   Reset clears the selection. Save checks current ownership and the
   configured dragon/god/colossus cap. The shared editor keeps that cap
   even for a player planning to enter the weekly tournament, as Flash
-  did; the weekly entry exception remains in the classic entry flow.
+  did. Weekly entry skips the public card's ownership/complex-unit
+  recheck; list restoration has already removed unavailable copies.
 - **Same save and commands:** opening the list prunes unavailable saved
   units and silently saves the remaining team, as the original does.
   Editing saves `set_attack_team ["tournament", JSON-string-of-20-ids]`,
   with zeros for empty places. It never changes `teams.quest` or removes
-  owned units. Help and teams use the command queue; the list uses the
-  original `tournaments/get_tournament_info.php` service envelope.
-- **Later slices remain playable in classic:** entry, waiting rooms,
-  matches, results/ranking/prize collection, and creating/inviting
-  friends. A current tournament opens a status and Continue link without
-  editing its team, leaving it or clearing its results. Classic links
-  flush pending commands before navigating. There are no fee or room
-  mutations in this slice, and the classic-only goal count is unchanged.
+  owned units. An enrolled room displays its frozen team. Closing a
+  panel leaves enrollment and results intact; opening it rereads the
+  saved state. Classic links flush pending commands before navigating.
+- **Entry and waiting:** empty teams are refused, short teams ask first;
+  a full weekly team entering in the last ten minutes also gets a
+  warning. Public rooms match five level brackets. The service takes
+  the fee once; `tournament_substract_resources` and
+  `tournament_refund_resources` retain their original bookkeeping
+  formats. Authoritative money is reloaded after a service changes it.
+  Four seats show the entrants, with the original bot portraits and
+  empty-place artwork. The minute countdown refreshes the room; it is
+  not a bot-arrival timer. Public rooms fill empty seats after thirty
+  minutes, friends' rooms after a day, when the server next checks them.
+  Start opens the matches when all seats are ready. Leaving before
+  readiness refunds the fee; leaving afterward abandons the room
+  without a refund. Stale leave/cancel requests cannot affect a newer
+  enrollment.
+- **Friends' rooms:** Your own offers the seven public types for
+  creation. The server requires three real player neighbours, including
+  Friends-page friends. The waiting host can cancel, refunding every
+  entrant, or open Invite. Invite follows the existing classic-page
+  adaptation: it explains where neighbours find the room and links to
+  `/friends`. No Facebook message or separate invitation record is
+  created. After readiness, the host can leave but cannot cancel the
+  other players' matches.
 
-`e2e/tests/tournaments.mjs` checks desktop and phone, the real saved help
-and teams, counts from storage/warehouse/buildings, caps and exclusions,
-retry, the classic link, an existing server room and weekly reuse. Rule
-and protocol tests sit beside their modules. `tests/test_tournaments.py`
-also checks that browsing and saving never charge or enter a room.
-The originals were read locally; behavioral notes are in
-`docs/original/rules/tournaments.md`.
+`tournamentPlay.ts` loads the configured arena and two copies of the
+enrolled armies. `rules/tournamentBattle.ts` places them, controls the
+opponent and computes the original score over the existing battle and
+special-move engine. Each entrant fights the other three armies
+independently; the other player need not be online. Home units, storage,
+the graveyard and the saved team do not suffer battle losses.
+
+- **The match:** the original loading/start step, two army life bars,
+  unit counts, normal orders, selection, speed and special moves. The
+  defender forms up at its slowest member's speed; weekly defenders
+  charge after ten seconds. Public defenders have no timed charge,
+  but their normal defensive behavior can react to an approaching foe.
+  Marching speeds return to normal on the first hit. Healers on both
+  sides can keep healing a whole patient, and the armies are kept in
+  the middle of the arena. Crack and Black Hole remain visible but
+  unavailable; other learnt spells use normal mana and `use_magic`.
+- **The score:** current rooms use accumulated damage, including damage
+  healed later and overkill, to the original armies. Summoned units do
+  not enter their life totals or completion checks. Older point-type
+  zero uses the original slot-array lengths. The result waits three
+  seconds, sends the original `finish_tournament_match` fields and
+  displays the original victory/defeat picture. Surrender asks first
+  and records a zero-point loss. There is no `end_attack`, casualty
+  report or battle-gold payment.
+- **Coming back:** an unfinished match restarts from the enrolled armies,
+  as the original did; health and positions are not saved. The server's
+  one-hour unfinished-match timeout still applies. A completed result
+  awaiting confirmation stays available for Retry, including a reload
+  in the same tab; the server's recorded result always wins. The client
+  does not announce a saved result until it has read that result back.
+
+Matches and Results remain available until Done. Public/friends' results
+show all four players' scores and times; weekly results show the top ten
+and the player's own rank. The server resolves exact public ties with an
+additive `winner_id`, because its returned player list is viewer-first.
+Weekly prizes follow the frozen rank at that player's completion, even
+if the live table changes later. The server has already paid any prize:
+gold/cash update the balances and unit prizes appear in Storage. Done
+only sends `clean_tournament` and refreshes home data. Repeated refresh,
+result submission or acknowledgement cannot award the prize twice.
+
+Browser coverage is split across `e2e/tests/tournaments.mjs` and the
+`tournament-*` tests, using local throwaway accounts and checking screens
+against saved rooms, matches and resources. Rule and protocol tests sit
+beside their modules; `tests/test_tournaments.py` covers the server's
+fees, state transitions, prizes and idempotency. For final verification
+and its exact tested commit, see HANDOFF.md. Original-source
+notes are in `docs/original/rules/tournaments.md`. No dedicated
+tournament goal exists in the shipped missions, so the classic-only
+goal count does not change; ordinary resource-spending progress still
+receives successful entry fees.
 
 ### Making the art look better
 

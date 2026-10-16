@@ -13,6 +13,7 @@ import { tileUnder, unitPoint, type Point } from "./rules/geometry.ts";
 import { areaOf, castSpell, magicOpen, marked, rankOf, spend, type MagicState, type SpellInfo } from "./rules/magic.ts";
 import type { Specials } from "./rules/specials.ts";
 import type { Town } from "./rules/town.ts";
+import { tournamentSpellAllowed } from "./rules/tournamentBattle.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
 import { SpecialButtons } from "./ui/specialButtons.ts";
@@ -42,6 +43,8 @@ export interface ControlParts {
   changed?: () => void;
   /** False: no spell book (spying). */
   spells?: boolean;
+  /** The original tournament book disables Crack and Black Hole. */
+  tournament?: boolean;
 }
 
 export class BattleControls {
@@ -64,6 +67,7 @@ export class BattleControls {
       void commands.flush();
     }, () => parts.changed?.());
     this.magic = spells.state;
+    if (parts.tournament) spells.canCast = (spell) => tournamentSpellAllowed(spell.id);
     this.book = parts.spells !== false && magicOpen(town.race, town.level) ? new SpellBook(spells, (spell) => {
       this.aimAt = null;
       if (spell) {
@@ -198,6 +202,7 @@ export class BattleControls {
   }
 
   private cast(spell: SpellInfo, tile: Point): void {
+    if (this.parts.tournament && !tournamentSpellAllowed(spell.id)) return;
     const { battle, items, random, view, commands, sound } = this.parts;
     const rank = spend(spell, this.magic);
     castSpell(battle, spell, rank, tile, { items, random });

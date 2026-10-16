@@ -4,6 +4,52 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: complete tournaments in the new client
+
+- **Finish the whole tournament feature in one follow-up.** After the
+  first list/team slice merged, the owner expanded the task to all four
+  remaining parts. Entry, rooms, battles, results and friends' creation
+  are integrated together, keeping the original services and classic
+  access. PR #87's verification/merge and the separate public-art
+  follow-up remain with their other chats.
+- **Keep the waiting clock's actual meaning.** Its sixty seconds count
+  down to a server refresh, as in Flash; they do not promise bots then.
+  The panel explains the existing thirty-minute public and one-day
+  friends' wait. A manual Refresh button is a convenience. Closing the
+  panel neither leaves the room nor clears results.
+- **Reuse our battle controls with two army life bars.** Armies are
+  copies, spells keep their original tournament exclusions, and score
+  uses the original cumulative-damage rule. An unfinished attempt
+  restarts from the enrolled teams after reopening, including its start
+  timestamp, as the original client/server did. This is not a health or
+  position save. A finished result whose reply failed remains available
+  for Retry and survives a reload in the same tab; a recorded server
+  outcome takes precedence.
+- **Keep finished results until Done.** This replaces Flash's delayed
+  popup/OK with an explicit acknowledgement in the panel, so a player
+  can still inspect matches and rankings. The server has already paid
+  the prize; Done only cleans the viewed room. Unit prizes still appear
+  in Storage. The weekly table may change after a prize is paid, so the
+  panel explains that its awarded rank was fixed at completion.
+- **Ask the server who won an exact tie.** Its existing seat-order rule
+  resolves equal score and time, but each player's response puts them
+  first. An additive `winner_id` supplies the actual winner instead of
+  making the new client guess from that reordered list. Prize rules and
+  request formats do not change.
+- **An old Leave or Cancel cannot touch a new room.** A supplied room id
+  must match the current enrollment before those services change it.
+  Omitted ids keep the legacy behavior. This protects a player from a
+  stale tab or late retry without changing ordinary leave/refund rules.
+- **Invite follows the site's existing Friends-page policy.** The
+  waiting host gets the same explanatory notice and `/friends` link as
+  the classic page. Neighbours join through Your own. No Facebook
+  delivery, direct messages or new invitation ledger is added.
+- **No tournament-specific mission count changes.** The complete local
+  source/config review found no dedicated tournament goal among the
+  227 missions. This corrects the first-slice note below, which assumed
+  such goals remained in classic. Successful fees still count toward
+  applicable ordinary resource-spending goals.
+
 ## 16 October 2026: tournament list and team selection
 
 - **This slice browses and prepares; entry stays in classic.** The list

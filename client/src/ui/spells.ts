@@ -29,6 +29,8 @@ export interface MagicParts {
   bank: { amount: number; gold: number; cash: number };
   /** Something changed (mana, gold or cash): redraw what shows it. */
   changed: () => void;
+  /** A battle mode may show a learnt spell but forbid casting it. */
+  canCast?: (spell: SpellInfo) => boolean;
 }
 
 /** The parts for a town: its gold and cash pay, the config's spells and prices, the save's mana. */
@@ -347,6 +349,10 @@ export class SpellBook {
       button.className = "spell-button";
       button.classList.toggle("short", parts.state.mana < spell.mana);
       button.title = `${spell.name}: ${spell.description}`;
+      if (parts.canCast && !parts.canCast(spell)) {
+        button.disabled = true;
+        button.title = `${spell.name} cannot be used in tournaments.`;
+      }
       button.setAttribute("aria-label", `Cast ${spell.name} (${spell.mana} mana)`);
       const cost = document.createElement("span");
       cost.className = "spell-cost";

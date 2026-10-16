@@ -4,7 +4,8 @@ import { test } from "node:test";
 import { itemsById, type GameConfig } from "./config.ts";
 import { readTown, type PlayerInfo } from "./town.ts";
 import { complexUnits, restoredTournamentTeam, tournamentCards, tournamentChoices, tournamentRules, tournamentTeamProblem,
-  type TournamentInfo } from "./tournaments.ts";
+  tournamentCategory, tournamentEntryProblem, tournamentEntryWarning, tournamentReady, tournamentFinished, tournamentDeadline,
+  tournamentPlayerScore, tournamentLeaderboard, tournamentPrize, type TournamentInfo, type TournamentRoom, type TournamentPlayer } from "./tournaments.ts";
 
 const config = JSON.parse(readFileSync(new URL("../../../config/game_config_20120826.json", import.meta.url), "utf8")) as GameConfig;
 const items = itemsById(config);
@@ -83,4 +84,84 @@ test("the shared editor checks empty teams, current ownership, all 20 slots and 
   assert.equal(tournamentTeamProblem(padded(...dragons), choices, items, rules), "complex");
   assert.equal(complexUnits(padded(...dragons), items), 11);
   assert.deepEqual(restoredTournamentTeam(padded(...dragons), choices), padded(...dragons), "opening does not destroy a saved weekly team");
+});
+
+test("entry uses the five original level brackets and distinct public/weekly team checks", () => {
+  assert.deepEqual([14, 15, 20, 21, 25, 26, 30, 31, 40, 41, 90].map(tournamentCategory), [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+  const dragons = [...items.values()].filter((item) => item.groups === "dragon" && !rules.banned.has(item.id)).slice(0, 11).map((item) => item.id);
+  const choices: [number, number][] = dragons.map((id) => [id, 1]);
+  assert.equal(tournamentEntryProblem(padded(), [], items, rules), "empty", "entry always needs an army");
+  assert.equal(tournamentEntryProblem(padded(511, 511), [[511, 1]], items, rules), "unavailable");
+  assert.equal(tournamentEntryProblem(padded(...dragons), choices, items, rules), "complex");
+  assert.equal(tournamentEntryProblem(padded(...dragons), choices, items, rules, true), null);
+  assert.equal(tournamentEntryProblem(padded(511), [], items, rules, true), null, "weekly keeps the card's original check");
+  assert.equal(tournamentEntryProblem(padded(762), [[762, 1]], items, rules, true), "unavailable", "server bans still apply");
+  assert.equal(tournamentEntryProblem(padded(-1), [], items, rules, true), "unavailable");
+  assert.equal(tournamentEntryProblem([511], [[511, 1]], items, rules, true), "unavailable", "send exactly twenty places");
+});
+
+test("short-team confirmation takes precedence over the final ten-minute weekly warning", () => {
+  assert.equal(tournamentEntryWarning(padded(511)), "short");
+  assert.equal(tournamentEntryWarning(padded(511), 10), "short");
+  const full = Array(20).fill(511);
+  assert.equal(tournamentEntryWarning(full), null);
+  assert.equal(tournamentEntryWarning(full, 601), null);
+  assert.equal(tournamentEntryWarning(full, 600), "ending");
+  assert.equal(tournamentEntryWarning(full, 0), "ending");
+});
+
+const entrant = (id: string): TournamentPlayer => ({ user_id: id, user_name: id, level: 15, country: "",
+  team: padded(511), abandonned: 0, matches: [] });
+const room = (): TournamentRoom => ({ tournament_id: "room", tournament_type_id: "1", reward_id: 0,
+  private: "0", owner_id: "", owner: "", point_type: 1, date_ready: null, date_finished: null,
+  match_playing: false, players: ["one", "two", "three", "four"].map(entrant) });
+
+test("readiness uses both server start time and four seats; its battle deadline is separate from refresh", () => {
+  const state = room();
+  const kind = rules.kinds[0];
+  assert.equal(tournamentReady(state, kind), false);
+  assert.equal(tournamentDeadline(state, kind), null);
+  state.date_ready = 1000;
+  assert.equal(tournamentReady(state, kind), true);
+  assert.equal(tournamentDeadline(state, kind), 1000 + 24 * 3600);
+  state.players.pop();
+  assert.equal(tournamentReady(state, kind), false);
+  assert.equal(tournamentFinished(state), false);
+  state.date_finished = 2000;
+  state.match_playing = true;
+  assert.equal(tournamentFinished(state), false);
+  state.match_playing = false;
+  assert.equal(tournamentFinished(state), true);
+});
+
+test("scores count finished matches only and rank by points then time with the paid winner breaking exact ties", () => {
+  const state = room();
+  const played = (who: string, points: number, seconds: number, finished = true) => ({ attacker_id: who, victim_id: "other",
+    finished, attacker_won: true, attacker_points: points, date_started: 1000, date_finished: finished ? 1000 + seconds : null });
+  state.players[0].matches = [played("one", 20.15, 30), played("one", 30.25, 60), played("one", 100, 0, false)];
+  state.players[1].matches = [played("two", 50.4, 90)];
+  state.players[2].matches = [played("three", 50.4, 100)];
+  state.players[3].matches = [played("four", 80, 300)];
+  state.winner_id = "two";
+  assert.deepEqual(tournamentPlayerScore(state.players[0]), { points: 50.4, seconds: 90, matches: 2 });
+  assert.deepEqual(tournamentLeaderboard(state).map(({ player }) => player.user_id), ["four", "two", "one", "three"]);
+  assert.equal(state.players[0].user_id, "one", "sorting must not mutate server order");
+});
+
+test("public prizes require the server winner and weekly prizes use the frozen paid rank", () => {
+  const state = room();
+  const kind = rules.kinds[0];
+  state.winner_id = "one";
+  assert.equal(tournamentPrize(state, kind, "one"), null);
+  state.date_finished = 2000;
+  assert.deepEqual(tournamentPrize(state, kind, "one"), kind.prize[0]);
+  assert.equal(tournamentPrize(state, kind, "two"), null);
+  delete state.winner_id;
+  assert.equal(tournamentPrize(state, kind, "one"), null, "requester-first row cannot decide a tie");
+  const weekly = rules.kinds.find((kind) => Number(kind.weekly_tournaments) > 0)!;
+  state.ranking = { total_user: 20, top: {}, user: { user_id: "one", user_name: "One", points: 200, time: 50, matches: 3, rank: 2 } };
+  assert.deepEqual(tournamentPrize(state, weekly, "one"), weekly.prize[1]);
+  assert.equal(tournamentPrize(state, weekly, "two"), null);
+  state.ranking.user.rank = 11;
+  assert.equal(tournamentPrize(state, weekly, "one"), null);
 });

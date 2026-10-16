@@ -291,6 +291,8 @@ export interface BattleOptions {
    * shoot, and stays out of the fight until villagers repair it in full.
    */
   home?: boolean;
+  /** Tournament healers keep following a patient after it is fully healed. */
+  keepHealedTargets?: boolean;
 }
 
 export class Battle {
@@ -310,6 +312,7 @@ export class Battle {
   private gridStale = true;
   private nextKey = 1;
   private readonly home: boolean;
+  private readonly keepHealedTargets: boolean;
   /** Things due on a later frame (a kamikaze set off by another, a spell's effects). */
   private later: { frame: number; run: () => void }[] = [];
   private shields: Shield[] = [];
@@ -350,6 +353,7 @@ export class Battle {
     this.random = options.random ?? Math.random;
     this.onDeath = options.onDeath ?? (() => {});
     this.home = options.home ?? false;
+    this.keepHealedTargets = options.keepHealedTargets ?? false;
   }
 
   /** Put an item on the field: a unit on its tile, a building on its footprint. */
@@ -566,7 +570,7 @@ export class Battle {
 
   /** A healer drops a target that's whole or not its side's, and picks the most hurt nearby. */
   private thinkHealer(unit: Fighter): void {
-    if (unit.target && (unit.target.side !== unit.side || unit.target.life >= unit.target.maxLife)) {
+    if (unit.target && (unit.target.side !== unit.side || (!this.keepHealedTargets && unit.target.life >= unit.target.maxLife))) {
       unit.target = null;
       unit.attacking = false;
     }

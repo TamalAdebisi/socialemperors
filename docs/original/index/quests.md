@@ -8,10 +8,10 @@ home town every 4 hours. The fighting itself (damage, reach, death) lives in
 the map engine (see [engine.md](engine.md)); special moves are the delegates
 (see [delegates.md](delegates.md)).
 
-**Count:** 65 built, 10 partly, 16 not yet, 8 not needed (99 classes).
+**Count:** 66 built, 10 partly, 15 not yet, 8 not needed (99 classes).
 
-**How deep this was read.** Read through: every `battle/` class but
-`TournamentIA` (its first half read, the rest by its parts), every projectile
+**How deep this was read.** Read through: every `battle/` class, including
+the later full tournament reading in `rules/tournaments.md`, every projectile
 class, `Quest`, `QuestInterface`, `QuestIslaTrolls1` (the other three by
 comparing them with it), `QuestIslaCivilizacion` and its seven islands,
 `QuestIslaHardGeneric` (the god islands by comparison) and all ten of their
@@ -57,7 +57,7 @@ ones an island gives the player for the fight.
 | `battle/collectiveai/HeavySiegeCollectiveAI.as` | 249 | A siege of big dragons from the left edge (three sets, from levels 25, 35 and 45) that leaves after killing 10 units and 5 buildings, at most every 6 hours. | not needed: switched off in the game (`Config.HEAVY_SIEGE` is false) |
 | `battle/CIA_QuestHelper.as` | 191 | Reinforcements for the Prisoner Princess camp: a window, enemies more than 10 tiles from the prison are removed, 9 Alliance Knights (576) are put down free in the far corner, walk to the town hall and join the player (see Surprises). | not yet |
 | `battle/Assault.as` | 623 | Attacking another player: the army, the counters, the pay (a town hall pays the defender's level times 100; a fighter half its gold price, an eighth of its stone price or ten times its cash price, each capped; the defender gets a tenth of each attacker's loss), the share of units that come home by level, the spy eagle, and the `end_attack` report. | partly: the attack, the pay, who comes home and the report in `attackPlay.ts` and `rules/pvp.ts` (from Neighbours); the spy eagle too; `pvp.py` checks the report |
-| `battle/TournamentIA.as` | 613 | The computer side in a tournament match: its army forms up, waits 10 seconds and advances; each unit takes the nearest enemy within its reach plus 2, else the weakest; healers go to whoever is hurt most; every 10 seconds anyone outside the middle 60 x 60 tiles is walked back in; the life bars and the end of the match. | not yet (opens the classic game; `tournaments.py` on the server) |
+| `battle/TournamentIA.as` | 613 | The computer side in a tournament match: forms at the slowest speed, weekly charges after 10 seconds, public uses normal defensive reactions without a timed charge; first hit restores marching speeds; targets by initial health order within reach plus 2, else initially weakest; both sides' healers can keep whole patients; every 10 seconds original units outside the middle 60 x 60 tiles walk back in; life bars, damage score and completion. | built: `rules/tournamentBattle.ts`, `tournamentPlay.ts` |
 
 ## Shots
 
@@ -223,9 +223,13 @@ Rules found here that our notes (CLIENT.md, PARITY.md, DECISIONS.md and
    means an enemy soldier in a player battle to start defensive, but a slip
    makes every one aggressive; the town's chosen defence (by default "half
    go out") then sets each unit. For when player battles are built.
-8. **Tournament matches** (`TournamentIA`). Healers there keep healing units
-   at full life; every 10 seconds any unit outside the middle 60 x 60 tiles is
-   walked back in; the computer side forms up and waits 10 seconds first.
+8. **Tournament matches** (`TournamentIA`). Both sides' healers can keep
+   healing units at full life; every 10 seconds original units outside the
+   middle 60 x 60 tiles walk back in. Weekly defenders charge 10 seconds
+   after forming; public defenders have no timed charge, but normal
+   defensive reactions can engage an approaching foe. The first hit
+   restores marching speeds. *Built:
+   `rules/tournamentBattle.ts`; full notes in `rules/tournaments.md`.*
 9. **A reward switch** (`Quest`, `QuestsInMap`). A page setting
    (`abLessRewardQuestsChapters`) turns on a multiplier (0 to 2, from the
    config's `REWARD_QUESTS_CHAPTERS_MULTIPLIER`) on every island kill, island

@@ -281,7 +281,7 @@ lent units are counted rightly, nothing counts after an island is decided,
 units on the border walk home rather than being sold, a walled-off order
 frees its unit.
 
-## Tournaments: first slice
+## Tournaments
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
@@ -290,10 +290,22 @@ frees its unit.
       and the warehouse as well as standing in town; banned units,
       per-unit limits, strongest-first choices and the shared editor's
       combined dragon/god/colossus limit. Separate tournament team save.
-- [ ] Waiting rooms, battle execution, results/ranking/prizes and
-      creating/inviting friends' tournaments: retain classic access.
+- [x] Entry warnings and weekly exceptions; five level brackets;
+      original service/command formats with one server-owned fee.
+- [x] Four-seat waiting rooms, original minute-to-refresh countdown,
+      public/friends bot filling, close/reopen, leave and refunds.
+- [x] Three independent battles against enrolled armies: original
+      placement, defender formation/targeting, damage score, spell
+      exclusions, surrender and no home casualties. Unfinished attempts
+      restart with the saved teams; failed result saves can be retried.
+- [x] Matches and Results, tournament deadline, four-player score board,
+      weekly top ten and own rank; authoritative winner, server-paid
+      prizes in Storage and explicit Done acknowledgement.
+- [x] Friends' creation, minimum-neighbour check, waiting host's
+      cancellation with refunds, and the existing Friends-page Invite
+      notice. The old Facebook invitation delivery is not needed.
 
-The last islands' team-source gap above remains separate; this slice
+The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 ## Not for Beta 1

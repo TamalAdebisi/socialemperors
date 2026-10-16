@@ -113,7 +113,7 @@ export default async function tournaments({ newPlayer }) {
   assert.match(await page.locator(".tournament-countdown").textContent(), /Ends in \d+d \d\d:\d\d:\d\d/);
   await player.press("Your own");
   assert.match(await page.locator(".tournament-cards").textContent(), /No friends' tournaments/);
-  assert.equal(await page.getByRole("link", { name: "Create in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
+  assert.ok(await page.getByRole("button", { name: "Create tournament", exact: true }).isEnabled());
 
   // Read-only fixtures for closed schedules and a friend's card, with text treated as text.
   await page.route(servicePath, async (route) => {
@@ -129,7 +129,7 @@ export default async function tournaments({ newPlayer }) {
   await player.shot("own-desktop");
   await player.press("Weekly");
   assert.match(await page.locator(".tournament-countdown").textContent(), /Available on 0d 00:01:/);
-  assert.equal(await page.getByRole("link", { name: "View in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
+  assert.ok(await page.getByRole("button", { name: "Enter tournament", exact: true }).isDisabled(), "a closed weekly schedule cannot be entered");
   await page.unroute(servicePath);
 
   // A malformed response gives retry and the working classic route; retry really reads again.
@@ -163,26 +163,27 @@ export default async function tournaments({ newPlayer }) {
   await phone.shot("weekly-phone");
   await phone.page.keyboard.press("Escape");
 
-  // An actual server room is handed back to classic, never replaced or cleaned.
+  // An actual server room reopens at its ready matches, never replaced or cleaned.
   const joined = await service("join_tournament", { tournament_type_id: "8", category: 1, tournament_id: "", team: padded(LIMITED, SWORD, KNIGHT), flashSubResources: 1 });
   assert.equal(joined.result, "OK");
   await open();
-  await page.waitForSelector(".tournament-current");
-  assert.match(await page.locator(".tournament-current").textContent(), /ready/);
-  assert.equal(await page.getByRole("link", { name: "Continue your tournament in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
-  assert.equal(await page.locator(".tournament-team-box").count(), 0);
+  await page.waitForSelector(".tournament-results");
+  assert.equal(await page.locator(".tournament-match").count(), 3, "three real server opponents are ready");
+  assert.equal(await page.getByRole("button", { name: "Edit team", exact: true }).count(), 0, "the enrolled team cannot be edited");
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, joined.tournament.tournament_id);
   await player.shot("existing-room");
   await service("leave_tournament", { tournament_id: joined.tournament.tournament_id });
   await page.keyboard.press("Escape");
   await open();
   await page.waitForSelector(".tournament-team-box");
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(LIMITED, SWORD, KNIGHT),
+    "reopening on desktop preserves the team saved from the phone");
   await player.press("Weekly");
   assert.equal(await page.locator(".tournament-card").count(), 0, "an entered weekly tournament stays hidden after leaving");
 
   // Follow the real link only after a new team save: the classic page has the same empire.
   await player.press("Your own");
-  await page.getByRole("link", { name: "Create in classic", exact: true }).click();
+  await page.getByRole("link", { name: "Open tournaments in classic", exact: true }).click();
   await page.waitForURL(/ruffle\.html$/);
   assert.ok((await page.content()).includes(player.settings.userId));
 }

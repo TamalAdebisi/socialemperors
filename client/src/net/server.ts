@@ -5,7 +5,7 @@
 import type { GameConfig } from "../rules/config.ts";
 import type { PlayerInfo } from "../rules/town.ts";
 import type { Continent } from "../rules/world.ts";
-import type { TournamentInfo } from "../rules/tournaments.ts";
+import type { TournamentEntryReply, TournamentInfo, TournamentMutationReply } from "../rules/tournaments.ts";
 
 /** What the game page (templates/client.html) tells the client. */
 export interface PageSettings {
@@ -46,15 +46,68 @@ export class GameServer {
     return this.post("get_game_config.php", {});
   }
 
-  /** The same service envelope as Flash's ServiceManager; list only. */
+  /** The same service envelope as Flash's ServiceManager. */
   async tournamentInfo(): Promise<TournamentInfo> {
-    const reply = await this.post<{ data: TournamentInfo }>("tournaments/get_tournament_info.php", {
-      data: "0".repeat(64) + ";" + JSON.stringify({ user_id: this.settings.userId }),
-    });
-    if (!reply.data || !reply.data.tournament_weekly || !reply.data.tournament_reward_id || !Array.isArray(reply.data.tournament_friends)) {
-      throw new Error("The tournament list was not returned.");
+    const data = await this.tournamentService("get_tournament_info");
+    assertTournamentInfo(data);
+    return data;
+  }
+
+  joinTournament(type: string, category: number, team: number[], roomId = ""): Promise<TournamentEntryReply> {
+    return this.tournamentEntry("join_tournament", { tournament_type_id: type, category, team,
+      tournament_id: roomId, flashSubResources: 1 });
+  }
+
+  createTournament(type: string, team: number[], friendIds: string[]): Promise<TournamentEntryReply> {
+    return this.tournamentEntry("create_tournament", { tournament_type_id: type, team,
+      usersFriends: friendIds, flashSubResources: 1 });
+  }
+
+  leaveTournament(roomId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("leave_tournament", { tournament_id: roomId });
+  }
+
+  cancelTournament(roomId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("cancel_tournament", { tournament_id: roomId });
+  }
+
+  startTournamentMatch(roomId: string, victimId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("start_tournament_match", { victim_id: victimId, tournament_id: roomId });
+  }
+
+  finishTournamentMatch(roomId: string, victimId: string, won: boolean, points: number): Promise<TournamentMutationReply> {
+    if (!Number.isFinite(points)) throw new Error("The tournament score is not a number.");
+    return this.tournamentMutation("finish_tournament_match", { victim_id: victimId, attacker_won: won,
+      attacker_points: points.toFixed(2), victim_points: 0, tournament_id: roomId });
+  }
+
+  cleanTournament(): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("clean_tournament");
+  }
+
+  private async tournamentEntry(service: string, params: Record<string, unknown>): Promise<TournamentEntryReply> {
+    const data = await this.tournamentService(service, params);
+    if (data.result === "OK") assertTournamentInfo(data);
+    else if (!["NOK", "NOTEAM", "NOFRIENDS"].includes(String(data.result))) {
+      throw new Error("The tournament entry reply was not returned.");
     }
-    return reply.data;
+    return data as unknown as TournamentEntryReply;
+  }
+
+  private async tournamentMutation(service: string, params: Record<string, unknown> = {}): Promise<TournamentMutationReply> {
+    const data = await this.tournamentService(service, params);
+    if (data.result !== "OK") throw new Error("The tournament action was not confirmed.");
+    return data as unknown as TournamentMutationReply;
+  }
+
+  private async tournamentService(service: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    const reply = await this.post<{ data?: unknown }>(`tournaments/${service}.php`, {
+      data: "0".repeat(64) + ";" + JSON.stringify({ user_id: this.settings.userId, ...params }),
+    });
+    if (!reply.data || typeof reply.data !== "object" || Array.isArray(reply.data)) {
+      throw new Error("The tournament reply was not returned.");
+    }
+    return reply.data as Record<string, unknown>;
   }
 
   /**
@@ -113,5 +166,18 @@ export class GameServer {
       throw new Error(`${endpoint}: ${response.status} ${await response.text()}`);
     }
     return (await response.json()) as T;
+  }
+}
+
+/** Do not turn a malformed response into an empty list or a departed room. */
+function assertTournamentInfo(data: Record<string, unknown>): asserts data is Record<string, unknown> & TournamentInfo {
+  const room = data.tournament as TournamentInfo["tournament"] | undefined;
+  if (!data.tournament_weekly || typeof data.tournament_weekly !== "object" ||
+    !data.tournament_reward_id || typeof data.tournament_reward_id !== "object" ||
+    !Array.isArray(data.tournament_friends) || room === undefined || (room !== null &&
+      (typeof room.tournament_id !== "string" || typeof room.tournament_type_id !== "string" ||
+        !Array.isArray(room.players) || room.players.some((player) =>
+          typeof player.user_id !== "string" || !Array.isArray(player.team) || !Array.isArray(player.matches))))) {
+    throw new Error("The tournament list was not returned.");
   }
 }
