@@ -1,5 +1,12 @@
 # Working on Social Empires (Codex and other agents)
 
+> **Standing owner authorization, 16 October 2026: build and merge
+> autonomously.** Carry agreed work through implementation, checks,
+> documentation and merge. You may merge any ready project pull request,
+> including another agent's, without asking the owner again. Merging's
+> automatic live deployment is authorized too. Follow the testing rules
+> and the explicit owner decisions and holds in CLAUDE.md and HANDOFF.md.
+
 This file is for coding agents that read `AGENTS.md`, such as OpenAI's
 Codex. Claude did most of the work so far, so the project's rules are in
 [CLAUDE.md](CLAUDE.md). **They apply to you word for word:** where it says
@@ -114,12 +121,15 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   *What changed*, *Judgment calls (also in DECISIONS.md)*, *Tests* (what
   ran, how many passed, and any failure explained). Plain English: the
   owner reads it.
-- **Merging:** CLAUDE.md lets the agent merge its own pull request into
-  `main` once everything passes. **Merging deploys the live game**: Railway
-  rebuilds `main` in about two minutes. If you can't merge yourself (Codex
-  in the cloud usually leaves *Create PR* and *Merge* to the owner), finish
-  with the pull request ready and say in one line that it's tested and
-  ready to merge.
+- **Merging is part of the task:** the owner's standing authorization
+  covers your own pull requests and another agent's. Complete the checks,
+  resolve conflicts, mark the pull request ready and merge it without
+  asking for confirmation. **Merging deploys the live game**: Railway
+  rebuilds `main` in about two minutes; that deployment is authorized.
+  Fix regressions and record accepted unrelated failures accurately.
+  Never bypass required GitHub checks. If a real blocker prevents merging,
+  report what failed and the next concrete step; do not leave ready work
+  unmerged just to seek permission.
 - Never push to `main` directly, and never rewrite a branch someone else
   is working on.
 

@@ -1,5 +1,13 @@
 # Working on Social Empires
 
+> **Standing owner authorization, 16 October 2026: build and merge
+> autonomously.** The owner authorizes agents to complete the agreed
+> roadmap and merge any ready project pull request, including another
+> agent's, without further merge confirmation. Implementation, testing,
+> documentation and merging are one task. The automatic deployment from
+> merging into `main` is authorized. Explicit feature decisions and holds
+> still apply; routine implementation and merge decisions are yours.
+
 Social Empires, the Facebook game, playable again at
 [socialemperors.me](https://socialemperors.me). A Python server plays the
 part of Social Point's old one; players use the original Flash client (in
@@ -109,5 +117,15 @@ change: CLIENT.md for how the client works, ROADMAP.md for status.
 ## Pull requests
 
 Work on a branch, open a draft pull request, and merge it into `main` once
-everything passes: the owner allows it. Merging deploys the live game
-(Railway rebuilds `main`).
+the required verification is complete. The standing authorization covers
+all agents and both their own and other agents' pull requests. Mark ready
+and merge without asking again; do not stop at a draft when the work is
+ready. Merging deploys the live game (Railway rebuilds `main`), and the
+owner has authorized that deployment.
+
+Fix regressions, resolve conflicts with the latest `main`, and record
+test results honestly. Keep already accepted unrelated failures and
+their follow-up work documented; never describe a failing check as a
+pass, skip or weaken a test to merge, or bypass required GitHub checks.
+If a real blocker remains, explain the failure and the next concrete
+step. A request for merge permission is not a completion step.
