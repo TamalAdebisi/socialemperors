@@ -210,18 +210,15 @@ changed, and no assertion was skipped or weakened.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 
-Built in #87 with tasks 3 and 5 (CLIENT.md, "The building card"), **not
-merged: one browser test fails there.** `e2e/tests/scripted-bosses.mjs`
-times out in `strikeAll` for camp 28 (the demon portals): after the test
-kills the enemy units, the fight never goes quiet for 5 seconds within
-the 30 allowed. There are no page errors, and the portals (life 1000) are
-still standing. It passes on `main` (323 s) and failed three times on the
-branch. It is not the test helper's new click (it failed before that) and
-not the card's shadow (removed, still failing). Find what in the branch's
-client changes the fight (`editor.ts` select and refresh, `ui/actions.ts`,
-`rules/work.ts` letOut), fix it, run the whole suite, then merge #87.
-Everything else in the suite passes (65 tests with `site-menu` and `card`).
-
+Built in #87 with tasks 3 and 5 (CLIENT.md, "The building card"); final
+verification is underway. The other agent reported `scripted-bosses`
+failing in the final scenario, although it passed on main. Diagnostics
+confirmed that nothing was still attacking: after 30 seconds it had
+advanced only 124 of the 150 quiet game frames needed. Earlier towns
+were still drawing in software. The test now closes each independent
+town after all its assertions and a screenshot, preserving the same
+30-second deadline and all battle/save checks. The standalone final
+scenario already passed; the combined run is being rechecked.
 
 PARITY.md, "The building card", and `docs/original/rules/town.md`,
 "Upgrading". 104 buildings upgrade to the next one (houses, farms, mills,

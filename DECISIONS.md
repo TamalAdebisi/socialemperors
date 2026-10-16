@@ -29,6 +29,11 @@ them can be found and reversed. The big, agreed decisions are in
 - **Map checks keep the card visible.** Test targets move into the open
   or use a visible part of the selected picture. They keep the other
   agent's selection checks without hiding controls to click through them.
+- **Independent battle-test towns close after their checks finish.**
+  Four towns drawing in software left the final fight at 124 of the 150
+  quiet frames needed, with nobody attacking, after its 30-second limit.
+  Closing completed towns preserves every screen/save assertion and that
+  deadline while giving the next town the drawing time it needs.
 
 ## 16 October 2026: the team test's oversized art
 

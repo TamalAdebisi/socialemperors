@@ -43,6 +43,11 @@ export default async function scriptedBosses({ newPlayer }) {
   assert.ok(!saved.items.some((i) => i[0] === CAVE));
   assert.equal(saved.idCurrentTreasure, 18);
   assert.deepEqual(saved.currentQuestVars, {});
+  await player.shot("boss-complete");
+  // These are independent towns. Once its screen and save are checked,
+  // close each one so software drawing in old tabs cannot starve the
+  // next fight's clock. Keep the same 30-second deadline and assertions.
+  await player.close();
 
   // Camp 27, the Balrog: no chest.
   const balrog = await town(newPlayer, 27);
@@ -56,6 +61,8 @@ export default async function scriptedBosses({ newPlayer }) {
   assert.ok(!saved.items.some((i) => i[0] === BALROG));
   const stored = JSON.stringify(saved.store ?? {});
   assert.ok(stored.includes(String(INFERNAL_WARRIOR)), `the Infernal Warrior in storage: ${stored}`);
+  await balrog.shot("reward-stored");
+  await balrog.close();
 
   // Camp 21, the mummy: three gems, then the mummy, then the sarcophagus.
   const mummy = await town(newPlayer, 21);
@@ -80,6 +87,8 @@ export default async function scriptedBosses({ newPlayer }) {
   await mummy.page.evaluate(() => window.seHome.camps.tap(window.seHome.parts.town.items.find((p) => p.item.id === 499), null));
   await mummy.wait(500);
   assert.equal((await mummy.saved()).idCurrentTreasure, 22);
+  await mummy.shot("keys-complete");
+  await mummy.close();
 
   // Camp 28, the demon portals: four portals and no chest; the last ends it, with two Celestial Soldiers beside it.
   const portals = await town(newPlayer, 28);
@@ -94,6 +103,7 @@ export default async function scriptedBosses({ newPlayer }) {
   assert.equal(saved.idCurrentTreasure, 29);
   assert.equal(saved.items.filter((i) => i[0] === 701).length, 2, "two Celestial Soldiers");
   assert.deepEqual(saved.currentQuestVars, {}, "nothing left over for the next camp");
+  await portals.shot("portals-complete");
 }
 
 /** A new town at level 30 with a knight, the given camp due. */
