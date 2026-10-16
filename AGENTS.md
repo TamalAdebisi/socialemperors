@@ -84,7 +84,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest full verification (#87):** all 67 browser tests passed in
+- **Earlier full verification (#87):** all 67 browser tests passed in
   **80m 30.65s**, including the build, on the machine below. Server:
   429 run (420 passed, 9 existing skips); client types and all 348 passed.
   [The delivery record](docs/verification-87.md) has the exact code commit,

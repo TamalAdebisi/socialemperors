@@ -129,6 +129,18 @@ class TutorialTest(unittest.TestCase):
         self.assertEqual(inventory._count(inventory.store(save, 0), 710), 1)
         self.assertEqual(save["privateState"]["stepNumber"], 9)
 
+    def test_reward_preserves_a_nest_already_in_gifts(self):
+        import inventory
+        save = sessions.session(self.first)
+        inventory.add_gift(save, 1233)
+        save["privateState"]["stepNumber"] = 9
+        self.checkpoint(32, 3)
+        do_command(self.first, "claim_tutorial_reward", [698, [53, 52], [54, 55]])
+        self.assertEqual(inventory.held(save, 0).get(1233), 1)
+        self.assertFalse(any(item[0] == 1233 for item in save["maps"][0]["items"]))
+        self.assertEqual(save["privateState"]["stepNumber"], 9)
+        self.assertEqual(self.where(self.first), 33)
+
     def test_missing_combat_unit_has_one_recovery_knight(self):
         from get_game_config import get_attribute_from_item_id as attr
         save = sessions.session(self.first)

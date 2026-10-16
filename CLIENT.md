@@ -1078,7 +1078,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  their windows are coming soon (50 of the 227); the server
+  they are not available yet (50 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
@@ -1330,7 +1330,8 @@ and the last task's tree count. Reports share the action's ordered command
 batch. Browser storage is not authoritative. The final choice is step 32;
 only `claim_tutorial_reward` completes step 33. This command saves the nest
 and chosen draggy once, including on request retries. A new nest starts
-at seven steps with no wait; existing nests retain their progress. A gift
+at seven steps with no wait; existing nests on the map, in Storage or in
+Gifts retain their progress. A gift
 without map space goes into Storage. The choice stays open until a server
 read confirms completion. Interrupted old saves resume; saves already
 holding the old completed tutorial's nest and draggy remain completed.

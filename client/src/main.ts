@@ -193,8 +193,8 @@ async function start(): Promise<void> {
     const opening = [...cleanUp(town).commands, ...freeHelpers(town)];
     const firstLesson = tutorialStart(info.playerInfo.completed_tutorial, town.id,
       info.privateState as Record<string, unknown> ?? {},
-      town.items.some((p) => p.item.id === DRAGON_NEST) || Boolean(town.store.get(DRAGON_NEST)),
-      town.items.some((p) => DRAGGIES.includes(p.item.id)) || DRAGGIES.some((id) => town.store.get(id)));
+      town.items.some((p) => p.item.id === DRAGON_NEST) || Boolean(town.store.get(DRAGON_NEST) || town.gifts.get(DRAGON_NEST)),
+      town.items.some((p) => DRAGGIES.includes(p.item.id)) || DRAGGIES.some((id) => town.store.get(id) || town.gifts.get(id)));
     if (firstLesson === null) {
       opening.push(...(oneVillager(town, items, clock())?.commands ?? []));
     }

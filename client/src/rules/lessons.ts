@@ -120,7 +120,8 @@ export const STEPS: LessonStep[] = [
 ];
 
 /** Whether an event moves step `step` on. */
-export function moves(step: number, event: LessonEvent): boolean {
+export function moves(step: number, event: LessonEvent, race?: string): boolean {
+  if (event.kind === "selected" && race !== undefined && event.item.race !== race) return false;
   const lesson = STEPS[step];
   if (!lesson) {
     return false;

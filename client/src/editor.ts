@@ -919,7 +919,7 @@ export class TownEditor {
     this.chooseTool("pointer");
   }
 
-  get lessonTraining(): boolean { return this.training.size > 0; }
+  get lessonTraining(): boolean { return [...this.training.values()].some((training) => training.unit.subcategory === SUBCAT.villager); }
   get lessonBuilding(): number | null { return this.building?.item.id ?? null; }
   get lessonSelected(): PlacedItem | null { return this.selected ?? this.group[0] ?? null; }
 

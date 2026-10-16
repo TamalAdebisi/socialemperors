@@ -64,6 +64,7 @@ export class Lessons {
   private resumeAfterTraining: number | null = null;
   private guidance = "";
   private foundTarget: PlacedItem | null = null;
+  private readonly resized = () => { this.guidance = ""; };
   /** Where a unit half hidden behind something can still be tapped, found again twice a second (`tappable`). */
   private spotted: { unit: PlacedItem; at: Point; until: number } | null = null;
   /** Where the arrow points now (the browser tests tap there, as a player would). */
@@ -71,6 +72,7 @@ export class Lessons {
 
   constructor(parts: LessonParts, from: number) {
     this.parts = parts;
+    window.addEventListener("resize", this.resized);
     this.view = new LessonsView(() => this.hear({ kind: "next" }), () => void this.help());
     this.felled = (parts.privateState.tutorial as TutorialCheckpoint | undefined)?.trees ?? (from === REWARD_STEP ? TREES_TO_CUT : 0);
     document.body.classList.add("tutorial-active");
@@ -163,7 +165,7 @@ export class Lessons {
       }
       return;
     }
-    if (moves(this.step, event)) {
+    if (moves(this.step, event, this.parts.town.race)) {
       const from = this.step;
       const returning = [3, 24].includes(from) ? this.resumeAfterTraining : null;
       if (returning !== null) this.resumeAfterTraining = null;
@@ -505,6 +507,7 @@ export class Lessons {
   /** Reward pending is a saved step. Only a saved claim completes the tutorial. */
   private finish(): void {
     this.running = false;
+    window.removeEventListener("resize", this.resized);
     this.view.remove();
     const draggies = DRAGGIES.map((id) => this.parts.items.get(id)).filter((item): item is ItemInfo => Boolean(item));
     chooseDraggy(draggies, this.parts.thumbnail,
@@ -518,7 +521,8 @@ export class Lessons {
     const { town, items, commands, view, editor, privateState } = this.parts;
     const nestItem = items.get(DRAGON_NEST)!;
     let nest = town.items.find((p) => p.item.id === DRAGON_NEST) ?? null;
-    const newNest = !nest && !town.store.get(DRAGON_NEST);
+    const hasStoredNest = Boolean(town.store.get(DRAGON_NEST) || town.gifts.get(DRAGON_NEST));
+    const newNest = !nest && !hasStoredNest;
     const nestSpot = !newNest ? null : freeSpotNear(town, nestItem, NEST_NEAR);
     // Reserve its footprint when finding the dragon's spot, without drawing early.
     if (nestSpot) nest = this.place(nestItem, nestSpot);
@@ -529,7 +533,7 @@ export class Lessons {
     if (newNest) Object.assign(privateState, { dragonNestActive: 1, stepNumber: NEST_GIFT_STEPS, dragonNumber: 0, timeStampTakeCare: -1 });
     if (nestSpot) {
       void view.redraw(nest!);
-    } else if (!nest && !town.store.get(DRAGON_NEST)) town.store.set(DRAGON_NEST, 1);
+    } else if (!nest && !hasStoredNest) town.store.set(DRAGON_NEST, 1);
     if (spot) {
       const draggy = this.place(item, spot);
       void view.redraw(draggy);

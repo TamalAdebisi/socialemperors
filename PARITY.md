@@ -298,7 +298,7 @@ frees its unit.
       per-unit limits, strongest-first choices and the shared editor's
       combined dragon/god/colossus limit. Separate tournament team save.
 - [ ] Waiting rooms, battle execution, results/ranking/prizes and
-      creating/inviting friends' tournaments: retain classic access.
+      creating/inviting friends' tournaments: still being built; classic choices are hidden.
 
 The last islands' team-source gap above remains separate; this slice
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
@@ -307,7 +307,8 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 **Later:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
-warehouse, darts, survival, tournaments, the tutorial.
+warehouse, darts and the remaining tournament stages. Survival, the nests
+and the mandatory tutorial are already built; see CLIENT.md.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.

@@ -20,7 +20,9 @@ them can be found and reversed. The big, agreed decisions are in
   chosen dragon once in one server command, so a lost answer and retry do
   not duplicate either. Put gifts in storage if the map has no room.
   Preserve legacy reports and already completed old saves; old skipped or
-  interrupted tutorials resume. New empires receive their own tutorial.
+  interrupted tutorials resume. New-client checkpoints are not inherited by
+  another empire; legacy carry-over reports remain readable and resume in
+  the new client so that empire can still receive its gift.
 - **Recovery should not require starting over.** Restore selections and
   placement after reload, provide Show me, wait for construction, and
   advance the farming lesson only after its worker actually enters.
@@ -36,6 +38,13 @@ them can be found and reversed. The big, agreed decisions are in
   Play on the empire page opens the new client. Remove classic links from
   its HUD and unfinished feature windows. Features still being built say
   so. Keep concurrent tournament and Menu work when integrating main.
+- **Keep the existing trusted-client command contract.** Mandatory means the
+  normal game flow cannot skip the lessons. Original Flash commands still
+  accept client-reported progress and placement; comprehensive server-side
+  action/footprint validation remains the existing later security work.
+  This slice checks reward choices and bounds, uses the client's normal
+  free-space/land rules, and prevents duplicate claims (including a nest
+  already held in Gifts). It does not claim to prevent forged commands.
 - **Fresh tutorial browser tests use real fresh towns.** Other feature
   tests explicitly start with a completed tutorial fixture, rather than
   relying on a Skip button that players no longer have.

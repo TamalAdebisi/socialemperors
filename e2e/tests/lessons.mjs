@@ -70,6 +70,13 @@ export default async function lessons({ newPlayer, phone = false }) {
   await player.wait(1000);
   await follow();  // the villager
   await reach(4);
+  if (!phone) {
+    // Resizing during guidance recomputes the target against the new layout.
+    await player.press("Show me");
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await page.waitForFunction(() => window.seLessons.pointing && document.querySelector(".lesson")?.dataset.moving === "false"
+      && document.elementFromPoint(window.seLessons.pointing.x, window.seLessons.pointing.y)?.closest("canvas"));
+  }
   assert.equal(await page.locator(".lesson-target").textContent(), "Move here");
   await player.shot("move-here");
   await player.click(await page.evaluate(() => window.seLessons.pointing));  // the ground beside the town hall

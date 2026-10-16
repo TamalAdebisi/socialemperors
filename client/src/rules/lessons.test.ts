@@ -45,7 +45,8 @@ test("each step waits for its own doing", () => {
   assert.ok(moves(6, { kind: "felled", resource: TREE }));
   assert.ok(passes(7), "the wood is the player's as the tree falls");
   assert.ok(moves(10, { kind: "placed", item: HOUSE, x: 50, y: 50 }), "the house anywhere it fits");
-  assert.ok(moves(11, { kind: "selected", item: KNIGHT }));
+  assert.ok(moves(11, { kind: "selected", item: KNIGHT }, "h"));
+  assert.ok(!moves(11, { kind: "selected", item: item({ ...KNIGHT, race: "t" }) }, "h"), "hostile units cannot complete soldier selection");
   assert.ok(moves(13, { kind: "death", enemy: true }));
   assert.ok(moves(14, { kind: "next" }) && !moves(14, { kind: "death", enemy: true }));
   assert.ok(!passes(16) && moves(16, { kind: "closed" }), "the goals read and closed");

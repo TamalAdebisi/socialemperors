@@ -64,7 +64,7 @@ def claim_reward(save: dict, draggy, nest_at, draggy_at) -> str:
             return "Invalid tutorial reward position."
     town = save["maps"][0]
     has_nest = any(int(item[0]) == 1233 for item in town["items"])
-    has_nest = has_nest or inventory._count(inventory.store(save, 0), 1233) > 0
+    has_nest = has_nest or inventory.held(save, 0).get(1233, 0) > 0
     def give(item, point):
         if point is None:
             inventory.add_stored(save, 0, item)

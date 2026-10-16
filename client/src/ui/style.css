@@ -4657,7 +4657,7 @@ button.world-piece:hover img {
 .tournament-card .tournament-fee { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .tournament-card strong { font: 800 15px var(--round); }
 .tournament-picture { width: 100%; aspect-ratio: 180 / 140; object-fit: contain; }
-.tournament-card .tournament-classic { margin-top: auto; white-space: normal; text-align: center; }
+.tournament-card .tournament-classic, .tournament-card .tournament-unavailable { margin-top: auto; white-space: normal; text-align: center; }
 .tournament-fee img, .tournament-prize > img.icon { width: 22px; height: 22px; vertical-align: middle; }
 .tournament-prize { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 13px; }
 .tournament-prize img { width: 36px; height: 36px; object-fit: contain; }

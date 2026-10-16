@@ -47,6 +47,7 @@ export function chooseDraggy(draggies: ItemInfo[], thumbnail: (item: ItemInfo) =
   header.textContent = words.header;
   const line = document.createElement("p");
   line.className = "draggy-line";
+  line.setAttribute("role", "status");
   line.textContent = words.line;
   const row = document.createElement("div");
   row.className = "draggy-row";

@@ -114,7 +114,8 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Your own");
   assert.match(await page.locator(".tournament-cards").textContent(), /No friends' tournaments/);
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").count());
+  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
+  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
 
   // Read-only fixtures for closed schedules and a friend's card, with text treated as text.
   await page.route(servicePath, async (route) => {
@@ -131,10 +132,11 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Weekly");
   assert.match(await page.locator(".tournament-countdown").textContent(), /Available on 0d 00:01:/);
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").count());
+  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
+  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
   await page.unroute(servicePath);
 
-  // A malformed response gives retry and the working classic route; retry really reads again.
+  // A malformed response gives retry; retry really reads again.
   await page.route(servicePath, (route) => route.fulfill({ json: { data: {} } }), { times: 1 });
   await player.press("Refresh");
   await page.waitForSelector(".tournament-error");
@@ -165,14 +167,15 @@ export default async function tournaments({ newPlayer }) {
   await phone.shot("weekly-phone");
   await phone.page.keyboard.press("Escape");
 
-  // An actual server room is handed back to classic, never replaced or cleaned.
+  // An actual server room remains saved while its unavailable stages are hidden.
   const joined = await service("join_tournament", { tournament_type_id: "8", category: 1, tournament_id: "", team: padded(LIMITED, SWORD, KNIGHT), flashSubResources: 1 });
   assert.equal(joined.result, "OK");
   await open();
   await page.waitForSelector(".tournament-current");
   assert.match(await page.locator(".tournament-current").textContent(), /ready/);
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").count());
+  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
+  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
   assert.equal(await page.locator(".tournament-team-box").count(), 0);
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, joined.tournament.tournament_id);
   await player.shot("existing-room");
