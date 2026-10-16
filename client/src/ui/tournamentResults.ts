@@ -152,8 +152,7 @@ export class TournamentResultsView {
     this.element.replaceChildren();
     this.element.setAttribute("aria-busy", String(this.busy));
     const heading = text("div", "", "tournament-results-heading");
-    const name = Number(this.room.private) === 1 ? `${this.room.owner}'s tournament` : this.parts.kind.name;
-    heading.append(text("h3", name));
+    if (Number(this.room.private) === 1) heading.append(text("h3", `${this.room.owner}'s tournament`));
     if (!this.finished) {
       heading.append(text("p", "", "tournament-deadline"));
       const mine = this.room.players.find((player) => player.user_id === this.parts.me);
@@ -162,7 +161,7 @@ export class TournamentResultsView {
         heading.append(text("p", `Your score: ${score.points.toFixed(2)} · ${score.matches} / ${mine.matches.length} matches · ${clock(score.seconds)}`, "tournament-score-stats"));
       }
     }
-    this.element.append(heading);
+    if (heading.childElementCount) this.element.append(heading);
     if (this.finished) this.element.append(this.outcome());
     if (this.failure) {
       const error = text("p", this.failure, "tournament-error");

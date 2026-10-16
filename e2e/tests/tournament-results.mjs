@@ -104,6 +104,8 @@ export default async function tournamentResults({ newPlayer }) {
   assert.equal(await phone.page.locator(".tournament-match button[aria-label^='Start match']").count(), 0);
   await fitsPhone(phone);
   await phone.shot("finished-matches-phone");
+  await phone.page.locator(".tournament-match-list").scrollIntoViewIfNeeded();
+  await phone.shot("finished-match-rows-phone");
   await phone.button("Done").click();
   await phone.page.waitForSelector(".tournament-cards");
   assert.equal((await service(winner, "get_tournament_info")).tournament, null);
@@ -136,6 +138,23 @@ export default async function tournamentResults({ newPlayer }) {
     const name = config.items.find((item) => Number(item.id) === Number(id)).name;
     await page.getByText(name, { exact: true }).last().waitFor();
     assert.equal(await winner.card(name).count(), 1);
+    const card = winner.card(name);
+    await card.scrollIntoViewIfNeeded();
+    await card.locator(".shop-picture").evaluate(async (holder) => {
+      const ready = () => {
+        const image = holder.querySelector("img");
+        if (image?.complete && image.naturalWidth > 0) return true;
+        const canvas = holder.querySelector("canvas");
+        if (!canvas?.width || !canvas.height) return false;
+        const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+        return pixels.some((value, index) => index % 4 === 3 && value > 0);
+      };
+      const deadline = performance.now() + 30_000;
+      while (!ready()) {
+        if (performance.now() > deadline) throw new Error("Storage reward artwork did not load");
+        await new Promise(requestAnimationFrame);
+      }
+    });
   }
   await winner.shot("reward-storage");
   await page.keyboard.press("Escape");
@@ -213,6 +232,10 @@ export default async function tournamentResults({ newPlayer }) {
   await open(weeklyPhone, true);
   await fitsPhone(weeklyPhone);
   await weeklyPhone.shot("weekly-results-phone");
+  await weeklyPhone.page.locator(".tournament-your-rank").scrollIntoViewIfNeeded();
+  await weeklyPhone.shot("weekly-rank-phone");
+  await weeklyPhone.page.locator(".tournament-scoreboard").scrollIntoViewIfNeeded();
+  await weeklyPhone.shot("weekly-ranking-rows-phone");
   assert.match(await weeklyPhone.page.locator(".tournament-outcome").textContent(), /rank when you finished/);
   await weeklyPhone.button("Done").click();
   await weeklyPhone.page.waitForSelector(".tournament-cards");
