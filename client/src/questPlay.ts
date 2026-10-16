@@ -59,7 +59,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     return;
   }
   if (!playedHere(island)) {
-    stop("This island is played in the classic game for now.");
+    stop("This island is not available yet.");
     return;
   }
   let army = armyOf(town);

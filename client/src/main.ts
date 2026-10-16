@@ -30,7 +30,7 @@ import { SurvivalWindow, HELP_KEY as SURVIVAL_HELP } from "./ui/survival.ts";
 import { MIN_LEVEL_TOURNAMENT, TOURNAMENT_HELP, tournamentChoices, tournamentRules } from "./rules/tournaments.ts";
 import { TournamentWindow } from "./ui/tournaments.ts";
 import { WorldMapWindow, type PlayerProfile } from "./ui/worldMap.ts";
-import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
+import { tutorialStart, DRAGGIES, DRAGON_NEST } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
 import { cleanUp, oneVillager } from "./rules/cleanup.ts";
 import { growBack } from "./rules/nature.ts";
@@ -187,14 +187,15 @@ async function start(): Promise<void> {
     commands.start();
     // As the town opens, as in the Flash client: things on top of each other sorted out, and
     // a villager for a town with none (rules/cleanup.ts; not before Arthur's lessons are
-    // taken or skipped); animals off the player's land are wild (rules/animals.ts); then
+    // completed); animals off the player's land are wild (rules/animals.ts); then
     // trees, rocks and a few animals grow back (rules/nature.ts).
     // As the Flash client opens a town: the tidy-up, and a free helper at a social building that waits for some.
     const opening = [...cleanUp(town).commands, ...freeHelpers(town)];
-    // Arthur's lessons (lessons.ts): carried on after a reload, from what the save and this browser say.
-    const lessonsKey = `se-lessons-${settings.userId}`;
-    const lessonsHere = rememberedLessons(lessonsKey);
-    if (!lessonsNotStarted(info.playerInfo.completed_tutorial, town.id) && !lessonsUnderWay(info.playerInfo.completed_tutorial, town.id, lessonsHere)) {
+    const firstLesson = tutorialStart(info.playerInfo.completed_tutorial, town.id,
+      info.privateState as Record<string, unknown> ?? {},
+      town.items.some((p) => p.item.id === DRAGON_NEST) || Boolean(town.store.get(DRAGON_NEST) || town.gifts.get(DRAGON_NEST)),
+      town.items.some((p) => DRAGGIES.includes(p.item.id)) || DRAGGIES.some((id) => town.store.get(id) || town.gifts.get(id)));
+    if (firstLesson === null) {
       opening.push(...(oneVillager(town, items, clock())?.commands ?? []));
     }
     for (const command of opening) {
@@ -447,7 +448,8 @@ async function start(): Promise<void> {
       arrived: (placed, lines) => editor.arrived(placed, lines),
       changed: () => hud.update(town),
     });
-    let learning = lessonsUnderWay(info.playerInfo.completed_tutorial, town.id, lessonsHere);
+    let learning = firstLesson !== null;
+    const laterLevels: Parameters<LevelUpWindows["show"]>[0] = [];
     const lines = new Map(((config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
     const doings = new Doings();
     doings.questStars = ((info.privateState as Record<string, unknown> | undefined)?.questsRank ?? {}) as Record<string, number>;
@@ -539,9 +541,10 @@ async function start(): Promise<void> {
         seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
       } : undefined,
       pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" },
-      showLevels: (reached) => levelWindows.show(reached.map((r) => ({
-        ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0,
-      }))),
+      showLevels: (reached) => {
+        const notices = reached.map((r) => ({ ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0 }));
+        if (learning) laterLevels.push(...notices); else levelWindows.show(notices);
+      },
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
@@ -599,6 +602,7 @@ async function start(): Promise<void> {
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.
     // Raids on the town and the troll camps (homeDefence.ts, homeCamps.ts): rolled each time it opens.
+    let fighting = () => false;
     const defend = () => {
       void import("./homeDefence.ts").then(({ HomeDefence }) => {
         const defence = new HomeDefence({
@@ -607,6 +611,7 @@ async function start(): Promise<void> {
           camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0,
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
+        fighting = () => defence.fighting !== null;
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
         grow();
         // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
@@ -616,7 +621,7 @@ async function start(): Promise<void> {
             commands.add(command.cmd, ...command.args);
           }
           void view.redraw(placed);
-          editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
+          if (!learning) editor.tell(placed.item.id === HARBOUR ? "Dock operative! Click in the Harbour to sail through the Great Sea!"
             : "Zeppelin operative! Click in the Zeppelin Tower to fly through the Ancient Sea!");
         }
       });
@@ -640,12 +645,23 @@ async function start(): Promise<void> {
             town, items, editor, view, commands,
             line: (id) => lines.get(id) ?? "",
             screenOf: (point) => mapLayer.toGlobal(point),
-            lookAt: (point) => camera.lookAt(point),
+            lookAt: (point) => {
+              const phone = matchMedia("(max-width: 720px), (orientation: portrait) and (max-width: 1000px)").matches;
+              const card = document.querySelector<HTMLElement>(".actions:not([hidden])")?.getBoundingClientRect();
+              const guide = document.querySelector<HTMLElement>(".lesson:not([hidden])")?.getBoundingClientRect();
+              let y = innerHeight * 0.53;
+              if (phone && card) y = Math.min(y, card.top - 50);
+              if (phone && guide) y = Math.max(y, guide.bottom + 35);
+              camera.panTo(point, { x: innerWidth * (phone ? 0.5 : 0.38), y },
+                matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700);
+            },
+            clock, panning: () => camera.panning, fighting: () => fighting(),
+            rewardSaved: async () => Number((await server.playerInfo()).playerInfo.completed_tutorial) === 33,
             thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
             privateState: saved,
-            remember: (step) => rememberLessons(lessonsKey, step),
             finished: () => {
               learning = false;
+              levelWindows.show(laterLevels.splice(0));
               welcome();
             },
           }, from);
@@ -653,18 +669,12 @@ async function start(): Promise<void> {
         });
       };
       const then = () => {
-        const completed = info.playerInfo.completed_tutorial;
-        if (lessonsUnderWay(completed, town.id, lessonsHere)) {
-          startLessons(resumeAt(Math.max(reported(completed), lessonsHere ?? 0)));
-        } else if (lessonsNotStarted(completed, town.id)) {
-          editor.offerLessons(() => startLessons(0));
-        } else {
-          welcome();
-        }
+        if (firstLesson !== null) startLessons(firstLesson);
+        else welcome();
       };
       // Before them, the server's message, if it has one (neighbours' help, gifts).
       const message = String((info.privateState as Record<string, unknown> | undefined)?.message ?? "").trim();
-      if (message) {
+      if (message && !learning) {
         editor.showServerMessage(message, then);
       } else {
         then();
@@ -860,25 +870,3 @@ start().catch((error: unknown) => {
   console.error(error);
   showStatus(`The town couldn't load: ${error instanceof Error ? error.message : String(error)}`);
 });
-
-/** The lesson this browser was at, for carrying on after a reload (null: none going on). */
-function rememberedLessons(key: string): number | null {
-  try {
-    const step = localStorage.getItem(key);
-    return step === null ? null : Number(step);
-  } catch {
-    return null;
-  }
-}
-
-function rememberLessons(key: string, step: number | null): void {
-  try {
-    if (step === null) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, String(step));
-    }
-  } catch {
-    // nothing kept: after a reload, the save's step alone says where they were
-  }
-}

@@ -186,28 +186,23 @@ export class IslandsWindow {
         button.href = "#";
         const why = !reachable ? `${lock.why}.`
           : lock.until ? `Your army rests from its attack on ${name} for ${restingFor(lock.until - now)}.`
-            : !here ? `${name} is played in the classic game for now.`
+            : !here ? `${name} is not available yet.`
               : level < MIN_LEVEL_QUESTS ? `Quests open at level ${MIN_LEVEL_QUESTS}.` : "You need an army to sail.";
         button.setAttribute("aria-label", `${name}: ${why}`);
         button.title = why;
         button.addEventListener("click", (e) => {
           e.preventDefault();
-          this.say(why, !here && lock.open ? p.classicUrl : null);
+          this.say(why);
         });
       }
       this.strip.append(button);
     });
   }
 
-  private say(text: string, classic: string | null): void {
+  private say(text: string): void {
     this.said.replaceChildren(text);
-    if (classic) {
-      const link = document.createElement("a");
-      link.href = classic;
-      link.textContent = " Open the classic game.";
-      this.said.append(link);
-    }
   }
+
 }
 
 function picture(className: string, src: string, alt = ""): HTMLImageElement {

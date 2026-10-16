@@ -147,7 +147,7 @@ export class GoalsView {
       const state = document.createElement("small");
       state.className = "goal-state";
       state.textContent = row.done ? "Done!" : row.progress ? `${row.progress.done} of ${row.progress.of}`
-        : "Played in the classic game for now";
+        : "Not available yet";
       text.append(title, about, state);
       const reward = document.createElement("span");
       reward.className = "goal-reward";

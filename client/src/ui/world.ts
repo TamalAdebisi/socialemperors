@@ -4,7 +4,7 @@
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
 // on players from the world map (ui/worldMap.ts, attackPlay.ts), and
 // survival (ui/survival.ts, survivalPlay.ts). Tournaments open their list
-// and team box here; the later stages continue in the classic game.
+// and team box here; later stages show their availability.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -14,7 +14,7 @@ interface Mode {
   about: string;
   icon: string;
   verb: string;
-  /** Played here: what Play does. Otherwise it opens the classic game. */
+  /** Played here: what Play does. Otherwise the feature is marked as coming soon. */
   run?: () => void;
 }
 
@@ -62,7 +62,7 @@ export class WorldWindows {
   }
 }
 
-function window_(key: string, title: string, modes: Mode[], classicUrl: string): Panel {
+function window_(key: string, title: string, modes: Mode[], _classicUrl: string): Panel {
   const panel = new Panel(key, title, { className: "list-window" });
   const list = document.createElement("ul");
   list.className = "rows";
@@ -91,15 +91,15 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
         run();
       });
     } else {
-      play.href = classicUrl;
-      play.setAttribute("aria-label", `${mode.name}: ${mode.verb.toLowerCase()} in the classic game`);
+      play.textContent = "Coming soon";
+      play.setAttribute("aria-disabled", "true");
     }
     row.append(icon, text, play);
     list.append(row);
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Tournament matches continue in the classic game, on the same empire.";
+  note.textContent = "More tournament features are coming soon.";
   panel.body.append(list, note);
   return panel;
 }

@@ -37,25 +37,7 @@
 			</div>
 		</div>
 
-		<fieldset class="choices">
-			<legend>Play with</legend>
-			<label class="choice"><input type="radio" name="PLAYER" value="ruffle" checked><span><b>Any modern browser</b>No install needed (Ruffle). Some things may not work yet.</span></label>
-			<label class="choice"><input type="radio" name="PLAYER" value="flash"><span><b>A Flash browser</b>Most compatible. Needs one, such as FlashBrowser.</span></label>
-			<label class="choice"><input type="radio" name="PLAYER" value="client"><span><b>The new game (preview)</b>Sharp and full screen, on phones too. For now you can build and run your town; battles come later.</span></label>
-		</fieldset>
+		<input type="hidden" name="PLAYER" value="client">
 	</form>
 
-	<script>
-		// Remember how this browser plays.
-		(function () {
-			var key = "se-player", radios = document.querySelectorAll('input[name="PLAYER"]');
-			try {
-				var saved = localStorage.getItem(key);
-				radios.forEach(function (radio) { if (radio.value === saved) radio.checked = true; });
-				radios.forEach(function (radio) {
-					radio.addEventListener("change", function () { try { localStorage.setItem(key, radio.value); } catch (e) {} });
-				});
-			} catch (e) {}
-		})();
-	</script>
 {% endblock %}
