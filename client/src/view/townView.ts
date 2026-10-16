@@ -535,6 +535,10 @@ export class TownView {
     // Separate AnimatedSprites drift, and a snapshot leaves a large stale
     // shape behind moving parts. Sync just before drawing, after the ticker.
     halo.onRender = () => {
+      // Walking translates every slot child, including this wrapper. The
+      // copies follow the picture's current position, so don't add that
+      // movement a second time through their parent.
+      halo.position.set(0, 0);
       for (let i = 0; i < halo.children.length; i++) {
         const copy = halo.children[i] as Sprite;
         const [dx, dy] = OUTLINE_STEPS[i];

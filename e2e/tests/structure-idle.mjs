@@ -11,7 +11,10 @@ import { has } from "../lib.mjs";
 export default async function structureIdle({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
-  await player.send([{ cmd: "buy", args: [77, 55, 56, 0, 0, 1, 1] }]);
+  await player.send([
+    { cmd: "buy", args: [77, 55, 56, 0, 0, 1, 1] },
+    { cmd: "buy", args: [500, 51, 58, 0, 0, 1, 1] },
+  ]);
   await player.reload();
   await player.select([55, 56], "Lumber Mill I");
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -27,6 +30,34 @@ export default async function structureIdle({ newPlayer }) {
   assert.equal(mill.finished, true);
   await player.press("Close");
   await page.mouse.move(20, 10);
+
+  // Outlines are shared with units. Exercise the real walking renderer:
+  // its container movement must not be applied again by the frame sync.
+  const walking = await page.evaluate(async () => {
+    const { town, view } = window.seHome.parts;
+    const unit = town.items.find((p) => p.item.id === 500 && p.tx === 51 && p.ty === 58);
+    view.hover(unit, null);
+    view.walk(unit, [{ x: 52, y: 58 }, { x: 53, y: 58 }], () => true, () => {});
+    await Promise.resolve();
+    const positions = new Set();
+    let aligned = true;
+    for (let frame = 0; frame < 12; frame++) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const slot = view.slots.get(unit);
+      const picture = slot.children.find((c) => c.texture && c.label !== "selected");
+      const halo = slot.getChildByLabel("outline");
+      positions.add(picture.x);
+      aligned &&= halo.children.every((copy) => copy.texture === picture.texture
+        && Math.abs(halo.x + copy.x - picture.x) <= 2.01
+        && Math.abs(halo.y + copy.y - picture.y) <= 2.01);
+    }
+    return { moved: positions.size > 1, aligned };
+  });
+  await player.shot("walking-outline");
+  assert.ok(walking.moved && walking.aligned, "a walking unit and its outline move exactly once, on matching frames");
+  // This is a renderer probe, not an order: restore the saved town.
+  await player.reload();
+  assert.ok(has(await player.saved(), 500, [51, 58]), "the renderer probe leaves the saved villager in place");
 
   const names = [...Object.keys(BUILDING_STATES), "electorre", "1360_tower", "1236_molino", "fuentemagma", "torredefensa6", ...Object.keys(BLANK_BUILDING_ENDS)];
   const report = [];
