@@ -16,6 +16,15 @@ them can be found and reversed. The big, agreed decisions are in
 - **Repair hover at the same shared point.** Its eight outline copies
   follow the building's actual frame just before rendering, preventing a
   stale scaffold or moving part from becoming a large yellow silhouette.
+  Walking offsets are applied once; a rendered movement check covers the
+  shared unit outline too.
+- **Measure clicks by input time, not rendering time.** The WebKit trace
+  showed a 122 ms click rejected after its release handler was delayed
+  1.86 seconds. Pointer and double-click timing now use the browser's
+  event timestamps. The existing short-press and double-click limits stay
+  the same; a genuine long press remains a long press. A browser regression
+  deliberately stalls input handling for 650 ms and checks that selecting
+  another villager still works without redirecting the first.
 - **Remove seven measured blank loop endings.** Only those exact art
   names and lengths are affected; legitimate motion and intentionally
   empty tree/terrain states remain. No new public art upload is needed.

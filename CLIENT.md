@@ -757,6 +757,12 @@ move. This applies in town and battle (`view/hit.ts`, `townView.ts`,
 `battleView.ts`). A ground click briefly shows the original gold ring at
 the exact click position, fixed in screen size while following the map,
 then fades; it cannot intercept another click (`view/markers.ts`).
+
+The camera measures short presses using the pointer events' timestamps,
+and passes that time to the editor for double-click selection. Slow drawing
+or a first pixel read can delay JavaScript handlers without changing how
+long the player actually held the button. The existing gesture limits stay
+the same (`view/camera.ts`, `editor.ts`).
 Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs`.
 
 Building previews snapshot their drawing origin before loading art, so
