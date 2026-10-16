@@ -1,5 +1,10 @@
 # Roadmap
 
+Structure idle animation pass: shared state selection and hover repair,
+plus seven blank loop endings. All configured structures are inventoried;
+verification and unavailable-source limits are recorded in
+[the audit](docs/structure-idle-audit.md). Full delivery checks are in progress.
+
 Tutorial repair in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93): mandatory home-town lessons, clearer guidance,
 smooth camera movement, recoverable progress and a confirmed first-dragon
 reward. Classic-client choices are hidden at the owner's request; its

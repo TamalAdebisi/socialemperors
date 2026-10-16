@@ -4,6 +4,28 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: the structure idle animation pass
+
+- **Restore the original idle state across the structure library.** The
+  lumber mill was alternating its finished art with scaffolding; towers
+  could mix idle and attack pictures. Read all available visual timelines
+  and use their state counts, preserving motion nested inside the selected
+  state at its existing duration. Keep farm work, animal counts, tree
+  skins and explicit quest states. Oil/water towers pour only at a target.
+  The occupied altar retains its existing active sequence.
+- **Repair hover at the same shared point.** Its eight outline copies
+  follow the building's actual frame just before rendering, preventing a
+  stale scaffold or moving part from becoming a large yellow silhouette.
+- **Remove seven measured blank loop endings.** Only those exact art
+  names and lengths are affected; legitimate motion and intentionally
+  empty tree/terrain states remain. No new public art upload is needed.
+- **Record the audit's limits.** All 1,010 configured structures were
+  inventoried: 900 readable art files cover 941 entries; 69 names have no
+  usable local source and return 404 publicly. They cannot be visually
+  verified here. The pass covers all available timeline/atlas data and
+  renders every stateful or blank-ending file plus motion controls in the
+  browser. See [the audit](docs/structure-idle-audit.md).
+
 ## 16 October 2026: playthrough controls and site repairs
 
 - **No auto-collect.** The owner withdrew it; collection and production

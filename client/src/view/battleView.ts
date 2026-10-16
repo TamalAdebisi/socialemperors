@@ -9,6 +9,7 @@ import type { ItemInfo } from "../rules/config.ts";
 import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitFacing, unitPoint, type Point } from "../rules/geometry.ts";
 import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
+import { pouringTower } from "./buildingAnimation.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt, unitHitDistance } from "./hit.ts";
 import { Markers } from "./markers.ts";
@@ -409,8 +410,12 @@ export class BattleView {
 
   /** What picture a fighter shows: its pose and way, or a special move's animation. */
   private keyOf(fighter: Fighter, pose: Pose, special: number): string {
-    return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)} ${fighter.still ?? ""}`
+    return !fighter.isUnit ? `b ${fighter.facing} ${fireStage(fighter.life, fighter.maxLife)} ${fighter.still ?? ""} ${this.pouring(fighter)}`
       : special ? `s${special} ${fighter.facing} ${fighter.item.id}` : `${pose} ${fighter.facing} ${fighter.item.id}`;
+  }
+
+  private pouring(fighter: Fighter): boolean {
+    return pouringTower(fighter.item.art) && !fighter.dead && fighter.target !== null && !fighter.target.dead;
   }
 
   /** The special animation a unit is playing (rules/specials.ts), or 0. */
@@ -440,7 +445,7 @@ export class BattleView {
     } else if (fighter.isUnit) {
       drawn.slot.addChild(unitSprite(art, fighter.facing, pose, fighter.at, pose === "MUERTE"));
     } else {
-      const sprite = buildingSprite(art, asPlaced(fighter), this.skin, false, fighter.still);
+      const sprite = buildingSprite(art, asPlaced(fighter), this.skin, false, fighter.still, this.pouring(fighter));
       drawn.slot.addChild(sprite);
       // Losing life: the game's flames over it.
       const stage = fireStage(fighter.life, fighter.maxLife);

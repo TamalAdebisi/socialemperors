@@ -1,5 +1,10 @@
 # Parity: the new client against the Flash game
 
+Structure idle repair: original state selection replaces scaffold/action
+cycling, nested effects keep moving, hover follows the actual frame, and
+seven blank loop endings are removed. Farm work, animal counts and explicit
+quest states retain priority. See [coverage and limits](docs/structure-idle-audit.md).
+
 Owner-requested tutorial usability pass: mandatory lessons, smooth camera
 pans, explicit movement/placement targets, reload recovery, soldier-only
 combat guidance and a saved first-dragon reward. This intentionally improves

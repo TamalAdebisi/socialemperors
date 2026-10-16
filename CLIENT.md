@@ -1270,12 +1270,39 @@ things, 69 pictures) opens in under 3 seconds on our test machine once its
 art is cached, and in about 10 the first time, mostly downloading the
 pictures; the bucket keeps them a day in the browser's cache.
 
+### Buildings at rest
+
+The structure idle pass inventories all 1,010 configured buildings/scenery
+entries: 900 available art files, with 69 unavailable names recorded in
+[the audit](docs/structure-idle-audit.md). `view/buildingStates.ts` is visual
+metadata generated from the art's first display-child timelines, for each
+facing. Ordinary buildings hold the original idle state rather than
+cycling through scaffolding or action states. `buildingAnimation.ts`
+selects the matching samples without shortening nested animation loops.
+Farms retain their working/ready pictures, ranches retain their animal
+counts (including the nested Training Stables animation), and explicit
+tree skins and quest steps take precedence. Oil/water towers change state
+when a battle target appears or disappears. Seven measured, fully blank
+loop endings are omitted without changing the preceding motion.
+
+`e2e/tests/structure-idle.mjs` renders every stateful or repaired loop in
+each facing, with genuine-motion controls, every-frame hover checks,
+occupied stables and battle target transitions. Its selected mill and
+towers remain in the server save. The source and all 2,163 available
+atlas pages were audited separately; unavailable files are not claimed
+as visually verified.
+
 ### Hovering
 
 Built (PARITY.md, "Small things"). Code: `rules/hover.ts` (what lights up
 and what its popup says), `view/bars.ts` (the popup and the bars),
 `view/selected.ts` (`markLife`), the editor's `light`. Test:
 `e2e/tests/hover.mjs`.
+
+The outline copies follow the source picture immediately before each
+render, including its current animation texture. They no longer keep a
+snapshot of an earlier frame, which could leave an oversized silhouette
+behind an animated building.
 
 As the Flash client does it, with a mouse (our notes, our words):
 

@@ -28,7 +28,7 @@ test("a farm: the empty field; the man or the woman at work, never both; ripe cr
   assert.deepEqual(lookOf(at(FARM, [580]), 45, true), [43], "a troll man too");
 });
 
-test("a ranch: as many animals as are inside; buildings laid out otherwise play as they are", () => {
+test("a ranch: as many animals as are inside; other layouts use the building state selector", () => {
   assert.deepEqual(lookOf(at(RANCH), 7, false), [0]);
   assert.deepEqual(lookOf(at(RANCH, [505, 505, 505]), 7, false), [3]);
   assert.equal(lookOf(at(STABLES, [571]), 318, false), null);

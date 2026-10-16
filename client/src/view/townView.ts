@@ -25,6 +25,7 @@ import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
+import { buildingLoopLength, buildingStateCount, buildingStateFrames, pouringTower } from "./buildingAnimation.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt, unitHitDistance } from "./hit.ts";
@@ -530,6 +531,19 @@ export class TownView {
       copy.position.set(picture.x + dx, picture.y + dy);
       halo.addChild(copy);
     }
+    // An animated picture's silhouette must follow the very same frame.
+    // Separate AnimatedSprites drift, and a snapshot leaves a large stale
+    // shape behind moving parts. Sync just before drawing, after the ticker.
+    halo.onRender = () => {
+      for (let i = 0; i < halo.children.length; i++) {
+        const copy = halo.children[i] as Sprite;
+        const [dx, dy] = OUTLINE_STEPS[i];
+        copy.texture = picture.texture;
+        copy.anchor.copyFrom(picture.anchor);
+        copy.scale.copyFrom(picture.scale);
+        copy.position.set(picture.x + dx, picture.y + dy);
+      }
+    };
     halo.filters = [this.outlineFill];
     slot.addChildAt(halo, 0);
   }
@@ -797,13 +811,14 @@ function pictureOf(slot: Container): Container | undefined {
     && child.label !== HOVER_LIFE && child.label !== PROGRESS);
 }
 
-export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number): Container {
+export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, ready = false, still?: number, attacking = false): Container {
   // Its frame is the way it faces; past the last, the game shows the last. An open wall gate
   // shows the frames after its closed ones (two on), as in the Flash client.
   const facing = placed.open && art.has(`frame/${placed.orientation + 2}`) ? placed.orientation + 2
     : Math.min(placed.orientation, Math.max(art.framesOf("frame"), 1) - 1);
   const name = `frame/${facing}`;
   let textures = art.animation(name) ?? [];
+  const look = lookOf(placed, textures.length, ready);
   if (isTree(placed.item) && textures.length > 1) {
     // A tree's frames are its looks for each island skin (snow on ice...).
     textures = [textures[Math.min(skin, textures.length - 1)]];
@@ -812,17 +827,24 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, r
     const steps = art.animation("steps/0") ?? [];
     textures = [steps[Math.min(still, steps.length - 1)]];
   } else if (still !== undefined && textures.length > 1) {
-    textures = [textures[Math.min(still, textures.length - 1)]];
-  } else if (placed.item.social && textures.length === 2) {
-    // A social building's two frames are open and waiting for its staff (scaffolding), not an animation.
-    // The server opens it for good (social.py), so it shows open.
-    textures = [textures[0]];
-  }
-  // A farm or ranch: only the pictures that fit who's inside and its harvest.
-  const look = lookOf(placed, textures.length, ready);
-  if (look) {
+    const frames = buildingStateFrames(art.name, facing, textures.length, still);
+    textures = frames ? frames.map((i) => textures[i]) : [textures[Math.min(still, textures.length - 1)]];
+  } else if (look) {
+    // Working farms and ordinary ranches already select their own state.
     textures = look.map((i) => textures[i]);
+  } else if (!(placed.item.id === 225 && placed.unitsInside > 0)) {
+    // Completed buildings show their idle state, including non-social
+    // mills/mines. Preserve nested smoke, flames, flags and other effects.
+    // The stables have six animal-count states, each with a nested loop.
+    // An occupied sacrifice altar retains its existing active sequence.
+    const state = placed.item.subcategory === 123 && buildingStateCount(art.name, facing) === placed.item.capacity + 1
+      ? placed.unitsInside : pouringTower(art.name) && attacking ? 1 : 0;
+    const frames = buildingStateFrames(art.name, facing, textures.length, state);
+    if (frames) {
+      textures = frames.map((i) => textures[i]);
+    }
   }
+  textures = textures.slice(0, buildingLoopLength(art.name, textures.length));
   const sprite = animated(textures, art.fps);
   const bounds = art.boundsOf(name);
   place(sprite, buildingOrigin(buildingPoint(placed.tx, placed.ty), bounds ?? { x: 0, y: 0, w: 0, h: 0 }));

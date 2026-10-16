@@ -19,6 +19,15 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Structure idle pass in progress:** `codex/structure-idle-animation`
+  fixes ordinary buildings cycling through construction/action states,
+  synchronizes hover outlines, and removes seven measured blank loop
+  endings. All 1,010 configured entries were inventoried: 900 readable
+  art files cover 941 entries; 69 names have unavailable sources and public
+  sheets. See [the audit](docs/structure-idle-audit.md). Client types and
+  361 tests pass; server 435 run (426 passed, 9 existing skips). The broad
+  Chromium/WebKit renderer pass and full browser suite are in progress.
+
 - **Owner playthrough controls in [#94](https://github.com/TamalAdebisi/socialemperors/pull/94):**
   Friends forms keep their CSS/images after nested POSTs; unit targets
   have an eight-pixel margin and a 44-pixel minimum, with original art
