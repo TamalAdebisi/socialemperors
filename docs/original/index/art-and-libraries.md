@@ -195,7 +195,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `EP_REFUGE_MC.as` | 40 | The selection panel for a refuge, with how many it holds. | art |
 | `EP_Resource_MC.as` | 30 | The selection panel for a resource building, with what it earns and its time bar. | art |
 | `EP_SpecialUnitMc.as` | 34 | The selection panel for a special unit, with its attacks. | art |
-| `EP_Survival_MC.as` | 33 | The selection panel for the survival building. | art |
+| `EP_Survival_MC.as` | 33 | The selection panel for the survival building. | art: its Enter Survival button (`open-survival`) |
 | `EP_TEXT_MC.as` | 36 | The selection panel for a building with plain text. | art |
 | `EP_TimeMachine_MC.as` | 37 | The selection panel for the time machine. | art |
 | `EP_TOWNHALL_MC.as` | 50 | The selection panel for the town hall, with the unit it trains. | art |
@@ -363,7 +363,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `PopupSocialBuildingMC.as` | 28 | A social building's window: friends hired. | art |
 | `PopupSocialFeedsMC.as` | 30 | The social feeds window. | art |
 | `PopupSuperMisteryBoxMC.as` | 64 | The super mystery box window: three boxes. | art |
-| `PopupSurvivalMC.as` | 41 | The survival window: lives and themes. | art |
+| `PopupSurvivalMC.as` | 41 | The survival window: lives and themes. | art: its hearts (`survival-life`, `survival-life-used`) |
 | `PopupSurvivalResultsMC.as` | 30 | Survival results. | art |
 | `PopupTournamentFinishedMC.as` | 26 | The end of a tournament: score. | art |
 | `PopupTournamentMC.as` | 31 | The tournament list window. | art |
@@ -398,7 +398,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `PlayerInfoTournamentMC.as` | 31 | A player's info in a tournament: name, level, country. | art |
 | `RecuadroTeamTournamentMC.as` | 20 | A team's box in a tournament. | art |
 | `SelectionTeamWindowMC.as` | 33 | The window to pick a tournament team. | art |
-| `SurvivalMapMC.as` | 28 | A survival map: theme, difficulty, lock. | art |
+| `SurvivalMapMC.as` | 28 | A survival map: theme, difficulty, lock. | art: its padlock (`survival-lock`) |
 | `ThemeMC.as` | 24 | A theme to apply or unlock. | art |
 | `ThumbFriendsTournamentMC.as` | 24 | A friends' tournament thumbnail. | art |
 | `ThumbSelectedUnitSurvivalMC.as` | 17 | A chosen survival unit, with a cross. | art |

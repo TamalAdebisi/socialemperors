@@ -1,0 +1,739 @@
+{
+ "_about": "The Survival Arena's five arenas, as the Flash client has them (QuestSurvivalMap1-5, PopupSurvival): each arena's name (localization_strings), picture (images_new/<picture>.jpg), ground, whether it can be played (the last three said Coming soon, and their maps never shipped), the unit won for holding out so many minutes, and its waves in order: the units it picks from, the seconds to the next wave, how many come, whether it's a boss wave (then all its units come, once each, and bossSeconds is the time between the waves that come while a boss lives), and how many times the wave comes before the next. Rules in rules/survival.ts; our notes in CLIENT.md, \"Survival\".",
+ "shape": [
+  10,
+  6,
+  6,
+  6,
+  11,
+  8,
+  3,
+  3,
+  3,
+  9,
+  8,
+  3,
+  3,
+  3,
+  9,
+  8,
+  3,
+  3,
+  3,
+  9,
+  12,
+  7,
+  7,
+  7,
+  13
+ ],
+ "water": 5,
+ "relic": 1253,
+ "arenaBuilding": 1283,
+ "maps": [
+  {
+   "quest": 100000035,
+   "name": 1161,
+   "picture": "SURVIVAL_DESIERTO",
+   "terrain": 1001,
+   "available": true,
+   "prizes": [
+    [
+     5,
+     619
+    ],
+    [
+     8,
+     577
+    ],
+    [
+     12,
+     662
+    ],
+    [
+     15,
+     629
+    ]
+   ],
+   "waves": [
+    {
+     "units": [
+      593
+     ],
+     "seconds": 20,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      669
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      613,
+      594
+     ],
+     "seconds": 18,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      538
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      614,
+      595
+     ],
+     "seconds": 15,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      665
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      613,
+      596
+     ],
+     "seconds": 10,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      671
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      612,
+      614,
+      597
+     ],
+     "seconds": 8,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      753
+     ],
+     "seconds": 5,
+     "count": 6,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      743
+     ],
+     "seconds": 3,
+     "count": 5,
+     "boss": false,
+     "spawns": 1000
+    }
+   ]
+  },
+  {
+   "quest": 100000036,
+   "name": 1162,
+   "picture": "SURVIVAL_MINERAL",
+   "terrain": 1004,
+   "available": true,
+   "prizes": [
+    [
+     5,
+     607
+    ],
+    [
+     8,
+     655
+    ],
+    [
+     12,
+     687
+    ],
+    [
+     15,
+     652
+    ]
+   ],
+   "waves": [
+    {
+     "units": [
+      558
+     ],
+     "seconds": 20,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      667
+     ],
+     "seconds": 5,
+     "count": 4,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      729,
+      643
+     ],
+     "seconds": 18,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      742
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      730,
+      715
+     ],
+     "seconds": 15,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      745
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      619,
+      687,
+      620
+     ],
+     "seconds": 10,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      754
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      712,
+      621,
+      624
+     ],
+     "seconds": 8,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      723
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      743
+     ],
+     "seconds": 3,
+     "count": 5,
+     "boss": false,
+     "spawns": 1000
+    }
+   ]
+  },
+  {
+   "quest": 100000037,
+   "name": 1163,
+   "picture": "SURVIVAL_NUBES",
+   "terrain": 1006,
+   "available": false,
+   "prizes": [
+    [
+     12,
+     730
+    ],
+    [
+     15,
+     654
+    ],
+    [
+     20,
+     644
+    ],
+    [
+     25,
+     758
+    ]
+   ],
+   "waves": [
+    {
+     "units": [
+      645
+     ],
+     "seconds": 20,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      654
+     ],
+     "seconds": 5,
+     "count": 4,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      644
+     ],
+     "seconds": 15,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      649
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      648
+     ],
+     "seconds": 10,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      650
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      725,
+      647
+     ],
+     "seconds": 6,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      758
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      646
+     ],
+     "seconds": 4,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      755
+     ],
+     "seconds": 5,
+     "count": 3,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      743
+     ],
+     "seconds": 3,
+     "count": 5,
+     "boss": false,
+     "spawns": 1000
+    }
+   ]
+  },
+  {
+   "quest": 100000038,
+   "name": 1164,
+   "picture": "SURVIVAL_NIEVE",
+   "terrain": 1002,
+   "available": false,
+   "prizes": [
+    [
+     12,
+     730
+    ],
+    [
+     15,
+     654
+    ],
+    [
+     20,
+     644
+    ],
+    [
+     25,
+     758
+    ]
+   ],
+   "waves": [
+    {
+     "units": [
+      578,
+      605
+     ],
+     "seconds": 20,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      637
+     ],
+     "seconds": 5,
+     "count": 4,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      606,
+      607
+     ],
+     "seconds": 15,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      641
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      603,
+      601
+     ],
+     "seconds": 10,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      545,
+      653
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      706,
+      727,
+      704
+     ],
+     "seconds": 6,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      709,
+      716
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      694,
+      683,
+      735
+     ],
+     "seconds": 4,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      722,
+      745
+     ],
+     "seconds": 5,
+     "count": 2,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      743
+     ],
+     "seconds": 3,
+     "count": 5,
+     "boss": false,
+     "spawns": 1000
+    }
+   ]
+  },
+  {
+   "quest": 100000039,
+   "name": 1165,
+   "picture": "SURVIVAL_SELVA",
+   "terrain": 1005,
+   "available": false,
+   "prizes": [
+    [
+     12,
+     730
+    ],
+    [
+     15,
+     654
+    ],
+    [
+     20,
+     644
+    ],
+    [
+     25,
+     758
+    ]
+   ],
+   "waves": [
+    {
+     "units": [
+      621,
+      622,
+      624,
+      625
+     ],
+     "seconds": 20,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      623
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      632,
+      633,
+      662,
+      626,
+      627,
+      628,
+      629
+     ],
+     "seconds": 15,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      635
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      655,
+      662,
+      660,
+      661
+     ],
+     "seconds": 10,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      684
+     ],
+     "seconds": 5,
+     "count": 1,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      699,
+      700,
+      701,
+      702,
+      704,
+      705,
+      703
+     ],
+     "seconds": 6,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      711,
+      724,
+      736
+     ],
+     "seconds": 5,
+     "count": 3,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      748,
+      749,
+      750,
+      751,
+      752,
+      753
+     ],
+     "seconds": 4,
+     "count": 8,
+     "boss": false,
+     "spawns": 4
+    },
+    {
+     "units": [
+      744,
+      755,
+      765
+     ],
+     "seconds": 5,
+     "count": 3,
+     "boss": true,
+     "spawns": 1,
+     "bossSeconds": 20
+    },
+    {
+     "units": [
+      743
+     ],
+     "seconds": 3,
+     "count": 5,
+     "boss": false,
+     "spawns": 1000
+    }
+   ]
+  }
+ ]
+}

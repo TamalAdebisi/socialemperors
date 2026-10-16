@@ -23,6 +23,8 @@ import { planOf } from "./rules/defencePlans.ts";
 import { inConstruction } from "./rules/construction.ts";
 import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, eaglesOf, spyingsLeft, type AttackEntry } from "./rules/pvp.ts";
 import { attackedLately } from "./rules/world.ts";
+import { MIN_LEVEL_SURVIVAL, SURVIVAL, livesLeft } from "./rules/survival.ts";
+import { SurvivalWindow, HELP_KEY as SURVIVAL_HELP } from "./ui/survival.ts";
 import { WorldMapWindow, type PlayerProfile } from "./ui/worldMap.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
@@ -80,6 +82,13 @@ async function start(): Promise<void> {
     // The battle's code is loaded only for an island.
     const { playQuest } = await import("./questPlay.ts");
     await playQuest(settings, server, quest);
+    return;
+  }
+  // ?survival=<arena>: the Survival Arena, played here (survivalPlay.ts).
+  const survival = new URLSearchParams(location.search).get("survival");
+  if (survival) {
+    const { playSurvival } = await import("./survivalPlay.ts");
+    await playSurvival(settings, server, survival);
     return;
   }
   // ?attack=<player id>&map=<town>: another player's town, attacked (attackPlay.ts); ?spy=: spied on.
@@ -278,7 +287,43 @@ async function start(): Promise<void> {
         return;
       }
       worldMap.open();
-    }, () => history.toggle());
+    }, () => history.toggle(), () => {
+      // From level 20, as the Flash client's world button (the arena's own button opens it at any level).
+      if (town.level < MIN_LEVEL_SURVIVAL) {
+        editor.tell(`Survival opens at level ${MIN_LEVEL_SURVIVAL}.`);
+        return;
+      }
+      survivalWindow.open();
+    });
+    const survivalWindow = new SurvivalWindow({
+      words: (id) => lines.get(id) ?? "",
+      pictureUrl: (name) => `${settings.assetsUrl}/images_new/${name}.jpg`,
+      thumbnail: (id) => `${settings.assetsUrl}/buildingthumbs/${items.get(id)?.art ?? ""}.jpg`,
+      itemName: (id) => items.get(id)?.name ?? "",
+      lives: () => livesLeft(attackState.survivalVidaTimeStamp, attackState.survivalVidasExtra, clock(),
+        Number(config.globals?.SURVIVAL_HOURS_LIVE_REGENERATE) || 3),
+      arenas: () => (attackState.survivalMaps ?? {}) as Record<string, { tp?: number } | undefined>,
+      lifePrice: Number(config.globals?.SURVIVAL_BUY_LIVE_CASH) || 3,
+      buyLife: () => {
+        const price = Number(config.globals?.SURVIVAL_BUY_LIVE_CASH) || 3;
+        if (town.cash < price) {
+          editor.tell("Not enough cash for a life.");
+          void bank.open();
+          return false;
+        }
+        town.cash -= price;
+        attackState.survivalVidasExtra = (Number(attackState.survivalVidasExtra) || 0) + 1;
+        commands.add("add_survival_vida_extra", price);
+        hud.update(town);
+        return true;
+      },
+      play: (quest) => location.assign(`/client.html?survival=${quest}`),
+      helpSeen: () => Array.isArray(attackState.helpMap) && (attackState.helpMap as string[]).includes(SURVIVAL_HELP),
+      sawHelp: () => {
+        attackState.helpMap = [...(Array.isArray(attackState.helpMap) ? attackState.helpMap as string[] : []), SURVIVAL_HELP];
+        commands.add("set_help_map", SURVIVAL_HELP);
+      },
+    });
     openWorld = (continent) => worldMap.open(continent);
     // Home to an attack not yet seen: the attacks received open by themselves, as in the Flash client.
     if (attackedWhileAway(attackState)) {
@@ -374,6 +419,10 @@ async function start(): Promise<void> {
               islands.open(page);
             }
           } };
+        }
+        // The Survival Arena: its Enter Survival, at any level, as the original's card.
+        if (placed.item.id === SURVIVAL.arenaBuilding) {
+          return { label: "Enter Survival", icon: "open-survival", run: () => survivalWindow.open() };
         }
         // The dragon nest and the monster nest (ui/nest.ts): the original's Open button.
         const kind = NESTS.find((n) => n.building === placed.item.id);

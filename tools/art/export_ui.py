@@ -112,6 +112,11 @@ PICTURES = {
     "plan-mid-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 2, 330),
     "plan-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 3, 330),
     "plan-picked": ("PopUpBattleOptionsMC/strat/s1/vist", 0),
+    # The Survival Arena: its card's Enter Survival, and the survival window's lives (full, used) and the padlock on an arena.
+    "open-survival": ("EP_Survival_MC/btnAbrir", 0),
+    "survival-life": ("PopupSurvivalMC/life1", 0, 120),
+    "survival-life-used": ("PopupSurvivalMC/life1", 1, 120),
+    "survival-lock": ("SurvivalMapMC/mcLock", 0, 200),
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),

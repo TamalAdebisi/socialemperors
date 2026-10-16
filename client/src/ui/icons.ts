@@ -70,6 +70,11 @@ export const ICONS = {
   "plan-mid-aggressive": new URL("./art/plan-mid-aggressive.webp", import.meta.url).href,
   "plan-aggressive": new URL("./art/plan-aggressive.webp", import.meta.url).href,
   "plan-picked": new URL("./art/plan-picked.webp", import.meta.url).href,
+  // The Survival Arena: its card's button, the window's lives and its padlock.
+  "open-survival": new URL("./art/open-survival.webp", import.meta.url).href,
+  "survival-life": new URL("./art/survival-life.webp", import.meta.url).href,
+  "survival-life-used": new URL("./art/survival-life-used.webp", import.meta.url).href,
+  "survival-lock": new URL("./art/survival-lock.webp", import.meta.url).href,
   // The cards' buttons for a building's window: the graveyards' and the altar's, the harbour's, the zeppelin tower's.
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
