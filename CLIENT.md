@@ -636,8 +636,11 @@ glove. The site's own links, the classic page's bar, are in a gold
 opening the site's Everybody page in a new tab, with a red count of what
 waits there (requests, gifts, help; the Menu carries it too, asked again
 every two minutes and when the tab comes back into view, as the classic
-page does); Empires, the front page; and Log out, a form, as the site's
-(`ui/hud.ts`; test `e2e/tests/site-menu.mjs`). Read-only server responses
+page does); Empires, the front page; Discord, when the server names one
+(`SE_DISCORD_URL`, DEPLOY.md), in a new tab too; and Log out, a form, as
+the site's (`ui/hud.ts`; tests `e2e/tests/site-menu.mjs` and
+`e2e/tests/contact.mjs`). The open Menu goes over the camp and raid
+countdown below it. Read-only server responses
 do not renew the login cookie, so an image arriving after logout cannot
 sign the browser back in. The 30-day expiry starts at signing in or the
 last session change (`tests/test_accounts.py`). Until Beta 2, Quests, Battle and World's battle modes open the

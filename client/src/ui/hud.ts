@@ -38,8 +38,8 @@ export interface HudActions {
   population?: (town: Town) => { current: number; max: number };
   /** Pausing (ui/pause.ts): its button goes before the music's. */
   pause?: { button(): HTMLButtonElement };
-  /** The site's links (the classic page's bar): what waits on the Everybody page, who's signed in, the form token for Log out. */
-  site?: { news: number; username: string; csrf: string };
+  /** The site's links (the classic page's bar): what waits on the Everybody page, who's signed in, the form token for Log out, and where to get in touch (SE_DISCORD_URL), if anywhere. */
+  site?: { news: number; username: string; csrf: string; discord?: string };
 }
 
 /** How often the Everybody count is asked again while the game is in view, as the classic page's: two minutes. */
@@ -353,8 +353,8 @@ export function showMessage(text: string): void {
  * The site's links in a Menu, as on the classic page's bar: Everybody (a new
  * tab, so the game plays on) with what waits there (requests, gifts, help;
  * asked again every two minutes and when the tab is back in view), Empires,
- * and Log out (a form, as the site's: another site can't log you out with a
- * link).
+ * Discord when the server names one (a new tab too), and Log out (a form, as
+ * the site's: another site can't log you out with a link).
  */
 function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void {
   const holder = bar.querySelector<HTMLElement>(".site")!;
@@ -364,6 +364,19 @@ function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void
   holder.querySelector<HTMLInputElement>('input[name="csrf"]')!.value = site.csrf;
   const logOut = holder.querySelector<HTMLButtonElement>('form button')!;
   logOut.title = `Log out ${site.username}`;
+  // Only https:// links: the server checks too, and any other kind could run code here.
+  let discord: HTMLAnchorElement | null = null;
+  if (site.discord && /^https:\/\//i.test(site.discord)) {
+    discord = document.createElement("a");
+    discord.setAttribute("role", "menuitem");
+    discord.href = site.discord;
+    discord.target = "_blank";
+    discord.rel = "noopener";
+    discord.dataset.discord = "";
+    discord.title = "Questions or a problem? Get in touch on Discord";
+    discord.textContent = "Discord";
+    logOut.form!.before(discord);
+  }
   const news = (count: number) => {
     for (const badge of holder.querySelectorAll<HTMLElement>("[data-site-news], [data-friends-news]")) {
       badge.textContent = String(count);
@@ -389,6 +402,7 @@ function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void
     }
   });
   friends.addEventListener("click", () => open(false));
+  discord?.addEventListener("click", () => open(false));
   const check = () => {
     if (document.hidden) {
       return;

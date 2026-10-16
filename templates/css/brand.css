@@ -120,6 +120,7 @@ h1, h2, h3 {
 }
 
 .button img.icon { width: 20px; height: 20px; }
+.button svg.icon { width: 18px; height: 18px; flex: none; }
 
 /* A button that reads as a link (Log out, in the lines of links). */
 .link-button {

@@ -67,6 +67,15 @@ app.config.update(
 if config_env.TRUSTED_PROXIES:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=config_env.TRUSTED_PROXIES, x_proto=config_env.TRUSTED_PROXIES)
 app.jinja_env.globals["csrf_token"] = csrf.token  # every form: <input type="hidden" name="csrf" ...>
+
+
+@app.context_processor
+def contact_link():
+    """Where players reach the people running the game (SE_DISCORD_URL), for
+    every page: read at each page, so a test can switch it."""
+    return {"discord_url": config_env.DISCORD_URL}
+
+
 app.register_blueprint(admin.admin)  # /admin, for the accounts in SE_ADMINS
 compress.install(app)  # text goes gzip-compressed: the config is 2 MB, packed 150 KB
 

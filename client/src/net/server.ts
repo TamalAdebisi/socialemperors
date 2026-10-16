@@ -27,6 +27,8 @@ export interface PageSettings {
   /** What waits on the site's Friends page, and who's signed in: the Menu's (ui/hud.ts). */
   news?: number;
   username?: string;
+  /** Where players reach the people running the game (SE_DISCORD_URL), or null: the Menu's Discord. */
+  discord?: string | null;
 }
 
 export function readPageSettings(doc: Document = document): PageSettings {

@@ -172,7 +172,9 @@ async function start(): Promise<void> {
   // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
   const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
     population: (t) => population(t, items, increase), sound, pause: new Pause(loop),
-    site: settings.csrf ? { news: settings.news ?? 0, username: settings.username ?? "", csrf: settings.csrf } : undefined });
+    site: settings.csrf
+      ? { news: settings.news ?? 0, username: settings.username ?? "", csrf: settings.csrf, discord: settings.discord ?? undefined }
+      : undefined });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);

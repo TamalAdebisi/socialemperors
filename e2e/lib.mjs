@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
+/** The test server's Discord link (SE_DISCORD_URL), as the live game's would be: never opened. */
+export const DISCORD = "https://discord.gg/e2e-example";
 
 // Playwright's requests do not pick up the shell's proxy automatically.
 // Cloud runners need it for the art bucket; the throwaway server stays local.

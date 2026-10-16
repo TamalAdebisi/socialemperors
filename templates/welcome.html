@@ -24,10 +24,11 @@
 			{% if invite_required %}
 			<label for="new-invite">Invite code</label>
 			<input id="new-invite" name="invite" required>
+			{% if discord_url %}<div class="hint">No code? <a href="{{ discord_url }}" target="_blank" rel="noopener">Ask for one on Discord</a></div>{% endif %}
 			{% endif %}
 			<button class="button gold" type="submit">Start playing</button>
 			{% else %}
-			<p class="muted">Sign-ups are closed right now.</p>
+			<p class="muted">Sign-ups are closed right now.{% if discord_url %} Questions? <a href="{{ discord_url }}" target="_blank" rel="noopener">Ask on Discord</a>.{% endif %}</p>
 			{% endif %}
 		</form>
 

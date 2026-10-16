@@ -60,6 +60,8 @@ body.game-page {
     display: contents;
 }
 
+#gamebar .icon.discord { color: #5865f2; }
+
 #gamebar .badge {
     margin-right: -2px;
 }
@@ -77,9 +79,30 @@ body.game-page {
     }
 }
 
-/* Phones: the buttons need the room more than a cut-off empire name. */
+/* Phones: the buttons need the room more than a cut-off empire name, and
+   sit closer together, so Log out still fits beside Discord. */
 @media (max-width: 480px) {
     #gamebar .empire {
+        display: none;
+    }
+
+    #gamebar {
+        gap: 8px;
+        padding: 0 8px;
+    }
+
+    #gamebar nav {
+        gap: 6px;
+    }
+
+    #gamebar nav .button.tiny {
+        padding: 0 8px;
+    }
+}
+
+/* The narrowest phones: Empires goes where the logo goes. */
+@media (max-width: 359px) {
+    #gamebar .logo {
         display: none;
     }
 }

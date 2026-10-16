@@ -226,6 +226,11 @@ numbers, because the server writes them into the game config.
       delete your empires, link Discord and Google, and set or change your
       password. Off the game's bar: the Discord and GitHub links, and the
       version
+- [x] Getting in touch (`SE_DISCORD_URL`, DEPLOY.md): a Discord link under
+      the pages around the game, on the classic game's bar and in the new
+      client's Menu, and "No code? Ask for one on Discord" by the invite
+      code. Off until the owner sets the link. In-game chat waits
+      ([DECISIONS.md](DECISIONS.md))
 - [x] Friends, as Facebook had (`friends.py`): ask by username, the other
       accepts or declines (the Friends page, `/friends`). Friends' empires
       come first among your neighbours in the game, then the most recently

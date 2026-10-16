@@ -36,6 +36,10 @@ SE_SUPABASE_KEY      The project's publishable key (sb_publishable_...). Not a
                      secret: it only lets the server start a sign-in
 SE_ALLOW_REGISTRATION  "1" (default) to let anyone sign up, "0" to close sign-ups
 SE_INVITE_CODE       If set, new accounts must enter this code (closed beta)
+SE_DISCORD_URL       A Discord link (https://discord.gg/... or a profile) where
+                     players can reach the people running the game. When set,
+                     the site, the game's bars and the sign-up form show it
+                     ("No code? Ask for one on Discord"). Only https:// links are used
 SE_MAX_VILLAGES      Max empires per account (default 3)
 SE_MAX_NEIGHBORS     Legacy setting, ignored: Everybody includes all accounts
 SE_CDN_FALLBACK      "1" to fetch missing assets from Social Point's old CDN
@@ -59,6 +63,13 @@ def _flag(name: str, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _https(name: str):
+    """An https:// address, or None: a page links to it, and any other kind
+    of link (javascript:...) could run code there."""
+    value = os.environ.get(name, "").strip()
+    return value if value.lower().startswith("https://") else None
 
 
 def _int(name: str, default: int) -> int:
@@ -86,6 +97,7 @@ SUPABASE_KEY = os.environ.get("SE_SUPABASE_KEY", "").strip() or None
 
 ALLOW_REGISTRATION = _flag("SE_ALLOW_REGISTRATION", True)
 INVITE_CODE = os.environ.get("SE_INVITE_CODE") or None
+DISCORD_URL = _https("SE_DISCORD_URL")
 MAX_VILLAGES_PER_USER = _int("SE_MAX_VILLAGES", 3)
 MAX_NEIGHBORS = _int("SE_MAX_NEIGHBORS", 30)
 CDN_FALLBACK = _flag("SE_CDN_FALLBACK", False)
