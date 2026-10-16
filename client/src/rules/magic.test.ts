@@ -14,7 +14,7 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
     flying: false, velocity: 3, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 1,
     unitsLimit: 0, cashCost: 0, cost: 100, costType: "g", facings: 1, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
-    life: 400, attack: 12, defense: 1, attackRange: 1, attackInterval: 35, size: 1, elevation: 1, groups: "", ...fields };
+    life: 400, attack: 12, defense: 1, attackRange: 1, attackInterval: 35, size: 1, elevation: 1, groups: "", upgradesTo: 0, ...fields };
 }
 
 const KNIGHT = item();

@@ -55,6 +55,19 @@ export const ICONS = {
   store: new URL("./art/store.webp", import.meta.url).href,
   remove: new URL("./art/remove.webp", import.meta.url).href,
   close: new URL("./art/close.webp", import.meta.url).href,
+  // The card's own (ui/actions.ts; its parchment, frames and bars are in style.css):
+  // Hurry up, Upgrade and its "UNLOCK AT", the TRAIN box and BUY with cash, the numbers' pictures.
+  "hurry-up": new URL("./art/hurry-up.webp", import.meta.url).href,
+  upgrade: new URL("./art/upgrade.webp", import.meta.url).href,
+  "unlock-at": new URL("./art/unlock-at.webp", import.meta.url).href,
+  train: new URL("./art/train.webp", import.meta.url).href,
+  "train-cash": new URL("./art/train-cash.webp", import.meta.url).href,
+  "stat-attack": new URL("./art/stat-attack.webp", import.meta.url).href,
+  "stat-delay": new URL("./art/stat-delay.webp", import.meta.url).href,
+  "stat-range": new URL("./art/stat-range.webp", import.meta.url).href,
+  "stat-speed": new URL("./art/stat-speed.webp", import.meta.url).href,
+  "stat-life": new URL("./art/stat-life.webp", import.meta.url).href,
+  "stat-room": new URL("./art/stat-room.webp", import.meta.url).href,
   // The way home from an island (the game bar's), and the quest window's stars.
   "my-town": new URL("./art/my-town.webp", import.meta.url).href,
   "towns": new URL("./art/towns.webp", import.meta.url).href,

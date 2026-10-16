@@ -47,7 +47,9 @@ export class LessonsView {
     this.hole.className = "lesson-hole";
     this.count.className = "lesson-count";
     this.count.hidden = true;
-    document.body.append(this.hole, this.box, this.arrow, this.count);
+    // Keep progress with the instruction, clear of the selected unit's card.
+    bubble.append(this.count);
+    document.body.append(this.hole, this.box, this.arrow);
   }
 
   /** A step's words (none: the bubble goes) and whether it has a Next. */

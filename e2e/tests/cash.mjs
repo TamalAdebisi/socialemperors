@@ -48,6 +48,7 @@ export default async function cash({ newPlayer }) {
   // The gold mine works for 8 hours: 2 cash finish it, and its gold comes now.
   const mine = await player.select(MINE_AT, (text) => text.startsWith("Gold Mine I"));
   assert.match(mine.text, /Ready in 8 h|Ready in 7 h/);
+  await player.press("Hurry up");  // the game's hurry window, then its Buy for 2
   await player.press("Finish now for 2 cash");
   await player.wait(300);
 

@@ -72,6 +72,33 @@ PICTURES = {
     "turn": ("BotonFlip_MC", 0),
     "store": ("BotonPutInStorage_MC", 0),
     "close": ("CloseButt", 0),
+    # The info panel itself (ui/actions.ts): its parchment, the brown frame round a picture,
+    # the time bar (its back and its yellow), Hurry up, Upgrade with the bubble it shows
+    # (the next building's) and its "UNLOCK AT" badge, the barracks' TRAIN box (the unit's
+    # picture goes on its grey half), BUY with cash and the bubble over the unit, the frame
+    # of a unit inside, and the small pictures by the numbers.
+    "card": ("RecuadroInfoMC", 0, 1200),
+    "card-frame": ("EP_BARRACKS_MC@22", 0, 300),
+    "card-bar": ("EP_Farm_MC/barraTiempo@1", 0, 600),
+    "card-bar-fill": ("EP_Farm_MC/barraTiempo@3", 0, 600),
+    "hurry-up": ("EP_Farm_MC/btHurryup", 0, 400),
+    "upgrade": ("EP_Farm_MC/btSell", 0),
+    "upgrade-bubble": ("EP_Farm_MC/upgradeinfo@1", 0, 500),
+    "unlock-at": ("EP_Farm_MC/upgradeinfo/unlock@1", 0, 400),
+    "train": ("EP_BARRACKS_MC@1", 0, 400),
+    "train-cash": ("EP_BARRACKS_MC@15", 0),
+    "train-bubble": ("EP_BARRACKS_MC/menu@1", 0, 500),
+    "portrait-frame": ("PortraitMC@2", 0),
+    "stat-attack": ("EP_BARRACKS_MC/menu/mcAttack@2", 0, 80),
+    "stat-delay": ("EP_BARRACKS_MC/menu/mcDefense@2", 0, 80),
+    "stat-range": ("EP_BARRACKS_MC/menu/mcRange@2", 0, 80),
+    "stat-speed": ("EP_BARRACKS_MC/menu/mcSpeed@2", 0, 80),
+    "stat-life": ("EP_BARRACKS_MC/menu/mcVida@2", 0, 80),
+    "stat-room": ("EP_BARRACKS_MC/menu/mcPop@2", 0, 80),
+    # Hurry up's window: its parchment, its title band and its white button (the words are ours to write).
+    "hurry-window": ("PopupHurryupMC@1", 0, 1000),
+    "hurry-band": ("PopupHurryupMC@8", 0, 700),
+    "hurry-button": ("PopupHurryupMC/btAsk@1", 0, 500),
     # The top bar.
     "add-cash": ("AddCashButton", 0),
     "daily-bonus": ("DailyButtonMC", 0),

@@ -59,8 +59,14 @@ export default async function group({ newPlayer }) {
   }
 
   // A double click on one: the villagers near it, not the spearman.
-  const one = await player.select(SQUARE[0], "Villager I");
-  await player.click(one.point);
+  await page.keyboard.press("Escape");
+  // The original-height info panel covers the feet after the first click.
+  // Double-click the visible head, with the browser sending both clicks.
+  const one = player.screenOf(...SQUARE[0], 60);
+  assert.equal(await page.evaluate((point) => window.seHome.parts.view.itemAt(point)?.item.id, one), VILLAGER,
+    "the double click targets a villager's picture");
+  await page.mouse.dblclick(one.x, one.y, { delay: 100 });
+  await player.wait(300);
   const kin = await names();
   assert.ok(kin.length >= 4 && kin.every((name) => name === "Villager I"), `the villagers near it: ${kin}`);
 
