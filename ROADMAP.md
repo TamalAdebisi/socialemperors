@@ -271,6 +271,12 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 slices, about one task each; every slice ends tested, documented and merged.
 The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
 
+**Browser checks, 16 October:** draft #86 fixes the survival and market
+tests' waits; both pass individually and in the full run. That run passed
+63 of 64 tests in 64 minutes 51 seconds. An oversized art bundle makes
+`team` hit the test machine's memory limit; [HANDOFF.md](HANDOFF.md)
+records the asset and the re-export needed before merging.
+
 - [ ] **Beta 1, the town builder** (the rest of step 3), built 14 October
       2026, now closing the gaps a side-by-side check against the Flash game
       found ([PARITY.md](PARITY.md); the rules it got wrong are fixed, and

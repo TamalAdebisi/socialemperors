@@ -78,9 +78,13 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
 - Run the tests for what you touched while you work, and the whole lot
-  before a pull request is merged. The browser suite is long, 30 to 50
-  seconds a test, so most of an hour: Chromium draws without a graphics
-  card here, so everything runs slower than on a player's computer.
+  before a pull request is merged. On 16 October 2026, the 64 browser
+  tests took **64 minutes 51 seconds**, including the build, on a cloud
+  machine with 2 CPUs and 8 GiB of memory (Python 3.13.5, Node 24.19.0,
+  Playwright 1.56.1). 63 passed; `team` hit the memory limit while loading
+  an oversized art bundle (HANDOFF.md, task 1). Several tests use multiple
+  towns and take three to five minutes. Chromium draws without a graphics
+  card here, so allow over an hour for the full run.
 - **Look at the screenshots** in `e2e/out/` (and the server's log there).
   A test can pass while the screen is wrong.
 - Every new feature gets a browser test that checks the screen and the
@@ -88,7 +92,10 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   marks each as a different visitor, so the limit of five new accounts an
   hour doesn't get in the way.
 - Wait for things to happen, not for a number of seconds: the slow drawing
-  makes fixed waits flaky (HANDOFF.md, task 1, has two of these to fix).
+  makes fixed waits flaky. The survival test waits for its displayed game
+  clock; the market test lets earlier messages finish before asking for
+  a warning, so the message queue has room for it. Both waits have a
+  30-second limit (HANDOFF.md, task 1).
 - Never skip, switch off or loosen a test to get a pass.
 
 ## Delivering work
