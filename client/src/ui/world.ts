@@ -32,14 +32,19 @@ export class WorldWindows {
   private readonly battles: Panel;
   private readonly world: Panel;
 
-  /** `attack`: opens the world map (ui/worldMap.ts); `results`: the Battle Results window (ui/attackHistory.ts). */
-  constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void) {
+  /**
+   * `attack`: opens the world map (ui/worldMap.ts); `results`: the Battle Results window (ui/attackHistory.ts);
+   * `towns`: the towns' window (ui/towns.ts), when the town has its button; on a phone it's a row here.
+   */
+  constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void,
+    towns: (() => void) | null = null) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
     const battles = BATTLES.map((mode) => mode.name === "Attack a player" ? { ...mode, run: attack } : mode);
     const history = { ...RESULTS, run: results };
     this.battles = window_("battle", "Battles", [...battles, history], classicUrl);
-    this.world = window_("world", "World", [quests, ...battles, history], classicUrl);
+    const travel: Mode[] = towns ? [{ name: "Towns", about: "Your towns, and travelling between them", icon: ICONS.towns, verb: "Go", run: towns }] : [];
+    this.world = window_("world", "World", [quests, ...battles, history, ...travel], classicUrl);
   }
 
   toggleQuests(): void {

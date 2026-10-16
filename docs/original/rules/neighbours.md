@@ -76,11 +76,10 @@ things only until the page is reloaded).
 - The bar shows the neighbours sorted by experience, smallest first, then
   Arthur, then an empty "add" slot at the end. With fewer than six cards
   in all, the empty slot is dropped and empty slots are put at the front
-  instead, so the neighbours sit on the right. *Ours: different: a
-  window with one row each, friends first, then the most recently seen
-  players, then Arthur; no sort by experience, no add slot, a link to the
-  Friends page instead (`client/src/ui/neighbours.ts`). The window itself
-  is the owner's choice of layout.*
+  instead, so the neighbours sit on the right. *Ours: a window with one
+  row each, sorted by experience the same, then Arthur; no add slot, a link
+  to the Friends page instead (`client/src/ui/neighbours.ts`). The window
+  itself is the owner's choice of layout.*
 - Six cards show at a time. It opens on the last six (Arthur and the add
   slot in view). Arrows move one card or six. Quirk: the scroll position
   starts three places away from what is shown (it is worked out from the
@@ -89,9 +88,9 @@ things only until the page is reloaded).
   (`client/src/ui/neighbours.ts`).*
 - Each card: the picture, the name, "XP" with the neighbour's experience,
   and a star with the level. A help mark shows on a neighbour who can be
-  helped and wasn't helped this session. *Ours: different: picture (an
-  initial on a colour; Arthur's king), name and level; no experience and
-  no help mark (`client/src/ui/neighbours.ts`). PARITY.md lists it.*
+  helped and wasn't helped this session. *Ours: picture (an initial on a
+  colour; Arthur's king), name, level and experience, and the game's
+  "ASSIST!" mark (`client/src/ui/neighbours.ts`).*
 - Pressing a card does something only at home and outside the tutorial.
   The empty slot opens the page's invite (Facebook's). *Ours: the
   Neighbours window is only in the home town's menus; the add slot is
@@ -369,8 +368,9 @@ things only until the page is reloaded).
 - Sending gifts is not in the game: Send gift and the empty gift box call
   the page (`gotoGifts`), and with the page's `showInitialGift` flag the
   game calls `gotoInitialGifts` once the town is up. *Ours: the classic
-  page passes the flag and opens our gifts window; the new client has no
-  way to it yet (CLIENT.md, "Not yet").*
+  page passes the flag and opens our gifts window; the new client has the
+  same window (`client/src/ui/gifts.ts`), from Neighbours, and opens it
+  when gifts wait as the town opens.*
 - A window to pick friends to send a special gift to
   (`PopupInviteFriends`) exists, but nothing in the game opens it.
   *Ours: same (none).*

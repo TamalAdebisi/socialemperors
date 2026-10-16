@@ -636,10 +636,13 @@ real town; a monitor on the left, a phone on the right):
 - The shop's things above the player's level are grey with "Level N" in
   red where the price would be. Storage has its own button and is still a
   tab of the same window, as in the original; whichever is showing is lit.
-- Neighbours: the list the server sends with the town (friends first, then
-  the players most recently seen). Each row has the player's initial on a
-  colour of its own (Facebook's pictures are gone) and Visit, which opens
-  their town to look at; a visited town has no menus, only Back home.
+- Neighbours: the list the server sends with the town, sorted by
+  experience, smallest first, then Arthur, as the original's bar. Each row
+  has the player's initial on a colour of its own (Facebook's pictures are
+  gone), their level and experience, the original's "ASSIST!" when they
+  can be helped today (not helped in the last 24 hours), and Visit, which
+  opens their town to look at; a visited town has no menus, only Back
+  home. Gifts comes first (the original's Send gift).
 - Army: the town's units by kind, with how many. Training comes with the
   training slice; until then the window says to train in the classic game.
 - The glove (the Flash client's fast-collect button) shows bottom right
@@ -1010,7 +1013,8 @@ gold and cash pills. Code:
 ### Missions and bonuses
 
 Built (Beta 1's sixth slice). The next goal shows bottom left (tap it for
-all 15 open); goals reached are paid their gold. The daily bonus and
+its own window, and from there all 15 open); goals reached are paid their
+gold. The daily bonus and
 Monday's chest show as round buttons at the top right while on offer. Code: `rules/goals.ts` and
 `goals.json`, `rules/bonuses.ts` (with tests), `goals.ts`, `bonuses.ts`.
 
@@ -1055,6 +1059,21 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
+
+**A goal's window** (`ui/goalWindow.ts`, since the parity list), as the
+Flash client's "Goal INFO": the game's parchment and band, the goal's title
+and text, the game's picture of its steps (`images_new/goal_NNN.jpg`, goals
+1 to 100), one of the game's 25 children beside it (`nino_NN.png`, by the
+goal's number), its gold, OK, and for goals 1 and 2 and those that build
+something HELP!, which draws the game's arrow at the Build menu (goal 2:
+the town hall's card, at its Train), gone once followed
+(`ui/helpArrow.ts`). The goal card opens its goal's window (a goal done,
+the list); the list's +INFO opens any goal's. The original's fourth button,
+paying cash to skip a goal, was switched off: in its place, Goals opens the
+list. Goals 6 to 9 carry the game's "Click here!" tag until tapped, and
+below level 8 "New Mission!" points at the box whenever a new goal joins
+the 15 open (and as the town opens), until a goal is looked at; neither in
+Arthur's lessons. Test: `e2e/tests/goal-window.mjs`.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`, `comeback_bonus.py`):
@@ -1141,8 +1160,20 @@ neighbours, Arthur last; Visit opens their town. Code:
   friend's is their initial on a colour, as in the neighbours' list.
   Test: `e2e/tests/friends-help.mjs`.
 
-**Not yet:** gifts and requests between neighbours, and adding neighbours
-from inside the game (the site's friends page does it).
+- **Gifts** (`ui/gifts.ts`): the classic page's Gifts window
+  (`templates/_gifts.html`, the server's `gifts.py`, `/gifts/game`) in the
+  panel, from the first row of Neighbours (the original's Send gift was on
+  a neighbour's portrait): gifts friends sent, to take into storage; today's
+  free gift for a friend; giving from storage. It opens by itself when gifts
+  wait as the town opens, as the classic page does. What sends the town's
+  waiting commands first, so the server's storage is the one on screen;
+  what it changes shows once the town loads again, as the window closes.
+  Test: `e2e/tests/gifts.mjs`.
+
+**Not yet:** requests between neighbours, and adding neighbours from
+inside the game (the site's friends page does it); the site's own bar
+(Empires, Friends with its count, Log out) waits for the owner's say on
+where it goes.
 
 ### Sound and speed
 
@@ -1371,6 +1402,44 @@ level), the good, the price in gold and the button, with the game's words
 
 Test: `e2e/tests/market.mjs` trades until no trades are left, with both
 warnings, the server's save, the three goals done, a reload and a phone.
+
+### The troll town
+
+The player's second town, as the Flash client offers it (`rules/towns.ts`,
+with tests; `ui/towns.ts`). A human town has a **Towns** button from level
+20 (on a wide screen on the rail; on a phone in World), the original's own
+picture of a boy and a troll; a player with two towns has it in both. With
+one town, its window shows the game's picture of a troll town, its words,
+and founding it for 100,000 gold or 22 cash, paid from the town that's open
+(the Flash client's own numbers; it never read the config's). Founding
+sends `buy_map` (1, 1 for cash or 0 for gold, "t", the paying town) at
+once and opens the troll town. With two towns the window ("SELECT TOWN")
+lists both with their pictures and names, this one greyed; **Travel!**
+sends what's waiting and opens the other. A town opens as the page loads
+with `?town=1` (the server's `get_player_info` with `map`); without it,
+the default town, as before. Each town keeps its own resources, level,
+camps and raids (by its race); cash is the player's. A troll town has no
+goals, daily bonus or lessons, as in the original, and its own music and
+shop. Test: `e2e/tests/troll-town.mjs` founds one with cash, checks the
+troll town, its shop and the server's two towns, and travels home.
+
+### Collection pieces
+
+A tree or rock harvested in a human town now and then gives a piece of one
+of the game's 23 collections of 5, as the Flash client drops them
+(`rules/collections.ts`, with tests). Out of 100 harvests, on average: half
+a piece of the rarest kind (the Ravager Troll's or the High Elf's first), 2
+rare ones (the dog's, the cat's or the skeleton's first) and 1.5 uncommon
+ones (any of the Pyramid, Treasure Chest, Garden, Golden Fountain, Frozen
+Mammoth, Crocodile Pit, Life Tree, Guillotine and Prison, or the Soldier
+Statue's first): 4 in all. Never in a troll town. The piece's picture,
+from the game's sheet of them (`images_new/collectibles_new.png`), pops up
+from the tree or rock, a message names it and its collection (the game's
+own words), and the server hears `add_collectable` (collection, piece),
+which keeps it in `privateState.collections`. The original dropped it on
+the ground to tap, as it did the wood; ours gives it at once, like the
+wood. The collections' window, to trade a full set for its prize, is for
+later; until then the classic game has it. Test: `e2e/tests/collections.mjs`.
 
 ### Step 4: battles
 

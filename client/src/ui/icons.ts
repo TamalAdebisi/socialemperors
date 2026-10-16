@@ -57,6 +57,8 @@ export const ICONS = {
   close: new URL("./art/close.webp", import.meta.url).href,
   // The way home from an island (the game bar's), and the quest window's stars.
   "my-town": new URL("./art/my-town.webp", import.meta.url).href,
+  "towns": new URL("./art/towns.webp", import.meta.url).href,
+  "assist-mark": new URL("./art/assist-mark.webp", import.meta.url).href,
   "star-on": new URL("./art/star-on.webp", import.meta.url).href,
   "star-off": new URL("./art/star-off.webp", import.meta.url).href,
   // Spells: the book that opens them in battle, and mana.
@@ -95,6 +97,12 @@ export const ICONS = {
   "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,
   "open-gate": new URL("./art/open-gate.webp", import.meta.url).href,
   "close-gate": new URL("./art/close-gate.webp", import.meta.url).href,
+  // A goal's window (ui/goalWindow.ts): its parchment, band and blue button; "New Mission!" by the goal card.
+  "goal-window": new URL("./art/goal-window.webp", import.meta.url).href,
+  "goal-band": new URL("./art/goal-band.webp", import.meta.url).href,
+  "goal-button": new URL("./art/goal-button.webp", import.meta.url).href,
+  "new-mission": new URL("./art/new-mission.webp", import.meta.url).href,
+  "click-here": new URL("./art/click-here.webp", import.meta.url).href,
   // The market (ui/market.ts): its card's button, a trade's card and its button.
   "open-market": new URL("./art/open-market.webp", import.meta.url).href,
   "market-card": new URL("./art/market-card.webp", import.meta.url).href,

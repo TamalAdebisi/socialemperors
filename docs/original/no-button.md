@@ -365,7 +365,9 @@ window to close before the next is looked at.
     collection piece (human towns only), sent with `add_collectable`
     (collection, piece) when it lands; with the line done, the villager
     goes on to the touching trees or rocks by itself. *Pieces: not yet; the
-    next tree: built, with small differences ([town.md](rules/town.md)).*
+    next tree: built, with small differences ([town.md](rules/town.md));
+    pieces from trees and rocks: built since "Collection pieces",
+    `client/src/rules/collections.ts`.*
 66. **Dropped rewards** (resources, experience, pieces) fall as tokens to
     tap; they collect themselves when six or more are about, and
     experience always does. *Partly: ours adds them at once, with a rising
@@ -446,7 +448,8 @@ the original never shows it).
 5. **Social buildings' free helpers on opening** (changes the save, rule
    23). (checked twice)
 6. **Collection pieces** from trees, rocks and enemies (changes the save,
-   rule 65). (checked twice)
+   rule 65). (checked twice) *Trees and rocks: fixed since "Collection pieces"; enemies
+   come with the battles (Beta 2).*
 7. **The town is only live during a fight** (rule 46): towers, enemies'
    reach and the Healing Spring act at home only in a raid or after units
    are sent at a camp (`client/src/homeDefence.ts`). The second reading

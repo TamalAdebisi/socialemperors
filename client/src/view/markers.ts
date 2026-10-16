@@ -4,7 +4,7 @@
 // caught, and the "+240" that rises from a building as it's collected.
 // Drawn on the map, so they move with it.
 
-import { Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
+import { Assets, Container, Graphics, Rectangle, Sprite, Text, Texture } from "pixi.js";
 
 import type { Point } from "../rules/geometry.ts";
 import type { Resource } from "../rules/production.ts";
@@ -103,8 +103,11 @@ export class Markers {
     this.rising.push({ text: group, age: 0, from: at.y, rise: RISE, ms: RISE_MS });
   }
 
-  /** One of the game's pictures popping up from `at` for a moment: what a unit was sent to do. */
-  pop(at: Point, url: string): void {
+  /**
+   * One of the game's pictures popping up from `at` for a moment: what a unit
+   * was sent to do, a collection piece found (`frame`: its part of the picture).
+   */
+  pop(at: Point, url: string, frame?: { x: number; y: number; width: number; height: number }): void {
     const group = new Container();
     group.position.set(at.x, at.y);
     group.scale.set(this.scale);
@@ -116,9 +119,10 @@ export class Markers {
         }
         return;
       }
-      const icon = new Sprite(loaded);
+      const picture = frame ? new Texture({ source: loaded.source, frame: new Rectangle(frame.x, frame.y, frame.width, frame.height) }) : loaded;
+      const icon = new Sprite(picture);
       icon.anchor.set(0.5, 1);
-      icon.scale.set(POP_SIZE / Math.max(loaded.width, loaded.height));
+      icon.scale.set(POP_SIZE / Math.max(picture.width, picture.height));
       group.addChild(icon);
       // Its second starts once the picture is in: a slow first download mustn't use it up unseen.
       this.rising.push({ text: group, age: 0, from: at.y, rise: POP_RISE, ms: POP_MS });

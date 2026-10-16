@@ -4,9 +4,12 @@
 // ui/goals.ts. (No skipping for cash: the Flash client had it switched off.)
 
 import type { ItemInfo } from "./rules/config.ts";
-import { Doings, completeGoal, openGoals, payGoal, progress, type Goal } from "./rules/goals.ts";
+import { Doings, OPEN_GOALS, completeGoal, openGoals, payGoal, progress, type Goal } from "./rules/goals.ts";
 import type { Town } from "./rules/town.ts";
-import { GoalsView } from "./ui/goals.ts";
+import { GoalsView, type GoalsViewParts } from "./ui/goals.ts";
+
+/** Below this level a new goal joining the open ones is announced ("New Mission!"), as in the Flash client. */
+const NEW_MISSION_UNTIL = 8;
 
 /** How often the goals are checked: every 60 frames of the Flash client. */
 const CHECK_MS = 2000;
@@ -28,6 +31,8 @@ export interface GoalKeeperParts {
   say: (text: string) => void;
   /** The town's numbers changed (gold paid, cash spent). */
   changed: () => void;
+  /** The goals' own windows (ui/goalWindow.ts) and notices; without them, the list alone. */
+  windows?: GoalsViewParts;
 }
 
 export class GoalKeeper {
@@ -39,13 +44,15 @@ export class GoalKeeper {
   private readonly startZoom: number;
   private lastCash: number;
   private timer: ReturnType<typeof setInterval> | undefined;
+  /** The last of the 15 open goals at the last look: when it changes, a new goal has joined them. */
+  private lastOpen = -1;
 
   constructor(parts: GoalKeeperParts) {
     this.parts = parts;
     this.doings = parts.doings;
     this.done = new Set(parts.done.map(Number));
     this.paid = new Set(parts.paid.map(Number));
-    this.view = new GoalsView();
+    this.view = new GoalsView(parts.windows ?? null);
     this.startZoom = parts.zoom();
     this.lastCash = parts.town.cash;
     this.timer = setInterval(() => this.check(), CHECK_MS);
@@ -101,6 +108,14 @@ export class GoalKeeper {
   private show(): void {
     const { town } = this.parts;
     const open = openGoals(this.parts.goals, this.done, this.paid);
+    // The 15th open goal changed (and, as there, on opening): "New Mission!", below level 8, not in Arthur's lessons.
+    const last = open.length === OPEN_GOALS ? open[OPEN_GOALS - 1].id : -1;
+    if (last !== this.lastOpen && last !== -1 && this.parts.windows && !this.parts.windows.quiet()) {
+      this.lastOpen = last;
+      if (town.level < NEW_MISSION_UNTIL) {
+        this.view.newMission();
+      }
+    }
     this.view.show(open.map((goal) => ({
       goal,
       done: this.done.has(goal.id),

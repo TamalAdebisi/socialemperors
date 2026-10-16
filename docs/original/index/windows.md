@@ -48,15 +48,15 @@ The plain boxes the rest of the game opens.
 | Class | Lines | What it does | Status |
 |---|---|---|---|
 | `popups/PopupCollect.as` | 177 | Choosing a mill's or mine's working time: four cards (5 min, 1 h, 4 h, 8 h) paying half, one, two and three times the harvest; sends `activate` with the choice (0 resets it). Which buildings ask is `COLLECT_VARIABLE_IDS`. | built: `rules/production.ts` (`WORK_TIMES`), `editor.ts` |
-| `popups/PopupHurryup.as` | 115 | Finish a building's work now for 2 cash (`COST_HURRY_UP`), or ask friends; shows the time left, ticking. | partly: hurry in `ui/actions.ts`; no Ask friends |
+| `popups/PopupHurryup.as` | 115 | Finish a building's work now for 2 cash (`COST_HURRY_UP`), or ask friends; shows the time left, ticking. | built, on the card: hurry and Ask friends in `ui/actions.ts` (DECISIONS.md) |
 | `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | built: `rules/shop.ts` |
 | `popups/MaxBuildingTypePopup.as` | 96 | "You already have the most of these": one of each mill and mine level, one of each special building, one market and one eagle, three nurseries. | built: `rules/shop.ts` (`atLimit`) |
 | `popups/PopupNeighbors.as` | 90 | "You need more neighbours" when land paid in gold needs more neighbours than the player has, with a button to invite friends. | built: `rules/land.ts` says why; the invite was Facebook's |
 | `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | not yet: ours says nothing when the town hall is missing |
-| `popups/EnterNamePopUp.as` | 229 | Renaming the town (three letters at least, Enter saves); sends `name_map` and shows the name in the top bar. | not yet (PARITY.md, renaming) |
+| `popups/EnterNamePopUp.as` | 229 | Renaming the town (three letters at least, Enter saves); sends `name_map` and shows the name in the top bar. | built: `ui/rename.ts`, from the level at the top |
 | `popups/PopUpLost.as` | 154 | A lost thing found on the map (cow, sheep, knight, crate, barrel...): the story, then the thing is taken off the map. Its only other effects are a call to `register_found_item.php` and a Facebook post; it pays nothing and saves nothing. | not yet: no lost things on our map |
-| `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | not yet (PARITY.md, in Beta 1); `market.py` on the server |
-| `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | not yet; `market.py` uses the same sums |
+| `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
+| `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | built: `rules/market.ts`; `market.py` uses the same sums |
 | `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | not yet; `social.py` |
 | `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | not yet; `shop.py` |
 | `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | not yet; `warehouse.py` |
@@ -70,8 +70,8 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/MissionPopup.as` | 869 | The goal box on the left (two goals, the host, a "new" badge on goals 6 to 9), the list of five at a time with how far each is, a window per goal with its picture, text, reward and a help arrow for building goals, the "goal done" animation, and the raid warning banner (5 seconds, with a button to look). The Pay button is hidden: `CAN_PAY_FOR_GOALS` is off. | partly: `ui/goals.ts` has the cards and the list; no per-goal window, picture, help arrow or badge |
-| `popups/PopupLevel.as` | 181 | The level-up window: the new level, its prize, up to four buildings it opens, and mana from level 36. The window itself adds the prize to the player's numbers when it opens. At level 20 it shows the way to the other towns; at level 5, with the princess still prisoner, it points at her camp. | partly: prizes in `rules/levels.ts`; ours is a short message (PARITY.md) |
+| `popups/MissionPopup.as` | 869 | The goal box on the left (two goals, the host, a "new" badge on goals 6 to 9), the list of five at a time with how far each is, a window per goal with its picture, text, reward and a help arrow for building goals, the "goal done" animation, and the raid warning banner (5 seconds, with a button to look). The Pay button is hidden: `CAN_PAY_FOR_GOALS` is off. | partly: `ui/goals.ts` has the card, the list, the "Click here!" tag and "New Mission!"; `ui/goalWindow.ts` the window per goal, its picture and HELP!'s arrow; no "goal done" animation |
+| `popups/PopupLevel.as` | 181 | The level-up window: the new level, its prize, up to four buildings it opens, and mana from level 36. The window itself adds the prize to the player's numbers when it opens. At level 20 it shows the way to the other towns; at level 5, with the princess still prisoner, it points at her camp. | partly: `ui/levelUp.ts`, one window per level, with prizes from `rules/levels.ts`; the level 5 and 20 pointers not yet |
 | `popups/PopupNewDaily.as` | 459 | The daily bonus: five days of gold, cash or a hero, today's highlighted; the day comes from `bonusNextId` or the server's count of days in a row. Sends `win_bonus`. | built: `rules/bonuses.ts`, `bonuses.ts` |
 | `popups/MondayBonusPopUp.as` | 186 | Monday's chest: three closed chests, one prize drawn at random from gold, a unit or cash; the unit is drawn from `MONDAY_BONUS_UNITS` and stored. Sends `weekly_reward`. | built: `rules/bonuses.ts` |
 | `popups/ComebackBonusPopUp.as` | 276 | The welcome-back chest on the second and third day, drawn the same way, the day's own unit from `COMEBACK_BONUS_UNITS`. Sends `comeback_reward`. Switched off in the client as built; our classic game switches it on. | built: `rules/bonuses.ts` |
@@ -223,7 +223,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupRaceSelector.as` | 199 | A second town from level 20: human or troll, 100,000 gold or 22 cash (`buy_map`); later, travel between towns. | not yet (PARITY.md: the troll town, in Beta 1) |
+| `popups/PopupRaceSelector.as` | 199 | A second town from level 20: human or troll, 100,000 gold or 22 cash (`buy_map`); later, travel between towns. | built: `ui/towns.ts`, in the panel (troll town only, as the original's choice was never wired) |
 | `popups/PopupNewTown.as` | 119 | "Congratulations" on the first town, to share. | not needed: Facebook share |
 | `popups/PopupNewMap.as` | 105 | "Congratulations" on a new town, to share. | not needed: Facebook share |
 | `popups/TutorialPopup.as` | 105 | A tutorial lesson, page by page (`game_status` "Tutorial Popup Created"). | built: `client/src/ui/lessons.ts` |

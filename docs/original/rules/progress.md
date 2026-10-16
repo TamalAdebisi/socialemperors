@@ -322,7 +322,7 @@ check counts the player's own things.
   badges with the host (Arthur, or Guinevere for women players). Goals 6
   to 9 carry a "new" badge until tapped (not during the lessons). *Ours:
   different: one card, the next goal, with its title and a bar (DECISIONS.md,
-  14 October 2026); no badges.*
+  14 October 2026); goals 6 to 9's "Click here!" tag, the same.*
 - Tapping the host: while the first open goal is 9 or below, its own
   window opens; otherwise the list. The list shows five at a time with
   up and down arrows (15 in all), each with its title, progress, an Info
@@ -333,10 +333,14 @@ check counts the player's own things.
   figure (`nino_` plus the goal's number modulo 25), OK. Opening it for
   goals 10 and below opens the build menu too; Help points an arrow at
   the build menu (goal 2: selects the town hall). Opening the shop after
-  goal 9's window shows an arrow at the barracks. *Ours: missing (PARITY.md).*
+  goal 9's window shows an arrow at the barracks. *Ours: the window, its
+  picture, figure and HELP! (`client/src/ui/goalWindow.ts`); no build menu
+  opened with it, nor the barracks arrow in the shop (DECISIONS.md, 16
+  October 2026).*
 - When a goal completes, the host cheers for 3.5 seconds. When the 15th
   open goal changes, below level 8, a "new mission" notice shows. *Ours:
-  different: a message when the gold is paid; no notices.*
+  the notice, the same (`client/src/goals.ts`); a message when the gold is
+  paid; no cheer.*
 - In "#0#", the host's name is put in the title and text. *Ours: same,
   always Arthur (`readGoals`).*
 
@@ -510,25 +514,26 @@ check counts the player's own things.
 
 - A town button in the games menu, hidden below level 20 in a human town
   (decided as the game loads). The web page can also open the same
-  window. *Ours: missing (PARITY.md: in Beta 1); the server has
-  `towns.py`.*
+  window. *Ours: Towns, on the rail from level 20 (on a phone in World),
+  `client/src/ui/towns.ts`; the server has `towns.py`.*
 - With one town, the window offers a troll town for 100,000 gold or 22
   cash (the client's own constants; the config's `map_prices` table is
   never read). The human-or-troll choice isn't wired, so it is always a
-  troll town. Below level 20 the buttons only warn. *Ours: missing.*
+  troll town. Below level 20 the buttons only warn. *Ours: same
+  (`client/src/rules/towns.ts`).*
 - Buying takes the price on screen, sends `buy_map` (1, 1 for cash or 0
   for gold, "t", the town paying) at once, and travels to town 1. *Ours:
-  missing.*
+  same, then opens town 1 as a new page.*
 - With two towns, the same button lists both; the current one is greyed,
   the other can be travelled to. Travelling sends what's queued, then
   loads the other town (`get_player_info` for that map); goals, the daily
-  bonus and the shop then follow that town's race and level. *Ours:
-  missing.*
+  bonus and the shop then follow that town's race and level. *Ours: same,
+  the other town opened as a new page (`?town=1`; DECISIONS.md, 16 October
+  2026).*
 - The game always starts in the default town (`playerInfo.default_map`);
   the "make default" box exists in the rename window but is hidden and
   `set_default_map` is never sent, so in practice it is always town 0.
-  *Ours: missing (the new client opens the default town and has no way
-  to the other).*
+  *Ours: the default town, unless the page asks for another (`?town=`).*
 
 ## Renaming
 

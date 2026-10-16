@@ -20,7 +20,7 @@ import { LevelUpWindows } from "./ui/levelUp.ts";
 import { renameWindow } from "./ui/rename.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
-import { arthur, carts } from "./rules/neighbours.ts";
+import { arthur, carts, helpedLately } from "./rules/neighbours.ts";
 import { planOf } from "./rules/defencePlans.ts";
 import { inConstruction } from "./rules/construction.ts";
 import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, eaglesOf, spyingsLeft, type AttackEntry } from "./rules/pvp.ts";
@@ -56,6 +56,9 @@ import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
 import { marketRules, readMarket } from "./rules/market.ts";
 import { helpSeconds } from "./rules/friendsHelp.ts";
+import { showsTowns, townAddress, townRaces } from "./rules/towns.ts";
+import { TownsWindow } from "./ui/towns.ts";
+import { GiftsWindow } from "./ui/gifts.ts";
 import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
@@ -67,11 +70,18 @@ import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
+import { isTheirs } from "./rules/editing.ts";
+import { pointAt } from "./ui/helpArrow.ts";
 
 /** The building where spells are learnt. */
 const WIZARDRY_ACADEMY = 416;
 /** The harbours and zeppelin towers (human and troll), and the island map's page each opens. */
 const DOCKS = new Map([[HARBOUR, 1], [343, 1], [ZEPPELIN_TOWER, 3], [344, 3]]);
+
+/** The goals with a picture of their steps in the game's files (goal_001.jpg to goal_100.jpg). */
+const GOAL_PICTURES = 100;
+/** Town halls, by their kind. */
+const TOWN_HALL_KIND = 135;
 
 /** Arthur's portrait in the Neighbours window: the game's own king. */
 const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
@@ -102,7 +112,10 @@ async function start(): Promise<void> {
   const visit = new URLSearchParams(location.search).get("visit") ?? undefined;
   showStatus(visit ? "Loading their town…" : "Loading your town…");
   // Visiting, the player's own save too: who they helped lately (helping is once a day per neighbour).
-  const [config, info, mine] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit }),
+  // ?town=1 opens the player's second town (travelling, ui/towns.ts); without it, the default one.
+  const townParam = new URLSearchParams(location.search).get("town");
+  const homeTown = visit === undefined && townParam !== null && Number.isInteger(Number(townParam)) ? Number(townParam) : undefined;
+  const [config, info, mine] = await Promise.all([server.gameConfig(), server.playerInfo({ user: visit, town: homeTown }),
     visit === undefined ? null : server.playerInfo()]);
   // The game's clock: the server's time when the town arrived, plus the time since.
   const arrived = performance.now();
@@ -199,9 +212,22 @@ async function start(): Promise<void> {
       storage: () => editor.storageCards(),
     });
     // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
-    const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE, noAttack: true }];
+    // Sorted by experience, smallest first, as the Flash client's bar; each marked "ASSIST!" when it can be helped today.
+    const assists = (info.privateState as { neighborAssists?: Record<string, number> } | undefined)?.neighborAssists;
+    const neighbourList = [
+      ...[...(info.neighbors ?? [])].sort((a, b) => (Number(a.xp) || 0) - (Number(b.xp) || 0))
+        .map((n) => ({ ...n, canHelp: !helpedLately(assists, String(n.pid), clock()) })),
+      { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE, noAttack: true },
+    ];
+    // The gifts (ui/gifts.ts): the classic page's window, from Neighbours; it opens by itself when gifts wait.
+    const gifts = settings.csrf ? new GiftsWindow({
+      empire: settings.userId, csrf: settings.csrf,
+      flush: () => commands.flush(),
+      reload: () => void commands.flush().then(() => location.reload()),
+    }) : null;
     const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`,
-      town.level >= MIN_LEVEL_PVP ? (pid) => `/client.html?attack=${encodeURIComponent(pid)}` : null);
+      town.level >= MIN_LEVEL_PVP ? (pid) => `/client.html?attack=${encodeURIComponent(pid)}` : null,
+      gifts ? () => void gifts.open() : null);
     const islands = new IslandsWindow({
       islands: islandData.islands as unknown as Island[], items,
       unlockedIndex: () => Number((info.privateState as Record<string, unknown> | undefined)?.unlockedQuestIndex ?? 0),
@@ -221,6 +247,7 @@ async function start(): Promise<void> {
         doings.openedIslands(how === "menu");
       },
     });
+    const races = townRaces((info.privateState as Record<string, unknown> | undefined)?.maps);
     const attackState = (info.privateState ??= {}) as Record<string, unknown>;
     const history = new AttackHistoryWindow({
       privateState: attackState, items,
@@ -284,7 +311,7 @@ async function start(): Promise<void> {
         return;
       }
       worldMap.open();
-    }, () => history.toggle());
+    }, () => history.toggle(), showsTowns(town, races.length) ? () => towns.toggle() : null);
     openWorld = (continent) => worldMap.open(continent);
     // Home to an attack not yet seen: the attacks received open by themselves, as in the Flash client.
     if (attackedWhileAway(attackState)) {
@@ -313,6 +340,8 @@ async function start(): Promise<void> {
       { key: "army", label: "Army", icon: ICONS.units, run: () => army.toggle(), shortcut: "a" },
       { key: "quests", label: "Quests", icon: ICONS.quests, only: "rail", run: () => world.toggleQuests(), shortcut: "q" },
       { key: "battle", label: "Battle", icon: ICONS.pvp, only: "rail", run: () => world.toggleBattles() },
+      // The towns: from level 20 in a human town, or with two towns (on a phone, in World).
+      ...(showsTowns(town, races.length) ? [{ key: "towns", label: "Towns", icon: ICONS.towns, only: "rail" as const, run: () => towns.toggle() }] : []),
       { key: "world", label: "World", icon: ICONS.world, only: "dock", run: () => world.toggleWorld(), shortcut: "w" },
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
@@ -368,6 +397,25 @@ async function start(): Promise<void> {
     const asking = settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null;
     const askPanel = new Panel("ask", "Ask friends", { className: "list-window" });
     const friendNames = new Map((info.neighbors ?? []).map((n) => [String(n.pid), n.name?.trim() || "Friend"]));
+    // The towns (ui/towns.ts): founding the troll town, and travelling between the two.
+    const towns = new TownsWindow({
+      town, races, names: info.playerInfo.map_names ?? [],
+      picture: (race) => `${settings.assetsUrl}/images_new/${race === "t" ? "townTroll" : "townHuman"}.png`,
+      words: { select: line(511, "SELECT TOWN"), level: line(512, "You have to reach level #0# to unlock the Troll Race.") },
+      send: async (command) => {
+        commands.add(command.cmd, ...command.args);
+        await commands.flush();  // as the Flash client: at once
+      },
+      travel: (id) => void commands.flush().then(() => {
+        location.search = townAddress(location.search, id);
+      }),
+      tell: (text) => editor.tell(text),
+      bank: (why) => {
+        editor.tell(why);
+        void bank.open();
+      },
+      changed: () => hud.update(town),
+    });
     // The market (ui/market.ts): its numbers from the config, the town's trading so far from the save.
     const trading = marketRules((config.globals ?? {}) as Record<string, unknown>);
     const market = new MarketWindow({
@@ -404,6 +452,7 @@ async function start(): Promise<void> {
         words: { hurry: line(91, "Hurry Up?"), accept: line(90, "Accept"), hour: line(98, "#0# hour") },
         seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
       } : undefined,
+      pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" },
       showLevels: (reached) => levelWindows.show(reached.map((r) => ({
         ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0,
       }))),
@@ -485,7 +534,15 @@ async function start(): Promise<void> {
     afterDrawing = () => {
       defend();
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
-      const welcome = () => editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+      const welcome = () => {
+        editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
+        // Gifts waiting on the site: their window, as the classic page opens it when the town is up.
+        void gifts?.waiting().then((waiting) => {
+          if (waiting > 0) {
+            void gifts.open();
+          }
+        });
+      };
       const startLessons = (from: number) => {
         learning = true;
         void import("./lessons.ts").then(({ Lessons }) => {
@@ -593,6 +650,26 @@ async function start(): Promise<void> {
         zoom: () => camera.scale,
         say: (text) => editor.tell(text),
         changed: () => hud.update(town),
+        // A goal's own window (ui/goalWindow.ts), with the game's pictures and words.
+        windows: {
+          window: {
+            words: { band: line(621, "Goal INFO"), reward: line(103, "Reward"), ok: line(605, "OK"), help: line(623, "HELP!"), goals: line(624, "Goals") },
+            picture: (goal) => goal.id <= GOAL_PICTURES ? `${settings.assetsUrl}/images_new/goal_${String(goal.id).padStart(3, "0")}.jpg` : null,
+            figure: (goal) => `${settings.assetsUrl}/images_new/nino_${String(goal.id % 25).padStart(2, "0")}.png`,
+            // HELP!: the arrow at the Build menu; for goal 2 (a villager trained), the town hall's card and its Train.
+            help: (goal) => {
+              const hall = goal.id === 2 ? town.items.find((p) => p.item.subcategory === TOWN_HALL_KIND && isTheirs(town, p.item)) : undefined;
+              if (hall) {
+                editor.focusOn(hall);
+                requestAnimationFrame(() => pointAt(document.querySelector(".actions .picture-button.train")));
+              } else {
+                pointAt(document.querySelector('.menus button[aria-label="Build"]'));
+              }
+            },
+          },
+          words: { clickHere: line(1485, "Click here!"), info: line(638, "+INFO"), newMission: line(635, "New Mission!") },
+          quiet: () => learning,
+        },
       });
     }
     bonuses = new BonusDesk({
