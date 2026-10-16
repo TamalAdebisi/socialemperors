@@ -7,16 +7,19 @@
 // chosen in the game's window.
 
 import assert from "node:assert/strict";
+import { PHONE } from "../lib.mjs";
 
 const NEST = 1233, GREEN_DRAGGY = 698;
 
-export default async function lessons({ newPlayer }) {
-  const player = await newPlayer({ lessons: true, dock: true });
+export default async function lessons({ newPlayer, phone = false }) {
+  const player = await newPlayer({ lessons: true, wild: true, camp: true, dock: true, ...(phone ? { phone: true, viewport: PHONE } : {}) });
   const { page } = player;
+  if (phone) player.click = async (at) => { await page.touchscreen.tap(at.x, at.y); await player.wait(250); };
   const step = () => page.evaluate(() => window.seLessons?.at ?? -1);
   const reach = async (n, timeout = 30_000) => {
     await page.waitForFunction((n) => (window.seLessons?.at ?? -1) >= n, n, { timeout });
-    await player.wait(600);  // the arrow glides there
+    console.log(`  tutorial step ${n}`);
+    await page.waitForFunction(() => document.querySelector(".lesson")?.dataset.moving !== "true");
   };
   /**
    * A tap where Arthur's arrow points; every one moves the lessons on. A tap
@@ -26,6 +29,7 @@ export default async function lessons({ newPlayer }) {
   const follow = async () => {
     const before = await step();
     for (let tries = 0; tries < 2; tries++) {
+      await page.waitForFunction(() => window.seLessons.pointing && document.querySelector(".lesson")?.dataset.moving === "false", null, { timeout: 30_000 });
       const at = await page.evaluate(() => window.seLessons.pointing);
       assert.ok(at, `the arrow points somewhere (step ${before})`);
       await player.click(at);
@@ -35,10 +39,16 @@ export default async function lessons({ newPlayer }) {
     await player.wait(300);
   };
 
-  assert.match(await player.bar(), /^Arthur teaches the first steps/);
-  await player.press("Take the lessons");
+  assert.equal(await page.getByRole("button", { name: "Skip them" }).count(), 0);
+  assert.equal(await page.getByRole("link", { name: "Classic game" }).count(), 0);
   await reach(0);
-  assert.match(await page.locator(".lesson-title").textContent(), /Welcome to your Empire/);
+  if (phone) {
+    await page.waitForFunction(() => document.querySelector(".lesson").getBoundingClientRect().top >= document.querySelector(".hud").getBoundingClientRect().bottom);
+    await page.getByRole("button", { name: /^Menu/ }).click();
+    assert.ok(await page.locator(".site-menu").isVisible(), "Menu remains reachable during the mandatory tutorial");
+    await page.getByRole("button", { name: /^Menu/ }).click();
+  }
+  assert.match(await page.locator(".lesson-title").textContent(), /Welcome to your empire/);
   await player.shot("welcome");
   await player.press("Next");
 
@@ -46,6 +56,13 @@ export default async function lessons({ newPlayer }) {
   await reach(1);
   await follow();  // the town hall
   await reach(2);
+  if (!phone) {
+    await page.evaluate(() => window.seHome.parts.commands.flush());
+    await player.reload();
+    await reach(2);
+    await page.keyboard.press("Escape");
+    await player.press("Show me");
+  }
   await follow();  // its Train button
   await reach(3, 20_000);
   const villagers = () => window.seHome.parts.town.items.filter((p) => p.item.subcategory === 71 && p.tx >= 40 && p.ty >= 40).length;
@@ -53,6 +70,15 @@ export default async function lessons({ newPlayer }) {
   await player.wait(1000);
   await follow();  // the villager
   await reach(4);
+  if (!phone) {
+    // Resizing during guidance recomputes the target against the new layout.
+    await player.press("Show me");
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await page.waitForFunction(() => window.seLessons.pointing && document.querySelector(".lesson")?.dataset.moving === "false"
+      && document.elementFromPoint(window.seLessons.pointing.x, window.seLessons.pointing.y)?.closest("canvas"));
+  }
+  assert.equal(await page.locator(".lesson-target").textContent(), "Move here");
+  await player.shot("move-here");
   await player.click(await page.evaluate(() => window.seLessons.pointing));  // the ground beside the town hall
   await reach(5);
   await follow();  // a tree
@@ -64,9 +90,12 @@ export default async function lessons({ newPlayer }) {
   await reach(9);
   await follow();  // House I in the shop
   await reach(10);
+  await page.keyboard.press("Escape");
+  await player.press("Show me");
+  await reach(10);
   await follow();  // where the house goes
   await reach(11);
-  await page.keyboard.press("Escape");  // done building
+  assert.equal(await page.evaluate(() => window.seHome.parts.editor.lessonBuilding), null, "placing mode closes automatically");
 
   // The first fight.
   await follow();  // a knight
@@ -94,11 +123,6 @@ export default async function lessons({ newPlayer }) {
   await follow();  // Farm Land
   await reach(19);
   await follow();  // where the farm goes
-  await reach(20);
-  await page.keyboard.press("Escape");
-  await follow();  // the goals again
-  await reach(21);
-  await follow();  // closed
   await reach(22);
   await follow();  // the town hall
   await reach(23);
@@ -109,14 +133,17 @@ export default async function lessons({ newPlayer }) {
   await player.wait(1000);
   await follow();  // the new villager
   await reach(25);
+  await page.waitForFunction(() => window.seLessons.pointing && document.querySelector(".lesson")?.dataset.moving === "false");
   await follow();  // the farm
   await reach(26);
+  if (!phone) {
+    await page.waitForFunction(() => window.seHome.parts.town.items.some((p) => p.item.subcategory === 122 && p.unitsInside > 0));
+    await page.evaluate(() => window.seHome.parts.commands.flush());
+    await player.reload();
+    assert.ok(await step() >= 26, "a working farm resumes without another worker purchase");
+  }
   await reach(27, 90_000);  // the crop ready
   await follow();  // collect it
-  await reach(28);
-  await follow();  // the goals
-  await reach(29);
-  await follow();  // closed
   await reach(30);
   await follow();  // a villager
   await reach(31);
@@ -132,6 +159,13 @@ export default async function lessons({ newPlayer }) {
 
   // Three trees down: the nest, and the draggy.
   await page.waitForSelector(".draggy-window.choose", { timeout: 180_000 });
+  await page.evaluate(() => window.seHome.parts.commands.flush());
+  const pending = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
+    { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
+  assert.equal((await pending.json()).privateState.tutorial.step, 32, "the reward choice is saved as unfinished");
+  await page.evaluate(() => localStorage.clear());
+  await player.reload();
+  await page.waitForSelector(".draggy-window.choose");
   await page.waitForFunction(() => [...document.querySelectorAll(".draggy-slot img")].every((i) => i.naturalWidth > 0), null, { timeout: 15_000 });
   await player.shot("draggy");
   await page.getByRole("button", { name: "Select Green Draggy" }).click();
@@ -141,9 +175,10 @@ export default async function lessons({ newPlayer }) {
   saved = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
   const info = await saved.json();
-  assert.equal(Number(info.playerInfo.completed_tutorial), 31, "every step reported");
-  assert.ok(info.map.items.some((i) => i[0] === NEST), "the dragon nest");
-  assert.ok(info.map.items.some((i) => i[0] === GREEN_DRAGGY), "the draggy chosen");
+  assert.equal(Number(info.playerInfo.completed_tutorial), 33, "reward saved before completion");
+  assert.deepEqual(info.privateState.tutorial, { step: 33, trees: 3, draggy: GREEN_DRAGGY });
+  assert.equal(info.map.items.filter((i) => i[0] === NEST).length, 1, "the dragon nest");
+  assert.equal(info.map.items.filter((i) => i[0] === GREEN_DRAGGY).length, 1, "the draggy chosen");
   assert.equal(info.privateState.stepNumber, 7, "the first egg at 7 of 10");
   assert.ok(!(Number(info.privateState.timeStampTakeCare) > 0), "and no wait");
   await player.reload();

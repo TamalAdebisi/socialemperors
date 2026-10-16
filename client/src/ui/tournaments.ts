@@ -22,7 +22,6 @@ export interface TournamentParts {
   thumbnail: (id: number) => string;
   helpSeen: () => boolean;
   sawHelp: () => void;
-  classicUrl: string;
   flush: () => Promise<boolean>;
   me: string;
   level: () => number;
@@ -96,7 +95,7 @@ export class TournamentWindow {
     this.creating = false;
     this.info = null;
     this.panel.title = "Tournaments";
-    this.panel.body.replaceChildren(text("p", "Loading tournaments…"), this.classic("Open tournaments in classic"));
+    this.panel.body.replaceChildren(text("p", "Loading tournaments…"));
     this.panel.open();
     try {
       const info = await this.parts.info();
@@ -123,30 +122,12 @@ export class TournamentWindow {
     } catch {
       if (generation !== this.generation) return;
       this.panel.body.replaceChildren(text("p", "Couldn't load or save your tournament details. Please try again.", "tournament-error"),
-        button("Try again", () => void this.open()), this.classic("Open tournaments in classic"));
+        button("Try again", () => void this.open()));
     }
   }
 
   private word(id: number, value?: string | number): string {
     return this.parts.words(id).replace("#0#", String(value ?? "")).trim();
-  }
-
-  /** Always flush before handing the same empire to classic. */
-  private classic(label: string): HTMLAnchorElement {
-    const link = text("a", label, "button small gold tournament-classic");
-    link.href = this.parts.classicUrl;
-    link.addEventListener("click", async (event) => {
-      event.preventDefault();
-      if (this.busy) return;
-      this.busy = true;
-      try {
-        if (await this.parts.flush()) location.assign(link.href);
-        else this.error("Your changes couldn't be saved. Reload before opening classic.");
-      } finally {
-        this.busy = false;
-      }
-    });
-    return link;
   }
 
   private render(resetScroll = false): void {
@@ -191,7 +172,7 @@ export class TournamentWindow {
     const box = text("section", "", "tournament-team-box");
     box.setAttribute("aria-label", this.word(1211));
     box.append(text("h3", this.word(1211)), this.slots(false), button("Edit team", () => void this.openEditor()));
-    this.panel.body.append(bar, tabs, list, box, this.classic("Open tournaments in classic"));
+    this.panel.body.append(bar, tabs, list, box);
     this.countdowns();
   }
 
@@ -391,7 +372,7 @@ export class TournamentWindow {
   private room(room: TournamentRoom): void {
     const kind = this.parts.rules.kinds.find((kind) => String(kind.id) === String(room.tournament_type_id));
     if (!kind) {
-      this.panel.body.append(text("p", "This tournament type is unavailable."), this.classic("Continue your tournament in classic"));
+      this.panel.body.append(text("p", "This tournament type is unavailable."));
       return;
     }
     this.panel.title = kind.name;

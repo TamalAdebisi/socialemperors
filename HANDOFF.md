@@ -19,10 +19,34 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Owner playthrough follow-up completed in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):**
+  the tutorial is mandatory, with smooth camera pans, explicit destinations,
+  soldier-only combat guidance and saved progress/rewards. Show me restores
+  interrupted actions; replacement villager training returns to the unfinished
+  task without resetting its chapter or count. Classic choices are hidden;
+  their routes and shared saves remain. Keep this visibility decision when
+  integrating tournament work. #87's building card and Menu/logout are retained.
+- **Tutorial verification:** server 435 run (426 passed, 9 existing skips),
+  client types and 350 tests passed. All 69 browser tests passed in **64m
+  32.58s**, on game code `20a87d8d`, including #87. The subsequent main merge
+  changes documentation only. Final recovery/review corrections at `6754695a`
+  passed desktop, phone, recovery and tournaments **4/4 in 8m 15.30s**.
+  These include resize guidance, own-unit selection, villager-specific
+  training recovery and keeping a nest already in Gifts. A later test-only
+  assertion tightening at `8638394b` passed all 14 tutorial server tests.
+  The other 65 browser tests use completed-tutorial fixtures; tournament
+  label styling is confined to that window. Screenshots and server logs were
+  inspected; no HTTP 5xx, Python tracebacks or unhandled commands. Refreshed
+  ordinary public art was used: team passed in 34 seconds, and memory-limit/OOM
+  counters did not increase. The formal art audit remains tracked in #91.
+  Automated review findings were addressed or explained in the PR and
+  DECISIONS.md; the original trusted-client command contract is retained.
+
 - **All tournament stages are implemented in #92**, following #89's
   lists, help and team box: rooms, copied-army battles, results/prizes and
   friends' tournaments. Final integration verification is in progress
-  after merging #87's completed work. Classic access remains available.
+  after merging #87 and #93. Classic choices stay hidden; the existing
+  routes and shared saves remain supported.
 - **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
@@ -49,14 +73,14 @@ next agent knows where to start.
   - **The switch:** attacking players, the world map, spying, survival,
     Arthur's lessons and the nests are built. All tournament stages are
     implemented, with #92's final checks pending. Left: the long tail of
-    windows and making the new client the default.
+    windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
   50% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  10% not yet (mostly windows). 50 of the 227 goals still say they're
-  played in the classic game (CLIENT.md, "Missions and bonuses"); that
-  number falls as features land.
+  10% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  feature windows (CLIENT.md, "Missions and bonuses"); that number falls
+  as features land.
 
 ## How the work has been done
 
@@ -152,7 +176,8 @@ between simultaneous runs.
 These focused checks help locate failures; the complete suite still
 needs coverage on the final code. Server tests and the client's type/unit
 checks can run alongside browser checks. Task 4 (shop details) can now
-build on the delivered card; task 7's next slice is the waiting room.
+build on the delivered card; task 7's complete implementation is in #92,
+with final verification after integrating #93 still pending.
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -351,12 +376,26 @@ The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
 friends' creation/invitation/cancellation. See [CLIENT.md](CLIENT.md#tournaments)
 and the expanded original rule notes. It preserves the original commands,
-keeps classic access and does not own #87 or #91. Final exact-commit check
-results and merge status will replace this pending note before delivery.
+keeps the original routes and shared saves while preserving #93's hidden
+classic choices. It includes the other chat's delivered #87 and #93 work;
+#91 still owns the public-art audit. Final exact-commit check results and
+merge status will replace this pending note before delivery.
+
+**Pre-#93 integration checks:** at
+`47471ff44126cad5707a601365beb904d70d23ad`, the server ran **434 tests:
+425 passed, 9 existing skips**; client types and **371 tests passed**.
+The complete browser run took **91m 52.03s**: **70 of 71 passed**,
+including all five tournament checks; `team` passed in **42 seconds**.
+Only `keys` failed, at its movement assertion after a fixed 400ms wait.
+This is the result before #93, not final verification of the new merge.
+#93 then landed on main at `73998ffc`; the integrated branch now requires
+fresh checks of its 440 server, 373 client and 73 browser tests.
 
 **First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
 editor, with desktop/phone coverage. At that first slice, entry and all
 later stages retained explicit classic links.
+The owner's later playthrough request hides those classic choices;
+#92 preserves that decision while completing the remaining stages.
 `docs/original/rules/tournaments.md` records the local source reading,
 including the different complex-unit checks in editing and weekly entry.
 The subsequent implementation follows the same `tournaments.py` command
@@ -431,7 +470,7 @@ together:
       `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before
       showing these at all.
 
-As each lands, its goals stop saying "classic game": update the count in
+As each lands, its goals stop saying "Coming soon": update the count in
 CLIENT.md.
 
 ### 9. Beta 2's leftovers (S to M each) - [ ]
@@ -449,9 +488,10 @@ CLIENT.md.
 
 ### 10. The switch itself (*owner*) - [ ]
 
-The new client becomes the default, with the Flash game one tap away for
-a while. When is the owner's call: ask once Betas 1 and 2 are played and
-tournaments are in.
+The owner's playthrough follow-up makes Play open the new client and hides
+classic choices now. This is a temporary interface change: keep the classic
+routes and shared saves. Full retirement of that client remains a later
+owner decision once the outstanding feature work is complete.
 
 ### Later, not now
 
@@ -471,7 +511,8 @@ allows pictures when there's a decision), and carry on with something else
 meanwhile.
 
 - Offer packs and mystery boxes: in or out (task 8).
-- When the new client becomes the default (task 10).
+- Full retirement of the classic client (task 10); hiding its choices is
+  already authorized.
 - AI-upscaled art: still open.
 
 Already decided, don't reopen: the menus as a rail and dock (CLIENT.md);

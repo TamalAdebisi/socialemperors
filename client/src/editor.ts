@@ -36,7 +36,7 @@ import { Doings } from "./rules/goals.ts";
 import type { Effect } from "./sound.ts";
 import { CURSORS, ICONS, type IconName } from "./ui/icons.ts";
 import { CART, canBeHelped, cartMet, deliver } from "./rules/neighbours.ts";
-import { skipLessons, type LessonEvent } from "./rules/lessons.ts";
+import type { LessonEvent } from "./rules/lessons.ts";
 import { buyLand, cantBuyLand, landForSale, landPrice, type LandPrice } from "./rules/land.ts";
 import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPrice, type Price } from "./rules/training.ts";
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
@@ -607,7 +607,6 @@ export class TownEditor {
       this.sound("place");
       this.showWhatItDoes(unit, placed, touch);
       this.goInto(unit, placed);
-      this.emit({ kind: "inside", unit: unit.item, building: placed.item });
       return;
     }
     if (placed && goers.length > 0) {
@@ -620,7 +619,6 @@ export class TownEditor {
       this.sound("place");
       this.showWhatItDoes(goers[0], placed, touch);
       this.select(placed);
-      this.emit({ kind: "inside", unit: goers[0].item, building: placed.item });
       return;
     }
     const state = placed ? workState(placed, this.clock()) : null;
@@ -913,6 +911,17 @@ export class TownEditor {
   focusOn(placed: PlacedItem): void {
     this.select(placed);
   }
+
+  /** Tutorial recovery restores a selection without buying or repeating an action. */
+  lessonReset(): void {
+    if (this.building) this.stopBuilding();
+    if (this.moving) this.cancelMove();
+    this.chooseTool("pointer");
+  }
+
+  get lessonTraining(): boolean { return [...this.training.values()].some((training) => training.unit.subcategory === SUBCAT.villager); }
+  get lessonBuilding(): number | null { return this.building?.item.id ?? null; }
+  get lessonSelected(): PlacedItem | null { return this.selected ?? this.group[0] ?? null; }
 
   private select(placed: PlacedItem | null): void {
     this.camera.setCursor(this.toolCursor());  // the unit's pointer was for the one selected before
@@ -1554,6 +1563,7 @@ export class TownEditor {
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
       this.savedAt.delete(unit);
       this.send([goInside(this.town, unit, building, from, this.clock())]);
+      this.emit({ kind: "inside", unit: unit.item, building: building.item });
       this.doings.pushedInto(unit.item, building.item);
       this.view.remove(unit);
       if (this.selected === unit) {
@@ -1935,11 +1945,6 @@ export class TownEditor {
   }
 
   /**
-   * Arthur's lessons not started: the Flash client would give them now. They
-   * are in the classic game for now, on this same empire; or they can be
-   * skipped, as if finished. Asked again on each visit until answered.
-   */
-  /**
    * The server's message for the player as the town opens (a neighbour helped,
    * a gift came: a line each), as the Flash client shows it: once, until OK,
    * which tells the server it's read (`clear_message`). Then `next`.
@@ -1950,22 +1955,6 @@ export class TownEditor {
       this.send([{ cmd: "clear_message", args: [] }]);
       next();
     } }]);
-  }
-
-  offerLessons(take: () => void): void {
-    this.bar.prompt("Arthur teaches the first steps: a villager, a house, a knight and a first battle, then a farm. "
-      + "At the end he gives you the dragon nest and a draggy of your choice (skipping them, you don't get those).", [
-      { label: "Take the lessons", run: () => {
-        this.bar.hide();
-        take();
-      } },
-      { label: "Skip them", run: () => {
-        this.bar.hide();
-        this.send([skipLessons()]);
-        void this.commands.flush();  // at once: the classic game reads it too
-        this.say("Lessons skipped. Your empire awaits!");
-      } },
-    ]);
   }
 
   /**

@@ -8,6 +8,7 @@ const KNIGHT = 514, SWORD = 511, BANNED = 762, LIMITED = 602;
 const padded = (...ids) => [...ids, ...Array(20 - ids.length).fill(0)];
 
 export default async function tournaments({ newPlayer }) {
+  // Other feature tests use the completed mandatory-tutorial fixture.
   const player = await newPlayer();
   const { page } = player;
   const servicePath = "**/tournaments/get_tournament_info.php";
@@ -114,6 +115,8 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Your own");
   assert.match(await page.locator(".tournament-cards").textContent(), /No friends' tournaments/);
   assert.ok(await page.getByRole("button", { name: "Create tournament", exact: true }).isEnabled());
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "friends creation is implemented");
 
   // Read-only fixtures for closed schedules and a friend's card, with text treated as text.
   await page.route(servicePath, async (route) => {
@@ -130,12 +133,15 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Weekly");
   assert.match(await page.locator(".tournament-countdown").textContent(), /Available on 0d 00:01:/);
   assert.ok(await page.getByRole("button", { name: "Enter tournament", exact: true }).isDisabled(), "a closed weekly schedule cannot be entered");
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "closed schedules use the implemented entry control");
   await page.unroute(servicePath);
 
-  // A malformed response gives retry and the working classic route; retry really reads again.
+  // A malformed response gives retry; retry really reads again.
   await page.route(servicePath, (route) => route.fulfill({ json: { data: {} } }), { times: 1 });
   await player.press("Refresh");
   await page.waitForSelector(".tournament-error");
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
   await player.press("Try again");
   await page.waitForSelector(".tournament-team-box");
   assert.equal(await page.locator(".tournament-help").count(), 0);
@@ -170,6 +176,8 @@ export default async function tournaments({ newPlayer }) {
   await page.waitForSelector(".tournament-results");
   assert.equal(await page.locator(".tournament-match").count(), 3, "three real server opponents are ready");
   assert.equal(await page.getByRole("button", { name: "Edit team", exact: true }).count(), 0, "the enrolled team cannot be edited");
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "ready rooms use the implemented matches view");
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, joined.tournament.tournament_id);
   await player.shot("existing-room");
   await service("leave_tournament", { tournament_id: joined.tournament.tournament_id });
@@ -212,9 +220,8 @@ export default async function tournaments({ newPlayer }) {
     "the editor does not save a team invalidated while it was open");
   await player.press("Cancel");
 
-  // Follow the real link only after a new team save: the classic page has the same empire.
+  // The classic routes still share this save, but launch choices stay hidden.
+  // Their direct routes are covered separately by classic.mjs.
   await player.press("Your own");
-  await page.getByRole("link", { name: "Open tournaments in classic", exact: true }).click();
-  await page.waitForURL(/ruffle\.html$/);
-  assert.ok((await page.content()).includes(player.settings.userId));
+  assert.equal(await page.getByRole("link", { name: /classic/i }).count(), 0);
 }

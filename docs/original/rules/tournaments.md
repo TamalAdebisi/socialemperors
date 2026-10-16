@@ -30,6 +30,8 @@ local and ignored. These notes are in our own words.
 `ui/tournaments.ts`, with Everyday/Weekly/Your own buttons and scrolling
 cards for the agreed panel. `ui/tournamentResults.ts` shows weekly prize
 previews, matches and rankings. These previews give no rewards.
+The owner's later interface decision hides classic choices; the original
+routes and compatibility with the same saved teams/rooms remain.
 
 ## The shared team editor
 

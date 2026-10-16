@@ -1,5 +1,12 @@
 # Parity: the new client against the Flash game
 
+Owner-requested tutorial usability pass: mandatory lessons, smooth camera
+pans, explicit movement/placement targets, reload recovery, soldier-only
+combat guidance and a saved first-dragon reward. This intentionally improves
+the original flow; original art and the reward are retained. Classic UI
+choices are hidden while its routes and shared saves remain compatible.
+
+
 What the new client still lacks, or does differently, compared with the
 original Flash client, for running a town (Beta 1). Made on 15 October 2026
 from two checks: five read-throughs of the Flash client's code, one per
@@ -305,6 +312,9 @@ frees its unit.
       cancellation with refunds, and the existing Friends-page Invite
       notice. The old Facebook invitation delivery is not needed.
 
+Classic choices stay hidden at the owner's request; the original routes
+and shared save support remain.
+
 The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
@@ -313,8 +323,8 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
-Survival, tournaments and the tutorial are now built; ROADMAP.md tracks
-the remaining work.
+Survival, tournaments, the nests and the mandatory tutorial are now built;
+ROADMAP.md tracks the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.

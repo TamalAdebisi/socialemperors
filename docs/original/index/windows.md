@@ -107,7 +107,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | not yet |
 | `popups/PopupBahamutSupremeInvocationTemple.as` | 816 | The Supreme Bahamut temple: 12 offerings (100,000 each of gold, stone, wood and food; 50 mana; 50 cash; five big dragons sacrificed; one finished collection), one every 48 hours, the wait skipped for 5 cash; then the final dragon is placed free and the temple starts over. Sends `next_temple_step`, `buy_temple_step_cash`, `reset_temple`. | not yet; `temple.py` |
 | `popups/invocationtemple/InvocationStep.as` | 227 | One offering on the temple's strip: its picture or prices, a tick when done. | not yet |
-| `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | built: `client/src/ui/draggy.ts`, `client/src/lessons.ts` |
+| `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | built: `client/src/ui/draggy.ts`, `client/src/lessons.ts`; mandatory, retry-safe saved reward |
 | `popups/SelectYourDragonReminderNestPopup.as` | 93 | Then a pointer to the dragon nest. | built: `client/src/ui/draggy.ts` |
 
 ## Social buildings and neighbours
@@ -226,7 +226,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/PopupRaceSelector.as` | 199 | A second town from level 20: human or troll, 100,000 gold or 22 cash (`buy_map`); later, travel between towns. | built: `ui/towns.ts`, in the panel (troll town only, as the original's choice was never wired) |
 | `popups/PopupNewTown.as` | 119 | "Congratulations" on the first town, to share. | not needed: Facebook share |
 | `popups/PopupNewMap.as` | 105 | "Congratulations" on a new town, to share. | not needed: Facebook share |
-| `popups/TutorialPopup.as` | 105 | A tutorial lesson, page by page (`game_status` "Tutorial Popup Created"). | built: `client/src/ui/lessons.ts` |
+| `popups/TutorialPopup.as` | 105 | A tutorial lesson, page by page (`game_status` "Tutorial Popup Created"). | built: `client/src/ui/lessons.ts`; owner-requested clearer mandatory flow and recovery |
 | `popups/PopupMotivation.as` | 91 | The tutorial's opening and closing words. | not yet |
 | `popups/PopupInstall.as` | 42 | "Add the app" on Facebook. | not needed: Facebook |
 

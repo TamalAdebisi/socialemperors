@@ -78,18 +78,26 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 434 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 371 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 71 tests
+.venv/bin/python -m unittest discover tests          # the server: 440 tests, about a minute
+(cd client && npm run check && npm test)             # the client's types and rules: 373 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 73 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest full verification (#87):** all 67 browser tests passed in
+- **Earlier full verification (#87):** all 67 browser tests passed in
   **80m 30.65s**, including the build, on the machine below. Server:
   429 run (420 passed, 9 existing skips); client types and all 348 passed.
   [The delivery record](docs/verification-87.md) has the exact code commit,
   screenshots reviewed and individual timings. The separate art-memory
   follow-up remains open for refreshed-cache public-art verification.
+- Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
+  **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
+  Later tutorial recovery/review corrections passed all three tutorial
+  checks and tournaments **4/4 in 8m 15.30s** on game code `6754695a`,
+  plus types and all 350 client tests. Server: 435 run, 426 passed,
+  9 existing skips; a later test-only assertion tightening passed all
+  14 tutorial server tests again. The full browser run used the repaired
+  ordinary public art with the old nine-item cache refreshed.
 - Run the tests for what you touched while you work, and the whole lot
   before a pull request is merged. For #86 on 16 October 2026, the 64 browser
   tests took **64 minutes 51 seconds**, including the build, on a cloud

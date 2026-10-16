@@ -4657,7 +4657,7 @@ button.world-piece:hover img {
 .tournament-card .tournament-fee { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .tournament-card strong { font: 800 15px var(--round); }
 .tournament-picture { width: 100%; aspect-ratio: 180 / 140; object-fit: contain; }
-.tournament-card .tournament-classic { margin-top: auto; white-space: normal; text-align: center; }
+.tournament-card .tournament-classic, .tournament-card .tournament-unavailable { margin-top: auto; white-space: normal; text-align: center; }
 .tournament-fee img, .tournament-prize > img.icon { width: 22px; height: 22px; vertical-align: middle; }
 .tournament-prize { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 13px; }
 .tournament-prize img { width: 36px; height: 36px; object-fit: contain; }
@@ -4892,4 +4892,32 @@ button.world-piece:hover img {
   width: 56px;
   height: 56px;
   object-fit: contain;
+}
+
+/* Mandatory tutorial: readable instructions, visible destinations, room for the map. */
+.lesson-bubble { min-height: 0; padding: 16px 22px 64px; }
+.lesson-foot { position: static; margin-top: 12px; gap: 8px; flex-wrap: wrap; }
+.lesson-next img { width: 80px; }
+.lesson-count { position: static; transform: none; margin-top: 8px; color: #24452f; font-size: 14px; text-shadow: none; }
+.lesson-arrow, .lesson-hole { transition: none; }
+.lesson-target { position: fixed; left: 0; top: 0; z-index: 901; pointer-events: none; color: #fff;
+  font: 900 14px var(--round); text-shadow: 0 2px 3px #16300e; }
+.lesson-target::before { content: ""; position: absolute; width: 74px; height: 36px; left: -39px; top: -20px;
+  border: 3px solid #ffe68a; border-radius: 50%; background: #fff7a733; box-shadow: 0 0 0 5px #4e7b3480; }
+.lesson-target { padding-top: 26px; text-align: center; width: 140px; margin-left: -70px; }
+.lesson-target::before { left: 31px; }
+.tutorial-active .menus button:not([aria-label="Build"]) { opacity: .5; }
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  .lesson { top: var(--lesson-top, 112px); right: 8px; left: 8px; justify-content: flex-end; }
+  .lesson-bubble { width: min(330px, calc(100vw - 76px)); padding: 12px 18px 52px; }
+  .lesson-arthur { width: 64px; margin-left: -10px; }
+  .lesson-title { font-size: 17px; }
+  .lesson-text { font-size: 13px; }
+  .lesson-foot { margin-top: 8px; }
+  .lesson-next img { width: 65px; }
+  .draggy-row { gap: 4px; }
+  .draggy-slot { width: 80px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lesson-arrow img, .lesson-marker { animation: none; }
 }
