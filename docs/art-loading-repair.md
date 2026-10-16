@@ -18,8 +18,8 @@ entry in its shard log, and final uploads succeeded. The unrelated empty
 `1410_bahamut_heart.swf` still failed, as in the preceding workflow and as
 already documented in CLIENT.md.
 
-**The art repair follow-up is closed in #91.** All 20 public images
-pass both request modes. The owner confirmed
+**All public-art checks pass; final #87 integration is being verified.**
+All 20 public images pass both request modes. The owner confirmed
 purging exactly the listed URLs in Cloudflare's dashboard. On 16 October
 at **11:24:20–11:24:40 UTC**, each ordinary image URL was compared with
 its `?repair=38885093455` version, first without Origin and then with
@@ -29,7 +29,9 @@ the freshly fetched JSON, and all files match the verified published
 export. The cold-cache `team` check passed, then the full browser suite
 finished **61/65**, including `team`, with the four previously documented
 failing test names listed below. No additional export, bucket change or
-purge was made. No owner-operated step remains for this repair.
+purge was made. No owner-operated step remains. #87 merged while this record was being
+finalized, so a fresh `team` → full-suite run on its integrated code is
+underway before #91 closes the follow-up.
 
 ## Publication and CDN verification
 
@@ -86,6 +88,26 @@ it, inspect that run and establish its expected files first. Refresh the
 local test cache only after both modes pass. A browser pass using
 cache-busted bodies does not verify ordinary URLs.
 
+## Final integration after #87 merged
+
+#87 merged as main `6c2fa146` at 12:51 UTC, while #91's final documentation
+was being prepared. It includes the card/Menu changes and repairs for
+all four unrelated browser failures in the pre-#87 run below. Its own
+full suite passed 67/67, but retained a stale 76-page red-god test cache:
+`team` took 121 seconds, reaching 8.00 GiB and 886,334 memory-limit events
+without an OOM. At 12:07 its independent public-manifest check confirmed
+the new two-page red-god JSON (SHA-256
+`c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c`),
+and the eight other cached main manifests matched the new public ones.
+See [#87's delivery record](verification-87.md). Those observations belong
+to its checkout; this art-repair checkout has the fully verified 40 files.
+
+All #87 changes are preserved. This branch is refreshing the nine-item
+cache and repeating `team`, then all 67 browser tests, on current main.
+The results below retain their original tested commits; the 61/65 result
+is not being relabelled as a pass or as the final integrated result.
+No further export, bucket operation or Cloudflare purge is involved.
+
 ## Browser verification with the fresh published files
 
 The isolated test cache's 146 old or locally substituted files for these
@@ -113,7 +135,7 @@ browser. It took 36m 30s; peak anonymous/shared/kernel memory was 1.91 GiB
 (3.44 GiB including file cache), with no memory events. Its output and
 screenshots were preserved separately.
 
-### Final ordinary-URL browser verification
+### Ordinary-URL verification before #87 merged
 
 Tested commit: `efcb4d242760d273f20ab0c36d20052cbd17a7f1`, which merges
 main `36b2f277` (including #89's tournament slice). The runtime matches
@@ -157,7 +179,8 @@ files still match the audited hashes after the full run. One early
 previous run; the dedicated `shop` screenshots render those same images.
 Those separate `buildingthumbs` images are not the repaired sprite sheets.
 
-The four failures are separate from the art repair. #89 already recorded
+The four failures below were separate from the art repair and were later
+fixed by #87. They are historical failures of the pre-#87 runtime. #89 already recorded
 these four failing test names and reproduced them on unchanged main
 `2918c71f`; no game code, test assertion or time limit was changed here:
 

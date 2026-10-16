@@ -293,11 +293,16 @@ merging the two wait fixes with that separate failure documented.
       (land, hurrying, the bank); missions and bonuses
       (goals, the daily bonus, Monday's chest); neighbours
       (visiting and helping, Arthur, the donkey carts); sound and speed (the
-      town's music and sounds, compressed downloads); and a run-through
+      town's music and sounds, compressed downloads); the building card,
+      the original's info panel with Upgrade (the owner's pick of the
+      mockups, 16 October 2026); and a run-through
       against the Flash game (`e2e/tests/classic.mjs`: an empire played in
       the new client opens in the classic game, and Arthur's lessons are
       offered there). Players can use the new client for everything but
       battles, which open in the classic game.
+      **#87 verified and delivered:** the building card, Upgrade and the
+      site's Menu; [all integrated checks](docs/verification-87.md) pass.
+      The final Beta 1 comparison remains on hold (HANDOFF.md, task 6).
       **Launch: a fresh start,** ready for the owner (DEPLOY.md, 6.4). The
       live server moves to Supabase with an empty database: none of today's
       accounts or empires go with it (the owner's call). `SE_COPY_SQLITE=0`

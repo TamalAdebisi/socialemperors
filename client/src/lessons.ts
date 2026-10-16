@@ -203,7 +203,7 @@ export class Lessons {
     };
     switch (target.kind) {
       case "train":
-        return button(".actions .picture-button.train");
+        return button(".actions .card-train-button");
       case "build":
         return button('.menus button[aria-label="Build"]');
       case "goals":

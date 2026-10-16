@@ -11,7 +11,7 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 1, height: 1, category: 1, subcategory: 111,
     flying: false, velocity: 0, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 0, unitsLimit: 0, cashCost: 0, cost: 30, costType: "w", facings: 2, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
-    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", ...fields };
+    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", upgradesTo: 0, ...fields };
 }
 
 const VILLAGER = item({ id: 500, name: "Villager I", isUnit: true, velocity: 3, subcategory: 71 });
@@ -145,6 +145,15 @@ test("the last worker out of a mill or mine whose time is chosen: the choice goe
   assert.deepEqual(last.commands.map((c) => c.cmd), ["pop_unit", "activate"]);
   assert.deepEqual(last.commands[1].args, [50, 50, 0, 13, 0]);
   assert.deepEqual([mine.workTime, mine.startedAt], [0, null]);
+});
+
+test("the one tapped on the card comes out, the others stay", () => {
+  const refuge = placed(REFUGE, 50, 50, { unitsInside: 2, units: [512, 500] });
+  const t = town([refuge]);
+  const out = letOut(t, refuge, ITEMS, 0)!;
+  assert.equal(out.unit.item.id, 512);
+  assert.deepEqual(refuge.units, [500]);
+  assert.equal(refuge.unitsInside, 1);
 });
 
 test("everybody out before a building goes", () => {

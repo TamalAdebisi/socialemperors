@@ -1,6 +1,6 @@
-// Editing a new town: turn a tower, move and sell houses, store a tower, and
-// the original's rules (trees and the town hall can't be sold). The server's
-// save must change the same way.
+// Editing a new town: turn a tower, move a house and sell one with the
+// bulldozer, store a tower, and the original's rules (trees and the town
+// hall can't be sold). The server's save must change the same way.
 
 import assert from "node:assert/strict";
 import { has, stored } from "../lib.mjs";
@@ -9,6 +9,7 @@ const TOWER = 29, HOUSE = 1, TREE = 19;
 
 export default async function edit({ newPlayer }) {
   const player = await newPlayer();
+  const { page } = player;
 
   await player.select([51, 47], "Tower I");
   await player.press("Turn");
@@ -26,11 +27,16 @@ export default async function edit({ newPlayer }) {
   assert.deepEqual((await player.barButtons()).filter((label) => /Sell|Remove|Store/.test(label)), [], "a tree offers no Sell, Remove or Store");
   await player.press("Close");
 
-  // Selling asks first.
-  await player.select([44, 52], "House I");
+  // The card has no Sell, as in the original: the bulldozer sells, and asks first.
+  const house = await player.select([44, 52], "House I");
+  assert.ok(!(await player.barButtons()).some((label) => /Sell|Remove/.test(label)), "no Sell on the card");
+  await page.keyboard.press("Escape");
+  await page.locator(".pointer-tool").click();
+  await page.locator('.tool-menu [data-tool="remove"]').click();
+  await player.click(house.point);
+  assert.match(await player.bar(), /^Sell House I/, "selling asks to confirm");
   await player.press("Sell");
-  assert.match(await player.bar(), /Sell/, "selling asks to confirm");
-  await player.press("Sell");
+  await page.locator(".pointer-tool").click();
 
   await player.select([59, 49], "Tower I");
   await player.press("Store");

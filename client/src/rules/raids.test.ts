@@ -11,7 +11,7 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
     flying: false, velocity: 6, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 1,
     unitsLimit: 0, cashCost: 0, cost: 100, costType: "g", facings: 1, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
-    life: 60, attack: 30, defense: 0, attackRange: 1, attackInterval: 20, size: 1, elevation: 1, groups: "", ...fields };
+    life: 60, attack: 30, defense: 0, attackRange: 1, attackInterval: 20, size: 1, elevation: 1, groups: "", upgradesTo: 0, ...fields };
 }
 
 const ITEMS = new Map<number, ItemInfo>();

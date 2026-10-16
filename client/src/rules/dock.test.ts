@@ -10,7 +10,7 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
     flying: false, velocity: 0, capacity: 0, activation: 0, collect: 0, collectType: "", collectXp: 0, trains: 0, population: 3, unitsLimit: 0, cashCost: 0,
     cost: 30, costType: "w", facings: 2, production: null,
     inStore: 0, shopTab: 0, minLevel: 0, storeLevel: 0, displayOrder: 0, isNew: false, xp: 0, race: "h",
-    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", ...fields };
+    life: 0, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", upgradesTo: 0, ...fields };
 }
 
 const HARBOR = item({ id: HARBOUR, name: "Harbor", width: 4, height: 4 });
