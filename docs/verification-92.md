@@ -111,6 +111,22 @@ do not display every entry together. The six shared-spell captures are
 desktop views. These limits remain separate from the Menu defect that
 requires correction.
 
+## Menu obstruction reproduced at 28f0fa42
+
+Commit `28f0fa42961e3cba33bccb47522166d03d92aef0` adds the real
+hit-target regression and documentation only; its runtime is unchanged
+from `3b5da9e9`. The focused `site-menu` run passed **0/1 in 53.96s**
+(42s inside the scenario). The assertion expected the desktop Empires
+row to receive clicks, but its target was the `home-threats` button.
+This reproduces the persistent screenshot defect. Its local archive is
+`tournament-evidence-review-focus-28f0fa42`.
+
+The CSS correction hides the home countdown while Menu is open, as it
+already does for panels. It leaves the countdown clock and Menu behavior
+unchanged. The regression assertion is retained. The corrected focused
+run and the full 77-case integration run are pending; the failed result
+above does not test the correction.
+
 ## Completed pre-#95 checks at 5d220abf
 
 Exact tested code: `5d220abfa562877ca346b205455f9554e15d497e`.

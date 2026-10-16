@@ -9,12 +9,14 @@ them can be found and reversed. The big, agreed decisions are in
 - **Check the visible control, not just its presence.** Screenshot review
   of the #95 integration at `3b5da9e9` found the persistent raid countdown
   covering the desktop Menu's Empires row, although the existing Menu
-  browser assertions passed. Stop the full run, add a real hit-target
-  regression and correct the overlap before restarting verification.
-  Preserve the countdown and Menu behavior. The regression and layout
-  correction are pending; the twelve completed cases are a partial run,
-  not a 77-case pass. The interrupted attack scenario is not a completed
-  test failure.
+  browser assertions passed. The added hit-target assertion reproduced
+  the obstruction at `28f0fa42`, whose runtime was unchanged from `3b`:
+  0/1 in 53.96s. Hide the home countdown only while Menu is open, giving
+  its destinations clear space without changing the clock. The CSS
+  correction is implemented; its unchanged regression and the full
+  integration rerun are pending. The twelve completed cases remain a
+  partial run, not a 77-case pass. The interrupted attack scenario is
+  not a completed test failure.
 
 ## 16 October 2026: visible dialogs keep battle shortcuts
 

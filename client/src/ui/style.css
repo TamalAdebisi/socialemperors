@@ -3455,6 +3455,8 @@ body {
   white-space: normal;
 }
 .battle-selection[hidden], .home-threats[hidden], .panel-open .home-threats { display: none; }
+/* Give the open Menu's destinations the same clear space as a panel. */
+body:has(.site-menu:not([hidden])) .home-threats { display: none; }
 /* The raid instruction is also in the countdown; give inspected units room. */
 body:has(.battle-selection:not([hidden])) .actions.asking { visibility: hidden; }
 @media (max-width: 600px) {
