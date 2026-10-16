@@ -155,6 +155,16 @@ export class Player {
       return status && status.hidden;
     }, null, { timeout: 60_000 });
     await this.wait(800);  // signs come up with the first refresh
+    // A town set up with experience past its level opens with the level-up window over the map,
+    // as the Flash client did; tests go on past it, as a player would (e2e/tests/levelup.mjs looks at it).
+    await this.closeLevelUps();
+  }
+
+  /** OK on each level-up window showing (ui/levelUp.ts), one after another. */
+  async closeLevelUps() {
+    for (let i = 0; i < 40 && await this.page.locator(".level-window").count(); i++) {
+      await this.page.locator(".level-ok").click();
+    }
   }
 
   wait(ms) {
