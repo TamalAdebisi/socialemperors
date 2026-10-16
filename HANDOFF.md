@@ -20,8 +20,10 @@ next agent knows where to start.
 ## Where things stand
 
 - **Task 1 is complete in #86**, with a separate art-loading failure
-  recorded below for follow-up. Its investigation now identifies **nine
-  stale art bundles**; the owner-operated export is still pending. The
+  recorded below for follow-up. All **nine stale art bundles have now
+  been exported**, under the owner's subsequent authorization. Cloudflare
+  still serves old cached images; a targeted purge and ordinary-URL
+  verification remain pending. The
   owner requested merging the two wait
   fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
   those are implemented but still awaiting browser verification and merge.
@@ -34,7 +36,8 @@ next agent knows where to start.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
-  separate art repair below needs the owner's export workflow.
+  separate art repair below has published its files; finishing it needs
+  a targeted Cloudflare cache purge or cache expiry.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
@@ -162,17 +165,17 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate follow-up: owner export of nine stale bundles still needed.**
+**Separate follow-up: export complete; CDN cache repair still needed.**
 For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
 army loaded. It failed on its own too, in a fresh browser, reaching this
 machine's 8 GiB memory limit.
-The current public `art/2075_elemental_red_god.json` names **76 sheets**:
+The public `art/2075_elemental_red_god.json` then named **76 sheets**:
 about **3.8 GiB** of decoded RGBA pixels, or **5.1 GiB** with mipmaps,
 before other graphics copies. This is separate from the two wait fixes;
 neither changes the team test, game code or art.
 
 **Rechecked on 16 October from main `002fcbeb`:** the ordinary public URL
-still serves 76 pages at scale 1, last modified before the current packer
+still served 76 pages at scale 1, last modified before the current packer
 was added. All 76 page manifests total 4,074,714,156 decoded RGBA bytes.
 An unchanged local export of the original SWF made two pages at scale
 0.25, step 2, about 124 MiB decoded, preserving animation lengths, bounds,
@@ -192,20 +195,27 @@ browser helper's disk cache has no expiry, so a fresh browser alone will
 not refresh any of these bundles. This local replacement pass does not
 replace the recorded 63/64 public-art result or close its follow-up.
 
-The owner should run **Export art to R2** on **main**, with **Make these
-again** set to **all nine names** in
-[the art repair notes](docs/art-loading-repair.md), and **Make every sheet
-again** left off. The earlier `2075_elemental_red_god`-only proposal does
-not cover the island's other oversized art. The notes contain the exact
-repair, evidence, local verification and post-export checks. Wait for a
-consistent new manifest and images at their ordinary public URLs (cache
-lifetime up to a day), clear only those items' old files from
-`.tools/art-cache/art/`, and check for local `art/sheets/` overrides. Then
-rerun `team` and the full suite on the integrated main and inspect the
-screenshots. Until that public-art verification is recorded, this remains
-the known failure; do not mark it fixed or call it a new #87/tournament
-regression merely because it recurs. No live workflow or bucket was
-changed, and no assertion was skipped or weakened.
+**Published under subsequent owner authorization on 16 October:** Codex
+ran [Export art to R2, run 38885093455](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+on main `2918c71f`, with all nine names and **Make every sheet again**
+off. All requested exports and uploads succeeded. The public manifests
+now reference 20 pages; fresh published images fetched with a cache-busting
+query verify at **987.84 MiB decoded**, with animation lengths, bounds,
+origins and frame rates preserved.
+
+**The CDN is still inconsistent:** ordinary image URLs return old
+Cloudflare `HIT` responses whose dimensions disagree with the new JSON.
+A request-side `no-cache` header did not refresh them. The exact remaining
+step is a targeted Cloudflare purge of
+[these 20 image URLs](docs/team-art-cache-purge.txt), or waiting for the
+24-hour cache lifetime to expire. This environment has no Cloudflare
+access. Then recheck ordinary URLs and refresh affected files in each
+checkout's `.tools/art-cache/art/`; also check for local `art/sheets/`
+overrides. Browser verification using the freshly published image bodies
+is in progress. Keep this CDN/cache failure distinct from new #87 or
+tournament regressions. See [the repair notes](docs/art-loading-repair.md)
+for evidence and exact checks. No source art, game code or test assertion
+was changed.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 

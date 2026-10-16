@@ -9,6 +9,57 @@ test assertions stay unchanged.
 refresh only `2075_elemental_red_god` does not cover the oversized art
 loaded by the island before the team picker appears.
 
+The owner subsequently authorized Codex to perform the reserved live
+step. [Export run 38885093455](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+was dispatched on main `2918c71f` at 10:07 UTC on 16 October, using the
+nine names below and `redo=false`. All eight jobs finished successfully
+at 10:42 UTC. Every requested SWF render and packed sheet has an `ok`
+entry in its shard log, and final uploads succeeded. The unrelated empty
+`1410_bahamut_heart.swf` still failed, as in the preceding workflow and as
+already documented in CLIENT.md.
+
+**Remaining live step: purge the 20 cached WebP URLs.** The new manifests
+are public, but Cloudflare still serves the old images at their ordinary
+URLs. The follow-up is not closed until those URLs are consistent and
+browser verification is recorded.
+
+## Publication and CDN verification
+
+All nine public main manifests and their sidecars have the expected
+scale, step and page counts. Fetching their images with
+`?repair=38885093455` verifies **40 files, 20 pages and 1,035,821,932
+decoded RGBA bytes (987.84 MiB)**. Actual WebP dimensions match the new
+JSON, all animation references exist, and sequence lengths, bounds,
+origins and frame rates match the original exports. The red god is two
+pages, 4094 × 4036 and 4093 × 3932, as in the local reproduction.
+
+The ordinary URLs failed this check: all 20 images were older cached
+files with dimensions different from the new manifests. For example, at
+10:38 UTC the red-god manifest was new (Last-Modified 16 October,
+10:37:51), while its WebP was a Cloudflare `HIT` from 14 October,
+17:32:01, sized 3698 × 3278. A `Cache-Control: no-cache` request still
+returned that old image, with an observed age of 11,274 seconds. The
+cache-busted request returned the correct 4094 × 4036 image, a `MISS`
+with Last-Modified 16 October, 10:37:51. A new export does not invalidate
+Cloudflare's cached copy of an existing image URL.
+
+The workflow sets a 24-hour cache lifetime. To finish immediately, an
+operator with Cloudflare access must open **socialemperors.me → Caching
+→ Configuration → Custom Purge**, select URL purging, and paste the
+**20 exact URLs in [team-art-cache-purge.txt](team-art-cache-purge.txt)**.
+This purges cache entries; it does not delete bucket objects. Alternatively,
+wait for the old entries to expire. No Cloudflare connection or credentials
+are available in this task's environment, and the configured GitHub
+workflows only upload to R2; they do not purge Cloudflare's cache.
+
+After the purge or expiry, fetch every ordinary URL again and confirm
+dimensions and hashes against the freshly published files. Refresh the
+local test cache using the steps below, then verify the browser against
+those ordinary URLs. Existing browsers may also need a reload that
+refreshes their cached images. A cache-busted image check or a browser
+pass using those image bodies must not be reported as an ordinary-URL
+CDN pass.
+
 ## Findings
 
 An ordinary GET of
@@ -81,10 +132,13 @@ This can keep the known failure around after a successful owner export.
 The public manifest itself was still oversized, so the test cache was not
 the cause of the stale public art.
 
-## The owner-operated repair
+## The targeted repair
 
-AGENTS.md reserves the live workflow and bucket for the owner. No live
-workflow was started and no bucket file was changed during this work.
+AGENTS.md normally reserves the live workflow and bucket for the owner.
+The initial investigation and #90 made no live changes. The owner's
+subsequent request authorized Codex to run this targeted repair; it does
+not change the general rule for future exports. The dispatched inputs
+were:
 
 1. In GitHub Actions, open **Export art to R2** on **main**.
 2. Set **Make these again** to this space-separated list (all nine names):

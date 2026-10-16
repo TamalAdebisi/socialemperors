@@ -15,7 +15,12 @@ them can be found and reversed. The big, agreed decisions are in
   stay intact. The existing export policy stores smaller pictures; for
   two of these items it also holds each picture for two frames while
   retaining the original animation length.
-- **The owner still operates the live art workflow.** Use all nine names
+- **The live export needs specific owner authorization.** The initial
+  investigation left that step to the owner. The owner subsequently asked
+  Codex to carry it out, authorizing targeted run
+  [38885093455](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+  on main `2918c71f`. This exception does not change AGENTS.md's general
+  reservation. Use all nine names
   in **Make these again**, with **Make every sheet again** off. A local
   replacement test is separate from verifying the public repair; refresh
   the public files and local test cache, then run `team` and the full
