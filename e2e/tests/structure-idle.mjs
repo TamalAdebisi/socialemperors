@@ -36,7 +36,12 @@ export default async function structureIdle({ newPlayer }) {
     if (index > 0 && index % 6 === 0) await player.reload();
     const name = names[index];
     const result = await page.evaluate(async ({ name, states }) => {
-      const { view, items } = window.seHome.parts;
+      const { view, items, camera } = window.seHome.parts;
+      // A clear-ground gallery makes every structure inspectable, including
+      // small art at the saved mill's tile and very large promotional art.
+      view.things.visible = false;
+      view.markers.layer.visible = false;
+      view.landSigns.visible = false;
       const item = [...items.values()].find((i) => !i.isUnit && i.art === name);
       if (!item) throw new Error(`No configured structure for ${name}`);
       const art = await view.art.get(name);
@@ -52,6 +57,11 @@ export default async function structureIdle({ newPlayer }) {
         picture.stop?.();
         view.outline(slot, true);
         const halo = slot.getChildByLabel("outline");
+        const bounds = slot.getBounds();
+        const centre = camera.toMap({ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
+        camera.zoomBy(Math.min(1.6 / camera.scale, 600 / bounds.width, 500 / bounds.height), null);
+        camera.update(1000);
+        camera.lookAt(centre);
         const frames = picture.textures ?? [picture.texture];
         const original = art.animation(`frame/${facing}`);
         const allowed = new Set(original.filter((_, frame) => frame % (states?.[facing] ?? 1) === 0));
