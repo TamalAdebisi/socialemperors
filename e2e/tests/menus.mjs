@@ -45,11 +45,12 @@ export default async function menus({ newPlayer }) {
   assert.ok(names.includes(neighbour.name), `the other player is a neighbour: ${names}`);
   await player.shot("neighbours");
 
-  // Battle: the three ways to fight, played in the classic game for now.
+  // Battle: the three ways to fight, played in the classic game for now, and the attacks' results.
   await player.menu("Battle");
   assert.deepEqual(await lit(), ["Battle"], "one window at a time");
-  assert.deepEqual(await page.locator(".panel:not([hidden]) .row strong").allTextContents(), ["Attack a player", "Survival", "Tournament"]);
-  assert.equal(await page.locator(".panel:not([hidden]) .row a").first().getAttribute("href"), "/ruffle.html");
+  assert.deepEqual(await page.locator(".panel:not([hidden]) .row strong").allTextContents(), ["Attack a player", "Survival", "Tournament", "Battle Results"]);
+  // Attack a player opens the world map here; the others, the classic game.
+  assert.equal(await page.locator(".panel:not([hidden]) .row a").nth(1).getAttribute("href"), "/ruffle.html");
   await page.keyboard.press("Escape");
   assert.equal(await panel().count(), 0, "Escape closes the window");
   assert.deepEqual(await lit(), []);
@@ -90,7 +91,7 @@ export default async function menus({ newPlayer }) {
   const sheet = await phone.page.locator(".panel:not([hidden])").boundingBox();
   assert.ok(sheet.y > 200 && sheet.y + sheet.height <= dock.y + 4, `the sheet sits above the dock: ${JSON.stringify(sheet)}`);
   assert.deepEqual(await phone.page.locator(".panel:not([hidden]) .row strong").allTextContents(),
-    ["Quests", "Attack a player", "Survival", "Tournament"]);
+    ["Quests", "Attack a player", "Survival", "Tournament", "Battle Results"]);
   await phone.shot("phone-world");
   // Dragging the sheet's handle down puts it away.
   const handle = await phone.page.locator(".panel:not([hidden]) .panel-handle").boundingBox();

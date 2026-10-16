@@ -81,7 +81,7 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopUpBattleOptions.as` | 192 | The army and the defence plan: the units in town, and four plans for when another player attacks (all stay, archers against siege, half go out, all go for the siege engines). Sends `set_strategy` on closing if it changed; choosing one also completes a goal. | not yet |
+| `popups/PopUpBattleOptions.as` | 192 | The army and the defence plan: the units in town, and four plans for when another player attacks (all stay, archers against siege, half go out, all go for the siege engines). Sends `set_strategy` on closing if it changed; choosing one also completes a goal. | built: the Army window's two tabs (`ui/army.ts`) |
 | `popups/PopUpYourArmie.as` | 92 | A list of the units in town with how many of each. | not needed: nothing opens it; `ui/army.ts` shows the same |
 | `popups/PopupGraveyard.as` | 479 | The Graveyard: fallen units of the town's race, six to a page; bring one back for potions, or for half its price (and, for gold units, its whole price in food); checks room for people and the unit's limit. Sends `resurrect_hero`; potion packs for cash (`graveyard_buy_potions`). | built: `ui/graveyard.ts`, `rules/graveyard.ts`; no asking friends for potions |
 | `popups/PopupHeroes.as` | 362 | The Altar of Heroes: the eight heroes, each from its level, for cash (`buy_cash`), placed beside the altar. | built: `ui/graveyard.ts` (`AltarWindow`) |
@@ -147,10 +147,10 @@ Player battles are for the last stop ("The switch"); the World window sends play
 | Class | Lines | What it does | Status |
 |---|---|---|---|
 | `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from); no help page |
-| `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); no defender's side or Revenge |
-| `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | not yet |
+| `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
+| `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
 | `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
-| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | not yet; `worlds.py` |
+| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; not the unit collection's |
 | `popups/PopupBuyTerritoryPvp.as` | 101 | Buy a place on the player-attack world for 5 cash (`buy_pvp_territory`). | not yet: our server doesn't handle `buy_pvp_territory` either |
 | `popups/PopUpBuyAssault.as` | 100 | Out of attacks or spy visits: wait, or buy 50 for 30 or 15 cash. | not needed: nothing opens it |
 

@@ -106,6 +106,12 @@ PICTURES = {
     "draggy-frame": ("SelectYourDragonPopUpMC@8", 0, 300, "top"),  # without the placeholder name below it
     "reminder-ok": ("SelectYourDragonReminderNestPopupMC@5", 0, 300),
     "open-nest": ("EP_DragonNest_MC/btnAbrir", 0),
+    # The army window's defence plans (another player's attack): each plan's picture, and the tick on the one chosen.
+    "plan-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 0, 330),
+    "plan-mid-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 1, 330),
+    "plan-mid-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 2, 330),
+    "plan-aggressive": ("PopUpBattleOptionsMC/strat/s1@3", 3, 330),
+    "plan-picked": ("PopUpBattleOptionsMC/strat/s1/vist", 0),
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),
