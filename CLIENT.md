@@ -273,6 +273,18 @@ from one clip in the game's library (`05122012_projectiles.swf`,
 `projectile_<n>` (the arrow is 400 bytes), so a battle loads only the
 shots it shows.
 
+**Existing exports are not rebuilt automatically.** The exporter skips an
+item whose main JSON already exists. On 16 October, the public
+`2075_elemental_red_god` bundle still predated the packing budget: 76
+pages, about 3.79 GiB decoded, enough to exhaust the browser test machine.
+The unchanged current exporter makes two pages, about 124 MiB, for that
+item. A guarded browser check also found eight oversized bundles loaded
+by the island before the team picker; refreshing the selected unit alone
+is insufficient. The owner needs a targeted **Export art to R2** run for
+all nine; the workflow inputs, cache refresh and verification are in
+[the art repair notes](docs/art-loading-repair.md). A browser test's disk
+cache in `.tools/art-cache/` does not expire by itself.
+
 Still to do for the art: the sounds inside the Flash files, and the
 scaffolding pictures for buildings under construction (in
 `assets/swf/120608_dynamic.swf`).
