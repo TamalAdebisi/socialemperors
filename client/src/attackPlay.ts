@@ -29,6 +29,7 @@ import { finalWindow } from "./questPlay.ts";
 import { Sound } from "./sound.ts";
 import { iconImage } from "./ui/icons.ts";
 import { showMessage, showStatus } from "./ui/hud.ts";
+import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
@@ -103,6 +104,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
     resizeTo: window, background: skinColour(enemy.skin), resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
+  const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${skinColour(enemy.skin).toString(16).padStart(6, "0")}`;
   document.body.classList.add("questing");
@@ -113,7 +115,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   camera.resize(app.screen.width, app.screen.height);
   camera.attach(app.canvas);
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
-  app.ticker.add((ticker) => camera.update(ticker.deltaMS));
+  loop.add((ms) => camera.update(ms));
 
   const commands = new CommandSender(settings, { clock: () => mine.timestamp, onFailure: (reason) => showStatus(reason) });
   const sound = new Sound(settings.assetsUrl, town.race, "ASSAULTS.mp3");
@@ -130,7 +132,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   const townView = new TownView(art, items, enemy);
   world.addChild(townView.root);
   await townView.build((done, total) => showStatus(`Marching to their town… ${Math.round((100 * done) / total)}%`));
-  app.ticker.add((ticker) => townView.tick(ticker.deltaMS, camera.scale));
+  loop.add((ms) => townView.tick(ms, camera.scale));
   townView.setFighting(true);
   commands.add("game_status", "LOAD_MAP", "NORM", "ASSA");
   void commands.flush();
@@ -227,7 +229,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   view.skin = enemy.skin;
   world.addChild(view.root);
   await view.load((done, total) => showStatus(`The army arrives… ${Math.round((100 * done) / total)}%`));
-  app.ticker.add((ticker) => view.update(ticker.deltaMS, camera.scale));
+  loop.add((ms) => view.update(ms, camera.scale));
   showStatus("");
   const started = performance.now();
 
@@ -274,7 +276,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
       ], true);
     },
   });
-  bar.add(new Pause(app.ticker).button("hud-sound"));
+  bar.add(new Pause(loop).button("hud-sound"));
   // For the browser tests (e2e/tests/attack.mjs).
   (window as unknown as Record<string, unknown>).seAttack = {
     battle, targets, view, plan,
@@ -296,9 +298,9 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   showMessage(spy ? "Tap where your eagle should fly: their defences will shoot at it." : `${targets.size} targets: their town hall wins it.`);
   setTimeout(() => showMessage(""), 3000);
 
-  app.ticker.add((ticker) => {
+  loop.add((ms) => {
     if (!finished && !asking) {
-      owed += Math.min(ticker.deltaMS, 250) * speed;
+      owed += Math.min(ms, 250) * speed;
       const step = 1000 / FPS;
       while (owed >= step) {
         owed -= step;

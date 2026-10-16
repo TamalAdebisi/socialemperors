@@ -1,26 +1,20 @@
-// Pausing (CLIENT.md, "Pausing"), as in the Flash client: the game stops
-// when the page loses the player (another window or tab), or from the pause
-// button by the music and sound buttons. A dark curtain and the game's own
+// Explicit pausing (CLIENT.md, "Pausing"): the pause button by the music
+// and sound buttons stops the game. Switching tabs keeps it running.
+// A dark curtain and the game's own
 // GAME PAUSED say so; RESUME, or any key let go, starts it again. While
 // paused nothing moves: units, fights, animations. Timers for work and
 // training are the server's clock and carry on, as in the original.
 
-import type { Ticker } from "pixi.js";
+import type { GameLoop } from "../gameLoop.ts";
 
 import { ICONS } from "./icons.ts";
 
 export class Pause {
-  private readonly ticker: Ticker;
+  private readonly ticker: GameLoop;
   private curtain: HTMLElement | null = null;
 
-  constructor(ticker: Ticker) {
+  constructor(ticker: GameLoop) {
     this.ticker = ticker;
-    window.addEventListener("blur", () => this.pause());
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        this.pause();
-      }
-    });
     window.addEventListener("keyup", () => this.resume());
   }
 

@@ -9,8 +9,29 @@ import assert from "node:assert/strict";
 export default async function siteMenu({ newPlayer }) {
   const player = await newPlayer();
   const friend = await newPlayer();
-  const asked = await friend.page.request.post(`${friend.base}/friends/ask`, { form: { username: player.name, csrf: await friend.csrf() } });
-  assert.ok(asked.ok(), "the friend asks");
+  await friend.page.goto(`${friend.base}/friends`);
+  await friend.page.getByRole("textbox", { name: "Username of the player to add" }).fill(player.name);
+  await Promise.all([
+    friend.page.waitForURL("**/friends/ask"),
+    friend.page.getByRole("button", { name: "Add friend" }).click(),
+  ]);
+  assert.match(await friend.page.locator(".card").textContent(), new RegExp(`Asked ${player.name}`));
+  for (const width of [1280, 390]) {
+    await friend.page.setViewportSize({ width, height: 844 });
+    const styled = await friend.page.evaluate(() => ({
+      card: getComputedStyle(document.querySelector(".card")).backgroundColor,
+      scene: getComputedStyle(document.querySelector(".scene")).position,
+      images: [...document.querySelectorAll("img")].every((img) => img.complete && img.naturalWidth > 0),
+      fits: document.documentElement.scrollWidth <= innerWidth,
+      sheets: [...document.styleSheets].map((sheet) => sheet.href),
+    }));
+    assert.equal(styled.scene, "fixed", "the nested form result loads the site's CSS");
+    assert.notEqual(styled.card, "rgba(0, 0, 0, 0)");
+    assert.ok(styled.images, "the logo and Friends icons load after submitting");
+    assert.ok(styled.fits, "Friends fits the screen");
+    assert.ok(styled.sheets.some((href) => href?.endsWith("/css/site.css")));
+    await friend.shot(`friends-${width}`);
+  }
   await player.reload();
   const { page } = player;
 

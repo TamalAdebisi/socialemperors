@@ -79,11 +79,19 @@ those commands run outside the sandbox when asked.
 
 ```
 .venv/bin/python -m unittest discover tests          # the server: 435 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 350 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 69 tests
+(cd client && npm run check && npm test)             # the client's types and rules: 354 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 71 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
+- **Latest playthrough verification (#94):** server 435 run (426 passed,
+  9 existing skips), client types and all 354 passed. Full Chromium suite:
+  **67/71 in 1h 52m 56.27s**; four failures and their follow-ups are recorded,
+  with all 71 cases now having passing results across the full/focused
+  runs. Game code stayed at `01ddd0cd`; subsequent edits are tests/docs.
+  WebKit buildings, controls, hover and Friends/Menu passed **4/4 in
+  3m 50.48s**. [The delivery record](docs/verification-94.md) retains the
+  original failures, exact checks, screenshot review and Mac GPU limit.
 - **Latest art verification (#91):** all 20 images match their JSON and
   repair-query copies, both plain and with the game's Origin header.
   With refreshed caches, `team` passed alone (52s) and in the full suite
