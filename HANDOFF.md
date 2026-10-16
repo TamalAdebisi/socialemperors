@@ -26,8 +26,8 @@ next agent knows where to start.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
-    shop's details and the run-through that closes the beta (the building
-    card and the site's bar went in with #87).
+    shop's details and the run-through that closes the beta. The building
+    card and the site's bar are built in #87, not merged yet (task 2).
   - **Beta 2, battles and quests:** built: combat, every island, spells,
     special moves, defending the town, camps, bosses, graveyards. Left: the
     special units' rarer moves, a short list of battle rules (PARITY.md,
@@ -104,9 +104,19 @@ now and then; neither is a bug in the game.
 - Keep what each test checks; only how it waits changes. Then run the
   whole suite and note how long it takes, for AGENTS.md.
 
-### 2. Beta 1: Upgrade on the building card (M) - [x]
+### 2. Beta 1: Upgrade on the building card (M) - [ ]
 
-Done in #87, with task 3 (CLIENT.md, "The building card").
+Built in #87 with tasks 3 and 5 (CLIENT.md, "The building card"), **not
+merged: one browser test fails there.** `e2e/tests/scripted-bosses.mjs`
+times out in `strikeAll` for camp 28 (the demon portals): after the test
+kills the enemy units, the fight never goes quiet for 5 seconds within
+the 30 allowed. There are no page errors, and the portals (life 1000) are
+still standing. It passes on `main` (323 s) and failed three times on the
+branch. It is not the test helper's new click (it failed before that) and
+not the card's shadow (removed, still failing). Find what in the branch's
+client changes the fight (`editor.ts` select and refresh, `ui/actions.ts`,
+`rules/work.ts` letOut), fix it, run the whole suite, then merge #87.
+Everything else in the suite passes (65 tests with `site-menu` and `card`).
 
 
 PARITY.md, "The building card", and `docs/original/rules/town.md`,
@@ -120,9 +130,9 @@ Town Hall II to IV can only be had this way, so three goals open up with
 it. The button can join the card's tiles in their current style (say so in
 DECISIONS.md); the card's new look is task 3.
 
-### 3. Beta 1: what the building card shows (S each, *owner*) - [x]
+### 3. Beta 1: what the building card shows (S each, *owner*) - [ ]
 
-Done in #87: the owner picked mockup A, the original's info panel.
+Built in #87 (see task 2): the owner picked mockup A, the original's info panel.
 
 
 PARITY.md, "What it shows": the picture with its health, its numbers
@@ -184,10 +194,10 @@ Where to start in our code:
   the barracks bubble (`train-bubble`) are exported already.
 - A phone has no hover: give it a tap, and say so in DECISIONS.md.
 
-### 5. Beta 1: the site's bar (S, *owner*) - [x]
+### 5. Beta 1: the site's bar (S, *owner*) - [ ]
 
-Done in #87: the owner left the place to us; a Menu after Full screen
-(DECISIONS.md, "the site's links in the new client").
+Built in #87 (see task 2): the owner left the place to us; a Menu after
+Full screen (DECISIONS.md, "the site's links in the new client").
 
 
 The classic page has Empires, Friends and Log out; the new client has
