@@ -1,7 +1,7 @@
 // What's always on screen, in HTML over the map (CLIENT.md, "The menus:
 // rail and dock"): the level with a bar to the next, and the resources as
 // dark pills with the game's own icons (short numbers on a phone: 12.4k);
-// the way back to the classic game and full screen; and in the bottom
+// full screen; and in the bottom
 // right corner, as on the Flash client's bar, the pointer with its tools
 // (the bulldozer and the fast-collect glove), the square tool (selecting
 // units with a box), and Collect all, which collects every ready building

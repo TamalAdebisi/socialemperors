@@ -36,6 +36,7 @@ export interface LessonParts {
   privateState: Record<string, unknown>;
   clock: () => number;
   panning: () => boolean;
+  fighting: () => boolean;
   rewardSaved: () => Promise<boolean>;
   /** The lessons are over: what comes after (the goals, the carts...). */
   finished: () => void;
@@ -86,7 +87,8 @@ export class Lessons {
     document.addEventListener(GOAL_WINDOW_EVENT, (e) => {
       this.hear({ kind: (e as CustomEvent<{ open: boolean }>).detail.open ? "goals" : "closed" });
     });
-    this.go(from);
+    // Combat orders are transient; reload returns to choosing the soldier.
+    this.go(from >= 11 && from <= 13 ? 11 : from);
     this.restore();
     const frame = () => {
       if (this.running) {
@@ -440,6 +442,9 @@ export class Lessons {
       this.recovering = true;
       commands.add("tutorial_knight", spot.x, spot.y);
       if (await commands.flush()) {
+        // A running battle owns its own fighters and selection. Reopen the
+        // saved town so the replacement joins normally, with losses retained.
+        if (this.parts.fighting()) { location.reload(); return; }
         const knight = this.place(item, spot);
         void view.redraw(knight);
         editor.lessonReset();
@@ -447,6 +452,10 @@ export class Lessons {
       } else editor.tell("The knight couldn't be saved. Reload to continue your lesson.");
       this.recovering = false;
     } else {
+      if ([12, 13].includes(this.step) && this.parts.fighting()) {
+        if (await commands.flush()) location.reload();
+        return;
+      }
       editor.lessonReset();
       // A training timer lost on reload needs its Train button again.
       if ([3, 24, 30].includes(this.step) && !this.thing({ kind: "villager" }) && !editor.lessonTraining) this.go(this.step < 20 ? 2 : 23);

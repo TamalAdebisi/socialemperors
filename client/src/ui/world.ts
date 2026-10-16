@@ -4,7 +4,7 @@
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
 // on players from the world map (ui/worldMap.ts, attackPlay.ts), and
 // survival (ui/survival.ts, survivalPlay.ts). Tournaments open their list
-// and team box here; the later stages continue in the classic game.
+// and team box here; later stages show their availability.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -14,7 +14,7 @@ interface Mode {
   about: string;
   icon: string;
   verb: string;
-  /** Played here: what Play does. Otherwise it opens the classic game. */
+  /** Played here: what Play does. Otherwise the feature is marked as coming soon. */
   run?: () => void;
 }
 

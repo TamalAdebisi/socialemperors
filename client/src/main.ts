@@ -594,6 +594,7 @@ async function start(): Promise<void> {
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
     // Once the town is drawn: a cart added before would be drawn twice.
     // Raids on the town and the troll camps (homeDefence.ts, homeCamps.ts): rolled each time it opens.
+    let fighting = () => false;
     const defend = () => {
       void import("./homeDefence.ts").then(({ HomeDefence }) => {
         const defence = new HomeDefence({
@@ -602,6 +603,7 @@ async function start(): Promise<void> {
           camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0,
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
+        fighting = () => defence.fighting !== null;
         app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
         grow();
         // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
@@ -637,7 +639,7 @@ async function start(): Promise<void> {
             screenOf: (point) => mapLayer.toGlobal(point),
             lookAt: (point) => camera.panTo(point, { x: innerWidth * (innerWidth < 720 ? 0.5 : 0.38), y: innerHeight * 0.53 },
               matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700),
-            clock, panning: () => camera.panning,
+            clock, panning: () => camera.panning, fighting: () => fighting(),
             rewardSaved: async () => Number((await server.playerInfo()).playerInfo.completed_tutorial) === 33,
             thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
             privateState: saved,

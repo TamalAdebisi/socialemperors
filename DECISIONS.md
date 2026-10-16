@@ -25,7 +25,9 @@ them can be found and reversed. The big, agreed decisions are in
   Only an enemy defeat advances combat. If the player has no soldier left
   during that lesson, offer one free training knight; villagers never
   qualify, existing soldiers prevent another, and later steps cannot claim
-  it. This small rule change prevents an impossible mandatory lesson.
+  it. Recovering an active fight reloads the saved town so the replacement
+  joins normally; recorded losses remain. This small rule change prevents
+  an impossible mandatory lesson.
 - **Hide the classic choices, without removing its routes or save support.**
   Play on the empire page opens the new client. Remove classic links from
   its HUD and unfinished feature windows. Features still being built say

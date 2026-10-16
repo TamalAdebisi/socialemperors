@@ -25,6 +25,24 @@ export default async function recovery({ newPlayer }) {
   let save = await player.saved();
   assert.equal(save.items.filter((i) => i[0] === 512).length, 1, "one saved replacement knight");
 
+  // Losing that soldier during an active fight still offers recovery. An
+  // ally's death must never be mistaken for winning the combat lesson.
+  await page.waitForFunction(() => document.querySelector(".lesson")?.dataset.moving === "false");
+  await player.click(await page.evaluate(() => window.seLessons.pointing));
+  await page.waitForFunction(() => window.seLessons.at === 13);
+  await page.evaluate(() => {
+    const fight = window.seHome.fighting;
+    const knight = fight.battle.fighters.find((f) => f.item.id === 512 && !f.dead);
+    fight.battle.kill(knight, null);
+  });
+  assert.equal(await page.evaluate(() => window.seLessons.at), 13);
+  await page.getByRole("button", { name: "Get a training knight" }).waitFor();
+  await player.press("Get a training knight");
+  await player.loaded();
+  await page.waitForFunction(() => window.seLessons?.at === 11);
+  save = await player.saved();
+  assert.equal(save.items.filter((i) => i[0] === 512).length, 1, "reopening combat includes the replacement, with the loss saved");
+
   // A saved partial final task resumes from its count, on a browser with no local storage.
   await player.send([{ cmd: "complete_tutorial", args: [31, { trees: 2 }] }]);
   await page.evaluate(() => localStorage.clear());
