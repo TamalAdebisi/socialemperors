@@ -39,7 +39,9 @@ them can be found and reversed. The big, agreed decisions are in
   fixed 17-second sleep could end before that minute on this machine.
   The sound and walking checks also use a destination above the card and
   verify that the canvas receives the click; all audio, path and saved
-  position assertions stay in place.
+  position assertions stay in place. Walking waits for arrival, bounded
+  at 15 seconds per destination, before checking the server's save;
+  #89's separate main run also reproduced the old fixed-wait failure.
 
 ## 16 October 2026: tournament list and team selection
 
