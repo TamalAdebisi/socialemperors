@@ -142,6 +142,48 @@ cash, but the map of the original found later that opening early is
 switched off in the original, and ours was removed: check, and reword the
 line rather than build it.
 
+What the original shows (read by Claude on 16 October; the class is
+`GUI/InfoButtonOver`, its layouts `InfoButtonStore*MC` in the game's file):
+a white speech bubble over the item, one layout per kind.
+
+- **A unit:** its name, life, attack, attack delay, speed, range, room.
+- **A house:** its line (`INFOPOPUP_HOUSE`), "Earns" its room for people,
+  "Timer".
+- **Mills, farms, mines:** `INFOPOPUP_VILLAGERS`, "Earns" what it collects
+  with the resource's picture, "Capacity" (workers), "Timer" (its working
+  time). The sacrifice altar and the treasure mine have a line of their
+  own instead.
+- **Ranches:** `INFOPOPUP_ANIMALS_FOOD`, the same numbers with animals.
+- **The bakery and the like:** `INFOPOPUP_RESOURCES`, Earns and Timer.
+- **Barracks, archery, stables, workshop, church:** `INFOPOPUP_TRAIN`, the
+  unit they train, with its name and numbers; a few have an extra line
+  (`STORE_EDIFICIO_*`).
+- **The castle:** `INFOPOPUP_DEFENSIVE`, its own numbers, then the unit it
+  trains.
+- **Towers, walls, gates, the dragon killer:** `INFOPOPUP_DEFENSIVE`, life,
+  attack, delay and range; the ice, water, oil towers and the fortress have
+  an extra line.
+- **Decorations:** Earns their experience.
+- **The market:** `INFOPOPUP_TRADE` and its lot (100, 200, 300).
+- **The blacksmith and the university:** their line and "10%" with a
+  green arrow.
+- **Eagles:** `INFOPOPUP_EAGLES` and their life (200, 400, 800, 10000).
+- **Healing buildings:** their line and their attack.
+- **Refuges:** Capacity.
+- **Wonders:** with room, the wonder line filled with 175 and its room;
+  without, `INFOPOPUP_MARAVILLA_RECURSOS` with Earns and Timer.
+- **Feature buildings and heroes' buildings:** one line each (`STORE_EDIFICIO_*`
+  by id).
+
+Where to start in our code:
+- The words' ids are in `Language.as`: look up `INFOPOPUP_*` and
+  `STORE_EDIFICIO_*`. Read them through main's `line(id, fallback)`.
+- `client/src/rules/card.ts` already has the building card's facts by
+  kind: the new code can sit beside it.
+- The building card's numbers' pictures (`stat-*` in `ui/icons.ts`) and
+  the barracks bubble (`train-bubble`) are exported already.
+- A phone has no hover: give it a tap, and say so in DECISIONS.md.
+
 ### 5. Beta 1: the site's bar (S, *owner*) - [x]
 
 Done in #87: the owner left the place to us; a Menu after Full screen
