@@ -26,16 +26,21 @@ next agent knows where to start.
   task without resetting its chapter or count. Classic choices are hidden;
   their routes and shared saves remain. Keep this visibility decision when
   integrating tournament work. #87's building card and Menu/logout are retained.
-- **Tutorial verification:** server 434 run (425 passed, 9 existing skips),
+- **Tutorial verification:** server 435 run (426 passed, 9 existing skips),
   client types and 350 tests passed. All 69 browser tests passed in **64m
   32.58s**, on game code `20a87d8d`, including #87. The subsequent main merge
-  changes documentation only. The final isolated villager-recovery correction
-  at `908fe63e` passed desktop, phone and recovery checks **3/3 in 7m 10.65s**,
-  plus client types and unit tests. The other 66 browser fixtures have completed
-  tutorials and do not instantiate Lessons. Screenshots and server logs were
+  changes documentation only. Final recovery/review corrections at `6754695a`
+  passed desktop, phone, recovery and tournaments **4/4 in 8m 15.30s**.
+  These include resize guidance, own-unit selection, villager-specific
+  training recovery and keeping a nest already in Gifts. A later test-only
+  assertion tightening at `8638394b` passed all 14 tutorial server tests.
+  The other 65 browser tests use completed-tutorial fixtures; tournament
+  label styling is confined to that window. Screenshots and server logs were
   inspected; no HTTP 5xx, Python tracebacks or unhandled commands. Refreshed
   ordinary public art was used: team passed in 34 seconds, and memory-limit/OOM
   counters did not increase. The formal art audit remains tracked in #91.
+  Automated review findings were addressed or explained in the PR and
+  DECISIONS.md; the original trusted-client command contract is retained.
 
 - **The first tournament slice is complete in #89:** everyday, weekly
   and friends' lists, help and the saved team box. The owner's later

@@ -78,7 +78,7 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 434 tests, about a minute
+.venv/bin/python -m unittest discover tests          # the server: 435 tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules: 350 tests
 PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 69 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
@@ -90,12 +90,14 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   [The delivery record](docs/verification-87.md) has the exact code commit,
   screenshots reviewed and individual timings. The separate art-memory
   follow-up remains open for refreshed-cache public-art verification.
-- Tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
+- Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
   **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
-  A final tutorial-only recovery correction then passed all three tutorial
-  browser checks in **7m 10.65s** on `908fe63e`, plus types and all 350
-  client tests. Server: 434 run, 425 passed, 9 existing skips. This run used
-  the repaired ordinary public art with the old nine-item cache refreshed.
+  Later tutorial recovery/review corrections passed all three tutorial
+  checks and tournaments **4/4 in 8m 15.30s** on game code `6754695a`,
+  plus types and all 350 client tests. Server: 435 run, 426 passed,
+  9 existing skips; a later test-only assertion tightening passed all
+  14 tutorial server tests again. The full browser run used the repaired
+  ordinary public art with the old nine-item cache refreshed.
 - Run the tests for what you touched while you work, and the whole lot
   before a pull request is merged. For #86 on 16 October 2026, the 64 browser
   tests took **64 minutes 51 seconds**, including the build, on a cloud
