@@ -21,7 +21,7 @@ export default async function tournamentWeekly({ newPlayer }) {
   const room = (await service(player, "get_tournament_info")).tournament;
   assert.equal(room.players.length, 4);
   for (const [index, opponent] of room.players.slice(1).entries()) {
-    await page.locator(`[data-victim="${opponent.user_id}"]`).getByRole("button").click();
+    await page.locator(`[data-victim="${opponent.user_id}"]`).getByRole("button", { name: /^Start match against/ }).click();
     await page.waitForSelector(".quest-window", { timeout: 60_000 });
     assert.equal(await player.button("Start the match").count(), 1, "the configured army's pictures loaded");
     await player.press("Start the match");

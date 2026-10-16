@@ -32,7 +32,7 @@ export default async function tournamentBattle({ newPlayer }) {
     if (request.url().endsWith("/command.php")) sent.push(...requestData(request).commands);
   });
   await open(player);
-  await page.locator(`[data-victim="${opponents[0].settings.userId}"]`).getByRole("button").click();
+  await page.locator(`[data-victim="${opponents[0].settings.userId}"]`).getByRole("button", { name: /^Start match against/ }).click();
   await page.waitForURL(/tournament=.*victim=/);
   await page.waitForSelector(".quest-window", { timeout: 60_000 });
   assert.equal((await service(player, "get_tournament_info")).tournament.players[0].matches[0].date_started, null,
@@ -106,7 +106,7 @@ export default async function tournamentBattle({ newPlayer }) {
   await page.waitForURL(/client\.html\?tournaments=1$/);
   await player.loaded();
   await page.waitForSelector(".tournament-results");
-  assert.equal(await page.locator(".tournament-match button").count(), 2);
+  assert.equal(await page.locator(".tournament-match button[aria-label^='Start match']").count(), 2);
   const home = await playerInfo(player);
   assert.deepEqual(home.map.store, before.map.store);
   assert.deepEqual(home.privateState.teams.tournament, before.privateState.teams.tournament);
@@ -119,7 +119,7 @@ export default async function tournamentBattle({ newPlayer }) {
   const phone = await player.onPhone();
   await open(phone, true);
   const secondId = opponents[1].settings.userId;
-  await phone.page.locator(`[data-victim="${secondId}"]`).getByRole("button").click();
+  await phone.page.locator(`[data-victim="${secondId}"]`).getByRole("button", { name: /^Start match against/ }).click();
   await phone.page.waitForSelector(".quest-window", { timeout: 60_000 });
   await phone.press("Start the match");
   await phone.page.waitForFunction(() => window.seTournament?.match.seconds >= 1, null, { timeout: 30_000 });
@@ -159,7 +159,7 @@ export default async function tournamentBattle({ newPlayer }) {
   await phone.page.waitForURL(/client\.html\?tournaments=1$/);
   await phone.loaded();
   await phone.page.waitForSelector(".tournament-results");
-  assert.equal(await phone.page.locator(".tournament-match button").count(), 1);
+  assert.equal(await phone.page.locator(".tournament-match button[aria-label^='Start match']").count(), 1);
   assert.deepEqual((await playerInfo(phone)).map.store, before.map.store);
   await phone.page.context().close();
   // Closing the enrollment elsewhere while this final match is open must

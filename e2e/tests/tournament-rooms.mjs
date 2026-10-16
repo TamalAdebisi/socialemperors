@@ -45,6 +45,11 @@ export default async function tournamentRooms({ newPlayer }) {
     team: padded(SWORD), tournament_id: "", flashSubResources: 1 });
   assert.deepEqual(commands.find((command) => command.cmd === "tournament_substract_resources")?.args, ["g", 500, "1", 0]);
   await host.shot("waiting-desktop");
+  await page.locator(".tournament-seat").getByRole("button", { name: host.name, exact: true }).click();
+  await page.waitForSelector(".tournament-profile");
+  assert.match(await page.locator(".tournament-profile").textContent(), /Level 15.*Honour:/s);
+  await host.button("Close profile").click();
+  assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, firstRoom.tournament_id);
 
   // A later saved preference cannot rewrite an already enrolled army, even
   // after the client is reloaded. Closing the window never leaves the room.

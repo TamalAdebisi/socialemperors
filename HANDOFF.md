@@ -261,16 +261,24 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [ ]
 
+**Complete follow-up implemented in draft [#92](https://github.com/TamalAdebisi/socialemperors/pull/92), verification in progress.**
+The owner expanded the task to finish all remaining tournament parts.
+The separate `codex/tournament-complete` checkout implements waiting rooms,
+entry/fees, copied-army battles and recovery, results/rankings/prizes, and
+friends' creation/invitation/cancellation. See [CLIENT.md](CLIENT.md#tournaments)
+and the expanded original rule notes. It preserves the original commands,
+keeps classic access and does not own #87 or #91. Final exact-commit check
+results and merge status will replace this pending note before delivery.
+
 **First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
-editor, with desktop/phone coverage (`CLIENT.md`, "Tournaments: list and
-team"). Entry and all later stages retain explicit classic links.
+editor, with desktop/phone coverage. At that first slice, entry and all
+later stages retained explicit classic links.
 `docs/original/rules/tournaments.md` records the local source reading,
 including the different complex-unit checks in editing and weekly entry.
-Next slice: the four-seat waiting room and countdown; only then connect
-entry fees and joining from the new list. Keep `tournaments.py`'s existing
-command/service formats. This work does not own #87 or the art repair.
+The subsequent implementation follows the same `tournaments.py` command
+and service formats. This work does not own #87 or the art repair.
 
-**Verification, 16 October:** the full browser run at
+**First-slice verification, 16 October:** the full browser run at
 `ff7000597777d1b9437870cc7dce99a9e62440c0` took **76 minutes 41 seconds**:
 **61 of 65 passed**, including `tournaments`, `menus` and `team`.
 `construction` exceeded its nine-second interaction deadline;
@@ -298,17 +306,17 @@ The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
 public rooms of four filled by bots after 30 minutes, the weekly
 tournament against three bots, friends' tournaments, prizes). The Battle
-window's Tournament row now opens the new list (`client/src/ui/world.ts`),
-with classic links for entry and the later stages. The Flash windows are listed in
+window's Tournament row opens the integrated panel (`client/src/ui/world.ts`).
+The Flash windows are listed in
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
-classes). Suggested slices:
+classes). Scope covered by #89 and the complete #92 follow-up:
 
 1. The tournament list (everyday, weekly, your own), its help and the team box — built.
-2. The waiting room: four seats, the countdown, bots filling in.
+2. The waiting room: four seats, the countdown, bots filling in — implemented.
 3. The match: a battle against the other player's army, as the attack on a
-   player is played now (`attackPlay.ts`); no units are lost.
-4. Results, the ranking and prizes.
-5. Friends' tournaments: create, invite, call off.
+   player is played now (`attackPlay.ts`); no units are lost — implemented.
+4. Results, the ranking and prizes — implemented.
+5. Friends' tournaments: create, invite, call off — implemented.
 
 ### 8. The switch: the long tail of windows (S to M each) - [ ]
 

@@ -37,6 +37,10 @@ export default async function tournamentResults({ newPlayer }) {
   assert.equal(await page.locator(".tournament-team button").count(), 0);
   await page.locator(".tournament-player-tabs").getByRole("button", { name: "Your matches", exact: true }).click();
   await winner.shot("matches-desktop");
+  await page.locator(`[data-victim="${loser.settings.userId}"] .tournament-player`).getByRole("button", { name: loser.name, exact: true }).click();
+  await page.waitForSelector(".tournament-profile");
+  assert.match(await page.locator(".tournament-profile").textContent(), /Level 15.*Attacks won:/s);
+  await winner.button("Close profile").click();
 
   // Record the winner's three matches, then check partial results before the
   // remaining human players finish. A loss still contributes its earned points.

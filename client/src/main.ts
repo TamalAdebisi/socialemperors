@@ -378,6 +378,7 @@ async function start(): Promise<void> {
       leave: (room) => server.leaveTournament(room),
       cancel: (room) => server.cancelTournament(room),
       clean: () => server.cleanTournament(),
+      fetchProfile: async (pid) => await server.publicProfile(pid) as PlayerProfile | null,
       play: async (room, victim) => {
         if (!await commands.flush()) throw new Error("Your changes couldn't be saved. Reload before playing.");
         location.assign(`/client.html?tournament=${encodeURIComponent(room)}&victim=${encodeURIComponent(victim)}`);

@@ -8,6 +8,7 @@ import { complexUnits, restoredTournamentTeam, TEAM_SLOTS, tournamentCards, tour
 import { iconImage } from "./icons.ts";
 import { Panel } from "./panel.ts";
 import { TournamentResultsView, renderTournamentPrizes } from "./tournamentResults.ts";
+import type { PlayerProfile } from "./worldMap.ts";
 
 export interface TournamentParts {
   rules: TournamentRules;
@@ -36,6 +37,7 @@ export interface TournamentParts {
   cancel: (room: string) => Promise<TournamentMutationReply>;
   clean: () => Promise<TournamentMutationReply>;
   play: (room: string, victim: string) => Promise<void>;
+  fetchProfile: (player: string) => Promise<PlayerProfile | null>;
 }
 
 function text<K extends keyof HTMLElementTagNameMap>(tag: K, value: string, className = ""): HTMLElementTagNameMap[K] {
@@ -364,6 +366,7 @@ export class TournamentWindow {
       this.results = new TournamentResultsView({ ...this.parts, room, kind,
         play: (victim) => this.parts.play(room.tournament_id, victim),
         acknowledge: () => this.exitRoom(room, true), refresh: () => this.refresh(), leave: () => this.exitRoom(room),
+        profile: (player) => this.profile(player),
       });
       this.panel.body.append(this.results.element);
       return;
@@ -381,7 +384,10 @@ export class TournamentWindow {
           image.className = "tournament-portrait";
           seat.append(image);
         } else seat.append(text("span", (player.user_name || "?").slice(0, 1).toUpperCase(), "tournament-initial"));
-        seat.append(text("strong", player.user_name), text("small", `Level ${player.level}${player.country ? ` · ${player.country}` : ""}`));
+        const name = bot ? text("strong", player.user_name) : button(player.user_name, () => {
+          void this.profile(player.user_id).catch(() => this.error("Couldn't load this player's profile. Please try again."));
+        }, "button tiny plain");
+        seat.append(name, text("small", `Level ${player.level}${player.country ? ` · ${player.country}` : ""}`));
       } else seat.append(text("span", "", "tournament-empty-seat"), text("strong", `Player ${i + 1}`), text("small", "Waiting…"));
       seats.append(seat);
     }
@@ -473,6 +479,20 @@ export class TournamentWindow {
       ? "Your player neighbours find this waiting room under Tournaments → Your own. Ask them to join there. Empty seats get computer players after a day."
       : "Add friends by their username on the Friends page. Their empires come first among your neighbours. You need at least three player neighbours to create a tournament."),
     link, button("OK", () => box.remove()));
+    this.panel.body.prepend(box);
+    box.scrollIntoView({ block: "nearest" });
+  }
+
+  private async profile(player: string): Promise<void> {
+    const generation = this.generation;
+    const shown = await this.parts.fetchProfile(player);
+    if (generation !== this.generation) return;
+    this.panel.body.querySelector(".tournament-profile")?.remove();
+    const box = text("section", "", "survival-help-box tournament-profile");
+    box.append(text("h3", shown?.name ?? "Emperor"));
+    const lines = shown ? [`Level ${shown.level ?? 1}`, `Honour: ${shown.honor_points ?? 0}`,
+      `Attacks won: ${shown.attacks_won ?? 0} · lost: ${shown.attacks_lost ?? 0}`] : ["No profile for this empire."];
+    box.append(...lines.map((line) => text("p", line)), button("Close profile", () => box.remove()));
     this.panel.body.prepend(box);
     box.scrollIntoView({ block: "nearest" });
   }

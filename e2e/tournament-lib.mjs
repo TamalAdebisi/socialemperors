@@ -39,9 +39,14 @@ export async function prepare(player, team = FULL_TEAM) {
     { cmd: "set_help_map", args: ["tournamentHelp"] },
   ]);
   await player.reload();
+  // These scenarios prepare several separate players. Park each unused town
+  // through its real Pause control, as a background game tab would pause,
+  // rather than spend the software renderer on four idle towns at once.
+  await player.press("Pause");
 }
 
 export async function open(player, phone = false) {
+  if (await player.page.locator(".pause-curtain").count()) await player.press("Resume");
   await player.menu(phone ? "World" : "Battle");
   await player.page.locator(".panel:not([hidden]) .row", { hasText: "Tournament" }).locator("a").click();
   await player.page.waitForSelector(".tournament-cards, .tournament-room, .tournament-results");
