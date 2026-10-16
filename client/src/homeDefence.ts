@@ -22,10 +22,10 @@ import type { PageSettings } from "./net/server.ts";
 import { Battle, ENEMY, FPS, NEUTRAL, SELF, SUBCAT, distance, type Fighter, type Side } from "./rules/battle.ts";
 import type { GameConfig, ItemInfo } from "./rules/config.ts";
 import { inConstruction } from "./rules/construction.ts";
-import { MAP_TILES } from "./rules/geometry.ts";
-import { sideAtHome } from "./rules/camps.ts";
+import { MAP_TILES, unitPoint } from "./rules/geometry.ts";
+import { CAMP_PERIOD, sideAtHome } from "./rules/camps.ts";
 import { Camps } from "./homeCamps.ts";
-import { Raid, planRaids, type RaidPlan } from "./rules/raids.ts";
+import { Raid, planBand, planRaids, raidRecovery, type RaidPlan } from "./rules/raids.ts";
 import { Specials, type SpecialsTable } from "./rules/specials.ts";
 import specialsTable from "./rules/specials-table.json" with { type: "json" };
 import { savedTile, type PlacedItem, type Town } from "./rules/town.ts";
@@ -81,6 +81,8 @@ export class HomeDefence {
   /** Frames since the town opened, at 30 a second. */
   private clock = 0;
   private owed = 0;
+  private forcedRaid = false;
+  private readonly status = document.createElement("button");
   private fight: Fight | null = null;
   private readonly lines: Map<number, string>;
   /** Raiders killed this visit. */
@@ -109,6 +111,15 @@ export class HomeDefence {
       quiet: parts.quiet,
     });
     this.camps.arrive();
+    this.status.type = "button";
+    this.status.className = "home-threats button small plain";
+    this.status.addEventListener("click", () => {
+      const target = parts.town.items.find((p) => p.item.subcategory === 811)
+        ?? parts.town.items.find((p) => this.camps.sideOf(p) === "enemy" && p.item.isUnit);
+      if (target) parts.camera.lookAt(unitPoint(target.tx, target.ty));
+    });
+    document.body.append(this.status);
+    this.updateStatus();
     (window as unknown as Record<string, unknown>).seHome = this;
   }
 
@@ -136,6 +147,7 @@ export class HomeDefence {
   hurry(): void {
     if (this.due.length) {
       this.clock = Math.max(this.clock, this.due[0].startsAt);
+      this.forcedRaid = true;
     }
   }
 
@@ -145,6 +157,7 @@ export class HomeDefence {
     const plan = planRaids(Math.max(level, this.parts.town.level), this.parts.town.race, () => 0.05).find((p) => p.kind === kind);
     if (plan) {
       this.due.unshift({ ...plan, startsAt: this.clock });
+      this.forcedRaid = true;
     }
   }
 
@@ -155,20 +168,32 @@ export class HomeDefence {
     while (this.owed >= step) {
       this.owed -= step;
       this.clock++;
-      while (this.due.length && this.due[0].startsAt <= this.clock) {
+      const protectedTown = this.parts.quiet?.() || this.parts.camp.last === 0;
+      const calm = (window as unknown as { seCalm?: boolean }).seCalm && !this.forcedRaid;
+      // No piled-up waves during a camp battle, tutorial or recovery.
+      if (this.fight || protectedTown || calm) {
+        for (const plan of this.due) plan.startsAt++;
+      } else if (this.due.length && this.due[0].startsAt <= this.clock) {
         this.begin(this.due.shift()!);
+        this.forcedRaid = false;
       }
       if (this.fight) {
         this.fight.step();
         if (this.fight.over) {
           this.fight.end();
           this.fight = null;
+          // Re-plan at the current level. A session never runs out of raids.
+          this.due.splice(0, this.due.length,
+            planBand(this.parts.town.level, this.parts.town.race, this.random,
+              this.clock + raidRecovery(this.parts.town.level)));
           this.camps.watch();
+          this.updateStatus();
         }
       }
       // Every second, fight or not: a scripted camp's doors open as soon as their wave falls.
       if (this.clock % 30 === 0) {
         this.camps.watch();
+        this.updateStatus();
       }
     }
     this.fight?.update(ms);
@@ -179,6 +204,22 @@ export class HomeDefence {
       this.fight = new Fight(this.parts, this.random, (line) => this.lines.get(line) ?? "", () => this.kills++);
     }
     this.fight.add(plan);
+    this.updateStatus();
+  }
+
+  private updateStatus(): void {
+    this.status.hidden = Boolean(this.parts.quiet?.());
+    const remaining = (seconds: number) => {
+      const n = Math.max(0, Math.ceil(seconds));
+      return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+    };
+    const { camp, clock } = this.parts;
+    const waiting = camp.last > 0 ? Math.max(0, CAMP_PERIOD - (clock() - camp.last)) : 0;
+    const mission = waiting > 0 ? `Next camp ${remaining(waiting)}` : "Camp ready · Show me";
+    const raid = this.fight ? "Defend your town" : camp.last === 0 ? "Raids begin after the rescue"
+      : `Next raid ${remaining(((this.due[0]?.startsAt ?? this.clock) - this.clock) / FPS)}`;
+    this.status.textContent = `${mission} · ${raid}`;
+    this.status.title = "Camps bring new missions. Raiders attack your town: build walls and towers, and repair between raids.";
   }
 }
 

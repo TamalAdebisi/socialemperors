@@ -88,7 +88,7 @@ class FriendsTest(unittest.TestCase):
 
         send_form(alice[0], "/friends/ask", username=bob[1])
         send_form(alice[0], f"/friends/cancel/{bob[2]}")
-        self.assertNotIn(alice[1], text(bob[0].get("/friends")))
+        self.assertIn(alice[1], text(bob[0].get("/friends")))  # still in Everybody
         self.assertEqual(send_form(bob[0], f"/friends/accept/{alice[2]}").status_code, 400)
 
     def test_what_cant_be_asked(self):
@@ -111,7 +111,7 @@ class FriendsTest(unittest.TestCase):
         self.befriend(alice, bob)
         self.assertEqual(send_form(alice[0], f"/friends/remove/{bob[2]}").headers["Location"], "/friends?done=removed")
         self.assertFalse(friends.are_friends(bob[2], alice[2]))
-        self.assertNotIn(alice[1], text(bob[0].get("/friends")))
+        self.assertIn(alice[1], text(bob[0].get("/friends")))  # still in Everybody
 
     def test_the_friends_page_needs_signing_in(self):
         self.assertEqual(server.app.test_client().get("/friends").status_code, 302)
@@ -124,12 +124,12 @@ class FriendsTest(unittest.TestCase):
         self.assertIn("data-friends-news hidden>0<", bar)       # nothing waiting: no badge
         send_form(alice[0], "/friends/ask", username=bob[1])
         self.assertIn("data-friends-news >1<", text(bob[0].get("/ruffle.html")))
-        self.assertIn('aria-label="Friends, 1 waiting"', text(bob[0].get("/ruffle.html")))
+        self.assertIn('aria-label="Everybody, 1 waiting"', text(bob[0].get("/ruffle.html")))
         self.assertEqual(bob[0].get("/friends/news").get_json(), {"news": 1})  # what the bar asks while the game is open
 
     # Friends in the game
 
-    def test_friends_come_first_among_the_neighbours(self):
+    def test_everybodys_empires_are_neighbors_without_a_cap(self):
         alice, bob, carol = self.player(), self.player(), self.player()
         self.befriend(alice, bob)
         pid = sessions.villages_of(alice[2])[0]["userid"]
@@ -140,11 +140,32 @@ class FriendsTest(unittest.TestCase):
             neighbours = [str(n["pid"]) for n in sessions.neighbors(pid)]
         self.assertIn(bob_pid, players)          # Bob, as a friend, though not the latest to play
         self.assertIn(bob_pid, neighbours)
-        self.assertNotIn(carol_pid, neighbours)  # no room left for the latest stranger
-        self.assertEqual(players[0], bob_pid)
+        self.assertIn(carol_pid, neighbours)  # the old cap no longer hides players
+        self.assertNotIn(pid, players)
         names = {str(n["pid"]): n["name"] for n in sessions.neighbors(pid)}
         self.assertEqual(names[bob_pid], bob[1])  # their username under the portrait, not "Emperor"
         self.assertIn(bob[1], [f["first_name"] for f in sessions.fb_friends_str(pid)])
+
+    def test_everybody_includes_accounts_without_empires_and_hides_unclaimed_saves(self):
+        alice, bob = self.player(), self.player(empire=False)
+        pid = sessions.villages_of(alice[2])[0]["userid"]
+        own_other = sessions.new_village(alice[2])
+        unclaimed = sessions.new_village(None)
+        people = friends.everybody(alice[2])
+        self.assertIn({"id": bob[2], "username": bob[1]}, people)
+        self.assertTrue(all(set(person) == {"id", "username"} for person in people))
+        page = text(alice[0].get("/friends"))
+        self.assertIn(bob[1], page)
+        self.assertIn("No empire yet", page)
+        self.assertNotIn("Add friend</button>", page)
+        self.assertNotIn(own_other, sessions.friends(pid))
+        self.assertNotIn(unclaimed, sessions.friends(pid))
+        self.assertFalse(friends.can_help(alice[2], alice[2]))
+        self.assertFalse(friends.can_help(alice[2], -1))
+        self.assertTrue(friends.can_help(alice[2], bob[2]))
+        sessions.delete_account(bob[2])
+        self.assertFalse(friends.can_help(alice[2], bob[2]))
+        self.assertNotIn(bob[2], [person["id"] for person in friends.everybody(alice[2])])
 
     def test_visiting_shows_their_username(self):
         bob = self.player()

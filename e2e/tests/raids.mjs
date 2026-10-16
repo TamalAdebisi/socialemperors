@@ -1,5 +1,5 @@
 // Raids (CLIENT.md, "Defending the town"): a town at level 12 is raided
-// by a band of bandits (brought on at once instead of after 7 minutes).
+// by a band of bandits (brought on at once instead of after 5 minutes).
 // The town becomes a battlefield: building waits, the soldiers fight, the
 // bandits are killed or leave. Each raider killed pays 5 gold, and the
 // server keeps it; then the town is the player's again, with its units
@@ -17,8 +17,8 @@ export default async function raids({ newPlayer }) {
   await player.send([{ cmd: "rt_level_up", args: [12] }, { cmd: "buy", args: [VILLAGER, 48, 56, 0, 0, 0, 1] }, ...army]);
   await player.reload();
   await player.page.waitForFunction(() => window.seHome, null, { timeout: 30_000 });
-  const plans = await player.page.evaluate(() => window.seHome.waiting.map((p) => ({ kind: p.kind, at: p.startsAt, n: p.units.length })));
-  assert.deepEqual(plans, [{ kind: "bandits", at: 7 * 60 * 30, n: 3 }], "level 12: one band of 3, at 7 minutes");
+  const plans = await player.page.evaluate(() => window.seHome.waiting.map((p) => ({ kind: p.kind, at: p.startsAt - window.seHome.clock, n: p.units.length })));
+  assert.deepEqual(plans, [{ kind: "bandits", at: 5 * 60 * 30, n: 3 }], "level 12: one band of 3, at 5 minutes");
   // After the first batch: the goal for two villagers (with the one lib.mjs gives every
   // test town) is done as the town opens, and pays its 10 gold then.
   const before = await player.saved();
@@ -77,7 +77,17 @@ export default async function raids({ newPlayer }) {
     if (i === 15) await player.shot("fighting");
     await player.wait(1000);
   }
-  assert.equal(await player.page.evaluate(() => Boolean(window.seHome.fighting)), false, "the raid is over");
+  const unfinished = await player.page.evaluate(() => {
+    const fight = window.seHome.fighting;
+    if (!fight) return null;
+    const describe = (f) => ({ id: f.item.id, x: f.tx, y: f.ty, life: f.life,
+      target: f.target && [f.target.item.id, f.target.tx, f.target.ty, f.target.dead],
+      attacking: f.attacking, path: f.path.length, moving: fight.battle.isMoving(f) });
+    return { frame: fight.battle.frame, quiet: fight.quiet, raiders: fight.raids[0].alive.map(describe),
+      enemies: fight.battle.fighters.filter((f) => f.side === 2 && !f.dead).map(describe),
+      knights: fight.battle.fighters.filter((f) => f.item.id === 514 && !f.dead).map(describe) };
+  });
+  assert.equal(unfinished, null, `the raid is over: ${JSON.stringify(unfinished)}`);
   assert.notEqual(await player.page.evaluate(() => window.seHome.parts.sound.currentTrack), "BATALLA.mp3", "the town's tune again");
   assert.equal(await player.bar(), "", "the town is the player's again");
   killed = await player.page.evaluate(() => window.seHome.kills);
@@ -115,7 +125,9 @@ export default async function raids({ newPlayer }) {
   const cursor = await player.page.evaluate(() => document.querySelector("canvas").style.cursor);
   assert.ok(cursor.includes(bucket) || cursor.includes("cursor-repair"), "the bucket pointer");
   await player.click(onHouse);
-  await player.wait(9000);
+  await player.page.waitForFunction(([x, y]) => (window.seHome.parts.town.items
+    .find((p) => !p.item.isUnit && p.tx === x && p.ty === y).health ?? 0) >= 25,
+  HOUSE, { timeout: 30000 });
   assert.ok((await health()) >= 25, `repairing (${await health()})`);
   assert.equal(await room(), roomBefore - 3, "no room until it's repaired in full");
   await player.shot("repairing");

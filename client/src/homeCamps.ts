@@ -1,9 +1,9 @@
 // The troll camps in the player's town (CLIENT.md, "Troll camps"): when
-// one is due (4 hours after the last chest), the border is cleared and the
+// one is due (10 minutes after the last chest), the border is cleared and the
 // camp put up (rules/camps.ts), with trolls about the border, and the game's
 // window tells its story. Its chest (or prison) lights up once no enemy unit
 // is left on the map; one tap opens it: the prize, the prisoners, and the
-// next camp 4 hours later. Sending units at the camp makes the town a
+// next camp 10 minutes later. Sending units at the camp makes the town a
 // battlefield (homeDefence.ts) until the fighting stops.
 //
 // The commands are the Flash client's: `sell` ... "CLEAN_<camp>" for what
@@ -95,6 +95,7 @@ export class Camps {
    */
   arrive(): void {
     const { town, commands, camp, clock } = this.parts;
+    if (camp.last > 0 && this.parts.quiet?.()) return;
     if (!campDue(camp.last, clock())) {
       return;
     }
@@ -211,8 +212,8 @@ export class Camps {
   watch(): void {
     this.scripted.watch();
     let chest = this.chest();
-    if (!chest && this.scripted.playing === null && !this.parts.battle?.() && campDue(this.parts.camp.last, this.parts.clock())) {
-      // The 4 hours ran out while the town was open: the camp comes now, as in the original.
+    if (!chest && !this.parts.quiet?.() && this.scripted.playing === null && !this.parts.battle?.() && campDue(this.parts.camp.last, this.parts.clock())) {
+      // The 10 minutes ran out while the town was open: the camp comes now, as in the original.
       this.arrive();
       chest = this.chest();
     }
@@ -251,7 +252,7 @@ export class Camps {
     return false;
   }
 
-  /** The chest opened: the prize, the prisoners, and the next camp in 4 hours. */
+  /** The chest opened: the prize, the prisoners, and the next camp in 10 minutes. */
   private open(chest: PlacedItem): void {
     const { town, commands, view, editor, camp, clock } = this.parts;
     const finished = campOfChest(chest.item.id) ?? camp.id;
@@ -275,7 +276,7 @@ export class Camps {
     const texts = campTexts(finished, town.race);
     if (texts) {
       notice(this.title(finished, texts.end[0]), this.parts.line(texts.end[1]), null,
-        () => notice(this.parts.line(531), this.parts.line(532), this.parts.pictureUrl(town.race === "t" ? "alert_troll_camp.jpg" : "alert_human_camp.jpg")));
+        () => notice(this.parts.line(531), "The next camp arrives in 10 minutes. Build your defenses: raiders will attack between missions.", this.parts.pictureUrl(town.race === "t" ? "alert_troll_camp.jpg" : "alert_human_camp.jpg")));
     }
   }
 }

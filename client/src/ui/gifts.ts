@@ -140,7 +140,7 @@ export class GiftsWindow {
     message.textContent = this.said;
     const friends = document.createElement("p");
     friends.className = "rows-note";
-    friends.innerHTML = '<a href="/friends" target="_blank" rel="noopener">Friends page</a>: add friends, answer requests.';
+    friends.innerHTML = '<a href="/friends" target="_blank" rel="noopener">Everybody</a>: gifts and help for all players.';
     this.panel.body.replaceChildren(tabs, body, message, friends);
   }
 
@@ -178,7 +178,7 @@ export class GiftsWindow {
     const box = document.createElement("section");
     box.className = "gifts-form";
     if (state.friends.length === 0) {
-      box.innerHTML = '<p class="rows-note">Gifts go to friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.</p>';
+      box.innerHTML = '<p class="rows-note">No other accounts yet. New players appear automatically.</p>';
       return box;
     }
     const open = state.friends.filter((f) => !f.sent_today);
@@ -198,7 +198,7 @@ export class GiftsWindow {
     const box = document.createElement("section");
     box.className = "gifts-form";
     if (state.friends.length === 0 || state.storage.length === 0) {
-      box.append(note(state.friends.length ? "Your storage is empty." : "Gifts go to friends: add friends first."));
+      box.append(note(state.friends.length ? "Your storage is empty." : "No other accounts yet."));
       return box;
     }
     const friend = select("For", state.friends.map((f) => [String(f.id), f.username]));

@@ -314,6 +314,10 @@ class BaseStorage:
     def count_users(self) -> int:
         return self._query("SELECT count(*) AS n FROM users")[0]["n"]
 
+    def community(self, user_id: int) -> list:
+        """Public account names for Everybody, including accounts without an empire."""
+        return self._query("SELECT id, username FROM users WHERE id != ? ORDER BY lower(username), id", (user_id,))
+
     def get_password_hash(self, user_id: int):
         rows = self._query("SELECT password_hash FROM users WHERE id = ?", (user_id,))
         return rows[0]["password_hash"] if rows else None

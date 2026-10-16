@@ -19,6 +19,13 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Current playthrough follow-up:** recurring low-level raids and recovery,
+  ten-minute camps with a countdown, shared battle inspection/Deselect, and
+  Everybody without friend requests. Decisions are recorded in DECISIONS.md.
+  Server: 436 run (427 passed, 9 existing skips); client types and 352 tests
+  pass. Focused browser checks are underway; the full browser run and merge
+  are still pending on `codex/playthrough-defence-selection`.
+
 - **Owner playthrough follow-up completed in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):**
   the tutorial is mandatory, with smooth camera pans, explicit destinations,
   soldier-only combat guidance and saved progress/rewards. Show me restores

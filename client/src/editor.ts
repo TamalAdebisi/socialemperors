@@ -575,6 +575,12 @@ export class TownEditor {
       return;
     }
     if (!placed) {
+      // Clicking away from an inspected artifact/building closes its card
+      // before an unrelated land offer can replace it.
+      if (this.selected || this.group.length) {
+        this.select(null);
+        return;
+      }
       const tile = this.tileAt(at);
       const block = landForSale(this.town, tile.x, tile.y);
       if (block !== null) {

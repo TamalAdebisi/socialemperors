@@ -44,6 +44,22 @@ export default async function card({ newPlayer }) {
   await player.said(/You need to be level 28 to upgrade this building/);
   await player.press("Close");
 
+  // Clicking empty ground dismisses an inspected object without opening
+  // a different card or issuing a troop order.
+  await player.select(FARM.slice(1), "Farm Land");
+  const empty = await page.evaluate(() => {
+    const { view } = window.seHome.parts;
+    for (let y = 220; y < 450; y += 20) {
+      for (let x = 350; x < 850; x += 20) {
+        if (!view.itemAt({ x, y })) return { x, y };
+      }
+    }
+    return null;
+  });
+  assert.ok(empty, "empty ground is visible");
+  await player.click(empty);
+  assert.equal(await player.bar(), "", "clicking away closes the inspected object's card");
+
   // A house: attack, the time between hits, room for people; Upgrade costs House II's 60 wood.
   await player.select(HOUSE.slice(1), "House I");
   assert.deepEqual(await card.locator(".card-stat").evaluateAll((all) => all.map((s) => s.getAttribute("aria-label"))),

@@ -77,8 +77,8 @@ def sent_today(user_id: int) -> set:
 
 
 def _friend(user: dict, friend_id: int) -> dict:
-    if not friends.are_friends(user["id"], friend_id):
-        raise GiftError("Gifts go to friends: add them on the Friends page first.")
+    if not friends.can_help(user["id"], friend_id):
+        raise GiftError("Choose another player with an account.")
     friend = _storage.get_user(friend_id)
     if friend is None:
         raise GiftError("That player isn't here any more.")

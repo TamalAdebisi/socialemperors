@@ -76,7 +76,7 @@ export class AskFriends {
       list.replaceChildren();
       if (!problem && friends.length === 0) {
         const none = document.createElement("li");
-        none.innerHTML = 'Help comes from friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.';
+        none.textContent = "No other accounts yet. New players will appear here automatically.";
         list.append(none);
       }
       for (const friend of problem ? [] : friends) {
@@ -85,7 +85,7 @@ export class AskFriends {
         const tick = document.createElement("input");
         tick.type = "checkbox";
         tick.value = String(friend.id);
-        tick.checked = friend.state === "can";
+        tick.checked = false;  // choose recipients explicitly from the community
         tick.disabled = friend.state !== "can";
         const name = document.createElement("b");
         name.textContent = friend.username;

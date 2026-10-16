@@ -26,7 +26,7 @@
             </section>
 
             <section class="gifts-tab gifts-form" data-for="free">
-                <p class="gifts-empty" data-no-friends>Gifts go to friends. <a href="/friends" target="_blank" rel="noopener">Add friends</a> first.</p>
+                <p class="gifts-empty" data-no-friends>No other accounts yet. New players appear here automatically.</p>
                 <div data-free-form>
                     <label for="gifts-free-friend">For</label>
                     <select id="gifts-free-friend" data-free-friend></select>
@@ -54,7 +54,7 @@
         <p class="bank-message" role="status" aria-live="polite"></p>
     </div>
 
-    <p class="bank-more"><a href="/friends" target="_blank" rel="noopener">Friends page</a>: add friends, answer requests.</p>
+    <p class="bank-more"><a href="/friends" target="_blank" rel="noopener">Everybody page</a>: gifts and help for all players.</p>
 </dialog>
 
 <script>
@@ -150,7 +150,7 @@
 
             var canGive = friends.length > 0 && state.storage.length > 0;
             $("[data-no-give]").hidden = canGive;
-            $("[data-no-give]").textContent = friends.length ? "Your storage is empty." : "Gifts go to friends: add friends first.";
+            $("[data-no-give]").textContent = friends.length ? "Your storage is empty." : "No other accounts yet.";
             $("[data-give-form]").hidden = !canGive;
             options($("[data-give-friend]"), friends, function (f) { return f.username; });
             options($("[data-give-item]"), state.storage, function (g) { return g.name + " (" + g.count + ")"; });

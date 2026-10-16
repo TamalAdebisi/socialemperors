@@ -1,6 +1,5 @@
 // The Neighbours window (CLIENT.md, "The menus: rail and dock"): one row
-// for each neighbour the server sends with the town (friends first, then
-// the most recently active players, then Arthur), with their level, a
+// for each registered player the server sends with the town (then Arthur), with their level, a
 // Visit button that opens their town to look at and, from level 6, an
 // Attack button that sends the army against it (attackPlay.ts).
 
@@ -103,7 +102,7 @@ export class NeighboursWindow {
     }
     const more = document.createElement("p");
     more.className = "rows-note";
-    more.innerHTML = `Add your friends as neighbours on the <a href="/friends">Friends page</a>.`;
+    more.innerHTML = `Everybody with an empire is here. No friend requests needed. <a href="/friends" target="_blank" rel="noopener">Everybody, gifts and help</a>. Arthur is the game's guide.`;
     this.panel.body.append(list, more);
   }
 

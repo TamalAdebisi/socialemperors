@@ -165,7 +165,7 @@ def _states(save: dict, USERID: str, kind: str, town: int, x: int, y: int, item:
             states[row["to_id"]] = "helped"
     if kind == "staff":  # on the staff now, however long ago they answered
         staff = _staff(save, town, x, y, item)
-        for friend_id in friends.of(sessions.owner_of(USERID)):
+        for friend_id in {f["id"] for f in friends.everybody(sessions.owner_of(USERID))}:
             if staff & set(sessions.empires_of(friend_id)):
                 states[friend_id] = "helped"
     return states
@@ -187,7 +187,7 @@ def window(user: dict, USERID: str, save: dict, kind: str, town: int, x: int, y:
     states = _states(save, USERID, kind, town, x, y, item)
     reply["friends"] = [{"id": f["id"], "username": f["username"],
                          "state": states.get(f["id"]) or ("can" if sessions.empires_of(f["id"]) else "no_empire")}
-                        for f in _storage().friends_of(user["id"])]
+                        for f in friends.everybody(user["id"])]
     reply["answered"] = [did(row["kind"], row["item"], row["helper"], "your")
                          for row in _storage().help_asked_by(USERID, int(time.time()) - EXPIRE)
                          if row["answered_at"] is not None and row["answered_at"] >= loaded_at]
@@ -202,10 +202,10 @@ def ask(user: dict, USERID: str, save: dict, kind: str, town: int, x: int, y: in
     room = _room(save, kind, town, x, y, item, "Your")
     if room <= 0:
         raise HelpError(_full(kind, item, "Your"))
-    mine = friends.of(user["id"])
+    mine = {f["id"] for f in friends.everybody(user["id"])}
     wanted = [f for f in dict.fromkeys(friend_ids) if f in mine]
     if not wanted:
-        raise HelpError("Pick the friends to ask.")
+        raise HelpError("Pick the players to ask.")
     with _asking:
         states = _states(save, USERID, kind, town, x, y, item)
         new = [f for f in wanted if f not in states]
@@ -216,10 +216,10 @@ def ask(user: dict, USERID: str, save: dict, kind: str, town: int, x: int, y: in
             raise HelpError(f"You have {MAX_WAITING} requests waiting for answers. Wait for some first.")
         for friend_id in new:
             _storage().add_help_request(user["id"], USERID, friend_id, kind, town, x, y, item)
-    names = {f["id"]: f["username"] for f in _storage().friends_of(user["id"])}
+    names = {f["id"]: f["username"] for f in friends.everybody(user["id"])}
     asked = [names.get(f, "a friend") for f in new]
     who = asked[0] if len(asked) == 1 else ", ".join(asked[:-1]) + " and " + asked[-1]
-    return f"Asked {who}. Friends answer on their Friends page; their help shows when your town loads again."
+    return f"Asked {who}. Players answer on the Everybody page; their help shows when your town loads again."
 
 
 def ask_seat(user: dict, USERID: str, save: dict, town: int, x: int, y: int, item: int, pid: str) -> str:
@@ -227,8 +227,8 @@ def ask_seat(user: dict, USERID: str, save: dict, town: int, x: int, y: int, ite
     owner = sessions.owner_of(str(pid))
     if owner == user["id"]:
         raise HelpError("That's one of your own empires.")
-    if owner is None or not friends.are_friends(user["id"], owner):
-        raise HelpError("Only friends can sit at your Round Table. Add them on the Friends page.")
+    if owner is None or not friends.can_help(user["id"], owner):
+        raise HelpError("Choose another player with an account for your Round Table.")
     return ask(user, USERID, save, "staff", town, x, y, item, [owner])
 
 
@@ -271,8 +271,8 @@ def answer(user: dict, request_id: int) -> str:
 
 def _help(user: dict, pid: str, request: dict) -> str:
     asker = (_storage().get_user(request["from_id"]) or {}).get("username", "That player")
-    if not friends.are_friends(user["id"], request["from_id"]):
-        raise HelpError(f"You and {asker} aren't friends any more.")
+    if not friends.can_help(user["id"], request["from_id"]):
+        raise HelpError(f"{asker}'s account is no longer available.")
     save = sessions.session(request["empire"])
     if save is None:
         raise HelpError(f"{asker}'s empire is gone.")

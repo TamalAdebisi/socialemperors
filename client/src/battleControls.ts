@@ -16,6 +16,7 @@ import type { Town } from "./rules/town.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
 import { SpecialButtons } from "./ui/specialButtons.ts";
+import { BattleSelection } from "./ui/battleSelection.ts";
 import { SpellBook, magicParts } from "./ui/spells.ts";
 import type { BattleView } from "./view/battleView.ts";
 import type { Camera } from "./view/camera.ts";
@@ -49,6 +50,7 @@ export class BattleControls {
   readonly magic: MagicState;
   private readonly book: SpellBook | null;
   private readonly moves: SpecialButtons;
+  private readonly selection: BattleSelection;
   private aimAt: Point | null = null;
   private hovering = false;
   private stopped = false;
@@ -67,7 +69,7 @@ export class BattleControls {
     this.book = parts.spells !== false && magicOpen(town.race, town.level) ? new SpellBook(spells, (spell) => {
       this.aimAt = null;
       if (spell) {
-        this.select([]);
+        this.select([], false);
       } else {
         view.aim(null);
       }
@@ -76,18 +78,24 @@ export class BattleControls {
       showMessage(text);
       setTimeout(() => showMessage(""), 2000);
     });
-    parts.camera.onTap = (at) => this.tap(at);
+    this.selection = new BattleSelection((units) => this.select(units), (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`);
+    parts.camera.onTap = (at, _touch, shift) => this.tap(at, shift);
     parts.camera.onHover = (at) => this.hover(at);
-    window.addEventListener("keydown", this.keys);
+    // Combat shortcuts win over the town's A (Army) and Space (box tool).
+    window.addEventListener("keydown", this.keys, true);
   }
 
   get selected(): Fighter[] {
-    return [...this.parts.view.selected].filter((f) => !f.dead);
+    return [...this.parts.view.selected].filter((f) => !f.dead && f.side === SELF && f.isUnit);
   }
 
-  select(units: Fighter[]): void {
+  select(units: Fighter[], cancelAim = true): void {
+    if (cancelAim) this.book?.stopAiming();
+    this.parts.view.aim(null);
+    this.aimAt = null;
     this.parts.view.selected = new Set(units);
-    this.moves.select(units);
+    this.moves.select(this.selected);
+    this.selection.update(units);
     this.onSelect();
   }
 
@@ -101,6 +109,7 @@ export class BattleControls {
   update(): void {
     if (!this.stopped) {
       this.moves.update();
+      this.selection.update([...this.parts.view.selected].filter((f) => !f.dead || f.ruined));
     }
   }
 
@@ -111,11 +120,12 @@ export class BattleControls {
     this.book?.hide();
     this.moves.select([]);
     this.moves.remove();
+    this.selection.remove();
     this.parts.view.selected = new Set();
-    window.removeEventListener("keydown", this.keys);
+    window.removeEventListener("keydown", this.keys, true);
   }
 
-  private tap(at: Point): void {
+  private tap(at: Point, shift = false): void {
     if (this.stopped) {
       return;
     }
@@ -133,12 +143,8 @@ export class BattleControls {
       return;
     }
     const tapped = view.fighterAt(at);
-    if (this.parts.tapFirst?.(tapped, tile, this.selected)) {
-      return;
-    }
     if (tapped && tapped.side === SELF && tapped.isUnit) {
       // A unit of the player's: it alone, or added to (or taken from) the others with Shift.
-      const shift = (window.event as KeyboardEvent | undefined)?.shiftKey;
       const now = new Set(shift ? view.selected : []);
       if (shift && now.has(tapped)) {
         now.delete(tapped);
@@ -149,8 +155,18 @@ export class BattleControls {
       sound.play("click");
       return;
     }
+    if (this.parts.tapFirst?.(tapped, tile, this.selected)) {
+      return;
+    }
     const chosen = this.selected;
+    // Scenery and friendly buildings are inspected, never movement orders.
+    if (tapped && (tapped.side !== ENEMY || chosen.length === 0)) {
+      this.select([tapped]);
+      sound.play("click");
+      return;
+    }
     if (chosen.length === 0) {
+      this.select([]);
       return;
     }
     if (tapped && tapped.side === ENEMY) {
@@ -178,10 +194,16 @@ export class BattleControls {
   }
 
   private key(e: KeyboardEvent): void {
+    if (e.ctrlKey || e.metaKey || e.altKey || document.body.classList.contains("panel-open")) return;
     if (e.key === "Escape") {
+      e.stopImmediatePropagation();
       this.select([]);
+    } else if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) {
+      return;
     } else if (e.key === " " || e.key.toLowerCase() === "a") {
+      if (e.key === " " && e.target instanceof HTMLButtonElement) return;
       e.preventDefault();
+      e.stopImmediatePropagation();
       this.selectAll();
     }
   }

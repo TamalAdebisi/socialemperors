@@ -518,6 +518,13 @@ export class BattleView {
         return fighter;
       }
     }
+    // The selection ring is a stable target even between animation frames
+    // or when a finger lands in the transparent space between a unit's legs.
+    for (const [fighter] of slots) {
+      if (!fighter.isUnit || fighter.dead) continue;
+      const feet = this.root.toGlobal(fighter.at);
+      if (Math.hypot(screen.x - feet.x, screen.y - feet.y) <= 14) return fighter;
+    }
     return null;
   }
 

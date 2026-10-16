@@ -10,10 +10,10 @@
                     <button id="fullscreen" class="button tiny gold" type="button" {% if not save_info.tutorial_done %}disabled{% endif %}>⛶<span class="label"> Full screen</span></button>
                 </span>
                 {% endif %}
-                {# What waits on the Friends page (requests, gifts, help), kept up to date below. A new tab: the game plays on. #}
+                {# What waits on the Everybody page (requests, gifts, help), kept up to date below. A new tab: the game plays on. #}
                 <a class="button tiny gold" id="friends-button" href="/friends" target="_blank" rel="noopener"
-                   data-tip="Friends, gifts and help (opens in a new tab)" aria-label="Friends{{ ', %d waiting' % news if news }}">
-                    <img src="img/villager.png" alt="" class="icon"><span class="label">Friends</span>
+                   data-tip="Everybody, gifts and help (opens in a new tab)" aria-label="Everybody{{ ', %d waiting' % news if news }}">
+                    <img src="img/villager.png" alt="" class="icon"><span class="label">Everybody</span>
                     <span class="badge" data-friends-news {% if not news %}hidden{% endif %}>{{ news }}</span>
                 </a>
                 <a class="button tiny gold" href="/" data-tip="Pick another empire">Empires</a>
@@ -22,8 +22,8 @@
         </header>
 
 <script>
-    // The Friends badge: asked again every two minutes while the game is in
-    // view, and when its tab is back in view (after answering on the Friends page).
+    // The Everybody badge: asked again every two minutes while the game is in
+    // view, and when its tab is back in view (after answering on the Everybody page).
     (function () {
         var link = document.getElementById("friends-button");
         var badge = link.querySelector("[data-friends-news]");
@@ -31,7 +31,7 @@
         function show(count) {
             badge.textContent = count;
             badge.hidden = !count;
-            link.setAttribute("aria-label", count ? "Friends, " + count + " waiting" : "Friends");
+            link.setAttribute("aria-label", count ? "Everybody, " + count + " waiting" : "Everybody");
         }
 
         function check() {

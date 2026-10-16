@@ -8,7 +8,7 @@
 	<div class="topbar">
 		<span>Hi <b>{{ user.username }}</b></span>
 		<nav>
-			<a href="/friends">Friends{% if news %} <span class="badge" data-tip="Requests and gifts waiting">{{ news }}</span>{% endif %}</a>
+			<a href="/friends">Everybody{% if news %} <span class="badge" data-tip="Requests and gifts waiting">{{ news }}</span>{% endif %}</a>
 			<a href="/settings">Settings</a>
 			<form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="link-button">Log out</button></form>
 		</nav>
