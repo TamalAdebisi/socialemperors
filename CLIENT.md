@@ -1813,8 +1813,8 @@ collections, in the last stop).
 
 ### Attacking players
 
-"The switch". Attacking another player's town still opens the classic
-game; the new client's side comes in slices. A reading of the original,
+"The switch". Attacking another player's town comes to the new client
+in slices; the world map, spying and revenge still open the classic game. A reading of the original,
 in our words, is the plan (how an attack starts, the battlefield and the
 four defence plans, the report, the windows after, spying, the world
 map, revenge).
@@ -1840,6 +1840,44 @@ First slice, the server (`pvp.py`, with tests in
   fifth with an Odin Statue) is recorded, but pays nothing.
 - The defender's tenths go to the town that was attacked; each player
   keeps the last 20 attacks made and received (the history shows 10).
+
+Second slice, the battle in the new client (`attackPlay.ts`, the rules
+in `rules/pvp.ts` and `rules/defencePlans.ts`, the browser test
+`e2e/tests/attack.mjs`). From level 6, **Attack** sits beside each
+neighbour but Arthur in the Neighbours window, as on the original's
+neighbour bar; it opens `/client.html?attack=<player>`.
+
+- **Before:** the attack is turned away for the player's own empire,
+  below level 6, with no army, or with no attacks left: 3 in the 6 hours
+  up to the last one (4 with an Odin Statue), all back together 6 hours
+  after it, as the Flash client counts them. Then `attack_player` is
+  sent (the attack counts from here) and a little map of the island's
+  5 x 5 blocks asks where the army starts: one of the 16 round the edge,
+  the top left picked.
+- **The battlefield** is the defender's town, drawn as their town. Their
+  soldiers, buildings that shoot and town hall fight; trees, rocks,
+  animals and refuges are nobody's; units of the other race, buildings on
+  the border blocks, lost things and the attacker's ships are cleared
+  away. The army stands round the corner picked, every unit of the town.
+- **Their soldiers follow the defence plan** saved in their town (the
+  army window's plan, `set_strategy`): all stay and fight what comes
+  near; half go out (as many as came, at the first attacker to hit, then
+  home); archers against siege engines; or everyone on the siege engines.
+  A town with none saved plays "half go out", as the Flash client did.
+- **Playing it:** the same orders, spells and specials as on an island.
+  The bar at the top counts the gold and XP won and the targets left
+  (their soldiers, shooting buildings and the town hall); Select all,
+  Speed and the crown (end the attack, which counts as lost). Their town
+  hall falling wins it; the army falling, or leaving, loses it.
+- **The pay:** a town hall its owner's level x 100, a fighter by its
+  price (at most 200), 25 for a win that found none, 20,000 at most;
+  nothing when the town had no town hall. The defender earns a tenth of
+  each attacker their town killed.
+- **The end:** the report goes to the server at once (`end_attack`, as
+  the Flash client's), with who of the fallen comes home by the player's
+  level (5 in 100 lost below level 10, a quarter to 15, half after) and
+  the honour; then a window with the gold, XP, honour and units lost.
+  Back home sends `game_status` and opens the player's own town.
 
 ### Making the art look better
 

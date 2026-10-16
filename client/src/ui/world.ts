@@ -1,7 +1,8 @@
 // The battle windows (CLIENT.md, "The menus: rail and dock"): a row for each
 // way to fight, with its icon, a line on what it is, and Play. On a wide
 // screen Quests and Battle are separate rail buttons; on a phone World holds
-// them all. Quests are played here (ui/islands.ts, questPlay.ts); attacking
+// them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
+// on neighbours from the Neighbours window (attackPlay.ts); the world map of
 // players, survival and tournaments still open the classic game, which
 // plays them on the same empire.
 
@@ -86,7 +87,7 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Attacking players, survival and tournaments open in the classic game for now, on the same empire.";
+  note.textContent = "Attack a neighbour from Neighbours. The world map, survival and tournaments open in the classic game for now, on the same empire.";
   panel.body.append(list, note);
   return panel;
 }

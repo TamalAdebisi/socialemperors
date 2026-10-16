@@ -118,7 +118,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupRecruitment.as` | 482 | The recruitment camp: friends recruited fill places; when full it gives the reward units beside it (`finish_si`). | not yet |
 | `popups/PopupRecruitmentPopulation.as` | 360 | The wonder of people: every 4 friends hired adds 10 to the room for people, up to 5 times (`increase_population`). | not yet |
 | `popups/PopupSocialFeeds.as` | 385 | The Round Table: post to friends one by one (`assist_send_feed`, at most 60); when it is ready, 4 answers pay 1,000 gold, 6 add 100 XP, 8 an item (`finish_si`, then `collect_new`). | not yet; `helps.py` |
-| `popups/PopOverVisit.as` | 84 | The little menu on a neighbour's picture: Visit, Attack (not for Arthur) and Send gift. | partly: Visit in `ui/neighbours.ts`; no Attack or Send gift |
+| `popups/PopOverVisit.as` | 84 | The little menu on a neighbour's picture: Visit, Attack (not for Arthur) and Send gift. | partly: Visit and Attack (from level 6) in `ui/neighbours.ts`; no Send gift |
 | `popups/AssistPopup.as` | 152 | On a visit to a neighbour not helped for 24 hours: a task picked at random from the config's `neighbor_assists`, OK, a short bar, then 10 gold and 3 XP (`assist_neighbor`). | not yet: `visit.ts` has the building helps but not this request (see `core.md`, surprise 2) |
 | `popups/infoFriendAssistPopup.as` | 101 | A neighbour's donkey cart: let it in to go round the buildings helped, or turn it away. | built: `editor.ts` (`welcomeCarts`), `rules/neighbours.ts` |
 | `popups/PopupInviteFriends.as` | 133 | Pick Facebook friends to send a gift to. | not needed: Facebook, and nothing opens it |
@@ -146,8 +146,8 @@ Player battles are for the last stop ("The switch"); the World window sends play
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | not yet: the World window opens the classic game |
-| `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | not yet |
+| `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from); no help page |
+| `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); no defender's side or Revenge |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | not yet |
 | `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
 | `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | not yet; `worlds.py` |
