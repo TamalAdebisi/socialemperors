@@ -49,6 +49,18 @@ them can be found and reversed. The big, agreed decisions are in
 - **Bought attack packs aren't offered:** the server has never sold
   them, so nothing opens that window.
 
+## 15 October 2026: hovering and the collecting bar
+
+- **The popup over what the mouse is on is drawn over the town.** The Flash
+  client drew it on the ground, under the buildings, so a building's front
+  could hide its own name and bar. Same for the collecting bar.
+- **Fading what stands in front isn't built.** When the mouse is where
+  several pictures overlap, the original lights one of them (not always
+  the one a click picks) and fades the others; we light the one a tap
+  would pick and fade nothing.
+- **The bulldozer's hover shows the popup too,** as the original's does
+  (its highlight is the same one), with the ground outlined in white.
+
 ## 15 October 2026: attacking players, the server's checks
 
 - **A fourth attack in 6 hours is recorded but pays nothing,** rather

@@ -103,7 +103,7 @@ dock"), so these come with a mockup first.
 - [x] **Tapping the ready bubble collects;** the refund rises as a number
       when selling. S
 - [x] **"For sale" signs** on closed land. S
-- [ ] **Small things:** when hovering a thing, a thin white outline, its
+- [x] **Small things:** when hovering a thing, a thin white outline, its
       life bar, and a bar with its name and time; a short "collecting"
       bar. S each
 - [x] **Keyboard:** S, A and W both moved the map and opened a window;
