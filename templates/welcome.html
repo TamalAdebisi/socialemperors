@@ -15,7 +15,7 @@
 	<div class="columns">
 		<form method="post" action="/welcome">
 			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
-			<h2><img src="img/knight.png" alt=""> New here?</h2>
+			<h2><img src="/img/knight.png" alt=""> New here?</h2>
 			{% if allow_registration %}
 			<p class="muted">Pick the name other players will see.</p>
 			<label for="new-username">Your username</label>
@@ -34,7 +34,7 @@
 		<form method="post" action="/welcome">
 			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
 			<input type="hidden" name="existing" value="1">
-			<h2><img src="img/villager.png" alt=""> Already playing?</h2>
+			<h2><img src="/img/villager.png" alt=""> Already playing?</h2>
 			<p class="muted">Log in once, and {{ provider_name }} will sign you in to that account from now on.</p>
 			<label for="old-username">Username</label>
 			<input id="old-username" name="username" autocomplete="username" required {% if tab == 'existing' %}autofocus{% endif %}>

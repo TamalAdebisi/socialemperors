@@ -80,20 +80,27 @@ those commands run outside the sandbox when asked.
 ```
 .venv/bin/python -m unittest discover tests          # the server: 440 tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 73 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 75 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament review-fix verification (#92) is pending.** The latest
-  completed full run, before these fixes, passed all **73 browser tests
-  in 93m 28.38s** at
-  `49b5685e368efd6efeecdc348a2202a710715b2f`, including all five tournament
-  checks, shared spells, #87's building card/Menu and #93's tutorial.
-  Server: **440 run (431 passed, 9 existing skips)**; client types and
-  **373 tests passed**. [The delivery record](docs/verification-92.md)
-  records that exact code and its timings. Merge `8dccab0d` added only
-  #91's documentation; later review fixes change runtime and tests and
-  require fresh verification before delivery.
+- **Tournament integration verification after #94 is pending.** The
+  completed pre-#94 run at
+  `67d2e02a563d6a2e4f06376cd5af960a1238fd23` passed **73/73 browser tests
+  in 92m 32.50s**, including the review fixes, all five tournament cases
+  and shared spells. Server: **440 run (431 passed, 9 existing skips)**;
+  client types and **381 tests passed**. Main `1eb2a2e2` adds runtime
+  changes and two browser cases, so the combined 75-case suite needs
+  fresh verification. [The delivery record](docs/verification-92.md)
+  preserves this baseline, earlier failures and the pre-review 49b5685e run.
+- **Playthrough verification (#94):** server 435 run (426 passed,
+  9 existing skips), client types and all 354 passed. Full Chromium suite:
+  **67/71 in 1h 52m 56.27s**; four failures and their follow-ups are recorded,
+  with all 71 cases now having passing results across the full/focused
+  runs. Game code stayed at `01ddd0cd`; subsequent edits are tests/docs.
+  WebKit buildings, controls, hover and Friends/Menu passed **4/4 in
+  3m 50.48s**. [The delivery record](docs/verification-94.md) retains the
+  original failures, exact checks, screenshot review and Mac GPU limit.
 - **Art verification (#91):** all 20 images match their JSON and
   repair-query copies, both plain and with the game's Origin header.
   With refreshed caches, `team` passed alone (52s) and in the full suite

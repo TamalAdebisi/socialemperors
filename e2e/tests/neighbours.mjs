@@ -54,6 +54,17 @@ export default async function neighbours({ newPlayer }) {
   const theirs = await info(helped);
   assert.deepEqual(theirs.map.receivedAssists[`u${helper.settings.userId}`], [[...FARM_AT, FARM]], "the help waits for them");
 
+  // Arthur's town: the one for a new player's stage. Finish this visitor's
+  // checks before timing the delivery, so another town's software drawing
+  // cannot starve the cart's frames now that losing focus no longer pauses.
+  await helper.menu("Neighbours");
+  await page.getByRole("link", { name: "Visit Arthur" }).click();
+  await helper.loaded();
+  assert.match(await page.locator(".hud-visiting").textContent(), /Visiting Arthur/);
+  assert.match(page.url(), /visit=100000030/);
+  await helper.shot("arthur");
+  await page.close();
+
   // The helped player's cart: let in, it brings the farm a quarter of its harvest (15 / 4 = 3 food).
   await helped.reload();
   assert.match(await helped.bar(), new RegExp(`^${helper.name} helped you`));
@@ -69,14 +80,6 @@ export default async function neighbours({ newPlayer }) {
   await helped.shot("cart-delivered");
   assert.equal(delivered.map.food, food + 3, "the cart's share");
   assert.deepEqual(delivered.map.receivedAssists, {}, "the cart has come");
-
-  // Arthur's town: the one for a new player's stage.
-  await helper.menu("Neighbours");
-  await page.getByRole("link", { name: "Visit Arthur" }).click();
-  await helper.loaded();
-  assert.match(await page.locator(".hud-visiting").textContent(), /Visiting Arthur/);
-  assert.match(page.url(), /visit=100000030/);
-  await helper.shot("arthur");
 }
 
 /** The farm on the screen: the middle of its 3 x 3 field (it's flat). */

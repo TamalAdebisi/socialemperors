@@ -24,3 +24,4 @@ client/dist/
 
 # The browser tests' screenshots and server log (node e2e/run.mjs)
 e2e/out/
+work/e2e-webkit/

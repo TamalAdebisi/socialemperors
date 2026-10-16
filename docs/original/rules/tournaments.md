@@ -151,6 +151,10 @@ The server's additive stale-id guard is covered in
   are independent directed matches, not elimination rounds. Defenders
   need not be online. There is no loss of units from home, storage or
   the saved team, and no attack-player reward or casualty command.
+- Owner-requested interface difference from #94: tournament battles use
+  the shared `GameLoop`, advancing while a tab is hidden and retaining
+  explicit Pause. The original tournament army, score and service rules
+  are unchanged.
 - The type supplies the arena map id. Arena fixtures are neutral and
   the whole map traversable. Each army forms in two columns of ten:
   player x10/14, defender x90/86, rows y59 down to 41 in steps of two.

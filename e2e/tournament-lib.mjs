@@ -39,9 +39,9 @@ export async function prepare(player, team = FULL_TEAM) {
     { cmd: "set_help_map", args: ["tournamentHelp"] },
   ]);
   await player.reload();
-  // These scenarios prepare several separate players. Park each unused town
-  // through its real Pause control, as a background game tab would pause,
-  // rather than spend the software renderer on four idle towns at once.
+  // These scenarios prepare several separate players. Explicitly Pause each
+  // unused fixture town so it does not compete for software rendering;
+  // ordinary hidden tabs keep simulating unless the player presses Pause.
   await player.press("Pause");
 }
 

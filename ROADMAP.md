@@ -252,6 +252,14 @@ numbers, because the server writes them into the game config.
 
 ### Phase 4: New game client (started)
 
+**Playthrough controls, 16 October:** Friends form-result styles repaired;
+unit click targets enlarged without changing their art; ground clicks get
+a brief gold ring; tab changes keep simulation running, with manual Pause
+retained. Building previews retain their alignment while art loads.
+Auto-collect was withdrawn and is not included.
+[Verification and Safari coverage](docs/verification-94.md) records the
+full/focused checks and the remaining Mac-specific reproduction limit.
+
 Replace the Flash client with a modern one that draws the same art and talks
 to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 
@@ -404,7 +412,7 @@ merging the two wait fixes with that separate failure documented.
         with copied armies; results, weekly rankings and server-paid
         prizes; friends' creation, invitation notice and cancellation
         ([CLIENT.md](CLIENT.md#tournaments); implemented in #89 and #92,
-        [review-fix verification pending](docs/verification-92.md)).
+        [verification after #94 pending](docs/verification-92.md)).
         Existing rooms and unfinished
         matches reopen from the server save. Classic choices stay hidden at
         the owner's request; their routes and shared saves remain.

@@ -146,6 +146,11 @@ The card's look is the owner's pick: mockup A, the original's panel
       swept over). S
 - [x] **Renaming the town** from the game. S
 
+- [x] **Owner playthrough conveniences:** larger unit click targets, a
+      fading ground-click ring, and background simulation across tab
+      changes while retaining explicit Pause. Collection is unchanged.
+      Friends form styles and delayed building-preview alignment repaired.
+
 ## Your calls (15 October 2026)
 
 - [x] **The troll town** (a second town, from level 20): in Beta 1. L
@@ -291,8 +296,8 @@ frees its unit.
 ## Tournaments
 
 All five parts are built in #89 and #92. The
-[delivery record](docs/verification-92.md) preserves the pre-review 73/73
-browser run; verification of the subsequent review fixes is pending.
+[delivery record](docs/verification-92.md) preserves the corrected pre-#94
+73/73 browser run; verification of the merged 75-case suite is pending.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.

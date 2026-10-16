@@ -48,6 +48,8 @@ const POP_RISE = 24;
 const POP_MS = 1000;
 /** Zoomed out further than this, signs stop shrinking with the map, so they can still be seen. */
 const SMALLEST_SCALE = 0.75;
+const CLICK_RING = new URL("./art/selected-unit.webp", import.meta.url).href;
+const CLICK_MS = 650;
 
 export class Markers {
   readonly layer = new Container();
@@ -56,6 +58,27 @@ export class Markers {
   private readonly rising: { text: Container; age: number; from: number; rise: number; ms: number }[] = [];
   private clock = 0;
   private scale = 1;
+  private click: { sprite: Sprite; age: number } | null = null;
+
+  constructor() {
+    void texture(CLICK_RING);
+  }
+
+  /** A brief ring at the exact map point tapped; it never intercepts clicks. */
+  groundClick(at: Point): void {
+    this.click?.sprite.destroy();
+    const sprite = new Sprite({ label: "ground-click", eventMode: "none" });
+    sprite.position.set(at.x, at.y);
+    sprite.anchor.set(0.5);
+    sprite.visible = false;
+    this.layer.addChild(sprite);
+    this.click = { sprite, age: 0 };
+    void texture(CLICK_RING).then((loaded) => {
+      if (!loaded || sprite.destroyed) return;
+      sprite.texture = loaded;
+      sprite.visible = true;
+    });
+  }
 
   /** Put a sign over a building at `top` (its picture's top middle), or take it away (null). */
   set(placed: PlacedItem, sign: Sign | null, top: Point | null): void {
@@ -132,6 +155,18 @@ export class Markers {
   /** Move things along: `ms` since the last tick; `zoom` is the map's. */
   tick(ms: number, zoom: number): void {
     this.clock += ms;
+    if (this.click) {
+      const click = this.click;
+      click.age += ms;
+      if (click.age >= CLICK_MS) {
+        click.sprite.destroy();
+        this.click = null;
+      } else {
+        const progress = click.age / CLICK_MS;
+        click.sprite.scale.set(52 * (1 + progress * 0.3) / click.sprite.texture.width / zoom);
+        click.sprite.alpha = 1 - progress;
+      }
+    }
     this.scale = Math.max(1, SMALLEST_SCALE / zoom);
     for (const { sign, phase } of this.signs.values()) {
       sign.scale.set(this.scale);

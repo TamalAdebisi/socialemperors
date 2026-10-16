@@ -3,21 +3,211 @@
 The remaining tournament stages are implemented together: entry and
 waiting rooms, three independent battles, results/rankings/prizes, and
 friends' creation and cancellation. They build on #89's list and team
-editor. Other chats delivered #87's building card/Menu and #93's mandatory
-tutorial; both were merged into this branch without rebasing. Classic
-choices remain hidden as the owner requested in #93, while the original
+editor. Other chats delivered #87's building card/Menu, #93's mandatory
+tutorial, #91's art audit and #94's playthrough controls; their work is
+preserved without rebasing. Classic choices remain hidden as the owner requested in #93, while the original
 routes and shared saves remain supported.
 
-## Final review-fix checks
+## Final verification after #94
 
-Pending. The review corrections change runtime and tests after the
-passing run below: Engineer targeting, original LIMIT accounting from
-attempted healing, zero-effect healing popups, friends-room reply
-validation, ordinary welcome ordering, the exact 720px layout boundary
-and the weekly warning test. Original weekly
-saved-team eligibility and abandoned-score ordering are retained.
-Fresh server, client and full browser results will be recorded against
-the new exact code before merge; no final commit or result is claimed yet.
+Pending. Main `1eb2a2e2ff58ae2ab1c4f4614eceb5fd9cc22b77` landed during
+the completed run below. It changes simulation, input, shared drawing
+and site forms, and adds two browser cases. Its integration needs fresh
+server, client and full 75-case browser checks on a new exact commit;
+no result for that combined runtime is claimed yet. Tournament battles
+also use #94's shared background simulation clock while retaining
+explicit Pause and their existing army/scoring/command rules.
+
+The next full run puts the five tournament scenarios and shared spells
+first, followed by `building-overlay`, `playthrough-controls` and
+`site-menu`, then the other 66 alphabetically. #94's own exact 67/71
+full result and focused follow-ups remain in
+[its delivery record](verification-94.md); they are not relabelled as a
+full passing run or as verification of the integrated tournament code.
+
+## Completed pre-#94 checks at 67d2e02a
+
+Exact tested code: `67d2e02a563d6a2e4f06376cd5af960a1238fd23`.
+The checkout stayed clean and at that commit throughout the checks. It
+includes main `d4bc1a72`, preserving #87, #91 and #93, the complete
+tournament feature, review corrections and the fixture fixes below.
+This is a completed baseline before #94, not the final delivery runtime.
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| `.venv/bin/python -m unittest discover tests` | 440 run: 431 passed, 9 existing PostgreSQL skips | 29.66 seconds |
+| `cd client && npm run check` | Types passed | 1.87 seconds |
+| `cd client && npm test` | All 381 tests passed | 7.18 seconds |
+| Full browser suite | 73 run: 73 passed, 0 failed | 92m 32.50s |
+
+All 73 scenario files ran once: the five tournament cases, shared
+spells, then the other 67 alphabetically. The archive contains **231
+screenshots across 73 folders**. The full local server log contains
+**zero Python tracebacks, zero HTTP 5xx replies and zero unhandled
+commands**. All game accounts and writes were local and disposable;
+public artwork was read through the environment's proxy. Environment:
+2-CPU quota, 8 GiB memory, Python 3.13.5, Node 24.19.0, Playwright 1.56.1
+and Chromium with software rendering; one browser runner at a time.
+
+## Review corrections and interrupted checks
+
+Review corrections were committed at
+`d3c8d64de70dd76ac265b5647d6a610797c8b600`. They keep Engineer 570 on
+its separate friendly siege-repair path, validate healing targets before
+the beat, and restore original LIMIT accounting from attempted healing
+even when the patient is whole. Actual health remains capped; only a
+zero-effect visual healing event is suppressed. They also validate
+friends-room cards before rendering, wait for ordinary welcome/gift
+dialogs before reopening a tournament, use the shared HUD's inclusive
+720px breakpoint, and scope the weekly-entry warning handler to the
+expected original confirmation.
+
+Two review suggestions would have changed original rules, so those rules
+are retained and explained in DECISIONS.md: weekly entry accepts its saved
+team without the public ownership/complex-unit recheck, and the score
+table keeps departed entrants in points/time order even though they cannot
+win. The server's winner metadata identifies who actually receives the
+prize. All eight original review threads were answered and resolved with
+the relevant source-supported explanation or correction; no decompiled
+source was published.
+
+The first new full attempt at `d3c8d64d` was interrupted after
+`tournament-weekly` passed in 131s, `tournament-rooms` passed in 212s,
+and `tournaments` failed in 107s. The failure was in setup for the new
+ordinary-welcome scenario, before its feature assertions: joining its
+room returned `NOK`. The saved local database showed 272 gold for a
+500-gold fee; the earlier treasure setup had been capped at 750 and the
+weekly entry had already spent its fee. The runner was stopped while
+`tournament-battle` was incomplete. Browser-closed errors printed during
+shutdown are interruption artifacts, not completed checks or separate
+gameplay findings. This was not a full passing run. At that commit,
+server 440 run (431 passed, 9 existing skips), types and all 381 client
+tests had passed in 30.62s, 2.16s and 7.60s respectively.
+
+Test-only commit `a1f06b48c8af2e5345ec2f65998e1d0773c13bd1` funds the
+separate welcome room through a normal treasure command and asserts the
+exact increase and first entry fee. Its focused run was **2/3 in 3m
+32.26s**: `tournaments` passed in 119s and `spells` in 46s, but
+`tournament-results` failed in 37s while seating its players. The preceding
+welcome scenario had left a public waiting seat behind on the shared
+local server, so the next scenario's entrants joined different rooms.
+
+Test-only commit `77c31ed0b07e5f047b7cbb90f572ab93e251100b` leaves that
+waiting room through the normal service after all welcome-return
+assertions and its screenshot, then checks that enrollment is cleared
+and the exact fee refunded. The repeated focused run passed **3/3 in
+5m 19.56s**: `tournaments` 114s, `tournament-results` 153s, `spells` 45s.
+No return, fee or saved-state assertion was removed.
+
+Screenshot inspection then found that the initial desktop match screen
+was captured before its twenty enrolled-team images had loaded.
+Test-only commit `67d2e02a563d6a2e4f06376cd5af960a1238fd23` waits up to
+30 seconds for all twenty images to finish loading with nonzero natural
+width before taking that screenshot. The focused results check passed
+**1/1 in 2m 42.26s** (157s for the scenario). All three commits after
+`d3c8d64d` change only the two tournament browser test files; application
+rules and server behavior are unchanged. The pre-#94 full run above checks
+the resulting integrated test and runtime state.
+
+## Pre-#94 visual inspection at 67d2e02a
+
+Owners reviewed all **47 tournament/spell screenshots**: weekly 6,
+rooms 7, list/help/team 10, battle 6, results 12 and spells 6. A separate
+review covered **11 shared screenshots**: card 8, dock 1 and site Menu 2.
+Original art, layout and control fit passed review. This includes the
+ordinary-welcome Gifts/return sequence, departed-score results, all
+three configured weekly armies, and controls at exactly 720px landscape.
+
+The advance image has its army outside the camera; formed desktop units
+are near the bottom/right; the golem capture shows its glow only. The
+team grid shows part of a scrollable viewport while the test asserts all
+twenty entries, and weekly ranks 9–10 are below the fold. These captures
+are not evidence of content outside their viewport. The army HUD retains
+the original label's fixed plural (including "1 units left") with adapted
+word order; it is not a verbatim localized HUD. The results capture now
+waits for all twenty enrolled-team images to load.
+
+## Pre-#94 browser results at 67d2e02a
+
+| Test | Result | Time |
+| --- | --- | ---: |
+| `tournament-weekly` | Passed | 130s |
+| `tournament-rooms` | Passed | 213s |
+| `tournaments` | Passed | 112s |
+| `tournament-battle` | Passed | 257s |
+| `tournament-results` | Passed | 154s |
+| `spells` | Passed | 45s |
+| `animals` | Passed | 33s |
+| `attack` | Passed | 131s |
+| `bonus` | Passed | 32s |
+| `bosses` | Passed | 37s |
+| `bubble` | Passed | 64s |
+| `camp` | Passed | 44s |
+| `camp-again` | Passed | 24s |
+| `card` | Passed | 117s |
+| `cash` | Passed | 41s |
+| `classic` | Passed | 50s |
+| `collect` | Passed | 103s |
+| `collections` | Passed | 34s |
+| `construction` | Passed | 58s |
+| `defence` | Passed | 28s |
+| `dock` | Passed | 48s |
+| `dragons` | Passed | 88s |
+| `edit` | Passed | 46s |
+| `friends-help` | Passed | 53s |
+| `gifts` | Passed | 45s |
+| `goal-window` | Passed | 57s |
+| `graveyard` | Passed | 28s |
+| `group` | Passed | 92s |
+| `heroes` | Passed | 37s |
+| `hover` | Passed | 49s |
+| `keys` | Passed | 36s |
+| `lessons` | Passed | 190s |
+| `lessons-phone` | Passed | 218s |
+| `lessons-recovery` | Passed | 87s |
+| `levelup` | Passed | 51s |
+| `look` | Passed | 58s |
+| `looks` | Passed | 112s |
+| `market` | Passed | 66s |
+| `menus` | Passed | 110s |
+| `messages` | Passed | 19s |
+| `monks` | Passed | 20s |
+| `nature` | Passed | 23s |
+| `neighbours` | Passed | 101s |
+| `nests` | Passed | 57s |
+| `phone-place` | Passed | 67s |
+| `pointers` | Passed | 72s |
+| `quest` | Passed | 120s |
+| `raids` | Passed | 169s |
+| `rename` | Passed | 30s |
+| `scripted` | Passed | 115s |
+| `scripted-bosses` | Passed | 155s |
+| `scripted-stories` | Passed | 255s |
+| `selected` | Passed | 98s |
+| `shop` | Passed | 46s |
+| `siege` | Passed | 38s |
+| `site-menu` | Passed | 49s |
+| `sound` | Passed | 29s |
+| `specials` | Passed | 24s |
+| `speed` | Passed | 17s |
+| `spy` | Passed | 66s |
+| `storage` | Passed | 40s |
+| `stuck` | Passed | 51s |
+| `survival` | Passed | 52s |
+| `team` | Passed | 40s |
+| `tidy` | Passed | 43s |
+| `tools` | Passed | 74s |
+| `town-rules` | Passed | 36s |
+| `train` | Passed | 38s |
+| `troll-town` | Passed | 40s |
+| `villagers` | Passed | 81s |
+| `walk` | Passed | 45s |
+| `work` | Passed | 54s |
+| `world` | Passed | 155s |
+
+Individual times are the runner's rounded seconds. Total elapsed also
+includes build, startup and cleanup. This completed pre-#94 run has no
+failures; verification after the new main merge remains pending.
 
 ## Pre-review full checks at 49b5685e
 
@@ -32,8 +222,9 @@ That main was merged afterward at `8dccab0d`, preserving the completed
 art audit. A path-by-path diff from `49b5685e` to `8dccab0d` confirmed
 that client, server, configuration, artwork, tools and tests were
 unchanged; that merge contained documentation and audit records only.
-This identity claim ends at `8dccab0d`. Subsequent review fixes change
-the runtime and tests and need the fresh verification recorded above.
+This identity claim ends at `8dccab0d`. Subsequent review fixes changed
+the runtime and tests and were verified separately at `67d2e02a` above.
+The later #94 integration still needs its own complete checks.
 
 | Check | Result | Elapsed, including startup/build |
 | --- | --- | --- |
@@ -236,9 +427,9 @@ includes build, startup and cleanup. This pre-review run had no failures.
 
 The list/team slice is in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89);
 [#92](https://github.com/TamalAdebisi/socialemperors/pull/92) implements
-every remaining tournament stage. Final verification of its review fixes
-is pending. Main through `d4bc1a72` is merged without rebasing, including
-the other chats' #87, #91 and #93 work. Merging #92 uses the owner's
+every remaining tournament stage. The review fixes passed all 73 cases
+at `67d2e02a`; final verification after merging #94 is pending. The other
+chats' #87, #91, #93 and #94 work is preserved. Merging #92 uses the owner's
 standing authorization for automatic deployment after the required checks.
 
 All five tournament parts are implemented; no tournament slice remains

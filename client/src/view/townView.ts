@@ -27,7 +27,7 @@ import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt } from "./hit.ts";
+import { isOpaqueAt, unitHitDistance } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { HOVER_LIFE, LIFE, SELECTED, loadSelected, markLife, markSelected, unmarkLife, unmarkSelected } from "./selected.ts";
@@ -121,7 +121,10 @@ export class TownView {
       const slot = new Container();
       this.ghostLayer.addChild(slot);
       this.ghost = { slot, drawnAt: buildingPoint(placed.tx, placed.ty) };
-      void this.draw(placed, slot);
+      // Placement keeps changing `placed` while its art loads. Draw at
+      // this fixed origin: moveGhost already applies the pointer's offset.
+      // Reading the new tile after awaiting art applies that move twice.
+      void this.draw({ ...placed }, slot);
     }
   }
 
@@ -205,6 +208,10 @@ export class TownView {
 
   isWalking(placed: PlacedItem): boolean {
     return this.walkers.has(placed);
+  }
+
+  groundClick(at: Point): void {
+    this.markers.groundClick(at);
   }
 
   /** Stop every walk on the last tile it reached, without hearing that they arrived (a raid takes over the town): the units that were walking. */
@@ -352,7 +359,21 @@ export class TownView {
         }
       }
     }
-    return null;
+    // A near miss on a small unit must select it before the editor sends
+    // the previous unit to the ground. Exact picture hits above still win.
+    let nearest: PlacedItem | null = null;
+    let distance = Infinity;
+    for (const [placed, slot] of this.slots) {
+      if (!placed.item.isUnit || !slot.visible) continue;
+      const picture = pictureOf(slot);
+      if (!picture) continue;
+      const d = unitHitDistance(picture.getBounds(), screen);
+      if (d < distance || (nearest && d === distance && depth(placed) > depth(nearest))) {
+        nearest = placed;
+        distance = d;
+      }
+    }
+    return nearest;
   }
 
   /** Draw a thing again (it moved or turned), and put it back in order. */

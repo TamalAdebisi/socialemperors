@@ -4,6 +4,59 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: tournaments use the shared background clock
+
+- **Apply #94's owner-requested background behavior to tournaments too.**
+  Use the same `GameLoop` as other battles so a hidden tab can keep the
+  match advancing. Explicit Pause still stops simulation and excludes
+  paused time. Army, scoring, spell and command rules stay unchanged.
+  The combined 75-case verification remains pending.
+
+## 16 October 2026: playthrough controls and site repairs
+
+- **No auto-collect.** The owner withdrew it; collection and production
+  rules stay as they were.
+- **Bigger unit targets, original art sizes.** Exact visible picture hits
+  keep priority. A near miss can select the closest unit within its
+  picture plus eight screen pixels, with at least a 44-pixel target at
+  every zoom, at home and in battles. Signs and buildings retain their
+  existing hit tests. This avoids redirecting the previously selected
+  villager when a click just misses another one.
+- **A visible ground click.** Reuse the original gold unit ring, centred
+  on the actual click, about 52 screen pixels wide, fading over 650 ms.
+  It follows the map and never captures input. No extra order is sent.
+- **Switching tabs no longer pauses the game.** Requested by the owner.
+  A separate simulation timer advances walking and fights while drawing
+  is suspended, replaying throttled time in steps of at most 100 ms.
+  Long suspensions are processed in bounded batches; returning cannot
+  count that time twice. Explicit Pause still stops simulation and
+  drawing; its elapsed time is excluded. Work and training retain their
+  existing server-clock behavior. Closing the browser does not run a
+  client simulation; a browser that freezes the page catches up when it
+  can run again.
+- **Fix the Friends form's asset URLs at their source.** Shared site
+  styles and page images use root paths, so nested form-result URLs
+  cannot turn them into /friends/css or /settings/img requests.
+- **Keep placement art on its footprint while loading.** Snapshot the
+  preview's drawing origin before awaiting its art; pointer movement is
+  already applied by the preview container and must not be applied twice.
+  Clear old hover state on entering placement or Move, so its periodic
+  refresh cannot erase the new footprint.
+  Browser checks cover immediate selection of several buildings without
+  distant ground changes, delayed loading of five preview types,
+  cancellation and the save. The owner reports Safari on a Mac, so the
+  runner also supports WebKit with separate results. This checks the
+  engine locally; it does not claim to reproduce a Mac's GPU.
+- **Browser checks wait for gameplay, not fixed sleeps.** The full run
+  exposed slow-renderer waits for a summon, spy flight, neighbour delivery
+  and a villager's repair. Wait for the same outcomes with bounded
+  deadlines, and close independent fixture pages after their assertions.
+  The raid check uses the existing siege check's four-times simulation
+  setting for the long random approach, retaining its completion deadline
+  and every kill/reward/repair/save assertion. WebKit screenshots wait for
+  the canvas frame and on-demand card art before visual review. These are
+  test-only changes.
+
 ## 16 October 2026: tournament review and original rule distinctions
 
 - **Keep the weekly saved-team exception.** Local source reading confirms
@@ -32,7 +85,16 @@ them can be found and reversed. The big, agreed decisions are in
 - **Verify the revised runtime again.** The 73/73 run at `49b5685e` remains
   a passing pre-review record. Its documentation-only identity with
   `8dccab0d` does not cover subsequent review fixes. Keep those results
-  intact and run the required checks on the new exact code before merge.
+  intact. The corrected runtime at `67d2e02a` subsequently passed all 73
+  browser cases. #94 changed runtime and added two cases during that run,
+  so preserve it as the pre-#94 baseline and verify all 75 after merging.
+- **Give each browser fixture its own funding and release its seat.** The
+  ordinary-welcome case funds its extra fee through a normal command,
+  then uses normal leave/refund after its return assertions. This keeps
+  the shared server's next scenario from inheriting its public room.
+  Screenshot capture waits for all twenty team images; saved-state and
+  fee assertions remain unchanged. The interrupted and focused results
+  remain in the delivery record.
 
 ## 16 October 2026: closing the public-art repair
 

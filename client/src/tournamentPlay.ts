@@ -3,6 +3,7 @@
 import "./ui/tournamentBattle.css";
 import { Application, Container } from "pixi.js";
 import { BattleControls } from "./battleControls.ts";
+import { GameLoop } from "./gameLoop.ts";
 import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
 import { finalWindow } from "./questPlay.ts";
@@ -69,6 +70,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   const app = new Application();
   await app.init({ resizeTo: window, background: skinColour(arena.skin), resolution: Math.min(window.devicePixelRatio || 1, 2),
     autoDensity: true, antialias: false, preference: "webgl", sharedTicker: true });
+  const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.classList.add("questing", "tournament-playing");
   document.body.style.background = `#${skinColour(arena.skin).toString(16).padStart(6, "0")}`;
@@ -78,7 +80,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   camera.resize(app.screen.width, app.screen.height);
   camera.attach(app.canvas);
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
-  app.ticker.add((ticker) => camera.update(ticker.deltaMS));
+  loop.add((ms) => camera.update(ms));
   const sound = new Sound(settings.assetsUrl, town.race, "ASSAULTS.mp3");
   const art = new ArtLibrary(settings.artUrl);
   const ground = new TownView(art, items, arena);
@@ -109,7 +111,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   view.skin = arena.skin;
   world.addChild(view.root);
   const missing = await view.load((done, total) => showStatus(`The armies arrive… ${Math.round(100 * done / total)}%`));
-  app.ticker.add((ticker) => view.update(ticker.deltaMS, camera.scale));
+  loop.add((ms) => view.update(ms, camera.scale));
   if (groundLoaded.missing.length || missing.length) {
     stop("Some tournament artwork could not load. Please reopen the match to try again."); return;
   }
@@ -148,7 +150,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
       unlock = blockBehind(question.closest<HTMLElement>(".quest-window")!);
     },
   });
-  bar.add(new Pause(app.ticker).button("hud-sound"));
+  bar.add(new Pause(loop).button("hud-sound"));
   (window as unknown as Record<string, unknown>).seTournament = {
     battle, match, view, player, enemy,
     select: (units: Fighter[]) => controls.select(units),
@@ -160,10 +162,10 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   };
   match.start();
   bar.update(match);
-  app.ticker.add((ticker) => {
+  loop.add((ms) => {
     if (!ended && !asking) {
       if (!match.result) {
-        owed += Math.min(ticker.deltaMS, 250) * speed;
+        owed += Math.min(ms, 250) * speed;
         while (owed >= 1000 / FPS && !match.result) {
           owed -= 1000 / FPS;
           battle.step();
@@ -175,7 +177,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
         if (endingMs === 0) {
           controls.stop();
         }
-        endingMs += Math.min(ticker.deltaMS, 250);
+        endingMs += Math.min(ms, 250);
         if (endingMs >= TOURNAMENT_END_DELAY * 1000 / FPS) {
           ended = true;
           finishWindow(match.result, true);

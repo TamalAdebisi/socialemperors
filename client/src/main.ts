@@ -56,6 +56,7 @@ import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
 import { MarketWindow } from "./ui/market.ts";
+import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
 import { marketRules, readMarket } from "./rules/market.ts";
@@ -154,10 +155,11 @@ async function start(): Promise<void> {
     autoDensity: true,
     antialias: false,
     preference: "webgl",
-    // One clock for everything: the camera, the drawing and the animations
-    // (animated sprites follow the shared one).
+    // Animated sprites share the drawing ticker; GameLoop also advances
+    // simulation when the browser suspends drawing in a hidden tab.
     sharedTicker: true,
   });
+  const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${skinColour(town.skin).toString(16).padStart(6, "0")}`;
 
@@ -169,7 +171,7 @@ async function start(): Promise<void> {
   camera.resize(app.screen.width, app.screen.height);
   camera.attach(app.canvas);
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
-  app.ticker.add((ticker) => camera.update(ticker.deltaMS));
+  loop.add((ms) => camera.update(ms));
 
   const levels = readLevels(config.levels);
   const increase = Number(config.globals?.POPULATION_INCREASE) || 10;
@@ -177,13 +179,13 @@ async function start(): Promise<void> {
   const sound = new Sound(settings.assetsUrl, town.race);
   // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
   const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
-    population: (t) => population(t, items, increase), sound, pause: new Pause(app.ticker),
+    population: (t) => population(t, items, increase), sound, pause: new Pause(loop),
     site: settings.csrf ? { news: settings.news ?? 0, username: settings.username ?? "", csrf: settings.csrf } : undefined });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
   world.addChild(view.root);
-  app.ticker.add((ticker) => view.tick(ticker.deltaMS, camera.scale));
+  loop.add((ms) => view.tick(ms, camera.scale));
 
   // The player's own town can be changed; a visited one only looked at.
   let afterDrawing = () => {};
@@ -673,7 +675,7 @@ async function start(): Promise<void> {
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
         fighting = () => defence.fighting !== null;
-        app.ticker.add((ticker) => defence.tick(ticker.deltaMS));
+        loop.add((ms) => defence.tick(ms));
         grow();
         // Then the harbour (and from level 30 the zeppelin tower), given and opened as the Flash
         // client does (rules/dock.ts): after the camp, as a new town's prisoner holds the harbour back.

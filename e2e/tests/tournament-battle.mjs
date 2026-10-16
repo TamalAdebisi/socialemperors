@@ -15,6 +15,23 @@ export default async function tournamentBattle({ newPlayer }) {
     ...[2, 7, 16].map((id) => ({ cmd: "buy_magic", args: [id, 0, 0] })),
     { cmd: "collect_treasure", args: [750, 0, 3, 0, 0, 0] },
   ]);
+  // As in playthrough-controls: withhold animation frames while hidden,
+  // so the independent GameLoop timer must advance the actual battle.
+  await player.page.addInitScript(() => {
+    window.testHidden = false;
+    Object.defineProperty(document, "hidden", { get: () => window.testHidden });
+    const request = window.requestAnimationFrame.bind(window);
+    const pending = [];
+    window.requestAnimationFrame = (run) => request((time) => {
+      if (window.testHidden) pending.push(run);
+      else run(time);
+    });
+    window.changeTestVisibility = (hidden) => {
+      window.testHidden = hidden;
+      document.dispatchEvent(new Event("visibilitychange"));
+      if (!hidden) for (const run of pending.splice(0)) request(run);
+    };
+  });
   await player.reload();
   const opponents = [];
   const room = await join(player, "1", "", padded(KNIGHT, KNIGHT, KNIGHT), 5);
@@ -52,6 +69,39 @@ export default async function tournamentBattle({ newPlayer }) {
   });
   assert.match(await page.locator(".tournament-battle-hud").textContent(), /3 units left.*1 units left/s);
   assert.ok(sent.some((command) => command.cmd === "game_status" && JSON.stringify(command.args) === JSON.stringify(["LOAD_MAP", "NORM", "TOUR"])));
+
+  const beforeHidden = await page.evaluate(() => {
+    window.dispatchEvent(new Event("blur"));
+    window.changeTestVisibility(true);
+    return window.seTournament.battle.frame;
+  });
+  await page.waitForFunction((before) => window.seTournament.battle.frame >= before + 60, beforeHidden,
+    { timeout: 20_000, polling: 100 });
+  assert.equal(await page.locator(".pause-curtain").count(), 0, "switching tabs does not pause a tournament");
+  const hiddenClock = await page.evaluate(() => ({
+    label: document.querySelector(".tournament-battle-clock").getAttribute("aria-label"),
+    seconds: window.seTournament.match.seconds,
+  }));
+  assert.equal(hiddenClock.label, `Match time ${hiddenClock.seconds} seconds`, "the hidden match updates its displayed clock");
+  const returned = await page.evaluate(async () => {
+    window.changeTestVisibility(false);
+    const frame = window.seTournament.battle.frame;
+    const at = performance.now();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return { frames: window.seTournament.battle.frame - frame, elapsed: performance.now() - at };
+  });
+  assert.ok(returned.frames <= Math.ceil(returned.elapsed * 30 / 1000) + 2,
+    `returning must not replay hidden time (${returned.frames} frames in ${returned.elapsed}ms)`);
+  await player.press("Pause");
+  const paused = await page.evaluate(() => window.seTournament.battle.frame);
+  await page.evaluate(() => window.changeTestVisibility(true));
+  // An independent timer checks the absence of progress during explicit Pause.
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 1000)));
+  assert.equal(await page.evaluate(() => window.seTournament.battle.frame), paused);
+  await page.evaluate(() => window.changeTestVisibility(false));
+  assert.ok(await page.locator(".pause-curtain").isVisible(), "visibility changes preserve explicit Pause");
+  await player.press("Resume");
+  await page.waitForFunction((before) => window.seTournament.battle.frame > before, paused);
 
   // The two prohibited spells stay visible but cannot be cast. An ordinary
   // learned spell stays usable, even though this match is won with the army.

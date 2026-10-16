@@ -15,6 +15,7 @@ const LEVEL = 17;
 export default async function spy({ newPlayer }) {
   const rival = await newPlayer();
   await rival.send([{ cmd: "rt_level_up", args: [LEVEL] }]);
+  await rival.page.close();  // this fixture's save is enough; it need not keep drawing
   const player = await newPlayer();
   const { page } = player;
   await player.send([{ cmd: "rt_level_up", args: [LEVEL] }, { cmd: "buy", args: [EAGLES_I, 40, 56, 0, 0, 1, 1] }]);
@@ -51,7 +52,10 @@ export default async function spy({ newPlayer }) {
   const before = await at();
   const { width, height } = player.viewport;
   await player.click({ x: width / 2 + 200, y: height / 2 + 100 });
-  await player.wait(2000);
+  await page.waitForFunction((before) => {
+    const eagle = window.seAttack.battle.fighters.find((f) => f.side === 1);
+    return Math.abs(eagle.tx - before.x) + Math.abs(eagle.ty - before.y) >= 3;
+  }, before, { timeout: 15_000 });
   const after = await at();
   assert.ok(Math.abs(after.x - before.x) + Math.abs(after.y - before.y) >= 3, `the eagle flew: ${JSON.stringify([before, after])}`);
   await player.wait(1500);
