@@ -4,8 +4,8 @@ import { test } from "node:test";
 
 import { itemsById, type GameConfig } from "./config.ts";
 import {
-  ATTACKS_PERIOD, attackerShare, attacksLeft, burnOnReturn, defenderTenth, honour, isTarget, killWorth, placeOf, recover, report, startPoints,
-  type Row,
+  ATTACKS_PERIOD, EAGLE, SPYINGS_PERIOD, attackerShare, attacksLeft, burnOnReturn, defenderTenth, eagleLife, eaglesOf, honour, isTarget,
+  killWorth, placeOf, recover, report, spyingsLeft, startPoints, type Row,
 } from "./pvp.ts";
 import type { Town } from "./town.ts";
 
@@ -88,4 +88,16 @@ test("home to an attack: the town hall and the first five buildings half burnt, 
   assert.equal(things.at(-1)!.health, Math.floor(item(TOWN_HALL).life / 2));
   assert.equal(things.filter((p) => p.item.id === HOUSE && "health" in p).length, 5);
   assert.ok([WALL, FLAG, SWORDSMAN].every((id) => !("health" in things.find((p) => p.item.id === id)!)));
+});
+
+test("spying: an Eagles building built, its eagle's life by level, 3 visits a day", () => {
+  const eagles = { item: item(186), tx: 40, ty: 40, orientation: 0 };
+  const town = { race: "h", items: [{ item: item(1), tx: 50, ty: 50, orientation: 0 }, eagles] } as unknown as Town;
+  assert.equal(eaglesOf(town, () => true), eagles);
+  assert.equal(eaglesOf(town, () => false), null, "still being built");
+  assert.deepEqual([185, 186, 187, 217, 349].map((id) => eagleLife(item(id), item(EAGLE))), [200, 400, 800, 10000, item(EAGLE).life]);
+  const three = [{ time: NOW - 3000 }, { time: NOW - 2000 }, { time: NOW - 1000 }];
+  assert.deepEqual(spyingsLeft(three, NOW), { left: 0, wait: SPYINGS_PERIOD - 1000 });
+  assert.equal(spyingsLeft(three.slice(1), NOW).left, 1);
+  assert.equal(spyingsLeft(three, NOW + SPYINGS_PERIOD).left, 3, "a day after the last, all three");
 });

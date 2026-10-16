@@ -40,6 +40,8 @@ export interface ControlParts {
   cursorFor?: (hovered: Fighter | null, selected: Fighter[]) => string;
   /** Mana and gold changed (the town's numbers at the top, at home). */
   changed?: () => void;
+  /** False: no spell book (spying). */
+  spells?: boolean;
 }
 
 export class BattleControls {
@@ -62,7 +64,7 @@ export class BattleControls {
       void commands.flush();
     }, () => parts.changed?.());
     this.magic = spells.state;
-    this.book = magicOpen(town.race, town.level) ? new SpellBook(spells, (spell) => {
+    this.book = parts.spells !== false && magicOpen(town.race, town.level) ? new SpellBook(spells, (spell) => {
       this.aimAt = null;
       if (spell) {
         this.select([]);

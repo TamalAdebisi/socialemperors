@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: spying
+
+- **The eagle sets off from the top-left corner,** with no corner to
+  pick, as the original's spy start showed none.
+- **Spying is offered from the world map only,** as in the original (the
+  neighbour bar had Attack, not Spy); home after it opens the map at the
+  continent spied on, as the Flash client went back to it.
+- **Attacks on players of the same level, or higher, count when left
+  early too,** as the original counted them; "attack a player" still
+  needs the battle fought to the end.
+
 ## 15 October 2026: the world map
 
 - **Each island shows its owner's name and level** under it, not only in
