@@ -84,12 +84,16 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Earlier full verification (#87):** all 67 browser tests passed in
-  **80m 30.65s**, including the build, on the machine below. Server:
-  429 run (420 passed, 9 existing skips); client types and all 348 passed.
-  [The delivery record](docs/verification-87.md) has the exact code commit,
-  screenshots reviewed and individual timings. The separate art-memory
-  follow-up remains open for refreshed-cache public-art verification.
+- **Latest art verification (#91):** all 20 images match their JSON and
+  repair-query copies, both plain and with the game's Origin header.
+  With refreshed caches, `team` passed alone (52s) and in the full suite
+  (42s). The pre-#93 full run was **66/67 in 79m 48.48s**; its historical
+  tutorial-arrow failure is recorded in [the repair notes](docs/art-loading-repair.md).
+  Peak anonymous/shared/kernel memory was 3.76 GiB, with no memory-limit
+  or OOM events. After merging #93, the cold-cache team passed again in
+  66s, followed by all four tutorial/tournament checks in 10m 28.77s.
+  Current server: 435 run (426 passed, 9 existing skips); client types
+  and all 350 passed. The art follow-up is closed.
 - Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
   **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
   Later tutorial recovery/review corrections passed all three tutorial
@@ -98,6 +102,12 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   9 existing skips; a later test-only assertion tightening passed all
   14 tutorial server tests again. The full browser run used the repaired
   ordinary public art with the old nine-item cache refreshed.
+- **Previous full verification (#87):** all 67 browser tests passed in
+  **80m 30.65s**, including the build, on the machine below. Server:
+  429 run (420 passed, 9 existing skips); client types and all 348 passed.
+  [The delivery record](docs/verification-87.md) has the exact code commit,
+  screenshots reviewed and individual timings. Its stale art-cache
+  result is historical; #91 supplies the refreshed-cache verification.
 - Run the tests for what you touched while you work, and the whole lot
   before a pull request is merged. For #86 on 16 October 2026, the 64 browser
   tests took **64 minutes 51 seconds**, including the build, on a cloud
