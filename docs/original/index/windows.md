@@ -150,7 +150,7 @@ Player battles are for the last stop ("The switch"); the World window sends play
 | `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
 | `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
-| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | not yet; `worlds.py` |
+| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; not the unit collection's |
 | `popups/PopupBuyTerritoryPvp.as` | 101 | Buy a place on the player-attack world for 5 cash (`buy_pvp_territory`). | not yet: our server doesn't handle `buy_pvp_territory` either |
 | `popups/PopUpBuyAssault.as` | 100 | Out of attacks or spy visits: wait, or buy 50 for 30 or 15 cash. | not needed: nothing opens it |
 

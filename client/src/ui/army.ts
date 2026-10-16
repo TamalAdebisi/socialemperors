@@ -65,6 +65,16 @@ export class ArmyWindow {
     this.panel.toggle();
   }
 
+  /** Open on the defence plans (the world map's Options button). */
+  openPlans(): void {
+    if (!this.panel.isOpen) {
+      this.opened = this.chosen = this.parts.plan();
+      this.panel.toggle();
+    }
+    this.tab = "plan";
+    this.render();
+  }
+
   private render(): void {
     const tabs = document.createElement("nav");
     tabs.className = "shop-tabs army-tabs";

@@ -1784,8 +1784,9 @@ collections, in the last stop).
 
 ### Attacking players
 
-"The switch". Attacking another player's town comes to the new client
-in slices; the world map, spying and revenge still open the classic game. A reading of the original,
+"The switch". Attacking another player's town is played in the new
+client: from Neighbours or the world map, with the defence plans, the
+history and revenge. Spying still needs the classic game. A reading of the original,
 in our words, is the plan (how an attack starts, the battlefield and the
 four defence plans, the report, the windows after, spying, the world
 map, revenge).
@@ -1881,6 +1882,45 @@ what was won, the units lost, and Take Revenge!!, an attack on them.
 - **Names:** the server now puts the attacker's username in the
   defender's history (every empire is called "Emperor" otherwise), as
   the neighbours list does.
+
+Fifth slice, the world map (`ui/worldMap.ts`, the rules in
+`rules/world.ts`, the browser test `e2e/tests/world.mjs`). **Attack a
+player** in the Battle and World windows opens it from level 6, as the
+Flash client's world button. It is the game's own screen, rebuilt in
+HTML from its pieces: the continent picture (`images_new/mapa1-5.jpg`,
+one for each continent in turn), and over it the eight islands, the
+borders, the statue, the ship and the zeppelin, drawn from the game's
+file by `tools/art/export_world.py`, which also reads where each piece
+sits on each of the five pictures (`tools/art/Placements.java`) into
+`ui/art/world/places.json`.
+
+- **The islands:** the player's town and its seven rivals, each a town
+  by its owner's level (a troll town for trolls), the flag on the rubble
+  once beaten. On the town's own continent the borders show, and the
+  town's land and the islands beaten are coloured in, as there. Each
+  island has its owner's name and level under it (an extra: the original
+  showed them only in the menu).
+- **An island's menu:** the owner and level, Profile (their honour and
+  attacks won and lost, `get_public_player_info.php`) and Attack. Attack
+  isn't offered for the player's own island, someone attacked in the
+  last 4 hours, with no army or no attacks left; the menu says why.
+  Attack opens the battle with the island's place and continent in the
+  report, so the server counts the island beaten (`worlds.py`).
+- **The bar:** the attacks left (or when they come back), Battle Results,
+  Options (the Army window on its defence plans), the continent to look
+  at with its arrows, a number and GO!, and My World to come back.
+  Under the map: the progress (islands beaten of 7) and Relocate, which
+  asks first and loses the islands beaten (`reset_position_univers`).
+- **Moving on:** once the seventh rival is beaten the server moves the
+  town to the next continent; the map then shows the game's prize window
+  (`reset_world_change`), and OK gives the cash and units into storage
+  (`apply_rewards_ranking`). If the player's own island counts as beaten
+  (islands swapped about), it changes places with one not beaten
+  (`modify_position_univers`), as there.
+- **The ship and the zeppelin** (from level 25) open the quests' map at
+  its first or third page.
+- **Not yet:** spying (the eagles), and the help page the original showed
+  the first time.
 
 ### Making the art look better
 

@@ -43,7 +43,12 @@ function goHome(): void {
   location.assign("/client.html");
 }
 
-export async function playAttack(settings: PageSettings, server: GameServer, victimId: string, victimTown: number): Promise<void> {
+/**
+ * `island`: from the world map, the island attacked (its place and continent), which the
+ * report carries so the server can count it beaten (worlds.py).
+ */
+export async function playAttack(settings: PageSettings, server: GameServer, victimId: string, victimTown: number,
+  island?: { posicion: number; nivel: number }): Promise<void> {
   showStatus("Marching to their town…");
   const [config, mine, theirs] = await Promise.all([server.gameConfig(), server.playerInfo(),
     server.playerInfo({ user: victimId, town: victimTown })]);
@@ -279,7 +284,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
       world_id: Number((mine.playerInfo as { world_id?: number }).world_id ?? 0), map: town.id, race: town.race };
     const rows = recover([...attackerRows.values()], attackerShare(town.level), random);
     const victimSent = recover([...victimRows.values()], 95, random);
-    const victim = { user_id: victimId, name, level: enemy.level, map: String(victimTown), race: enemy.race };
+    const victim = { user_id: victimId, name, level: enemy.level, map: String(victimTown), race: enemy.race, ...(island ?? {}) };
     const sent = report({ attacker, victim, gold, xp, attackerRows: rows, victimRows: victimSent, won, seconds, voluntary,
       townHallGold, defenderGold, noTownHall: !hasTownHall, items });
     // Sent at once, so nothing is lost if the page closes on the results (as the islands).

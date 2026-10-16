@@ -263,7 +263,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 |---|---|---|---|
 | `backgroundThinFrameMC.as` | 17 | A thin window frame. | art |
 | `DartTargetMC.as` | 26 | A balloon target in the darts game. | art |
-| `ExplorationWorldMC.as` | 65 | The world map's bar: world number, spies, history, go home, move. | art |
+| `ExplorationWorldMC.as` | 65 | The world map's bar: world number, spies, history, go home, move. | art: its islands, borders, statues, ship, zeppelin and buttons drawn by `tools/art/export_world.py` |
 | `FolderWindowMC.as` | 23 | A window with pages and a close button. | art |
 | `FotoNeighbourMC.as` | 23 | A neighbour's photo with a hand and a bubble. | art |
 | `FotoNeighbourMC2.as` | 17 | A neighbour's photo. | art |

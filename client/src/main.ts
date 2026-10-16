@@ -20,7 +20,9 @@ import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { planOf } from "./rules/defencePlans.ts";
-import { MIN_LEVEL_PVP, burnOnReturn } from "./rules/pvp.ts";
+import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, type AttackEntry } from "./rules/pvp.ts";
+import { attackedLately } from "./rules/world.ts";
+import { WorldMapWindow, type PlayerProfile } from "./ui/worldMap.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
 import { cleanUp, oneVillager } from "./rules/cleanup.ts";
@@ -83,7 +85,9 @@ async function start(): Promise<void> {
   const attack = new URLSearchParams(location.search).get("attack");
   if (attack) {
     const { playAttack } = await import("./attackPlay.ts");
-    await playAttack(settings, server, attack, Number(new URLSearchParams(location.search).get("map")) || 0);
+    const query = new URLSearchParams(location.search);
+    const island = query.has("island") ? { posicion: Number(query.get("island")), nivel: Number(query.get("continent")) } : undefined;
+    await playAttack(settings, server, attack, Number(query.get("map")) || 0, island);
     return;
   }
 
@@ -225,7 +229,50 @@ async function start(): Promise<void> {
         doings.historyOpened = true;
       },
     });
-    const world = new WorldWindows(settings.classicUrl, islands, () => history.toggle());
+    const worldMap = new WorldMapWindow({
+      me: settings.userId,
+      continent: (options) => server.continent({ town: town.id, ...options }),
+      beaten: () => (info.map as unknown as { universAttackWin?: unknown }).universAttackWin,
+      clearBeaten: () => {
+        (info.map as unknown as { universAttackWin?: unknown }).universAttackWin = [];
+      },
+      attacksLeft: () => attacksLeft((attackState.attacksSent ?? []) as AttackEntry[], clock(),
+        town.items.some((p) => p.item.id === ODIN_STATUE), Number(attackState.tsAttacksReset) || 0),
+      lately: () => attackedLately((attackState.attacksSent ?? []) as AttackEntry[], clock()),
+      armySize: () => armyOf(town).reduce((sum, [, n]) => sum + n, 0),
+      level: () => town.level,
+      words: (id) => lines.get(id) ?? "",
+      pictureUrl: (n) => `${settings.assetsUrl}/images_new/mapa${n}.jpg`,
+      attackUrl: (island) => `/client.html?${new URLSearchParams({ attack: island.user_id, map: String(island.map),
+        island: String(island.posicion), continent: String(island.nivel) })}`,
+      profile: async (pid) => (await server.publicProfile(pid)) as PlayerProfile | null,
+      results: () => history.open("sent"),
+      options: () => army.openPlans(),
+      sail: (page) => islands.open(page, "dock"),
+      send: (cmd, ...args) => commands.add(cmd, ...args),
+      prizeOwed: () => Number(attackState.worldChange) === 1,
+      prizeShown: () => {
+        attackState.worldChange = 0;
+      },
+      prizes: config.level_ranking_reward,
+      claim: (_continent, prize) => {
+        town.cash += prize.cash;
+        for (const [id, n] of prize.units) {
+          town.store.set(id, (town.store.get(id) ?? 0) + n);
+        }
+        hud.update(town);
+      },
+      thumbnail: (id) => `${settings.assetsUrl}/buildingthumbs/${items.get(id)?.art ?? ""}.jpg`,
+      itemName: (id) => items.get(id)?.name ?? "",
+      zeppelinLevel: Number(items.get(ZEPPELIN_TOWER)?.minLevel) || 25,
+    });
+    const world = new WorldWindows(settings.classicUrl, islands, () => {
+      if (town.level < MIN_LEVEL_PVP) {
+        editor.tell(`Attacks on other players open at level ${MIN_LEVEL_PVP}.`);
+        return;
+      }
+      worldMap.open();
+    }, () => history.toggle());
     // Home to an attack not yet seen: the attacks received open by themselves, as in the Flash client.
     if (attackedWhileAway(attackState)) {
       openAttacked = () => {

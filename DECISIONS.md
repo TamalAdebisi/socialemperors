@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 15 October 2026: the world map
+
+- **Each island shows its owner's name and level** under it, not only in
+  its menu as in the original, so the map reads on a phone too (an
+  extra).
+- **The map is a panel beside the town,** like the quests' map, not a
+  screen over everything; its pieces are the game's own.
+- **The island menu explains itself in our words** ("Already attacked:
+  wait 4 hours...", "You need an army..."); the original's own labels
+  for these were drawn into its art, not in the game's texts.
+- **Attack is the menu's link to the battle page,** so the attack is
+  counted when the battle opens, as from Neighbours.
+
 ## 15 October 2026: the defence plan and the battle results
 
 - **The plan is a tab of the Army window** ("My Defensive Strategy"), as

@@ -367,7 +367,12 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
   - [x] Choosing the town's defence plan in the Army window; the Battle
         Results window (attacks made and received, each report, Take
         Revenge!!, the "Attacked!" notice); the goals about attacks
-  - [ ] Attacking players, the rest: the world map, spying
+  - [x] The world map: continents of eight islands, rivals near the
+        player's level, attacking from an island, beaten islands, the
+        progress, browsing, relocating, profiles and the prize for a new
+        continent ([CLIENT.md](CLIENT.md#attacking-players))
+  - [ ] Attacking players, the rest: spying (the eagles), the map's
+        first-time help
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))

@@ -3054,3 +3054,294 @@ body {
   width: fit-content;
   margin: 10px auto 0;
 }
+
+/* ---- The world map (ui/worldMap.ts): the bar, the continent with its islands, the progress ---- */
+@media (min-width: 721px) and (not ((orientation: portrait) and (max-width: 1000px))) {
+  .panel.world-window {
+    width: min(760px, calc(100vw - var(--rail-w) - 64px));
+  }
+}
+
+.world-window .panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.world-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.world-attacks {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--parchment-deep);
+  font: 800 14px var(--round);
+}
+
+.world-attacks.none {
+  color: #a1281c;
+}
+
+.world-art {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.world-art img {
+  transition: transform 0.1s;
+}
+
+.world-art:hover:not(:disabled) img {
+  transform: scale(1.06);
+}
+
+.world-art:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.world-art.results img { height: 40px; }
+.world-art.options img { height: 42px; }
+.world-art.go img { height: 36px; }
+.world-art.my-world img { height: 54px; }
+.world-art.prev img { height: 28px; }
+.world-art .flip { transform: scaleX(-1); }
+.world-art.next:hover:not(:disabled) img { transform: scaleX(-1.06) scaleY(1.06); }
+
+.world-pick {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 13px var(--round);
+}
+
+.world-number {
+  width: 3.5em;
+  padding: 3px 4px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 8px;
+  font: 800 16px var(--round);
+  text-align: center;
+}
+
+.world-map {
+  position: relative;
+  flex: none;
+  width: 100%;
+  aspect-ratio: 701 / 514;
+  overflow: hidden;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: #33c3f0;
+}
+
+.world-map.loading > * {
+  visibility: hidden;
+}
+
+.world-map.loading::after {
+  content: attr(data-loading);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 800 22px var(--round);
+  text-shadow: 0 2px 0 #024;
+}
+
+.world-picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+.world-piece {
+  position: absolute;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+.world-piece img {
+  display: block;
+  width: 100%;
+}
+
+button.world-piece {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+button.world-piece:hover img {
+  filter: brightness(1.12);
+}
+
+/* An island beaten or the player's own: its land coloured, as the Flash client tints it. */
+.world-tint {
+  position: absolute;
+  background: #0000ff;
+  -webkit-mask: var(--mask) center / 100% 100% no-repeat;
+  mask: var(--mask) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.world-name {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  max-width: 140%;
+  overflow: hidden;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(30, 20, 10, 0.72);
+  color: #fff;
+  font: 800 11px var(--round);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.world-island.mine .world-name {
+  background: #1f6fd1;
+}
+
+/* The menu over an island (its owner, Profile, Attack), and the profile in it. */
+.world-menu {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 150px;
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 3px solid var(--wood);
+  border-radius: 12px;
+  background: var(--parchment);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transform: translate(10%, -30%);
+}
+
+.world-menu.right {
+  transform: translate(-90%, -30%);
+}
+
+.world-menu[hidden] {
+  display: none;
+}
+
+.world-menu strong {
+  font: 800 15px var(--round);
+}
+
+.world-menu-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 800 14px var(--round);
+}
+
+.world-menu-level .icon {
+  width: 20px;
+}
+
+.world-art.profile img { height: 26px; }
+.world-art.attack img { height: 52px; }
+
+.world-why {
+  margin: 0;
+  color: #a1281c;
+  font: 700 13px var(--round);
+  text-align: center;
+}
+
+.world-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.world-profile p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.world-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.world-progress {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  height: 22px;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #2e4f9e;
+}
+
+.world-progress span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #120fa8;
+}
+
+.world-progress strong {
+  position: relative;
+  display: block;
+  color: #fff;
+  font: 800 13px/18px var(--round);
+  text-align: center;
+}
+
+/* A new continent: its prize. */
+.world-prize {
+  position: absolute;
+  z-index: 3;
+  inset: 20% 10% auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  border: 3px solid var(--wood);
+  border-radius: 14px;
+  background: var(--parchment);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.world-prize strong {
+  font: 800 20px var(--round);
+}
+
+.world-prize p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.world-prize-unit {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
