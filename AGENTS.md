@@ -79,19 +79,20 @@ those commands run outside the sandbox when asked.
 
 ```
 .venv/bin/python -m unittest discover tests          # the server: 436 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 356 tests
+(cd client && npm run check && npm test)             # the client's types and rules: 357 tests
 PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 73 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
 - **Latest playthrough verification (#95):** server 436 run (427 passed,
-  9 existing skips), client types and all 356 passed. Complete integrated
+  9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
   #94. WebKit selection, recurring raids, cards and Everybody passed
   **4/4 in 2m 37.96s**. Test-only rendering/save waits and a central click
   target follow the full run: card passed in Chromium (111s), and final
   selection passed in Chromium (50.22s total) and WebKit (21.77s total).
-  [The delivery record](docs/verification-95.md)
+  Review corrections at `ad9adfd7` have fresh server/client passes; affected
+  browser checks are running. [The delivery record](docs/verification-95.md)
   retains the initial results, failures, screenshot review and engine limits.
 - **Previous playthrough verification (#94):** server 435 run (426 passed,
   9 existing skips), client types and all 354 passed. Full Chromium suite:

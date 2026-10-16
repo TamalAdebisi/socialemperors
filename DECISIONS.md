@@ -9,12 +9,16 @@ them can be found and reversed. The big, agreed decisions are in
 - **Recurring pressure with recovery.** The owner asked for meaningful troll
   attacks. Enable them after lessons and the first rescue, even at low
   levels. Opening a rescued town gives five minutes to prepare. Use the
-  original level/race soldier tables, at least two per band. After any completed fight, including the first camp, give seven
-  minutes of recovery below level 10, five from level 10.
+  original level/race soldier tables, at least two per band. After any
+  completed fight, including the first camp, give seven minutes of recovery
+  below level 10, five from level 10.
   Do not stack raids onto camp fights. Retreat after four minutes and remove
   blocked retreaters by five, so a town without troops can recover. Try
-  reachable defenses when a protected unit cannot be reached. Other siege
-  kinds keep their existing behavior. Raid timers remain local to the session;
+  reachable defenses when a protected unit cannot be reached. Continue
+  across all buildings in batches of twenty route checks per second, and
+  reject waiting spots outside weapon range. All automatically rolled first
+  attacks allow five minutes; special sieges keep their combat stages.
+  Raid timers remain local to the session;
   unit losses/rewards remain saved and buildings keep the original repair rules.
 - **A ten-minute camp wait.** Replace the four-hour cooldown with ten minutes,
   using the existing saved chest timestamp. Show the next camp and raid on
@@ -35,8 +39,7 @@ them can be found and reversed. The big, agreed decisions are in
   label Arthur as the game's guide. Select help recipients explicitly instead
   of preselecting every account in the community. Keep old friendship
   endpoints and existing pending requests compatible, but remove the
-  add/remove-friend UI. Do not
-  delete or rename TAKTAK: no built-in account by that name was found, and no
+  add/remove-friend UI. Do not delete or rename TAKTAK: no built-in account by that name was found, and no
   live account inspection was performed.
 - **Integrate the concurrent controls update.** Merge #94 without rebasing.
   Retain its click feedback, background simulation, explicit Pause, building
@@ -53,6 +56,18 @@ them can be found and reversed. The big, agreed decisions are in
   the upgraded building plus completed save batch. Click the visible unit
   center instead of a changing animation edge. Keep the same selection,
   replacement and resource-cost assertions, and retain the initial failures.
+
+- **Review decisions.** Shift groups contain commandable units only; a form
+  change refreshes group portraits; the threat button locates active raiders.
+  Error-only help replies do not claim the community is empty. Strengthen
+  daily-gift and Escape assertions. Keep own-eagle inspection consistent
+  with other friendly units; destination taps still fly it. Keep tournaments
+  on the all-account neighbor list: their existing rule already used neighbors,
+  not explicit friendship records, and the owner asked for everyone to be a
+  friend. Keep spell selection clearing the previous marker while preserving
+  its aiming state; the new preview is drawn on pointer movement or touch.
+  The new camp timing sentence follows the new client's English interface;
+  this change does not introduce a translation framework or invented string IDs.
 
 ## 16 October 2026: playthrough controls and site repairs
 

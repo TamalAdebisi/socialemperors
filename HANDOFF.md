@@ -24,12 +24,13 @@ next agent knows where to start.
   shared battle inspection/Deselect, and Everybody without friend requests.
   Main #94 is integrated, retaining its controls and site fixes. Decisions
   are recorded in DECISIONS.md. Server: 436 run (427 passed, 9 existing skips);
-  client types and 356 tests passed. Complete integrated Chromium: **73/73
+  client types and 357 tests passed after review. Complete integrated Chromium: **73/73
   in 1h 23m 18.88s** on `10507be4`. WebKit: **4/4 in 2m 37.96s**. Test-only
   rendering/save waits at `4f049001` and a central click target at `20ba5058`
   follow the full run. Card passed in Chromium (111s); final selection passed
-  in Chromium (50.22s total) and WebKit (21.77s total). No game-code changes
-  follow `10507be4`. [The delivery record](docs/verification-95.md)
+  in Chromium (50.22s total) and WebKit (21.77s total). Review corrections at
+  `ad9adfd7` now have fresh server/client passes; their affected browser checks
+  are running. The full-suite result remains attributed to `10507be4`. [The delivery record](docs/verification-95.md)
   retains the initial 71/71 run, WebKit failures and their corrections,
   screenshot/log review and the Linux WebKit/Mac GPU distinction.
 

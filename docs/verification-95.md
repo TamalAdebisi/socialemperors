@@ -4,6 +4,49 @@ All players and game writes use throwaway local accounts and servers. The
 ordinary public game art is cached locally. No live game account or save
 was accessed.
 
+## Final review follow-up
+
+Runtime `ad9adfd7` addresses the automated review after the complete run.
+Server: **436 run, 427 passed, 9 existing skips**, 32.335 seconds. Client:
+types and **357/357 passed**, 8.238 seconds. Eight affected Chromium checks
+are running: battle selection, recurring raids, raids, siege, friends-help,
+spells, spy and site-menu. Focused WebKit follow-up is pending.
+
+The added dense-town rule test initially failed: the battle rule could
+choose a reachable waiting spot outside weapon range, leaving a raider
+with a target it could not hit. Bands now reject that spot, retry idle
+unreachable targets, and continue their defense search beyond the first
+20 buildings in bounded batches. The new test and all client rules pass.
+Every automatically rolled first raid type also receives the five-minute
+preparation period; forced test arrivals still explicitly override it.
+
+The other fixes keep Shift groups free of inspected buildings/enemies,
+refresh portraits when a selected fighter changes form, make the threat
+button locate active attackers, and keep error-only help replies distinct
+from an empty directory. Browser tests cover those state changes. The
+existing gift test now verifies the daily cap for an account with no
+friendship record, and Escape checks the actual selection as well as its
+panel. The invite copy and stale trailing verification placeholder are fixed.
+
+### Automated review disposition
+
+| Finding | Result |
+| --- | --- |
+| Group portraits stale after transformation | Fixed; browser check calls the real form-change behavior. |
+| Shift retains inspected objects | Fixed; groups start from commandable units. |
+| Own eagle no longer invokes destination callback | Intentional inspection, consistent with the owner's selection request; browser check inspects the eagle then flies it with a destination tap. |
+| Defense search limited to twenty buildings | Fixed; bounded batches continue across the full candidate list. |
+| Gift cap missing a stranger assertion | Added the second-send rejection assertion. |
+| Threat button misses active raiders | Fixed and checked through the actual button. |
+| Escape test checks only panel visibility | Added an assertion that the selected-unit list is empty. |
+| Tournament eligibility includes every account | Intentional all-community behavior; the old helper already included recent non-friend neighbors. Owner/room/fee restrictions remain, while the owner explicitly removed friendship gates. |
+| Spell selection allegedly loses its preview | No preview exists at spell choice: SpellBook sets its aiming state, and pointer movement/touch builds the new marker. Clearing the previous marker is intentional; spell checks verify aiming and casting. |
+| Error-only help response claims no accounts exist | Fixed and checked with an error response fixture. |
+| New camp sentence is English | Consistent with this client's English UI and new labels; no new language-selection/translation system is introduced. Existing original localized story text remains. |
+| Higher-level first raids bypass preparation | Fixed for every automatically rolled raid kind; unit checks cover all kinds. |
+| Invite copy implies own/unclaimed empires appear | Corrected to other players' empires. |
+| Duplicate pending verification section | Removed. |
+
 ## Initial complete run
 
 Runtime `1c978b47e7d261bdb0e5d973759c29f7baa1b370`, based on main `d4bc1a72`:
@@ -15,7 +58,7 @@ This run is retained as an initial result, not relabeled as verification of
 the later main merge. Its screenshots and server log were preserved before
 starting further runs.
 
-## Main integration and current verification
+## Complete integrated run before review
 
 Main advanced to `1eb2a2e2` (#94) during that run. It was merged without
 rebasing at `10507be421042211081161e59766d8d802fe3ff7`. The combined code keeps
@@ -30,10 +73,10 @@ explicit Pause, placement fixes and root-relative site assets, alongside
 - Focused WebKit: **4/4 passed in 2m 37.96s** on test revision `4f049001`,
   covering battle selection, recurring raids, object cards and Everybody/Menu.
 
-No game-code changes follow the verified integration commit. Browser-test
-waits/diagnostics at `4f049001`, a central click target at `20ba5058`, and
-delivery documentation follow it. Those test changes receive focused checks
-in both engines.
+Game code stayed at `10507be4` through browser-test waits/diagnostics at
+`4f049001` and the central click target at `20ba5058`. The later review
+corrections at `ad9adfd7` receive separate checks below; the full 73-case
+result remains attributed to its actual commit.
 
 Environment: 3 CPUs, 8 GiB memory limit, Python 3.13.5, Node 24.19.0,
 Playwright 1.56.1, Chromium with software WebGL. Browser suites run one
@@ -310,7 +353,3 @@ the order below. Chromium was selected through
 | walk | 48 | Passed |
 | work | 56 | Passed |
 | world | 138 | Passed |
-
-## Integrated full-run order and timings
-
-Pending.
