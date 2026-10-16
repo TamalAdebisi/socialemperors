@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: browser test waits
+
+- **The owner requested merging #86 with the separate `team` failure
+  documented.** Both changed tests pass. The oversized art bundle still
+  needs the repair and verification recorded in HANDOFF.md; no test was
+  skipped or weakened.
+- **Survival waits for three seconds on the displayed game clock,** so
+  the existing check for at least three seconds in the save still holds
+  on a computer that draws slowly.
+- **Market warnings wait for earlier messages to finish first.** Goal
+  rewards use the same queue, which drops new messages when full. Both
+  warning checks wait for an empty queue, each with a 30-second limit.
+
 ## 16 October 2026: gifts
 
 - **Gifts sits first in the Neighbours window,** as the original's Send

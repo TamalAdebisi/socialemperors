@@ -13,12 +13,15 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **`main` is at `43ac3c7`**, with everything merged: pull requests #70 to
-  #84 went in on 15 and 16 October. There are no open pull requests. The
-  `claude/*` branches on GitHub are all merged and old: don't build on
-  them, start from `main`.
-- **Tests on `main`:** the server's 427 pass (9 skipped), the client's 324
-  pass, and of the 64 browser tests two are flaky (task 1).
+- **Task 1 is complete in #86**, with a separate art-loading failure
+  recorded below for follow-up. The owner requested merging the two wait
+  fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
+  those are implemented but still awaiting testing and merge. Leave those
+  tasks with that pull
+  request, and start new work from the latest `main` after it lands.
+- **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
+  client's 324 passed, and 63 of 64 browser tests passed. The two flaky
+  tests now pass; `team` needs the separate art repair described in task 1.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Nothing in the queue needs the live server, the database or the art
@@ -87,22 +90,44 @@ Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
 ask, then build.
 
-### 1. Mend the two flaky browser tests (S) - [ ]
+### 1. Mend the two flaky browser tests (S) - [x]
 
-Do this first, so a red test means something again. Both fail on `main`
-now and then; neither is a bug in the game.
+Completed in **[#86](https://github.com/TamalAdebisi/socialemperors/pull/86)**.
+The owner requested merging on 16 October with the separate `team`
+failure below documented for follow-up.
 
-- **`e2e/tests/survival.mjs`**: three seconds after the stand starts, it
-  expects the arena's clock at 0:02 or more, and sometimes reads 0:01. The
-  battle clock is game time, and Chromium without a graphics card runs it
-  slower than the wall clock. Wait (with a time limit) until the clock
-  passes 0:02, rather than a fixed three seconds.
-- **`e2e/tests/market.mjs`**, near line 85: after the 17th trade it waits
-  10 seconds for "Market resources have been exhausted", which can come
-  late when the whole suite is running. Find what the message waits on and
-  wait on that.
-- Keep what each test checks; only how it waits changes. Then run the
-  whole suite and note how long it takes, for AGENTS.md.
+- **`e2e/tests/survival.mjs`** waits for three seconds on the displayed
+  game clock, with a 30-second limit. Drawing without a graphics card can
+  make game time lag behind real time; the existing save check still
+  requires at least three seconds.
+- **`e2e/tests/market.mjs`** waits for earlier messages to finish before
+  triggering either warning. Goal rewards share a queue of three
+  messages; a full queue drops new messages. Each wait has a 30-second
+  limit. All existing warning, trade and save checks stay in place.
+
+**Verified on 16 October:** both tests pass on their own and in the full
+suite. The server ran 427 tests (418 passed, 9 existing skips); the
+client's type check and all 324 tests passed. Screenshots were inspected.
+The full browser run took **64 minutes 51 seconds**, including the build:
+**63 of 64 passed**, with `team` the only failure. AGENTS.md records the
+machine and timing.
+
+**Separate follow-up: repair one existing art bundle.** `team` times out
+at `e2e/tests/team.mjs:38` while the selected army loads. It fails on its
+own too, in a fresh browser, reaching this machine's 8 GiB memory limit.
+The current public `art/2075_elemental_red_god.json` names **76 sheets**:
+about **3.8 GiB** of decoded RGBA pixels, or **5.1 GiB** with mipmaps,
+before other graphics copies. This is separate from the two wait fixes;
+neither changes the team test, game code or art.
+
+The current packer (`tools/art/pack_sheet.py`) already limits an item to
+four sheets. The owner can run **Export art to R2**, with **Make these
+again** set to `2075_elemental_red_god` and **Make every sheet again** left
+off. Once the new manifest is served (the bucket's cache lasts up to a
+day), clear this item's old files from `.tools/art-cache/art/` on the
+test machine and rerun `team` and the full suite. The workflow is the
+owner's to start, as AGENTS.md says. No test was skipped or weakened to
+work around this failure.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 

@@ -60,7 +60,12 @@ export default async function survival({ newPlayer }) {
   assert.ok(start.mine > 0 && start.mine <= 30, `the army, 30 at most: ${start.mine}`);
   assert.equal(start.enemies, 8, "the first wave");
   assert.match(await page.locator(".survival-line").textContent(), /ENEMY WAVE 1 IS COMING!!!/);
-  await player.wait(3000);
+  // The arena counts game time, which runs slowly without a graphics card.
+  // Reach three seconds before ending the stand, as the saved-time check below needs.
+  await page.waitForFunction(() => {
+    const clock = document.querySelector('.survival-hud [aria-label="Time held"]')?.textContent?.match(/Time (\d+):(\d+)/);
+    return clock && Number(clock[1]) * 60 + Number(clock[2]) >= 3;
+  }, null, { timeout: 30_000 });
   assert.match(await page.locator(".survival-hud").textContent(), /Time 0:0[2-9].*Killed \d+.*Relic \d+\/5000/s);
   await player.shot("arena");
   const started = await info();
