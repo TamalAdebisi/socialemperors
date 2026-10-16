@@ -63,9 +63,10 @@ second.
   after each gain.*
 - It goes up one level per check. The level-up window's two buttons both
   check again on closing, so several levels gained at once come as one
-  window after another, each paying its prize as it opens. *Ours:
-  different: all levels at once, one message naming the last level and
-  every prize (`rules/levels.ts`, `editor.ts`). Same totals.*
+  window after another, each paying its prize as it opens. *Ours: one
+  window after another too (`client/src/ui/levelUp.ts`); the prizes are
+  all paid as the levels are reached, not as each window opens
+  (`rules/levels.ts`). Same totals.*
 - A level up sends `rt_level_up` (the new level) at once. *Ours: same
   (`rules/levels.ts`).*
 - On opening the home town from level 5, the game sends `rt_publish_score`
@@ -104,13 +105,13 @@ second.
   up to four buildings that open at this level: those whose `min_level`
   is exactly the new level, of type building, sold in some store and of
   the town's own race. A level-up sound plays. Its two buttons (share and
-  skip) both just close it here. *Ours: different: a short message with
-  the name and prizes, and the sound; no buildings list (PARITY.md lists
-  the window as to do).*
+  skip) both just close it here. *Same: `client/src/ui/levelUp.ts`, `client/src/rules/levels.ts` (`unlockedAt`), with one button, OK.*
+  *Fixed since "The level-up window".*
 - Opening it closes the other window of its sort if one is open (the
   market, for one), and redraws the open shop's cards for the new level
-  rather than closing the shop; message windows stay. *Ours: different:
-  our message doesn't close anything.*
+  rather than closing the shop; message windows stay. *Ours: the shop
+  redraws its cards (`client/src/editor.ts`, `levelUp`); the market's
+  panel stays open beside the level-up window, as every panel does.*
 - At home, every level up rolls the raids again as if the town had just
   opened: from level 25 one chance in 10 of a siege, stampede or army by
   level band, and the bandit bands from levels 10, 15 and 20 (the details
@@ -298,7 +299,7 @@ check counts the player's own things.
   since "Select several units, as in the Flash client"; until then the
   goal was left to the classic game.*
 - Other kinds played only in the classic game for now: the market's
-  trades (65, 66, 72) and its friends (51), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
+  friends (51; its trades, 65, 66 and 72, count here since "The market"), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
   129, 142, 152, 162, 164, 172, 185, 192, 205, 209), player battles and
   spying (59, 67, 78, 79, 94, 132, 161), the defence plan (60), social
   buildings staffed (53, 71, 90, 96, 104, 115, 122, 150, 159, 170, 176,
@@ -455,8 +456,8 @@ check counts the player's own things.
   that houses nobody; the cash goes in the collect command's last place.
   It counts as a harvest for the goals. The window shows the time left,
   ticking, and an "ask friends" button that opened a Facebook request.
-  *Ours: same rule (`hurry`, `rules/production.ts`); no ask-friends
-  button (not needed).*
+  *Ours: same rule (`hurry`, `rules/production.ts`); Ask friends sits
+  beside it on the card.*
 - Speeding up a building under construction costs 10 cash (written into
   the info panel), but only for items with a build time, and no item in
   the config has one, so it never shows. *Ours: not applicable.*
@@ -468,21 +469,25 @@ check counts the player's own things.
 
 - The market's window (from the market building) trades wood, stone and
   food for gold, in lots of 100, 200 or 300 by the market's level (I, II,
-  III; the troll markets the same). *Ours: missing (PARITY.md: in Beta
-  1); the server has `market.py`.*
+  III; the troll markets the same). *Ours: same, from "Visit Market" on
+  the card, in the panel (`client/src/ui/market.ts`, DECISIONS.md, 16
+  October 2026).*
 - Price of a lot: the base per 100 (wood 100, stone 150, food 100 gold)
   times the lot over 100, plus 2% of that for each purchase so far,
   rounded; a sale pays three quarters of that, rounded. The count goes up
   one per purchase and down one per sale, kept between -25 and 200 (the
-  town's `resourcesTraded`). *Ours: missing; `market.py` uses the same
-  sums.*
+  town's `resourcesTraded`). *Ours: same (`client/src/rules/market.ts`);
+  `market.py` uses the same sums.*
 - 20 trades, shown as "trades left"; the count is set back to 0 when the
   town loads more than 20 hours after the last trade. Trading with none
   left, buying without the gold or selling without the goods each gives a
-  warning. *Ours: missing.*
+  warning. *Ours: same, with the game's words; selling names the right
+  good (the game's line always said wood); buying without the gold opens
+  the bank.*
 - Each trade sends `trade_resource_b` (town, resource, 1 sell or 0 buy,
   amount), adds or takes gold and the goods on screen, and feeds the three
-  market goals while they are open. *Ours: missing.*
+  market goals while they are open. *Ours: same (`market-trade` in
+  `client/src/rules/goals.json`).*
 
 ## Trades with cash inside the game
 
@@ -528,15 +533,15 @@ check counts the player's own things.
 ## Renaming
 
 - At home, tapping the town's name in the top bar opens the rename window
-  with the current name. *Ours: missing (PARITY.md).*
+  with the current name. *Same, from the level at the top, whose tip names the town (`client/src/ui/hud.ts`, `offerRename`).*
 - The Save button never works in this build (its action is always
   removed); Enter saves when the name has 3 or more characters. Cancel
-  closes. *Ours: missing.*
+  closes. *Different: ours saves with Save too (a recorded call), `client/src/ui/rename.ts`.*
 - Saving sends `name_map` (town, name) and shows the new name in the top
   bar. It also writes the name to the wrong place in the player's data,
   so reopening the window shows the old name until the game reloads. The
   name "My Empire" is shown in the player's language. Renaming doesn't
-  complete goal 33. *Ours: missing; the server sets `map_names`.*
+  complete goal 33. *Same: `name_map`, and the top bar's tip has the new name at once (reopening shows it too); the server sets `map_names`.*
 
 ## Where CLIENT.md is wrong or short
 
@@ -625,6 +630,7 @@ so.
     level with its name, prize, up to four new buildings and the mana;
     it closes a market-type window and redraws the shop. Ours a message
     (`client/src/editor.ts`). (checked twice)
+    *Fixed since "The level-up window".*
 13. **Mana per level on screen** (looks different). The original adds 2
     on screen from level 36 at once; ours only when the Academy's window
     next lists an unlearnt spell or a spell is learnt, or after a reload
@@ -642,6 +648,7 @@ so.
     windows' details skimmed)
 17. **Several level ups** (looks different). One window each in the
     original, one message in ours; same prizes. (checked twice)
+    *Fixed since "The level-up window".*
 18. **The shop's cards** (looks different). Eight a page, "new" and
     "limited" badges, a hover card; ours a list without them
     (`client/src/ui/shop.ts`). (checked twice)
@@ -652,9 +659,11 @@ so.
     `client/src/rules/goals.json` though the kind is built. (checked
     twice)
 21. **The market** (missing), with goals 51, 65, 66, 72. (checked twice)
+    *Fixed since "The market" (goal 51, friends for the market, stays classic).*
 22. **The second town and travelling** (missing). (checked twice; the
     warnings below level 20 skimmed)
 23. **Renaming** (missing). (checked twice)
+    *Fixed since "Naming the empire".*
 24. **Level 5 and level 20 hints** (missing): the princess helper and the
     town button. (checked twice; whether the level 20 one shows anything
     is still not verified in the bar's art)

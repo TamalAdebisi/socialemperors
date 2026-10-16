@@ -275,15 +275,16 @@ things only until the page is reloaded).
 ## Friends' help asked for elsewhere
 
 - Hurry: the hurry window has Ask friends, which opens the page's ask
-  window for that building (`showPopupSEHelpCollect`). *Ours: missing
-  (PARITY.md lists it).*
+  window for that building (`showPopupSEHelpCollect`). *Ours: same, from
+  Ask friends on the card of a building at work (`client/src/ui/actions.ts`,
+  DECISIONS.md, 16 October 2026).*
 - Friends who answered show over the building as their pictures (the
   building's `hc`, those not yet used), stacked, the top one showing.
   Only at home. Tapping the building while any wait uses one: an hour off
   its wait (`COLLECT_HELP_SECONDS`, 3,600), `accept_collect_help` (x, y,
   town, id, friend), the next picture shows. These pictures go when the
-  building is ready. *Ours: missing: the new client ignores `hc`, so the
-  hours wait in the save for the classic game.*
+  building is ready. *Ours: same (`client/src/rules/friendsHelp.ts`,
+  `client/src/view/friendBubble.ts`), each friend shown by their initial.*
 - The dragon nest: Hire friends asks all friends through the page. Each
   friend in `dragonSocialHelp` counts for 2 steps, taken when the nest's
   window opens (a list of their pictures first, then the steps, never past
@@ -516,7 +517,7 @@ Most serious first.
     checked, their drawing only skimmed)
 15. **Friends' hurry help**: Ask friends, and their pictures over a
     building taking an hour off (`hc`, `accept_collect_help`). (checked
-    twice)
+    twice) *Fixed since "Friends' help at a building".*
 16. **The dragon nest's friends' help** (with the nest). (checked twice)
     Built with the nest's window, without the friends' pictures.
 17. **Attack and Send gift** on a neighbour. (checked twice)

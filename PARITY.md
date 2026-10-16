@@ -97,7 +97,7 @@ dock"), so these come with a mockup first.
 - [x] **Construction:** a new building stands in scaffolding for 10
       seconds, with a bar and its sounds, and can't be used meanwhile. M
 - [x] **Turning while placing** (Space). S
-- [ ] **On phones, seeing where a building will go** before it's bought. S
+- [x] **On phones, seeing where a building will go** before it's bought. S
 - [x] **Clean-up on load:** overlapping buildings go to storage, units on
       a taken tile step aside, a town with no villager gets one. S
 - [x] **Tapping the ready bubble collects;** the refund rises as a number
@@ -111,7 +111,7 @@ dock"), so these come with a mockup first.
 
 ## Windows and messages
 
-- [ ] **Level-up window:** the new level, its prize, and up to 4 buildings
+- [x] **Level-up window:** the new level, its prize, and up to 4 buildings
       that just became available. Ours is a short message that can be lost
       when several are waiting. M
 - [x] **Messages from the server at start** ("Bob helped your farm", "a
@@ -126,21 +126,22 @@ dock"), so these come with a mockup first.
       giving from storage, the free gift) and Empires, Friends and Log out,
       as on the classic page. M
 - [ ] **Neighbours:** sorted by XP, with their XP and a mark on those you
-      can help; Send gift. Friends' help on a building shows their picture
-      over it; tapping takes an hour off. M
-- [ ] **Hurry:** the original's window adds "Ask friends". S
+      can help; Send gift. M
+- [x] **Friends' help on a building** shows their picture over it;
+      tapping takes an hour off. S
+- [x] **Hurry:** the original's window adds "Ask friends". S
 - [x] **Selecting several units** with the square tool (or Space), a box
       or a double click, and sending them as a group. M
 - [x] **The pointer's tools:** the original's pointer button opens a menu
       of tools: Remove (the bulldozer, which stays on to remove one thing
       after another) and Fast collect (the glove, collecting what it's
       swept over). S
-- [ ] **Renaming the town** from the game. S
+- [x] **Renaming the town** from the game. S
 
 ## Your calls (15 October 2026)
 
 - [ ] **The troll town** (a second town, from level 20): in Beta 1. L
-- [ ] **The market** (trading wood, food and stone; three goals need it): in
+- [x] **The market** (trading wood, food and stone; three goals need it): in
       Beta 1. M
 - **The Daily News window**: left out. It showed Social Point's news,
   offers for cash and a few tips; there's no news to show now.

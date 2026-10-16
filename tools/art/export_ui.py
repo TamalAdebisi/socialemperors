@@ -106,6 +106,18 @@ PICTURES = {
     "draggy-frame": ("SelectYourDragonPopUpMC@8", 0, 300, "top"),  # without the placeholder name below it
     "reminder-ok": ("SelectYourDragonReminderNestPopupMC@5", 0, 300),
     "open-nest": ("EP_DragonNest_MC/btnAbrir", 0),
+    # The level-up window: its parchment in a wooden frame, and its title band.
+    "level-window": ("PopupLevelMC@1", 0, 1200),
+    "level-band": ("PopupLevelMC@2", 0, 900),
+    # The window that names the empire: its parchment with the name's field, its band, Save and Cancel.
+    "name-window": ("PopUpNameTownMC@1", 0, 1200),
+    "name-band": ("PopUpNameTownMC@2", 0, 800),
+    "name-save": ("PopUpNameTownMC/saveButt", 0, 300),
+    "name-cancel": ("PopUpNameTownMC/cancelButt", 0, 300),
+    # The market: its card's button, a trade's card (its wooden frame), and the trade's button without its word.
+    "open-market": ("EP_Market_MC/btMarket", 0),
+    "market-card": ("ButtonMarketMC@1", 0, 400),
+    "market-button": ("ButtonMarketMC/btnBuy@1", 0, 300),
     # The army window's defence plans (another player's attack): each plan's picture, and the tick on the one chosen.
     "plan-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 0, 330),
     "plan-mid-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 1, 330),
@@ -188,6 +200,11 @@ MAP_PICTURES = {
     # that fills it from the left.
     "progress-back": ("FauxBarMC@1", 0),
     "progress-fill": ("FauxBarMC@3", 0),
+    # A friend's help waiting over a building (FotoNeighbourMC): the white bubble, its blue
+    # label without words, and the hand that shows when the mouse is on it.
+    "friend-bubble": ("FotoNeighbourMC@1", 0),
+    "friend-label": ("FotoNeighbourMC/acceptText@1", 0),
+    "friend-hand": ("FotoNeighbourMC@3", 0),
 }
 MAP_OUT = os.path.join(ROOT, "client", "src", "view", "art")
 

@@ -15,7 +15,9 @@ import { CommandSender } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
-import { readLevels } from "./rules/levels.ts";
+import { readLevels, unlockedAt } from "./rules/levels.ts";
+import { LevelUpWindows } from "./ui/levelUp.ts";
+import { renameWindow } from "./ui/rename.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
@@ -49,13 +51,17 @@ import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
+import { MarketWindow } from "./ui/market.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
+import { marketRules, readMarket } from "./rules/market.ts";
+import { helpSeconds } from "./rules/friendsHelp.ts";
 import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
 import { AskFriends } from "./ui/askFriends.ts";
+import { Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -355,8 +361,52 @@ async function start(): Promise<void> {
     let bonuses: BonusDesk | undefined;
     // The goals, while they run (from level 35 they stop, as in the Flash client).
     let goalKeeper: GoalKeeper | undefined;
+    // The level-up window, the game's words in it; from level 36 each level gives mana too.
+    const line = (id: number, fallback: string) => lines.get(id) ?? fallback;
+    // Asking friends (ui/askFriends.ts): the dragon nest's Hire friends, and a working building's Ask friends,
+    // whose answers wait over it as their pictures (rules/friendsHelp.ts).
+    const asking = settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null;
+    const askPanel = new Panel("ask", "Ask friends", { className: "list-window" });
+    const friendNames = new Map((info.neighbors ?? []).map((n) => [String(n.pid), n.name?.trim() || "Friend"]));
+    // The market (ui/market.ts): its numbers from the config, the town's trading so far from the save.
+    const trading = marketRules((config.globals ?? {}) as Record<string, unknown>);
+    const market = new MarketWindow({
+      town, rules: trading, state: readMarket(info.map, trading, clock()), clock,
+      words: {
+        buy: line(607, "Buy"), sell: line(608, "sell"), tradesLeft: line(839, "Trades left today:"),
+        noTrades: line(183, "Market resources have been exhausted. Come back in 24 hours to trade more!"),
+        noGoods: line(184, "You don't have enough wood to sell!"),
+      },
+      send: (command) => commands.add(command.cmd, ...command.args),
+      changed: () => hud.update(town),
+      traded: (good, amount) => doings.traded(good, amount),
+      tell: (text) => editor.tell(text),
+      bank: (why) => {
+        editor.tell(why);
+        void bank.open();
+      },
+    });
+    const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
+    const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
+    const levelWindows = new LevelUpWindows(
+      { title: line(467, "LEVEL #0#!"), rank: line(468, "You've reached #0# rank"), canBuy: line(469, "You can now buy:"), reward: line(470, "Level reward:") },
+      (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      () => sound.play("level-up"));
+    (window as unknown as Record<string, unknown>).seLevels = levelWindows;
     const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
       sound: (effect) => sound.play(effect),
+      friendHelp: asking ? {
+        ask: (placed) => {
+          askPanel.open();
+          asking.show(askPanel.body, { kind: "collect", town: town.id, x: placed.tx, y: placed.ty, item: placed.item.id }, () => askPanel.close());
+        },
+        name: (empire) => friendNames.get(empire) ?? "Friend",
+        words: { hurry: line(91, "Hurry Up?"), accept: line(90, "Accept"), hour: line(98, "#0# hour") },
+        seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
+      } : undefined,
+      showLevels: (reached) => levelWindows.show(reached.map((r) => ({
+        ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0,
+      }))),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
       waiting: (gifts) => menus.count("storage", gifts),
@@ -380,7 +430,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return graves.windowOf(placed);
+        return market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();
@@ -397,6 +447,14 @@ async function start(): Promise<void> {
       } });
     hud.offerCollectAll(() => editor.collectAll());
     hud.offerSquareTool(() => editor.takeSquareTool());
+    // Naming the empire, from the top bar as in the Flash client: `name_map` (town, name).
+    hud.offerRename(() => renameWindow(town.townName || "My Empire",
+      { title: line(614, "NAME YOUR EMPIRE"), save: line(612, "Save"), cancel: line(613, "Cancel") },
+      (name) => {
+        commands.add("name_map", town.id, name);
+        town.townName = name;
+        hud.update(town);
+      }));
     hud.offerTools((tool) => editor.chooseTool(tool));
     // Help from neighbours: their donkey carts, one after another.
     const names = new Map(neighbourList.map((n) => [String(n.pid), n.name?.trim() || "A neighbour"]));
@@ -518,7 +576,7 @@ async function start(): Promise<void> {
         editor.tell(why);
         void bank.open();
       },
-      askFriends: settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null,
+      askFriends: asking,
     });
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;

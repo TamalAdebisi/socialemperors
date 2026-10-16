@@ -110,6 +110,9 @@ export class Doings {
   /** The island map opened at all, and from the menus (not a harbour's button). */
   islandsOpened = false;
   islandsFromMenu = false;
+  /** The market's trades, by good (w, s, f): what was bought, and what was sold (as a negative count). */
+  bought = new Map<string, number>();
+  sold = new Map<string, number>();
   /** A defence plan picked in the army window (while its goal is open, as the Flash client counted it). */
   planPicked = false;
   /** Attacks on players fought to the end (not left), and the neighbours attacked, since the page opened. */
@@ -211,6 +214,14 @@ export class Doings {
       this.islandsOpened = true;
     }
     this.islandsFromMenu ||= fromMenu;
+  }
+
+  /** A trade at the market: the good and how much, bought (above 0) or sold (below). */
+  traded(good: string, amount: number): void {
+    if (this.hears("market-trade")) {
+      const counts = amount > 0 ? this.bought : this.sold;
+      counts.set(good, (counts.get(good) ?? 0) + amount);
+    }
   }
 
   pickedPlan(): void {
@@ -331,6 +342,8 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.islandsOpened ? 1 : 0, 1);
     case "islands-from-menu":
       return of(doings.islandsFromMenu ? 1 : 0, 1);
+    case "market-trade":
+      return of(marketTraded(doings, args[0] as unknown[]) ? 1 : 0, 1);
     case "attack-player":
       return of(doings.attacksMade, n(0));
     case "spy-player":
@@ -379,6 +392,20 @@ function inside(town: Town, items: Map<number, ItemInfo>, building: (item: ItemI
     }
   }
   return n;
+}
+
+/** Whether each good was bought (a count above 0) or sold (below 0) as much as asked: ["s", 200, ...]. */
+function marketTraded(doings: Doings, asked: unknown[]): boolean {
+  for (let i = 0; i < asked.length; i += 2) {
+    const good = String(asked[i]), amount = Number(asked[i + 1]);
+    if (amount > 0 && (doings.bought.get(good) ?? 0) < amount) {
+      return false;
+    }
+    if (amount < 0 && (doings.sold.get(good) ?? 0) > amount) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function trainedAt(doings: Doings, what: unknown, buildingId: number): boolean {

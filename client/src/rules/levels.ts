@@ -4,7 +4,7 @@
 // ("rt_level_up", which pays the same prize into the save). No drawing here.
 
 import type { Command } from "../net/commands.ts";
-import type { ConfigLevel } from "./config.ts";
+import type { ConfigLevel, ItemInfo } from "./config.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { Town } from "./town.ts";
 
@@ -45,4 +45,25 @@ export function levelUps(town: Town, levels: Level[]): { commands: Command[]; re
     reached.push({ level: town.level, name: level.name, prize: level.prize });
   }
   return { commands, reached };
+}
+
+/** The most new buildings the level-up window shows, as the Flash client's. */
+export const UNLOCKED_SHOWN = 4;
+
+/**
+ * What a level opens, for the level-up window: the buildings first sold at
+ * exactly this level, in the shop, of the town's people, as the Flash
+ * client lists them; at most four.
+ */
+export function unlockedAt(items: Iterable<ItemInfo>, level: number, race: string): ItemInfo[] {
+  const found: ItemInfo[] = [];
+  for (const item of items) {
+    if (item.minLevel === level && !item.isUnit && item.inStore > 0 && item.race === race) {
+      found.push(item);
+      if (found.length === UNLOCKED_SHOWN) {
+        break;
+      }
+    }
+  }
+  return found;
 }

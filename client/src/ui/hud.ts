@@ -60,6 +60,8 @@ export interface Hud {
   offerBank(open: () => void): void;
   /** Visiting: the helps left today, as the Flash client's rays beside the neighbour's name. */
   helpsLeft(count: number): void;
+  /** At home: the level, which carries the town's name, opens `rename` when tapped (the Flash client's top bar named the town there). */
+  offerRename(rename: () => void): void;
 }
 
 /** The most a neighbour's buildings can be helped on a visit: one ray each. */
@@ -94,7 +96,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <a class="button tiny gold" data-classic href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
-  const who = town.townName ? `${town.name} · ${town.townName}` : town.name;
+  const who = (t: Town) => (t.townName ? `${t.name} · ${t.townName}` : t.name);
   const level = bar.querySelector<HTMLElement>(".hud-level")!;
   if (actions.visiting) {
     const visiting = bar.querySelector<HTMLElement>(".hud-visiting")!;
@@ -115,7 +117,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
     // Visiting, the bar is empty, as in the Flash client.
     const done = actions.visiting ? 0 : to === undefined ? 1 : Math.min(Math.max((t.xp - from) / (to - from), 0), 1);
     bar.querySelector<HTMLElement>(".hud-xp-done")!.style.width = `${Math.round(done * 100)}%`;
-    level.dataset.tip = actions.visiting ? `${actions.visiting}: level ${t.level}` : `${who}: ` + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
+    level.dataset.tip = actions.visiting ? `${actions.visiting}: level ${t.level}` : `${who(t)}: ` + (to === undefined ? `${numbers.format(t.xp)} XP, the last level`
       : `${numbers.format(t.xp)} of ${numbers.format(to)} XP for level ${t.level + 1}`);
     if (actions.population && !actions.visiting) {
       const people = actions.population(t);
@@ -219,6 +221,18 @@ export function showHud(town: Town, actions: HudActions): Hud {
       const rays = bar.querySelectorAll<HTMLElement>(".hud-rays img");
       rays.forEach((ray, i) => ray.classList.toggle("used", i >= count));
       bar.querySelector(".hud-rays")?.setAttribute("aria-label", `${count} helps left`);
+    },
+    offerRename(rename) {
+      level.setAttribute("role", "button");
+      level.setAttribute("aria-label", "Your town's name");
+      level.classList.add("renames");
+      level.addEventListener("click", rename);
+      level.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          rename();
+        }
+      });
     },
     offerCollectAll(run) {
       offered = true;

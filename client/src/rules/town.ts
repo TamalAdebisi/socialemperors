@@ -2,6 +2,7 @@
 // and the numbers shown at the top of the screen. No drawing here.
 
 import type { ItemInfo } from "./config.ts";
+import { readHelpers } from "./friendsHelp.ts";
 
 /** One thing on the map, as the save stores it:
  * [item id, x, y, orientation, collected at, level, units inside, attributes]. */
@@ -31,6 +32,10 @@ export interface SaveMap {
   timestampLastTreasure?: number;
   /** Help from neighbours waiting for their donkey carts: { "u<pid>": [[x, y, building], ...] }. */
   receivedAssists?: Record<string, unknown>;
+  /** The market (rules/market.ts): purchases minus sales by good, trades so far, the last one's time. */
+  resourcesTraded?: Record<string, number>;
+  numTradesDone?: number;
+  timestampLastTrade?: number;
 }
 
 /** A storage box as the save keeps it: { "<item id>": count }, or a list of counts by item id. */
@@ -104,6 +109,12 @@ export interface PlacedItem {
    * again, the town shows it finished.
    */
   builtAt?: number;
+  /**
+   * Friends whose help waits over the building, an hour off its work each
+   * (rules/friendsHelp.ts): their empires, the one shown on top last. From
+   * the item's `hc`.
+   */
+  helpers?: string[];
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */
@@ -157,6 +168,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       startedAt: Number.isFinite(started) ? Number(started) : null,
       workTime: Number(attributes?.cp) || 0,
       ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length } : {}),
+      ...(readHelpers(attributes?.hc).length > 0 ? { helpers: readHelpers(attributes?.hc) } : {}),
     });
   }
   return {
