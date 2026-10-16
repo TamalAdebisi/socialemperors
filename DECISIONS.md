@@ -19,6 +19,12 @@ them can be found and reversed. The big, agreed decisions are in
 - **Remove seven measured blank loop endings.** Only those exact art
   names and lengths are affected; legitimate motion and intentionally
   empty tree/terrain states remain. No new public art upload is needed.
+- **Use a stable pose for one incomplete idle loop.** The floating-island
+  promotion's export has only five idle samples, five seconds apart, and
+  cuts off a longer nested timeline. Hold its original idle picture rather
+  than introduce large periodic jumps. Restoring that one nested animation
+  smoothly would need a new held-state art export. Other nested effects
+  keep their available samples and timing.
 - **Record the audit's limits.** All 1,010 configured structures were
   inventoried: 900 readable art files cover 941 entries; 69 names have no
   usable local source and return 404 publicly. They cannot be visually

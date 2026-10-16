@@ -1279,6 +1279,8 @@ metadata generated from the art's first display-child timelines, for each
 facing. Ordinary buildings hold the original idle state rather than
 cycling through scaffolding or action states. `buildingAnimation.ts`
 selects the matching samples without shortening nested animation loops.
+One incomplete, very sparsely sampled loop uses a stable original idle
+picture; the audit records that visual compromise.
 Farms retain their working/ready pictures, ranches retain their animal
 counts (including the nested Training Stables animation), and explicit
 tree skins and quest steps take precedence. Oil/water towers change state

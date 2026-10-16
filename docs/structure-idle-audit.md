@@ -33,7 +33,8 @@ retained. Large bounding-box changes in moving chained offers are not
 grounds to freeze their animation; their child timelines remain intact.
 
 The browser regression renders all **86 stateful files, seven repaired
-blank-ending loops, and four genuine-motion controls**, in every facing.
+blank-ending loops, four genuine-motion controls and one static tower**,
+98 art files in every facing.
 It traverses every resulting frame, checks allowed state samples and
 matching hover textures, and captures each structure. Its test pages
 reload every six art files to release large decoded atlases. This is
@@ -58,6 +59,14 @@ duration, including a final partial interval. This cannot recover motion
 frames that were never exported; it retains the available samples at the
 correct timing. No public art upload is needed for this repair.
 
+One incomplete export, `1527_dragonCity_cross`, has only five usable idle
+samples spaced five seconds apart. Its nested timeline is longer than the
+export's 600-frame cap. Holding each sparse sample would introduce obvious
+jumps, so this one structure uses its original first idle picture. That
+is an explicit visual compromise: a smoothly moving, held-state export
+would be needed to restore its nested motion. We do not upload new public
+sheets as part of this client repair.
+
 The distinction between the first display child and the first movie clip
 matters: a building with a static shape first can have later animated
 layers. The generator includes shapes when determining the first child,
@@ -65,6 +74,8 @@ so the Coliseum Stands' later animation is not incorrectly frozen.
 
 The Training Stables have six animal-count states interleaved with a
 318-frame nested loop. Each count now stays in its own state. The occupied
+upgraded sheep ranches also use their real count: their art has eleven
+states despite a capacity of six. The occupied
 Sacrifice Altar retains its existing active sequence; this idle repair
 does not redesign its working animation. Farms keep their existing
 male/female working and ready-crop selectors. Explicit chest steps and

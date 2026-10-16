@@ -41,8 +41,17 @@ test("the stables' nested animation never changes how many animals are inside", 
   }
 });
 
+test("upgraded sheep ranches select their animal count despite having extra unused states", () => {
+  for (const name of ["rancho1_2", "rancho1_3"]) {
+    assert.equal(buildingStateCount(name, 0), 11, "eleven pictures, despite a capacity of six");
+    for (let animals = 0; animals <= 6; animals++) {
+      assert.deepEqual(buildingStateFrames(name, 0, 11, animals), Array(11).fill(animals));
+    }
+  }
+});
+
 test("genuine nested flames, lightning and windmill motion remain complete", () => {
-  for (const name of ["1360_tower", "electorre", "1236_molino", "torredefensa6"]) {
+  for (const name of ["1360_tower", "electorre", "1236_molino", "fuentemagma"]) {
     assert.equal(buildingStateFrames(name, 0, 60), null);
     assert.equal(pouringTower(name), false);
   }
@@ -58,7 +67,7 @@ test("every audited state selector clamps safely and preserves the sheet duratio
           const frames = buildingStateFrames(name, facing, length, state);
           if (states === 1) assert.equal(frames, null);
           else {
-            assert.equal(frames!.length, length);
+            assert.equal(frames!.length, name === "1527_dragonCity_cross" ? 1 : length);
             assert.ok(frames!.every((i) => i >= 0 && i < length));
             assert.equal(new Set(frames!.map((i) => i % states)).size, 1);
           }
@@ -67,6 +76,10 @@ test("every audited state selector clamps safely and preserves the sheet duratio
     }
   }
   assert.equal(buildingStateFrames("aserradero1", 0, 0), null);
+});
+
+test("the incomplete floating-island export holds its idle pose instead of jumping every five seconds", () => {
+  for (const facing of [0, 1]) assert.deepEqual(buildingStateFrames("1527_dragonCity_cross", facing, 600), [0]);
 });
 
 test("all seven affected structures loop before their blank last frame, retaining their motion", () => {

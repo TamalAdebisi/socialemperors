@@ -837,7 +837,7 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, r
     // mills/mines. Preserve nested smoke, flames, flags and other effects.
     // The stables have six animal-count states, each with a nested loop.
     // An occupied sacrifice altar retains its existing active sequence.
-    const state = placed.item.subcategory === 123 && buildingStateCount(art.name, facing) === placed.item.capacity + 1
+    const state = placed.item.subcategory === 123 && buildingStateCount(art.name, facing) > 1
       ? placed.unitsInside : pouringTower(art.name) && attacking ? 1 : 0;
     const frames = buildingStateFrames(art.name, facing, textures.length, state);
     if (frames) {

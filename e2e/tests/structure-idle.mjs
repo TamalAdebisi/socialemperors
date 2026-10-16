@@ -28,7 +28,7 @@ export default async function structureIdle({ newPlayer }) {
   await player.press("Close");
   await page.mouse.move(20, 10);
 
-  const names = [...Object.keys(BUILDING_STATES), "electorre", "1360_tower", "1236_molino", "torredefensa6", ...Object.keys(BLANK_BUILDING_ENDS)];
+  const names = [...Object.keys(BUILDING_STATES), "electorre", "1360_tower", "1236_molino", "fuentemagma", "torredefensa6", ...Object.keys(BLANK_BUILDING_ENDS)];
   const report = [];
   for (let index = 0; index < names.length; index++) {
     // Release decoded atlases between batches, including the big animated
@@ -76,30 +76,34 @@ export default async function structureIdle({ newPlayer }) {
       assert.ok(face.valid && face.synchronized, `${name}/${face.facing} has a matching outline on every frame`);
       assert.ok(face.first, `${name}/${face.facing} starts in its idle state`);
     }
-    if (["aserradero1", "oiltower", "torreagua", "adiestramientocaballos"].includes(name)) {
+    if (["aserradero1", "oiltower", "torreagua", "adiestramientocaballos", "1527_dragonCity_cross"].includes(name)) {
       assert.ok(result.faces.every((f) => f.unique === 1), `${name} holds its empty/idle picture`);
     }
-    if (["electorre", "1360_tower", "1236_molino", "torredefensa6", "workshop5"].includes(name)) {
+    if (["electorre", "1360_tower", "1236_molino", "fuentemagma", "workshop5"].includes(name)) {
       assert.ok(result.faces.every((f) => f.unique > 1), `${name} keeps its genuine idle motion`);
+    }
+    if (name === "torredefensa6") {
+      assert.ok(result.faces.every((f) => f.frames === 1 && f.unique === 1), "the Fire Tower's original idle art is static");
     }
     if (name in BLANK_BUILDING_ENDS) {
       assert.ok(result.faces.every((f) => f.frames === BLANK_BUILDING_ENDS[name] - 1 && f.unique > 1 && !f.blank), `${name} cannot blink out at the loop boundary`);
     }
-    if (name === "adiestramientocaballos") {
-      const occupied = await page.evaluate(async () => {
+    if (["adiestramientocaballos", "rancho1_2", "rancho1_3"].includes(name)) {
+      const occupied = await page.evaluate(async ({ name, states }) => {
         const { view, items } = window.seHome.parts;
-        const item = items.get(227), art = await view.art.get(item.art);
+        const item = [...items.values()].find((i) => i.art === name), art = await view.art.get(name);
         const counts = [];
-        for (let unitsInside = 1; unitsInside <= 5; unitsInside++) {
+        for (let unitsInside = 1; unitsInside <= item.capacity; unitsInside++) {
           view.showGhost({ item, tx: 55, ty: 56, orientation: 0, unitsInside, units: Array(unitsInside).fill(571), startedAt: 0, workTime: 0 });
           await Promise.resolve();
           const picture = view.ghost.slot.children.find((c) => c.texture);
-          const allowed = new Set(art.animation("frame/0").filter((_, i) => i % 6 === unitsInside));
-          counts.push(picture.textures?.length === 318 && picture.textures.every((t) => allowed.has(t)));
+          const allowed = new Set(art.animation("frame/0").filter((_, i) => i % states === unitsInside));
+          const frames = picture.textures ?? [picture.texture];
+          counts.push(frames.every((t) => allowed.has(t)) && (name === "adiestramientocaballos" ? frames.length === 318 : frames.length === 1));
         }
         return counts;
-      });
-      assert.ok(occupied.every(Boolean), "each occupied stable keeps its own animal count while moving");
+      }, { name, states: BUILDING_STATES[name][0] });
+      assert.ok(occupied.every(Boolean), `${name} keeps the right animal count, including nested motion and unused states`);
     }
     // Each structure gets a rendered screenshot for the visual pass.
     await player.shot(`idle-${name}`);

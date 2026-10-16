@@ -15,6 +15,12 @@ export function buildingStateFrames(art: string, facing: number, pictures: numbe
     return null;
   }
   const first = Math.max(0, Math.min(state, states - 1, pictures - 1));
+  // This export has only five idle samples, five seconds apart, and cuts
+  // off a longer nested timeline. Playing them would introduce large jumps.
+  // Keep its original idle pose until a separately held-state loop exists.
+  if (art === "1527_dragonCity_cross") {
+    return [first];
+  }
   const last = first + Math.floor((pictures - 1 - first) / states) * states;
   return Array.from({ length: pictures }, (_, time) => Math.min(first + Math.floor(time / states) * states, last));
 }
