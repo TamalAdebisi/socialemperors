@@ -50,16 +50,17 @@ test("upgraded sheep ranches select their animal count despite having extra unus
   }
 });
 
-test("genuine nested flames, lightning and windmill motion remain complete", () => {
-  for (const name of ["1360_tower", "electorre", "1236_molino", "fuentemagma"]) {
+test("genuine motion in nested or later layers remains complete", () => {
+  for (const name of ["1360_tower", "electorre", "1236_molino", "fuentemagma", "1304_gradas"]) {
     assert.equal(buildingStateFrames(name, 0, 60), null);
     assert.equal(pouringTower(name), false);
   }
+  assert.equal(buildingStateCount("1304_gradas", 0), 1, "its first display child is a shape, before the animated stands");
   assert.equal(buildingStateFrames("molinotrol1", 0, 40), null, "this facing has its motion in a nested clip");
   assert.ok(buildingStateFrames("molinotrol1", 1, 40)!.every((i) => i === 0), "the other facing's direct child is held by the original game");
 });
 
-test("every audited state selector clamps safely and preserves the sheet duration", () => {
+test("every audited state selector stays valid and retains one state", () => {
   for (const [name, facings] of Object.entries(BUILDING_STATES)) {
     for (const [facing, states] of facings.entries()) {
       for (const length of [1, states, states * 3 + 1]) {
