@@ -36,6 +36,45 @@ them can be found and reversed. The big, agreed decisions are in
   tests explicitly start with a completed tutorial fixture, rather than
   relying on a Skip button that players no longer have.
 
+## 16 October 2026: verifying the building card and Menu
+
+- **The phone card leaves a row for the pointer tools below it.** The
+  taller parchment covered them in the browser screenshots. It now uses
+  the available width and sits above the tools, keeping the owner's
+  chosen card and dock layout.
+- **Lifting a finger keeps the upgrade price open.** Touch sends a
+  pointer-leave event before each click; clearing the preview there made
+  every tap act like the first. The second tap now completes the upgrade,
+  as the existing design intended, with a browser check of its saved cost.
+- **The tutorial's progress count sits inside Arthur's instruction
+  bubble.** Its fixed position crossed the taller card in a passing
+  test's screenshot; keeping it with the instruction makes both readable.
+- **Browser checks use the environment's proxy when configured.**
+  Playwright does not pick it up itself; art requests otherwise fail in
+  this cloud environment. The throwaway game server stays on localhost.
+  No assertion or game rule changes for this setup.
+- **Read-only responses do not renew the login cookie.** The Menu's
+  logout check caught a late image response restoring the cookie after
+  logout. It is now renewed when the session changes; the 30-day expiry
+  runs from signing in or the last session change, not every image or
+  news request. A server regression test reproduces the old behavior.
+- **Map checks keep the card visible.** Test targets move into the open
+  or use a visible part of the selected picture. They keep the other
+  agent's selection checks without hiding controls to click through them.
+- **Independent battle-test towns close after their checks finish.**
+  Four towns drawing in software left the final fight at 124 of the 150
+  quiet frames needed, with nobody attacking, after its 30-second limit.
+  Closing completed towns preserves every screen/save assertion and that
+  deadline while giving the next town the drawing time it needs.
+- **The siege check waits for its game minute, with a 30-second limit,**
+  then still requires the living siege engines to target buildings. Its
+  fixed 17-second sleep could end before that minute on this machine.
+  The sound and walking checks also use a destination above the card and
+  verify that the canvas receives the click; all audio, path and saved
+  position assertions stay in place. Walking waits for arrival, bounded
+  at 15 seconds per destination, before checking the server's save;
+  #89's separate main run also reproduced the old fixed-wait failure.
+
 ## 16 October 2026: tournament list and team selection
 
 - **This slice browses and prepares; entry stays in classic.** The list
@@ -115,6 +154,39 @@ them can be found and reversed. The big, agreed decisions are in
   rewards use the same queue, which drops new messages when full. Both
   warning checks wait for an empty queue, each with a 30-second limit.
 
+## 16 October 2026: the site's links in the new client
+
+The owner left where they go to me ("whatever is optimal").
+
+- **One gold Menu, after Full screen** (after Classic game on a phone),
+  holding Friends, Empires and Log out: three more buttons would crowd the
+  top bar on a phone, and these are used now and then, not while playing.
+- **The Friends count shows on the Menu itself,** so a request or a gift
+  is seen without opening it; Friends opens in a new tab, as on the
+  classic page, so the game plays on.
+- **Classic game and Full screen stay where they were.**
+
+## 16 October 2026: the building card
+
+- **The card is the original's info panel,** the owner's pick (mockup
+  A): its parchment, frames, bars, buttons and words from the game's file.
+- **No Sell on the card,** as in the original (its slot there was
+  Upgrade): selling is the bulldozer's, in the pointer's menu, which asks
+  first as before. Ours had added Sell to the card.
+- **Upgrade on a touch screen:** the first tap shows the bubble with the
+  next building and its level or price (a mouse sees it by hovering), the
+  second upgrades. The original upgraded at once, its price shown only
+  on hover.
+- **Hurry up opens the game's hurry window** (Ask for help, or Buy for 2
+  cash), as the original's; ours had both buttons on the card itself.
+- **The time bar also shows training and building,** with the time left
+  under it: the original showed those only on the map.
+- **A wonder's tip has its numbers filled in** ("increases the 175
+  population limit by 20"): the original's card left the blanks showing,
+  its shop filled them.
+- **A tap on a unit inside lets that one out,** as the original's
+  portraits; the bar's single Let out button went with the old card.
+
 ## 16 October 2026: gifts
 
 - **Gifts sits first in the Neighbours window,** as the original's Send
@@ -123,7 +195,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **One Gifts row, not Send gift on each neighbour:** the window lets
   the player pick the friend, as the classic page's does.
 - **The site's bar (Empires, Friends, Log out) isn't in the new client
-  yet:** where it goes on the owner's layout is theirs to say.
+  yet:** where it goes on the owner's layout is theirs to say. (Since: a
+  Menu, "the site's links in the new client" above.)
 
 ## 16 October 2026: the troll town
 

@@ -33,9 +33,11 @@ export default async function friendsHelp({ newPlayer }) {
   }, MILL_AT);
   const savedMill = async () => (await asker.saved({ waitForBatch: false })).items.find((i) => i[0] === MILL && i[1] === MILL_AT[0] && i[2] === MILL_AT[1]);
 
-  // The card of the mill at work: Ask friends, beside finishing now for cash. It lists the friend; Ask asks.
+  // The card of the mill at work: Hurry up opens the game's window, Ask for help beside finishing now for cash.
+  // It lists the friend; Ask asks.
   await asker.select(MILL_AT, "Mill I");
-  await asker.press("Ask friends");
+  await asker.press("Hurry up");
+  await asker.press("Ask for help");
   const window = page.locator(".panel.list-window:not([hidden])", { has: page.locator(".ask-friends") });
   await window.locator(".ask-friends label", { hasText: friend.name }).waitFor();
   await asker.shot("ask");

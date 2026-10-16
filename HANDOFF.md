@@ -37,7 +37,8 @@ next agent knows where to start.
   owner requested merging the two wait
   fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
   those are implemented but still awaiting browser verification and merge.
-  #87 also has conflicts with `main`; its delivery task is below. Leave
+  #87 now includes `main` with both agents' work retained; its delivery
+  task is below. Leave
   those tasks with that pull request, and start dependent work from the
   latest `main` after it lands.
 - **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
@@ -50,8 +51,8 @@ next agent knows where to start.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
-    building card (upgrading, and what it shows), the shop's details, the
-    site's bar, and the run-through that closes the beta.
+    shop's details and the run-through that closes the beta. The building
+    card and the site's bar are built in #87, not merged yet (task 2).
   - **Beta 2, battles and quests:** built: combat, every island, spells,
     special moves, defending the town, camps, bosses, graveyards. Left: the
     special units' rarer moves, a short list of battle rules (PARITY.md,
@@ -221,6 +222,16 @@ changed, and no assertion was skipped or weakened.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 
+Built in #87 with tasks 3 and 5 (CLIENT.md, "The building card"); final
+verification is underway. The other agent reported `scripted-bosses`
+failing in the final scenario, although it passed on main. Diagnostics
+confirmed that nothing was still attacking: after 30 seconds it had
+advanced only 124 of the 150 quiet game frames needed. Earlier towns
+were still drawing in software. The test now closes each independent
+town after all its assertions and a screenshot, preserving the same
+30-second deadline and all battle/save checks. The standalone final
+scenario already passed; the combined run is being rechecked.
+
 PARITY.md, "The building card", and `docs/original/rules/town.md`,
 "Upgrading". 104 buildings upgrade to the next one (houses, farms, mills,
 ranches, towers, walls, barracks, the town hall). It needs the next one's
@@ -233,6 +244,9 @@ it. The button can join the card's tiles in their current style (say so in
 DECISIONS.md); the card's new look is task 3.
 
 ### 3. Beta 1: what the building card shows (S each) - [ ]
+
+Built in #87 (see task 2): the owner picked mockup A, the original's info panel.
+
 
 PARITY.md, "What it shows": the picture with its health, its numbers
 (attack, speed, range, the room a house gives), what the next collect
@@ -250,7 +264,53 @@ cash, but the map of the original found later that opening early is
 switched off in the original, and ours was removed: check, and reword the
 line rather than build it.
 
+What the original shows (read by Claude on 16 October; the class is
+`GUI/InfoButtonOver`, its layouts `InfoButtonStore*MC` in the game's file):
+a white speech bubble over the item, one layout per kind.
+
+- **A unit:** its name, life, attack, attack delay, speed, range, room.
+- **A house:** its line (`INFOPOPUP_HOUSE`), "Earns" its room for people,
+  "Timer".
+- **Mills, farms, mines:** `INFOPOPUP_VILLAGERS`, "Earns" what it collects
+  with the resource's picture, "Capacity" (workers), "Timer" (its working
+  time). The sacrifice altar and the treasure mine have a line of their
+  own instead.
+- **Ranches:** `INFOPOPUP_ANIMALS_FOOD`, the same numbers with animals.
+- **The bakery and the like:** `INFOPOPUP_RESOURCES`, Earns and Timer.
+- **Barracks, archery, stables, workshop, church:** `INFOPOPUP_TRAIN`, the
+  unit they train, with its name and numbers; a few have an extra line
+  (`STORE_EDIFICIO_*`).
+- **The castle:** `INFOPOPUP_DEFENSIVE`, its own numbers, then the unit it
+  trains.
+- **Towers, walls, gates, the dragon killer:** `INFOPOPUP_DEFENSIVE`, life,
+  attack, delay and range; the ice, water, oil towers and the fortress have
+  an extra line.
+- **Decorations:** Earns their experience.
+- **The market:** `INFOPOPUP_TRADE` and its lot (100, 200, 300).
+- **The blacksmith and the university:** their line and "10%" with a
+  green arrow.
+- **Eagles:** `INFOPOPUP_EAGLES` and their life (200, 400, 800, 10000).
+- **Healing buildings:** their line and their attack.
+- **Refuges:** Capacity.
+- **Wonders:** with room, the wonder line filled with 175 and its room;
+  without, `INFOPOPUP_MARAVILLA_RECURSOS` with Earns and Timer.
+- **Feature buildings and heroes' buildings:** one line each (`STORE_EDIFICIO_*`
+  by id).
+
+Where to start in our code:
+- The words' ids are in `Language.as`: look up `INFOPOPUP_*` and
+  `STORE_EDIFICIO_*`. Read them through main's `line(id, fallback)`.
+- `client/src/rules/card.ts` already has the building card's facts by
+  kind: the new code can sit beside it.
+- The building card's numbers' pictures (`stat-*` in `ui/icons.ts`) and
+  the barracks bubble (`train-bubble`) are exported already.
+- A phone has no hover: give it a tap, and say so in DECISIONS.md.
+
 ### 5. Beta 1: the site's bar (S) - [ ]
+
+Built in #87 (see task 2): the owner left the place to us; a Menu after
+Full screen (DECISIONS.md, "the site's links in the new client").
+
 
 The classic page has Empires, Friends and Log out; the new client has
 none of them yet on `main`. The owner delegated their placement. #87

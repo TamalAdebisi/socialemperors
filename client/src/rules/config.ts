@@ -71,6 +71,8 @@ export interface ConfigItem {
   elevation?: string;
   /** Tags like "god", "colossus", "dragon". */
   groups?: string;
+  /** Buildings: what Upgrade turns it into (its id, 0 none). */
+  upgrades_to?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -165,6 +167,8 @@ export interface ItemInfo {
   /** 0: something units walk over (crops, flowers); buildings are 1. */
   elevation: number;
   groups: string;
+  /** Buildings: the item Upgrade turns it into, or 0. */
+  upgradesTo: number;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -209,6 +213,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     size: Number(item.size) || 1,
     elevation: item.elevation === undefined ? 1 : Number(item.elevation),
     groups: item.groups ?? "",
+    upgradesTo: Number(item.upgrades_to) || 0,
   };
 }
 

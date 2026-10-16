@@ -169,7 +169,8 @@ async function start(): Promise<void> {
   const sound = new Sound(settings.assetsUrl, town.race);
   // Visiting, the top bar shows the neighbour's numbers, as the Flash client did.
   const hud = showHud(town, { classicUrl: settings.classicUrl, visiting: visit === undefined ? undefined : town.name, levels,
-    population: (t) => population(t, items, increase), sound, pause: new Pause(app.ticker) });
+    population: (t) => population(t, items, increase), sound, pause: new Pause(app.ticker),
+    site: settings.csrf ? { news: settings.news ?? 0, username: settings.username ?? "", csrf: settings.csrf } : undefined });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
@@ -521,7 +522,14 @@ async function start(): Promise<void> {
       (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       () => sound.play("level-up"));
     (window as unknown as Record<string, unknown>).seLevels = levelWindows;
-    const editor = new TownEditor({ town, view, bar: new ActionBar(), commands, hud, camera, clock, levels, shop, items, doings,
+    const card = new ActionBar();
+    card.useWords({
+      hurryTitle: line(814, "WORK IN PROGRESS"), hurryHeader: line(815, "You can take the following actions"),
+      hurryAsk: line(816, "Ask your friends to help you speed up"), hurryPay: line(817, "Pay to finish the work instantly"),
+      hurryOr: line(818, "OR"), hurryAskButton: line(1554, "Ask for help"), buyFor: line(888, "Buy for:"), train: line(891, "Allows you to train:"),
+      cost: line(1488, "COST:"), upgrade: line(1491, "Upgrade"),
+    });
+    const editor = new TownEditor({ town, view, bar: card, commands, hud, camera, clock, levels, shop, items, doings, line,
       sound: (effect) => sound.play(effect),
       friendHelp: asking ? {
         ask: (placed) => {
@@ -745,7 +753,7 @@ async function start(): Promise<void> {
               const hall = goal.id === 2 ? town.items.find((p) => p.item.subcategory === TOWN_HALL_KIND && isTheirs(town, p.item)) : undefined;
               if (hall) {
                 editor.focusOn(hall);
-                requestAnimationFrame(() => pointAt(document.querySelector(".actions .picture-button.train")));
+                requestAnimationFrame(() => pointAt(document.querySelector(".actions .card-train-button")));
               } else {
                 pointAt(document.querySelector('.menus button[aria-label="Build"]'));
               }

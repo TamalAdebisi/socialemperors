@@ -17,7 +17,9 @@ export default async function train({ newPlayer }) {
   const before = await player.saved({ waitForBatch: false });
   const hall = await player.select(HALL, "Town Hall");
   assert.equal(await player.button("Train Villager I").isVisible(), true);
-  assert.match(await player.button("Train Villager I").textContent(), /50 food/);
+  // The price under the TRAIN box, as the game's: "COST: 50" and food's picture.
+  assert.match(await player.page.locator(".card-train-cost").textContent(), /COST: 50/);
+  assert.equal(await player.page.locator(".card-train-cost img").getAttribute("alt"), "food");
 
   for (let n = 1; n <= 4; n++) {
     await player.press("Train Villager I");

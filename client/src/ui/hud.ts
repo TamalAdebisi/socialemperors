@@ -6,7 +6,9 @@
 // (the bulldozer and the fast-collect glove), the square tool (selecting
 // units with a box), and Collect all, which collects every ready building
 // at once.
-// Messages slide in at the top, not over the middle of the town.
+// Messages slide in at the top, not over the middle of the town. The
+// site's own links, as on the classic page's bar (Friends with what waits
+// there, Empires, Log out), are in a Menu by Full screen.
 
 import type { Level } from "../rules/levels.ts";
 import type { Town } from "../rules/town.ts";
@@ -36,7 +38,12 @@ export interface HudActions {
   population?: (town: Town) => { current: number; max: number };
   /** Pausing (ui/pause.ts): its button goes before the music's. */
   pause?: { button(): HTMLButtonElement };
+  /** The site's links (the classic page's bar): what waits on the Friends page, who's signed in, the form token for Log out. */
+  site?: { news: number; username: string; csrf: string };
 }
+
+/** How often the Friends count is asked again while the game is in view, as the classic page's: two minutes. */
+const NEWS_MS = 120_000;
 
 /** The pointer's tools, as on the Flash client's bar: the pointer itself, the bulldozer, the glove. */
 export type Tool = "pointer" | "remove" | "collect";
@@ -94,6 +101,14 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <button class="hud-sound" type="button" data-music hidden></button>
       <button class="hud-sound" type="button" data-effects hidden></button>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
+      <span class="site" hidden>
+        <button class="button tiny gold site-button" type="button" aria-haspopup="menu" aria-expanded="false">Menu<span class="menu-count" data-site-news hidden></span></button>
+        <span class="site-menu" role="menu" hidden>
+          <a role="menuitem" href="/friends" target="_blank" rel="noopener" data-friends>Friends<span class="menu-count" data-friends-news hidden></span></a>
+          <a role="menuitem" href="/">Empires</a>
+          <form method="post" action="/logout"><input type="hidden" name="csrf"><button role="menuitem" type="submit">Log out</button></form>
+        </span>
+      </span>
     </div>`;
   const who = (t: Town) => (t.townName ? `${t.name} · ${t.townName}` : t.name);
   const level = bar.querySelector<HTMLElement>(".hud-level")!;
@@ -170,6 +185,9 @@ export function showHud(town: Town, actions: HudActions): Hud {
   document.addEventListener("fullscreenchange", () => {
     fullscreen.textContent = document.fullscreenElement ? "Exit full screen" : "Full screen";
   });
+  if (actions.site) {
+    showSite(bar, actions.site);
+  }
   document.body.appendChild(bar);
 
   // The bottom right corner, as on the Flash client's bar: the pointer, the square tool, then the glove.
@@ -329,4 +347,62 @@ export function showMessage(text: string): void {
   } else {
     message.classList.remove("shown");
   }
+}
+
+/**
+ * The site's links in a Menu, as on the classic page's bar: Friends (a new
+ * tab, so the game plays on) with what waits there (requests, gifts, help;
+ * asked again every two minutes and when the tab is back in view), Empires,
+ * and Log out (a form, as the site's: another site can't log you out with a
+ * link).
+ */
+function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void {
+  const holder = bar.querySelector<HTMLElement>(".site")!;
+  const button = holder.querySelector<HTMLButtonElement>(".site-button")!;
+  const menu = holder.querySelector<HTMLElement>(".site-menu")!;
+  const friends = holder.querySelector<HTMLAnchorElement>("[data-friends]")!;
+  holder.querySelector<HTMLInputElement>('input[name="csrf"]')!.value = site.csrf;
+  const logOut = holder.querySelector<HTMLButtonElement>('form button')!;
+  logOut.title = `Log out ${site.username}`;
+  const news = (count: number) => {
+    for (const badge of holder.querySelectorAll<HTMLElement>("[data-site-news], [data-friends-news]")) {
+      badge.textContent = String(count);
+      badge.hidden = count <= 0;
+    }
+    button.setAttribute("aria-label", count > 0 ? `Menu, ${count} waiting on the Friends page` : "Menu");
+    friends.setAttribute("aria-label", count > 0 ? `Friends, ${count} waiting` : "Friends");
+  };
+  news(site.news);
+  const open = (on: boolean) => {
+    menu.hidden = !on;
+    button.setAttribute("aria-expanded", String(on));
+  };
+  button.addEventListener("click", () => open(button.getAttribute("aria-expanded") !== "true"));
+  document.addEventListener("pointerdown", (event) => {
+    if (!holder.contains(event.target as Node)) {
+      open(false);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !menu.hidden) {
+      open(false);
+    }
+  });
+  friends.addEventListener("click", () => open(false));
+  const check = () => {
+    if (document.hidden) {
+      return;
+    }
+    fetch("/friends/news", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((reply: { news?: number } | null) => {
+        if (typeof reply?.news === "number") {
+          news(reply.news);
+        }
+      })
+      .catch(() => {});
+  };
+  setInterval(check, NEWS_MS);
+  document.addEventListener("visibilitychange", check);
+  holder.hidden = false;
 }

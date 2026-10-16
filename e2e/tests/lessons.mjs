@@ -134,6 +134,13 @@ export default async function lessons({ newPlayer, phone = false }) {
   await reach(30);
   await follow();  // a villager
   await reach(31);
+  const countBox = await page.locator(".lesson-count").boundingBox();
+  const bubbleBox = await page.locator(".lesson-bubble").boundingBox();
+  const cardBox = await page.locator(".actions.card").boundingBox();
+  assert.ok(countBox && bubbleBox && countBox.x >= bubbleBox.x && countBox.y >= bubbleBox.y
+    && countBox.x + countBox.width <= bubbleBox.x + bubbleBox.width
+    && countBox.y + countBox.height <= bubbleBox.y + bubbleBox.height, "the progress count fits inside Arthur's instruction");
+  assert.ok(!cardBox || countBox.y + countBox.height <= cardBox.y, "the progress count stays clear of the building card");
   await player.shot("trees");
   await player.click(await page.evaluate(() => window.seLessons.pointing));  // the marked trees (the last step stays till three fall)
 
