@@ -101,6 +101,19 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual([p["c"] for p in kinds[ADVANCED]["prize"]], [15] * 5)  # the fee back, with the unit
         self.assertEqual(kinds[NEWBIES]["prize"][0]["g"], 1500)  # gold prizes as in the game
 
+    def test_browsing_and_saving_a_team_do_not_enter_or_charge(self):
+        team = [643, 0, 649] + [0] * 17
+        do_command(self.me, "set_attack_team", ["quest", json.dumps(SWORDSMEN)])
+        do_command(self.me, "set_attack_team", ["tournament", json.dumps(team)])
+        do_command(self.me, "set_help_map", ["tournamentHelp"])
+        info = self.ask("get_tournament_info")
+        state = sessions.session(self.me)["privateState"]
+        self.assertIsNone(info["tournament"])
+        self.assertEqual(state["teams"], {"quest": SWORDSMEN, "tournament": team})
+        self.assertIn("tournamentHelp", state["helpMap"])
+        self.assertEqual((self.gold(), self.cash()), (100000, 100))
+        self.assertEqual(vars(tournaments)["__tournaments"], {})
+
     # Public rooms
 
     def test_a_room_waits_for_players(self):

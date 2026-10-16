@@ -402,7 +402,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `ThemeMC.as` | 24 | A theme to apply or unlock. | art |
 | `ThumbFriendsTournamentMC.as` | 24 | A friends' tournament thumbnail. | art |
 | `ThumbSelectedUnitSurvivalMC.as` | 17 | A chosen survival unit, with a cross. | art |
-| `ThumbTeamMC.as` | 19 | A team member's thumbnail, with a cross. | art |
+| `ThumbTeamMC.as` | 19 | A team member's thumbnail, with a cross. | art: empty-place mark and removal cross in `tournament-empty`, `tournament-remove` |
 | `ThumbTournamentCreationMC.as` | 40 | A tournament kind to create. | art |
 | `ThumbTournamentMC.as` | 36 | A tournament's thumbnail. | art |
 | `ThumbUnitMC.as` | 22 | A unit's thumbnail with a count. | art |

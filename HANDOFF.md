@@ -228,6 +228,15 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [ ]
 
+**First slice implemented:** the list, first-time help and saved team
+editor, with desktop/phone coverage (`CLIENT.md`, "Tournaments: list and
+team"). Entry and all later stages retain explicit classic links.
+`docs/original/rules/tournaments.md` records the local source reading,
+including the different complex-unit checks in editing and weekly entry.
+Next slice: the four-seat waiting room and countdown; only then connect
+entry fees and joining from the new list. Keep `tournaments.py`'s existing
+command/service formats. This work does not own #87 or the art repair.
+
 The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
 public rooms of four filled by bots after 30 minutes, the weekly
@@ -237,7 +246,7 @@ client the Battle window's Tournament row still opens the classic game
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
 classes). Suggested slices:
 
-1. The tournament list (everyday, weekly, your own), its help and the team box.
+1. The tournament list (everyday, weekly, your own), its help and the team box — built.
 2. The waiting room: four seats, the countdown, bots filling in.
 3. The match: a battle against the other player's army, as the attack on a
    player is played now (`attackPlay.ts`); no units are lost.
