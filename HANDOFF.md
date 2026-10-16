@@ -19,9 +19,10 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **The first tournament slice is complete in #89:** everyday, weekly
-  and friends' lists, help and the saved team box. Entry and later stages
-  keep classic links. Task 7 below records its checks and the next slice.
+- **All tournament stages are implemented in #92**, following #89's
+  lists, help and team box: rooms, copied-army battles, results/prizes and
+  friends' tournaments. Final integration verification is in progress
+  after merging #87's completed work. Classic access remains available.
 - **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
@@ -46,13 +47,14 @@ next agent knows where to start.
     special units' rarer moves, a short list of battle rules (PARITY.md,
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
-    Arthur's lessons and the nests are built. Left: later tournament stages,
-    the long tail of windows, and making the new client the default.
+    Arthur's lessons and the nests are built. All tournament stages are
+    implemented, with #92's final checks pending. Left: the long tail of
+    windows and making the new client the default.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  47% are built in the new client, 40% partly (mostly special buildings
+  50% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  12% not yet (mostly windows). 50 of the 227 goals still say they're
+  10% not yet (mostly windows). 50 of the 227 goals still say they're
   played in the classic game (CLIENT.md, "Missions and bonuses"); that
   number falls as features land.
 

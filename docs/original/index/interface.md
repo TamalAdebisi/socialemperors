@@ -9,7 +9,7 @@ own: the potion offer, the player-attack world map and the dragon-rider
 minigame. The windows themselves are in [windows.md](windows.md), the map
 and its units in [engine.md](engine.md) and [core.md](core.md).
 
-**Count:** 35 built, 17 partly, 17 not yet, 18 not needed, 11 art (98 classes).
+**Count:** 36 built, 16 partly, 17 not yet, 18 not needed, 11 art (98 classes).
 
 **How deep this was read.** Read through: `GuiManager`, `PlayerStatus`,
 `MissionsManager`, `CommandManager`, `CollectableManager`, `KompuManager`,
