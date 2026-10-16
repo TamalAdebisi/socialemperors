@@ -420,7 +420,7 @@ function startWindow(name: string, army: [number, number][], items: Map<number, 
 }
 
 /** A window in the middle of the screen with a title, maybe a body, and buttons; each button closes it. */
-function finalWindow(title: string, buttons: { label: string; run: () => unknown; gold?: boolean; danger?: boolean; keep?: boolean }[],
+export function finalWindow(title: string, buttons: { label: string; run: () => unknown; gold?: boolean; danger?: boolean; keep?: boolean }[],
   small = false, body?: HTMLElement): void {
   const box = document.createElement("section");
   box.className = `quest-window${small ? " small" : ""}`;

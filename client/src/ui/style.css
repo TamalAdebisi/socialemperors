@@ -3151,3 +3151,43 @@ body {
   display: flex;
   gap: 8px;
 }
+
+/* Attacking a player: the start corner, a little map of the island's 5 x 5 blocks. */
+.attack-corners p {
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.attack-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 40px);
+  gap: 4px;
+  justify-content: center;
+  margin: 0 auto 6px;
+}
+
+.attack-cell {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 8px;
+  background: #8fbf5a;
+  cursor: pointer;
+}
+
+.attack-cell:disabled {
+  background: #6f9a45;
+  cursor: default;
+  opacity: 0.6;
+}
+
+.attack-cell.picked {
+  border-color: #a1281c;
+  background: #d9483b;
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+.attack-cell:not(:disabled):hover {
+  filter: brightness(1.1);
+}

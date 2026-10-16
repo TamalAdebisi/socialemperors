@@ -21,6 +21,7 @@ import { renameWindow } from "./ui/rename.ts";
 import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
+import { MIN_LEVEL_PVP } from "./rules/pvp.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
 import { cleanUp, oneVillager } from "./rules/cleanup.ts";
@@ -79,6 +80,13 @@ async function start(): Promise<void> {
     // The battle's code is loaded only for an island.
     const { playQuest } = await import("./questPlay.ts");
     await playQuest(settings, server, quest);
+    return;
+  }
+  // ?attack=<player id>&map=<town>: another player's town, attacked (attackPlay.ts).
+  const attack = new URLSearchParams(location.search).get("attack");
+  if (attack) {
+    const { playAttack } = await import("./attackPlay.ts");
+    await playAttack(settings, server, attack, Number(new URLSearchParams(location.search).get("map")) || 0);
     return;
   }
 
@@ -181,8 +189,9 @@ async function start(): Promise<void> {
       storage: () => editor.storageCards(),
     });
     // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
-    const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE }];
-    const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`);
+    const neighbourList = [...(info.neighbors ?? []), { ...arthur(town.level, levels.length), picture: ARTHUR_PICTURE, noAttack: true }];
+    const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`,
+      town.level >= MIN_LEVEL_PVP ? (pid) => `/client.html?attack=${encodeURIComponent(pid)}` : null);
     const islands = new IslandsWindow({
       islands: islandData.islands as unknown as Island[], items,
       unlockedIndex: () => Number((info.privateState as Record<string, unknown> | undefined)?.unlockedQuestIndex ?? 0),

@@ -39,6 +39,23 @@ them can be found and reversed. The big, agreed decisions are in
   was removed in that build); here both do.
 - **30 letters at most,** so the name fits where it shows.
 
+## 15 October 2026: attacking players in the new client
+
+- **Attack is in the Neighbours window, from level 6.** The original's
+  neighbour bar offered Attack at any level, but its Battle button
+  stays locked until 6; the new client keeps both to 6.
+- **Every attack counts, wherever it starts.** The original's neighbour
+  bar didn't take one off its counter until the town reloaded; here the
+  count is read fresh before each attack.
+- **The defender's race comes from their saved town,** not the
+  original's guess of "human" for neighbours, so a troll town keeps its
+  trolls in the battle.
+- **The report is sent as the results open,** not when the player
+  presses OK, so nothing is lost if the page closes there (as the
+  islands do).
+- **Bought attack packs aren't offered:** the server has never sold
+  them, so nothing opens that window.
+
 ## 15 October 2026: placing on a phone
 
 - **A tap shows where it would go; a tap on it puts it there.** The Flash
