@@ -306,7 +306,9 @@ frees its unit.
 
 All five parts are built in #89 and #92. The
 [delivery record](docs/verification-92.md) preserves the completed pre-#95
-75/75 browser run; verification of the merged 77-case suite is pending.
+75/75 browser run and the later interrupted cc run (19 passes, one
+raid-fixture failure reproduced on unchanged main). Verification of the
+merged 78-case suite, including #97, is pending.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.

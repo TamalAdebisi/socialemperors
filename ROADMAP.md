@@ -426,7 +426,7 @@ merging the two wait fixes with that separate failure documented.
         with copied armies; results, weekly rankings and server-paid
         prizes; friends' creation, invitation notice and cancellation
         ([CLIENT.md](CLIENT.md#tournaments); implemented in #89 and #92,
-        [verification after #95 pending](docs/verification-92.md)).
+        [verification after #97 pending](docs/verification-92.md)).
         Existing rooms and unfinished
         matches reopen from the server save. Classic choices stay hidden at
         the owner's request; their routes and shared saves remain.

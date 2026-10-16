@@ -84,14 +84,18 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); verification after integrating #95 is pending.**
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); verification after integrating #97 is pending.**
   Following #89's lists, help and team box, this adds rooms, copied-army
   battles, results/prizes and friends' tournaments. Integrated #94 code at
   `5d220abfa562877ca346b205455f9554e15d497e` passed **75/75 browser tests
   in 92m 46.83s**; server **440 run, 431 passed, 9 existing skips**; client
-  types and **385 tests passed**. #95 landed during that run with runtime
-  changes and two browser cases; the merged 77-case suite needs fresh
-  verification. Tournament creation retains three real player neighbours
+  types and **385 tests passed**. The later `cc218b7e` unit checks passed
+  (442 server run, 433 passed and 9 existing skips; types and 388 client
+  tests); its browser run stopped after 19 passes and one raid-fixture
+  failure reproduced on unchanged main, with classic incomplete. #97 is
+  now merged, preserving its contact links and Menu stacking. Fresh
+  verification of the combined 78-case suite is pending. Tournament
+  creation retains three real player neighbours
   and its fees, now using Everybody's community list. The
   [delivery record](docs/verification-92.md) preserves each completed
   baseline and earlier check. No further tournament slice remains.
@@ -124,7 +128,7 @@ next agent knows where to start.
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
     Arthur's lessons, the nests and all tournament stages are built;
-    tournament verification after #95 is pending. Left: the long tail of
+    tournament verification after #97 is pending. Left: the long tail of
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
@@ -229,8 +233,9 @@ These focused checks help locate failures; the complete suite still
 needs coverage on the final code. Server tests and the client's type/unit
 checks can run alongside browser checks. Task 4 (shop details) can now
 build on the delivered card. Task 7's implementation is in #92; its
-pre-#95 75/75 pass is recorded, with fresh verification of the merged
-77-case suite pending in [the delivery record](docs/verification-92.md).
+pre-#95 75/75 pass and later interrupted runs are recorded, with fresh
+verification of the merged 78-case suite after #97 pending in
+[the delivery record](docs/verification-92.md).
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -524,7 +529,7 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [ ]
 
-**Complete implementation in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); final verification after #95 pending.**
+**Complete implementation in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); final verification after #97 pending.**
 The owner expanded the task to finish all remaining tournament parts.
 The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
@@ -534,11 +539,34 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Final verification after #95: pending.** Main
-`a3328da6c1e9e18a68636ab18d49098786f13c01` adds recurring raids, shared
-selection/inspection and Everybody, with two browser cases. Preserve that
-work and run all 77 on the new exact code; no result for the combined
-runtime or new unit-test count is claimed yet.
+**Final verification after #97: pending.** Main
+`8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged at
+`36f618710ba9b4efceb9bd81b70d22bb5867fc09`. Preserve its contact links
+and Menu stacking, alongside #95's recurring raids, shared inspection
+and Everybody. The now-redundant countdown-hiding rule is removed; the
+real hit-target regression covers all four configured Menu destinations.
+Run fresh server/client checks and all 78 browser cases on the new exact
+code. No final result or delivery is claimed yet.
+
+**Interrupted pre-#97 checks:** exact `cc218b7e9c046d83d915d5bd43a5048168356450`
+passed server **442 run: 433 passed, 9 existing skips** (31.05s), types
+(2.31s) and client **388/388** (8.06s). Menu/recurring-raids focus passed
+**2/2 in 1m 35.91s**, but the subsequent full attempt stopped after
+**19 passes and one real recurring-raids failure**, with classic incomplete.
+All five tournament checks passed. The archive has 101 screenshots in
+20 populated folders, 68 reviewed; the pre-interruption server log has
+no tracebacks, HTTP 5xx or unhandled commands. The runner's 77 precreated
+directories are not evidence of 77 completed cases.
+
+An exact saved-map replay reproduces the trapped raid on unchanged main
+`a3328da6`: the fixture's packed resources enclose the spawn. Moving one
+stone through the normal command opens an exit, retaining all 24 stone
+and 24 gold resources. The fixture now pins its first scheduled wave to
+that edge and checks the saved move; later waves stay random. All
+movement/recovery/reward assertions and the 15-second deadline remain.
+This test-only correction needs browser verification. The
+[delivery record](docs/verification-92.md) preserves the replay evidence,
+Menu/dialog regressions and fixes, all partial timings and visual limits.
 
 **Completed pre-#95 verification:** exact code
 `5d220abfa562877ca346b205455f9554e15d497e`, including #94, passed
@@ -651,7 +679,7 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 4. Results, the ranking and prizes — built.
 5. Friends' tournaments: create, invite, call off — built.
 
-All five parts are implemented; final verification after #95 is pending.
+All five parts are implemented; final verification after #97 is pending.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.
 

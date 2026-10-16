@@ -12,17 +12,32 @@ export default async function recurringRaids({ newPlayer }) {
     return home.parts.town.items.filter((p) => home.camps.sideOf(p) === "enemy")
       .map((p) => ({ cmd: "kill", args: [p.tx, p.ty, p.item.id, 0, p.item.isUnit ? "u" : "b"] }));
   });
-  await player.send(oldEnemies);
+  // FULL_WILD's packed Gold/Stone rows enclose a pocket at the top edge.
+  // Leave an exit without removing resources or changing the raid rules.
+  await player.send([...oldEnemies, { cmd: "move", args: [99, 2, 69, 99, 4, 0, 0, "moveTo"] }]);
   await player.reload();
   await page.waitForFunction(() => window.seHome);
   const before = await player.saved();
+  for (const resource of [69, 73]) {
+    assert.equal(before.items.filter(([id]) => id === resource).length, 24, "the fixture keeps every resource");
+  }
+  assert.ok(before.items.some(([id, x, y]) => id === 69 && x === 99 && y === 4), "the moved stone is saved");
+  assert.ok(!before.items.some(([, x, y]) => x === 99 && y === 2), "the edge pocket has an exit");
   await page.evaluate(() => {
     const home = window.seHome;
     home.parts.quiet = () => true;
     for (let i = 0; i < 1300; i++) home.tick(250);
   });
   assert.equal(await page.evaluate(() => Boolean(window.seHome.fighting)), false, "no raids during lessons");
-  await page.evaluate(() => { window.seHome.parts.quiet = () => false; });
+  await page.evaluate(() => {
+    const home = window.seHome;
+    home.parts.quiet = () => false;
+    // Exercise the previously trapped edge on the ordinary scheduled wave.
+    // The following waves retain their randomly chosen entry points.
+    const plan = home.waiting.find((raid) => raid.kind === "bandits");
+    plan.spawn = { x: 92, y: 0 };
+    for (const unit of plan.units) { unit.x = 92; unit.y = 0; }
+  });
   let killed = 0;
   for (let wave = 0; wave < 4; wave++) {
     await page.evaluate(() => {

@@ -4,27 +4,33 @@ The remaining tournament stages are implemented together: entry and
 waiting rooms, three independent battles, results/rankings/prizes, and
 friends' creation and cancellation. They build on #89's list and team
 editor. Other chats delivered #87's building card/Menu, #93's mandatory
-tutorial, #91's art audit, #94's playthrough controls and #95's selection,
-recurring threats and Everybody; their work is preserved without rebasing.
+tutorial, #91's art audit, #94's playthrough controls, #95's selection,
+recurring threats and Everybody, and #97's contact links and Menu stacking;
+their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Final verification after #95
+## Final verification after #97
 
-Pending. Main `a3328da6c1e9e18a68636ab18d49098786f13c01` landed during
-the completed run below. It changes shared battle selection, recurring
-raids/camps and community eligibility, with two new browser scenarios.
-The `3b5da9e9` unit checks passed, but screenshot review stopped its full
-browser run after twelve completed cases because the new home countdown
-covered a desktop Menu row. The layout correction and a fresh full
-77-case run are pending. Tournament Invite now points to Everybody at
-`/friends`; the three-player-neighbour minimum, owner/room restrictions
-and fees remain unchanged.
+Pending. Main `8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged
+without rebasing at `36f618710ba9b4efceb9bd81b70d22bb5867fc09` after
+the interrupted `cc218b7e` run below. #97 adds contact links, one browser
+case and an independent Menu stacking fix. The merge keeps that fix and
+removes the now-redundant countdown-hiding rule. The hit-target regression stays
+and covers all four Menu links with Discord configured. The combined
+runtime needs fresh server, client and full **78-case** browser checks;
+no final verification or delivery is claimed yet.
 
-The next full run puts the five tournament scenarios and shared spells
-first, then `building-overlay`, `playthrough-controls`, `site-menu`,
-`battle-selection` and `recurring-raids`, followed by the other 66
-alphabetically. #95's original full and later focused results remain in
+The next full run starts with site-menu, contact and recurring-raids,
+then the five tournament cases, shared spells, building-overlay,
+playthrough-controls and battle-selection, followed by the other 66
+alphabetically. The focused Menu/contact/raid check is also pending.
+
+Tournament Invite still points to Everybody at `/friends`; the
+three-player-neighbour minimum, owner/room restrictions and fees remain
+unchanged. The raid fixture correction below keeps the real movement
+assertion and its timeout. #95's original full and later focused results
+remain in
 [its delivery record](verification-95.md), and #94's full/focused history
 in [its own record](verification-94.md). Neither is relabelled as a test
 of the final integrated tournament code.
@@ -121,11 +127,99 @@ row to receive clicks, but its target was the `home-threats` button.
 This reproduces the persistent screenshot defect. Its local archive is
 `tournament-evidence-review-focus-28f0fa42`.
 
-The CSS correction hides the home countdown while Menu is open, as it
-already does for panels. It leaves the countdown clock and Menu behavior
-unchanged. The regression assertion is retained. The corrected focused
-run and the full 77-case integration run are pending; the failed result
-above does not test the correction.
+The CSS correction at `cc218b7e9c046d83d915d5bd43a5048168356450` hid
+the home countdown while Menu was open, without changing its clock.
+The retained regression and recurring-raids passed **2/2 in 1m 35.91s**
+(58s and 30s). All four fresh Menu captures showed Empires accessible on
+desktop and phone. Its local archive is
+`tournament-evidence-review-focus-cc218b7e`. #97 subsequently supplied
+its own stacking correction; the merge retains that solution and removes
+the redundant hiding rule. This focus predates that integration.
+
+## Interrupted full integration check at cc218b7e
+
+Exact tested code: `cc218b7e9c046d83d915d5bd43a5048168356450`, clean
+and pushed before checks, including fetched main `a3328da6` as an
+ancestor. The required unit checks passed:
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| `.venv/bin/python -m unittest discover tests` | 442 run: 433 passed, 9 existing PostgreSQL skips | 31.05 seconds |
+| `cd client && npm run check` | Types passed | 2.31 seconds |
+| `cd client && npm test` | All 388 tests passed | 8.06 seconds |
+
+The 77-case browser run was deliberately stopped after **19 passes and
+one actual failure** to merge newly landed #97 and correct the raid
+fixture described below. `classic` was incomplete; its shutdown output
+is an interruption, not another completed failure. All five tournament
+scenarios and shared spells passed. No full-suite result is claimed.
+
+| Completed test | Result | Time |
+| --- | --- | ---: |
+| `site-menu` | Passed | 61s |
+| `tournament-weekly` | Passed | 127s |
+| `tournament-rooms` | Passed | 208s |
+| `tournaments` | Passed | 117s |
+| `tournament-battle` | Passed | 277s |
+| `tournament-results` | Passed | 143s |
+| `spells` | Passed | 46s |
+| `building-overlay` | Passed | 82s |
+| `playthrough-controls` | Passed | 44s |
+| `battle-selection` | Passed | 42s |
+| `recurring-raids` | Failed | 33s |
+| `animals` | Passed | 29s |
+| `attack` | Passed | 127s |
+| `bonus` | Passed | 32s |
+| `bosses` | Passed | 35s |
+| `bubble` | Passed | 67s |
+| `camp` | Passed | 49s |
+| `camp-again` | Passed | 26s |
+| `card` | Passed | 112s |
+| `cash` | Passed | 40s |
+
+The local archive `tournament-evidence-partial-cc218b7e` contains
+**101 screenshots across 20 populated folders**. The runner created 77
+scenario directories, most empty; that total does not mean 77 scenarios
+ran. The separately saved pre-interruption server log contains zero Python tracebacks,
+HTTP 5xx replies or unhandled commands.
+
+Screenshot review covered **68 captures**: 50 tournament/shared-spell images,
+14 building/control/Menu images and four selection/raid images. Menu
+targets and the tournament art/controls passed review. Army viewport
+edges and overlapping troops limit what
+individual frames show; the weekly advance capture shows empty terrain,
+with advancement checked by assertion. The golem capture shows its glow
+only. Scrollable team/ranking views do not display every entry together;
+the six shared-spell captures are desktop views. A temporary phone toast
+and an edge capture during dismissal do not establish persistent Menu
+obstruction. Selection's portrait, ring, statistics and Deselect are
+readable on desktop and phone. The raid incoming/failure captures show
+two attackers and defense/build-block notices; there is no recovery
+capture or visual proof of the obstruction's cause. The replay below
+establishes that cause. These limits do not imply the failed raid worked.
+
+### Raid failure and unchanged-main replay
+
+`recurring-raids` exhausted its unchanged 15-second movement wait. At
+frame 419, two attackers were stationary at `(92, 1)` and `(91, 1)` with
+no path: the test's packed resource rows enclosed a 16-tile edge pocket.
+An exact replay of the saved map and wave reproduced that state on both
+main `a3328da6c1e9e18a68636ab18d49098786f13c01` and `cc218b7e`.
+The raid, home-defense, walking, geometry, config, camp and shared fixture
+files used for this comparison were identical. This establishes a
+pre-existing fixture obstruction, not a tournament runtime regression or
+a timeout-only problem.
+
+Moving one fixture stone from `(99, 2)` to `(99, 4)` opened the exit.
+The replay then gave both attackers targets by frame 30 on both commits,
+with all 24 stone and 24 gold resources retained. The browser fixture
+uses the ordinary saved move, asserts the counts and exit, and makes its
+first scheduled wave use the previously trapped edge. Later waves remain
+random. The four-wave, recovery, reward and movement assertions and
+15-second movement deadline remain intact; runtime raid/pathfinding rules
+are unchanged. Local proof is retained in `tournament-raid-pocket-replay`
+artifacts. The modified browser fixture and combined #97 runtime still
+need fresh checks; the replay is not a browser pass.
 
 ## Completed pre-#95 checks at 5d220abf
 
@@ -665,8 +759,8 @@ includes build, startup and cleanup. This pre-review run had no failures.
 The list/team slice is in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89);
 [#92](https://github.com/TamalAdebisi/socialemperors/pull/92) implements
 every remaining tournament stage. The #94 integration passed all 75
-cases at `5d220abf`; final verification after merging #95 is pending.
-The other chats' #87, #91, #93, #94 and #95 work is preserved. Merging #92
+cases at `5d220abf`; final verification after merging #97 is pending.
+The other chats' #87, #91, #93, #94, #95 and #97 work is preserved. Merging #92
 uses the owner's
 standing authorization for automatic deployment after the required checks.
 

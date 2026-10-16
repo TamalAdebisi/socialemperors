@@ -5,6 +5,7 @@
 // on a phone the Menu sits by Full screen; Log out signs the player out.
 
 import assert from "node:assert/strict";
+import { DISCORD } from "../lib.mjs";
 
 async function assertMenuTargets(list, screen) {
   const targets = await list.getByRole("menuitem").evaluateAll((items) => items.map((item) => {
@@ -16,7 +17,7 @@ async function assertMenuTargets(list, screen) {
       hit: hit?.className || hit?.tagName || "nothing",
     };
   }));
-  assert.equal(targets.length, 3, `${screen} Menu has all three destinations`);
+  assert.equal(targets.length, 4, `${screen} Menu has all four destinations, including configured Discord`);
   for (const target of targets) {
     assert.ok(target.reachable, `${screen} Menu item ${target.name} receives clicks; hit ${target.hit}`);
   }
@@ -79,6 +80,9 @@ export default async function siteMenu({ newPlayer }) {
   assert.equal(await friends.getAttribute("href"), "/friends");
   assert.equal(await friends.getAttribute("target"), "_blank", "a new tab: the game plays on");
   assert.equal(await list.getByRole("menuitem", { name: "Empires" }).getAttribute("href"), "/");
+  const discord = list.getByRole("menuitem", { name: "Discord" });
+  assert.equal(await discord.getAttribute("href"), DISCORD);
+  assert.equal(await discord.getAttribute("target"), "_blank");
   await player.shot("menu");
   await assertMenuTargets(list, "Desktop");
   await page.keyboard.press("Escape");

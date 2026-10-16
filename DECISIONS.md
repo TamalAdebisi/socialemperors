@@ -4,6 +4,28 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: preserve #97 and correct the raid fixture
+
+- **Keep main's Menu stacking fix.** Main #97 landed during the `cc218b7e`
+  run and was merged at `36f61871`. Its top-bar stacking already keeps
+  the Menu over the countdown, so remove our redundant countdown-hiding
+  rule. Keep the hit-target regression, now checking all four destinations
+  with Discord configured. Preserve #97's contact/sign-up choices below.
+- **Open the test map's trapped edge, without changing raid rules.** The
+  cc run's movement failure reproduced exactly on unchanged main
+  `a3328da6`: packed fixture resources enclosed a 16-tile pocket. Moving
+  one stone through the normal saved command preserves all resources
+  and opens an exit; replay gives both attackers targets by frame 30.
+  Exercise that edge on the first scheduled wave, retain later random
+  entries and every movement/recovery/reward assertion, including the
+  15-second movement deadline. This is a fixture correction, not a longer
+  timeout or a runtime pathfinding repair.
+- **Keep the interrupted evidence.** At cc, 19 cases passed and one
+  failed; classic was interrupted. Unit checks and the earlier Menu focus
+  passed, but no full 77-case pass occurred. The merged contact case
+  brings the fresh suite to 78; final verification and delivery remain
+  pending in [the record](docs/verification-92.md).
+
 ## 16 October 2026: getting in touch, and who can join
 
 - **No in-game chat for now.** The original had none: players talked
@@ -35,10 +57,10 @@ them can be found and reversed. The big, agreed decisions are in
   covering the desktop Menu's Empires row, although the existing Menu
   browser assertions passed. The added hit-target assertion reproduced
   the obstruction at `28f0fa42`, whose runtime was unchanged from `3b`:
-  0/1 in 53.96s. Hide the home countdown only while Menu is open, giving
-  its destinations clear space without changing the clock. The CSS
-  correction is implemented; its unchanged regression and the full
-  integration rerun are pending. The twelve completed cases remain a
+  0/1 in 53.96s. Hiding the home countdown only while Menu was open
+  passed the unchanged regression and recurring-raids focus at cc:
+  2/2 in 1m 35.91s. #97's later stacking solution supersedes this hiding
+  rule, as recorded above. The twelve completed cases at 3b remain a
   partial run, not a 77-case pass. The interrupted attack scenario is
   not a completed test failure.
 
@@ -51,9 +73,8 @@ them can be found and reversed. The big, agreed decisions are in
   a rendered dialog or alert dialog. Hidden mounted panels do not block
   shortcuts; existing modifier/form guards and dialog focus behavior stay
   unchanged. The unchanged assertion and shared selection passed a
-  two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final 77-case
-  integration verification remains pending after the Menu overlap found
-  during the subsequent full run.
+  two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final integration
+  verification remains pending, now with 78 cases after #97.
 
 ## 16 October 2026: tournaments join Everybody
 
@@ -65,8 +86,9 @@ them can be found and reversed. The big, agreed decisions are in
   unchanged. Preserve the new shared battle inspection controls as well.
 - **Keep each completed run attached to its code.** The 75/75 run at
   `5d220abf` is a completed pre-#95 baseline, alongside the earlier 67 and
-  49 records. #95 changes runtime and adds two cases; verify all 77 on
-  the new integrated code before delivery.
+  49 records. #95 changed runtime and added two cases; its later partial
+  runs remain recorded. #97 adds another case, so verify all 78 on the
+  new integrated code before delivery.
 
 ## 16 October 2026: playthrough feedback — active defense and everybody
 
@@ -139,8 +161,9 @@ them can be found and reversed. The big, agreed decisions are in
   Use the same `GameLoop` as other battles so a hidden tab can keep the
   match advancing. Explicit Pause still stops simulation and excludes
   paused time. Army, scoring, spell and command rules stay unchanged.
-  The integrated code at `5d220abf` passed all 75 cases. #95 landed
-  during that run; the next combined 77-case verification is pending.
+  The integrated code at `5d220abf` passed all 75 cases. Later #95
+  attempts and #97 integration are recorded above; the fresh combined
+  78-case verification remains pending.
 
 ## 16 October 2026: playthrough controls and site repairs
 
