@@ -26,9 +26,9 @@ next agent knows where to start.
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
   task 4, the shop details; its research below is retained. Task 6 remains
-  on hold. The nine-bundle art follow-up has verified all images in both request
-  modes and passed `team` plus the pre-#87 suite; its final integration
-  check on the new 67-test main is running before #91 merges.
+  on hold. The nine-bundle art follow-up has verified all images in both
+  request modes; `team` passed and the pre-#87 suite finished 61/65. Its
+  final integration check on the new 67-test main is running before #91 merges.
 - **Verification for #87:** 429 server tests (420 passed, 9 existing
   skips), client types and all 348 unit tests passed. The integrated
   browser suite ran all 67 tests: 67 passed, 0 failed. Details and the
