@@ -39,6 +39,8 @@ time.
 ## Run it on your computer
 
 You need Python 3.13 (what the live server runs) and, for the new client, Node 22.
+`tools/setup.sh` does all of the setting up below in one go, plus a browser
+for the browser tests and the decompiled Flash client.
 
 ```
 python -m venv .venv
@@ -69,6 +71,8 @@ node e2e/run.mjs                     # the new client in a real browser (e2e/run
 | [MULTIPLAYER.md](MULTIPLAYER.md) | The server's settings |
 | [FLASH.md](FLASH.md) | Playing with real Flash |
 | [CLAUDE.md](CLAUDE.md) | The ground rules for Claude, which does much of the work on this project |
+| [AGENTS.md](AGENTS.md) | The same rules for other coding agents (Codex), and how they set up, test and deliver |
+| [HANDOFF.md](HANDOFF.md) | Where the work stands and what comes next, for whichever agent starts next |
 
 ## Credits
 
