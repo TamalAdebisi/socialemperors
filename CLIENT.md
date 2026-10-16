@@ -762,8 +762,13 @@ Building previews snapshot their drawing origin before loading art, so
 pointer movement during loading cannot offset the picture twice. Old
 hover state is cleared on entering placement or Move, keeping its refresh
 from erasing the footprint.
-`e2e/tests/building-overlay.mjs` checks selection leaves distant ground
-unchanged, delayed preview alignment, cancellation and the saved building.
+`e2e/tests/building-overlay.mjs` checks house, tower and Town Hall selection
+leave distant ground unchanged. Delayed house, farm, ranch, mine and tower
+previews check alignment, footprint refresh, cancellation and the save.
+For Safari reports, `node e2e/run.mjs --webkit building-overlay` runs the
+same check in WebKit, with separate output under `work/e2e-webkit/`.
+Install that engine with `npx playwright install webkit` first. Linux
+WebKit covers the browser engine, but does not reproduce a Mac's GPU.
 The Friends page and other site forms use root-relative CSS and image
 URLs; `site-menu.mjs` checks the actual submitted Friends page on desktop
 and phone, including loaded images and styles.

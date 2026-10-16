@@ -99,7 +99,10 @@ export default async function spells({ newPlayer }) {
   await player.page.mouse.move(there.x, there.y);
   await player.wait(200);
   await player.page.mouse.click(there.x, there.y);
-  await player.wait(3000);
+  // The summoning takes 57 game frames. Software drawing may advance
+  // fewer than that during a fixed three-second wall-clock sleep.
+  await player.page.waitForFunction(() => window.seQuest.battle.fighters.some((f) => f.summoned),
+    null, { timeout: 30_000 });
   await player.shot("golem");
   const golem = await player.page.evaluate(() => window.seQuest.battle.fighters
     .filter((f) => f.summoned).map((f) => ({ side: f.side, life: f.maxLife, name: f.item.name })));

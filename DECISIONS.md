@@ -34,8 +34,18 @@ them can be found and reversed. The big, agreed decisions are in
   already applied by the preview container and must not be applied twice.
   Clear old hover state on entering placement or Move, so its periodic
   refresh cannot erase the new footprint.
-  Browser checks cover immediate building selection without distant
-  ground changes, delayed preview loading, cancellation and the save.
+  Browser checks cover immediate selection of several buildings without
+  distant ground changes, delayed loading of five preview types,
+  cancellation and the save. The owner reports Safari on a Mac, so the
+  runner also supports WebKit with separate results. This checks the
+  engine locally; it does not claim to reproduce a Mac's GPU.
+- **Browser checks wait for gameplay, not fixed sleeps.** The full run
+  exposed slow-renderer waits for a summon, spy flight, neighbour delivery
+  and a villager's repair. Wait for the same outcomes with bounded
+  deadlines, and close independent fixture pages after their assertions.
+  The raid check uses the existing siege check's four-times simulation
+  setting for the long random approach, retaining its completion deadline
+  and every kill/reward/repair/save assertion. These are test-only changes.
 
 ## 16 October 2026: closing the public-art repair
 

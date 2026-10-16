@@ -23,8 +23,13 @@ export default async function raids({ newPlayer }) {
   // test town) is done as the town opens, and pays its 10 gold then.
   const before = await player.saved();
 
-  // The band comes now.
-  await player.page.evaluate(() => window.seHome.hurry());
+  // As in the siege check, run the long trip from a random map edge at
+  // four simulation steps per frame. Keep the same completion deadline;
+  // slow software drawing must not turn it into a test of the GPU's speed.
+  await player.page.evaluate(() => {
+    window.seHome.speed = 4;
+    window.seHome.hurry();
+  });
   await player.wait(1500);
   assert.ok(await player.page.evaluate(() => Boolean(window.seHome.fighting)));
   assert.match(await player.bar(), /under attack/, "building waits");
@@ -77,7 +82,16 @@ export default async function raids({ newPlayer }) {
     if (i === 15) await player.shot("fighting");
     await player.wait(1000);
   }
-  assert.equal(await player.page.evaluate(() => Boolean(window.seHome.fighting)), false, "the raid is over");
+  const stillFighting = await player.page.evaluate(() => {
+    const fight = window.seHome.fighting;
+    if (!fight) return null;
+    const unit = (f) => ({ id: f.item.id, x: f.tx, y: f.ty, life: f.life, next: f.next,
+      attacking: f.attacking, target: f.target && { id: f.target.item.id, x: f.target.tx, y: f.target.ty } });
+    return { frame: fight.battle.frame, quiet: fight.quiet,
+      raiders: fight.raids.flatMap((raid) => raid.alive.map(unit)),
+      knights: fight.battle.fighters.filter((f) => f.item.id === 514 && !f.dead).map(unit) };
+  });
+  assert.equal(Boolean(stillFighting), false, `the raid is over${stillFighting ? `: ${JSON.stringify(stillFighting)}` : ""}`);
   assert.notEqual(await player.page.evaluate(() => window.seHome.parts.sound.currentTrack), "BATALLA.mp3", "the town's tune again");
   assert.equal(await player.bar(), "", "the town is the player's again");
   killed = await player.page.evaluate(() => window.seHome.kills);
@@ -115,7 +129,11 @@ export default async function raids({ newPlayer }) {
   const cursor = await player.page.evaluate(() => document.querySelector("canvas").style.cursor);
   assert.ok(cursor.includes(bucket) || cursor.includes("cursor-repair"), "the bucket pointer");
   await player.click(onHouse);
-  await player.wait(9000);
+  // Wait for the walk to the house and its first repair tick, not a fixed
+  // sleep that can expire while the villager is still on the way.
+  await player.page.waitForFunction(([x, y]) => (window.seHome.parts.town.items
+    .find((p) => !p.item.isUnit && p.tx === x && p.ty === y).health ?? 0) >= 25,
+    HOUSE, { timeout: 30_000 });
   assert.ok((await health()) >= 25, `repairing (${await health()})`);
   assert.equal(await room(), roomBefore - 3, "no room until it's repaired in full");
   await player.shot("repairing");
