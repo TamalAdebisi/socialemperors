@@ -1,6 +1,6 @@
 # Roadmap
 
-Tutorial repair in progress: mandatory home-town lessons, clearer guidance,
+Tutorial repair in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93): mandatory home-town lessons, clearer guidance,
 smooth camera movement, recoverable progress and a confirmed first-dragon
 reward. Classic-client choices are hidden at the owner's request; its
 routes remain available. See CLIENT.md and DECISIONS.md.

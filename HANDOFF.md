@@ -19,14 +19,23 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **Owner playthrough follow-up:** mandatory tutorial repair and hidden
-  classic choices on `codex/mandatory-tutorial`. The owner reported abrupt
-  camera jumps, unclear movement targets and villagers suggested for combat.
-  The owner authorizes clearer flow over one-to-one tutorial fidelity.
-  Desktop and phone browser verification, reloads and reward retries are
-  part of this slice. Keep #87's Menu/card and the other tournament/art
-  chats' work when integrating; do not restore classic fallback buttons.
-
+- **Owner playthrough follow-up completed in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):**
+  the tutorial is mandatory, with smooth camera pans, explicit destinations,
+  soldier-only combat guidance and saved progress/rewards. Show me restores
+  interrupted actions; replacement villager training returns to the unfinished
+  task without resetting its chapter or count. Classic choices are hidden;
+  their routes and shared saves remain. Keep this visibility decision when
+  integrating tournament work. #87's building card and Menu/logout are retained.
+- **Tutorial verification:** server 434 run (425 passed, 9 existing skips),
+  client types and 350 tests passed. All 69 browser tests passed in **64m
+  32.58s**, on game code `20a87d8d`, including #87. The subsequent main merge
+  changes documentation only. The final isolated villager-recovery correction
+  at `908fe63e` passed desktop, phone and recovery checks **3/3 in 7m 10.65s**,
+  plus client types and unit tests. The other 66 browser fixtures have completed
+  tutorials and do not instantiate Lessons. Screenshots and server logs were
+  inspected; no HTTP 5xx, Python tracebacks or unhandled commands. Refreshed
+  ordinary public art was used: team passed in 34 seconds, and memory-limit/OOM
+  counters did not increase. The formal art audit remains tracked in #91.
 
 - **The first tournament slice is complete in #89:** everyday, weekly
   and friends' lists, help and the saved team box. The owner's later
