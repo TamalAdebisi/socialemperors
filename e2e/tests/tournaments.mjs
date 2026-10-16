@@ -315,4 +315,11 @@ export default async function tournaments({ newPlayer }) {
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, returnRoom.tournament.tournament_id);
   assert.equal((await getInfo()).map.coins, returnBalance, "returning neither repeats the fee nor leaves the saved room");
   await player.shot("after-welcome-gift");
+
+  // Cases share this local server. Release the public seat so the next case's
+  // players are matched together, using the normal leave and refund service.
+  const returnLeft = await service("leave_tournament", { tournament_id: returnRoom.tournament.tournament_id });
+  assert.equal(returnLeft.result, "OK");
+  assert.equal((await service("get_tournament_info")).tournament, null, "the welcome fixture leaves no active room");
+  assert.equal((await getInfo()).map.coins, returnBalance + returnFee, "leaving the waiting room refunds exactly its entry fee");
 }
