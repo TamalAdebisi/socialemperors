@@ -1816,7 +1816,7 @@ collections, in the last stop).
 
 "The switch". Attacking another player's town is played in the new
 client: from Neighbours or the world map, with the defence plans, the
-history and revenge. Spying still needs the classic game. A reading of the original,
+history, revenge and spying. A reading of the original,
 in our words, is the plan (how an attack starts, the battlefield and the
 four defence plans, the report, the windows after, spying, the world
 map, revenge).
@@ -1953,8 +1953,29 @@ sits on each of the five pictures (`tools/art/Placements.java`) into
 - **Names:** the server now names each island, and each profile, by its
   player's username, as the neighbours list does; it sent the town's
   name before, which is "My Empire" for nearly everyone.
-- **Not yet:** spying (the eagles), and the help page the original showed
-  the first time.
+- **Left out:** the help page the original showed the first time. Its
+  words ("Try to make it to Island 1") show the original's continents ran
+  from 50 down to 1; the server's run from 1 up (`worlds.py`), and the
+  owner chose to keep that, so the page would mislead.
+
+Sixth slice, spying (in `attackPlay.ts`, `e2e/tests/spy.mjs`). With an
+Eagles building built, the world map's bar shows the eagles left (3 in
+the 24 hours up to the last visit, counted as attacks are) and an
+island's menu has Spy; without, it says to build Eagles.
+
+- **The visit:** `spy_player` is sent, the game's "Preparing To SPY"
+  window opens, and the player's eagle alone flies over their town as
+  the battle page draws it, their defence plan and towers shooting at it.
+  Its life comes from the Eagles building: 200, 400, 800 or 10,000 for
+  Eagles I to IV. Every tap sends it there; it attacks nothing and
+  there's no spell book, as the original lets nothing else be tapped.
+  The bar counts their targets.
+- **The end:** when the eagle falls, or is called home, nothing is won or
+  lost and no report is sent; Back home opens the world map at the
+  continent spied on, as the Flash client goes back.
+- **Goals:** spying, winning two and three attacks (the save's count),
+  and attacking two players of the player's level and two above it, now
+  count here.
 
 ### Making the art look better
 

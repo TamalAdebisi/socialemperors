@@ -23,6 +23,10 @@ export const MAX_GOLD = 20000;
 export const WIN_FLOOR = 25;
 
 const SUB = { peasant: 71, townHall: 135, wall: 221, deco: 411, lost: 911, refuge: 1311 } as const;
+/** The spy's eagle; the Eagles buildings, and its life with each (Eagles I to IV; the troll one, its own). */
+export const EAGLE = 543;
+const EAGLES_LIFE = new Map([[185, 200], [186, 400], [187, 800], [217, 10000]]);
+const SUB_EAGLES = 136;
 /** Coming home to an attack not yet seen: the town hall and this many other buildings are found half burnt. */
 const BURNT_ON_RETURN = 5;
 /** The attacker's own transports, which never fight on either side. */
@@ -245,4 +249,22 @@ export function burnOnReturn(town: Town): PlacedItem[] {
     }
   }
   return burnt;
+}
+
+/**
+ * The town's Eagles building, if it has one built, as the Flash client
+ * looks for it: spying needs it, and its level sets the eagle's life.
+ */
+export function eaglesOf(town: Town, built: (placed: PlacedItem) => boolean): PlacedItem | null {
+  return town.items.find((p) => p.item.subcategory === SUB_EAGLES && built(p)) ?? null;
+}
+
+/** The spy eagle's life: 200, 400, 800 or 10,000 by the Eagles building; the troll Eagles keep the eagle's own. */
+export function eagleLife(eagles: ItemInfo, eagle: ItemInfo): number {
+  return EAGLES_LIFE.get(eagles.id) ?? eagle.life;
+}
+
+/** Spy visits left now: 3 in the 24 hours up to the last, counted as attacks are (`attacksLeft`). */
+export function spyingsLeft(spyings: AttackEntry[], now: number, reset = 0): { left: number; wait: number } {
+  return attacksLeft(spyings, now, false, reset, SPYINGS_MAX, SPYINGS_PERIOD);
 }

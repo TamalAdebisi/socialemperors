@@ -3076,7 +3076,8 @@ body {
   gap: 6px 10px;
 }
 
-.world-attacks {
+.world-attacks,
+.world-eagles {
   padding: 3px 10px;
   border-radius: 999px;
   background: var(--parchment-deep);

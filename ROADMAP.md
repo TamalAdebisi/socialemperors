@@ -371,8 +371,10 @@ The ground rules for the work are in [CLAUDE.md](CLAUDE.md).
         player's level, attacking from an island, beaten islands, the
         progress, browsing, relocating, profiles and the prize for a new
         continent ([CLIENT.md](CLIENT.md#attacking-players))
-  - [ ] Attacking players, the rest: spying (the eagles), the map's
-        first-time help
+  - [x] Spying with the eagles, and the goals about spying and attacks
+  - [x] Left out on purpose: the world map's first-time help, whose words
+        assume the original's continents counting down to 1 (the owner
+        kept ours counting up)
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))

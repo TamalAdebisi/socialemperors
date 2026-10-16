@@ -146,7 +146,7 @@ Player battles are for the last stop ("The switch"); the World window sends play
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from); no help page |
+| `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from), and the spy visit's start with its words; no help page |
 | `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
 | `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
