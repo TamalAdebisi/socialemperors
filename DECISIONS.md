@@ -4,6 +4,39 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: closing the public-art repair
+
+- **Close this operational repair without a code change.** All 20 images
+  match in plain and Origin requests; the nine-item cache was refreshed,
+  then `team` passed alone and in the full browser suite. No further
+  export, bucket deletion or purge is needed. #91 records the hashes,
+  dimensions, cache headers, screenshots, test counts and memory.
+- **Verify both merged slices with fresh art.** #87 merged while the
+  pre-#87 61/65 result was being recorded. Preserve all of its work and
+  #89's tournament slice, refresh the nine-item cache again, then run
+  `team` before the full suite. The four earlier failing checks now pass.
+  That suite was 66/67 in 79m 48.48s, with no memory-limit/OOM events.
+  Both older verification records retain their original results.
+- **Keep the tutorial failure as a separate historical observation.**
+  `lessons` checked an absent arrow at step 3 while the villager was
+  still training. The runtime and test are identical to main `6c2fa146`;
+  this repair changes documentation only. Record the failure and the
+  focused unchanged-test follow-up (1/1 passed; none of its 104 art
+  requests used these nine items) without claiming the full suite was
+  all green. #93 replaced the tutorial during verification and already
+  records 69/69 with refreshed ordinary art plus its final focused checks.
+  Preserve that work and check the final integration; do not describe the
+  old failure as a #93 regression. Closing this art repair adds no
+  gameplay, source-art or test-assertion changes.
+- **Use #93's completed full-suite evidence for its new tutorial.** Its
+  69/69 run used refreshed ordinary public art, and its final corrections
+  passed all four affected checks. After the documentation-only merge,
+  repeat the team and affected tutorial/tournament checks locally, plus
+  current unit checks: all five browser checks passed, with 435 server
+  tests run (9 existing skips), types and all 350 client tests passed.
+  Attribute #93's results explicitly; keep our two full runs and their
+  tested commits intact instead of relabelling them.
+
 ## 16 October 2026: wait for keyboard movement in the browser check
 
 - **Measure the movement the test intended to exercise.** The complete
@@ -74,7 +107,8 @@ them can be found and reversed. The big, agreed decisions are in
   are integrated together, keeping the original services and shared saves.
   The owner's later #93 decision hides classic choices; its routes remain
   supported. #87 and #93 were delivered by their other chats and are
-  preserved here; the separate public-art audit remains with #91.
+  preserved here; the other chat completed the separate public-art audit
+  in #91.
 - **Keep the waiting clock's actual meaning.** Its sixty seconds count
   down to a server refresh, as in Flash; they do not promise bots then.
   The panel explains the existing thirty-minute public and one-day
@@ -201,13 +235,32 @@ them can be found and reversed. The big, agreed decisions are in
   stay intact. The existing export policy stores smaller pictures; for
   two of these items it also holds each picture for two frames while
   retaining the original animation length.
-- **The owner still operates the live art workflow.** Use all nine names
+- **The live export needs specific owner authorization.** The initial
+  investigation left that step to the owner. The owner subsequently asked
+  Codex to carry it out, authorizing targeted run
+  [38885093455](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+  on main `2918c71f`. This exception does not change AGENTS.md's general
+  reservation. Use all nine names
   in **Make these again**, with **Make every sheet again** off. A local
   replacement test is separate from verifying the public repair; refresh
   the public files and local test cache, then run `team` and the full
   suite. [The repair notes](docs/art-loading-repair.md) record the evidence
   and exact steps. Do not repeat the known 76-page memory exhaustion just
   to establish the same baseline.
+- **Verify image bytes as well as new manifests.** The authorized export
+  succeeded, but Cloudflare kept old WebPs at all 20 ordinary image URLs
+  while serving new JSON. Revalidation requests did not refresh them;
+  cache-busted requests proved the uploaded images were correct. Recovery
+  required a targeted purge of the documented URLs or cache expiry;
+  ordinary-URL verification remained open until their bytes agreed. Tests using freshly downloaded, cache-busted images
+  are identified separately. No Cloudflare access is available here; the
+  owner confirmed purging only those 20 URLs. At 11:24 UTC, all 20
+  ordinary images byte-matched their `?repair=38885093455` versions both
+  without Origin and with `Origin: https://socialemperors.me`; actual
+  dimensions match the new JSON. Per-response hashes and cache headers
+  are recorded in the linked repair notes. No additional export, bucket
+  deletion or purge is needed. Refresh the nine-item local test cache,
+  then run `team` before the full suite, preserving every assertion.
 
 ## 16 October 2026: standing authorization to build and merge
 

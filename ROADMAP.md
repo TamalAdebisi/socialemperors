@@ -403,7 +403,8 @@ merging the two wait fixes with that separate failure documented.
         selection, entry and waiting rooms; three independent matches
         with copied armies; results, weekly rankings and server-paid
         prizes; friends' creation, invitation notice and cancellation
-        ([CLIENT.md](CLIENT.md#tournaments)). Existing rooms and unfinished
+        ([CLIENT.md](CLIENT.md#tournaments); complete in #89 and #92,
+        [verification](docs/verification-92.md)). Existing rooms and unfinished
         matches reopen from the server save. Classic choices stay hidden at
         the owner's request; their routes and shared saves remain.
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,

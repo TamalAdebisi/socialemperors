@@ -290,6 +290,10 @@ frees its unit.
 
 ## Tournaments
 
+All five parts are built in #89 and #92; the
+[delivery record](docs/verification-92.md) records the final 73/73 browser
+run, rule tests and exact tested code.
+
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
 - [x] Original help, shown once and saved with `tournamentHelp`.
