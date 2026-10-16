@@ -22,35 +22,32 @@ next agent knows where to start.
 - **The first tournament slice is complete in #89:** everyday, weekly
   and friends' lists, help and the saved team box. Entry and later stages
   keep classic links. Task 7 below records its checks and the next slice.
-- **Task 1 is complete in #86**, with a separate art-loading failure
-  recorded below for follow-up. Its investigation now identifies **nine
-  stale art bundles**; the owner-operated export is still pending. The
-  owner requested merging the two wait
-  fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
-  those are implemented but still awaiting browser verification and merge.
-  #87 now includes `main` with both agents' work retained; its delivery
-  task is below. Leave
-  those tasks with that pull request, and start dependent work from the
-  latest `main` after it lands.
-- **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
-  client's 324 passed, and 63 of 64 browser tests passed. The two flaky
-  tests now pass; `team` needs the separate art repair described in task 1.
+- **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
+  #87 delivered the building card, upgrades and site Menu, with both
+  agents' work and the later #89 tournament merge preserved. Next is
+  task 4, the shop details; its research below is retained. Task 6 remains
+  on hold. The separate nine-bundle art follow-up remains open for
+  public-art verification after the owner's export.
+- **Verification for #87:** 429 server tests (420 passed, 9 existing
+  skips), client types and all 348 unit tests passed. The integrated
+  browser suite ran all 67 tests: 67 passed, 0 failed. Details and the
+  separate art follow-up are below.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
-  separate art repair below needs the owner's export workflow.
+  separate art repair below still needs post-export verification.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
     shop's details and the run-through that closes the beta. The building
-    card and the site's bar are built in #87, not merged yet (task 2).
+    card and the site's Menu are complete in #87 (tasks 2, 3 and 5).
   - **Beta 2, battles and quests:** built: combat, every island, spells,
     special moves, defending the town, camps, bosses, graveyards. Left: the
     special units' rarer moves, a short list of battle rules (PARITY.md,
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
-    Arthur's lessons and the nests are built. Left: tournaments, the long
-    tail of windows, and making the new client the default.
+    Arthur's lessons and the nests are built. Left: later tournament stages,
+    the long tail of windows, and making the new client the default.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
   47% are built in the new client, 40% partly (mostly special buildings
@@ -99,32 +96,48 @@ and tests assume.
 
 ## The queue, in order
 
-**Immediate delivery task: verify and merge #87.** Read AGENTS.md,
-CLAUDE.md and this file. Continue #87 on `claude/charming-hamilton-jiyrk5`;
-merge the latest `origin/main` into it (do not rebase). Resolve conflicts
-by retaining both sets of work: #86's waits and art-failure notes, these
-standing instructions, and #87's card, upgrade, Menu and shop research.
-The owner already chose card mockup A and delegated the Menu's placement;
-do not ask those questions again. The PR description reports unit-test
-passes, but a completed full browser run has not been recorded.
+**Immediate delivery task completed: [#87](https://github.com/TamalAdebisi/socialemperors/pull/87).**
+Merged main into the existing branch without rebasing or rewriting either
+agent's history. Conflicts retain #86's waits, the standing instructions,
+#87's card/upgrade/Menu and shop research, #90's art investigation and
+#89's tournament slice. The final integrated code is
+`d760f3a318571b07ccbae8d51004efa0b0bf98f4`, including main `36b2f277`;
+only the delivery documentation follows that verification commit.
 
-Run the server tests, client type check and unit tests, then all browser
-tests (66 at #87's current head). Inspect desktop and phone screenshots
-and the server log. Fix failures without weakening assertions. Record
-the tested commit, counts, duration and any unresolved failure in the PR.
-The existing `team` art-memory failure is documented under task 1; if it
-recurs, establish whether it is the same accepted unrelated failure.
-Merge once verification is complete and regressions are resolved, using
-the standing authorization. Keep tasks 1, 2, 3 and 5 ticked in the merged
-handoff. Update the status at the top instead of restoring #87's stale
-"no open pull requests" text.
+- Server: **429 run, 420 passed, 9 existing skips**, **34.33 seconds**.
+- Client: type check and **348/348 passed**, **14.10 seconds**.
+- Browser: **all 67 run**, **67 passed, 0 failed**, **80m 30.65s**
+  including the build. The repaired checks and new feature checks ran
+  first, then the other 60 alphabetically; [the full record](docs/verification-87.md)
+  lists their order and individual timings.
+- Desktop and phone screenshots and the local server log were inspected.
+  The server log has no HTTP 5xx responses or Python tracebacks. All
+  accounts and game writes were on throwaway local servers; only public
+  art was read remotely.
 
-**Checks that different chats can run concurrently:** use separate
-machines or cloud environments and separate checkouts of the same commit
-after the coordinator has merged `main` into #87. Each chat records its
-commit, command, results, screenshots and failures. One coordinator owns
-changes to #87 and the final merge. Run browser checks one at a time on
-the shared 2-CPU, 8-GiB machine; separate chats or worktrees do not add RAM.
+The earlier complete 66-test run at `b412f28a` took **75m 14.75s**:
+63 passed; `siege`, `sound` and `walk` failed. Siege now waits for its
+minute on the game clock (30-second limit). Sound and walking use a
+visible destination above the card; walking waits for arrival (15-second
+limit per destination) before its unchanged saved-position checks. The
+combined branch verifies all three repairs. No assertion was removed or
+weakened. #86's market and survival waits remain unchanged and pass.
+
+Verification also fixed the phone card covering pointer tools, touch
+pointer-leave dismissing the upgrade price before the second tap,
+tutorial progress crossing the card, and late read responses restoring
+a login cookie after logout. The reported scripted battle timeout was
+124 of 150 quiet frames after 30 seconds, with nobody attacking; closing
+already-checked independent towns frees drawing time while retaining its
+original deadline and every assertion. The separate art issue remains a
+follow-up under task 1, not a claimed fix in #87.
+
+**Future concurrent checks:** use separate machines or cloud
+environments and separate checkouts of the same integrated commit. Each
+chat records its commit, command, results, screenshots and failures. One
+coordinator owns changes and the final merge. Run browser checks one at
+a time on the shared 2-CPU, 8-GiB machine; separate chats or worktrees do
+not add RAM.
 The runner also overwrites `e2e/out/server.log`, so never share a checkout
 between simultaneous runs.
 
@@ -134,11 +147,10 @@ between simultaneous runs.
 | Site Menu and desktop/phone controls | `site-menu menus dock keys pointers phone-place` |
 | The two repaired timing checks | `survival market` |
 
-These focused checks help locate failures; the coordinator still ensures
-the complete suite is covered on the final code. Server tests and the
-client's type/unit checks can run alongside browser checks. Research for
-task 4 (shop details) and the first slice of task 7 (tournaments) can also
-proceed independently; task 4's implementation builds on #87.
+These focused checks help locate failures; the complete suite still
+needs coverage on the final code. Server tests and the client's type/unit
+checks can run alongside browser checks. Task 4 (shop details) can now
+build on the delivered card; task 7's next slice is the waiting room.
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -166,17 +178,17 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate follow-up: owner export of nine stale bundles still needed.**
+**Separate follow-up: verify the nine repaired public bundles.**
 For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
 army loaded. It failed on its own too, in a fresh browser, reaching this
 machine's 8 GiB memory limit.
-The current public `art/2075_elemental_red_god.json` names **76 sheets**:
+At that check, public `art/2075_elemental_red_god.json` named **76 sheets**:
 about **3.8 GiB** of decoded RGBA pixels, or **5.1 GiB** with mipmaps,
 before other graphics copies. This is separate from the two wait fixes;
 neither changes the team test, game code or art.
 
 **Rechecked on 16 October from main `002fcbeb`:** the ordinary public URL
-still serves 76 pages at scale 1, last modified before the current packer
+still served 76 pages at scale 1, last modified before the current packer
 was added. All 76 page manifests total 4,074,714,156 decoded RGBA bytes.
 An unchanged local export of the original SWF made two pages at scale
 0.25, step 2, about 124 MiB decoded, preserving animation lengths, bounds,
@@ -196,7 +208,22 @@ browser helper's disk cache has no expiry, so a fresh browser alone will
 not refresh any of these bundles. This local replacement pass does not
 replace the recorded 63/64 public-art result or close its follow-up.
 
-The owner should run **Export art to R2** on **main**, with **Make these
+**Delivery recheck, 16 October at 12:07 UTC:** the owner-operated
+[Export art to R2 run](https://github.com/TamalAdebisi/socialemperors/actions/runs/38885093455)
+completed successfully at 10:41 UTC. Ordinary public manifest GETs now
+show all nine at the expected two or three pages (20 total). The main
+bundle now has two pages, scale 0.25, step 2, SHA-256
+`c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c`.
+This checkout's cache still holds its old 76-page manifest; the other
+eight cached manifests match the new public files. The cache was not
+changed during #87's verification. In the final integrated run, `team`
+passed in **121 seconds**. Its sampled cgroup peak was **8.00 GiB**, with
+**886,334 memory-limit events**, **0 OOM events** and **0 OOM kills**.
+This does not close
+the art follow-up: consistent images and a refreshed-cache `team`/full
+suite remain to be verified. #87 did not operate the workflow or bucket.
+
+The targeted export uses **Export art to R2** on **main**, with **Make these
 again** set to **all nine names** in
 [the art repair notes](docs/art-loading-repair.md), and **Make every sheet
 again** left off. The earlier `2075_elemental_red_god`-only proposal does
@@ -209,19 +236,14 @@ rerun `team` and the full suite on the integrated main and inspect the
 screenshots. Until that public-art verification is recorded, this remains
 the known failure; do not mark it fixed or call it a new #87/tournament
 regression merely because it recurs. No live workflow or bucket was
-changed, and no assertion was skipped or weakened.
+changed by #87 verification, and no assertion was skipped or weakened.
 
-### 2. Beta 1: Upgrade on the building card (M) - [ ]
+### 2. Beta 1: Upgrade on the building card (M) - [x]
 
-Built in #87 with tasks 3 and 5 (CLIENT.md, "The building card"); final
-verification is underway. The other agent reported `scripted-bosses`
-failing in the final scenario, although it passed on main. Diagnostics
-confirmed that nothing was still attacking: after 30 seconds it had
-advanced only 124 of the 150 quiet game frames needed. Earlier towns
-were still drawing in software. The test now closes each independent
-town after all its assertions and a screenshot, preserving the same
-30-second deadline and all battle/save checks. The standalone final
-scenario already passed; the combined run is being rechecked.
+Completed in [#87](https://github.com/TamalAdebisi/socialemperors/pull/87)
+with tasks 3 and 5 (CLIENT.md, "The building card"). Verification and
+repairs are recorded above; the reported scripted battle timeout is
+resolved with completed test towns closed before the next scenario.
 
 PARITY.md, "The building card", and `docs/original/rules/town.md`,
 "Upgrading". 104 buildings upgrade to the next one (houses, farms, mills,
@@ -231,12 +253,12 @@ level and costs its full price; the old one gives back 1/20 of its price
 scaffolding like any new building. The Flash client sends `sell` (reason
 `"UPGR"`) and then `buy` on the same spot; the server already handles both.
 Town Hall II to IV can only be had this way, so three goals open up with
-it. The button can join the card's tiles in their current style (say so in
-DECISIONS.md); the card's new look is task 3.
+it. The Upgrade button uses the original card's action pictures, with
+the price shown on hover or the first phone tap (DECISIONS.md).
 
-### 3. Beta 1: what the building card shows (S each) - [ ]
+### 3. Beta 1: what the building card shows (S each) - [x]
 
-Built in #87 (see task 2): the owner picked mockup A, the original's info panel.
+Completed in #87 (see task 2): the owner picked mockup A, the original's info panel.
 
 
 PARITY.md, "What it shows": the picture with its health, its numbers
@@ -244,7 +266,7 @@ PARITY.md, "What it shows": the picture with its health, its numbers
 brings with a time bar, how full it is, the units inside (tap one to let
 it out), what a barracks trains, and a tip per kind of building. **The
 card's look was the owner's pick:** they chose mockup A, the original's
-info panel. It is implemented in #87, awaiting verification and merge.
+info panel. It is verified and delivered in #87.
 
 ### 4. Beta 1: the shop's details (M) - [ ]
 
@@ -297,15 +319,15 @@ Where to start in our code:
   the barracks bubble (`train-bubble`) are exported already.
 - A phone has no hover: give it a tap, and say so in DECISIONS.md.
 
-### 5. Beta 1: the site's bar (S) - [ ]
+### 5. Beta 1: the site's bar (S) - [x]
 
-Built in #87 (see task 2): the owner left the place to us; a Menu after
+Completed in #87 (see task 2): the owner left the place to us; a Menu after
 Full screen (DECISIONS.md, "the site's links in the new client").
 
 
-The classic page has Empires, Friends and Log out; the new client has
-none of them yet on `main`. The owner delegated their placement. #87
-implements a Menu after Full screen; verify and merge that work.
+The new client's Menu now provides Empires, Friends and Log out, as on
+the classic page. Friends carries its waiting count and opens a new tab;
+logout uses the site's form. The owner delegated their placement.
 
 ### 6. Beta 1: the run-through, and closing the beta (M) - [ ]
 
@@ -352,7 +374,9 @@ Desktop/phone screenshots and local server logs were inspected.
 The `team` pass in this run does not close #90's separate public-art
 repair and verification. Browser checks used local throwaway accounts;
 an uncommitted environment proxy preload allowed uncached public art to
-load. No production game accounts or live writes were used.
+load. No production game accounts or live writes were used. #87 subsequently
+repaired all four timing failures and verified the combined code in the
+67-test run recorded above.
 
 The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
@@ -442,7 +466,7 @@ meanwhile.
 
 Already decided, don't reopen: the menus as a rail and dock (CLIENT.md);
 the building card's mockup A and the agent-chosen Menu placement (both
-implemented in #87, awaiting verification and merge);
+completed in #87);
 the continents counting up from 1, so the world map's first-time help is
 left out; the Daily News window left out; the welcome-back chest kept in
 both clients; the troll town and the market in Beta 1; a fresh start on
