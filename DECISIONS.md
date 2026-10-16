@@ -16,6 +16,8 @@ them can be found and reversed. The big, agreed decisions are in
   They replace Flash's three-card paging. The twenty team places use five
   columns for usable phone targets; Reset and Cancel are available.
   Cancel discards edits. Classic links wait for pending saves first.
+  Friends' room cards use the tournament type's original picture instead
+  of the former Facebook profile photo.
 - **The team follows the original's ownership count:** standing units,
   units inside buildings, the warehouse and this town's storage, capped
   by each unit's limit and sorted by attack. Unplaced gifts do not count.

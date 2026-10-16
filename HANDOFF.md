@@ -240,9 +240,9 @@ command/service formats. This work does not own #87 or the art repair.
 The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
 public rooms of four filled by bots after 30 minutes, the weekly
-tournament against three bots, friends' tournaments, prizes). In the new
-client the Battle window's Tournament row still opens the classic game
-(`client/src/ui/world.ts`). The Flash windows are listed in
+tournament against three bots, friends' tournaments, prizes). The Battle
+window's Tournament row now opens the new list (`client/src/ui/world.ts`),
+with classic links for entry and the later stages. The Flash windows are listed in
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
 classes). Suggested slices:
 
