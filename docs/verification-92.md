@@ -14,10 +14,12 @@ original routes and shared saves remain supported.
 Pending. Main `a3328da6c1e9e18a68636ab18d49098786f13c01` landed during
 the completed run below. It changes shared battle selection, recurring
 raids/camps and community eligibility, with two new browser scenarios.
-The integration needs fresh server, client and full 77-case checks on a
-new exact commit; no result or new unit count is claimed yet. Tournament
-Invite now points to Everybody at `/friends`; the three-player-neighbour
-minimum, owner/room restrictions and fees remain unchanged.
+The `3b5da9e9` unit checks passed, but screenshot review stopped its full
+browser run after twelve completed cases because the new home countdown
+covered a desktop Menu row. The layout correction and a fresh full
+77-case run are pending. Tournament Invite now points to Everybody at
+`/friends`; the three-player-neighbour minimum, owner/room restrictions
+and fees remain unchanged.
 
 The next full run puts the five tournament scenarios and shared spells
 first, then `building-overlay`, `playthrough-controls`, `site-menu`,
@@ -49,9 +51,65 @@ failure itself.
 The correction checks for any rendered `dialog` or `alertdialog` before
 handling shared battle shortcuts, including when focus has moved to the
 body. Hidden mounted panels are ignored; modifier/form guards and dialog
-focus behavior remain unchanged. Types passed with this correction, but
-its unchanged browser assertion and the full 77-case run are pending.
-The failed run above does not verify the correction.
+focus behavior remain unchanged. The correction at
+`3b5da9e99005c619bdeb31aa22c169482171c9fb` passed the unchanged
+tournament-battle assertion and shared battle-selection scenario:
+**2/2 in 5m 31.79s** (281s and 44s). Its local archive is
+`tournament-evidence-review-focus-3b5da9e9`. This focused pass verifies
+the correction; the failed run above does not.
+
+## Interrupted full #95 integration check at 3b5da9e9
+
+Exact tested code: `3b5da9e99005c619bdeb31aa22c169482171c9fb`, clean
+and pushed before the checks, with fetched main `a3328da6` confirmed as
+an ancestor. All unit checks passed:
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| `.venv/bin/python -m unittest discover tests` | 442 run: 433 passed, 9 existing PostgreSQL skips | 32.12 seconds |
+| `cd client && npm run check` | Types passed | 2.33 seconds |
+| `cd client && npm test` | All 388 tests passed | 7.36 seconds |
+
+The full browser run completed **12 passing cases** before screenshot
+review found the new home raid countdown covering the desktop Menu's
+Empires row. This persistent overlap was a real usability defect missed
+by the existing Menu assertions. The run was deliberately stopped to add
+a hit-target regression and fix the layout. No full 77-case result is
+claimed. `attack` was incomplete; its browser-closed output at 135s was
+caused by the intentional interrupt, not a completed scenario failure.
+
+| Completed test | Result | Time |
+| --- | --- | ---: |
+| `tournament-weekly` | Passed | 128s |
+| `tournament-rooms` | Passed | 211s |
+| `tournaments` | Passed | 108s |
+| `tournament-battle` | Passed | 286s |
+| `tournament-results` | Passed | 158s |
+| `spells` | Passed | 48s |
+| `building-overlay` | Passed | 83s |
+| `playthrough-controls` | Passed | 40s |
+| `site-menu` | Passed | 60s |
+| `battle-selection` | Passed | 46s |
+| `recurring-raids` | Passed | 33s |
+| `animals` | Passed | 31s |
+
+The partial archive `tournament-evidence-partial-3b5da9e9` contains
+**75 screenshots across 13 folders**, including the incomplete attack
+scenario. Before interruption, the local server log had zero Python
+tracebacks, HTTP 5xx replies or unhandled commands.
+
+Owners reviewed **68 fresh captures**: 50 tournament/shared-spell
+images (weekly 6, rooms 7, list/help/team 10, battle 9, results 12 and
+spells 6), 14 #94 integration images and four #95 integration images.
+Tournament art and controls passed review. Review also exposed the
+persistent Menu overlap above. A temporary phone toast can cover Menu;
+an edge capture after dismissal is not proof of a persistent defect.
+Some units meet the army viewport edge or overlap, the weekly advance
+capture shows empty terrain with advancement checked by assertion, and
+the golem capture shows its glow only. Scrollable team/ranking views
+do not display every entry together. The six shared-spell captures are
+desktop views. These limits remain separate from the Menu defect that
+requires correction.
 
 ## Completed pre-#95 checks at 5d220abf
 

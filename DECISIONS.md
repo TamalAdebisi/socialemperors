@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: the home countdown must leave Menu usable
+
+- **Check the visible control, not just its presence.** Screenshot review
+  of the #95 integration at `3b5da9e9` found the persistent raid countdown
+  covering the desktop Menu's Empires row, although the existing Menu
+  browser assertions passed. Stop the full run, add a real hit-target
+  regression and correct the overlap before restarting verification.
+  Preserve the countdown and Menu behavior. The regression and layout
+  correction are pending; the twelve completed cases are a partial run,
+  not a 77-case pass. The interrupted attack scenario is not a completed
+  test failure.
+
 ## 16 October 2026: visible dialogs keep battle shortcuts
 
 - **A backdrop touch must not bypass a dialog.** The focused #95
@@ -12,8 +24,10 @@ them can be found and reversed. The big, agreed decisions are in
   army selection. The shared battle keyboard handler now also checks for
   a rendered dialog or alert dialog. Hidden mounted panels do not block
   shortcuts; existing modifier/form guards and dialog focus behavior stay
-  unchanged. Keep the failing assertion intact. Types pass; the focused
-  browser rerun and full 77-case integration check are still pending.
+  unchanged. The unchanged assertion and shared selection passed a
+  two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final 77-case
+  integration verification remains pending after the Menu overlap found
+  during the subsequent full run.
 
 ## 16 October 2026: tournaments join Everybody
 
