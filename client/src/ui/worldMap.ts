@@ -22,7 +22,7 @@ const art = (name: string) => new URL(`./art/world/${name}.webp`, import.meta.ur
 const WORDS = {
   moreAttacksIn: 104, loading: 886, progress: 1117, noAttacks: 1118, attacks: 1119, select: 1121,
   kingOfWorldText: 1122, nextIslandText: 1123, kingOfWorld: 1128, kingOfIsland: 1129, waiting: 1130,
-  relocateConfirm: 1319, relocate: 1320,
+  relocateConfirm: 1319, relocate: 1320, eagles: 1120,
 } as const;
 
 /** What the island menu says when there's no attacking. */
@@ -60,6 +60,10 @@ export interface WorldMapParts {
   /** The continent pictures (images_new/mapa1-5.jpg). */
   pictureUrl: (n: number) => string;
   attackUrl: (island: Island) => string;
+  /** Spying: where Spy goes, whether the town has its Eagles built, and the visits left. */
+  spyUrl: (island: Island) => string;
+  eagles: () => boolean;
+  spyingsLeft: () => { left: number; wait: number };
   profile: (pid: string) => Promise<PlayerProfile | null>;
   results: () => void;
   options: () => void;
@@ -158,11 +162,12 @@ export class WorldMapWindow {
     this.open();
   }
 
-  open(): void {
+  /** Open on the town's continent, or `continent` (back from spying there, as the Flash client comes back). */
+  open(continent?: number): void {
     if (!this.panel.isOpen) {
       this.panel.toggle();
     }
-    void this.load(undefined);
+    void this.load(continent);
   }
 
   private word(id: number): string {
@@ -183,7 +188,7 @@ export class WorldMapWindow {
       const answer = await this.parts.continent({ continent, relocate, moveOn: owed });
       const islands = answer.continent ?? [];
       const nivel = Number(islands[0]?.nivel) || this.home || FIRST_CONTINENT;
-      if (continent === undefined) {
+      if (continent === undefined || islands.some((i) => i.user_id === this.parts.me)) {
         this.home = nivel;
         // The player's own island beaten: it changes places with one that isn't, as in the Flash client.
         const moved = moveOffBeaten(islands, this.parts.me, beatenIslands(this.parts.beaten()));
@@ -232,6 +237,10 @@ export class WorldMapWindow {
       attacks.textContent = `${this.word(WORDS.noAttacks)}${count.wait > 0 ? ` · ${this.word(WORDS.moreAttacksIn)} ${h ? `${h} h ` : ""}${min} min` : ""}`;
       attacks.classList.add("none");
     }
+    const eagles = document.createElement("span");
+    eagles.className = "world-eagles";
+    eagles.textContent = `${this.word(WORDS.eagles)} ${this.parts.spyingsLeft().left}`;
+    eagles.hidden = !this.parts.eagles();
     const results = button("world-art results", "Battle Results", picture("results", ""), () => this.parts.results());
     const options = button("world-art options", "Options: your army and defence", picture("options", ""), () => this.parts.options());
     const pick = document.createElement("div");
@@ -246,7 +255,7 @@ export class WorldMapWindow {
     pick.append(label, prev, this.number, next, go);
     const home = button("world-art my-world", "My World: back to your continent", picture("my-world", ""), () => void this.load(undefined));
     home.hidden = atHome;
-    this.bar.replaceChildren(attacks, results, options, pick, home);
+    this.bar.replaceChildren(attacks, eagles, results, options, pick, home);
 
     // The map: the continent's picture, its borders and the islands beaten (on the town's own), the islands.
     const parts: HTMLElement[] = [];
@@ -340,6 +349,22 @@ export class WorldMapWindow {
     const items: HTMLElement[] = [title, level];
     const profile = button("world-art profile", `Profile of ${name}`, picture("profile", ""), () => void this.profile(island));
     items.push(profile);
+    // Spy, as the Flash client offers it: with the Eagles built and visits left, on anyone but the player.
+    if (island.user_id !== this.parts.me) {
+      if (this.parts.eagles() && this.parts.spyingsLeft().left > 0) {
+        const spy = document.createElement("a");
+        spy.className = "world-art spy";
+        spy.href = this.parts.spyUrl(island);
+        spy.setAttribute("aria-label", `Spy on ${name}`);
+        spy.append(picture("spy", ""));
+        items.push(spy);
+      } else {
+        const why = document.createElement("p");
+        why.className = "world-why";
+        why.textContent = this.parts.eagles() ? "No eagles left for now." : "Build Eagles to spy.";
+        items.push(why);
+      }
+    }
     const choice = islandChoice(island, this.parts.me, this.parts.lately(), this.parts.armySize(), this.parts.attacksLeft().left);
     if (choice === "attack") {
       const attack = document.createElement("a");

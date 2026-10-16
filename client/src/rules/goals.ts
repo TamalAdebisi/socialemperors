@@ -118,6 +118,12 @@ export class Doings {
   /** Attacks on players fought to the end (not left), and the neighbours attacked, since the page opened. */
   attacksMade = 0;
   neighboursAttacked = new Set<string>();
+  /** Spy visits; attacks on players of the player's level and above it (left or not, as the Flash client counted them). */
+  spied = 0;
+  attacksSameLevel = 0;
+  attacksHigherLevel = 0;
+  /** Attacks won in all (the save's privateState.attacksWon). */
+  attacksWon = 0;
   /** The Battle Results window opened. */
   historyOpened = false;
   /**
@@ -225,12 +231,16 @@ export class Doings {
   }
 
   /** An attack on a player, played on its own page: told here when the player comes home (attackPlay.ts). */
-  attacked(victim: string, voluntary: boolean, neighbour: boolean): void {
+  attacked(victim: string, voluntary: boolean, neighbour: boolean, levels?: { theirs?: number; mine?: number }): void {
     if (!voluntary) {
       this.attacksMade++;
     }
     if (neighbour) {
       this.neighboursAttacked.add(victim);
+    }
+    if (levels?.theirs !== undefined && levels.mine !== undefined) {
+      this.attacksSameLevel += levels.theirs === levels.mine ? 1 : 0;
+      this.attacksHigherLevel += levels.theirs > levels.mine ? 1 : 0;
     }
   }
 
@@ -336,6 +346,14 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(marketTraded(doings, args[0] as unknown[]) ? 1 : 0, 1);
     case "attack-player":
       return of(doings.attacksMade, n(0));
+    case "spy-player":
+      return of(doings.spied, n(0));
+    case "attacks-won":
+      return of(doings.attacksWon, n(0));
+    case "attack-same-level":
+      return of(doings.attacksSameLevel, n(0));
+    case "attack-higher-level":
+      return of(doings.attacksHigherLevel, n(0));
     case "attack-neighbour":
       return of(doings.neighboursAttacked.size ? 1 : 0, 1);
     case "history-opened":

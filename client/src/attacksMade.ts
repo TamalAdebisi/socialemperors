@@ -9,6 +9,11 @@ export interface AttackMade {
   victim: string;
   /** Left before the end: not counted for "attack a player", as there. */
   voluntary: boolean;
+  /** A spy visit, not an attack. */
+  spy?: boolean;
+  /** The defender's level and the player's, for the goals about levels. */
+  level?: number;
+  mine?: number;
 }
 
 export function attacksSoFar(): AttackMade[] {

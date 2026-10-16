@@ -168,6 +168,21 @@ test("attacks on players: fought to the end, a neighbour's town; the Battle Resu
   assert.deepEqual(progress(t, goals.get(68)!, doings, 0, ITEMS), { done: 1, of: 1 });
 });
 
+test("spying, attacks won, and attacks on players of the same level or higher", () => {
+  const goals = readGoals([78, 79, 94, 132, 161].map((id) => ({ id, title: `Goal ${id}` })), data.goals as unknown as Record<string, Need>);
+  const doings = new Doings();
+  const t = town();
+  const at = (id: number) => progress(t, goals.get(id)!, doings, 0, ITEMS);
+  assert.deepEqual([at(78), at(79), at(94)], [{ done: 0, of: 1 }, { done: 0, of: 2 }, { done: 0, of: 3 }]);
+  doings.spied = 1;
+  doings.attacksWon = 2;
+  assert.deepEqual([at(78), at(79), at(94)], [{ done: 1, of: 1 }, { done: 2, of: 2 }, { done: 2, of: 3 }]);
+  doings.attacked("a", true, false, { theirs: 10, mine: 10 });
+  doings.attacked("b", false, false, { theirs: 12, mine: 10 });
+  doings.attacked("c", false, false, { theirs: 9, mine: 10 });
+  assert.deepEqual([at(132), at(161)], [{ done: 1, of: 2 }, { done: 1, of: 2 }], "left early still counts, as there");
+});
+
 test("doings count only while a goal of their kind is open, as in the Flash client; collecting always", () => {
   const doings = new Doings();
   doings.listen(["collect-kind"]);

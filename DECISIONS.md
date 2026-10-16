@@ -39,6 +39,21 @@ them can be found and reversed. The big, agreed decisions are in
   was removed in that build); here both do.
 - **30 letters at most,** so the name fits where it shows.
 
+## 16 October 2026: spying
+
+- **The continents keep counting up from 1** (the owner's call): the
+  original counted down from 50 to 1, its "King of the World" at 1. So
+  the map's first-time help, which says "Try to make it to Island 1",
+  is left out.
+- **The eagle sets off from the top-left corner,** with no corner to
+  pick, as the original's spy start showed none.
+- **Spying is offered from the world map only,** as in the original (the
+  neighbour bar had Attack, not Spy); home after it opens the map at the
+  continent spied on, as the Flash client went back to it.
+- **Attacks on players of the same level, or higher, count when left
+  early too,** as the original counted them; "attack a player" still
+  needs the battle fought to the end.
+
 ## 15 October 2026: the world map
 
 - **Each island shows its owner's name and level** under it, not only in

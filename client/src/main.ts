@@ -22,7 +22,8 @@ import { obstacle, readShop, shopItems } from "./rules/shop.ts";
 import { readLandPrices } from "./rules/land.ts";
 import { arthur, carts } from "./rules/neighbours.ts";
 import { planOf } from "./rules/defencePlans.ts";
-import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, type AttackEntry } from "./rules/pvp.ts";
+import { inConstruction } from "./rules/construction.ts";
+import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, eaglesOf, spyingsLeft, type AttackEntry } from "./rules/pvp.ts";
 import { attackedLately } from "./rules/world.ts";
 import { WorldMapWindow, type PlayerProfile } from "./ui/worldMap.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
@@ -87,13 +88,13 @@ async function start(): Promise<void> {
     await playQuest(settings, server, quest);
     return;
   }
-  // ?attack=<player id>&map=<town>: another player's town, attacked (attackPlay.ts).
-  const attack = new URLSearchParams(location.search).get("attack");
+  // ?attack=<player id>&map=<town>: another player's town, attacked (attackPlay.ts); ?spy=: spied on.
+  const attack = new URLSearchParams(location.search).get("attack") ?? new URLSearchParams(location.search).get("spy");
   if (attack) {
     const { playAttack } = await import("./attackPlay.ts");
     const query = new URLSearchParams(location.search);
     const island = query.has("island") ? { posicion: Number(query.get("island")), nivel: Number(query.get("continent")) } : undefined;
-    await playAttack(settings, server, attack, Number(query.get("map")) || 0, island);
+    await playAttack(settings, server, attack, Number(query.get("map")) || 0, island, query.has("spy"));
     return;
   }
 
@@ -155,6 +156,7 @@ async function start(): Promise<void> {
   let afterDrawing = () => {};
   let openIslands = () => {};
   let openAttacked = () => {};
+  let openWorld = (_continent?: number) => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -251,6 +253,10 @@ async function start(): Promise<void> {
       pictureUrl: (n) => `${settings.assetsUrl}/images_new/mapa${n}.jpg`,
       attackUrl: (island) => `/client.html?${new URLSearchParams({ attack: island.user_id, map: String(island.map),
         island: String(island.posicion), continent: String(island.nivel) })}`,
+      spyUrl: (island) => `/client.html?${new URLSearchParams({ spy: island.user_id, map: String(island.map),
+        island: String(island.posicion), continent: String(island.nivel) })}`,
+      eagles: () => eaglesOf(town, (p) => !inConstruction(p, clock() * 1000)) !== null,
+      spyingsLeft: () => spyingsLeft((attackState.spyings ?? []) as AttackEntry[], clock(), Number(attackState.tsSpyingsReset) || 0),
       profile: async (pid) => (await server.publicProfile(pid)) as PlayerProfile | null,
       results: () => history.open("sent"),
       options: () => army.openPlans(),
@@ -279,6 +285,7 @@ async function start(): Promise<void> {
       }
       worldMap.open();
     }, () => history.toggle());
+    openWorld = (continent) => worldMap.open(continent);
     // Home to an attack not yet seen: the attacks received open by themselves, as in the Flash client.
     if (attackedWhileAway(attackState)) {
       openAttacked = () => {
@@ -343,8 +350,13 @@ async function start(): Promise<void> {
     // And what attacks on players in this tab did.
     const neighbourIds = new Set((info.neighbors ?? []).map((n) => String(n.pid)));
     for (const made of attacksSoFar()) {
-      doings.attacked(made.victim, made.voluntary, neighbourIds.has(made.victim));
+      if (made.spy) {
+        doings.spied++;
+      } else {
+        doings.attacked(made.victim, made.voluntary, neighbourIds.has(made.victim), { theirs: made.level, mine: made.mine });
+      }
     }
+    doings.attacksWon = Number((info.privateState as Record<string, unknown> | undefined)?.attacksWon) || 0;
     // The bonuses (made once the town's goals are, below) hear of a level up.
     let bonuses: BonusDesk | undefined;
     // The goals, while they run (from level 35 they stop, as in the Flash client).
@@ -650,6 +662,10 @@ async function start(): Promise<void> {
   // Back from an island: the island window again, as the Flash client opens it.
   if (new URLSearchParams(location.search).has("islands")) {
     openIslands();
+  } else if (new URLSearchParams(location.search).has("world")) {
+    // Back from spying: the world map again, at the continent spied on, as the Flash client comes back.
+    const continent = Number(new URLSearchParams(location.search).get("world"));
+    openWorld(continent > 0 ? continent : undefined);
   } else {
     openAttacked();
   }
