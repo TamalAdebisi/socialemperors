@@ -4624,6 +4624,74 @@ button.world-piece:hover img {
   object-fit: contain;
 }
 
+/* Tournament list and team box: the same scrolling panel on desktop and phone. */
+.tournament-tools, .tournament-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tournament-tabs button { flex: 1; }
+.tournament-tabs [aria-pressed="true"] { background: var(--gold); border-color: var(--gold-edge); }
+.tournament-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.tournament-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 8px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 10px;
+  background: #fff8df;
+  overflow-wrap: anywhere;
+}
+.tournament-cards > li:not(.tournament-card), .tournament-card:only-child { grid-column: 1 / -1; }
+.tournament-card:only-child .tournament-picture { max-width: 180px; align-self: center; }
+.tournament-card p { margin: 2px 0; font-size: 13px; }
+.tournament-card .tournament-fee { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.tournament-card strong { font: 800 15px var(--round); }
+.tournament-picture { width: 100%; aspect-ratio: 180 / 140; object-fit: contain; }
+.tournament-card .tournament-classic { margin-top: auto; white-space: normal; text-align: center; }
+.tournament-fee img, .tournament-prize > img.icon { width: 22px; height: 22px; vertical-align: middle; }
+.tournament-prize { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 13px; }
+.tournament-prize img { width: 36px; height: 36px; object-fit: contain; }
+.tournament-team-box h3, .tournament-window h3 { margin: 4px 0; }
+.tournament-team {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  padding: 0;
+  margin: 8px 0;
+  list-style: none;
+}
+.tournament-team li {
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 6px;
+  background: #fff8df;
+}
+.tournament-team li:empty { background: #fff8df url("./art/tournament-empty.webp") center / 35% no-repeat; }
+.tournament-team img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+.tournament-unit { position: relative; width: 100%; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; }
+.tournament-unit:hover::after, .tournament-unit:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 15%;
+  background: url("./art/tournament-remove.webp") center / contain no-repeat;
+}
+.tournament-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tournament-choice { display: flex; flex-direction: column; align-items: center; border: 1px solid var(--parchment-edge); border-radius: 8px; padding: 5px; background: #fff8df; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+.tournament-choice img { width: 60px; max-width: 100%; aspect-ratio: 1; object-fit: contain; }
+.tournament-choice:disabled { opacity: .5; cursor: default; }
+.tournament-error { color: #9e251e; font-weight: 700; }
+
 /* ---- The Survival window (ui/survival.ts) and the arena's bar (survivalPlay.ts) ---- */
 .survival-lives {
   display: flex;

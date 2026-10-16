@@ -49,8 +49,8 @@ export default async function menus({ newPlayer }) {
   await player.menu("Battle");
   assert.deepEqual(await lit(), ["Battle"], "one window at a time");
   assert.deepEqual(await page.locator(".panel:not([hidden]) .row strong").allTextContents(), ["Attack a player", "Survival", "Tournament", "Battle Results"]);
-  // Attack a player and Survival are played here; Tournament, in the classic game.
-  assert.equal(await page.locator(".panel:not([hidden]) .row a").nth(2).getAttribute("href"), "/ruffle.html");
+  // Tournament now opens its list here; matches keep their classic link inside.
+  assert.equal(await page.locator(".panel:not([hidden]) .row a").nth(2).getAttribute("href"), "#");
   await page.keyboard.press("Escape");
   assert.equal(await panel().count(), 0, "Escape closes the window");
   assert.deepEqual(await lit(), []);

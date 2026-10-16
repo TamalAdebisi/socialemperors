@@ -41,6 +41,38 @@ them can be found and reversed. The big, agreed decisions are in
   verify that the canvas receives the click; all audio, path and saved
   position assertions stay in place.
 
+## 16 October 2026: tournament list and team selection
+
+- **This slice browses and prepares; entry stays in classic.** The list
+  shows everyday tournaments, the weekly schedule and friends' rooms,
+  with their original pictures, fees and advertised everyday prizes.
+  Clear classic links preserve entry, existing rooms, matches, results,
+  ranking prizes and creating friends' tournaments. No new-client entry
+  or fee command is sent before the waiting-room slice exists.
+- **Three list buttons and scrolling cards fit the agreed panel/sheet.**
+  They replace Flash's three-card paging. The twenty team places use five
+  columns for usable phone targets; Reset and Cancel are available.
+  Cancel discards edits. Classic links wait for pending saves first.
+  Friends' room cards use the tournament type's original picture instead
+  of the former Facebook profile photo.
+- **The team follows the original's ownership count:** standing units,
+  units inside buildings, the warehouse and this town's storage, capped
+  by each unit's limit and sorted by attack. Unplaced gifts do not count.
+  Opening the list removes unavailable saved units and saves twenty
+  places, as Flash does. Quest teams remain separate.
+- **Keep the original distinction between editing and weekly entry.**
+  The shared editor enforces the configured combined dragon/god/colossus
+  limit (currently ten). Restoring a saved team does not trim that limit;
+  weekly entry exempts it in the original card and on the server. Entry
+  remains in classic, including its empty/short-team warnings.
+- **No tournament goals change yet.** This slice does not play or win
+  tournaments; those goals keep their classic-game guidance.
+- **Keep unrelated browser repairs outside this slice.** The full run's
+  four failures (`construction`, `scripted-bosses`, `siege`, `walk`) all
+  reproduce on unchanged main. Record those results and preserve every
+  assertion. The successful `team` run here does not close the separate
+  art follow-up owned by #90.
+
 ## 16 October 2026: the team test's oversized art
 
 - **Repair the stale exports with the existing exporter.** The public

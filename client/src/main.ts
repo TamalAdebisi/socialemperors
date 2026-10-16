@@ -27,6 +27,8 @@ import { MIN_LEVEL_PVP, ODIN_STATUE, attacksLeft, burnOnReturn, eaglesOf, spying
 import { attackedLately } from "./rules/world.ts";
 import { MIN_LEVEL_SURVIVAL, SURVIVAL, livesLeft } from "./rules/survival.ts";
 import { SurvivalWindow, HELP_KEY as SURVIVAL_HELP } from "./ui/survival.ts";
+import { MIN_LEVEL_TOURNAMENT, TOURNAMENT_HELP, tournamentChoices, tournamentRules } from "./rules/tournaments.ts";
+import { TournamentWindow } from "./ui/tournaments.ts";
 import { WorldMapWindow, type PlayerProfile } from "./ui/worldMap.ts";
 import { lessonsNotStarted, lessonsUnderWay, reported, resumeAt } from "./rules/lessons.ts";
 import { markWild } from "./rules/animals.ts";
@@ -37,7 +39,7 @@ import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
 import { GoalKeeper } from "./goals.ts";
 import { BonusDesk } from "./bonuses.ts";
-import { readTown, type Town } from "./rules/town.ts";
+import { readTown, type Box, type Town } from "./rules/town.ts";
 import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
@@ -328,7 +330,38 @@ async function start(): Promise<void> {
         return;
       }
       survivalWindow.open();
-    }, showsTowns(town, races.length) ? () => towns.toggle() : null);
+    }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => {
+      if (!tournamentConfig.enabled) {
+        editor.tell("Tournaments are not available right now.");
+      } else if (town.level < MIN_LEVEL_TOURNAMENT) {
+        editor.tell(`Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.`);
+      } else void tournamentWindow.open();
+    });
+    const tournamentConfig = tournamentRules(config);
+    const tournamentWindow = new TournamentWindow({
+      rules: tournamentConfig, items,
+      info: () => server.tournamentInfo(),
+      choices: () => tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig),
+      savedTeam: () => (attackState.teams as Record<string, unknown> | undefined)?.tournament,
+      saveTeam: async (team) => {
+        // Keep the queued choice locally too: closing/reopening while the
+        // batch is in flight must not restore an older team over it.
+        const teams = (attackState.teams ??= {}) as Record<string, unknown>;
+        teams.tournament = [...team];
+        commands.add("set_attack_team", "tournament", JSON.stringify(team));
+        return commands.flush();
+      },
+      words: (id) => lines.get(id) ?? "",
+      pictureUrl: (file) => `${settings.assetsUrl}/images_new/${file}`,
+      thumbnail: (id) => `${settings.assetsUrl}/buildingthumbs/${items.get(id)?.art ?? ""}.jpg`,
+      helpSeen: () => Array.isArray(attackState.helpMap) && (attackState.helpMap as string[]).includes(TOURNAMENT_HELP),
+      sawHelp: () => {
+        attackState.helpMap = [...(Array.isArray(attackState.helpMap) ? attackState.helpMap as string[] : []), TOURNAMENT_HELP];
+        commands.add("set_help_map", TOURNAMENT_HELP);
+      },
+      classicUrl: settings.classicUrl,
+      flush: () => commands.flush(),
+    });
     const survivalWindow = new SurvivalWindow({
       words: (id) => lines.get(id) ?? "",
       pictureUrl: (name) => `${settings.assetsUrl}/images_new/${name}.jpg`,

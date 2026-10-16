@@ -19,6 +19,9 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **The first tournament slice is complete in #89:** everyday, weekly
+  and friends' lists, help and the saved team box. Entry and later stages
+  keep classic links. Task 7 below records its checks and the next slice.
 - **Task 1 is complete in #86**, with a separate art-loading failure
   recorded below for follow-up. Its investigation now identifies **nine
   stale art bundles**; the owner-operated export is still pending. The
@@ -50,9 +53,9 @@ next agent knows where to start.
     tail of windows, and making the new client the default.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  45% are built in the new client, 40% partly (mostly special buildings
+  47% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  15% not yet (mostly windows). 50 of the 227 goals still say they're
+  12% not yet (mostly windows). 50 of the 227 goals still say they're
   played in the classic game (CLIENT.md, "Missions and bonuses"); that
   number falls as features land.
 
@@ -318,16 +321,49 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [ ]
 
+**First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
+editor, with desktop/phone coverage (`CLIENT.md`, "Tournaments: list and
+team"). Entry and all later stages retain explicit classic links.
+`docs/original/rules/tournaments.md` records the local source reading,
+including the different complex-unit checks in editing and weekly entry.
+Next slice: the four-seat waiting room and countdown; only then connect
+entry fees and joining from the new list. Keep `tournaments.py`'s existing
+command/service formats. This work does not own #87 or the art repair.
+
+**Verification, 16 October:** the full browser run at
+`ff7000597777d1b9437870cc7dce99a9e62440c0` took **76 minutes 41 seconds**:
+**61 of 65 passed**, including `tournaments`, `menus` and `team`.
+`construction` exceeded its nine-second interaction deadline;
+`scripted-bosses` timed out waiting for the last portal battle to end;
+`siege` did not see every engine target a building after its fixed wait;
+`walk` did not see the knight saved at the second destination after its
+fixed wait. All four failed at the same assertions in a separate,
+unchanged-main checkout at `2918c71f58b53783aa3c8dbfff79faa3709df561`
+(8 minutes 3 seconds). They are existing failures, not tournament
+regressions; no assertions or time limits were weakened.
+
+Main's #90 art notes were merged at
+`844035fecf70a91dc9bde435a1bda465e705fbf3`; game, art and test files are
+identical to `ff700059` (only documentation differs). At that integrated
+commit, the server ran **428 tests: 419 passed, 9 existing skips**; client
+types and **333 tests passed**. Final focused browser checks at that
+commit passed **2/2** (`tournaments`, `menus`) in **4m 14s**.
+Desktop/phone screenshots and local server logs were inspected.
+The `team` pass in this run does not close #90's separate public-art
+repair and verification. Browser checks used local throwaway accounts;
+an uncommitted environment proxy preload allowed uncached public art to
+load. No production game accounts or live writes were used.
+
 The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
 public rooms of four filled by bots after 30 minutes, the weekly
-tournament against three bots, friends' tournaments, prizes). In the new
-client the Battle window's Tournament row still opens the classic game
-(`client/src/ui/world.ts`). The Flash windows are listed in
+tournament against three bots, friends' tournaments, prizes). The Battle
+window's Tournament row now opens the new list (`client/src/ui/world.ts`),
+with classic links for entry and the later stages. The Flash windows are listed in
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
 classes). Suggested slices:
 
-1. The tournament list (everyday, weekly, your own), its help and the team box.
+1. The tournament list (everyday, weekly, your own), its help and the team box — built.
 2. The waiting room: four seats, the countdown, bots filling in.
 3. The match: a battle against the other player's army, as the attack on a
    player is played now (`attackPlay.ts`); no units are lost.

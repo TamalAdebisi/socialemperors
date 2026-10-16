@@ -7,14 +7,15 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 29 built, 11 partly, 68 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 42 built, 15 partly, 51 not yet, 23 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
 level-up, bonuses, darts, graveyards, nests, riders, temple, social
 buildings, quests, attacks, survival and the team window) were read through.
-Of the tournament classes, the list, room and results windows were read in
-their main parts, the cards, rows and tabs only by their function names; the
+The tournament list, team editor and public/weekly cards were reread in full
+for the first slice (see `rules/tournaments.md`). The room and results were
+read in their main parts, other cards, rows and tabs by their function names; the
 five picture classes in `popupKompuGacha/` by their fields. Whether a window
 is ever opened was checked by searching for who calls its `PopupManager`
 function. Prices and counts come from the classes and from
@@ -37,7 +38,7 @@ The plain boxes the rest of the game opens.
 | `popups/AlertPopup.as` | 71 | The plain message with an OK button (or none), used for most of the game's warnings; it can run something when closed. | built: `ui/notice.ts` and the bar's messages |
 | `popups/ConfirmPopup.as` | 86 | A yes-or-no question, with what to do on each answer. | built: the bar's prompts (`ui/actions.ts`, `editor.ts`) |
 | `popups/PopupAlerta.as` | 67 | A message with a title and one of the game's pictures; used for a camp's end and similar news. | built: `ui/notice.ts` (with a picture) |
-| `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: our windows carry their own help lines; nothing first-time, and no `set_help_map` |
+| `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: first-time survival and tournament help saved with `set_help_map`; other windows later |
 | `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: our notices show prizes for camps and chests; the windows that use this one are classic |
 | `popups/PopupLore.as` | 148 | A picture book, page by page: the story of the gods and colossi, opened from the news and from a gods icon at the side of the screen. | not yet |
 | `popups/PopupMoreCash.as` | 63 | "Not enough cash", with a button to the page that sold cash. | not needed: payments |
@@ -136,9 +137,9 @@ The plain boxes the rest of the game opens.
 | `popups/PopupQuestFinished.as` | 324 | The end of an island: won or lost (bosses have their own picture), gold and XP, units lost; then home. | built: `questPlay.ts`; no Facebook share |
 | `popups/PopupQuestInfo2.as` | 239 | A home camp's story, at its start and its end, then the treasure message. | built: `homeCamps.ts`, `homeScripted.ts` |
 | `popups/PopupEncampment.as` | 118 | An older camp story window, one text per camp type. | not needed: nothing opens it (`PopupQuestInfo2` took its place) |
-| `popups/tournament/SelectionTeamWindow.as` | 867 | The team of up to 20 for islands with teams and for tournaments: units from everything the player owns (counted to each unit's limit), strongest first; god islands need some gods or colossi. Saved with `set_attack_team`, also silently each time it opens. Tournaments forbid some units and limit the "complex" ones. | partly: islands in `questPlay.ts`, `rules/quest.ts`; tournaments not; units in buildings not offered (PARITY.md) |
-| `popups/tournament/ThumbUnit.as` | 125 | A unit card in the team window, with how many are left. | partly (with the team window) |
-| `popups/tournament/ThumbSelectedUnit.as` | 68 | A chosen unit in the team window; a click gives it back. | partly (with the team window) |
+| `popups/tournament/SelectionTeamWindow.as` | 867 | The team of up to 20 for islands with teams and for tournaments: units from everything the player owns (counted to each unit's limit), strongest first; god islands need some gods or colossi. Saved with `set_attack_team`, also silently each time it opens. Tournaments forbid some units and limit the "complex" ones. | partly: tournament pool, limits, restoration and save in `rules/tournaments.ts`, `ui/tournaments.ts`; quest pool still limited to standing units |
+| `popups/tournament/ThumbUnit.as` | 125 | A unit card in the team window, with how many are left. | built: counted choices in the quest and tournament pickers |
+| `popups/tournament/ThumbSelectedUnit.as` | 68 | A chosen unit in the team window; a click gives it back. | built: removable selected units in the quest and tournament pickers |
 
 ## Attacking other players
 
@@ -171,12 +172,12 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/tournament/PopupTournament.as` | 439 | The tournament list: everyday, weekly and the player's own; the team at the bottom; its help shows by itself the first time. | not yet; `tournaments.py` |
+| `popups/tournament/PopupTournament.as` | 439 | The tournament list: everyday, weekly and the player's own; the team at the bottom; its help shows by itself the first time. | partly: list, first-time help and team box in `ui/tournaments.ts`; entry stays classic |
 | `popups/tournament/CreateYourTournamentWindow.as` | 179 | Pick a kind of tournament to create for friends. | not yet |
-| `popups/tournament/ThumbTournament.as` | 308 | One tournament card: picture, entry cost, prizes, Enter. | not yet |
+| `popups/tournament/ThumbTournament.as` | 308 | One tournament card: picture, entry cost, prizes, Enter. | partly: picture, fee and server-selected prize in `ui/tournaments.ts`; entry stays classic |
 | `popups/tournament/ThumbTournamentCreation.as` | 192 | One kind of tournament in the create window. | not yet |
-| `popups/tournament/ThumbFriendsTournament.as` | 228 | The card for creating a tournament with friends. | not yet |
-| `popups/tournament/ThumbWeeklyTournament.as` | 234 | A weekly tournament's card, with its countdown when closed. | not yet |
+| `popups/tournament/ThumbFriendsTournament.as` | 228 | The card for creating a tournament with friends. | partly: original picture and classic creation link; creation later |
+| `popups/tournament/ThumbWeeklyTournament.as` | 234 | A weekly tournament's card, with its countdown when closed. | partly: weekly visibility/countdown and classic links; entry and prize info later |
 | `popups/tournament/ThumbWeeklyTournamentPrize.as` | 74 | One prize in a weekly tournament's list. | not yet |
 | `popups/tournament/WeeklyTournamentInfoWindow.as` | 110 | A weekly tournament's prizes by rank. | not yet |
 | `popups/tournament/PopupTournamentRoom.as` | 338 | The waiting room: four players, a minute's countdown, searching; the creator can cancel or invite. | not yet |
@@ -191,7 +192,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/tournament/TournamentRankingRow.as` | 93 | One row of the weekly ranking, with its prize. | not yet |
 | `popups/tournament/TournamentRankingUserRow.as` | 102 | The player's own ranking row. | not yet |
 | `popups/tournament/TournamentPlayerData.as` | 116 | A tournament player's data (no window). | not yet |
-| `popups/tournament/RecuadroTeamTournament.as` | 98 | The team box in the tournament window. | not yet |
+| `popups/tournament/RecuadroTeamTournament.as` | 98 | The team box in the tournament window. | built: twenty-place team box in `ui/tournaments.ts` |
 | `popups/tournament/AlertInviteTournament.as` | 47 | A tournament invitation, yes or no. | not yet |
 
 ## Shop offers, collections and news

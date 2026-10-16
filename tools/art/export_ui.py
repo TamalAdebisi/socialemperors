@@ -60,6 +60,9 @@ PICTURES = {
     "pvp": ("GuiMC/bgBar/iconMenuWorld/pvpButton", 0),
     "survival": ("GuiMC/bgBar/iconMenuWorld/survivalButton", 0),
     "tournament": ("GuiMC/bgBar/iconMenuWorld/tournamentButton", 0),
+    # The team box: an empty place and the cross on a selected unit.
+    "tournament-empty": ("ThumbTeamMC@1", 0),
+    "tournament-remove": ("ThumbTeamMC/cruz_mc", 0),
     "units": ("GuiMC/bgBar/iconMenuGift/unitsButton", 0),
     "news": ("GuiMC/bgBar/iconMenuGift/newsButton", 0),
     "collections": ("GuiMC/bgBar/iconMenuGift/colButton", 0),
