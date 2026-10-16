@@ -17,21 +17,42 @@ async function check(player, touch) {
   await page.waitForFunction(() => window.seHome);
   await page.evaluate(() => window.seHome.hurry());
   await page.waitForFunction(() => window.seHome.fighting);
+  await page.evaluate(async () => {
+    await window.seHome.fighting.view.load(() => {});
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  await page.evaluate(() => {
+    window.selectionEvents = [];
+    for (const type of ["pointerdown", "pointerup", "pointercancel"]) {
+      document.querySelector("canvas").addEventListener(type, (event) => {
+        const at = { x: event.offsetX, y: event.offsetY };
+        window.selectionEvents.push({ type, ...at, time: performance.now(), stamp: event.timeStamp });
+      }, true);
+    }
+  });
   await page.keyboard.press("a");
   await page.locator(".battle-selection-roster button").first().waitFor();
   assert.ok(await page.locator(".battle-selection-roster button").count() >= 2);
   // Clicking the picture of a unit must leave only that unit selected.
   const point = await mapPoint(page);
   if (touch) await page.touchscreen.tap(point.x, point.y);
-  else await page.mouse.click(point.x, point.y);
+  else await clickUnit(page, point);
   const selected = await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.key));
+  if (selected.length !== 1 || selected[0] !== point.key) {
+    console.log("selection diagnostic", await page.evaluate((point) => ({ point,
+      hitNow: window.seHome.fighting.view.fighterAt(point)?.key,
+      element: document.elementFromPoint(point.x, point.y)?.tagName,
+      selectedNow: window.seHome.fighting.controls.selected.map((u) => u.key),
+      events: window.selectionEvents,
+    }), point));
+  }
   assert.deepEqual(selected, [point.key]);
   if (!touch) {
     const other = await mapPoint(page, point.key);
     await page.keyboard.down("Shift");
-    await page.mouse.click(other.x, other.y);
+    await clickUnit(page, other);
     assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 2);
-    await page.mouse.click(other.x, other.y);
+    await clickUnit(page, other);
     await page.keyboard.up("Shift");
     assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.key)), [point.key]);
   }
@@ -61,6 +82,14 @@ async function check(player, touch) {
   assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 1);
   await page.keyboard.press("Escape");
   assert.ok(await page.locator(".battle-selection").isHidden());
+}
+
+async function clickUnit(page, point) {
+  // Software WebKit can spend over a second drawing the first hover. Let
+  // that render before pressing, so this is a click rather than a long hold.
+  await page.mouse.move(point.x, point.y);
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.mouse.click(point.x, point.y);
 }
 
 async function mapPoint(page, except = null) {

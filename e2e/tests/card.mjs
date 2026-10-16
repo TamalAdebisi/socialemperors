@@ -127,7 +127,11 @@ export default async function card({ newPlayer }) {
   assert.ok(has(await phone.saved(), HOUSE_2, HOUSE.slice(1)), "the first tap does not buy the upgrade");
   await phone.shot("phone-upgrade-price");
   await touchUpgrade.tap();
-  const afterTouch = await phone.saved();
+  await phone.page.waitForFunction(([x, y]) => {
+    const { town, commands } = window.seHome.parts;
+    return town.items.some((p) => p.item.id === 3 && p.tx === x && p.ty === y) && commands.pending === 0;
+  }, HOUSE.slice(1), { timeout: 30000 });
+  const afterTouch = await phone.saved({ waitForBatch: false });
   assert.ok(has(afterTouch, 3, HOUSE.slice(1)) && !has(afterTouch, HOUSE_2, HOUSE.slice(1)), "the second tap upgrades to House III");
   assert.equal(afterTouch.wood, beforeTouch.wood + 3 - 120, "House II's refund and House III's price are saved");
   await phone.shot("phone-upgraded");
