@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class BuildingStates {
     public static void main(String[] args) throws Exception {
@@ -22,7 +23,7 @@ public class BuildingStates {
         System.out.println("// This is visual metadata, not game code. See docs/structure-idle-audit.md.");
         System.out.println("export const BUILDING_STATES: Readonly<Record<string, readonly number[]>> = {");
         int read = 0, missing = 0, multiple = 0;
-        for (String name : Files.readAllLines(Path.of(args[0])).stream().sorted().distinct().toList()) {
+        for (String name : new TreeSet<>(Files.readAllLines(Path.of(args[0])))) {
             try {
                 SWF swf = RenderSwf.load(new File("assets/buildingsprites/" + name + ".swf"));
                 Timeline root = ((Timelined) swf.getCharacterByClass(RenderSwf.findClass(swf, name))).getTimeline();
