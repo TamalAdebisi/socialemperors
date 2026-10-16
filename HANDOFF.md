@@ -21,9 +21,9 @@ next agent knows where to start.
 
 - **Task 1 is complete in #86**, with a separate art-loading failure
   recorded below for follow-up. All **nine stale art bundles have now
-  been exported**, under the owner's subsequent authorization. Cloudflare
-  still serves old cached images; a targeted purge and ordinary-URL
-  verification remain pending. The
+  been exported**, under the owner's subsequent authorization. The CDN
+  mismatch was also resolved: all 40 ordinary public files verified at
+  11:18 UTC. The full browser run is in progress. The
   owner requested merging the two wait
   fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
   those are implemented but still awaiting browser verification and merge.
@@ -32,12 +32,12 @@ next agent knows where to start.
   latest `main` after it lands.
 - **Tests for #86:** the server ran 427 (418 passed, 9 skipped), the
   client's 324 passed, and 63 of 64 browser tests passed. The two flaky
-  tests now pass; `team` needs the separate art repair described in task 1.
+  tests passed; `team` failed and prompted the separate art repair
+  described in task 1. Post-export verification is recorded there.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
-  separate art repair below has published its files; finishing it needs
-  a targeted Cloudflare cache purge or cache expiry.
+  separate art repair below has published and verified its public files.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
@@ -165,7 +165,7 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate follow-up: export complete; CDN cache repair still needed.**
+**Separate follow-up: export and public files verified; browser run ongoing.**
 For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
 army loaded. It failed on its own too, in a fresh browser, reaching this
 machine's 8 GiB memory limit.
@@ -203,17 +203,25 @@ now reference 20 pages; fresh published images fetched with a cache-busting
 query verify at **987.84 MiB decoded**, with animation lengths, bounds,
 origins and frame rates preserved.
 
-**The CDN is still inconsistent:** ordinary image URLs return old
+**The CDN was initially inconsistent:** ordinary image URLs returned old
 Cloudflare `HIT` responses whose dimensions disagree with the new JSON.
 A request-side `no-cache` header did not refresh them. The exact remaining
-step is a targeted Cloudflare purge of
+step was a targeted Cloudflare purge of
 [these 20 image URLs](docs/team-art-cache-purge.txt), or waiting for the
 24-hour cache lifetime to expire. This environment has no Cloudflare
-access. Then recheck ordinary URLs and refresh affected files in each
-checkout's `.tools/art-cache/art/`; also check for local `art/sheets/`
-overrides. Browser verification using the freshly published image bodies
-is in progress. Keep this CDN/cache failure distinct from new #87 or
-tournament regressions. See [the repair notes](docs/art-loading-repair.md)
+access; the owner coordinated that step with Opus. At **11:18 UTC**, all
+40 ordinary JSON/WebP responses were independently fetched and matched
+the verified fresh files byte for byte. No further export or purge is
+pending. Other checkouts must still refresh affected files in
+`.tools/art-cache/art/`; also check for local `art/sheets/` overrides.
+With the freshly published image bodies in the isolated cache,
+`team` passed in **41 seconds**, using **3.44 GiB** peak
+anonymous/shared/kernel memory (4.84 GiB including file cache), with no
+memory-limit/OOM events. File hashes, requests, screenshots and server log
+were checked. The full browser suite is running with these same files;
+a final cold-cache `team` check will follow it. Keep stale local-cache
+failures distinct from new #87 or tournament regressions. See
+[the repair notes](docs/art-loading-repair.md)
 for evidence and exact checks. No source art, game code or test assertion
 was changed.
 

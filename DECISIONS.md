@@ -27,6 +27,17 @@ them can be found and reversed. The big, agreed decisions are in
   suite. [The repair notes](docs/art-loading-repair.md) record the evidence
   and exact steps. Do not repeat the known 76-page memory exhaustion just
   to establish the same baseline.
+- **Verify image bytes as well as new manifests.** The authorized export
+  succeeded, but Cloudflare kept old WebPs at all 20 ordinary image URLs
+  while serving new JSON. Revalidation requests did not refresh them;
+  cache-busted requests proved the uploaded images were correct. Finish
+  this operational repair with a targeted purge of the documented URLs
+  or cache expiry, and keep the ordinary-URL verification open until
+  their bytes agree. Tests using freshly downloaded, cache-busted images
+  are identified separately. No Cloudflare access is available here; the
+  owner coordinated that step with Opus. At 11:18 UTC, independent GETs
+  of all 40 ordinary JSON/WebP URLs matched the verified published files,
+  resolving the CDN mismatch without a code change.
 
 ## 16 October 2026: standing authorization to build and merge
 

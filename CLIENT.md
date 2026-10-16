@@ -281,9 +281,11 @@ The unchanged current exporter makes two pages, about 124 MiB, for that
 item. A guarded browser check also found eight oversized bundles loaded
 by the island before the team picker; refreshing the selected unit alone
 is insufficient. With subsequent owner authorization, Codex ran the
-targeted **Export art to R2** workflow for all nine. The new manifests
-are public, but Cloudflare still serves old cached WebP images, so a
-targeted purge of 20 image URLs or cache expiry remains necessary. The
+targeted **Export art to R2** workflow for all nine. Cloudflare initially
+served old cached WebP images alongside the new manifests. After the
+owner coordinated the cache step, all 40 ordinary JSON/WebP URLs verified
+against the fresh export at 11:18 UTC. No further export or purge is
+pending for these items. The
 workflow inputs, purge list, cache refresh and verification are in
 [the art repair notes](docs/art-loading-repair.md). A browser test's disk
 cache in `.tools/art-cache/` does not expire by itself.

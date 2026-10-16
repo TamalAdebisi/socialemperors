@@ -18,10 +18,12 @@ entry in its shard log, and final uploads succeeded. The unrelated empty
 `1410_bahamut_heart.swf` still failed, as in the preceding workflow and as
 already documented in CLIENT.md.
 
-**Remaining live step: purge the 20 cached WebP URLs.** The new manifests
-are public, but Cloudflare still serves the old images at their ordinary
-URLs. The follow-up is not closed until those URLs are consistent and
-browser verification is recorded.
+**The ordinary public URLs are now verified.** The owner coordinated the
+Cloudflare step separately with Opus. At 11:18 UTC, Codex independently
+fetched all 40 ordinary JSON/WebP URLs, without query parameters: every
+file byte-matched the verified export, and all dimensions and animation
+checks passed. No further export or cache purge is pending. The full
+browser run is still in progress.
 
 ## Publication and CDN verification
 
@@ -33,7 +35,7 @@ JSON, all animation references exist, and sequence lengths, bounds,
 origins and frame rates match the original exports. The red god is two
 pages, 4094 × 4036 and 4093 × 3932, as in the local reproduction.
 
-The ordinary URLs failed this check: all 20 images were older cached
+The ordinary URLs initially failed this check: all 20 images were older cached
 files with dimensions different from the new manifests. For example, at
 10:38 UTC the red-god manifest was new (Last-Modified 16 October,
 10:37:51), while its WebP was a Cloudflare `HIT` from 14 October,
@@ -43,22 +45,63 @@ cache-busted request returned the correct 4094 × 4036 image, a `MISS`
 with Last-Modified 16 October, 10:37:51. A new export does not invalidate
 Cloudflare's cached copy of an existing image URL.
 
-The workflow sets a 24-hour cache lifetime. To finish immediately, an
-operator with Cloudflare access must open **socialemperors.me → Caching
+The workflow sets a 24-hour cache lifetime. The targeted recovery
+procedure was to open **socialemperors.me → Caching
 → Configuration → Custom Purge**, select URL purging, and paste the
 **20 exact URLs in [team-art-cache-purge.txt](team-art-cache-purge.txt)**.
-This purges cache entries; it does not delete bucket objects. Alternatively,
-wait for the old entries to expire. No Cloudflare connection or credentials
-are available in this task's environment, and the configured GitHub
+This purges cache entries; it does not delete bucket objects. Waiting for
+the old entries to expire is an alternative. No Cloudflare connection or
+credentials are available in this task's environment, and the configured GitHub
 workflows only upload to R2; they do not purge Cloudflare's cache.
 
-After the purge or expiry, fetch every ordinary URL again and confirm
+After a purge or expiry, fetch every ordinary URL again and confirm
 dimensions and hashes against the freshly published files. Refresh the
 local test cache using the steps below, then verify the browser against
 those ordinary URLs. Existing browsers may also need a reload that
 refreshes their cached images. A cache-busted image check or a browser
 pass using those image bodies must not be reported as an ordinary-URL
 CDN pass.
+
+To check the 20 ordinary image URLs after purging, without writing to R2:
+
+```sh
+mkdir -p work/team-art-cdn-check
+while IFS= read -r url; do
+  name="${url##*/}"
+  curl -fsS --retry 3 "$url?repair=38885093455" \
+    -o "work/team-art-cdn-check/$name.expected" || exit 1
+  curl -fsS --retry 3 "$url" -o "work/team-art-cdn-check/$name" || exit 1
+  cmp "work/team-art-cdn-check/$name.expected" \
+    "work/team-art-cdn-check/$name" || exit 1
+done < docs/team-art-cache-purge.txt
+```
+
+All comparisons must pass. The query parameter above identifies the
+verified export from this run; if another export has since replaced it,
+inspect that run and establish its expected files first.
+
+## Browser verification with the fresh published files
+
+The isolated test cache's 146 old or locally substituted files for these
+nine items were moved aside before publication checks. There is no local
+`art/sheets/` override. After the CDN mismatch was found, the **40 verified
+published files** described above were placed in that cache; their image
+bodies came from the cache-busted public URLs, not from the local export.
+
+On the unchanged runtime at main `2918c71f`, `team` **passed 1/1 in 41
+seconds** (43.6 seconds including startup). Every repaired JSON and WebP
+was requested once, and all 40 cached file hashes match the verified
+downloads. The picker, selected-team and landed screenshots were inspected;
+the landed unit renders with its artwork. The server log contains no
+HTTP errors or exceptions. Peak anonymous/shared/kernel memory was
+**3.44 GiB**, or **4.84 GiB** including filesystem cache, from a 1.59-GiB
+whole-environment baseline. No memory-limit, OOM or OOM-kill events
+occurred, and the guard did not fire.
+
+The full browser suite is running with the same verified files. At 11:18
+UTC, all 40 ordinary CDN responses were independently checked and matched
+these exact bytes. A final cold-cache `team` run will check the normal
+fetch path after the full suite finishes.
 
 ## Findings
 
@@ -269,9 +312,8 @@ memory limit before the picker while loading the eight other old bundles;
 the guard stopped it with no OOM kill. No further identical failing runs
 were made. The test, assertions and game code were never edited.
 
-The previously recorded full-suite result remains **63/64**, with `team`
-failed. The runtime code at `002fcbeb` is unchanged from that #86 baseline;
-this documentation-only change does not repeat that known failing public
-art run. A full run on integrated main with the repaired **public** art
-is still required after the owner's workflow. The local replacement pass
-does not close that outstanding verification.
+The initial #90 investigation retained the earlier **63/64** result, with
+`team` failed. Its local replacement pass did not close the public-art
+follow-up. The subsequent authorized export, CDN findings and browser
+verification with the fresh published files are recorded above; the
+historical failed run is not relabelled as a pass.
