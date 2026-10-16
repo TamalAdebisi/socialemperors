@@ -445,7 +445,7 @@ FRIENDS_DONE = {"accepted": "You're friends now: their empires come first among 
 
 def render_friends(user, error=None, done=None, status=200):
     store = storage()
-    mine = store.friends_of(user["id"])
+    mine = friends.everybody(user["id"])
     sent = gifts.sent_today(user["id"])
     for friend in mine:
         friend["empires"] = villages_of(friend["id"])
@@ -616,7 +616,7 @@ def gifts_window():
         sent = gifts.sent_today(user["id"])
         reply.update(
             waiting=gifts.waiting(user["id"]),
-            friends=[dict(f, sent_today=f["id"] in sent) for f in storage().friends_of(user["id"])],
+            friends=[dict(f, sent_today=f["id"] in sent) for f in friends.everybody(user["id"])],
             free=gifts.free_list(level), next_free=gifts.next_free(level), level=level,
             storage=gifts.storage_list(save, int(save["playerInfo"].get("default_map") or 0)),
             loaded_at=bank.loaded_at.get(USERID, 0), now=time.time())

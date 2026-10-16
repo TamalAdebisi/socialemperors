@@ -1,5 +1,14 @@
 # Parity: the new client against the Flash game
 
+**16 October playthrough follow-up:** recurring raids after lessons/rescue,
+with five minutes on opening town and five to seven to recover after fights; camps
+return after ten minutes and show a countdown. Shared battle controls expose
+individual inspection and Deselect. Everybody is listed without friend
+requests, including for gifts and help. These owner-requested changes override
+the original pacing and friend gates described below; see CLIENT.md and
+DECISIONS.md. [The delivery record](docs/verification-95.md) includes the
+73/73 integrated Chromium run and the server/client checks.
+
 Owner-requested tutorial usability pass: mandatory lessons, smooth camera
 pans, explicit movement/placement targets, reload recovery, soldier-only
 combat guidance and a saved first-dragon reward. This intentionally improves
@@ -296,8 +305,8 @@ frees its unit.
 ## Tournaments
 
 All five parts are built in #89 and #92. The
-[delivery record](docs/verification-92.md) preserves the corrected pre-#94
-73/73 browser run; verification of the merged 75-case suite is pending.
+[delivery record](docs/verification-92.md) preserves the completed pre-#95
+75/75 browser run; verification of the merged 77-case suite is pending.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
@@ -319,8 +328,8 @@ All five parts are built in #89 and #92. The
       departed entrants, separate authoritative winner, server-paid
       prizes in Storage and explicit Done acknowledgement.
 - [x] Friends' creation, minimum-neighbour check, waiting host's
-      cancellation with refunds, and the existing Friends-page Invite
-      notice. The old Facebook invitation delivery is not needed.
+      cancellation with refunds, and the community-page Invite notice
+      (Everybody following #95). The old Facebook invitation delivery is not needed.
 
 Classic choices stay hidden at the owner's request; the original routes
 and shared save support remain.

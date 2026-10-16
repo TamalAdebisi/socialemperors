@@ -486,13 +486,14 @@ export class TournamentWindow {
   private invite(tournament: boolean): void {
     this.panel.body.querySelector(".tournament-invite")?.remove();
     const box = text("section", "", "survival-help-box tournament-invite");
-    const link = text("a", "Open the Friends page", "button small gold");
+    const link = text("a", "Open Everybody", "button small gold");
     link.href = "/friends";
     link.target = "_blank";
     link.rel = "noopener";
-    box.append(text("h3", "Invite friends"), text("p", tournament
-      ? "Your player neighbours find this waiting room under Tournaments → Your own. Ask them to join there. Empty seats get computer players after a day."
-      : "Add friends by their username on the Friends page. Their empires come first among your neighbours. You need at least three player neighbours to create a tournament."),
+    const community = "Other players' empires are neighbours automatically. No friend requests needed. ";
+    box.append(text("h3", "Invite friends"), text("p", community + (tournament
+      ? "They find this waiting room under Tournaments → Your own. Ask them to join there. Empty seats get computer players after a day."
+      : "You need at least three player neighbours to create a tournament. Find players on Everybody.")),
     link, button("OK", () => box.remove()));
     this.panel.body.prepend(box);
     box.scrollIntoView({ block: "nearest" });

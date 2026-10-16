@@ -5,7 +5,7 @@
 // enemy unit is left; sending a knight at the camp makes the town a
 // battlefield (the enemies are then struck down by the test's hand). Then
 // the prison opens: the prize by level, the princess freed, and the next
-// camp in 4 hours, all kept by the server.
+// camp in 10 minutes, all kept by the server.
 
 import assert from "node:assert/strict";
 
@@ -67,4 +67,17 @@ export default async function camp({ newPlayer }) {
   assert.equal(after.coins, coins + 450, "level 12: 450 gold");
   assert.equal(after.idCurrentTreasure, 1, "the next camp");
   assert.ok(after.items.some((i) => i[0] === PRINCESS), "the princess is freed");
+  // The next mission is visible immediately and arrives without reopening town.
+  await player.page.waitForFunction(() => /Next camp (9:|10:)/.test(document.querySelector(".home-threats")?.textContent ?? ""));
+  await player.page.evaluate(() => {
+    const home = window.seHome;
+    const now = home.parts.clock();
+    home.parts.clock = () => now + 601;
+    home.camps.parts.clock = home.parts.clock;
+    home.camps.watch();
+  });
+  await player.page.waitForFunction(() => window.seHome.parts.town.items.some((p) => p.item.subcategory === 811));
+  const next = await player.saved();
+  assert.equal(next.idCurrentTreasure, 1);
+  assert.ok(next.items.some((i) => i[0] === 86), "the next camp's prison is saved");
 }

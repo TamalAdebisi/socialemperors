@@ -99,12 +99,12 @@ class HelpsTest(unittest.TestCase):
         state, status = self.window(alice, target)
         self.assertEqual(status, 200)
         self.assertEqual(state["what"], "an hour off your Gold Mine I")
-        self.assertEqual([(f["username"], f["state"]) for f in state["friends"]], [(bob[1], "can")])
+        self.assertIn((bob[1], "can"), [(f["username"], f["state"]) for f in state["friends"]])
 
         state, status = self.window(alice, target, friend=str(bob[2]))
         self.assertEqual(status, 200, state)
         self.assertIn(f"Asked {bob[1]}", state["ok"])
-        self.assertEqual(state["friends"][0]["state"], "asked")
+        self.assertEqual(next(f for f in state["friends"] if f["username"] == bob[1])["state"], "asked")
         self.assertIn("asked them already", self.window(alice, target, friend=str(bob[2]))[0]["error"])
 
         page = text(bob[0].get("/friends"))
@@ -117,7 +117,7 @@ class HelpsTest(unittest.TestCase):
         save = sessions.session(alice[3])
         self.assertIn(f"{bob[1]} took an hour off your Gold Mine I.", save["privateState"]["message"])
         state, _ = self.window(alice, target)
-        self.assertEqual(state["friends"][0]["state"], "helped")
+        self.assertEqual(next(f for f in state["friends"] if f["username"] == bob[1])["state"], "helped")
         self.assertEqual(state["answered"], [f"{bob[1]} took an hour off your Gold Mine I"])
         self.assertIn("helped with it already", self.window(alice, target, friend=str(bob[2]))[0]["error"])
 
@@ -189,7 +189,7 @@ class HelpsTest(unittest.TestCase):
         self.assertEqual(state["what"], "a place at your Allies Building")
         self.assertIn(f"You took a place at {alice[1]}'s Allies Building.", self.answer(bob))
         self.assertEqual(summit[ATTRS]["si"], [bob[3]])
-        self.assertEqual(self.window(alice, target)[0]["friends"][0]["state"], "helped")
+        self.assertEqual(next(f for f in self.window(alice, target)[0]["friends"] if f["username"] == bob[1])["state"], "helped")
         self.assertIn("helped with it already", self.window(alice, target, friend=str(bob[2]))[0]["error"])
 
     def test_the_wonder_takes_a_fifth_at_a_time(self):
@@ -217,8 +217,8 @@ class HelpsTest(unittest.TestCase):
         self.assertIn(f"Asked {bob[1]}", state["ok"])
         self.run_command(alice, "assist_send_feed", [35, 35, 0, ROUND_TABLE, bob[3]])
         self.assertEqual(table[ATTRS]["sif"], {"u" + bob[3]: True})
-        self.assertIn("Only friends", self.window(alice, target, seat=carol[3])[0]["error"])
-        self.assertIn("Only friends", self.window(alice, target, seat="100000047")[0]["error"])  # a built-in village
+        self.assertIn(f"Asked {carol[1]}", self.window(alice, target, seat=carol[3])[0]["ok"])
+        self.assertIn("another player with an account", self.window(alice, target, seat="100000047")[0]["error"])  # a built-in village
         self.assertIn("your own empires", self.window(alice, target, seat=alice[3])[0]["error"])
 
         self.assertIn(f"You took a seat at {alice[1]}'s Round Table.", self.answer(bob))
@@ -246,7 +246,7 @@ class HelpsTest(unittest.TestCase):
         self.assertEqual(self.asked_of(bob), [])
 
         friends.unfriend({"id": carol[2]}, alice[2])
-        self.assertIn("aren't friends any more", self.answer(carol))
+        self.assertIn("isn't there any more", self.answer(carol))  # friendship no longer gates help
 
     def test_dismissing(self):
         alice, bob = self.player(), self.player()
@@ -257,12 +257,12 @@ class HelpsTest(unittest.TestCase):
         self.assertEqual(reply.headers["Location"], "/friends?done=dismissed")
         self.assertEqual(self.asked_of(bob), [])
 
-    def test_only_friends_and_only_your_own_empire(self):
+    def test_everybody_can_help_but_only_from_their_own_empire(self):
         alice, bob, carol = self.player(), self.player(), self.player()
         self.befriend(alice, bob)
         self.build(alice, GOLD_MINE, 38, 38)
         target = dict(kind="collect", town=0, x=38, y=38, item=GOLD_MINE)
-        self.assertEqual(self.window(alice, target, friend=str(carol[2]))[0]["error"], "Pick the friends to ask.")
+        self.assertIn(f"Asked {carol[1]}", self.window(alice, target, friend=str(carol[2]))[0]["ok"])
         reply = carol[0].get("/help/game", query_string=dict({k: str(v) for k, v in target.items()}, empire=alice[3]))
         self.assertEqual(reply.status_code, 403)
 

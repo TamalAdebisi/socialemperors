@@ -383,6 +383,43 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(self.gold(), 100000)
         self.assertIsNone(self.tournament())
 
+    def test_community_accounts_create_discover_and_join_without_friend_requests(self):
+        store = sessions.storage()
+        owners, players = [], []
+        for index in range(4):
+            owner = store.create_user(f"tournament{time.time_ns()}{index}", "unused")
+            self.addCleanup(sessions.delete_account, owner)
+            owners.append(owner)
+            pid = sessions.new_village(owner_id=owner)
+            sessions.session(pid)["maps"][0]["coins"] = 100000
+            players.append(pid)
+            self.assertEqual(store.friends_of(owner), [])
+        host, *guests = players
+        own_other = sessions.new_village(owner_id=owners[0])
+        sessions.session(own_other)["maps"][0]["coins"] = 100000
+        unclaimed = self.player()
+        neighbours = sessions.friends(host)  # the real community lookup, not befriend's stub
+        self.assertTrue(set(guests).issubset(neighbours))
+        self.assertNotIn(own_other, neighbours)
+        self.assertNotIn(unclaimed, neighbours)
+
+        reply = self.create(pid=host)
+        self.assertEqual(reply["result"], "OK")
+        room = reply["tournament"]
+        self.assertEqual(self.gold(host), 99500)
+        self.assertEqual(self.ask("get_tournament_info", own_other)["tournament_friends"], [])
+        self.assertEqual(self.join_friend(room, own_other)["result"], "NOK")
+        self.assertEqual(self.gold(own_other), 100000)
+        for guest in guests:
+            cards = self.ask("get_tournament_info", guest)["tournament_friends"]
+            self.assertEqual([card["tournament_id"] for card in cards], [room["tournament_id"]])
+            self.assertEqual(self.join_friend(room, guest)["result"], "OK")
+            self.assertEqual(self.gold(guest), 99500)
+        ready = self.tournament(host)
+        self.assertEqual(ready["date_ready"], self.now)
+        self.assertEqual({player["user_id"] for player in ready["players"]}, set(players))
+        self.assertTrue(all(store.friends_of(owner) == [] for owner in owners))
+
     def test_the_owner_calls_it_off(self):
         friends = [self.player() for _ in range(3)]
         self.befriend(self.me, *friends)
@@ -437,7 +474,8 @@ class TournamentsTest(unittest.TestCase):
 
     def test_friends_are_the_players_among_the_neighbours(self):
         sessions.friends = self.friends
-        other = self.player()
+        owner = sessions.storage().create_user(f"community{time.time_ns()}", "unused")
+        other = sessions.new_village(owner_id=owner)
         sessions.session(other)["playerInfo"]["last_logged_in"] = self.now  # one of the most recently active
         friends = sessions.friends(self.me)
         self.assertIn(other, friends)

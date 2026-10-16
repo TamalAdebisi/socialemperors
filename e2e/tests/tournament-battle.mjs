@@ -54,6 +54,7 @@ export default async function tournamentBattle({ newPlayer }) {
   await page.waitForSelector(".quest-window", { timeout: 60_000 });
   assert.equal((await service(player, "get_tournament_info")).tournament.players[0].matches[0].date_started, null,
     "loading the map does not start a timed attempt");
+  assert.equal(await page.locator(".battle-selection").count(), 0, "the start dialog has no active battle inspector");
   await player.shot("before-start-desktop");
   await player.press("Start the match");
   await page.waitForFunction(() => window.seTournament, null, { timeout: 30_000 });
@@ -116,6 +117,17 @@ export default async function tournamentBattle({ newPlayer }) {
   await page.waitForFunction(() => window.seTournament.match.state === "waiting", null, { timeout: 60_000 });
   await player.shot("formed-desktop");
 
+  // The shared inspector works with the tournament's copied army. Portraits
+  // inspect one unit; Escape clears it without issuing an order.
+  await player.press("Select all");
+  await assertGroup(page);
+  await page.locator(".battle-selection-roster button").first().click();
+  await assertInspection(page, "player", 0);
+  await player.shot("inspect-desktop");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.evaluate(() => window.seTournament.view.selected.size), 0);
+  assert.ok(await page.locator(".battle-selection").isHidden());
+
   let savedFirst;
   await page.route(tournamentPath("finish_tournament_match"), async (route) => {
     const response = await route.fetch();
@@ -134,9 +146,14 @@ export default async function tournamentBattle({ newPlayer }) {
     const at = screenOf(enemy[0]);
     return at.x > 100 && at.x < innerWidth - 100 && at.y > 180 && at.y < innerHeight - 100;
   });
+  const inspected = await page.evaluate(() => window.seTournament.screenOf(window.seTournament.enemy[0]));
+  await clickUnit(page, inspected);
+  await assertInspection(page, "enemy", 0);
+  assert.equal(await page.evaluate(() => window.seTournament.player.some((unit) => unit.target?.side === 2)), false,
+    "inspecting an opponent with no troops selected does not order an attack");
   await player.press("Select all");
   const target = await page.evaluate(() => window.seTournament.screenOf(window.seTournament.enemy[0]));
-  await page.mouse.click(target.x, target.y);
+  await clickUnit(page, target);
   await page.waitForFunction(() => window.seTournament.player.some((unit) => unit.target?.side === 2));
   await player.press("Spell book");
   await player.press("Open book");
@@ -148,6 +165,7 @@ export default async function tournamentBattle({ newPlayer }) {
   assert.equal(await page.locator(".panel.spells:not([hidden])").count(), 0, "a finished battle closes its spell academy");
   assert.equal(await page.getByRole("heading", { name: "Wizard's Resources Bank", exact: true }).count(), 0,
     "a finished battle closes its mana bank before saving the result");
+  assert.equal(await page.locator(".battle-selection").count(), 0, "a finished battle removes its inspector before saving");
   assert.ok(await player.button("Back to tournament").isDisabled(), "an unconfirmed result is not presented as saved");
   const first = (await service(player, "get_tournament_info")).tournament.players[0].matches.find((m) => m.victim_id === opponents[0].settings.userId);
   assert.equal(first.finished, true);
@@ -194,17 +212,44 @@ export default async function tournamentBattle({ newPlayer }) {
   const hud = await phone.page.locator(".tournament-battle-hud").boundingBox();
   assert.ok(hud.x >= 0 && hud.x + hud.width <= PHONE.width + 1);
   await phone.shot("battle-phone");
+  await phone.button("Select all").tap();
+  await assertGroup(phone.page);
+  await assertPhoneInspectionFits(phone.page);
+  await phone.shot("selection-phone");
+  await phone.page.locator(".battle-selection-roster button").first().tap();
+  await assertInspection(phone.page, "player", 0);
+  await assertPhoneInspectionFits(phone.page);
+  await phone.shot("inspect-phone");
+  await phone.button("Deselect").tap();
+  assert.equal(await phone.page.evaluate(() => window.seTournament.view.selected.size), 0);
+  assert.ok(await phone.page.locator(".battle-selection").isHidden());
+  await phone.button("Select all").tap();
+  const selectedBeforeQuestion = await phone.page.evaluate(() => [...window.seTournament.view.selected].map((unit) => unit.key));
+  const deselect = await phone.button("Deselect").boundingBox();
   await phone.press("Leave the match");
   assert.equal(await phone.page.locator(".tournament-battle-hud").evaluate((el) => el.inert), true,
     "the surrender question blocks background orders and spells");
+  assert.equal(await phone.page.locator(".battle-selection").evaluate((el) => el.inert), true,
+    "the surrender question also blocks the battle inspector");
+  await phone.page.touchscreen.tap(deselect.x + deselect.width / 2, deselect.y + deselect.height / 2);
+  await phone.page.keyboard.press("Escape");
+  assert.deepEqual(await phone.page.evaluate(() => [...window.seTournament.view.selected].map((unit) => unit.key)), selectedBeforeQuestion,
+    "background touch and dialog Escape leave the paused army selection unchanged");
+  assert.ok(await phone.button("Keep fighting").isVisible());
   await phone.press("Keep fighting");
+  assert.equal(await phone.page.locator(".battle-selection").evaluate((el) => el.inert), false);
+  await phone.button("Deselect").tap();
+  assert.equal(await phone.page.evaluate(() => window.seTournament.view.selected.size), 0,
+    "Keep fighting restores the inspector's touch controls");
   assert.equal((await service(phone, "get_tournament_info")).tournament.players[0].matches.find((m) => m.victim_id === secondId).finished, false);
   // This failure happens before the service: the tab's pending result must
   // survive a page reload and then reach the actual server once.
   await phone.page.route(tournamentPath("finish_tournament_match"), (route) => route.fulfill({ json: { data: {} } }), { times: 1 });
+  await phone.button("Select all").tap();
   await phone.press("Leave the match");
   await phone.press("Leave match");
   await phone.page.getByRole("button", { name: "Retry saving", exact: true }).waitFor({ state: "visible", timeout: 20_000 });
+  assert.equal(await phone.page.locator(".battle-selection").count(), 0, "surrender also removes the inspector before retrying a result");
   assert.equal((await service(phone, "get_tournament_info")).tournament.players[0].matches.find((m) => m.victim_id === secondId).finished, false);
   await phone.page.reload();
   await phone.page.waitForFunction(() => document.querySelector('.tournament-match-result [role="status"]')?.textContent === "Match recorded. No units lost.", null, { timeout: 30_000 });
@@ -237,4 +282,46 @@ export default async function tournamentBattle({ newPlayer }) {
   await player.loaded();
   await page.waitForSelector(".tournament-cards");
   for (const entrant of [player, ...opponents]) await service(entrant, "leave_tournament", { tournament_id: room.tournament_id });
+}
+
+async function assertGroup(page) {
+  assert.deepEqual(await page.evaluate(() => [...window.seTournament.view.selected].map((unit) => unit.key)),
+    await page.evaluate(() => window.seTournament.player.map((unit) => unit.key)));
+  assert.match(await page.locator(".battle-selection").textContent(), /3 units selected/);
+  assert.equal(await page.locator(".battle-selection-roster button").count(), 3);
+  await page.waitForFunction(() => {
+    const images = [...document.querySelectorAll(".battle-selection-roster img")];
+    return images.length === 3 && images.every((image) => image.complete && image.naturalWidth > 0);
+  });
+}
+
+async function clickUnit(page, point) {
+  // Match the shared selection check: let the initial hover render before
+  // pressing, so slow software drawing does not turn a click into a hold.
+  await page.mouse.move(point.x, point.y);
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.mouse.click(point.x, point.y);
+}
+
+async function assertInspection(page, side, index) {
+  const expected = await page.evaluate(({ side, index }) => {
+    const unit = window.seTournament[side][index];
+    return { key: unit.key, text: `${unit.item.name} · ${Math.ceil(unit.life)}/${unit.maxLife} health · ${unit.attack} attack` };
+  }, { side, index });
+  assert.deepEqual(await page.evaluate(() => [...window.seTournament.view.selected].map((unit) => unit.key)), [expected.key]);
+  assert.equal(await page.locator(".battle-selection > span").textContent(), expected.text);
+  assert.equal(await page.locator(".battle-selection-roster button").count(), 0);
+}
+
+async function assertPhoneInspectionFits(page) {
+  const layout = await page.evaluate(() => {
+    const selection = document.querySelector(".battle-selection").getBoundingClientRect();
+    const hud = document.querySelector(".tournament-battle-hud").getBoundingClientRect();
+    const book = document.querySelector(".spell-book").getBoundingClientRect();
+    return { left: selection.left, right: selection.right, top: selection.top, bottom: selection.bottom,
+      hudBottom: hud.bottom, bookTop: book.top, width: innerWidth };
+  });
+  assert.ok(layout.left >= 0 && layout.right <= layout.width, "the inspector fits across the phone");
+  assert.ok(layout.top >= layout.hudBottom, "the inspector leaves the battle HUD uncovered");
+  assert.ok(layout.bottom <= layout.bookTop, "the inspector leaves the closed spell controls uncovered");
 }

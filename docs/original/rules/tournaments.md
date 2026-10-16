@@ -121,12 +121,16 @@ in the shipped 227 missions; tournament wins are not player-attack wins.
   and short-team warning before choosing a type. The request includes
   `tournament_type_id`, `team`, `usersFriends`, `flashSubResources: 1`.
   The server checks its own neighbour list, not the supplied list:
-  at least three real player empires, including Friends-page friends.
+  at least three real player empires. Following the owner's #95 policy,
+  these are eligible other registered accounts' empires in Everybody,
+  without an accepted-friendship gate or the former neighbour cap.
+  The minimum count, host, room, fee and refund rules are unchanged.
 - The waiting private owner gets Cancel and Invite; other entrants
   get Leave. Original Invite called the embedding page's social
   bridge. Here the classic page already substitutes an explanatory
   notice and `/friends` link: neighbours find the room in Your own.
-  The new panel keeps that policy. No separate invitation record,
+  The new panel keeps that policy; the linked community page is now
+  Everybody following #95. No separate invitation record,
   external message or start-up invitation popup is needed.
 - Leaving before readiness refunds that entrant; the private owner's
   departure cancels the room and refunds every human. Once ready,

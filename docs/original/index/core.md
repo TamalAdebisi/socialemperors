@@ -1,5 +1,10 @@
 # The game core (Base, MapInitializer, Constants...)
 
+**16 October playthrough follow-up:** raids now recur at every level after
+lessons/rescue, with recovery between waves. Camps return after ten minutes.
+These requested pacing changes override the original schedule below; see
+CLIENT.md and DECISIONS.md.
+
 This part of the original Flash client starts the game and keeps it running.
 `Base` loads the config and the save, draws the map, turns taps and keys into
 building, moving, selling and fighting, and sends the commands; `MapInitializer`
@@ -65,7 +70,7 @@ resources" flag (`buy` or `sell` with 1 in that place).
 | The camp | When the troll timer is done and no chest waits: the wild ring is cleared ("CLEAN" plus the camp's number; the player's units walk home), the camp is put up, and clusters of idle trolls added. A camp number that doesn't exist for the race is moved on (humans skip 9 and 11) and reported with `collect_treasure`. | built: `homeCamps.ts`, `rules/camps.ts` |
 | Rocks growing back | A growing rock whose time is up is sold ("REGEN") and one of the four rocks bought free in its place. Done on open only. | built: `rules/work.ts` (ours checks every second, not only on open) |
 | Trees, rocks and animals | Clusters of gold, stone and trees and 100 single trees, fewer the more there are; then sheep, cows, horses from level 11 (boars for trolls), no more than `ANIMALS_PER_DAY` a kind a day (`admin_add_animal`). | built: `rules/nature.ts`, `rules/animals.ts` |
-| Raids | From level 25, 1 chance in 10 of a siege, stampede (30) or army (35); bandits from levels 10, 15 and 20 after 7, 14 and 21 minutes. The heavy siege is switched off (`Config.HEAVY_SIEGE`). | built: `rules/raids.ts`, `homeDefence.ts` |
+| Raids | From level 25, 1 chance in 10 of a siege, stampede (30) or army (35); bandits from levels 10, 15 and 20 after 7, 14 and 21 minutes. The heavy siege is switched off (`Config.HEAVY_SIEGE`). | built: `rules/raids.ts`, `homeDefence.ts`; owner-requested recurring bands after lessons/rescue, five minutes to prepare and five to seven between fights (DECISIONS.md) |
 | Extras on open | The Morocco dealer (only for a "gold member" page), offer buildings and other games' adverts. | not needed |
 | Islands, survival, tournaments | Places the player's army at the landing tile (or a chosen edge for a player battle), and a tournament's two armies of up to 20 facing each other. | built: `questPlay.ts`, `attackPlay.ts`, `survivalPlay.ts`, `tournamentPlay.ts` and `rules/tournamentBattle.ts` |
 | Free spawns | Villagers, units and allies bought free (`buy` with the free flag); the Allies Building's 9 knights. | partly: villagers built; the allies not yet |

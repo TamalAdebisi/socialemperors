@@ -44,6 +44,22 @@ export default async function card({ newPlayer }) {
   await player.said(/You need to be level 28 to upgrade this building/);
   await player.press("Close");
 
+  // Clicking empty ground dismisses an inspected object without opening
+  // a different card or issuing a troop order.
+  await player.select(FARM.slice(1), "Farm Land");
+  const empty = await page.evaluate(() => {
+    const { view } = window.seHome.parts;
+    for (let y = 220; y < 450; y += 20) {
+      for (let x = 350; x < 850; x += 20) {
+        if (!view.itemAt({ x, y })) return { x, y };
+      }
+    }
+    return null;
+  });
+  assert.ok(empty, "empty ground is visible");
+  await player.click(empty);
+  assert.equal(await player.bar(), "", "clicking away closes the inspected object's card");
+
   // A house: attack, the time between hits, room for people; Upgrade costs House II's 60 wood.
   await player.select(HOUSE.slice(1), "House I");
   assert.deepEqual(await card.locator(".card-stat").evaluateAll((all) => all.map((s) => s.getAttribute("aria-label"))),
@@ -111,7 +127,11 @@ export default async function card({ newPlayer }) {
   assert.ok(has(await phone.saved(), HOUSE_2, HOUSE.slice(1)), "the first tap does not buy the upgrade");
   await phone.shot("phone-upgrade-price");
   await touchUpgrade.tap();
-  const afterTouch = await phone.saved();
+  await phone.page.waitForFunction(([x, y]) => {
+    const { town, commands } = window.seHome.parts;
+    return town.items.some((p) => p.item.id === 3 && p.tx === x && p.ty === y) && commands.pending === 0;
+  }, HOUSE.slice(1), { timeout: 30000 });
+  const afterTouch = await phone.saved({ waitForBatch: false });
   assert.ok(has(afterTouch, 3, HOUSE.slice(1)) && !has(afterTouch, HOUSE_2, HOUSE.slice(1)), "the second tap upgrades to House III");
   assert.equal(afterTouch.wood, beforeTouch.wood + 3 - 120, "House II's refund and House III's price are saved");
   await phone.shot("phone-upgraded");

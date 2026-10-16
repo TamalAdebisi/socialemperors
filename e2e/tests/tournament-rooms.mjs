@@ -137,7 +137,8 @@ export default async function tournamentRooms({ newPlayer }) {
   await page.waitForSelector(".tournament-cards");
   await gold(host, before.map.coins);
 
-  // Three real neighbours make creation possible. The refusal fixture is
+  // Three unrelated accounts become neighbours without any friend requests.
+  // The refusal fixture is
   // necessary because the full runner keeps earlier test accounts, which
   // also count as neighbours. The real three-neighbour rule has server tests.
   const friends = [];
@@ -149,6 +150,9 @@ export default async function tournamentRooms({ newPlayer }) {
   const [guest, second, third] = friends;
   const guestBefore = await playerInfo(guest);
   await host.reload();
+  const communityNeighbours = new Set((await playerInfo(host)).neighbors.map((neighbour) => String(neighbour.pid)));
+  for (const friend of friends) assert.ok(communityNeighbours.has(friend.settings.userId),
+    "new community empires are tournament neighbours without friend requests");
   await open(host);
   await host.button("Your own").click();
   await host.button("Create tournament").click();
@@ -163,6 +167,10 @@ export default async function tournamentRooms({ newPlayer }) {
   await page.waitForSelector(".tournament-invite");
   assert.match(await page.locator(".tournament-error").textContent(), /3 friends/);
   assert.equal(await page.locator(".tournament-invite a").getAttribute("href"), "/friends");
+  assert.equal(await page.locator(".tournament-invite a").textContent(), "Open Everybody");
+  const tooFewNeighbours = await page.locator(".tournament-invite").textContent();
+  assert.match(tooFewNeighbours, /neighbours automatically.*No friend requests needed.*at least three player neighbours/s);
+  assert.doesNotMatch(tooFewNeighbours, /Add friends|come first/);
   assert.equal((await service(host, "get_tournament_info")).tournament, null);
   await gold(host, before.map.coins);
   await page.locator(".tournament-invite").getByRole("button", { name: "OK", exact: true }).click();
@@ -186,10 +194,17 @@ export default async function tournamentRooms({ newPlayer }) {
   await gold(host, before.map.coins - 500);
   await host.button("Invite friends").click();
   assert.match(await page.locator(".tournament-invite").textContent(), /Your own.*after a day/s);
+  assert.match(await page.locator(".tournament-invite").textContent(), /neighbours automatically.*No friend requests needed/s);
   const friendsLink = page.locator(".tournament-invite a");
+  assert.equal(await friendsLink.textContent(), "Open Everybody");
   assert.equal(await friendsLink.getAttribute("href"), "/friends");
   assert.equal(await friendsLink.getAttribute("target"), "_blank");
-  assert.ok((await page.request.get(host.base + "/friends")).ok(), "the invitation has a working local Friends page");
+  const everybody = await page.request.get(host.base + "/friends");
+  assert.ok(everybody.ok(), "the invitation has a working local Everybody page");
+  const directory = await everybody.text();
+  assert.match(directory, /No friend requests needed/);
+  assert.ok(directory.includes(guest.name), "the guest is listed without sending or accepting a friend request");
+  assert.doesNotMatch(directory, /Add friend<\/button>/);
   await host.shot("invite-desktop");
   await page.locator(".tournament-invite").getByRole("button", { name: "OK", exact: true }).click();
 

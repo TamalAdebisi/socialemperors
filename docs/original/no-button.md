@@ -216,7 +216,8 @@ window to close before the next is looked at.
     the owner's call).*
 36. **A tournament invitation,** when the page asks. *Not needed: the
     Facebook page delivery has no equivalent here. The waiting-room
-    Invite follows the site's Friends-page notice; neighbours enter
+    Invite follows the site's community-page notice (now Everybody);
+    neighbours enter
     through Your own. See [rules/tournaments.md](rules/tournaments.md).*
 37. **Darts** (first start): the client looks for the current darts
     round, the last one in the config's `darts_items` whose start date

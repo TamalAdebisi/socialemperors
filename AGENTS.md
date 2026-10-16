@@ -78,22 +78,33 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 440 tests, about a minute
+.venv/bin/python -m unittest discover tests          # the server's unit tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 75 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 77 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament integration verification after #94 is pending.** The
-  completed pre-#94 run at
-  `67d2e02a563d6a2e4f06376cd5af960a1238fd23` passed **73/73 browser tests
-  in 92m 32.50s**, including the review fixes, all five tournament cases
-  and shared spells. Server: **440 run (431 passed, 9 existing skips)**;
-  client types and **381 tests passed**. Main `1eb2a2e2` adds runtime
-  changes and two browser cases, so the combined 75-case suite needs
-  fresh verification. [The delivery record](docs/verification-92.md)
-  preserves this baseline, earlier failures and the pre-review 49b5685e run.
-- **Playthrough verification (#94):** server 435 run (426 passed,
+- **Tournament integration verification after #95 is pending.** The
+  completed pre-#95 run at
+  `5d220abfa562877ca346b205455f9554e15d497e` passed **75/75 browser tests
+  in 92m 46.83s**, including #94, all five tournament cases and shared
+  spells. Server: **440 run (431 passed, 9 existing skips)**; client
+  types and **385 tests passed**. Main `a3328da6` adds runtime changes
+  and two browser cases, so the combined 77-case suite needs fresh
+  verification. [The delivery record](docs/verification-92.md) preserves
+  this baseline, earlier failures, and the 67d2e02a and 49b5685e runs.
+- **Playthrough verification (#95):** server 436 run (427 passed,
+  9 existing skips), client types and all 357 passed after review. Complete integrated
+  Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
+  #94. WebKit selection, recurring raids, cards and Everybody passed
+  **4/4 in 2m 37.96s**. Test-only rendering/save waits and a central click
+  target follow the full run: card passed in Chromium (111s), and final
+  selection passed in Chromium (50.22s total) and WebKit (21.77s total).
+  Review corrections at `ad9adfd7` have fresh server/client passes, affected
+  Chromium **8/8 in 7m 2.97s**, and WebKit **3/3 in 1m 31.96s**.
+  Automated re-review found zero new issues. [The delivery record](docs/verification-95.md)
+  retains the initial results, failures, screenshot review and engine limits.
+- **Previous playthrough verification (#94):** server 435 run (426 passed,
   9 existing skips), client types and all 354 passed. Full Chromium suite:
   **67/71 in 1h 52m 56.27s**; four failures and their follow-ups are recorded,
   with all 71 cases now having passing results across the full/focused
