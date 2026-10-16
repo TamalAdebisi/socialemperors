@@ -32,6 +32,9 @@ export interface GoalWindowParts {
 
 const numbers = new Intl.NumberFormat("en-US");
 
+/** Told on the document as a goal's window opens and closes ({ open }): Arthur's lessons hear it, as the original's did. */
+export const GOAL_WINDOW_EVENT = "se-goal-window";
+
 /** Whether a goal's window offers HELP!, as the Flash client's: goals 1 and 2 and those that build something, while not done. */
 export function hasHelp(goal: Goal, done: boolean): boolean {
   const kind = goal.need?.[0];
@@ -57,7 +60,10 @@ export class GoalWindow {
   }
 
   show(goal: Goal, done: boolean): void {
-    this.close();
+    // Already open (a second tap on the card): its content changes, and it isn't told as closed and opened again.
+    const wasOpen = this.open !== null;
+    this.open?.remove();
+    this.open = null;
     const { words } = this.parts;
     const box = document.createElement("section");
     box.className = "goal-window";
@@ -127,10 +133,17 @@ export class GoalWindow {
     document.body.append(box);
     this.open = box;
     ok.focus();
+    if (!wasOpen) {
+      document.dispatchEvent(new CustomEvent(GOAL_WINDOW_EVENT, { detail: { open: true } }));
+    }
   }
 
   close(): void {
-    this.open?.remove();
+    if (!this.open) {
+      return;
+    }
+    this.open.remove();
     this.open = null;
+    document.dispatchEvent(new CustomEvent(GOAL_WINDOW_EVENT, { detail: { open: false } }));
   }
 }

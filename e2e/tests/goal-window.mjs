@@ -34,7 +34,7 @@ export default async function goalWindow({ newPlayer }) {
   await window.getByRole("button", { name: "HELP!" }).click();
   assert.equal(await window.count(), 0);
   const arrow = page.locator(".help-arrow");
-  await arrow.waitFor();
+  await arrow.locator("img").waitFor();  // (its holder has no size of its own: it turns the picture)
   const build = await page.locator('.menus button[aria-label="Build"]').boundingBox();
   const transform = await arrow.evaluate((a) => a.style.transform);
   const [x, y] = transform.match(/translate\((-?[\d.]+)px, (-?[\d.]+)px\)/).slice(1).map(Number);

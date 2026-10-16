@@ -2363,7 +2363,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 901;
+  z-index: 960;  /* over the windows it points into (a goal's window) */
   width: 0;
   height: 0;
   pointer-events: none;
@@ -3142,11 +3142,6 @@ body {
   .goal-new-mission {
     animation: none;
   }
-}
-
-/* HELP!'s arrow: above the windows. */
-.help-arrow {
-  z-index: 960;
 }
 
 /* ---- The market (ui/market.ts) ------------------------------------------------ */

@@ -1073,7 +1073,9 @@ paying cash to skip a goal, was switched off: in its place, Goals opens the
 list. Goals 6 to 9 carry the game's "Click here!" tag until tapped, and
 below level 8 "New Mission!" points at the box whenever a new goal joins
 the 15 open (and as the town opens), until a goal is looked at; neither in
-Arthur's lessons. Test: `e2e/tests/goal-window.mjs`.
+Arthur's lessons. In the lessons, "tap the goals" opens this window and its
+OK closes it, as the original's lessons did (they listen for
+`GOAL_WINDOW_EVENT`). Test: `e2e/tests/goal-window.mjs`.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`, `comeback_bonus.py`):

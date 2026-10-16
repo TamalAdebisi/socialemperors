@@ -27,9 +27,11 @@ export default async function collections({ newPlayer }) {
   // The tree comes down (the walk and the work: some seconds); the piece pops up with it.
   await page.waitForFunction(([x, y]) => !window.seHome.parts.town.items.some((p) => p.item.id === 19 && p.tx === x && p.ty === y),
     TREE_AT, { timeout: 60_000 });
-  await player.wait(300);
-  await player.shot("found");
-  await player.said(/You found a collection piece: .+, of .+\./);
+  // The message stays 2.5 seconds: looked for while the picture is taken.
+  await Promise.all([player.said(/You found a collection piece: .+, of .+\./), (async () => {
+    await player.wait(300);
+    await player.shot("found");
+  })()]);
 
   await player.saved();  // the commands sent
   const saved = await (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
