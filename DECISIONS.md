@@ -34,6 +34,11 @@ them can be found and reversed. The big, agreed decisions are in
   quiet frames needed, with nobody attacking, after its 30-second limit.
   Closing completed towns preserves every screen/save assertion and that
   deadline while giving the next town the drawing time it needs.
+- **The siege check waits for its game minute, with a 30-second limit,**
+  then still requires the living siege engines to target buildings. Its
+  fixed 17-second sleep could end before that minute on this machine.
+  The sound check also uses a destination above the card and verifies
+  that the canvas receives the click; all audio assertions stay in place.
 
 ## 16 October 2026: the team test's oversized art
 

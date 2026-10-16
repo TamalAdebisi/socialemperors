@@ -16,7 +16,10 @@ export default async function siege({ newPlayer }) {
     window.seHome.bring("siege");
   });
   await player.wait(1000);
-  const army = await player.page.evaluate(() => window.seHome.fighting.raids[0].fighters.map((f) => f.item.id));
+  const { army, began } = await player.page.evaluate(() => {
+    const raid = window.seHome.fighting.raids[0];
+    return { army: raid.fighters.map((f) => f.item.id), began: raid.stageFrom };
+  });
   assert.equal(army.length, 26, "20 soldiers, 5 engines and the captain");
   assert.equal(army.filter((id) => id === 520).length, 5, "a human town's siege brings scorpions");
   await player.page.evaluate(() => {
@@ -25,8 +28,10 @@ export default async function siege({ newPlayer }) {
   });
   await player.wait(1500);
   await player.shot("lined-up");
-  // After a minute (15 seconds at 4 times), the engines at a building.
-  await player.wait(17_000);
+  // Wait for the siege's minute on the game clock. Software drawing can
+  // make even the four-times clock run behind real time.
+  await player.page.waitForFunction((began) => window.seHome.fighting?.battle.frame - began >= 1800,
+    began, { timeout: 30_000 });
   const engines = await player.page.evaluate(() => window.seHome.fighting.raids[0].fighters
     .filter((f) => f.item.id === 520 && !f.dead).map((f) => f.target && !f.target.isUnit));
   assert.ok(engines.length > 0 && engines.every(Boolean), "the engines go for a building");

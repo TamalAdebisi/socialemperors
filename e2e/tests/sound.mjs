@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-const KNIGHT_AT = [50, 44], TO = [55, 56];
+const KNIGHT_AT = [50, 44], TO = [54, 55];
 // The effects' lengths in seconds (client/src/sound/), give or take a little.
 const LENGTH = { click: 0.42, place: 0.62 };
 
@@ -47,6 +47,9 @@ export default async function sound({ newPlayer }) {
   await player.select(KNIGHT_AT, "Light Knight");
   assert.match((await page.evaluate(() => window.__music))[0], /^play .*\/music\/Spirit%20of%20Eternity\.mp3$/);
   let since = (await effects()).length;
+  const destination = player.screenOf(...TO);
+  assert.ok(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === "CANVAS", destination),
+    "the walk destination is visible above the card");
   await player.tapTile(TO);
   assert.ok(await heard("place", since), `a unit sent off: ${await effects()}`);
 
