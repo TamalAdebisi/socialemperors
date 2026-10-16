@@ -70,7 +70,11 @@ export function renameWindow(current: string, words: { title: string; save: stri
   document.addEventListener("keydown", keys, true);
   input.addEventListener("input", () => box.classList.toggle("short", input.value.trim().length < NAME_SHORTEST));
   buttons.append(button(ICONS["name-save"], words.save, done), button(ICONS["name-cancel"], words.cancel, close));
-  box.append(band, input, buttons);
+  // The box fills the parchment's own name field (an input won't stretch between top and bottom: its holder does).
+  const field = document.createElement("div");
+  field.className = "name-field";
+  field.append(input);
+  box.append(band, field, buttons);
   document.body.append(box);
   input.focus();
   input.select();
