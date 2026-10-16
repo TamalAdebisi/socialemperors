@@ -47,8 +47,8 @@ export class Camera {
   private pinchDistance = 0;
   private readonly keys = new Set<string>();
   private press: { x: number; y: number; t: number; moved: number; pinched: boolean; box: boolean } | null = null;
-  /** A tap on the map and its input timestamp, and the mouse moving over it. Screen points. */
-  onTap: ((at: Point, touch: boolean, time?: number) => void) | null = null;
+  /** A map tap, its Shift modifier and input timestamp. Screen points. */
+  onTap: ((at: Point, touch: boolean, shift: boolean, time?: number) => void) | null = null;
   onHover: ((at: Point) => void) | null = null;
   /** The mouse left the map (onto a window, or off the page). */
   onLeave: (() => void) | null = null;
@@ -137,7 +137,7 @@ export class Camera {
           if (press.box) {
             this.onBox?.(press, press, true);  // no box after all, just a tap
           }
-          this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen", e.timeStamp);
+          this.onTap?.({ x: e.offsetX, y: e.offsetY }, e.pointerType === "touch" || e.pointerType === "pen", e.shiftKey, e.timeStamp);
           return;
         }
         if (press?.box) {

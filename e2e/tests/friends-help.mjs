@@ -14,11 +14,7 @@ const HOUR = 3600;
 export default async function friendsHelp({ newPlayer }) {
   const asker = await newPlayer();
   const friend = await newPlayer();
-  // Friends: each asks the other (the second ask is a yes).
-  for (const [one, other] of [[asker, friend], [friend, asker]]) {
-    const asked = await one.page.request.post(`${one.base}/friends/ask`, { form: { username: other.name, csrf: await one.csrf() } });
-    assert.ok(asked.ok(), `${one.name} asks ${other.name}`);
-  }
+  // All accounts can help without sending friend requests.
   await asker.send([
     { cmd: "buy", args: [MILL, ...MILL_AT, 0, 0, 1, 1, "b"] },
     { cmd: "buy", args: [VILLAGER, ...SPOT, 0, 0, 1, 1, "u"] },
@@ -40,6 +36,7 @@ export default async function friendsHelp({ newPlayer }) {
   await asker.press("Ask for help");
   const window = page.locator(".panel.list-window:not([hidden])", { has: page.locator(".ask-friends") });
   await window.locator(".ask-friends label", { hasText: friend.name }).waitFor();
+  await window.locator(".ask-friends label", { hasText: friend.name }).locator("input").check();
   await asker.shot("ask");
   await window.getByRole("button", { name: "Ask", exact: true }).click();
   await page.waitForFunction(() => /Asked|asked/.test(document.querySelector(".ask-status")?.textContent ?? ""), null, { timeout: 10_000 });
@@ -73,4 +70,13 @@ export default async function friendsHelp({ newPlayer }) {
   const after = await savedMill();
   assert.ok(!after[7]?.hc, "the server used it too");
   assert.equal(after[4], before[4] - HOUR, "the server's clock for the mill an hour back");
+  // A failed directory read is an error, not an empty community.
+  await page.route("**/help/game?**", (route) => route.fulfill({
+    contentType: "application/json", body: JSON.stringify({ error: "Help is temporarily unavailable." }),
+  }), { times: 1 });
+  await asker.select(MILL_AT, "Mill I");
+  await asker.press("Hurry up");
+  await asker.press("Ask for help");
+  await page.locator(".ask-status", { hasText: "Help is temporarily unavailable." }).waitFor();
+  assert.equal(await page.getByText("No other accounts yet. New players will appear here automatically.").count(), 0);
 }

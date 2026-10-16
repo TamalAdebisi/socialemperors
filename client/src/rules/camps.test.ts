@@ -35,10 +35,11 @@ function item(fields: Partial<ItemInfo>): ItemInfo {
     life: 100, attack: 0, defense: 1, attackRange: 0, attackInterval: 0, size: 1, elevation: 1, groups: "", upgradesTo: 0, ...fields };
 }
 
-test("a camp every 4 hours from the last chest; the next after the last is the first", () => {
+test("a camp ten minutes after the last chest, including existing saves; the sequence loops", () => {
   assert.ok(campDue(0, 1_000_000));
-  assert.ok(!campDue(1_000_000, 1_000_000 + 4 * 3600 - 1));
-  assert.ok(campDue(1_000_000, 1_000_000 + 4 * 3600));
+  assert.ok(!campDue(1_000_000, 1_000_000 + 600 - 1));
+  assert.ok(campDue(1_000_000, 1_000_000 + 600));
+  assert.ok(campDue(1_000_000, 1_000_000 + 3600));
   assert.equal(nextCamp(29), 0);
 });
 

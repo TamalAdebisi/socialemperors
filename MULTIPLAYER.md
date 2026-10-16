@@ -13,8 +13,8 @@ people can play on at once, safely.
 | Address hard-coded to `http://127.0.0.1:5050` | Set `SE_PUBLIC_URL` to your domain |
 | Each village a JSON file; all reloaded on every visit to the start page | SQLite database, or Postgres (Supabase) when hosted; loaded once, changes saved in batches every 5 s and on shutdown |
 | Flask's development server | gunicorn (`gunicorn server:app`, settings in `gunicorn.conf.py`) |
-| Every save on the machine shown as a neighbour | Built-in neighbours, then your friends' empires (`friends.py`), then the most recently active players, 30 at most beside your friends |
-| Gifts and help asked of Facebook friends | Friends by username: gifts (`gifts.py`), and help asked from the game's own buttons, answered on the Friends page (`helps.py`) |
+| Every save on the machine shown as a neighbour | Every other registered account's empires, with no friend gate or cap; Arthur is the game's guide |
+| Gifts and help asked of Facebook friends | Everybody: gifts (`gifts.py`) and help (`helps.py`) between all registered accounts, without friend requests; original daily and ownership limits remain |
 | No way to manage players | An admin page at `/admin` for the usernames in `SE_ADMINS`: reset a password, delete an account or empire, and the bug radar |
 | A password change left other logins working | The login cookie and game tokens carry a fingerprint of the password, so changing it (at `/account`) signs out everywhere else; forms carry CSRF tokens |
 

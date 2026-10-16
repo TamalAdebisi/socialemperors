@@ -1,5 +1,9 @@
 # Neighbours and messages
 
+**16 October playthrough follow-up:** all registered accounts are neighbors,
+without a friend gate or cap. Everybody includes gifts and help; Arthur is
+identified as the game's guide. See CLIENT.md and DECISIONS.md.
+
 How the original Flash client (the copy in `decompiled/`, version 0.9.26b)
 handles neighbours: the friends bar along the bottom, the little menu on a
 neighbour, visiting their town and helping it, the request that greets a

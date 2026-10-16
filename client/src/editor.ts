@@ -191,7 +191,7 @@ export class TownEditor {
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
     this.sound = parts.sound ?? (() => {});
-    this.camera.onTap = (at, touch, time) => this.tap(at, touch, time);
+    this.camera.onTap = (at, touch, _shift, time) => this.tap(at, touch, time);
     this.camera.onHover = (at) => this.hover(at);
     this.camera.onLeave = () => this.light(null);
     this.camera.onPress = (at, touch) => this.startsBox(at, touch);
@@ -577,6 +577,12 @@ export class TownEditor {
       return;
     }
     if (!placed) {
+      // Clicking away from an inspected artifact/building closes its card
+      // before an unrelated land offer can replace it.
+      if (this.selected || this.group.length) {
+        this.select(null);
+        return;
+      }
       const tile = this.tileAt(at);
       const block = landForSale(this.town, tile.x, tile.y);
       if (block !== null) {
@@ -1214,7 +1220,7 @@ export class TownEditor {
   resume(moved: PlacedItem[]): void {
     this.paused = false;
     this.bar.hide();
-    this.camera.onTap = (at, touch, time) => this.tap(at, touch, time);
+    this.camera.onTap = (at, touch, _shift, time) => this.tap(at, touch, time);
     this.camera.onHover = (at) => this.hover(at);
     this.camera.onLeave = () => this.light(null);
     for (const unit of moved) {

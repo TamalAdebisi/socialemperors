@@ -46,6 +46,14 @@ export default async function quest({ newPlayer }) {
   assert.equal(await player.page.locator(".quest-hud").count(), 1);
   assert.match(await player.page.locator(".quest-hud").textContent(), /5 trolls left/);
 
+  // Select all is not a sticky command mode: inspect a unit, then clear it.
+  await player.press("Select all");
+  await player.page.locator(".battle-selection-roster button").first().click();
+  assert.equal(await player.page.evaluate(() => window.seQuest.view.selected.size), 1);
+  assert.match(await player.page.locator(".battle-selection").textContent(), /health.*attack/);
+  await player.press("Deselect");
+  assert.equal(await player.page.evaluate(() => window.seQuest.view.selected.size), 0);
+
   // Faster, every unit selected, then at the nearest troll, again and again.
   await player.press("Speed 1×");
   await player.press("Speed 2×");

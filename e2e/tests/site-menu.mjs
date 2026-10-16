@@ -1,7 +1,7 @@
 // The site's links in the new client (CLIENT.md, "The menus: rail and
 // dock"): a Menu by Full screen, as the classic page's bar. A friend's
-// request waits on the Friends page, so the Menu and its Friends carry a
-// red 1; Friends opens the site's page in a new tab, Empires the front page;
+// request waits on the Everybody page, so the Menu and its Everybody carry a
+// red 1; Everybody opens the site's page in a new tab, Empires the front page;
 // on a phone the Menu sits by Classic game; Log out signs the player out.
 
 import assert from "node:assert/strict";
@@ -9,11 +9,27 @@ import assert from "node:assert/strict";
 export default async function siteMenu({ newPlayer }) {
   const player = await newPlayer();
   const friend = await newPlayer();
+  const csrf = await friend.csrf();
   await friend.page.goto(`${friend.base}/friends`);
-  await friend.page.getByRole("textbox", { name: "Username of the player to add" }).fill(player.name);
+  assert.equal(await friend.page.getByRole("button", { name: "Add friend", exact: true }).count(), 0);
+  // The old endpoint remains compatible. A fixture form exercises its nested
+  // response and assets without restoring friend requests to Everybody's UI.
   await Promise.all([
     friend.page.waitForURL("**/friends/ask"),
-    friend.page.getByRole("button", { name: "Add friend" }).click(),
+    friend.page.evaluate(({ username, csrf }) => {
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = "/friends/ask";
+      for (const [name, value] of Object.entries({ username, csrf })) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.append(input);
+      }
+      document.body.append(form);
+      form.submit();
+    }, { username: player.name, csrf }),
   ]);
   assert.match(await friend.page.locator(".card").textContent(), new RegExp(`Asked ${player.name}`));
   for (const width of [1280, 390]) {
@@ -36,11 +52,11 @@ export default async function siteMenu({ newPlayer }) {
   const { page } = player;
 
   const menu = page.getByRole("button", { name: /^Menu/ });
-  assert.equal(await menu.getAttribute("aria-label"), "Menu, 1 waiting on the Friends page");
+  assert.equal(await menu.getAttribute("aria-label"), "Menu, 1 waiting on the Everybody page");
   await menu.click();
   const list = page.locator(".site-menu");
   assert.ok(await list.isVisible(), "the Menu opens");
-  const friends = list.getByRole("menuitem", { name: "Friends, 1 waiting" });
+  const friends = list.getByRole("menuitem", { name: "Everybody, 1 waiting" });
   assert.equal(await friends.getAttribute("href"), "/friends");
   assert.equal(await friends.getAttribute("target"), "_blank", "a new tab: the game plays on");
   assert.equal(await list.getByRole("menuitem", { name: "Empires" }).getAttribute("href"), "/");

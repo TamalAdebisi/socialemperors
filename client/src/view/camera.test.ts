@@ -24,8 +24,8 @@ function pointer(c: Camera) {
     if (previous) Object.defineProperty(globalThis, "window", previous);
     else Reflect.deleteProperty(globalThis, "window");
   }
-  return (type: string, timeStamp: number) => listeners.get(type)!({
-    type, timeStamp, pointerId: 1, pointerType: "mouse", offsetX: 500, offsetY: 400,
+  return (type: string, timeStamp: number, shiftKey = false) => listeners.get(type)!({
+    type, timeStamp, shiftKey, pointerId: 1, pointerType: "mouse", offsetX: 500, offsetY: 400,
   } as PointerEvent);
 }
 
@@ -33,12 +33,12 @@ test("a short click survives a long delay in processing its release", (t) => {
   let now = 1000;
   t.mock.method(performance, "now", () => now);
   const c = camera(), send = pointer(c);
-  const taps: number[] = [];
-  c.onTap = (_at, _touch, time) => taps.push(time!);
-  send("pointerdown", 1000);
+  const taps: { time: number; shift: boolean }[] = [];
+  c.onTap = (_at, _touch, shift, time) => taps.push({ time: time!, shift });
+  send("pointerdown", 1000, true);
   now = 3000;
-  send("pointerup", 1122);
-  assert.deepEqual(taps, [1122], "preserve the actual input time for double-click selection too");
+  send("pointerup", 1122, true);
+  assert.deepEqual(taps, [{ time: 1122, shift: true }], "preserve input time and the battle selection modifier separately");
 });
 
 test("a genuinely long press stays a long press even when its handlers run together", (t) => {

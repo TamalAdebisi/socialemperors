@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Battle, ENEMY, SELF, seededRandom } from "./battle.ts";
+import { Battle, ENEMY, NEUTRAL, SELF, seededRandom } from "./battle.ts";
 import type { ItemInfo } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
-import { Raid, enemyIds, planRaids } from "./raids.ts";
+import { FIRST_RAID, Raid, enemyIds, planBand, planRaids, raidRecovery } from "./raids.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 510, name: "Swordsman", isUnit: true, art: "x", width: 1, height: 1, category: 0, subcategory: 78,
@@ -33,16 +33,54 @@ test("who raids: trolls on a human town by level, humans on a troll town", () =>
   assert.deepEqual(enemyIds(6, "t"), [509, 516, 512, 510, 517, 513]);
 });
 
-test("bands from level 10 at 7 minutes, 15 at 14, 20 at 21, from an edge; a human town's bands are smaller", () => {
-  assert.deepEqual(planRaids(9, "h", seededRandom(1)), []);
+test("bands start at five minutes even at low levels, scale by level and leave recovery between waves", () => {
+  assert.equal(planRaids(1, "h", seededRandom(1))[0].units.length, 2);
   const plans = planRaids(20, "h", seededRandom(1)).filter((p) => p.kind === "bandits");
-  assert.deepEqual(plans.map((p) => p.startsAt / 1800), [7, 14, 21]);
+  assert.deepEqual(plans.map((p) => p.startsAt), [FIRST_RAID]);
   assert.ok(plans.every((p) => p.units.length === 5));
   assert.ok(plans.every((p) => [0, 99].includes(p.spawn.x) || [0, 99].includes(p.spawn.y)));
   assert.equal(planRaids(20, "t", seededRandom(1)).filter((p) => p.kind === "bandits")[0].units.length, 10);
+  assert.equal(raidRecovery(1), 7 * 1800);
+  assert.equal(raidRecovery(12), 5 * 1800);
+  assert.equal(planBand(12, "h", seededRandom(2), 999).startsAt, 999);
+});
+
+test("raiders attack a town with no units, and eventually leave even if there is nothing left to burn", () => {
+  const b = battle();
+  const plan = planBand(1, "h", seededRandom(1), 0);
+  plan.spawn = { x: 50, y: 55 };
+  plan.units = [{ id: 525, x: 50, y: 55, squad: "band" }];
+  const raid = new Raid(b, plan, ITEMS, 1, "h", quiet);
+  const house = b.add(HOUSE, 50, 50, SELF);
+  for (let i = 0; i < 6 * 1800 && !raid.done; i++) { b.step(); raid.step(); }
+  assert.ok(house.ruined, "unprotected buildings burn without a player order");
+  assert.ok(raid.done, "the town gets a recovery period even with no units to kill");
+});
+
+test("a band blocked from its chosen unit attacks a reachable wall", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: () => 0.99, home: true });
+  const villager = b.add(VILLAGER, 50, 50, SELF);
+  villager.condition = "passive";
+  const wall = item({ ...HOUSE, id: 100, subcategory: 221, width: 1, height: 1, life: 1000 });
+  const walls = [];
+  for (let x = 47; x <= 53; x++) {
+    for (let y = 47; y <= 53; y++) {
+      if ([47, 53].includes(x) || [47, 53].includes(y)) walls.push(b.add(wall, x, y, SELF));
+    }
+  }
+  const plan = planBand(1, "h", seededRandom(1), 0);
+  plan.units = [{ id: 525, x: 50, y: 57, squad: "band" }];
+  const raid = new Raid(b, plan, ITEMS, 1, "h", quiet);
+  for (let i = 0; i < 60; i++) { b.step(); raid.step(); }
+  assert.ok(walls.includes(raid.alive[0].target!), "the wall is the next target");
+  assert.equal(villager.life, villager.maxLife, "the protected unit has not been hit");
 });
 
 test("a siege 1 visit in 10, of the level's kind only", () => {
+  for (const level of [27, 32, 40]) {
+    assert.ok(planRaids(level, "h", () => 0.05).every((plan) => plan.startsAt === FIRST_RAID),
+      "every automatically rolled first raid allows preparation");
+  }
   const kinds = (level: number) => {
     const seen = new Set<string>();
     for (let seed = 0; seed < 300; seed++) {
@@ -62,6 +100,27 @@ test("a siege 1 visit in 10, of the level's kind only", () => {
   assert.ok(sieges > 140 && sieges < 260, `about 1 in 10 (${sieges} of 2000)`);
   const siege = planRaids(27, "h", () => 0.05).find((p) => p.kind === "siege")!;
   assert.equal(siege.units.length, 26, "20 soldiers, 5 engines, a captain");
+});
+
+test("a blocked band continues beyond twenty unreachable buildings", () => {
+  const b = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: () => 0.99, home: true });
+  const wall = item({ ...HOUSE, id: 100, subcategory: 221, width: 1, height: 1, life: 10000 });
+  for (let x = 19; x <= 26; x++) {
+    for (let y = 19; y <= 26; y++) {
+      if ([19, 26].includes(x) || [19, 26].includes(y)) b.add(wall, x, y, NEUTRAL);
+    }
+  }
+  const house = item({ ...HOUSE, width: 1, height: 1, life: 10000 });
+  for (let x = 20; x <= 24; x++) {
+    for (let y = 20; y <= 24; y++) b.add(house, x, y, SELF);
+  }
+  b.add(VILLAGER, 25, 22, SELF).condition = "passive";
+  const reachable = b.add(house, 5, 22, SELF);
+  const plan = planBand(1, "h", seededRandom(1), 0);
+  plan.units = [{ id: 525, x: 17, y: 22, squad: "band" }];
+  const raid = new Raid(b, plan, ITEMS, 1, "h", quiet);
+  for (let i = 0; i < 120; i++) { b.step(); raid.step(); }
+  assert.equal(raid.alive[0].target?.key, reachable.key, "the reachable building outside the first twenty is found");
 });
 
 test("a band attacks the player's buildings and units, and leaves at its spawn once both quotas are met", () => {

@@ -44,6 +44,18 @@ export default async function spy({ newPlayer }) {
   assert.equal(await page.locator(".spell-book-button").count(), 0, "no spells while spying");
   assert.match(await page.locator(".quest-hud").textContent(), /\d+ targets?(?! left)/);
 
+  // The eagle's own picture is still inspectable; destination taps fly it.
+  await page.getByRole("button", { name: "Deselect", exact: true }).click();
+  const eaglePoint = await page.evaluate(() => {
+    const { battle, view, lookAt } = window.seAttack;
+    const eagle = battle.fighters.find((f) => f.side === 1);
+    lookAt({ x: eagle.tx, y: eagle.ty });
+    const box = view.drawn.get(eagle).slot.children[0].getBounds();
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2, key: eagle.key };
+  });
+  await player.click(eaglePoint);
+  assert.deepEqual(await page.evaluate(() => [...window.seAttack.view.selected].map((f) => f.key)), [eaglePoint.key]);
+
   // A tap sends it there (it's quick: where it is, not whether it's still flying).
   const at = () => page.evaluate(() => {
     const eagle = window.seAttack.battle.fighters.find((f) => f.side === 1);

@@ -632,8 +632,8 @@ using the game's own button pictures (`client/src/ui/art/`).
 the town; red counts on buttons for what's waiting (gifts, ready
 buildings); and a **Collect all** button, like the original's fast-collect
 glove. The site's own links, the classic page's bar, are in a gold
-**Menu** after Full screen (on a phone, after Classic game): Friends,
-opening the site's Friends page in a new tab, with a red count of what
+**Menu** after Full screen: Everybody,
+opening the site's Everybody page in a new tab, with a red count of what
 waits there (requests, gifts, help; the Menu carries it too, asked again
 every two minutes and when the tab comes back into view, as the classic
 page does); Empires, the front page; and Log out, a form, as the site's
@@ -781,6 +781,15 @@ URLs; `site-menu.mjs` checks the actual submitted Friends page on desktop
 and phone, including loaded images and styles.
 
 ### Selecting several units
+
+Battles now show selected units' portraits and a **Deselect** button
+(`ui/battleSelection.ts`). A map click or portrait selects one unit from a
+group; Shift adds/removes units and Escape clears the selection. A single
+selection shows name, health and attack. Scenery and friendly buildings
+can be inspected without moving the army; clicking bare ground clears an
+inspected object. The enlarged click targets described above also apply
+in battles. Covered on desktop and phone by
+`battle-selection`, and on an island by `quest`.
 
 Built after Beta 1's run-through, at the owner's request. Code:
 `rules/group.ts` (the rules, with tests), `TownEditor.selectGroup`,
@@ -1171,6 +1180,13 @@ renaming the empire.
 
 ### Neighbours
 
+The owner's playthrough follow-up makes every registered account part of
+**Everybody**: no friend requests are needed for visiting, gifts, help or
+Round Table seats. The directory includes accounts without an empire;
+Neighbours lists all other accounts' empires with no cap. Unclaimed imports
+and the player's own other empires are excluded. Arthur is labeled as the
+game's guide. Legacy friendship endpoints remain compatible for old clients.
+
 Built (Beta 1's seventh slice). The Neighbours window lists the player's
 neighbours, Arthur last; Visit opens their town. Code:
 `rules/neighbours.ts` (with tests), `visit.ts`, and the carts in
@@ -1204,7 +1220,7 @@ neighbours, Arthur last; Visit opens their town. Code:
   cart was met, so the shares that followed found nothing. It now keeps
   them as "on the way" (`assistsOnTheWay`) until each is delivered.
 - **The server's message:** what friends did for the player while away (a
-  help request answered) and gifts taken on the Friends page wait in the
+  help request answered) and gifts taken on the Everybody page wait in the
   save as a message, a line each (`privateState.message`). As the town
   opens, before the carts or Arthur's lessons, it shows in the bar with OK,
   once: OK tells the server it's read (`clear_message`), as the Flash client
@@ -1215,7 +1231,7 @@ neighbours, Arthur last; Visit opens their town. Code:
   at work opens the game's hurry window, with **Ask for help** beside
   finishing it for cash, as the original's. It opens the site's ask window in the panel
   (`ui/askFriends.ts`, the server's `helps.py`, kind "collect"). Each friend
-  who answers on their Friends page waits over the building when the town
+  who answers on their Everybody page waits over the building when the town
   next opens, in the game's bubble (FotoNeighbourMC: "Hurry Up?", and
   "Accept" with the game's hand while the mouse is on it). A tap on the
   building takes the top one: an hour off its work
@@ -1922,25 +1938,34 @@ few kinds with its numbers; our notes in words are in
 
 **Defending the town**, the same way. Code: `rules/raids.ts` (what comes
 and how it behaves, with tests), `homeDefence.ts` (the town as a
-battlefield, loaded from level 10 only), `battleControls.ts` (the
+battlefield and recurring schedule), `battleControls.ts` (the
 player's hands in any battle, shared with the islands), `view/fire.ts`
 (the game's flames, `FireMC`, exported by `tools/art/export_ui.py`), and
 `raiders.py` on the server.
 
-- **What comes,** rolled afresh each time the town opens, and never
-  saved, as in the original: from level 10 a band of bandits that attacks
-  after 7 minutes, from 15 a second at 14 minutes, from 20 a third at 21.
-  A band is a quarter of the level in units (half for a troll town),
-  picked from the enemy race's soldiers for the level, and comes from a
+- **What comes:** attacks unlock after the tutorial and first rescue, even
+  at low levels. Opening a rescued town gives five minutes of preparation
+  for every automatically rolled first attack, including the larger sieges.
+  Once any fight ends (including the first camp), there are seven minutes
+  to rebuild below level 10, five from level
+  10. The schedule repeats all session, rechecking the town's current level;
+  raids never pile onto an existing camp fight. Bands have at least two units,
+  otherwise a quarter of the level (half for a troll town), from a
   random edge of the map. From level 25 there's 1 chance in 10 of a siege
   of the level's kind: the village siege (25 to 29: 20 soldiers, 5
   engines and a captain, from the bottom of the map), the stampede (30 to
   34: 6 big mounts and a captain) or the army (35 and up: 30 from the left
   edge, while one of the town's villagers runs in crying for help).
 - **How they fight:** a band goes for the nearest building or unit of the
-  player's, at random between the two, until it has burnt out 2 buildings
-  and killed 2 units (3 from level 11, 4 from 16), then walks back to its
-  edge and leaves. A siege waits a minute, its captain riding up and down
+  player's, at random between the two, until it has burnt out one building
+  and killed one unit (2 from level 6, 3 from 11, 4 from 16), then walks back to its
+  edge and leaves. Bands retreat after four minutes even if their quotas
+  cannot be met, and leave by five if their exit is blocked. Unreachable
+  targets lead them to reachable defenses instead. They search beyond the
+  first twenty buildings in batches of twenty route checks per second and
+  reject waiting spots outside their weapon range. The threat button locates
+  an active raider before looking for a camp. A siege waits a minute, its
+  captain riding up and down
   calling out (the game's own lines, from the config), then sends its
   engines at the nearest building, its first squad 5 seconds later, its
   second squad and the captain 15 seconds after that, and retreats 2
@@ -1968,11 +1993,19 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   by the server (`raiders.py`, up to 300 a day). When the raid is over the
   units stay where the fight left them (`move`, as after a walk).
 
-**Troll camps**, the same way. Code: `rules/camps.ts` (with tests),
+A visible camp/raid countdown explains what comes next; clicking it finds
+the current camp. New camps wait until lessons and fighting are over.
+The saved chest timestamp carries the shorter camp wait across reloads;
+raid preparation restarts on opening town, as before. Browser coverage:
+`recurring-raids` (four naturally scheduled waves, tutorial protection and
+saved rewards), `raids` (combat, burning, repair), `camp` (next mission and
+server save), plus the existing camp and siege suites.
+
+**Troll camps**, using the original layouts and the requested shorter wait. Code: `rules/camps.ts` (with tests),
 `rules/camps.json` (the layouts, as data in our own schema),
 `homeCamps.ts`, and `ui/notice.ts` for the camp's window.
 
-- **When:** 4 hours after the last chest was opened
+- **When:** ten minutes after the last chest was opened
   (`map.timestampLastTreasure`; a new town gets its first camp at once).
   Which camp is `map.idCurrentTreasure` (0 to 29), each chest moving it
   on; a camp the player's race doesn't get moves on as in the original
@@ -2009,7 +2042,7 @@ player's hands in any battle, shared with the islands), `view/fire.ts`
   experience up to level 5, rising by 100 and 10 every five levels to 750
   and 100 from level 26. A prison frees its prisoners beside it (a free
   `buy` each): the princess, three rangers, a rebel troll, Prince Arthur,
-  healers... The next camp comes 4 hours later.
+  healers... The next camp comes ten minutes later.
 
 - **Music and the alert:** when one of the player's things is hit at home,
   the game's battle tune (BATALLA) takes over from the town's; every 70
@@ -2035,7 +2068,7 @@ camps players reach, our own notes on the original's tables) and
   brings a wave of five skeletons (the statue), whose fall lights it.
   Unlike the ten camps built by code, these chests don't wait for every
   enemy on the map to fall. Opening one pays the level's reward and the
-  next camp comes in 4 hours.
+  next camp comes in ten minutes.
 - **Reloading:** camps 7 and 13 save nothing of their own: how far one
   has got is read from the pieces still standing (keys left, the chest,
   the wave), as in the original. The newer camps (14 to 29) save their

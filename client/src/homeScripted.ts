@@ -506,7 +506,7 @@ export class ScriptedCamps {
     this.finish(camp, { x: chest.tx, y: chest.ty });
   }
 
-  /** The camp done: the level's reward, the end window, the camp's prizes, the next camp in 4 hours. */
+  /** The camp done: the level's reward, the end window, the camp's prizes, the next camp in 10 minutes. */
   private finish(camp: ScriptedCamp, at: { x: number; y: number } | null): void {
     const { town, commands, editor, clock } = this.parts;
     const id = this.id!;
@@ -528,7 +528,7 @@ export class ScriptedCamps {
     editor.gained();
     editor.tell(`+${prize.gold} gold, +${prize.xp} XP`);
     notice(this.camps.title(id, camp.popup[2]), this.parts.line(camp.popup[3]), null,
-      () => notice(this.parts.line(531), this.parts.line(532), this.parts.pictureUrl(town.race === "t" ? "alert_troll_camp.jpg" : "alert_human_camp.jpg")));
+      () => notice(this.parts.line(531), "The next camp arrives in 10 minutes. Build your defenses: raiders will attack between missions.", this.parts.pictureUrl(town.race === "t" ? "alert_troll_camp.jpg" : "alert_human_camp.jpg")));
   }
 
   /** The camp's prizes: units beside the spot, the player's; buildings (or anything with no spot) to storage. */

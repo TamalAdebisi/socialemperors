@@ -236,7 +236,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   const controls = new BattleControls({
     battle, view, camera, world, items, town, config, privateState, settings, commands, sound, specials, random,
     spells: !spy,
-    // Spying, every tap sends the eagle there, whatever is under it.
+    // Destination taps send the eagle there; its own picture can be inspected.
     tapFirst: eagle ? (_tapped, tile) => {
       if (!eagle!.dead) {
         battle.moveTo([eagle!], tile);

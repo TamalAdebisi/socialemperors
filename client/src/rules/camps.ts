@@ -1,10 +1,10 @@
 // The troll camps of the home town (CLIENT.md, "Troll camps"), as the
-// Flash client builds them: 4 hours after the last camp's chest was
+// Flash client builds them: 10 minutes after the last camp's chest was
 // opened, a camp is put up on the border of the map (the ring of land the
 // player never owns), walled, with its soldiers and towers, and a chest or
 // a prison that opens once no enemy unit is left anywhere on the map.
 // Opening it pays by level (and frees the prisoners); the next camp comes
-// 4 hours later. Ten of the thirty camps are laid out by the original's own
+// 10 minutes later. Ten of the thirty camps are laid out by the original's own
 // code, and those are built here (rules/camps.json); the others are
 // scripted stories, played in the classic game for now.
 //
@@ -17,7 +17,7 @@ import campData from "./camps.json" with { type: "json" };
 import { enemyIds } from "./raids.ts";
 
 /** A camp comes this long (seconds) after the last chest was opened. */
-export const CAMP_PERIOD = 4 * 3600;
+export const CAMP_PERIOD = 10 * 60;
 /** The camps there are: the next after the last is the first. */
 const CAMPS = 30;
 const MAP = 100;
@@ -51,7 +51,7 @@ const DATA = campData as unknown as {
 /** The camps built in this client. */
 export const BUILT_HERE = new Set(Object.keys(DATA.camps).map(Number));
 
-/** Whether a camp is due: 4 hours since the last chest. */
+/** Whether a camp is due: 10 minutes since the last chest. */
 export function campDue(lastTreasure: number, now: number): boolean {
   return now - (Number(lastTreasure) || 0) >= CAMP_PERIOD;
 }

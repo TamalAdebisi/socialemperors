@@ -36,17 +36,18 @@ const FULL_WILD = [
  * player, rather than starting with enough. `dock`: let the town be given its
  * harbour (and zeppelin tower) as it opens, rather than starting with them.
  */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false } = {}) {
   const context = await browser.newContext({
     ...network,
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
   });
   await serveArt(context);
-  // No siege at random as the town opens (homeDefence.ts): tests bring raids when they want them.
-  await context.addInitScript(() => {
-    window.seCalm = true;
-  });
+  // Ordinary feature fixtures hold raids; recurring-raids opts into the real scheduler.
+  // Combat checks bring specific raids with hurry/bring.
+  await context.addInitScript((raids) => {
+    window.seCalm = !raids;
+  }, raids);
   const page = await context.newPage();
   const player = new Player(page, base, out, viewport);
   const name = `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
@@ -68,7 +69,7 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   if (!camp) {
     // A new town gets its first troll camp at once (homeCamps.ts); most tests start
     // as if its chest had just been opened instead (1 point of experience), which
-    // starts the 4-hour wait for the next.
+    // starts the 10-minute wait for the next.
     await player.send([{ cmd: "collect_treasure", args: [0, 1, 3, 0, 0, 0] }]);
   }
   // Other feature tests start with the tutorial completed in their fixture.
