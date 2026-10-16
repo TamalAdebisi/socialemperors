@@ -49,6 +49,8 @@ export class Camera {
   /** A tap on the map (a click, or a short touch: `touch`), and the mouse moving over it. Screen points. */
   onTap: ((at: Point, touch: boolean) => void) | null = null;
   onHover: ((at: Point) => void) | null = null;
+  /** The mouse left the map (onto a window, or off the page). */
+  onLeave: (() => void) | null = null;
   /**
    * A press on the map: true when the town takes the drag to draw a box
    * (selecting units) instead of moving the map. `onBox` then hears the box
@@ -106,6 +108,11 @@ export class Camera {
       this.velocity = { x: 0, y: 0 };
       this.recentMoves = [];
       this.pinchDistance = this.pinchSpread();
+    });
+    canvas.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "mouse") {
+        this.onLeave?.();
+      }
     });
     canvas.addEventListener("pointermove", (e) => {
       if (e.pointerType === "mouse" && e.buttons === 0) {
