@@ -739,6 +739,25 @@ Close door. It isn't saved: gates are shut each time the town opens.
 ground where a unit is going. (Units sent to a building or a tree: "Villagers
 at work"; wild animals following a unit home: "The living map".)
 
+### Click feedback and unit targets
+
+Units keep their original appearance, with an eight-pixel click margin
+and at least a 44-pixel target at every zoom. Exact picture hits and ready
+bubbles keep priority; a nearby unit is considered before an empty-ground
+move. This applies in town and battle (`view/hit.ts`, `townView.ts`,
+`battleView.ts`). A ground click briefly shows the original gold ring at
+the exact click position, fixed in screen size while following the map,
+then fades; it cannot intercept another click (`view/markers.ts`).
+Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs`.
+
+Building previews snapshot their drawing origin before loading art, so
+pointer movement during loading cannot offset the picture twice.
+`e2e/tests/building-overlay.mjs` checks selection leaves distant ground
+unchanged, delayed preview alignment, cancellation and the saved building.
+The Friends page and other site forms use root-relative CSS and image
+URLs; `site-menu.mjs` checks the actual submitted Friends page on desktop
+and phone, including loaded images and styles.
+
 ### Selecting several units
 
 Built after Beta 1's run-through, at the owner's request. Code:
@@ -2035,12 +2054,17 @@ with tests) and `ui/graveyard.ts` (the three windows).
   scaffolding while it waits for its staff. They're drawn open, as the
   server opens them for good; they used to flicker between the two.
 
-**Pausing**, the same way. Code: `ui/pause.ts`. The game stops when the
-page loses the player (another window, another tab), or from the pause
-button by the music and sound buttons, at home and on an island. A
-dark curtain and the game's GAME PAUSED say so; RESUME, or any key let go,
-starts it again. While paused nothing moves (the drawing's clock stops);
-work and training go on, as they're the server's clock.
+**Pausing and background play.** Code: `gameLoop.ts`, `ui/pause.ts`.
+At the owner's request, switching tabs or windows keeps the game running.
+Drawing uses the screen's ticker; hidden-tab walking and battles use an
+independent timer, replaying elapsed time in small steps when the browser
+throttles it. A fully frozen page catches up when it can run again, in
+bounded batches. Returning cannot count the same interval twice.
+The Pause button still stops simulation and drawing under GAME PAUSED;
+RESUME, or any key let go, starts it again without replaying paused time.
+Work and training keep their server-clock behavior. Closing the browser
+does not run a client simulation. Tests: `gameLoop.test.ts`,
+`e2e/tests/playthrough-controls.mjs` and `e2e/tests/dock.mjs`.
 
 **Monks at home** turn units as on the islands (four each, one every 24
 seconds). As in the Flash client the server isn't told: a unit of the

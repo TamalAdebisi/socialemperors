@@ -12,6 +12,15 @@ const MIN_ALPHA = 32;
 
 type Rect = { x: number; y: number; width: number; height: number };
 
+/** Units get an eight-pixel margin and at least a 44px target at every zoom. */
+export function unitHitDistance(box: Rect, screen: Point): number {
+  if (box.width <= 0 || box.height <= 0) return Infinity;
+  const dx = Math.abs(screen.x - (box.x + box.width / 2));
+  const dy = Math.abs(screen.y - (box.y + box.height / 2));
+  if (dx > Math.max(22, box.width / 2 + 8) || dy > Math.max(22, box.height / 2 + 8)) return Infinity;
+  return Math.hypot(dx, dy);
+}
+
 let probe: CanvasRenderingContext2D | null = null;
 
 export function isOpaqueAt(picture: Container, screen: Point): boolean {

@@ -393,7 +393,9 @@ window to close before the next is looked at.
     *Built, the same: decided on opening (`client/src/bonuses.ts`,
     `animals.py`).*
 73. **The page losing focus** pauses the game (not in the tutorial);
-    buildings' clocks run on. *Built: `client/src/ui/pause.ts`.*
+    buildings' clocks run on. *Owner-requested difference, 16 October 2026:
+    tab changes keep simulation running (`client/src/gameLoop.ts`);
+    explicit Pause remains (`client/src/ui/pause.ts`).*
 
 ## 4. Switched off by a setting
 

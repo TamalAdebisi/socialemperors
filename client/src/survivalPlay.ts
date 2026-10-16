@@ -25,6 +25,7 @@ import { readTown } from "./rules/town.ts";
 import { finalWindow } from "./questPlay.ts";
 import { Sound } from "./sound.ts";
 import { showStatus } from "./ui/hud.ts";
+import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
@@ -87,6 +88,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
     resizeTo: window, background: SEA, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
+  const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${SEA.toString(16)}`;
   document.body.classList.add("questing");
@@ -96,7 +98,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
   camera.resize(app.screen.width, app.screen.height);
   camera.attach(app.canvas);
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
-  app.ticker.add((ticker) => camera.update(ticker.deltaMS));
+  loop.add((ms) => camera.update(ms));
 
   const commands = new CommandSender(settings, { clock: () => info.timestamp, onFailure: (reason) => showStatus(reason) });
   const sound = new Sound(settings.assetsUrl, town.race, "QUESTS.mp3");
@@ -141,7 +143,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
   world.addChild(view.root);
   await view.drawGround(items.get(map.terrain), SURVIVAL.shape);
   await view.load((done, total) => showStatus(`Into the arena… ${Math.round((100 * done) / total)}%`));
-  app.ticker.add((ticker) => view.update(ticker.deltaMS, camera.scale));
+  loop.add((ms) => view.update(ms, camera.scale));
   showStatus("");
   commands.add("game_status", "LOAD_MAP", "NORM", "QUEST");
   void commands.flush();
@@ -175,7 +177,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
       ], true);
     },
   });
-  bar.add(new Pause(app.ticker).button("hud-sound"));
+  bar.add(new Pause(loop).button("hud-sound"));
   const say = (text: string) => bar.say(text);
   survival = new Survival({ map, battle, relic, items, random, news: (news: SurvivalNews) => {
     say(news.kind === "boss" ? word(WORDS.boss, news.number) : word(WORDS.wave, news.number));
@@ -196,9 +198,9 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
   (window as unknown as Record<string, unknown>).seSurvival = { battle, survival, relic, lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)) };
   survival.start();
 
-  app.ticker.add((ticker) => {
+  loop.add((ms) => {
     if (!ended && !asking) {
-      owed += Math.min(ticker.deltaMS, 250) * speed;
+      owed += Math.min(ms, 250) * speed;
       const step = 1000 / FPS;
       while (owed >= step) {
         owed -= step;

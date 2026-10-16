@@ -4,6 +4,37 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: playthrough controls and site repairs
+
+- **No auto-collect.** The owner withdrew it; collection and production
+  rules stay as they were.
+- **Bigger unit targets, original art sizes.** Exact visible picture hits
+  keep priority. A near miss can select the closest unit within its
+  picture plus eight screen pixels, with at least a 44-pixel target at
+  every zoom, at home and in battles. Signs and buildings retain their
+  existing hit tests. This avoids redirecting the previously selected
+  villager when a click just misses another one.
+- **A visible ground click.** Reuse the original gold unit ring, centred
+  on the actual click, about 52 screen pixels wide, fading over 650 ms.
+  It follows the map and never captures input. No extra order is sent.
+- **Switching tabs no longer pauses the game.** Requested by the owner.
+  A separate simulation timer advances walking and fights while drawing
+  is suspended, replaying throttled time in steps of at most 100 ms.
+  Long suspensions are processed in bounded batches; returning cannot
+  count that time twice. Explicit Pause still stops simulation and
+  drawing; its elapsed time is excluded. Work and training retain their
+  existing server-clock behavior. Closing the browser does not run a
+  client simulation; a browser that freezes the page catches up when it
+  can run again.
+- **Fix the Friends form's asset URLs at their source.** Shared site
+  styles and page images use root paths, so nested form-result URLs
+  cannot turn them into /friends/css or /settings/img requests.
+- **Keep placement art on its footprint while loading.** Snapshot the
+  preview's drawing origin before awaiting its art; pointer movement is
+  already applied by the preview container and must not be applied twice.
+  Browser checks cover immediate building selection without distant
+  ground changes, delayed preview loading, cancellation and the save.
+
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 
 - **The owner explicitly asked for a clearer tutorial over exact fidelity.**

@@ -146,6 +146,11 @@ The card's look is the owner's pick: mockup A, the original's panel
       swept over). S
 - [x] **Renaming the town** from the game. S
 
+- [x] **Owner playthrough conveniences:** larger unit click targets, a
+      fading ground-click ring, and background simulation across tab
+      changes while retaining explicit Pause. Collection is unchanged.
+      Friends form styles and delayed building-preview alignment repaired.
+
 ## Your calls (15 October 2026)
 
 - [x] **The troll town** (a second town, from level 20): in Beta 1. L

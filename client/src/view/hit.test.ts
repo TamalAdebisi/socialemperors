@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { sheetPixel } from "./hit.ts";
+import { sheetPixel, unitHitDistance } from "./hit.ts";
+
+test("a small unit keeps a 44px target, with gaps and near misses selectable", () => {
+  const tiny = { x: 100, y: 100, width: 10, height: 16 };
+  assert.ok(Number.isFinite(unitHitDistance(tiny, { x: 84, y: 108 })));
+  assert.equal(unitHitDistance(tiny, { x: 82, y: 108 }), Infinity);
+  assert.equal(unitHitDistance(tiny, { x: 105, y: 108 }), 0);
+  const big = { x: 100, y: 100, width: 60, height: 80 };
+  assert.ok(Number.isFinite(unitHitDistance(big, { x: 167, y: 140 })));
+  assert.equal(unitHitDistance(big, { x: 169, y: 140 }), Infinity);
+  assert.equal(unitHitDistance({ ...tiny, width: 0 }, { x: 100, y: 100 }), Infinity);
+});
 
 // A 100 x 80 picture, anchored at its bottom middle, packed with its
 // see-through border trimmed: only the 40 x 30 part at (20, 45) is kept,

@@ -524,6 +524,7 @@ export class TownEditor {
       this.useTool(placed);
       return;
     }
+    if (!placed) this.view.groundClick(this.camera.toMap(at));
     const cart = placed ? this.cartsWaiting.get(placed) : undefined;
     if (cart) {
       cart();  // a neighbour's cart, waiting: ask again

@@ -133,6 +133,7 @@ export class BattleControls {
       return;
     }
     const tapped = view.fighterAt(at);
+    if (!tapped) view.groundClick(camera.toMap(at));
     if (this.parts.tapFirst?.(tapped, tile, this.selected)) {
       return;
     }
