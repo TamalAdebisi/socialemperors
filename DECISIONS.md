@@ -16,6 +16,9 @@ them can be found and reversed. The big, agreed decisions are in
   for these were drawn into its art, not in the game's texts.
 - **Attack is the menu's link to the battle page,** so the attack is
   counted when the battle opens, as from Neighbours.
+- **Islands and profiles show the player's username,** not the town's
+  name ("My Empire" for nearly everyone): the original showed the
+  Facebook name, and the username is ours.
 
 ## 15 October 2026: the defence plan and the battle results
 

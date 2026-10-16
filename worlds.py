@@ -104,7 +104,9 @@ def _island(pid: str, village: dict, town_id: int, nivel: int, posicion: int) ->
     info = village["playerInfo"]
     town = village["maps"][town_id]
     names = info.get("map_names") or []
-    name = names[town_id] if town_id < len(names) and names[town_id] else info.get("name")
+    # The player's username, as the neighbours list shows it (the Flash client showed the
+    # Facebook name); a built-in village by its town's name.
+    name = sessions.username_of(pid) or (names[town_id] if town_id < len(names) and names[town_id] else info.get("name"))
     return {
         "posicion": posicion,
         "nivel": nivel,
@@ -325,7 +327,7 @@ def profile(pid: str):
     info, pState = village["playerInfo"], village["privateState"]
     shown = {
         "pid": str(info.get("pid", pid)),
-        "name": info.get("name"),
+        "name": sessions.username_of(pid) or info.get("name"),
         "level": _level(village["maps"][0]),
         "map_names": info.get("map_names") or [],
         "honor_points": int(pState.get("honor") or 0),

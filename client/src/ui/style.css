@@ -3112,7 +3112,8 @@ body {
 .world-art.options img { height: 42px; }
 .world-art.go img { height: 36px; }
 .world-art.my-world img { height: 54px; }
-.world-art.prev img { height: 28px; }
+.world-art.prev img,
+.world-art.next img { height: 28px; }
 .world-art .flip { transform: scaleX(-1); }
 .world-art.next:hover:not(:disabled) img { transform: scaleX(-1.06) scaleY(1.06); }
 

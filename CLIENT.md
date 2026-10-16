@@ -1885,8 +1885,9 @@ Third slice, the town's own defence plan (`ui/army.ts`, the browser test
 `e2e/tests/defence.mjs`). The Army window has two tabs, as the Flash
 client's battle options window: My Army, and My Defensive Strategy with
 the four plans, each with the game's picture, name and description (from
-the config's texts) and its tick on the one chosen. A town that never
-chose shows "Mid Aggressive" (half go out), the plan it fights with. The
+the config's texts) and its tick on the one chosen. A new town starts on
+"Defensive" (all stay), as the game's own new save has it; a save with
+no plan at all fights as "Mid Aggressive" (half go out). The
 plan picked is saved with `set_strategy` as the window closes, only if
 it changed, as there; picking one also counts for the goal that asks
 for it.
@@ -1949,6 +1950,9 @@ sits on each of the five pictures (`tools/art/Placements.java`) into
   (`modify_position_univers`), as there.
 - **The ship and the zeppelin** (from level 25) open the quests' map at
   its first or third page.
+- **Names:** the server now names each island, and each profile, by its
+  player's username, as the neighbours list does; it sent the town's
+  name before, which is "My Empire" for nearly everyone.
 - **Not yet:** spying (the eagles), and the help page the original showed
   the first time.
 
