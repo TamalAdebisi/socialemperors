@@ -65,7 +65,13 @@ and saved outcomes. Passing screenshots exposed the tutorial overlap;
 that was repaired and rechecked. Final integration screenshots confirm
 the card and tournament controls coexist, with reachable phone controls.
 
-## Separate art follow-up remains open
+## Art follow-up at #87 delivery
+
+The figures below describe #87's checkout at delivery. The subsequent
+[#91 verification](art-loading-repair.md) closes the art follow-up with
+consistent public images, refreshed caches and another integrated
+`team` → full-suite run. It retains the separate tutorial failure in
+that later suite; the results below are not rewritten.
 
 In the final integrated run, `team` passed in **121 seconds**. Its sampled
 cgroup peak was **8.00 GiB**, with **886,334 memory-limit events**, **0
@@ -86,7 +92,7 @@ run's cached main manifest remains the old 76-page one; the other eight
 cached manifests match the new public files. No cache was changed during
 verification. A variable pass with the stale cached bundle does not verify
 the repaired public art. Consistent images, cache refresh and subsequent
-`team`/full-suite verification remain a separate follow-up; see [the
+`team`/full-suite verification were still due at #87 delivery; see [the
 repair notes](art-loading-repair.md). #87 did not operate the live
 workflow or bucket.
 

@@ -4,22 +4,30 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
-## 16 October 2026: public-art verification and final integration
+## 16 October 2026: closing the public-art repair
 
 - **Close this operational repair without a code change.** All 20 images
   match in plain and Origin requests; the nine-item cache was refreshed,
   then `team` passed alone and in the full browser suite. No further
   export, bucket deletion or purge is needed. #91 records the hashes,
   dimensions, cache headers, screenshots, test counts and memory.
-- **Keep the four unrelated browser failures visible.** The full run was
-  61/65, with the same four failing test names already reproduced by #89
-  on main. The boss timeout occurred at an earlier battle in this run;
-  an independent unchanged-main check reproduced the later case and
-  requested none of the repaired art. Record both locations accurately.
-  #87 subsequently repaired those waits and merged while this record was
-  being finalized. Preserve its completed work and repeat `team`, then
-  the full suite on current main with refreshed live art. This art repair
-  adds no gameplay, source-art or test-assertion changes.
+- **Verify both merged slices with fresh art.** #87 merged while the
+  pre-#87 61/65 result was being recorded. Preserve all of its work and
+  #89's tournament slice, refresh the nine-item cache again, then run
+  `team` before the full suite. The four earlier failing checks now pass.
+  The final suite is 66/67 in 79m 48.48s, with no memory-limit/OOM events.
+  Both older verification records retain their original results.
+- **Keep the tutorial failure as a separate historical observation.**
+  `lessons` checked an absent arrow at step 3 while the villager was
+  still training. The runtime and test are identical to main `6c2fa146`;
+  this repair changes documentation only. Record the failure and the
+  focused unchanged-test follow-up (1/1 passed; none of its 104 art
+  requests used these nine items) without claiming the full suite was
+  all green. #93 replaced the tutorial during verification and already
+  records 69/69 with refreshed ordinary art plus its final focused checks.
+  Preserve that work and check the final integration; do not describe the
+  old failure as a #93 regression. Closing this art repair adds no
+  gameplay, source-art or test-assertion changes.
 
 ## 16 October 2026: verifying the building card and Menu
 

@@ -3,7 +3,7 @@
 Investigation on 16 October 2026, starting from main `002fcbeb`. This is
 the separate failure recorded under HANDOFF.md, task 1, not a regression
 from #87 or the tournament work. The original source art, game code and
-test assertions stay unchanged.
+test assertions stay unchanged by this art repair.
 
 **The repair required nine targeted exports.** The earlier proposal to
 refresh only `2075_elemental_red_god` does not cover the oversized art
@@ -18,7 +18,7 @@ entry in its shard log, and final uploads succeeded. The unrelated empty
 `1410_bahamut_heart.swf` still failed, as in the preceding workflow and as
 already documented in CLIENT.md.
 
-**All public-art checks pass; final #87 integration is being verified.**
+**Art follow-up closed on 16 October 2026, with final verification in #91.**
 All 20 public images pass both request modes. The owner confirmed
 purging exactly the listed URLs in Cloudflare's dashboard. On 16 October
 at **11:24:20–11:24:40 UTC**, each ordinary image URL was compared with
@@ -26,12 +26,13 @@ its `?repair=38885093455` version, first without Origin and then with
 `Origin: https://socialemperors.me` on both requests. All **40 comparisons
 passed**: SHA-256 bytes and actual WebP dimensions agree, dimensions match
 the freshly fetched JSON, and all files match the verified published
-export. The cold-cache `team` check passed, then the full browser suite
-finished **61/65**, including `team`, with the four previously documented
-failing test names listed below. No additional export, bucket change or
-purge was made. No owner-operated step remains. #87 merged while this record was being
-finalized, so a fresh `team` → full-suite run on its integrated code is
-underway before #91 closes the follow-up.
+export. After merging #87, the cache was refreshed again: `team` passed
+alone in **52 seconds** and in the full suite in **42 seconds**. The final
+suite finished **66/67 in 79m 48.48s**, with a separate tutorial-arrow
+failure described below. No memory-limit or OOM event occurred. No
+additional export, bucket change or purge was made after the owner's
+purge report. No owner-operated step remains. The earlier 61/65 result
+below predates #87 and is retained as historical evidence.
 
 ## Publication and CDN verification
 
@@ -88,7 +89,7 @@ it, inspect that run and establish its expected files first. Refresh the
 local test cache only after both modes pass. A browser pass using
 cache-busted bodies does not verify ordinary URLs.
 
-## Final integration after #87 merged
+## Verification after #87, before #93
 
 #87 merged as main `6c2fa146` at 12:51 UTC, while #91's final documentation
 was being prepared. It includes the card/Menu changes and repairs for
@@ -102,11 +103,71 @@ and the eight other cached main manifests matched the new public ones.
 See [#87's delivery record](verification-87.md). Those observations belong
 to its checkout; this art-repair checkout has the fully verified 40 files.
 
-All #87 changes are preserved. This branch is refreshing the nine-item
-cache and repeating `team`, then all 67 browser tests, on current main.
-The results below retain their original tested commits; the 61/65 result
-is not being relabelled as a pass or as the final integrated result.
-No further export, bucket operation or Cloudflare purge is involved.
+All #87 changes are preserved. Tested integrated runtime: main
+`6c2fa146`, merged at `4f2f969ad6125444aadc88e018c7a80556067822`; the full
+run started at `a2cfe59a` after a documentation-only clarification.
+The native #87 browser helper now supports this environment's proxy, so
+the earlier networking preload is no longer used. A scratch observer
+only logged requests during the focused `team` check; the full suite
+uses the standard `node e2e/run.mjs` command.
+
+At **12:58:41 UTC**, all 40 active cache files for the nine items were
+moved to another evidence backup, with no `art/sheets/` override. `team`
+then fetched ordinary live files and **passed 1/1 in 52 seconds**
+(**57.2 seconds with build/startup**). Every repaired file was requested
+once and all 40 hashes match the CDN audit. The three screenshots show
+the selected army with its original artwork; the server log has no HTTP
+errors or exceptions. Peak anonymous/shared/kernel memory was **3.56
+GiB** (3,827,306,496 bytes), or **7.52 GiB** including file cache, from a
+4.18-GiB whole-environment baseline. No memory-limit/OOM events occurred.
+
+The final suite ran **13:00:41–14:20:30 UTC**: all **67 tests** ran once,
+**66 passed and `lessons` failed**, in **79m 48.48s** including build,
+startup and cleanup. `team` passed in **42 seconds**. Construction,
+scripted-bosses, siege and walking all passed with #87's fixes; market,
+survival and tournaments passed too. All **188 screenshots** were
+reviewed. The server log has no HTTP errors or exception markers. All
+40 repaired cache files still have the verified public hashes, and no
+local `art/sheets/` exists.
+
+Peak anonymous/shared/kernel memory was **3.76 GiB** (4,039,917,568 bytes),
+or **7.75 GiB** including file cache (8,325,226,496 bytes), from a
+4.26-GiB whole-environment baseline. Memory was sampled every 0.5 seconds
+across the environment; this is not a per-browser RSS figure. All cgroup
+memory-event deltas were zero, including memory-limit, OOM and OOM-kill
+events. The 6.5-GiB anonymous/shared/kernel guard did not fire.
+
+Server checks passed **429 run: 420 passed, 9 existing skips**, 66.3
+seconds (67.8 with startup). Client types and **348 unit tests passed**,
+25.4 seconds together; the browser-runner build passed. The earlier
+results below retain their original commits; 61/65 is not relabelled as
+the final result, and this 66/67 run is not described as all green.
+
+### Separate tutorial observation on pre-#93 code
+
+`lessons` failed after 22 seconds at `e2e/tests/lessons.mjs:30`, called
+from line 49: **the arrow points somewhere (step 3)**. The test was at
+its Train-button call, while the game had already advanced to step 3.
+The failure screenshot shows the villager still training (three seconds
+remaining), with its artwork loaded. This is a different failure from
+the art-loading memory problem and from the four pre-#87 failures.
+The runtime and test match main `6c2fa146`; this repair changes only
+documentation. At **14:21:16–14:24:22 UTC**, the unchanged focused test
+**passed 1/1 in 179 seconds** (3m 6.45s including build/startup). None of
+its **104 art requests** used the nine repaired items. All three
+screenshots and the clean server log were inspected. Peak
+anonymous/shared/kernel memory was **1.00 GiB** (5.23 GiB with file
+cache, 4.54-GiB baseline), with no memory-limit/OOM events. The exact
+cause of the intermittent arrow/step mismatch was not established.
+No assertion, timeout or gameplay behavior was changed for this check.
+
+#93 merged as main `73998ffc` at 14:03:36 UTC, while the 67-test run was
+still using `6c2fa146`. It replaces the tutorial flow and its browser
+checks. The old arrow observation is historical evidence, not a claimed
+failure of #93. Its separate verification records 69/69 with refreshed
+ordinary art, followed by 4/4 checks for its final tutorial corrections.
+The final documentation merge preserves that work and checks its team,
+tutorial and tournament integration separately.
 
 ## Browser verification with the fresh published files
 

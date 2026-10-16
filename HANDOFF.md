@@ -26,9 +26,10 @@ next agent knows where to start.
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
   task 4, the shop details; its research below is retained. Task 6 remains
-  on hold. The nine-bundle art follow-up has verified all images in both
-  request modes; `team` passed and the pre-#87 suite finished 61/65. Its
-  final integration check on the new 67-test main is running before #91 merges.
+  on hold. **The nine-bundle art follow-up is closed in #91:** all images
+  match in both request modes, and `team` passes alone and in the full
+  suite. Final browser verification is **66/67**; the separate tutorial
+  observation is recorded under task 1 below.
 - **Verification for #87:** 429 server tests (420 passed, 9 existing
   skips), client types and all 348 unit tests passed. The integrated
   browser suite ran all 67 tests: 67 passed, 0 failed. Details and the
@@ -36,8 +37,8 @@ next agent knows where to start.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
-  separate art repair below has verified the public files and is checking
-  the final #87 integration.
+  separate art repair below has verified the public files and the final
+  #87 integration. No owner-operated art step remains.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
@@ -131,8 +132,8 @@ tutorial progress crossing the card, and late read responses restoring
 a login cookie after logout. The reported scripted battle timeout was
 124 of 150 quiet frames after 30 seconds, with nobody attacking; closing
 already-checked independent towns frees drawing time while retaining its
-original deadline and every assertion. The separate art issue remains a
-follow-up under task 1, not a claimed fix in #87.
+original deadline and every assertion. The separate art issue was not a
+claimed fix in #87; #91 closes it under task 1 with refreshed-cache checks.
 
 **Future concurrent checks:** use separate machines or cloud
 environments and separate checkouts of the same integrated commit. Each
@@ -180,7 +181,7 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate art follow-up: public files verified; final #87 integration checks running.**
+**Separate art follow-up: closed in #91 on 16 October 2026.**
 For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
 army loaded. It failed on its own too, in a fresh browser, reaching this
 machine's 8 GiB memory limit.
@@ -281,10 +282,39 @@ this record was being finalized. Its own 67/67 run retained a stale
 76-page red-god cache: `team` passed in 121 seconds at 8.00 GiB with
 886,334 memory-limit events (no OOM), so it did not verify the fresh art.
 That evidence remains in [its delivery record](docs/verification-87.md).
-This branch preserves all #87 work and is repeating a cache refresh,
-`team`, then the full 67-test suite on the new main before final merge.
-The earlier 61/65 and baseline results above remain historical checks,
-not the final integrated result.
+This branch preserves all #87 work. On main `6c2fa146` integrated at
+`4f2f969a` (documentation-only `a2cfe59a` at full-run start), the cache
+was refreshed again at **12:58:41 UTC**. `team` passed **1/1 in 52s**
+(57.2s with build/startup), with all 40 ordinary live files fetched once
+and hash-verified. Screenshots and server log passed review. Peak
+anonymous/shared/kernel memory was **3.56 GiB** (7.52 GiB with file
+cache), with no memory-limit/OOM events. The full suite ran
+**13:00:41–14:20:30 UTC**: **66/67 passed in 79m 48.48s**, including
+`team` in **42 seconds**. All four pre-#87 failing checks passed, as did
+market, survival and tournaments. Peak anonymous/shared/kernel memory
+was **3.76 GiB** (4,039,917,568 bytes), or **7.75 GiB** including file
+cache, from a 4.26-GiB baseline. No memory-limit/OOM events occurred and
+the guard did not fire. All **188 screenshots** and the clean server log
+were reviewed; all 40 repaired cache hashes still match. Server checks:
+**429 run, 420 passed, 9 existing skips**, 67.8 seconds including startup;
+client types and all **348 tests passed**, 25.4 seconds together.
+The earlier 61/65 and baseline results above remain historical checks.
+
+**Separate current-main tutorial observation:** `lessons` failed after
+22 seconds at line 30, called from line 49, with **the arrow points
+somewhere (step 3)**. At the test's Train-button call the game had already
+advanced to step 3; the screenshot shows the villager still training,
+with artwork loaded. The runtime/test match main `6c2fa146` and are
+unchanged by this repair. At **14:21:16–14:24:22 UTC**, the unchanged
+focused test **passed 1/1 in 179s** (3m 6.45s with startup/build), with
+**1.00 GiB** peak anonymous/shared/kernel memory (5.23 GiB including
+file cache), no memory events, and all three screenshots/clean server
+log reviewed. None of its **104 art requests** used the repaired items.
+The exact intermittent cause was not established. #93 merged while the
+full run used the older code and subsequently replaces this tutorial
+flow; this is not a claimed #93 failure. Do not confuse it with the
+closed memory failure or call the 66/67 run all green. No game rule or
+test assertion was changed by the art repair.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [x]
 
