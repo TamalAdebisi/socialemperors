@@ -2173,6 +2173,49 @@ seconds, with a 30-second limit. Game time can run behind real time when
 Chromium draws without a graphics card; the saved stand must still be at
 least three seconds long.
 
+### Tournaments: list and team
+
+The first tournament slice opens from Battle (World on a phone), from
+level 15 and while `TOURNAMENT_ACTIVATED` is on. `rules/tournaments.ts`
+keeps the list and selection rules; `ui/tournaments.ts` draws the panel
+and phone sheet, and `main.ts` connects the town, saves and server.
+
+- **Everyday, Weekly and Your own** show the game's tournament pictures,
+  entry costs, the server's chosen everyday/friends' prizes, weekly
+  availability/countdown and friends' rooms. Already-entered weekly
+  tournaments are hidden, as in Flash. Refresh asks the server again;
+  a failed request offers Retry and the classic link.
+- **Help** uses the original words and current banned-unit names. It
+  opens the first time, recorded as `set_help_map ["tournamentHelp"]`.
+- **Your Team** has twenty places. The editor offers owned units from
+  the town, buildings, warehouse and town storage (not gifts), strongest
+  first and within each unit's limit. It excludes civilians and banned
+  units. Adding uses the first empty place; removing returns one copy;
+  Reset clears the selection. Save checks current ownership and the
+  configured dragon/god/colossus cap. The shared editor keeps that cap
+  even for a player planning to enter the weekly tournament, as Flash
+  did; the weekly entry exception remains in the classic entry flow.
+- **Same save and commands:** opening the list prunes unavailable saved
+  units and silently saves the remaining team, as the original does.
+  Editing saves `set_attack_team ["tournament", JSON-string-of-20-ids]`,
+  with zeros for empty places. It never changes `teams.quest` or removes
+  owned units. Help and teams use the command queue; the list uses the
+  original `tournaments/get_tournament_info.php` service envelope.
+- **Later slices remain playable in classic:** entry, waiting rooms,
+  matches, results/ranking/prize collection, and creating/inviting
+  friends. A current tournament opens a status and Continue link without
+  editing its team, leaving it or clearing its results. Classic links
+  flush pending commands before navigating. There are no fee or room
+  mutations in this slice, and the classic-only goal count is unchanged.
+
+`e2e/tests/tournaments.mjs` checks desktop and phone, the real saved help
+and teams, counts from storage/warehouse/buildings, caps and exclusions,
+retry, the classic link, an existing server room and weekly reuse. Rule
+and protocol tests sit beside their modules. `tests/test_tournaments.py`
+also checks that browsing and saving never charge or enter a room.
+The originals were read locally; behavioral notes are in
+`docs/original/rules/tournaments.md`.
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

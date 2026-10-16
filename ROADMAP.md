@@ -387,7 +387,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] Survival in the new client: the window with its lives and arenas,
         the army of 30, the waves and bosses round the relic, the results
         ([CLIENT.md](CLIENT.md#survival))
-  - [ ] Tournaments in the new client
+  - [ ] Tournaments in the new client: list, first-time help and team
+        selection built ([CLIENT.md](CLIENT.md#tournaments-list-and-team));
+        waiting rooms, matches, results/prizes and friends' creation later.
+        Those stages remain available through classic links.
   - [x] Arthur's lessons in the new client, all 32 steps, ending with the
         dragon nest and the choice of a draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))

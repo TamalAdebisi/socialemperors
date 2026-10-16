@@ -281,6 +281,21 @@ lent units are counted rightly, nothing counts after an island is decided,
 units on the border walk home rather than being sold, a walled-off order
 frees its unit.
 
+## Tournaments: first slice
+
+- [x] Everyday, weekly and friends' tournament lists, server-selected
+      advertised prizes, weekly availability and the level/config gate.
+- [x] Original help, shown once and saved with `tournamentHelp`.
+- [x] Tournament team of twenty: owned units inside buildings, in storage
+      and the warehouse as well as standing in town; banned units,
+      per-unit limits, strongest-first choices and the shared editor's
+      combined dragon/god/colossus limit. Separate tournament team save.
+- [ ] Waiting rooms, battle execution, results/ranking/prizes and
+      creating/inviting friends' tournaments: retain classic access.
+
+The last islands' team-source gap above remains separate; this slice
+does not change the quest picker. See `docs/original/rules/tournaments.md`.
+
 ## Not for Beta 1
 
 **Later:** collections, the units book, offer packs, markets for allies,
