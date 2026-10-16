@@ -25,8 +25,9 @@ next agent knows where to start.
 - **Task 1 is complete in #86**, with a separate art-loading failure
   recorded below for follow-up. All **nine stale art bundles have now
   been exported**, under the owner's subsequent authorization. The CDN
-  mismatch was also resolved: all 40 ordinary public files verified at
-  11:18 UTC. The full browser run is in progress. The
+  mismatch was also resolved: all 20 images verified at 11:24 UTC in
+  both plain and Origin-header requests. A cold-cache `team` run passed;
+  the subsequent full browser run is in progress. The
   owner requested merging the two wait
   fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
   those are implemented but still awaiting browser verification and merge.
@@ -206,27 +207,42 @@ now reference 20 pages; fresh published images fetched with a cache-busting
 query verify at **987.84 MiB decoded**, with animation lengths, bounds,
 origins and frame rates preserved.
 
-**The CDN was initially inconsistent:** ordinary image URLs returned old
-Cloudflare `HIT` responses whose dimensions disagree with the new JSON.
-A request-side `no-cache` header did not refresh them. The exact remaining
-step was a targeted Cloudflare purge of
-[these 20 image URLs](docs/team-art-cache-purge.txt), or waiting for the
-24-hour cache lifetime to expire. This environment has no Cloudflare
-access; the owner coordinated that step with Opus. At **11:18 UTC**, all
-40 ordinary JSON/WebP responses were independently fetched and matched
-the verified fresh files byte for byte. No further export or purge is
-pending. Other checkouts must still refresh affected files in
-`.tools/art-cache/art/`; also check for local `art/sheets/` overrides.
-With the freshly published image bodies in the isolated cache,
-`team` passed in **41 seconds**, using **3.44 GiB** peak
-anonymous/shared/kernel memory (4.84 GiB including file cache), with no
-memory-limit/OOM events. File hashes, requests, screenshots and server log
-were checked. The full browser suite is running with these same files;
-a final cold-cache `team` check will follow it. Keep stale local-cache
-failures distinct from new #87 or tournament regressions. See
-[the repair notes](docs/art-loading-repair.md)
-for evidence and exact checks. No source art, game code or test assertion
-was changed.
+**The CDN was initially inconsistent:** all 20 ordinary WebP URLs served
+old cached images alongside new JSON. The owner subsequently confirmed
+purging exactly [these 20 URLs](docs/team-art-cache-purge.txt) in the
+Cloudflare dashboard. No further export, bucket deletion or purge was
+performed. On **16 October, 11:24:20–11:24:40 UTC**, each ordinary image
+was compared with its `?repair=38885093455` version both without Origin
+and with `Origin: https://socialemperors.me`. **All 40 comparisons passed:**
+SHA-256 bytes and actual WebP dimensions agree, dimensions match the JSON,
+and all files match the verified fresh export. Plain ordinary requests
+were `HIT` (Age 369–400 seconds); Origin ordinary requests were `MISS`
+(Age absent). Every Last-Modified was the new 16 October upload.
+[The per-response audit](docs/team-art-cdn-verification-2026-10-16.json)
+records hashes, dimensions, CF-Cache-Status, Age and Last-Modified for
+both addresses in both modes. No stale URLs remain to recheck after the
+owner's 17 October 10:45 UTC expiry fallback.
+
+**Final browser verification, in the requested order:** at 11:25:07 UTC,
+all 40 active cache files for these nine items were moved aside; there
+was no local `art/sheets/`. On `efcb4d242760d273f20ab0c36d20052cbd17a7f1`
+(runtime identical to main `36b2f277`, including #89), `team` fetched the
+ordinary live files and **passed 1/1 in 48 seconds** (53.7 seconds with
+build/startup). All 40 cache hashes match and each file was requested
+once. Screenshots show the original artwork and the server log has no
+HTTP errors or exceptions. Peak anonymous/shared/kernel memory was
+**3.55 GiB** (5.75 GiB including file cache); no memory-limit/OOM events
+occurred. The full **65-test** browser suite started afterwards at 11:26
+UTC; its result is pending.
+
+The earlier cache-busted-files `team` pass (41 seconds, 3.44 GiB peak)
+and the stopped full run are historical evidence, not the final ordered
+verification. Other checkouts must refresh these nine items in
+`.tools/art-cache/art/` and avoid local `art/sheets/` overrides before
+classifying a recurrence. Keep stale-cache failures distinct from new
+#87 or tournament regressions. See [the repair notes](docs/art-loading-repair.md)
+for commands, timing and memory methodology. No source art, game code
+or test assertion was changed by this repair.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 

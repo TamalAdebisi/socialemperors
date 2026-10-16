@@ -67,9 +67,13 @@ them can be found and reversed. The big, agreed decisions are in
   or cache expiry, and keep the ordinary-URL verification open until
   their bytes agree. Tests using freshly downloaded, cache-busted images
   are identified separately. No Cloudflare access is available here; the
-  owner coordinated that step with Opus. At 11:18 UTC, independent GETs
-  of all 40 ordinary JSON/WebP URLs matched the verified published files,
-  resolving the CDN mismatch without a code change.
+  owner confirmed purging only those 20 URLs. At 11:24 UTC, all 20
+  ordinary images byte-matched their `?repair=38885093455` versions both
+  without Origin and with `Origin: https://socialemperors.me`; actual
+  dimensions match the new JSON. Per-response hashes and cache headers
+  are recorded in the linked repair notes. No additional export, bucket
+  deletion or purge is needed. Refresh the nine-item local test cache,
+  then run `team` before the full suite, preserving every assertion.
 
 ## 16 October 2026: standing authorization to build and merge
 

@@ -283,8 +283,9 @@ by the island before the team picker; refreshing the selected unit alone
 is insufficient. With subsequent owner authorization, Codex ran the
 targeted **Export art to R2** workflow for all nine. Cloudflare initially
 served old cached WebP images alongside the new manifests. After the
-owner coordinated the cache step, all 40 ordinary JSON/WebP URLs verified
-against the fresh export at 11:18 UTC. No further export or purge is
+owner purged the 20 image URLs, all images verified against the fresh
+export at 11:24 UTC, both without Origin and with
+`Origin: https://socialemperors.me`; their dimensions match the JSON. No further export or purge is
 pending for these items. The
 workflow inputs, purge list, cache refresh and verification are in
 [the art repair notes](docs/art-loading-repair.md). A browser test's disk
