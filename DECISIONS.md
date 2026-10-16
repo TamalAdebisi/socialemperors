@@ -76,6 +76,12 @@ them can be found and reversed. The big, agreed decisions are in
   position assertions stay in place. Walking waits for arrival, bounded
   at 15 seconds per destination, before checking the server's save;
   #89's separate main run also reproduced the old fixed-wait failure.
+- **Keep the art follow-up separate from this delivery.** The owner's
+  export completed during verification, and all nine public manifests
+  now show the smaller page counts. The current run retains its cached
+  76-page main bundle; no cache was changed mid-run. Even a pass does not
+  close the image-consistency and refreshed-cache verification still due
+  under #90. This delivery did not operate the live workflow or bucket.
 
 ## 16 October 2026: tournament list and team selection
 

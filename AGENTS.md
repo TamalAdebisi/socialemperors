@@ -84,8 +84,14 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
+- **Latest full verification (#87):** all 67 browser tests passed in
+  **80m 30.65s**, including the build, on the machine below. Server:
+  429 run (420 passed, 9 existing skips); client types and all 348 passed.
+  [The delivery record](docs/verification-87.md) has the exact code commit,
+  screenshots reviewed and individual timings. The separate art-memory
+  follow-up remains open for refreshed-cache public-art verification.
 - Run the tests for what you touched while you work, and the whole lot
-  before a pull request is merged. On 16 October 2026, the 64 browser
+  before a pull request is merged. For #86 on 16 October 2026, the 64 browser
   tests took **64 minutes 51 seconds**, including the build, on a cloud
   machine with 2 CPUs and 8 GiB of memory (Python 3.13.5, Node 24.19.0,
   Playwright 1.56.1). 63 passed; `team` hit the memory limit while loading

@@ -1468,6 +1468,7 @@ The phone test checks those tools stay tappable and checks both upgrade
 taps against the save. Code: `ui/actions.ts` (the card),
 `rules/card.ts` (what each kind shows) and `rules/upgrade.ts` (both with
 tests), `TownEditor.select`. Test: `e2e/tests/card.mjs`.
+Full integrated verification: [#87 delivery record](docs/verification-87.md).
 
 **What it shows**, left to right, as the original (our notes, our words):
 
