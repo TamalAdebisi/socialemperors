@@ -31,6 +31,10 @@ export interface SaveMap {
   timestampLastTreasure?: number;
   /** Help from neighbours waiting for their donkey carts: { "u<pid>": [[x, y, building], ...] }. */
   receivedAssists?: Record<string, unknown>;
+  /** The market (rules/market.ts): purchases minus sales by good, trades so far, the last one's time. */
+  resourcesTraded?: Record<string, number>;
+  numTradesDone?: number;
+  timestampLastTrade?: number;
 }
 
 /** A storage box as the save keeps it: { "<item id>": count }, or a list of counts by item id. */

@@ -89,6 +89,10 @@ export const ICONS = {
   "open-nest": new URL("./art/open-nest.webp", import.meta.url).href,
   "open-gate": new URL("./art/open-gate.webp", import.meta.url).href,
   "close-gate": new URL("./art/close-gate.webp", import.meta.url).href,
+  // The market (ui/market.ts): its card's button, a trade's card and its button.
+  "open-market": new URL("./art/open-market.webp", import.meta.url).href,
+  "market-card": new URL("./art/market-card.webp", import.meta.url).href,
+  "market-button": new URL("./art/market-button.webp", import.meta.url).href,
   // The nests' window (ui/nest.ts).
   "nest-button": new URL("./art/nest-button.webp", import.meta.url).href,
   "nest-marker": new URL("./art/nest-marker.webp", import.meta.url).href,

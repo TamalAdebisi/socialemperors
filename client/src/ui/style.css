@@ -2747,6 +2747,90 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
+/* ---- The market (ui/market.ts) ------------------------------------------------ */
+/* The game's six trade cards, buying along the top and selling below, each
+   laid out as the original's: the lot and its good, the price in gold, the
+   button. Sizes follow the card's width (cqw), so phones get the same card. */
+.market-trades {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 8px;
+}
+
+.market-trade {
+  container-type: inline-size;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  aspect-ratio: 400 / 317;
+  padding: 7% 8% 7%;
+  background: center / 100% 100% no-repeat;
+}
+
+.market-lot,
+.market-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqw;
+  margin: 0;
+  color: #000;
+  font-family: var(--round);
+  font-weight: 900;
+}
+
+.market-lot b {
+  font-size: 14cqw;
+}
+
+.market-lot img {
+  height: 30cqw;
+  max-width: 46cqw;
+  object-fit: contain;
+}
+
+.market-price b {
+  font-size: 12cqw;
+}
+
+.market-price img {
+  height: 12cqw;
+}
+
+.market-do {
+  width: 66%;
+  aspect-ratio: 300 / 85;
+  padding: 0;
+  border: 0;
+  background: center / 100% 100% no-repeat;
+  color: #000;
+  font: 900 11cqw var(--round);
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+}
+
+/* The original's buttons grew under the mouse. */
+.market-do:hover {
+  transform: scale(1.07);
+}
+
+.market-do:active {
+  transform: scale(0.96);
+}
+
+.market-left {
+  margin: 4px 0 0;
+  color: #000;
+  text-align: center;
+  font: 900 16px var(--round);
+}
+
+.market-left b {
+  font-size: 20px;
+}
+
 /* ---- The nests (ui/nest.ts) ------------------------------------------------ */
 /* The original window's parts down the panel: the progress bar, this step's
    picture, the button and the countdown, the row of dragons, Hire friends.

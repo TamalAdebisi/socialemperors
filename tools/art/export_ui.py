@@ -114,6 +114,10 @@ PICTURES = {
     "name-band": ("PopUpNameTownMC@2", 0, 800),
     "name-save": ("PopUpNameTownMC/saveButt", 0, 300),
     "name-cancel": ("PopUpNameTownMC/cancelButt", 0, 300),
+    # The market: its card's button, a trade's card (its wooden frame), and the trade's button without its word.
+    "open-market": ("EP_Market_MC/btMarket", 0),
+    "market-card": ("ButtonMarketMC@1", 0, 400),
+    "market-button": ("ButtonMarketMC/btnBuy@1", 0, 300),
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),

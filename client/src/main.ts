@@ -44,8 +44,10 @@ import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
+import { MarketWindow } from "./ui/market.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
+import { marketRules, readMarket } from "./rules/market.ts";
 import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
@@ -251,6 +253,24 @@ async function start(): Promise<void> {
     let goalKeeper: GoalKeeper | undefined;
     // The level-up window, the game's words in it; from level 36 each level gives mana too.
     const line = (id: number, fallback: string) => lines.get(id) ?? fallback;
+    // The market (ui/market.ts): its numbers from the config, the town's trading so far from the save.
+    const trading = marketRules((config.globals ?? {}) as Record<string, unknown>);
+    const market = new MarketWindow({
+      town, rules: trading, state: readMarket(info.map, trading, clock()), clock,
+      words: {
+        buy: line(607, "Buy"), sell: line(608, "sell"), tradesLeft: line(839, "Trades left today:"),
+        noTrades: line(183, "Market resources have been exhausted. Come back in 24 hours to trade more!"),
+        noGoods: line(184, "You don't have enough wood to sell!"),
+      },
+      send: (command) => commands.add(command.cmd, ...command.args),
+      changed: () => hud.update(town),
+      traded: (good, amount) => doings.traded(good, amount),
+      tell: (text) => editor.tell(text),
+      bank: (why) => {
+        editor.tell(why);
+        void bank.open();
+      },
+    });
     const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
     const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
     const levelWindows = new LevelUpWindows(
@@ -286,7 +306,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return graves.windowOf(placed);
+        return market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();

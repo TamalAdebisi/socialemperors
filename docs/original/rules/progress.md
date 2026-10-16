@@ -110,8 +110,8 @@ second.
 - Opening it closes the other window of its sort if one is open (the
   market, for one), and redraws the open shop's cards for the new level
   rather than closing the shop; message windows stay. *Ours: the shop
-  redraws its cards (`client/src/editor.ts`, `levelUp`); there's no market
-  window yet to close.*
+  redraws its cards (`client/src/editor.ts`, `levelUp`); the market's
+  panel stays open beside the level-up window, as every panel does.*
 - At home, every level up rolls the raids again as if the town had just
   opened: from level 25 one chance in 10 of a siege, stampede or army by
   level band, and the bandit bands from levels 10, 15 and 20 (the details
@@ -299,7 +299,7 @@ check counts the player's own things.
   since "Select several units, as in the Flash client"; until then the
   goal was left to the classic game.*
 - Other kinds played only in the classic game for now: the market's
-  trades (65, 66, 72) and its friends (51), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
+  friends (51; its trades, 65, 66 and 72, count here since "The market"), all trolls beaten (42), camp quests on the map (43, 75, 93, 113,
   129, 142, 152, 162, 164, 172, 185, 192, 205, 209), player battles and
   spying (59, 67, 78, 79, 94, 132, 161), the defence plan (60), social
   buildings staffed (53, 71, 90, 96, 104, 115, 122, 150, 159, 170, 176,
@@ -469,21 +469,25 @@ check counts the player's own things.
 
 - The market's window (from the market building) trades wood, stone and
   food for gold, in lots of 100, 200 or 300 by the market's level (I, II,
-  III; the troll markets the same). *Ours: missing (PARITY.md: in Beta
-  1); the server has `market.py`.*
+  III; the troll markets the same). *Ours: same, from "Visit Market" on
+  the card, in the panel (`client/src/ui/market.ts`, DECISIONS.md, 16
+  October 2026).*
 - Price of a lot: the base per 100 (wood 100, stone 150, food 100 gold)
   times the lot over 100, plus 2% of that for each purchase so far,
   rounded; a sale pays three quarters of that, rounded. The count goes up
   one per purchase and down one per sale, kept between -25 and 200 (the
-  town's `resourcesTraded`). *Ours: missing; `market.py` uses the same
-  sums.*
+  town's `resourcesTraded`). *Ours: same (`client/src/rules/market.ts`);
+  `market.py` uses the same sums.*
 - 20 trades, shown as "trades left"; the count is set back to 0 when the
   town loads more than 20 hours after the last trade. Trading with none
   left, buying without the gold or selling without the goods each gives a
-  warning. *Ours: missing.*
+  warning. *Ours: same, with the game's words; selling names the right
+  good (the game's line always said wood); buying without the gold opens
+  the bank.*
 - Each trade sends `trade_resource_b` (town, resource, 1 sell or 0 buy,
   amount), adds or takes gold and the goods on screen, and feeds the three
-  market goals while they are open. *Ours: missing.*
+  market goals while they are open. *Ours: same (`market-trade` in
+  `client/src/rules/goals.json`).*
 
 ## Trades with cash inside the game
 
@@ -655,6 +659,7 @@ so.
     `client/src/rules/goals.json` though the kind is built. (checked
     twice)
 21. **The market** (missing), with goals 51, 65, 66, 72. (checked twice)
+    *Fixed since "The market" (goal 51, friends for the market, stays classic).*
 22. **The second town and travelling** (missing). (checked twice; the
     warnings below level 20 skimmed)
 23. **Renaming** (missing). (checked twice)

@@ -1049,9 +1049,11 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
   open goals' kinds only).
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
-- Goals about battles, quests, the market, the social buildings and
-  capturing animals say they're played in the classic game for now (76 of
-  the 227); the server keeps them done whichever client does them.
+- Goals about battles, quests, the social buildings and the like say
+  they're played in the classic game for now (59 of the 227); the server
+  keeps them done whichever client does them. The market's three (buy 200
+  stone, buy 100 wood, sell 100 wood) count the trades made while they're
+  open, in any number of trades, as the original counts them.
 
 **The bonuses** (the server pays from the same config, `daily_bonus.py`,
 `monday_bonus.py`, `comeback_bonus.py`):
@@ -1320,6 +1322,39 @@ changes its copy as the server does, so the window is right without a
 reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
 the dragon got, the friends' list and the monster nest opened, with checks
 on the server's save.
+
+### The market
+
+Built with Beta 1's parity list. A market (the first, second or third,
+the trolls' too; not the Allies' Market, a social building with its own
+window) has **Visit Market** on its card, the original's button. Its
+window, in the panel like every window here (`ui/market.ts`; the rules in
+`rules/market.ts`, with tests), has six of the game's trade cards: buying
+wood, stone and food along the top, selling them below, as the original
+lays them out. Each card has the lot (100, 200 or 300 by the market's
+level), the good, the price in gold and the button, with the game's words
+("Buy", "sell", "Trades left today:"). Below them, the trades left.
+
+- **Prices**, as the original and the server's `market.py` work them out:
+  the config's base for 100 (wood and food 100 gold, stone 150) times the
+  lot, plus 2% of that for each purchase so far (each sale takes 2% off),
+  rounded; a sale pays three quarters of the price. The count is kept
+  between 25 sales and 200 purchases, by good.
+- **20 trades**, then the game's "Market resources have been exhausted"
+  until 20 hours after the last trade; the count starts again then (as the
+  town loads, as in the original, or at the next trade if the window has
+  stayed open that long, as the server does).
+- A trade is at once: the town's gold and goods change, every card's price
+  changes, and `trade_resource_b` (town, good, 1 sell or 0 buy, lot) goes
+  with the town's other commands. Selling more than the town has gives the
+  game's "You don't have enough wood to sell!", naming the right good;
+  buying without the gold opens the bank, as the original opened its gold
+  window.
+- The save keeps the counts in the town (`resourcesTraded`,
+  `numTradesDone`, `timestampLastTrade`), so a reload shows the same.
+
+Test: `e2e/tests/market.mjs` trades until no trades are left, with both
+warnings, the server's save, the three goals done, a reload and a phone.
 
 ### Step 4: battles
 

@@ -140,7 +140,7 @@ dock"), so these come with a mockup first.
 ## Your calls (15 October 2026)
 
 - [ ] **The troll town** (a second town, from level 20): in Beta 1. L
-- [ ] **The market** (trading wood, food and stone; three goals need it): in
+- [x] **The market** (trading wood, food and stone; three goals need it): in
       Beta 1. M
 - **The Daily News window**: left out. It showed Social Point's news,
   offers for cash and a few tips; there's no news to show now.

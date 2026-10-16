@@ -76,6 +76,24 @@ test("goal 41, the square tool: done when it's taken up", () => {
   assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 1, of: 1 });
 });
 
+test("goals 65, 66 and 72, the market: bought 200 stone, bought 100 wood, sold 100 wood, in any number of trades", () => {
+  const goals = readGoals([{ id: 65, title: "", reward: 130 }, { id: 66, title: "", reward: 132 }, { id: 72, title: "", reward: 144 }],
+    data.goals as unknown as Record<string, Need>);
+  const [stone, wood, sell] = [65, 66, 72].map((id) => goals.get(id)!);
+  const doings = new Doings();
+  const done = (goal: typeof stone) => progress(town(), goal, doings, 0, ITEMS)!.done;
+  doings.traded("s", 100);
+  doings.traded("w", -100);
+  assert.deepEqual([done(stone), done(wood), done(sell)], [0, 0, 1], "100 stone of 200; wood sold, not bought");
+  doings.traded("s", 100);
+  doings.traded("w", 200);
+  assert.deepEqual([done(stone), done(wood), done(sell)], [1, 1, 1]);
+  const listening = new Doings();
+  listening.listen(["collect-kind"]);
+  listening.traded("s", 300);
+  assert.equal(listening.bought.size, 0, "counted only while a market goal is open");
+});
+
 test("battles and the like are for the classic game", () => {
   assert.equal(progress(town(), { id: 79, title: "", description: "", reward: 1, need: ["classic"] }, new Doings(), 0, ITEMS), null);
 });

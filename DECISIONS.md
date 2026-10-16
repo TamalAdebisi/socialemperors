@@ -4,6 +4,22 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: the market
+
+- **In the panel, not a window in the middle.** The original's market
+  was a window over the town; ours opens in the panel like every other
+  building's window (the menus' layout the owner picked), with the
+  game's own trade cards and words inside.
+- **The warning names the right good.** The game's line for selling
+  more than the town has always said "wood" (the text had no place for
+  the good); ours says food or stone when it's those.
+- **Buying without the gold opens the bank,** with "Not enough gold: it
+  takes ...", as every purchase here does; the original opened its own
+  gold window.
+- **A day's trades can start again while the window is open,** if 20
+  hours pass since the last trade: the server already counts that way;
+  the original waited for the next load.
+
 ## 16 October 2026: naming the empire
 
 - **The way in is the level at the top.** The Flash client's top bar
