@@ -48,7 +48,7 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
-  if (!wild || !camp || !dock) {
+  if (!lessons || !wild || !camp || !dock) {
     await player.readSettings();
   }
   if (!dock) {
@@ -65,13 +65,10 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
     // starts the 4-hour wait for the next.
     await player.send([{ cmd: "collect_treasure", args: [0, 1, 3, 0, 0, 0] }]);
   }
+  // Other feature tests start with the tutorial completed in their fixture.
+  // Fresh-player tutorial tests keep the real mandatory flow.
+  if (!lessons) await player.send([{ cmd: "complete_tutorial", args: [33] }]);
   await player.open();
-  // A new player is asked about Arthur's lessons first; most tests skip them, as a player may.
-  if (!lessons) {
-    const sent = page.waitForResponse((r) => r.url().endsWith("/command.php"));
-    await player.press("Skip them");
-    await sent;
-  }
   return player;
 }
 

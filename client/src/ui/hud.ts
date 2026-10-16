@@ -93,7 +93,6 @@ export function showHud(town: Town, actions: HudActions): Hud {
       <a class="button tiny gold" data-home href="/client.html" hidden>Back home</a>
       <button class="hud-sound" type="button" data-music hidden></button>
       <button class="hud-sound" type="button" data-effects hidden></button>
-      <a class="button tiny gold" data-classic href="">Classic game</a>
       <button class="button tiny gold" type="button" data-fullscreen>Full screen</button>
     </div>`;
   const who = (t: Town) => (t.townName ? `${t.name} · ${t.townName}` : t.name);
@@ -132,7 +131,6 @@ export function showHud(town: Town, actions: HudActions): Hud {
     }
   };
   update(town);
-  bar.querySelector<HTMLAnchorElement>("[data-classic]")!.href = actions.classicUrl;
 
   // Music and sound: the Flash client's own buttons, a note and a speaker, crossed out when off.
   const sound = actions.sound;

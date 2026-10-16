@@ -120,7 +120,13 @@ def do_command(USERID, cmd, args, previous=None):
         print(shop.gold_statue(save, towns.current(save)))
 
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
-        print(tutorial.reached(save, args[0]))
+        print(tutorial.reached(save, args[0], args[1] if len(args) > 1 else None))
+
+    elif cmd == "tutorial_knight":
+        print(tutorial.training_knight(save, args[0], args[1]))
+
+    elif cmd == "claim_tutorial_reward":
+        print(tutorial.claim_reward(save, args[0], args[1], args[2]))
     
     elif cmd == Constant.CMD_MOVE:
         ix = args[0]

@@ -113,7 +113,8 @@ export default async function tournaments({ newPlayer }) {
   assert.match(await page.locator(".tournament-countdown").textContent(), /Ends in \d+d \d\d:\d\d:\d\d/);
   await player.press("Your own");
   assert.match(await page.locator(".tournament-cards").textContent(), /No friends' tournaments/);
-  assert.equal(await page.getByRole("link", { name: "Create in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.ok(await page.locator(".tournament-unavailable").count());
 
   // Read-only fixtures for closed schedules and a friend's card, with text treated as text.
   await page.route(servicePath, async (route) => {
@@ -129,7 +130,8 @@ export default async function tournaments({ newPlayer }) {
   await player.shot("own-desktop");
   await player.press("Weekly");
   assert.match(await page.locator(".tournament-countdown").textContent(), /Available on 0d 00:01:/);
-  assert.equal(await page.getByRole("link", { name: "View in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.ok(await page.locator(".tournament-unavailable").count());
   await page.unroute(servicePath);
 
   // A malformed response gives retry and the working classic route; retry really reads again.
@@ -169,7 +171,8 @@ export default async function tournaments({ newPlayer }) {
   await open();
   await page.waitForSelector(".tournament-current");
   assert.match(await page.locator(".tournament-current").textContent(), /ready/);
-  assert.equal(await page.getByRole("link", { name: "Continue your tournament in classic", exact: true }).getAttribute("href"), player.settings.classicUrl);
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
+  assert.ok(await page.locator(".tournament-unavailable").count());
   assert.equal(await page.locator(".tournament-team-box").count(), 0);
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, joined.tournament.tournament_id);
   await player.shot("existing-room");
@@ -180,9 +183,6 @@ export default async function tournaments({ newPlayer }) {
   await player.press("Weekly");
   assert.equal(await page.locator(".tournament-card").count(), 0, "an entered weekly tournament stays hidden after leaving");
 
-  // Follow the real link only after a new team save: the classic page has the same empire.
   await player.press("Your own");
-  await page.getByRole("link", { name: "Create in classic", exact: true }).click();
-  await page.waitForURL(/ruffle\.html$/);
-  assert.ok((await page.content()).includes(player.settings.userId));
+  assert.equal(await page.getByRole("link", { name: /classic/i }).count(), 0);
 }

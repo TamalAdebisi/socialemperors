@@ -41,6 +41,7 @@ export class Camera {
   private zoomAround: Point | null = null;
   /** Glide after a drag, in screen pixels per millisecond. */
   private velocity: Point = { x: 0, y: 0 };
+  private flight: { from: Point; to: Point; elapsed: number; duration: number } | null = null;
   private readonly pointers = new Map<number, Point>();
   private recentMoves: { t: number; x: number; y: number }[] = [];
   private pinchDistance = 0;
@@ -91,6 +92,7 @@ export class Camera {
     this.canvas = canvas;
     canvas.style.touchAction = "none";  // the page mustn't scroll or zoom itself under our fingers
     canvas.addEventListener("pointerdown", (e) => {
+      this.flight = null;
       canvas.setPointerCapture(e.pointerId);
       this.pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
       if (this.pointers.size === 1) {
@@ -178,7 +180,16 @@ export class Camera {
     const dx = (this.held("ArrowRight") - this.held("ArrowLeft")) * step;
     const dy = (this.held("ArrowDown") - this.held("ArrowUp")) * step;
     if (dx || dy) {
+      this.flight = null;
       this.panScreen(dx, dy);
+    }
+    if (this.flight) {
+      const f = this.flight;
+      f.elapsed = Math.min(f.duration, f.elapsed + ms);
+      const t = f.elapsed / f.duration;
+      const ease = t * t * (3 - 2 * t);
+      this.centre = { x: f.from.x + (f.to.x - f.from.x) * ease, y: f.from.y + (f.to.y - f.from.y) * ease };
+      if (t === 1) this.flight = null;
     }
     // Glide: the drag's speed, fading.
     if (this.pointers.size === 0 && (this.velocity.x || this.velocity.y)) {
@@ -206,10 +217,22 @@ export class Camera {
 
   /** Put a point of the map in the middle of the screen. */
   lookAt(point: Point): void {
+    this.flight = null;
     this.centre = { ...point };
     this.velocity = { x: 0, y: 0 };
     this.apply();
   }
+
+  /** Guide the eye to an objective, leaving room for the tutorial and its controls. */
+  panTo(point: Point, screen: Point, duration = 700): void {
+    const to = { x: point.x + (this.width / 2 - screen.x) / this.zoom,
+      y: point.y + (this.height / 2 - screen.y) / this.zoom };
+    this.velocity = { x: 0, y: 0 };
+    if (duration <= 0) this.lookAt(to);
+    else this.flight = { from: { ...this.centre }, to, elapsed: 0, duration };
+  }
+
+  get panning(): boolean { return this.flight !== null; }
 
   /** How big the map is drawn: 1 is the art's own size. */
   get scale(): number {

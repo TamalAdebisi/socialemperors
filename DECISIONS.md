@@ -4,6 +4,36 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: mandatory tutorial and hiding the classic choices
+
+- **The owner explicitly asked for a clearer tutorial over exact fidelity.**
+  Keep Arthur, the game's pictures, the town actions and original reward.
+  Rewrite instructions around one action at a time, remove repeated goal
+  windows, pan smoothly, mark destinations and honour reduced motion.
+  The tutorial is mandatory in the home town; there is no Skip choice.
+  Other feature menus wait until the dragon is saved.
+- **Save objectives on the server, including the final tree count.** A
+  browser-local flag cannot complete an unsaved task. Step 32 is a pending
+  dragon choice; step 33 means its whole gift was saved. Claim the nest and
+  chosen dragon once in one server command, so a lost answer and retry do
+  not duplicate either. Put gifts in storage if the map has no room.
+  Preserve legacy reports and already completed old saves; old skipped or
+  interrupted tutorials resume. New empires receive their own tutorial.
+- **Recovery should not require starting over.** Restore selections and
+  placement after reload, provide Show me, wait for construction, and
+  advance the farming lesson only after its worker actually enters.
+  Only an enemy defeat advances combat. If the player has no soldier left
+  during that lesson, offer one free training knight; villagers never
+  qualify, existing soldiers prevent another, and later steps cannot claim
+  it. This small rule change prevents an impossible mandatory lesson.
+- **Hide the classic choices, without removing its routes or save support.**
+  Play on the empire page opens the new client. Remove classic links from
+  its HUD and unfinished feature windows. Features still being built say
+  so. Keep concurrent tournament and Menu work when integrating main.
+- **Fresh tutorial browser tests use real fresh towns.** Other feature
+  tests explicitly start with a completed tutorial fixture, rather than
+  relying on a Skip button that players no longer have.
+
 ## 16 October 2026: tournament list and team selection
 
 - **This slice browses and prepares; entry stays in classic.** The list

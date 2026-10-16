@@ -1,9 +1,5 @@
-// Arthur's lessons in the new client (CLIENT.md, "Arthur's lessons"): the
-// Flash client's tutorial, step by step (rules/lessons.ts), on the town as
-// it is. Each step points at what to tap, waits for the player to do it
-// (the editor tells what they do), and is reported to the server as the
-// Flash client reports it. At the end the town gets the dragon nest and a
-// draggy of the player's choice.
+// Arthur's mandatory lessons: guidance, recovery and the saved first-dragon
+// reward. Objectives live in rules/lessons.ts; see CLIENT.md.
 
 import type { CommandSender } from "./net/commands.ts";
 import type { TownEditor } from "./editor.ts";
@@ -12,10 +8,11 @@ import { freeSpotNear } from "./rules/dock.ts";
 import { isOpenLand, takenTiles } from "./rules/editing.ts";
 import { unitPoint, type Point } from "./rules/geometry.ts";
 import {
-  DRAGGIES, DRAGGY_NEAR, DRAGON_NEST, LAST_STEP, LIGHT_KNIGHT, MARKED_TREES, NEST_GIFT_STEPS, NEST_NEAR, STEPS, SUBCAT, TREES_TO_CUT,
-  moves, pageOf, passes, stepReached, type LessonEvent, type Target,
+  DRAGGIES, DRAGGY_NEAR, DRAGON_NEST, LAST_STEP, REWARD_STEP, LESSONS_DONE, LIGHT_KNIGHT, MARKED_TREES, NEST_GIFT_STEPS, NEST_NEAR, STEPS, SUBCAT, TREES_TO_CUT,
+  moves, pageOf, passes, stepReached, type LessonEvent, type Target, type TutorialCheckpoint, fightingUnit,
 } from "./rules/lessons.ts";
-import { DRAGON_NEST as DRAGON_NEST_KIND, readNest, writeNest } from "./rules/nest.ts";
+import { inConstruction } from "./rules/construction.ts";
+import { workState } from "./rules/production.ts";
 import type { PlacedItem, Town } from "./rules/town.ts";
 import { chooseDraggy, nestReminder } from "./ui/draggy.ts";
 import { GOAL_WINDOW_EVENT } from "./ui/goalWindow.ts";
@@ -37,8 +34,9 @@ export interface LessonParts {
   thumbnail: (item: ItemInfo) => string;
   /** The save's privateState, where the nest's steps are kept (rules/nest.ts). */
   privateState: Record<string, unknown>;
-  /** Where this browser keeps the step it's at (to carry on after a reload); null forgets it. */
-  remember: (step: number | null) => void;
+  clock: () => number;
+  panning: () => boolean;
+  rewardSaved: () => Promise<boolean>;
   /** The lessons are over: what comes after (the goals, the carts...). */
   finished: () => void;
 }
@@ -59,6 +57,10 @@ export class Lessons {
   private running = true;
   /** When the camera last went to a target Arthur covered. */
   private uncovered = 0;
+  private recovering = false;
+  private transitioning = false;
+  private rewardQueued = false;
+  private guidance = "";
   /** Where a unit half hidden behind something can still be tapped, found again twice a second (`tappable`). */
   private spotted: { unit: PlacedItem; at: Point; until: number } | null = null;
   /** Where the arrow points now (the browser tests tap there, as a player would). */
@@ -66,7 +68,10 @@ export class Lessons {
 
   constructor(parts: LessonParts, from: number) {
     this.parts = parts;
-    this.view = new LessonsView(() => this.hear({ kind: "next" }));
+    this.view = new LessonsView(() => this.hear({ kind: "next" }), () => void this.help());
+    this.felled = (parts.privateState.tutorial as TutorialCheckpoint | undefined)?.trees ?? (from === REWARD_STEP ? TREES_TO_CUT : 0);
+    document.body.classList.add("tutorial-active");
+    this.lockMenus(true);
     parts.editor.listeners.push((event) => this.hear(event));
     let goals = false;
     onPanelChange((panel) => {
@@ -82,6 +87,7 @@ export class Lessons {
       this.hear({ kind: (e as CustomEvent<{ open: boolean }>).detail.open ? "goals" : "closed" });
     });
     this.go(from);
+    this.restore();
     const frame = () => {
       if (this.running) {
         this.follow();
@@ -97,12 +103,17 @@ export class Lessons {
   }
 
   private go(step: number): void {
+    if (step === LAST_STEP && this.felled >= TREES_TO_CUT) step = REWARD_STEP;
     this.step = step;
+    this.pointing = null;
     this.spot = undefined;
-    if (step > 0) {
-      this.parts.commands.add(stepReached(step).cmd, ...stepReached(step).args);
+    this.guidance = "";
+    this.view.helpLabel();
+    this.checkpoint();
+    if (step === REWARD_STEP) {
+      this.finish();
+      return;
     }
-    this.parts.remember(step);
     const lesson = STEPS[step];
     const words = (w: number | string) => (typeof w === "number" ? this.parts.line(w).replace("#0#", "Arthur").trim() : w);
     this.view.say(words(lesson.title), words(lesson.text), pageOf(step), lesson.next);
@@ -123,44 +134,84 @@ export class Lessons {
         this.parts.editor.showInShop(item);
       }
     }
-    if (passes(step)) {
+    if (step >= 11 && step <= 13 && !this.thing({ kind: "enemy" })) {
+      queueMicrotask(() => this.go(14));
+    } else if (passes(step)) {
       queueMicrotask(() => this.go(step + 1));
     }
+    this.follow();
   }
 
   private hear(event: LessonEvent): void {
-    if (!this.running) {
+    if (!this.running || this.transitioning) {
       return;
     }
     if (this.step === LAST_STEP) {
       if (event.kind === "felled" && event.resource.subcategory === SUBCAT.tree) {
-        this.felled++;
+        this.felled = Math.min(TREES_TO_CUT, this.felled + 1);
+        queueMicrotask(() => this.checkpoint());
         this.view.counter(`Trees chopped ${this.felled}/${TREES_TO_CUT}`);
         if (this.felled >= TREES_TO_CUT) {
-          this.finish();
+          this.transitioning = true;
+          queueMicrotask(() => { this.transitioning = false; this.go(REWARD_STEP); });
         }
       }
       return;
     }
     if (moves(this.step, event)) {
-      this.go(this.step + 1);
+      const from = this.step;
+      this.transitioning = true;
+      // Placement/training/collection finish their commands after emitting.
+      // Checkpoint only after that work, in the same ordered command batch.
+      queueMicrotask(() => {
+        this.transitioning = false;
+        if (this.step !== from) return;
+        if (event.kind === "placed") this.parts.editor.lessonReset();
+        this.go(this.step + 1);
+      });
     }
   }
 
   /** Every screen frame: the arrow on its target, and the markers on the trees. */
   private follow(): void {
     const lesson = STEPS[this.step];
-    const at = this.screenPoint(lesson.target);
+    if (!lesson) return;
+    if (this.step === 26) {
+      const farm = this.thing({ kind: "farm" });
+      if (farm && workState(farm, this.parts.clock())?.status === "ready") { this.go(27); return; }
+    }
+    let target = lesson.target;
+    let text = String(lesson.text);
+    const selected = this.parts.editor.lessonSelected;
+    if ([4, 5, 25, 31].includes(this.step) && selected?.item.subcategory !== SUBCAT.villager) {
+      target = { kind: "villager" };
+      text = "Select a villager first, then follow the arrow to the next action.";
+    }
+    const farm = this.step === 25 ? this.thing({ kind: "farm" }) : null;
+    if (farm && inConstruction(farm, Date.now())) {
+      target = { kind: "none" };
+      text = "Your farm is being built. Keep your villager selected; I'll point to the farm when it is ready.";
+    }
+    const guidance = `${target.kind}:${text}`;
+    if (guidance !== this.guidance) {
+      this.guidance = guidance;
+      this.view.say(String(lesson.title), text, pageOf(this.step), lesson.next);
+      const map = this.mapPoint(target);
+      if (map) this.parts.lookAt(map);
+    }
+    const at = this.screenPoint(target);
     // A thing that has walked (or come out) under Arthur: the camera goes to it, once a second at most.
     const now = performance.now();
-    if (at && this.view.covers(at) && now - this.uncovered > 1000) {
-      const map = this.mapPoint(lesson.target);
+    if (at && !this.parts.panning() && this.view.covers(at) && now - this.uncovered > 1500) {
+      const map = this.mapPoint(target);
       if (map) {
         this.parts.lookAt(map);
         this.uncovered = now;
       }
     }
     this.pointing = at;
+    this.view.destination(at, target.kind === "ground" ? "Move here" : target.kind === "tile" ? "Build here" : "", this.parts.panning());
+    if (this.step >= 11 && this.step <= 13 && !this.thing({ kind: "knight" })) this.view.helpLabel("Get a training knight");
     const dim = this.step === 0 || this.step === 14 ? "all" : at === null ? "none" : "around";
     this.view.point(at, dim);
     this.view.mark(this.step === LAST_STEP ? this.markedTrees().map((tree) => this.parts.screenOf(this.middle(tree))) : []);
@@ -203,7 +254,7 @@ export class Lessons {
     };
     switch (target.kind) {
       case "train":
-        return button(".actions .picture-button.train");
+        return button(".card-train-button, .actions .picture-button.train");
       case "build":
         return button('.menus button[aria-label="Build"]');
       case "goals":
@@ -294,7 +345,7 @@ export class Lessons {
       case "tree":
         return near((p) => p.item.subcategory === SUBCAT.tree);
       case "knight":
-        return near((p) => p.item.id === LIGHT_KNIGHT) ?? near((p) => p.item.isUnit && p.item.attack > 0 && p.item.race === town.race);
+        return near((p) => p.item.id === LIGHT_KNIGHT) ?? near((p) => fightingUnit(p.item) && p.item.race === town.race);
       case "enemy":
         return near((p) => p.item.isUnit && p.item.attack > 0 && p.item.race !== town.race && p.item.race !== "a" && p.item.race !== "n");
       case "farm":
@@ -346,59 +397,115 @@ export class Lessons {
     return this.parts.screenOf(unitPoint(x, y));
   }
 
-  /** The third tree down: the lessons are over. The nest, then the draggy. */
+  private checkpoint(): void {
+    const command = stepReached(this.step, this.felled);
+    this.parts.commands.add(command.cmd, ...command.args);
+    this.parts.privateState.tutorial = { step: this.step, trees: this.felled };
+  }
+
+  private lockMenus(locked: boolean): void {
+    document.querySelectorAll<HTMLButtonElement>('.menus button:not([aria-label="Build"])').forEach((button) => { button.disabled = locked; });
+  }
+
+  /** Restore selections and unfinished placement; these are not server state. */
+  private restore(): void {
+    const { editor } = this.parts;
+    const select = (kind: Target["kind"]) => {
+      const unit = this.thing({ kind } as Target);
+      if (unit) editor.focusOn(unit);
+    };
+    if ([2, 23].includes(this.step)) select("hall");
+    if ([4, 5, 6, 25, 31].includes(this.step)) select("villager");
+    if ([12, 13].includes(this.step)) select("knight");
+    const target = STEPS[this.step]?.target;
+    if (target?.kind === "tile") {
+      const item = this.parts.items.get(target.id);
+      if (item && editor.lessonBuilding !== item.id) editor.startBuilding(item);
+    }
+    // Walking orders aren't saved until the worker arrives inside.
+    if (this.step === 26 && !this.thing({ kind: "farm" })?.unitsInside) {
+      this.go(25);
+      select("villager");
+    }
+  }
+
+  private async help(): Promise<void> {
+    if (this.recovering || this.step >= REWARD_STEP) return;
+    const { editor, town, commands, items, view } = this.parts;
+    if (this.step >= 11 && this.step <= 13 && !this.thing({ kind: "knight" })) {
+      const item = items.get(LIGHT_KNIGHT);
+      const hall = this.thing({ kind: "hall" });
+      const spot = item && freeSpotNear(town, item, { x: hall?.tx ?? 50, y: (hall?.ty ?? 50) + 3 });
+      if (!item || !spot) { editor.tell("Make room near your Town Hall for a training knight."); return; }
+      this.recovering = true;
+      commands.add("tutorial_knight", spot.x, spot.y);
+      if (await commands.flush()) {
+        const knight = this.place(item, spot);
+        void view.redraw(knight);
+        editor.lessonReset();
+        this.go(11);
+      } else editor.tell("The knight couldn't be saved. Reload to continue your lesson.");
+      this.recovering = false;
+    } else {
+      editor.lessonReset();
+      // A training timer lost on reload needs its Train button again.
+      if ([3, 24, 30].includes(this.step) && !this.thing({ kind: "villager" }) && !editor.lessonTraining) this.go(this.step < 20 ? 2 : 23);
+      if ([12, 13].includes(this.step)) this.go(11);
+      if (this.step === 6) this.go(5);
+      this.restore();
+      const target = STEPS[this.step].target;
+      if (target.kind === "card") {
+        const item = items.get(target.id);
+        if (item) editor.showInShop(item);
+      }
+      const at = this.mapPoint(target);
+      if (at) this.parts.lookAt(at);
+    }
+  }
+
+  private place(item: ItemInfo, spot: Point): PlacedItem {
+    const placed: PlacedItem = { item, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
+    this.parts.town.items.push(placed);
+    return placed;
+  }
+
+  /** Reward pending is a saved step. Only a saved claim completes the tutorial. */
   private finish(): void {
     this.running = false;
     this.view.remove();
-    this.parts.remember(null);
-    this.giveNest();
-  }
-
-  private giveNest(): void {
-    const { town, items, commands, view } = this.parts;
-    const nestItem = items.get(DRAGON_NEST);
-    let nest = town.items.find((p) => p.item.id === DRAGON_NEST) ?? null;
-    if (nestItem && !nest) {
-      const spot = freeSpotNear(town, nestItem, NEST_NEAR);
-      if (spot) {
-        nest = { item: nestItem, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
-        town.items.push(nest);
-        commands.add("buy", DRAGON_NEST, spot.x, spot.y, 0, town.id, 1, 1, "b");
-        // The first egg starts at 7 of 10, as the Flash client gives it (sent as the text "0").
-        for (let i = 0; i < NEST_GIFT_STEPS; i++) {
-          commands.add("next_step", "0");
-        }
-        const egg = readNest(DRAGON_NEST_KIND, this.parts.privateState);
-        writeNest(DRAGON_NEST_KIND, this.parts.privateState, { ...egg, step: egg.step + NEST_GIFT_STEPS });
-        void view.redraw(nest);
-      }
-    }
-    const draggies = DRAGGIES.map((id) => items.get(id)).filter((item): item is ItemInfo => Boolean(item));
-    const line = this.parts.line;
+    const draggies = DRAGGIES.map((id) => this.parts.items.get(id)).filter((item): item is ItemInfo => Boolean(item));
     chooseDraggy(draggies, this.parts.thumbnail,
-      { title: line(1403) || "FREE DRAGGY!!", header: line(1404) || "CONGRATULATIONS!!", line: line(1405), select: line(1406) || "Select" },
-      (item) => this.giveDraggy(item, nest));
+      { title: "Choose your first draggy", header: "Your empire is ready!", line: "Pick your companion. Your dragon nest is included.", select: "Select" },
+      (item) => this.giveDraggy(item));
   }
 
-  private giveDraggy(item: ItemInfo, nest: PlacedItem | null): void {
-    const { town, commands, view, editor } = this.parts;
+  private async giveDraggy(item: ItemInfo): Promise<boolean> {
+    if (this.rewardQueued) return false;
+    this.rewardQueued = true;
+    const { town, items, commands, view, editor, privateState } = this.parts;
+    const nestItem = items.get(DRAGON_NEST)!;
+    let nest = town.items.find((p) => p.item.id === DRAGON_NEST) ?? null;
+    const newNest = !nest && !town.store.get(DRAGON_NEST);
+    const nestSpot = !newNest ? null : freeSpotNear(town, nestItem, NEST_NEAR);
+    // Reserve its footprint when finding the dragon's spot, without drawing early.
+    if (nestSpot) nest = this.place(nestItem, nestSpot);
     const spot = freeSpotNear(town, item, DRAGGY_NEAR);
+    commands.add("claim_tutorial_reward", item.id, nestSpot ? [nestSpot.x, nestSpot.y] : null, spot ? [spot.x, spot.y] : null);
+    if (!await commands.flush() || !await this.parts.rewardSaved()) return false;
+    privateState.tutorial = { step: LESSONS_DONE, trees: TREES_TO_CUT, draggy: item.id };
+    if (newNest) Object.assign(privateState, { dragonNestActive: 1, stepNumber: NEST_GIFT_STEPS, dragonNumber: 0, timeStampTakeCare: -1 });
+    if (nestSpot) {
+      void view.redraw(nest!);
+    } else if (!nest && !town.store.get(DRAGON_NEST)) town.store.set(DRAGON_NEST, 1);
     if (spot) {
-      const draggy: PlacedItem = { item, tx: spot.x, ty: spot.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
-      town.items.push(draggy);
-      commands.add("buy", item.id, spot.x, spot.y, 0, town.id, 1, 1, "u");
+      const draggy = this.place(item, spot);
       void view.redraw(draggy);
       this.parts.lookAt(this.middle(draggy));
-    }
-    void commands.flush();  // at once, as the Flash client sends it
-    editor.tell(`${item.name} is yours!`);
-    const nestItem = nest?.item ?? this.parts.items.get(DRAGON_NEST);
-    if (!nestItem) {
-      this.parts.finished();
-      return;
-    }
-    setTimeout(() => nestReminder(nestItem, this.parts.thumbnail(nestItem), { title: this.parts.line(1408) || "Dragon Nest", text: this.parts.line(1409) },
-      () => this.showNest(nest)), 1500);
+    } else town.store.set(item.id, (town.store.get(item.id) ?? 0) + 1);
+    editor.tell(`${item.name} is yours!${spot ? "" : " Find your gift in Storage."}`);
+    this.step = LESSONS_DONE;
+    nestReminder(nestItem, this.parts.thumbnail(nestItem), { title: "Dragon Nest", text: nest ? "Your nest will help you raise more dragons. Select it whenever you're ready." : "Your nest is in Storage. Place it when you have room to raise more dragons." }, () => this.showNest(nest));
+    return true;
   }
 
   /** The reminder closed: the camera on the nest, the arrow on it a while. */
@@ -421,6 +528,8 @@ export class Lessons {
         arrow.remove();
       }, NEST_ARROW_MS);
     }
+    document.body.classList.remove("tutorial-active");
+    this.lockMenus(false);
     this.parts.finished();
   }
 }

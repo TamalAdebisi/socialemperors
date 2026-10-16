@@ -1296,53 +1296,44 @@ something of its kind is built.
 
 ### Arthur's lessons
 
-Built with "The switch". The Flash client gives Arthur's lessons (its
-tutorial) in a player's first town while `playerInfo.completed_tutorial`
-is 0. The new client now gives them too, the same way: 32 steps, each
-reported to the server as it's reached (`complete_tutorial`, the step), so
-both clients agree on how far a player got.
+The owner requested a mandatory, clearer tutorial after the first desktop
+playthrough. It starts automatically in the home town, with eight chapters,
+Arthur and the original pictures. Instructions name one action at a time.
+The camera pans to objectives (instant only for reduced-motion preferences),
+and a labelled ground marker makes walking and placement destinations clear.
+The final tree count sits inside the bubble. Other feature menus, goal
+notices and level-up windows wait until the reward is saved.
 
-- **The first half (steps 0 to 14)** is Arthur's own words from the game's
-  text: train a villager, walk it, cut a tree, build House I, send a knight
-  at a troll. **The second half (15 to 31)** walks through the first
-  goals: a farm, a villager to work it, its food collected, three marked
-  trees cut. The original showed no words there, only the arrow; ours adds
-  a line or two (DECISIONS.md).
-- **On screen** (`ui/lessons.ts`): Arthur and his speech bubble at the
-  right, the game's yellow arrow on what to tap, the screen dimmed around
-  it, red markers over the trees to cut and their count. All the game's
-  own pictures (`tools/art/export_ui.py`, the `tutor-*` entries). The
-  camera goes to each thing on the map, and again if it walks under
-  Arthur; an open goals window is closed by the player before going on.
-- **What moves a step on** is in `rules/lessons.ts` (with tests): the
-  town editor tells the lessons what the player did (`TownEditor.emit`:
-  selected, training, walk, harvest, felled, shop, placed...), and each
-  step says which of those it waits for. Buildings go where the original
-  puts them if that's free, otherwise the nearest spot that fits.
-- **A reload** carries on from the start of the lesson it was in
-  (`resumeAt`). The step is kept in the save and, for step 15, in the
-  browser too: 15 alone is also what skipping sends, so it only means
-  "under way" where this browser says so.
-- **At the end** the town is given the dragon nest (1233) for free, with
-  its first egg 7 of 10 steps along and no wait (the server's
-  `next_step` as a gift), and the window "FREE DRAGGY!!" offers three
-  draggies; the one chosen is placed for free. Then a reminder that the
-  nest gives more, and the arrow on it. Code: `lessons.ts` (the steps on
-  screen and the gifts), `ui/draggy.ts` (the two windows).
-- **Asked first.** A new player is asked at the bottom: **Take the
-  lessons** starts them; **Skip them** sends the report of step 15, as
-  the Flash client does when its first half is over. (The Classic game
-  link at the top opens the Flash game instead, where they start the
-  same way.) Skipping gives no
-  nest and no draggy. It asks on each visit until answered. While the
-  lessons run, the camps' story window and the first villager's welcome
-  wait.
+`rules/lessons.ts` describes objectives and matching editor events;
+`lessons.ts` restores selections, reopens placement and provides Show me.
+Construction must finish before the farm is a click target. Its lesson
+advances after the worker enters, rather than when a walking order starts.
+A ready crop is recognised after reload. Combat targets fighting units,
+never villagers, and waits for an enemy defeat. A lost army during this
+lesson can receive one replacement training knight through the server's
+presence-checked `tutorial_knight` command.
 
-Tests: `e2e/tests/lessons.mjs` plays all 32 steps by following the arrow,
-reloads part way, chooses the green draggy and checks the save (every step
-reported, the nest, the draggy, the egg's steps); `e2e/tests/classic.mjs`
-opens the lessons in the classic game instead; `tests/test_commands.py`
-checks the gift steps on the server.
+The server checkpoint `privateState.tutorial` stores the exact objective
+and the last task's tree count. Reports share the action's ordered command
+batch. Browser storage is not authoritative. The final choice is step 32;
+only `claim_tutorial_reward` completes step 33. This command saves the nest
+and chosen draggy once, including on request retries. A new nest starts
+at seven steps with no wait; existing nests retain their progress. A gift
+without map space goes into Storage. The choice stays open until a server
+read confirms completion. Interrupted old saves resume; saves already
+holding the old completed tutorial's nest and draggy remain completed.
+Legacy `complete_tutorial` reports remain supported.
+
+The empire page's Play opens the new client; classic-client choices and
+fallback links are hidden. The old routes and save compatibility remain.
+This is the owner's temporary UI change, not removal of the old client.
+
+Tests: `lessons`, `lessons-phone` play the full tutorial on fresh towns,
+including reloads and reward persistence; `lessons-recovery` covers a lost
+army, saved tree progress and a lost reward response. Camera and tutorial
+rules have unit tests; `tests/test_tutorial.py` verifies checkpoint ordering,
+reward retries, storage and legacy compatibility. `classic` still checks
+that the old route reads buildings saved by the new client.
 
 ### The nests
 

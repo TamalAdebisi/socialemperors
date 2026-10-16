@@ -40,7 +40,7 @@ function framed(picture: string, name: string): HTMLElement {
 
 /** "FREE DRAGGY!!": one of three, chosen with its Select; `chosen` hears which. */
 export function chooseDraggy(draggies: ItemInfo[], thumbnail: (item: ItemInfo) => string, words: { title: string; header: string; line: string; select: string },
-  chosen: (item: ItemInfo) => void): void {
+  chosen: (item: ItemInfo) => Promise<boolean>): void {
   const { box, body } = parchment(words.title, "choose");
   const header = document.createElement("p");
   header.className = "draggy-header";
@@ -60,9 +60,13 @@ export function chooseDraggy(draggies: ItemInfo[], thumbnail: (item: ItemInfo) =
     button.className = "button gold";
     button.textContent = words.select;
     button.setAttribute("aria-label", `${words.select} ${item.name}`);
-    button.addEventListener("click", () => {
-      box.remove();
-      chosen(item);
+    button.addEventListener("click", async () => {
+      row.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+      line.textContent = "Saving your draggy…";
+      try {
+        if (await chosen(item)) { box.remove(); return; }
+      } catch { /* The saved reward can be recovered after a reload. */ }
+      line.textContent = "Your gift couldn't be confirmed. Reload to continue; your saved choice will be kept.";
     });
     choice.append(slot, button);
     row.append(choice);

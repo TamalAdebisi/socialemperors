@@ -1,5 +1,12 @@
 # Parity: the new client against the Flash game
 
+Owner-requested tutorial usability pass: mandatory lessons, smooth camera
+pans, explicit movement/placement targets, reload recovery, soldier-only
+combat guidance and a saved first-dragon reward. This intentionally improves
+the original flow; original art and the reward are retained. Classic UI
+choices are hidden while its routes and shared saves remain compatible.
+
+
 What the new client still lacks, or does differently, compared with the
 original Flash client, for running a town (Beta 1). Made on 15 October 2026
 from two checks: five read-throughs of the Flash client's code, one per

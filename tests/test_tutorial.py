@@ -82,5 +82,71 @@ class TutorialTest(unittest.TestCase):
         self.assertEqual(self.where(sessions.new_village(self.account)), 15)
 
 
+    def checkpoint(self, step, trees=0):
+        do_command(self.first, "complete_tutorial", [step, {"trees": trees}])
+
+    def test_checkpoint_and_tree_count_survive_late_reports(self):
+        self.checkpoint(31, 2)
+        self.checkpoint(31, 1)
+        self.checkpoint(15)
+        self.assertEqual(sessions.session(self.first)["privateState"]["tutorial"], {"step": 31, "trees": 2})
+        self.assertEqual(self.where(sessions.new_village(self.account)), 0)
+
+    def test_reward_is_one_saved_gift_despite_retries(self):
+        self.checkpoint(32, 3)
+        for _ in range(3):
+            do_command(self.first, "claim_tutorial_reward", [698, [53, 52], [54, 55]])
+        save = sessions.session(self.first)
+        self.assertEqual(sum(item[0] == 1233 for item in save["maps"][0]["items"]), 1)
+        self.assertEqual(sum(item[0] == 698 for item in save["maps"][0]["items"]), 1)
+        self.assertEqual(self.where(self.first), 33)
+        self.assertEqual(save["privateState"]["stepNumber"], 7)
+        self.checkpoint(32, 3)
+        self.assertEqual(save["privateState"]["tutorial"]["step"], 33)
+
+    def test_reward_requires_final_trees_and_valid_choice_and_positions(self):
+        import copy
+        self.checkpoint(31, 2)
+        save = sessions.session(self.first)
+        before = copy.deepcopy(save)
+        do_command(self.first, "claim_tutorial_reward", [698, [53, 52], [54, 55]])
+        self.assertEqual(save, before)
+        self.checkpoint(32, 3)
+        before = copy.deepcopy(save)
+        for args in ([999, None, None], [698, [53, 52], [100, 55]], [698, [False, 52], None]):
+            do_command(self.first, "claim_tutorial_reward", args)
+            self.assertEqual(save, before)
+
+    def test_full_map_rewards_go_to_storage_without_losing_existing_egg(self):
+        import inventory
+        save = sessions.session(self.first)
+        save["maps"][0]["store"] = []
+        inventory.add_stored(save, 0, 1233)
+        save["privateState"]["stepNumber"] = 9
+        self.checkpoint(32, 3)
+        do_command(self.first, "claim_tutorial_reward", [710, None, None])
+        self.assertEqual(inventory._count(inventory.store(save, 0), 1233), 1)
+        self.assertEqual(inventory._count(inventory.store(save, 0), 710), 1)
+        self.assertEqual(save["privateState"]["stepNumber"], 9)
+
+    def test_missing_combat_unit_has_one_recovery_knight(self):
+        from get_game_config import get_attribute_from_item_id as attr
+        save = sessions.session(self.first)
+        town = save["maps"][0]
+        town["items"] = [item for item in town["items"] if not
+            (attr(item[0], "type") == "u" and str(attr(item[0], "race")) == "h"
+             and int(attr(item[0], "subcat_functional") or 0) != 71)]
+        before = len(town["items"])
+        do_command(self.first, "tutorial_knight", [50, 50])
+        self.assertEqual(len(town["items"]), before)
+        self.checkpoint(11)
+        for _ in range(3):
+            do_command(self.first, "tutorial_knight", [50, 50])
+        self.assertEqual(sum(item[0] == 512 for item in town["items"]), 1)
+        self.checkpoint(14)
+        do_command(self.first, "tutorial_knight", [51, 50])
+        self.assertEqual(sum(item[0] == 512 for item in town["items"]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

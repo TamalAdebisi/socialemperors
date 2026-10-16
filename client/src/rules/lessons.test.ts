@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { ItemInfo } from "./config.ts";
 import {
-  LAST_LESSON, LAST_STEP, STEPS, lessonsNotStarted, lessonsUnderWay, moves, pageOf, passes, resumeAt, skipLessons, stepReached,
+  LAST_STEP, STEPS, tutorialStart, moves, pageOf, passes, resumeAt, stepReached,
 } from "./lessons.ts";
 
 function item(fields: Partial<ItemInfo>): ItemInfo {
@@ -20,19 +20,20 @@ const TREE = item({ id: 70, subcategory: 125 });
 const HOUSE = item({ id: 1, subcategory: 111 });
 const KNIGHT = item({ id: 512, isUnit: true, subcategory: 79, attack: 10 });
 
-test("the lessons are offered in the first town until one is reported", () => {
-  assert.equal(lessonsNotStarted(0, 0), true);
-  assert.equal(lessonsNotStarted("0", 0), true);  // older saves keep it as text
-  assert.equal(lessonsNotStarted(undefined, 0), true);
-  assert.equal(lessonsNotStarted("3", 0), false);
-  assert.equal(lessonsNotStarted(15, 0), false);
-  assert.equal(lessonsNotStarted(0, 1), false);  // never in a second town, as in the Flash client
+test("fresh, partially completed and old skipped tutorials must finish", () => {
+  for (const progress of [0, "0", undefined, 3, 15, 31]) assert.notEqual(tutorialStart(progress, 0, {}, false, false), null);
+  assert.equal(tutorialStart(0, 1, {}, false, false), null);
+  assert.equal(tutorialStart(31, 0, {}, true, true), null);
+  assert.equal(tutorialStart(31, 0, {}, true, false), 32);
+  assert.equal(tutorialStart(33, 0, {}, false, false), null);
+  assert.equal(tutorialStart(31, 0, { tutorial: { step: 31, trees: 2 } }, true, true), 31);
+  assert.equal(tutorialStart(33, 0, { tutorial: { step: 33, trees: 3 } }, true, true), null);
 });
 
-test("skipping sends the Flash client's report of the first half; each step is reported", () => {
-  assert.deepEqual(skipLessons(), { cmd: "complete_tutorial", args: [LAST_LESSON] });
-  assert.deepEqual(stepReached(7), { cmd: "complete_tutorial", args: [7] });
-  assert.equal(STEPS.length, LAST_STEP + 1, "steps 0 to 31");
+test("checkpoints save the objective and tree count, including reward pending", () => {
+  assert.deepEqual(stepReached(31, 2), { cmd: "complete_tutorial", args: [31, { trees: 2 }] });
+  assert.deepEqual(stepReached(32, 3), { cmd: "complete_tutorial", args: [32, { trees: 3 }] });
+  assert.equal(STEPS.length, LAST_STEP + 1);
 });
 
 test("each step waits for its own doing", () => {
@@ -45,24 +46,18 @@ test("each step waits for its own doing", () => {
   assert.ok(passes(7), "the wood is the player's as the tree falls");
   assert.ok(moves(10, { kind: "placed", item: HOUSE, x: 50, y: 50 }), "the house anywhere it fits");
   assert.ok(moves(11, { kind: "selected", item: KNIGHT }));
-  assert.ok(moves(13, { kind: "death" }));
-  assert.ok(moves(14, { kind: "next" }) && !moves(14, { kind: "death" }));
-  assert.ok(!passes(16) && moves(16, { kind: "closed" }) && moves(21, { kind: "closed" }) && moves(29, { kind: "closed" }), "the goals read and closed");
+  assert.ok(moves(13, { kind: "death", enemy: true }));
+  assert.ok(moves(14, { kind: "next" }) && !moves(14, { kind: "death", enemy: true }));
+  assert.ok(!passes(16) && moves(16, { kind: "closed" }), "the goals read and closed");
   assert.ok(!passes(LAST_STEP), "the last step counts its trees");
-  assert.equal(pageOf(0), "0 of 7");
-  assert.equal(pageOf(13), "6 of 7");
-  assert.equal(pageOf(20), "");
+  assert.ok(!moves(11, { kind: "selected", item: item({ ...VILLAGER, attack: 5 }) }));
+  assert.ok(!moves(13, { kind: "death", enemy: false }));
+  assert.equal(pageOf(0), "1 of 8");
+  assert.equal(pageOf(13), "4 of 8");
+  assert.equal(pageOf(31), "8 of 8");
 });
 
-test("after a reload: carry on from the lesson's start; 15 alone is the first half done elsewhere", () => {
-  assert.equal(resumeAt(3), 1);
-  assert.equal(resumeAt(9), 8);
-  assert.equal(resumeAt(13), 11);
-  assert.equal(resumeAt(26), 20);
-  assert.equal(resumeAt(31), 30);
-  assert.equal(lessonsUnderWay(5, 0, null), true);
-  assert.equal(lessonsUnderWay(15, 0, null), false);
-  assert.equal(lessonsUnderWay(15, 0, 15), true);
-  assert.equal(lessonsUnderWay(31, 0, 31), false, "over");
-  assert.equal(lessonsUnderWay(5, 1, null), false);
+test("reload resumes the saved objective, including the reward choice", () => {
+  for (const step of [0, 3, 9, 13, 15, 26, 31, 32]) assert.equal(resumeAt(step), step);
+  assert.equal(tutorialStart(31, 0, { tutorial: { step: 32, trees: 3 } }, false, false), 32);
 });

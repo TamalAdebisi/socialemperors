@@ -62,7 +62,7 @@ export class WorldWindows {
   }
 }
 
-function window_(key: string, title: string, modes: Mode[], classicUrl: string): Panel {
+function window_(key: string, title: string, modes: Mode[], _classicUrl: string): Panel {
   const panel = new Panel(key, title, { className: "list-window" });
   const list = document.createElement("ul");
   list.className = "rows";
@@ -91,15 +91,15 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
         run();
       });
     } else {
-      play.href = classicUrl;
-      play.setAttribute("aria-label", `${mode.name}: ${mode.verb.toLowerCase()} in the classic game`);
+      play.textContent = "Coming soon";
+      play.setAttribute("aria-disabled", "true");
     }
     row.append(icon, text, play);
     list.append(row);
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Tournament matches continue in the classic game, on the same empire.";
+  note.textContent = "More tournament features are coming soon.";
   panel.body.append(list, note);
   return panel;
 }

@@ -65,7 +65,7 @@ export class TournamentWindow {
     this.editing = false;
     this.info = null;
     this.panel.title = "Tournaments";
-    this.panel.body.replaceChildren(text("p", "Loading tournaments…"), this.classic("Open tournaments in classic"));
+    this.panel.body.replaceChildren(text("p", "Loading tournaments…"), this.unavailable());
     this.panel.open();
     try {
       const info = await this.parts.info();
@@ -89,7 +89,7 @@ export class TournamentWindow {
     } catch {
       if (generation !== this.generation) return;
       this.panel.body.replaceChildren(text("p", "Couldn't load or save your tournament details. Please try again.", "tournament-error"),
-        button("Try again", () => void this.open()), this.classic("Open tournaments in classic"));
+        button("Try again", () => void this.open()), this.unavailable());
     }
   }
 
@@ -97,22 +97,8 @@ export class TournamentWindow {
     return this.parts.words(id).replace("#0#", String(value ?? "")).trim();
   }
 
-  /** Always flush before handing the same empire to classic. */
-  private classic(label: string): HTMLAnchorElement {
-    const link = text("a", label, "button small gold tournament-classic");
-    link.href = this.parts.classicUrl;
-    link.addEventListener("click", async (event) => {
-      event.preventDefault();
-      if (this.busy) return;
-      this.busy = true;
-      try {
-        if (await this.parts.flush()) location.assign(link.href);
-        else this.error("Your changes couldn't be saved. Reload before opening classic.");
-      } finally {
-        this.busy = false;
-      }
-    });
-    return link;
+  private unavailable(): HTMLElement {
+    return text("span", "Coming soon", "tournament-unavailable");
   }
 
   private render(resetScroll = false): void {
@@ -129,8 +115,8 @@ export class TournamentWindow {
       const kind = this.parts.rules.kinds.find((kind) => String(kind.id) === String(room.tournament_type_id));
       this.panel.body.append(text("h3", kind?.name ?? "Your tournament"),
         text("p", room.date_finished !== null ? "Your tournament has finished." : room.date_ready !== null ? "Your tournament is ready." : "Your tournament is waiting for players.", "tournament-current"),
-        this.classic("Continue your tournament in classic"),
-        text("p", "Waiting rooms, matches and results are played in the classic game, on the same empire.", "rows-note"));
+        this.unavailable(),
+        text("p", "Waiting rooms, matches and results are coming soon.", "rows-note"));
       return;
     }
     const bar = text("div", "", "tournament-tools");
@@ -149,7 +135,7 @@ export class TournamentWindow {
     if (!cards.length) list.append(text("li", this.tab === "weekly" ? "No weekly tournament available." : "No friends' tournaments waiting for you."));
     if (this.tab === "own") {
       const create = text("li", "", "tournament-card");
-      create.append(this.picture("tournament_friends.jpg"), text("strong", this.word(1263)), text("p", this.word(1266)), this.classic("Create in classic"));
+      create.append(this.picture("tournament_friends.jpg"), text("strong", this.word(1263)), text("p", this.word(1266)), this.unavailable());
       list.append(create);
     }
     const box = text("section", "", "tournament-team-box");
@@ -160,7 +146,7 @@ export class TournamentWindow {
       this.render(true);
     }));
     this.panel.body.append(bar, tabs, list, box,
-      text("p", "Entering, matches and results continue in the classic game. Your saved team is shared.", "rows-note"));
+      text("p", "Save your team now. Tournament entry and matches are coming soon.", "rows-note"));
     this.countdowns();
   }
 
@@ -195,8 +181,8 @@ export class TournamentWindow {
       timer.dataset.label = this.word(card.weekly.open ? 1260 : 1259);
       row.append(timer, text("p", this.word(1295)));
       // Rank/prize windows are a later slice, still reachable in classic.
-      row.append(this.classic(card.weekly.open ? "Enter / prizes in classic" : "View in classic"));
-    } else row.append(this.classic("Enter in classic"));
+      row.append(this.unavailable());
+    } else row.append(this.unavailable());
     return row;
   }
 

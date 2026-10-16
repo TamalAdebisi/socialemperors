@@ -1,5 +1,11 @@
 # Roadmap
 
+Tutorial repair in progress: mandatory home-town lessons, clearer guidance,
+smooth camera movement, recoverable progress and a confirmed first-dragon
+reward. Classic-client choices are hidden at the owner's request; its
+routes remain available. See CLIENT.md and DECISIONS.md.
+
+
 **Goal:** make Social Empires a complete, playable, free online game at
 [socialemperors.me](https://socialemperors.me). We keep all the original art,
 music and content, finish the features that never got a server, and over time

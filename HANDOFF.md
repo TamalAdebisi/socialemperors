@@ -19,6 +19,15 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Owner playthrough follow-up:** mandatory tutorial repair and hidden
+  classic choices on `codex/mandatory-tutorial`. The owner reported abrupt
+  camera jumps, unclear movement targets and villagers suggested for combat.
+  The owner authorizes clearer flow over one-to-one tutorial fidelity.
+  Desktop and phone browser verification, reloads and reward retries are
+  part of this slice. Keep #87's Menu/card and the other tournament/art
+  chats' work when integrating; do not restore classic fallback buttons.
+
+
 - **The first tournament slice is complete in #89:** everyday, weekly
   and friends' lists, help and the saved team box. Entry and later stages
   keep classic links. Task 7 below records its checks and the next slice.

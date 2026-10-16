@@ -16,9 +16,11 @@ export class LessonsView {
   private readonly arrow = document.createElement("div");
   private readonly hole = document.createElement("div");
   private readonly count = document.createElement("div");
+  private readonly help = document.createElement("button");
+  private readonly target = document.createElement("div");
   private readonly markers: HTMLImageElement[] = [];
 
-  constructor(onNext: () => void) {
+  constructor(onNext: () => void, onHelp: () => void = () => {}) {
     this.box.className = "lesson";
     this.box.setAttribute("role", "dialog");
     this.box.setAttribute("aria-label", "Arthur's lessons");
@@ -27,6 +29,7 @@ export class LessonsView {
     bubble.style.backgroundImage = `url("${ICONS["tutor-bubble"]}")`;
     this.title.className = "lesson-title";
     this.text.className = "lesson-text";
+    this.text.setAttribute("aria-live", "polite");
     const foot = document.createElement("div");
     foot.className = "lesson-foot";
     this.page.className = "lesson-page";
@@ -35,8 +38,12 @@ export class LessonsView {
     this.next.setAttribute("aria-label", "Next");
     this.next.innerHTML = `<img src="${ICONS["tutor-next"]}" alt="">`;
     this.next.addEventListener("click", onNext);
-    foot.append(this.page, this.next);
-    bubble.append(this.title, this.text, foot);
+    this.help.type = "button";
+    this.help.className = "button tiny lesson-help";
+    this.help.textContent = "Show me";
+    this.help.addEventListener("click", onHelp);
+    foot.append(this.page, this.help, this.next);
+    bubble.append(this.title, this.text, this.count, foot);
     const arthur = document.createElement("img");
     arthur.className = "lesson-arthur";
     arthur.src = ICONS["tutor-arthur"];
@@ -47,7 +54,9 @@ export class LessonsView {
     this.hole.className = "lesson-hole";
     this.count.className = "lesson-count";
     this.count.hidden = true;
-    document.body.append(this.hole, this.box, this.arrow, this.count);
+    this.target.className = "lesson-target";
+    this.target.hidden = true;
+    document.body.append(this.hole, this.box, this.arrow, this.target);
   }
 
   /** A step's words (none: the bubble goes) and whether it has a Next. */
@@ -57,10 +66,20 @@ export class LessonsView {
     this.text.textContent = text;
     this.page.textContent = page;
     this.next.hidden = !next;
+    this.help.hidden = next;
     if (next) {
       this.next.focus();
     }
   }
+
+  destination(at: Point | null, label: string, moving: boolean): void {
+    this.box.dataset.moving = String(moving);
+    this.target.hidden = !at || !label;
+    this.target.textContent = label;
+    if (at) this.target.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px)`;
+  }
+
+  helpLabel(label = "Show me"): void { this.help.textContent = label; }
 
   /**
    * Point at a spot of the screen (null: no arrow). `dim`: "around" the
@@ -115,7 +134,7 @@ export class LessonsView {
   }
 
   remove(): void {
-    for (const element of [this.box, this.arrow, this.hole, this.count, ...this.markers]) {
+    for (const element of [this.box, this.arrow, this.hole, this.count, this.target, ...this.markers]) {
       element.remove();
     }
   }
