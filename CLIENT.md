@@ -1458,7 +1458,9 @@ later; until then the classic game has it. Test: `e2e/tests/collections.mjs`.
 The card for the thing selected is the Flash client's info panel
 (RecuadroInfo), the owner's pick of the mockups (design A): the game's
 parchment at the bottom middle, 580 by 146 as there, and on a phone the
-same parts stacked above the dock. Code: `ui/actions.ts` (the card),
+same parts stacked above the dock, with room below for the pointer tools.
+The phone test checks those tools stay tappable and checks both upgrade
+taps against the save. Code: `ui/actions.ts` (the card),
 `rules/card.ts` (what each kind shows) and `rules/upgrade.ts` (both with
 tests), `TownEditor.select`. Test: `e2e/tests/card.mjs`.
 

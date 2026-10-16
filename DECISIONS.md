@@ -4,6 +4,21 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: verifying the building card and Menu
+
+- **The phone card leaves a row for the pointer tools below it.** The
+  taller parchment covered them in the browser screenshots. It now uses
+  the available width and sits above the tools, keeping the owner's
+  chosen card and dock layout.
+- **Lifting a finger keeps the upgrade price open.** Touch sends a
+  pointer-leave event before each click; clearing the preview there made
+  every tap act like the first. The second tap now completes the upgrade,
+  as the existing design intended, with a browser check of its saved cost.
+- **Browser checks use the environment's proxy when configured.**
+  Playwright does not pick it up itself; art requests otherwise fail in
+  this cloud environment. The throwaway game server stays on localhost.
+  No assertion or game rule changes for this setup.
+
 ## 16 October 2026: standing authorization to build and merge
 
 - **The owner authorizes autonomous delivery of the agreed roadmap,**

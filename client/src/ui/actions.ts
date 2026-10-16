@@ -444,7 +444,13 @@ export class ActionBar {
       holder.classList.remove("showing");
       upgrade.run();
     });
-    holder.addEventListener("pointerleave", () => holder.classList.remove("showing"));
+    holder.addEventListener("pointerleave", (event) => {
+      // A finger leaves after every tap, before click. Keep its first-tap
+      // preview so the next click can upgrade instead of reopening it.
+      if (event.pointerType !== "touch") {
+        holder.classList.remove("showing");
+      }
+    });
     holder.append(bubble, button);
     return holder;
   }

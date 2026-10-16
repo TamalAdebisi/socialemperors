@@ -89,5 +89,30 @@ export default async function card({ newPlayer }) {
   await phone.select(FARM.slice(1), "Farm Land");
   const box2 = await phone.page.locator(".actions.card").boundingBox();
   assert.ok(box2.x >= 0 && box2.x + box2.width <= 390, `the card fits the phone: ${JSON.stringify(box2)}`);
+  const tools = await phone.page.locator(".corner").boundingBox();
+  assert.ok(box2.y + box2.height <= tools.y, "the phone card leaves the pointer tools uncovered");
+  for (const selector of [".pointer-tool", ".square-tool"]) {
+    assert.ok(await phone.page.locator(selector).evaluate((button) => {
+      const box = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+    }), `${selector} can be tapped while the card is open`);
+  }
   await phone.shot("phone");
+  await phone.press("Close");
+
+  // A real touch: lifting the finger must keep the price open for the second tap.
+  await phone.send([{ cmd: "rt_level_up", args: [19] }]);
+  await phone.reload();
+  await phone.select(HOUSE.slice(1), "House II");
+  const touchUpgrade = phone.page.locator(".card-upgrade-button");
+  const beforeTouch = await phone.saved();
+  await touchUpgrade.tap();
+  assert.ok(await phone.page.locator(".card-upgrade.showing").count(), "the first tap keeps the price open after lifting the finger");
+  assert.ok(has(await phone.saved(), HOUSE_2, HOUSE.slice(1)), "the first tap does not buy the upgrade");
+  await phone.shot("phone-upgrade-price");
+  await touchUpgrade.tap();
+  const afterTouch = await phone.saved();
+  assert.ok(has(afterTouch, 3, HOUSE.slice(1)) && !has(afterTouch, HOUSE_2, HOUSE.slice(1)), "the second tap upgrades to House III");
+  assert.equal(afterTouch.wood, beforeTouch.wood + 3 - 120, "House II's refund and House III's price are saved");
+  await phone.shot("phone-upgraded");
 }

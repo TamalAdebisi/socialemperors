@@ -1507,6 +1507,9 @@ body {
     grid-template-columns: 76px 1fr auto;
     gap: 6px 8px;
     width: auto;
+    max-width: none;
+    /* The taller card needs its own space above the pointer tools. */
+    bottom: calc(var(--dock-h) + 70px);
     min-height: 0;
   }
   .card-main {

@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 
+// Playwright's requests do not pick up the shell's proxy automatically.
+// Cloud runners need it for the art bucket; the throwaway server stays local.
+const proxyServer = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+const network = proxyServer ? { proxy: { server: proxyServer, bypass: "localhost,127.0.0.1" } } : {};
+
 /**
  * Enough trees, rocks and wild animals for a town (rules/nature.ts), in the
  * wild corners at the top of the map: with them, none grow on the player's
@@ -33,6 +38,7 @@ const FULL_WILD = [
  */
 export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false } = {}) {
   const context = await browser.newContext({
+    ...network,
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
   });
@@ -180,6 +186,7 @@ export class Player {
   async onPhone() {
     const mine = this.page.context();
     const context = await mine.browser().newContext({
+      ...network,
       viewport: PHONE, deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: "en-US",
     });
     await context.addCookies(await mine.cookies());
