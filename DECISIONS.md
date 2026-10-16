@@ -30,6 +30,25 @@ them can be found and reversed. The big, agreed decisions are in
   or use a visible part of the selected picture. They keep the other
   agent's selection checks without hiding controls to click through them.
 
+## 16 October 2026: the team test's oversized art
+
+- **Repair the stale exports with the existing exporter.** The public
+  `2075_elemental_red_god` bundle predates the packing budget. Today's
+  unchanged exporter makes two pages rather than 76. A guarded local check
+  found eight more stale bundles loaded by the island, so the repair must
+  include all nine. No new resolution policy, loader change, gameplay
+  change or weaker test is justified by this failure. The original SWFs
+  stay intact. The existing export policy stores smaller pictures; for
+  two of these items it also holds each picture for two frames while
+  retaining the original animation length.
+- **The owner still operates the live art workflow.** Use all nine names
+  in **Make these again**, with **Make every sheet again** off. A local
+  replacement test is separate from verifying the public repair; refresh
+  the public files and local test cache, then run `team` and the full
+  suite. [The repair notes](docs/art-loading-repair.md) record the evidence
+  and exact steps. Do not repeat the known 76-page memory exhaustion just
+  to establish the same baseline.
+
 ## 16 October 2026: standing authorization to build and merge
 
 - **The owner authorizes autonomous delivery of the agreed roadmap,**

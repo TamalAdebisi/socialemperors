@@ -20,7 +20,9 @@ next agent knows where to start.
 ## Where things stand
 
 - **Task 1 is complete in #86**, with a separate art-loading failure
-  recorded below for follow-up. The owner requested merging the two wait
+  recorded below for follow-up. Its investigation now identifies **nine
+  stale art bundles**; the owner-operated export is still pending. The
+  owner requested merging the two wait
   fixes with that failure documented. Draft #87 contains tasks 2, 3 and 5;
   those are implemented but still awaiting browser verification and merge.
   #87 now includes `main` with both agents' work retained; its delivery
@@ -32,8 +34,8 @@ next agent knows where to start.
   tests now pass; `team` needs the separate art repair described in task 1.
 - **The live game,** socialemperors.me, has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
-  Nothing in the queue needs the live server, the database or the art
-  bucket.
+  Code work uses local servers and needs no live database access. The
+  separate art repair below needs the owner's export workflow.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
@@ -161,22 +163,50 @@ The full browser run took **64 minutes 51 seconds**, including the build:
 **63 of 64 passed**, with `team` the only failure. AGENTS.md records the
 machine and timing.
 
-**Separate follow-up: repair one existing art bundle.** `team` times out
-at `e2e/tests/team.mjs:38` while the selected army loads. It fails on its
-own too, in a fresh browser, reaching this machine's 8 GiB memory limit.
+**Separate follow-up: owner export of nine stale bundles still needed.**
+For #86, `team` timed out at `e2e/tests/team.mjs:38` while the selected
+army loaded. It failed on its own too, in a fresh browser, reaching this
+machine's 8 GiB memory limit.
 The current public `art/2075_elemental_red_god.json` names **76 sheets**:
 about **3.8 GiB** of decoded RGBA pixels, or **5.1 GiB** with mipmaps,
 before other graphics copies. This is separate from the two wait fixes;
 neither changes the team test, game code or art.
 
-The current packer (`tools/art/pack_sheet.py`) already limits an item to
-four sheets. The owner can run **Export art to R2**, with **Make these
-again** set to `2075_elemental_red_god` and **Make every sheet again** left
-off. Once the new manifest is served (the bucket's cache lasts up to a
-day), clear this item's old files from `.tools/art-cache/art/` on the
-test machine and rerun `team` and the full suite. The workflow is the
-owner's to start, as AGENTS.md says. No test was skipped or weakened to
-work around this failure.
+**Rechecked on 16 October from main `002fcbeb`:** the ordinary public URL
+still serves 76 pages at scale 1, last modified before the current packer
+was added. All 76 page manifests total 4,074,714,156 decoded RGBA bytes.
+An unchanged local export of the original SWF made two pages at scale
+0.25, step 2, about 124 MiB decoded, preserving animation lengths, bounds,
+origin and frame rate. **That one-item repair is insufficient:** a guarded
+browser run with it stopped before the team picker (`team.mjs:18`). The
+island loads eight more stale bundles, each with 5–20 pages, totalling
+another 3.88 GiB decoded. The current packer selects two or three pages
+for each. Full local source exports confirmed **20 pages, about 988 MiB
+decoded across all nine**, with every item within its existing four-page
+budget. The unchanged `team` test then **passed in 36 seconds**, with
+screenshots and server log inspected: peak anonymous/shared/kernel memory
+3.49 GiB (4.70 GiB including file cache), no memory-limit or OOM events.
+Each repaired manifest/image was requested once. Server tests ran 427
+(418 passed, 9 existing skips); client types, build and all 324 tests
+passed. No exporter, loader, gameplay or test change was needed. The
+browser helper's disk cache has no expiry, so a fresh browser alone will
+not refresh any of these bundles. This local replacement pass does not
+replace the recorded 63/64 public-art result or close its follow-up.
+
+The owner should run **Export art to R2** on **main**, with **Make these
+again** set to **all nine names** in
+[the art repair notes](docs/art-loading-repair.md), and **Make every sheet
+again** left off. The earlier `2075_elemental_red_god`-only proposal does
+not cover the island's other oversized art. The notes contain the exact
+repair, evidence, local verification and post-export checks. Wait for a
+consistent new manifest and images at their ordinary public URLs (cache
+lifetime up to a day), clear only those items' old files from
+`.tools/art-cache/art/`, and check for local `art/sheets/` overrides. Then
+rerun `team` and the full suite on the integrated main and inspect the
+screenshots. Until that public-art verification is recorded, this remains
+the known failure; do not mark it fixed or call it a new #87/tournament
+regression merely because it recurs. No live workflow or bucket was
+changed, and no assertion was skipped or weakened.
 
 ### 2. Beta 1: Upgrade on the building card (M) - [ ]
 
