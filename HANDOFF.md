@@ -26,8 +26,8 @@ next agent knows where to start.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
-    building card (upgrading, and what it shows), the shop's details, the
-    site's bar, and the run-through that closes the beta.
+    shop's details and the run-through that closes the beta (the building
+    card and the site's bar went in with #87).
   - **Beta 2, battles and quests:** built: combat, every island, spells,
     special moves, defending the town, camps, bosses, graveyards. Left: the
     special units' rarer moves, a short list of battle rules (PARITY.md,
@@ -104,7 +104,10 @@ now and then; neither is a bug in the game.
 - Keep what each test checks; only how it waits changes. Then run the
   whole suite and note how long it takes, for AGENTS.md.
 
-### 2. Beta 1: Upgrade on the building card (M) - [ ]
+### 2. Beta 1: Upgrade on the building card (M) - [x]
+
+Done in #87, with task 3 (CLIENT.md, "The building card").
+
 
 PARITY.md, "The building card", and `docs/original/rules/town.md`,
 "Upgrading". 104 buildings upgrade to the next one (houses, farms, mills,
@@ -117,7 +120,10 @@ Town Hall II to IV can only be had this way, so three goals open up with
 it. The button can join the card's tiles in their current style (say so in
 DECISIONS.md); the card's new look is task 3.
 
-### 3. Beta 1: what the building card shows (S each, *owner*) - [ ]
+### 3. Beta 1: what the building card shows (S each, *owner*) - [x]
+
+Done in #87: the owner picked mockup A, the original's info panel.
+
 
 PARITY.md, "What it shows": the picture with its health, its numbers
 (attack, speed, range, the room a house gives), what the next collect
@@ -136,7 +142,11 @@ cash, but the map of the original found later that opening early is
 switched off in the original, and ours was removed: check, and reword the
 line rather than build it.
 
-### 5. Beta 1: the site's bar (S, *owner*) - [ ]
+### 5. Beta 1: the site's bar (S, *owner*) - [x]
+
+Done in #87: the owner left the place to us; a Menu after Full screen
+(DECISIONS.md, "the site's links in the new client").
+
 
 The classic page has Empires, Friends and Log out; the new client has
 none of them yet. Where they go on the owner's layout is theirs to say
@@ -236,8 +246,6 @@ Ask these in plain words, with pictures where it's about looks (CLAUDE.md
 allows pictures when there's a decision), and carry on with something else
 meanwhile.
 
-- The building card's new look (task 3): a mockup to pick from.
-- Where the site's bar goes (task 5).
 - Offer packs and mystery boxes: in or out (task 8).
 - When the new client becomes the default (task 10).
 - AI-upscaled art: still open.
