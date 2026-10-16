@@ -257,6 +257,8 @@ unit click targets enlarged without changing their art; ground clicks get
 a brief gold ring; tab changes keep simulation running, with manual Pause
 retained. Building previews retain their alignment while art loads.
 Auto-collect was withdrawn and is not included.
+[Verification and Safari coverage](docs/verification-94.md) records the
+full/focused checks and the remaining Mac-specific reproduction limit.
 
 Replace the Flash client with a modern one that draws the same art and talks
 to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:

@@ -743,9 +743,10 @@ Open door (the game's button); open, the gate shows its open picture,
 units walk through it, and Move, Turn, Store and Upgrade are hidden until
 Close door. It isn't saved: gates are shut each time the town opens.
 
-**Not yet:** the speech bubbles units say now and then, and a mark on the
-ground where a unit is going. (Units sent to a building or a tree: "Villagers
-at work"; wild animals following a unit home: "The living map".)
+**Not yet:** the speech bubbles units say now and then, and a persistent
+mark at a unit's destination (ground clicks now get brief feedback below).
+Units sent to a building or a tree: "Villagers at work"; wild animals
+following a unit home: "The living map".
 
 ### Click feedback and unit targets
 

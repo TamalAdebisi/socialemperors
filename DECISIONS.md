@@ -45,7 +45,9 @@ them can be found and reversed. The big, agreed decisions are in
   deadlines, and close independent fixture pages after their assertions.
   The raid check uses the existing siege check's four-times simulation
   setting for the long random approach, retaining its completion deadline
-  and every kill/reward/repair/save assertion. These are test-only changes.
+  and every kill/reward/repair/save assertion. WebKit screenshots wait for
+  the canvas frame and on-demand card art before visual review. These are
+  test-only changes.
 
 ## 16 October 2026: closing the public-art repair
 

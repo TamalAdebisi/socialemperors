@@ -19,6 +19,26 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Owner playthrough controls in [#94](https://github.com/TamalAdebisi/socialemperors/pull/94):**
+  Friends forms keep their CSS/images after nested POSTs; unit targets
+  have an eight-pixel margin and a 44-pixel minimum, with original art
+  sizes. Ground clicks flash the original gold ring. Hidden tabs keep
+  simulation running, while explicit Pause remains available. No
+  auto-collect: the owner withdrew it. Building previews snapshot their
+  loading origin and clear stale hover state, keeping pictures aligned
+  and footprints visible.
+- **#94 verification:** server 435 run (426 passed, 9 existing skips),
+  types and 354 client tests passed. Full Chromium: **67/71 in 1h 52m
+  56.27s**. Follow-ups resolve summon/flight/delivery/repair timing checks;
+  all 71 cases have passing results across the full and focused runs.
+  No runtime changes follow the tested `01ddd0cd` game code. WebKit:
+  **4/4 in 3m 50.48s** for buildings, controls, hover and Friends/Menu.
+  [The complete record](docs/verification-94.md) preserves every failure,
+  test-only adjustment and screenshot review. The two shared preview
+  bugs are fixed; the exact wide ground streak reported on Safari/Mac
+  was not reproduced. Linux WebKit does not reproduce a Mac's GPU, so
+  do not claim a separate terrain-rendering repair.
+
 - **Owner playthrough follow-up completed in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):**
   the tutorial is mandatory, with smooth camera pans, explicit destinations,
   soldier-only combat guidance and saved progress/rewards. Show me restores
