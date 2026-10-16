@@ -107,5 +107,14 @@ export default async function playthroughControls({ newPlayer }) {
     const unit = window.seHome.parts.editor.lessonSelected;
     return [unit.tx, unit.ty];
   }), SECOND, "a finger near the villager selects it too");
+  await phone.page.evaluate(async () => {
+    // The newly opened card loads its parchment on demand. Wait for it
+    // and the canvas's selection ring before the visual review, in WebKit too.
+    const source = getComputedStyle(document.querySelector(".actions.card")).borderImageSource;
+    const picture = new Image();
+    picture.src = source.match(/^url\(["']?(.*?)["']?\)$/)[1];
+    await picture.decode();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   await phone.shot("phone-selection");
 }
