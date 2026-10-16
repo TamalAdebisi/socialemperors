@@ -36,9 +36,9 @@ export default async function structureIdle({ newPlayer }) {
     if (index > 0 && index % 6 === 0) await player.reload();
     const name = names[index];
     const result = await page.evaluate(async ({ name, states }) => {
-      const { view, items, camera } = window.seHome.parts;
-      // A clear-ground gallery makes every structure inspectable, including
-      // small art at the saved mill's tile and very large promotional art.
+      const { view, items } = window.seHome.parts;
+      // Keep the gallery separate from nearby town art. Capture its actual
+      // renderer output below, independently of camera/compositor timing.
       view.things.visible = false;
       view.markers.layer.visible = false;
       view.landSigns.visible = false;
@@ -47,6 +47,7 @@ export default async function structureIdle({ newPlayer }) {
       const art = await view.art.get(name);
       if (!art) throw new Error(`No art for ${name}`);
       const faces = [];
+      const captures = [];
       for (let facing = 0; facing < art.framesOf("frame"); facing++) {
         const placed = { item, tx: 55, ty: 56, orientation: facing, unitsInside: 0, units: [], startedAt: 0, workTime: 0 };
         view.showGhost(placed);
@@ -57,11 +58,11 @@ export default async function structureIdle({ newPlayer }) {
         picture.stop?.();
         view.outline(slot, true);
         const halo = slot.getChildByLabel("outline");
-        const bounds = slot.getBounds();
-        const centre = camera.toMap({ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
-        camera.zoomBy(Math.min(1.6 / camera.scale, 600 / bounds.width, 500 / bounds.height), null);
-        camera.update(1000);
-        camera.lookAt(centre);
+        const synchronize = halo.onRender;
+        halo.onRender = (renderer) => {
+          synchronize();
+          if (renderer) window.seStructureRenderer = renderer;
+        };
         const frames = picture.textures ?? [picture.texture];
         const original = art.animation(`frame/${facing}`);
         const allowed = new Set(original.filter((_, frame) => frame % (states?.[facing] ?? 1) === 0));
@@ -76,16 +77,27 @@ export default async function structureIdle({ newPlayer }) {
         picture.gotoAndStop?.(0);
         await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         const synchronized = halo.children.every((copy) => copy.texture === picture.texture);
+        // Render the current object independently of camera/screenshot timing.
+        // A valid frame index alone cannot prove that visible art was drawn.
+        const renderer = window.seStructureRenderer;
+        const pixels = renderer.extract.pixels({ target: slot });
+        let visible = 0;
+        for (let i = 3; i < pixels.pixels.length; i += 4) if (pixels.pixels[i] > 0) visible++;
+        captures.push(await renderer.extract.base64({ target: slot, format: "png", clearColor: 0x5b9f30 }));
         faces.push({ facing, frames: frames.length, unique: new Set(frames).size, valid, synchronized,
+          visible,
           blank: frames.some((texture) => texture.frame.width <= 1 && texture.frame.height <= 1),
           first: picture.texture === original[0] });
       }
-      return { name, faces };
+      return { name, faces, captures };
     }, { name, states: BUILDING_STATES[name] });
     for (const face of result.faces) {
       assert.ok(face.valid && face.synchronized, `${name}/${face.facing} has a matching outline on every frame`);
       assert.ok(face.first, `${name}/${face.facing} starts in its idle state`);
+      assert.ok(face.visible > 10, `${name}/${face.facing} actually renders visible pixels`);
+      writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }
+    delete result.captures;
     if (["aserradero1", "oiltower", "torreagua", "adiestramientocaballos", "1527_dragonCity_cross"].includes(name)) {
       assert.ok(result.faces.every((f) => f.unique === 1), `${name} holds its empty/idle picture`);
     }
@@ -115,8 +127,6 @@ export default async function structureIdle({ newPlayer }) {
       }, { name, states: BUILDING_STATES[name][0] });
       assert.ok(occupied.every(Boolean), `${name} keeps the right animal count, including nested motion and unused states`);
     }
-    // Each structure gets a rendered screenshot for the visual pass.
-    await player.shot(`idle-${name}`);
     report.push(result);
     writeFileSync(join(player.out, "structure-idle-audit.json"), JSON.stringify(report, null, 2));
     await page.evaluate(() => window.seHome.parts.view.showGhost(null));
