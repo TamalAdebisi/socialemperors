@@ -4,6 +4,36 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 16 October 2026: tournament review and original rule distinctions
+
+- **Keep the weekly saved-team exception.** Local source reading confirms
+  that weekly entry checks empty/short teams and its ending warning,
+  while public entry also checks ownership and the complex-unit cap.
+  Opening the list restores eligible copies; weekly entry can still use
+  that saved selection after ownership changes. Refreshing balances does
+  not add the public restriction. The existing rule test covers this
+  deliberate original behavior.
+- **Keep score order separate from winner eligibility.** The original
+  results table retains abandoned entrants and sorts their completed
+  scores by points and time. A departed high scorer can appear first
+  while an eligible lower row wins. Keep that order and the departure
+  label; the server's `winner_id` identifies who receives the prize.
+- **Leave Engineers on their own siege-repair path.** The original
+  tournament's four collective healers exclude Engineer 570. Its normal
+  behavior repairs friendly siege units; repeated tournament attack
+  orders must not overwrite that target. Check healing targets before
+  each beat as well; whole patients remain selected.
+- **Preserve LIMIT from attempted healing.** The original sends the
+  positive healing amount to unit delegates before capping the patient's
+  health. A healing unit can therefore build LIMIT with a whole patient.
+  Correct the shared healing callback to report the positive rounded
+  attempt, retaining the health cap and existing LIMIT cadence. Suppress
+  only the visual `+0` event when no health is restored, not the callback.
+- **Verify the revised runtime again.** The 73/73 run at `49b5685e` remains
+  a passing pre-review record. Its documentation-only identity with
+  `8dccab0d` does not cover subsequent review fixes. Keep those results
+  intact and run the required checks on the new exact code before merge.
+
 ## 16 October 2026: closing the public-art repair
 
 - **Close this operational repair without a code change.** All 20 images
@@ -52,7 +82,9 @@ them can be found and reversed. The big, agreed decisions are in
   tournament return URL waits for resumed mandatory lessons and their
   welcome dialogs to finish. It then opens the tournament once, keeping
   the saved team. This prevents a tournament panel from opening over
-  Arthur while the ordinary feature menus are locked.
+  Arthur while the ordinary feature menus are locked. Ordinary returns
+  also wait for the initial gifts read and visible welcome dialogs, even
+  when no lessons are pending, before reopening the room once.
 
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 

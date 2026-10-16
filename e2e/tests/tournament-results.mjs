@@ -18,6 +18,7 @@ export default async function tournamentResults({ newPlayer }) {
   const config = await gameConfig(winner);
   const before = await playerInfo(winner);
   const losingBefore = await playerInfo(loser);
+  const abandoningBefore = await playerInfo(fourth);
   const room = await join(winner);
   for (let index = 1; index < players.length; index++) {
     assert.equal((await join(players[index], "1", "", padded(...Array(index).fill(SWORD)))).tournament_id, room.tournament_id);
@@ -56,7 +57,13 @@ export default async function tournamentResults({ newPlayer }) {
   assert.match(await page.locator(`.tournament-score-row[data-player="${winner.settings.userId}"]`).textContent(), /270\.75/);
   assert.match(await page.locator(`.tournament-score-row[data-player="${loser.settings.userId}"]`).textContent(), /12\.34/);
   assert.equal((await playerInfo(winner)).map.coins, before.map.coins - 500, "there is no early prize");
-  for (let index = 1; index < players.length; index++) {
+  // Flash's score table retains a departed entrant's earned points and place,
+  // while its separate winner calculation excludes them. The server owns the
+  // same distinction: the highest scorer leaves before the room finishes.
+  for (const opponent of players.slice(0, 3)) await finish(fourth, room.tournament_id, opponent.settings.userId, "100.00");
+  assert.equal((await service(fourth, "leave_tournament", { tournament_id: room.tournament_id })).result, "OK");
+  assert.equal((await service(fourth, "get_tournament_info")).tournament, null);
+  for (let index = 1; index < players.length - 1; index++) {
     for (const opponent of players) {
       if (opponent === players[index] || (index === 1 && opponent === winner)) continue;
       await finish(players[index], room.tournament_id, opponent.settings.userId, `${index * 10}.00`, false);
@@ -65,6 +72,9 @@ export default async function tournamentResults({ newPlayer }) {
   const finishedRoom = (await service(winner, "get_tournament_info")).tournament;
   assert.ok(finishedRoom.date_finished);
   assert.equal(finishedRoom.winner_id, winner.settings.userId);
+  const departed = finishedRoom.players.find((player) => player.user_id === fourth.settings.userId);
+  assert.equal(Number(departed.abandonned), 1);
+  assert.equal(departed.matches.reduce((points, match) => points + match.attacker_points, 0), 300);
   const prize = config.tournament_type["1"].prize[finishedRoom.reward_id];
   const awarded = await playerInfo(winner);
   const expectedGold = before.map.coins - 500 + Number(prize.g ?? 0);
@@ -75,12 +85,19 @@ export default async function tournamentResults({ newPlayer }) {
   }
   assert.deepEqual(awarded.map.store, before.map.store, "enrolled units remain in home storage");
   assert.equal((await playerInfo(loser)).map.coins, losingBefore.map.coins - 500, "a losing player receives no prize");
+  const abandonedSave = await playerInfo(fourth);
+  assert.equal(abandonedSave.map.coins, abandoningBefore.map.coins - 500, "the departed high scorer receives neither prize nor post-start refund");
+  assert.equal(abandonedSave.playerInfo.cash, abandoningBefore.playerInfo.cash);
+  assert.deepEqual(abandonedSave.privateState.gifts, abandoningBefore.privateState.gifts);
 
   await winner.button("Refresh").click();
   await page.waitForSelector('.tournament-outcome[data-won="true"]');
   await gold(winner, expectedGold);
   assert.match(await page.locator(".tournament-outcome").textContent(), /prize has been awarded.*Storage/s);
   assert.equal(await winner.button("Done").count(), 1, "Done acknowledges an already paid prize");
+  assert.equal(await page.locator(".tournament-score-row").first().getAttribute("data-player"), fourth.settings.userId,
+    "the score table preserves the original score ordering, not prize eligibility");
+  assert.match(await page.locator(".tournament-score-row").first().textContent(), /Left tournament.*300\.00/s);
   await winner.shot("winner-desktop");
   // Reading, reopening and retrying the already completed last match cannot
   // duplicate currency or unit rewards, or replace its first recorded score.
@@ -163,7 +180,9 @@ export default async function tournamentResults({ newPlayer }) {
   // If acknowledgement succeeds but its reply is lost, Refresh reconciles it.
   await open(loser);
   await loser.page.waitForSelector('.tournament-outcome[data-won="false"]');
-  assert.equal(await loser.page.locator(".tournament-score-row").first().getAttribute("data-player"), winner.settings.userId);
+  assert.equal(await loser.page.locator(".tournament-score-row").first().getAttribute("data-player"), fourth.settings.userId);
+  assert.match(await loser.page.locator(".tournament-score-row").first().textContent(), /Left tournament.*300\.00/s);
+  assert.equal((await service(loser, "get_tournament_info")).tournament.winner_id, winner.settings.userId);
   assert.equal(await loser.page.locator(".tournament-outcome .tournament-prize").count(), 0);
   await loser.shot("loser-desktop");
   await loser.page.route(tournamentPath("clean_tournament"), async (route) => {

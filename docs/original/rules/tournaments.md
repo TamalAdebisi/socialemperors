@@ -7,6 +7,11 @@ placement in `MapInitializer`, the spell exclusions in `PopupMagic`,
 `IsoEngine.refreshTotalPlayerUnits`, the saved storage/gifts and map
 loading in `Base`, the gate and return-home handling in `GuiManager`,
 its level in `Config`, and the relevant `MissionsManager` checks.
+Review also reread `IA.checkHealerBehaviour`, `ClericEngineerDelegate`,
+`IsoUnit.updateAttack`, `IsoFightingElement.recibirVida`,
+`AngelicalSuperHealerDelegate`, `LimitDelegate`, the siege predicate,
+`ThumbWeeklyTournament`, `ThumbTournament`, and
+`TournamentResultTabResults` locally.
 Compared with `tournaments.py`, its tests and the existing battle,
 storage, friends and command patterns. The decompiled source remains
 local and ignored. These notes are in our own words.
@@ -60,8 +65,11 @@ picker's separate ownership-source gap remains in PARITY.md.
 
 - Public/friends entry checks ownership, the complex cap, a nonempty
   team and confirmation for a short team. Weekly entry skips that
-  card's ownership and complex-cap recheck; the list has already
-  restored eligible copies. It checks empty/short teams. A full weekly
+  card's ownership and complex-cap recheck. The list restores eligible
+  copies when opened, but weekly can retain that selection after later
+  ownership changes. `ThumbWeeklyTournament` and the manager's join path
+  preserve this exception; refreshing balances does not add the public
+  ownership check. Weekly checks empty/short teams. A full weekly
   team entering within the last ten minutes gets an ending warning;
   the short-team warning takes precedence, not both. The shared editor
   still applies its own cap; these are distinct checks.
@@ -161,12 +169,23 @@ The server's additive stale-id guard is covered in
   Target order uses the original army's initial health order: first
   within range plus two, else the initially weakest; an existing valid
   target is retained. This is not a continuous weakest-health sort.
-- Healers on both sides can keep healing a whole patient in tournaments.
+- Healers on both sides can retain a whole patient in tournaments.
   The four original defender healers (502, 590, 866, 886) follow a friendly
   nonhealer; a hurt unit with lower absolute health can become their
-  target. Every ten seconds after forming,
-  original living units outside the middle sixty-by-sixty area walk
-  back to its boundary. Both armies receive this boundary correction.
+  target. Engineer 570 is deliberately outside that collective group:
+  inherited healer behavior repairs injured friendly siege units and
+  clears hostile targets. The new client's repeated collective orders
+  must not overwrite this separate repair target between ordinary AI
+  updates.
+- Original healing caps actual health but sends the attempted amount
+  to the unit delegate; healing LIMIT therefore grows even when the
+  patient is whole, subject to its usual cadence. The shared callback
+  uses the positive rounded attempt, not only the health restored.
+  A zero-effect heal omits the visual `+0` event, while retaining the
+  callback, patient and original LIMIT behavior.
+- Every ten seconds after forming, original living units outside the
+  middle sixty-by-sixty area walk back to its boundary. Both armies
+  receive this boundary correction.
 - The original armies alone supply life bars, counts and completion.
   Summoned fighters can fight, but do not enter those tracked lists.
   Crack (7) and Black Hole (16) remain visible but disabled; other
@@ -211,10 +230,13 @@ completion and surrender; browser checks cover real saved matches.
   minutes while still unresolved. The server closes unplayed matches
   on expiry, or completes early once the remaining human matches end.
 - Public/friends results sum finished points and elapsed match times;
-  order by points descending, then shorter time. A winner must not be
-  abandoned and must have outgoing matches. Exact ties use original
-  seat order on the server. Since the response puts its viewer first,
-  the added `winner_id` supplies the authoritative winner to the panel.
+  order by points descending, then shorter time, retaining abandoned
+  entrants and their completed scores. This table order is separate
+  from winner eligibility: an abandoned high scorer may appear first,
+  but a winner must not be abandoned and must have outgoing matches.
+  Exact ties use original seat order on the server. Since the response
+  puts its viewer first, the added `winner_id` supplies the authoritative
+  winner to the panel. Departure labels do not demote the score row.
 - Weekly results show the server's top ten, total users and separate
   own-rank row, including ranks outside ten. Prize index is rank minus
   one for the top ten only. The player's paid rank is frozen when their

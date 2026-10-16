@@ -8,7 +8,18 @@ tutorial; both were merged into this branch without rebasing. Classic
 choices remain hidden as the owner requested in #93, while the original
 routes and shared saves remain supported.
 
-## Final integrated checks
+## Final review-fix checks
+
+Pending. The review corrections change runtime and tests after the
+passing run below: Engineer targeting, original LIMIT accounting from
+attempted healing, zero-effect healing popups, friends-room reply
+validation, ordinary welcome ordering, the exact 720px layout boundary
+and the weekly warning test. Original weekly
+saved-team eligibility and abandoned-score ordering are retained.
+Fresh server, client and full browser results will be recorded against
+the new exact code before merge; no final commit or result is claimed yet.
+
+## Pre-review full checks at 49b5685e
 
 Code commit: `49b5685e368efd6efeecdc348a2202a710715b2f`.
 It includes main `73998ffc` (#93), #87 and the complete tournament work.
@@ -17,13 +28,12 @@ It includes main `73998ffc` (#93), #87 and the complete tournament work.
 `d4bc1a72f4884037d3b15c9c0cb66548a8fb5dfd` at 14:43:55 UTC. Its changes
 from `73998ffc` are documentation and recorded audit data only. The
 tournament checkout stayed at the tested commit for the entire full run.
-That latest main was merged afterward, preserving the completed art audit.
-
-The delivery changes after the tested commit contain documentation and
-audit records only. A path-by-path diff against `49b5685e` confirmed that
-client, server, configuration, artwork, tools and tests are unchanged.
-The tested runtime is therefore exactly the one delivered; the final
-documentation merge does not require another browser run.
+That main was merged afterward at `8dccab0d`, preserving the completed
+art audit. A path-by-path diff from `49b5685e` to `8dccab0d` confirmed
+that client, server, configuration, artwork, tools and tests were
+unchanged; that merge contained documentation and audit records only.
+This identity claim ends at `8dccab0d`. Subsequent review fixes change
+the runtime and tests and need the fresh verification recorded above.
 
 | Check | Result | Elapsed, including startup/build |
 | --- | --- | --- |
@@ -54,13 +64,13 @@ screenshots across all 73 scenario folders for local review. Browser
 console errors remain assertions in the runner; only deliberately
 simulated lost-reply errors are handled by their specific recovery tests.
 
-## Tournament coverage
+## Pre-review tournament coverage
 
 - `tournaments`: desktop and phone list/help/team controls, real saved
   ownership and team state, server-room reopening, weekly reuse, and a
   tournament return URL held until mandatory lessons and welcome dialogs
   finish. The focused tutorial-return integration check passed in 109s
-  before the final run.
+  before this pre-review full run.
 - `tournament-rooms`: original entry payloads and fee bookkeeping,
   short-team confirmation, four seats, immutable enrolled teams,
   refresh/reload recovery, public readiness, friends' creation and Invite
@@ -101,21 +111,22 @@ No game keyboard behavior or assertion was weakened.
 
 An earlier partial run at `164e4f21` was stopped after 14 passes when
 its inherited Python 3.12 environment was noticed. It is not counted as
-a full pass; the final checks use the separate Python 3.13 environment.
+a full pass; the completed 49b5685e checks used the separate Python 3.13
+environment.
 
 Main #93 then landed during verification. Integration preserved its
 mandatory tutorial, recovery, final reward and hidden-classic decisions.
 A saved tournament return now waits for those lessons and welcome dialogs
-before opening the panel once. The final full run above tests this
-combined code; earlier passes do not stand in for it.
+before opening the panel once. The 49b5685e full run above tested this
+combined code; it does not cover the subsequent ordinary-welcome fix.
 
-## Visual review
+## Pre-review visual inspection at 49b5685e
 
 Reviewed the desktop and phone tournament list, help and team screens;
 waiting, ready and friends' rooms; the return after mandatory lessons;
 battle controls, victory and surrender; all three weekly armies; match
 rows, public and weekly results, prize lists, rankings and Storage. All
-12 final results screenshots and all five weekly phone screenshots were
+12 results screenshots and all five weekly phone screenshots were
 checked, together with the shared spell book, academy and casting views.
 Original art loads, labels remain readable, and controls fit without
 sideways clipping or overlap with the Menu or dock. The advance screenshot
@@ -124,7 +135,7 @@ show those units clearly. It is not used as evidence of unit appearance.
 
 Earlier reviews found and fixed phone touch targets, duplicate headings,
 stale ownership from another tab, screenshot art waits and purchase
-windows left open after combat. The final reviewed screens show no
+windows left open after combat. Those reviewed screens showed no
 regression from the integrated building-card or tutorial work.
 
 ## Public-art audit completed separately in #91
@@ -140,7 +151,7 @@ separate historical tutorial-arrow observation, followed by the recorded
 The tournament checks did not operate an export workflow, alter the live
 bucket or repeat that audit.
 
-## Browser results
+## Pre-review browser results at 49b5685e
 
 | Test | Result | Time |
 | --- | --- | ---: |
@@ -219,17 +230,17 @@ bucket or repeat that audit.
 | `world` | Passed | 128s |
 
 Individual times are the runner's rounded seconds. Total elapsed also
-includes build, startup and cleanup. The complete run has no failures.
+includes build, startup and cleanup. This pre-review run had no failures.
 
 ## Delivery
 
 The list/team slice is in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89);
-[#92](https://github.com/TamalAdebisi/socialemperors/pull/92) delivers every
-remaining tournament stage. The final delivery documentation follows
-the exact tested code commit above. Latest main is merged without
-rebasing, including the other chats' #87, #91 and #93 work. Merging #92
-uses the owner's standing authorization for automatic deployment.
+[#92](https://github.com/TamalAdebisi/socialemperors/pull/92) implements
+every remaining tournament stage. Final verification of its review fixes
+is pending. Main through `d4bc1a72` is merged without rebasing, including
+the other chats' #87, #91 and #93 work. Merging #92 uses the owner's
+standing authorization for automatic deployment after the required checks.
 
-All five tournament parts are complete; no tournament slice remains in
-this scope. The next queued project task is shop details, with the
-owner's Beta 1 run-through hold preserved.
+All five tournament parts are implemented; no tournament slice remains
+in this scope. After delivery, the next queued project task is shop
+details, with the owner's Beta 1 run-through hold preserved.

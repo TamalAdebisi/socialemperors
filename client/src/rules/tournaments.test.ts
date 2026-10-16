@@ -165,3 +165,24 @@ test("public prizes require the server winner and weekly prizes use the frozen p
   state.ranking.user.rank = 11;
   assert.equal(tournamentPrize(state, weekly, "one"), null);
 });
+
+test("an abandoned high scorer stays in the original score table but cannot take the eligible winner's prize", () => {
+  const state = room();
+  state.date_ready = 1000;
+  state.date_finished = 1100;
+  state.winner_id = "two";
+  for (const [index, player] of state.players.entries()) {
+    player.matches = state.players.filter((opponent) => opponent !== player).map((opponent) => ({
+      attacker_id: player.user_id, victim_id: opponent.user_id, finished: true,
+      attacker_won: true, attacker_points: index === 0 ? 100 : 90 - index,
+      date_started: 1000, date_finished: 1010,
+    }));
+  }
+  state.players[0].abandonned = 1;
+  const table = tournamentLeaderboard(state);
+  assert.deepEqual(table.map(({ player }) => player.user_id), ["one", "two", "three", "four"]);
+  assert.equal(table[0].points, 300, "leaving does not erase completed-match points");
+  assert.equal(table[0].player.abandonned, 1, "the view can mark this row as having left");
+  assert.equal(tournamentPrize(state, rules.kinds[0], "one"), null, "score-table position alone never grants a prize");
+  assert.deepEqual(tournamentPrize(state, rules.kinds[0], "two"), rules.kinds[0].prize[0]);
+});

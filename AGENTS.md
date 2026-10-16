@@ -79,19 +79,21 @@ those commands run outside the sandbox when asked.
 
 ```
 .venv/bin/python -m unittest discover tests          # the server: 440 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 373 tests
+(cd client && npm run check && npm test)             # the client's types and rules
 PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 73 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest integrated tournament verification (#92):** all **73 browser
-  tests passed in 93m 28.38s** at
+- **Tournament review-fix verification (#92) is pending.** The latest
+  completed full run, before these fixes, passed all **73 browser tests
+  in 93m 28.38s** at
   `49b5685e368efd6efeecdc348a2202a710715b2f`, including all five tournament
   checks, shared spells, #87's building card/Menu and #93's tutorial.
   Server: **440 run (431 passed, 9 existing skips)**; client types and
   **373 tests passed**. [The delivery record](docs/verification-92.md)
-  records the exact code, individual timings and subsequent documentation
-  integration of #91's completed art repair.
+  records that exact code and its timings. Merge `8dccab0d` added only
+  #91's documentation; later review fixes change runtime and tests and
+  require fresh verification before delivery.
 - **Art verification (#91):** all 20 images match their JSON and
   repair-query copies, both plain and with the game's Origin header.
   With refreshed caches, `team` passed alone (52s) and in the full suite

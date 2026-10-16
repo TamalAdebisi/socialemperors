@@ -177,7 +177,15 @@ function assertTournamentInfo(data: Record<string, unknown>): asserts data is Re
   const room = data.tournament as TournamentInfo["tournament"] | undefined;
   if (!data.tournament_weekly || typeof data.tournament_weekly !== "object" ||
     !data.tournament_reward_id || typeof data.tournament_reward_id !== "object" ||
-    !Array.isArray(data.tournament_friends) || room === undefined || (room !== null &&
+    !Array.isArray(data.tournament_friends) || data.tournament_friends.some((friend: unknown) => {
+      if (!friend || typeof friend !== "object" || Array.isArray(friend)) return true;
+      const card = friend as Record<string, unknown>;
+      return typeof card.tournament_id !== "string" || !card.tournament_id ||
+        typeof card.tournament_type_id !== "string" || !card.tournament_type_id || typeof card.owner !== "string" ||
+        (card.owner_id !== undefined && typeof card.owner_id !== "string") ||
+        (typeof card.reward_id !== "number" && typeof card.reward_id !== "string") || card.reward_id === "" ||
+        !Number.isInteger(Number(card.reward_id)) || Number(card.reward_id) < 0;
+    }) || room === undefined || (room !== null &&
       (typeof room.tournament_id !== "string" || typeof room.tournament_type_id !== "string" ||
         !Array.isArray(room.players) || room.players.some((player) =>
           typeof player.user_id !== "string" || !Array.isArray(player.team) || !Array.isArray(player.matches))))) {

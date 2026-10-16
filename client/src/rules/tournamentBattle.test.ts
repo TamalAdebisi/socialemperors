@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { Battle, ENEMY, FPS, SELF } from "./battle.ts";
 import { itemsById, type GameConfig, type ItemInfo } from "./config.ts";
 import { MAP_TILES } from "./geometry.ts";
+import { Specials, type SpecialsTable } from "./specials.ts";
 import { TournamentBattle, tournamentBout, tournamentPositions, tournamentScore, tournamentSpellAllowed, type TournamentScore } from "./tournamentBattle.ts";
 import type { TournamentRoom } from "./tournaments.ts";
 
@@ -127,6 +128,23 @@ test("enemy healers keep a whole patient and switch to a more badly hurt defende
   assert.equal(theirs[2].target, theirs[1]);
 });
 
+test("the tournament collective leaves engineers to repair friendly siege through ordinary healing beats", () => {
+  const engineer = unit({ id: 570, subcategory: 72, attack: 25, attackRange: 5, attackInterval: 15 });
+  const siege = unit({ id: 521, subcategory: 81, attack: 0 });
+  const { battle, match, mine, theirs, step } = arena(false, [unit({ attack: 0 })], [siege, unit({ attack: 0 }), engineer]);
+  match.start();
+  battle.hurt(theirs[0], 10, mine[0]);
+  theirs[1].life = 5;
+  mine[0].life = 10;
+  assert.equal(theirs[2].target, null, "collective combat orders do not send the engineer to the opposing army");
+  step(120);
+  assert.equal(theirs[2].target, theirs[0]);
+  assert.equal(theirs[0].life, theirs[0].maxLife, "the engineer repairs its siege patient on real battle beats");
+  assert.equal(theirs[1].life, 5, "the weaker non-siege defender is not an engineer patient");
+  assert.equal(mine[0].life, 10, "the opposing army is never healed");
+  assert.equal(match.state, "fighting");
+});
+
 test("both sides' tournament healers retain a whole patient; normal battles still release it", () => {
   for (const side of [SELF, ENEMY] as const) {
     for (const tournament of [true, false]) {
@@ -140,6 +158,61 @@ test("both sides' tournament healers retain a whole patient; normal battles stil
       assert.equal(healer.target, tournament ? patient : null);
     }
   }
+});
+
+test("a retained whole tournament patient produces no healing events until it is hurt again", () => {
+  for (const side of [SELF, ENEMY] as const) {
+    for (const id of [502, 570, 590, 866, 886]) {
+      const battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: () => 0.5,
+        keepHealedTargets: true });
+      const patient = battle.add(unit({ attack: 0, subcategory: id === 570 ? 81 : 78 }), 50, 50, side);
+      const healer = battle.add(unit({ id, subcategory: 72, attackRange: 5, attackInterval: 15 }), 51, 50, side,
+        { offset: 0 });
+      const attempted: number[] = [];
+      battle.onDealt = (_by, amount, healing) => { if (healing) attempted.push(amount); };
+      healer.target = patient;
+      healer.attacking = true;
+      for (let i = 0; i < 120; i++) battle.step();
+      assert.equal(healer.target, patient);
+      assert.deepEqual(attempted, Array(8).fill(10), "whole-patient beats still report attempted healing for LIMIT");
+      assert.equal(battle.takeEvents().some((event) => event.kind === "hit" && event.heal), false);
+      patient.life -= 5;
+      for (let i = 0; i < 120; i++) battle.step();
+      assert.equal(patient.life, patient.maxLife);
+      assert.equal(healer.target, patient, "the original target remains assigned after recovery");
+      assert.deepEqual(attempted, Array(16).fill(10), `healer ${id} keeps the original attempted-healing amount`);
+      const healing = battle.takeEvents().filter((event) => event.kind === "hit" && event.heal);
+      assert.equal(healing.length, 1);
+      assert.ok(healing[0].kind === "hit" && healing[0].amount === 5);
+    }
+  }
+});
+
+test("whole-patient healing fills the angel's LIMIT on its usual cadence without empty healing popups", async () => {
+  const { default: table } = await import("./specials-table.json", { with: { type: "json" } });
+  const battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random: () => 0.5,
+    keepHealedTargets: true });
+  const specials = new Specials(battle, table as unknown as SpecialsTable, itemsById(config), () => 0.5);
+  const patient = battle.add(unit({ attack: 0 }), 50, 50, SELF);
+  const angel = battle.add(unit({ id: 886, attackRange: 5, attackInterval: 15 }), 51, 50, SELF, { offset: 0 });
+  specials.buttons(angel);
+  angel.target = patient;
+  angel.attacking = true;
+  for (let i = 0; i < 15; i++) { battle.step(); specials.step(); }
+  assert.equal(angel.limit, 10, "the full patient still supplies attempted healing to LIMIT");
+  for (let i = 0; i < 15; i++) { battle.step(); specials.step(); }
+  assert.equal(angel.limit, 10, "a second beat inside the same second does not fill again");
+  for (let i = 0; i < 15; i++) { battle.step(); specials.step(); }
+  assert.equal(angel.limit, 20, "a later beat fills from the whole patient again");
+  assert.equal(patient.life, patient.maxLife);
+  assert.equal(battle.takeEvents().some((event) => event.kind === "hit" && event.heal), false);
+  patient.life -= 5;
+  for (let i = 0; i < 30; i++) { battle.step(); specials.step(); }
+  assert.equal(patient.life, patient.maxLife);
+  assert.equal(angel.limit, 30, "partial healing still counts the requested amount, never the smaller health gap");
+  const healing = battle.takeEvents().filter((event) => event.kind === "hit" && event.heal);
+  assert.equal(healing.length, 1);
+  assert.ok(healing[0].kind === "hit" && healing[0].amount === 5);
 });
 
 test("damage healed later still lowers the score; summons cannot keep a beaten army in the match", () => {

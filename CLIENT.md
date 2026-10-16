@@ -651,7 +651,8 @@ real town; a monitor on the left, a phone on the right):
 
 - The rail and the dock are one row of buttons; the style sheet stands it
   up or lays it down, and shows Quests and Battle on the rail, World in
-  the dock. The phone arrangement takes over below 720 pixels wide, or on
+  the dock. The phone arrangement takes over at 720 pixels wide or
+  narrower, or on
   any screen held upright up to 1000 wide (so a tablet held upright gets
   the dock); `NARROW` in `ui/panel.ts` and the last rule of `style.css`
   say the same. On a short screen (a phone held sideways) the rail's
@@ -1844,8 +1845,9 @@ few kinds with its numbers; our notes in words are in
   including what is still missing, are `beats` in `rules/specials.json`
   (`rules/specials-beats.test.ts` plays every one).
 - **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
-  from the damage they deal (healers from the healing they do), at most
-  once a second, doubled beside a Limit Wizard of their side; full at
+  from the damage they deal (healers from attempted healing, including
+  a whole patient), at most once a second, doubled beside a Limit Wizard
+  of their side; full at
   2,000 (500 for the Dragon Hunters). Full, the LIMIT button lights up:
   50 lightning bolts at random enemies in reach, 50 healing beams on
   their side's hurt, or a smash that hits and throws every enemy around,
@@ -2296,7 +2298,8 @@ connects the town and command queue; `net/server.ts` uses the existing
   configured dragon/god/colossus cap. The shared editor keeps that cap
   even for a player planning to enter the weekly tournament, as Flash
   did. Weekly entry skips the public card's ownership/complex-unit
-  recheck; list restoration has already removed unavailable copies.
+  recheck. Opening the list restores eligible copies then; the original
+  weekly exception still applies if ownership changes before entry.
 - **Same save and commands:** opening the list prunes unavailable saved
   units and silently saves the remaining team, as the original does.
   Editing saves `set_attack_team ["tournament", JSON-string-of-20-ids]`,
@@ -2305,8 +2308,10 @@ connects the town and command queue; `net/server.ts` uses the existing
   panel leaves enrollment and results intact; opening it rereads the
   saved state. Ownership and the saved selection refresh together, so
   units acquired in another tab are not pruned using an old town view.
-  Editing, saving and entry also refresh their ownership checks.
-  Navigation to a match flushes pending commands first.
+  Editing and saving use fresh ownership; entry refreshes balances and
+  choices, then applies its public or weekly rules. Navigation to a match
+  flushes pending commands first. Returning waits for lessons, any pending
+  gifts read and welcome dialogs before reopening the room once.
 - **Entry and waiting:** empty teams are refused, short teams ask first;
   a full weekly team entering in the last ten minutes also gets a
   warning. Public rooms match five level brackets. The service takes
@@ -2342,10 +2347,15 @@ the graveyard and the saved team do not suffer battle losses.
   defender forms up at its slowest member's speed; weekly defenders
   charge after ten seconds. Public defenders have no timed charge,
   but their normal defensive behavior can react to an approaching foe.
-  Marching speeds return to normal on the first hit. Healers on both
-  sides can keep healing a whole patient, and the armies are kept in
-  the middle of the arena. Crack and Black Hole remain visible but
-  unavailable; other learnt spells use normal mana and `use_magic`.
+  Marching speeds return to normal on the first hit. The four collective
+  healers follow friendly patients; Engineers instead use their ordinary
+  friendly siege-repair behavior. Healers on both sides retain whole
+  patients; attempted healing still builds LIMIT, without a `+0` popup
+  when no health is restored. The armies stay in the
+  middle of the arena. Crack and Black Hole remain visible but unavailable;
+  other learnt spells use normal mana and `use_magic`. Battle controls
+  use the shared HUD's phone layout at 720 pixels wide or narrower, or
+  on portrait screens up to 1000 pixels wide.
 - **The score:** current rooms use accumulated damage, including damage
   healed later and overkill, to the original armies. Summoned units do
   not enter their life totals or completion checks. Older point-type
@@ -2364,9 +2374,12 @@ the graveyard and the saved team do not suffer battle losses.
   does not announce a saved result until it has read that result back.
 
 Matches and Results remain available until Done. Public/friends' results
-show all four players' scores and times; weekly results show the top ten
-and the player's own rank. The server resolves exact public ties with an
-additive `winner_id`, because its returned player list is viewer-first.
+show all four players' scores and times, including departed entrants in
+score/time order. A departed high scorer can appear first but cannot win;
+the departure label and server's `winner_id` distinguish these cases.
+Weekly results show the top ten and the player's own rank. The server
+also resolves exact public ties through `winner_id`, because its returned
+player list is viewer-first.
 Weekly prizes follow the frozen rank at that player's completion, even
 if the live table changes later. The server has already paid any prize:
 gold/cash update the balances and unit prizes appear in Storage. Done
@@ -2377,9 +2390,10 @@ Browser coverage is split across `e2e/tests/tournaments.mjs` and the
 `tournament-*` tests, using local throwaway accounts and checking screens
 against saved rooms, matches and resources. Rule and protocol tests sit
 beside their modules; `tests/test_tournaments.py` covers the server's
-fees, state transitions, prizes and idempotency. The complete browser
-suite passed all 73 checks, including all five tournament checks; see
-[the delivery record](docs/verification-92.md) for the exact tested commit
+fees, state transitions, prizes and idempotency. The pre-review browser
+suite passed all 73 checks, including all five tournament checks;
+verification of the subsequent review fixes is pending. See
+[the delivery record](docs/verification-92.md) for the exact tested code
 and results. Original-source notes are in
 `docs/original/rules/tournaments.md`. No dedicated tournament goal exists
 in the shipped missions, so the count of unfinished goals does not change;

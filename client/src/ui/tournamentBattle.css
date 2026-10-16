@@ -51,7 +51,7 @@
 .tournament-match-result [role="status"] { min-height: 2em; }
 .spell-button:disabled { opacity: .45; cursor: not-allowed; }
 .tournament-battle-cover { position: fixed; inset: 0; z-index: 4; background: #0005; }
-@media (max-width: 719px), (orientation: portrait) and (max-width: 1000px) {
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
   .tournament-battle-hud { flex-direction: column; gap: 5px; padding: 6px; }
   .tournament-battle-armies { flex-basis: auto; width: 100%; max-width: none; gap: 6px; }
   /* Town controls use display:contents on phones. A battle needs one compact

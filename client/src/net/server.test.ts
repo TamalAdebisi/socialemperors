@@ -25,6 +25,25 @@ test("failed or malformed tournament replies cannot masquerade as an empty list"
   await assert.rejects(server.tournamentInfo(), /not returned/);
 });
 
+test("friends' cards validate before either a list or successful entry reaches the window", async (t) => {
+  const server = new GameServer({ dynamicUrl: "/game", userId: "player" } as PageSettings);
+  const friend = { tournament_id: "friend-room", tournament_type_id: "1", reward_id: 2, owner: "<Friend>" };
+  let data: Record<string, unknown> = { tournament: null, tournament_reward_id: {}, tournament_weekly: {}, tournament_friends: [friend] };
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data })));
+  assert.deepEqual((await server.tournamentInfo()).tournament_friends, [friend]);
+  data.tournament_friends = [{ ...friend, reward_id: "2", owner_id: "friend" }];
+  assert.equal((await server.tournamentInfo()).tournament_friends[0].reward_id, "2", "the original numeric-string index remains supported");
+  for (const invalid of [null, "friend-room", [], {}, { ...friend, tournament_id: null },
+    { ...friend, tournament_type_id: 1 }, { ...friend, owner: null }, { ...friend, reward_id: "unknown" },
+    { ...friend, reward_id: -1 }, { ...friend, reward_id: 1.5 }]) {
+    data.tournament_friends = [invalid];
+    await assert.rejects(server.tournamentInfo(), /not returned/);
+  }
+  data = { ...data, result: "OK", tournament_friends: [null] };
+  await assert.rejects(server.joinTournament("1", 1, [511]), /not returned/);
+  await assert.rejects(server.createTournament("1", [511], []), /not returned/);
+});
+
 test("entry and room mutations preserve original service names and payloads", async (t) => {
   const calls: { service: string; payload: Record<string, unknown> }[] = [];
   const info = { tournament: null, tournament_reward_id: {}, tournament_weekly: {}, tournament_friends: [] };

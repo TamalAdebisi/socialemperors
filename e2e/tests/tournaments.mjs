@@ -263,4 +263,48 @@ export default async function tournaments({ newPlayer }) {
   assert.equal(Number(learned.playerInfo.completed_tutorial), 33);
   assert.deepEqual(learned.privateState.teams.tournament, padded(SWORD));
   await learner.shot("after-mandatory-lessons");
+
+  // Ordinary returns also wait for a slow welcome read and the real social
+  // gift it finds; closing Gifts then restores the saved room exactly once.
+  await learner.press("Pause");
+  for (const [one, other] of [[player, learner], [learner, player]]) {
+    const asked = await one.page.request.post(`${one.base}/friends/ask`,
+      { form: { username: other.name, csrf: await one.csrf() } });
+    assert.ok(asked.ok());
+  }
+  const giftState = await (await learner.page.request.get(`${learner.base}/gifts/game?empire=${encodeURIComponent(learner.settings.userId)}`)).json();
+  const recipient = giftState.friends.find((friend) => friend.username === player.name);
+  assert.ok(recipient && giftState.free.length > 0);
+  const gift = await learner.page.request.post(`${learner.base}/gifts/game?empire=${encodeURIComponent(learner.settings.userId)}`,
+    { form: { action: "free", friend: String(recipient.id), item: String(giftState.free[0].id), csrf: await learner.csrf() } });
+  assert.ok((await gift.json()).ok);
+  const returnRoom = await service("join_tournament", { tournament_type_id: "1", category: 1, tournament_id: "", team: padded(SWORD), flashSubResources: 1 });
+  assert.equal(returnRoom.result, "OK");
+  const returnBalance = (await getInfo()).map.coins;
+  let releaseWelcome, welcomeRead;
+  const welcomeHeld = new Promise((resolve) => { releaseWelcome = resolve; });
+  const welcomeReading = new Promise((resolve) => { welcomeRead = resolve; });
+  await page.route("**/gifts/game?**", async (route) => {
+    const response = await route.fetch();
+    welcomeRead();
+    await welcomeHeld;
+    await route.fulfill({ response });
+  }, { times: 1 });
+  const readsBeforeReturn = reads;
+  await page.goto(`${player.base}/client.html?tournaments=1`);
+  await player.loaded();
+  await welcomeReading;
+  try {
+    assert.equal(reads, readsBeforeReturn, "ordinary return waits for the welcome read before requesting tournaments");
+    assert.equal(await page.locator(".tournament-window:not([hidden])").count(), 0);
+  } finally { releaseWelcome(); }
+  const giftWindow = page.locator(".panel.gifts-window:not([hidden])");
+  await giftWindow.getByRole("button", { name: `Take ${giftState.free[0].name}`, exact: true }).waitFor();
+  assert.equal(reads, readsBeforeReturn, "the gift window is not replaced by the returning tournament");
+  await giftWindow.getByRole("button", { name: "Close window", exact: true }).click();
+  await page.waitForSelector(".tournament-room", { timeout: 30_000 });
+  assert.equal(reads, readsBeforeReturn + 1);
+  assert.equal((await service("get_tournament_info")).tournament.tournament_id, returnRoom.tournament.tournament_id);
+  assert.equal((await getInfo()).map.coins, returnBalance, "returning neither repeats the fee nor leaves the saved room");
+  await player.shot("after-welcome-gift");
 }

@@ -2,7 +2,7 @@
 // exercises the automatic advance, then all three real matches are recorded.
 import assert from "node:assert/strict";
 import { PHONE } from "../lib.mjs";
-import { prepare, open, confirm, gameConfig, service, playerInfo, fitsPhone } from "../tournament-lib.mjs";
+import { prepare, open, gameConfig, service, playerInfo, fitsPhone } from "../tournament-lib.mjs";
 
 export default async function tournamentWeekly({ newPlayer }) {
   const player = await newPlayer({ viewport: PHONE, phone: true });
@@ -13,11 +13,26 @@ export default async function tournamentWeekly({ newPlayer }) {
   await open(player, true);
   await player.press("Weekly");
   const enter = () => page.locator('[data-tournament="8"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
-  // The suite may run in the original final-ten-minutes warning interval.
-  const available = (await service(player, "get_tournament_info")).tournament_weekly["8"];
-  if (Number(available.timeLeft) <= 600) await confirm(player, enter);
-  else await enter();
-  await page.waitForSelector(".tournament-results");
+  // Entry refreshes the town asynchronously, so the clock can cross the
+  // final-ten-minutes boundary after the card was displayed. Accept only
+  // the original weekly warning while this entry is in progress.
+  const weeklyWarning = config.localization_strings.find((word) => Number(word.id) === 1298)?.text.trim();
+  assert.ok(weeklyWarning, "the original weekly warning is configured");
+  const entryDialogs = [];
+  const acceptWeeklyWarning = async (dialog) => {
+    const prompt = { type: dialog.type(), message: dialog.message() };
+    entryDialogs.push(prompt);
+    if (prompt.type === "confirm" && prompt.message === weeklyWarning) await dialog.accept();
+    else await dialog.dismiss();
+  };
+  page.on("dialog", acceptWeeklyWarning);
+  try {
+    await enter();
+    await page.waitForSelector(".tournament-results");
+  } finally {
+    page.off("dialog", acceptWeeklyWarning);
+    for (const prompt of entryDialogs) assert.deepEqual(prompt, { type: "confirm", message: weeklyWarning });
+  }
   const room = (await service(player, "get_tournament_info")).tournament;
   assert.equal(room.players.length, 4);
   for (const [index, opponent] of room.players.slice(1).entries()) {
@@ -40,6 +55,39 @@ export default async function tournamentWeekly({ newPlayer }) {
     });
     await player.shot(`weekly-army-${index + 1}-phone`);
     if (index === 0) {
+      // Exactly 720px in landscape uses the shared HUD's phone breakpoint.
+      // Pause the real match during layout checks, then restore the phone
+      // before observing formation and the timed advance below.
+      await player.press("Pause");
+      await page.setViewportSize({ width: 720, height: 600 });
+      await page.waitForFunction(() => innerWidth === 720 && innerHeight === 600 && matchMedia("(orientation: landscape)").matches);
+      const layout = await page.locator(".tournament-battle-hud").evaluate((hud) => {
+        const bounds = hud.getBoundingClientRect();
+        return {
+          direction: getComputedStyle(hud).flexDirection,
+          controls: getComputedStyle(hud.querySelector(".hud-buttons")).display,
+          x: bounds.x, right: bounds.right, height: bounds.height,
+          fits: hud.scrollWidth <= hud.clientWidth,
+          buttons: [...hud.querySelectorAll("button")].map((button) => {
+            const box = button.getBoundingClientRect();
+            return { name: button.getAttribute("aria-label") ?? button.textContent,
+              x: box.x, right: box.right, width: box.width, height: box.height };
+          }),
+        };
+      });
+      assert.equal(layout.direction, "column", "720px landscape uses the compact battle HUD");
+      assert.equal(layout.controls, "flex", "battle controls stay in their own row at the shared phone breakpoint");
+      assert.ok(layout.x >= 0 && layout.right <= 721 && layout.fits, "the landscape HUD has no horizontal overflow");
+      assert.ok(layout.height <= 160, "the landscape controls leave room for the battlefield");
+      for (const button of layout.buttons) {
+        assert.ok(button.x >= 0 && button.right <= 721, `${button.name} fits in the landscape viewport`);
+        assert.ok(button.width >= 44 && button.height >= 44, `${button.name} keeps a full touch target in landscape`);
+      }
+      await player.press("Resume");
+      await page.waitForSelector(".pause-curtain", { state: "detached" });
+      await player.shot("weekly-battle-720-landscape");
+      await page.setViewportSize(PHONE);
+      await page.waitForFunction(({ width, height }) => innerWidth === width && innerHeight === height, PHONE);
       await player.press("Speed 1×");
       await player.press("Speed 2×");
       await page.waitForFunction(() => window.seTournament.match.state === "waiting", null, { timeout: 60_000 });

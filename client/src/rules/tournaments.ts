@@ -222,6 +222,9 @@ export function tournamentPlayerScore(player: TournamentPlayer): { points: numbe
   };
 }
 
+/** The original score table includes players who left, with their retained
+ * points and time. Its displayed positions are not prize eligibility: an
+ * abandoned high scorer can precede the server's actual winner. */
 export function tournamentLeaderboard(room: TournamentRoom): (ReturnType<typeof tournamentPlayerScore> & { player: TournamentPlayer })[] {
   return room.players.map((player) => ({ player, ...tournamentPlayerScore(player) }))
     .sort((a, b) => b.points - a.points || a.seconds - b.seconds ||

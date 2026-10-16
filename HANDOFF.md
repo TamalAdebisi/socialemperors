@@ -42,18 +42,19 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are complete and verified in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92)**,
-  following #89's lists, help and team box: rooms, copied-army battles,
-  results/prizes and friends' tournaments. At
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); review-fix verification is pending.**
+  Following #89's lists, help and team box, this adds rooms, copied-army
+  battles, results/prizes and friends' tournaments. The pre-review run at
   `49b5685e368efd6efeecdc348a2202a710715b2f`, including #87 and #93,
   **73/73 browser tests passed in 93m 28.38s**; server **440 run, 431 passed,
   9 existing skips**; client types and **373 tests passed**. All five
   tournament checks passed. [The delivery record](docs/verification-92.md)
-  records the exact evidence and subsequent documentation integration of
-  #91's completed art repair. No further tournament slice remains.
+  preserves that evidence and #91's documentation integration at
+  `8dccab0d`. Later review fixes need fresh checks before merge. No further
+  tournament slice remains.
   Classic choices stay hidden; the existing routes and shared saves remain
   supported.
-- **Tasks 1, 2, 3, 5 and 7 are complete:** #86 delivered the timing fixes;
+- **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
   task 4, the shop details; its research below is retained. Task 6 remains
@@ -80,9 +81,9 @@ next agent knows where to start.
     special units' rarer moves, a short list of battle rules (PARITY.md,
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
-    Arthur's lessons, the nests and all tournament stages are built and
-    verified. Left: the long tail of windows and the later decision about
-    retiring the classic client.
+    Arthur's lessons, the nests and all tournament stages are built;
+    tournament review-fix verification is pending. Left: the long tail of
+    windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
   50% are built in the new client, 40% partly (mostly special buildings
@@ -185,9 +186,9 @@ between simultaneous runs.
 These focused checks help locate failures; the complete suite still
 needs coverage on the final code. Server tests and the client's type/unit
 checks can run alongside browser checks. Task 4 (shop details) can now
-build on the delivered card; task 7 is complete in #92, with all 73
-browser checks passing after integrating #93. Its exact tested code and
-results are in [the delivery record](docs/verification-92.md).
+build on the delivered card. Task 7's implementation is in #92; its
+pre-review 73/73 pass is recorded, with fresh verification of the review
+fixes pending in [the delivery record](docs/verification-92.md).
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -479,9 +480,9 @@ the original, play a town from the start in both clients on this computer
 and tell the owner it's ready to play. They test by playing, at that
 point, not before.
 
-### 7. The switch: tournaments in the new client (L, in slices) - [x]
+### 7. The switch: tournaments in the new client (L, in slices) - [ ]
 
-**Complete implementation and verification in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92).**
+**Complete implementation in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); final review-fix verification pending.**
 The owner expanded the task to finish all remaining tournament parts.
 The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
@@ -491,18 +492,27 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Final integrated verification:** exact tested code
+**Final review-fix verification: pending.** Review corrected Engineer
+orders and shared healing LIMIT accounting, suppressing only zero-effect
+healing popups. It also corrected malformed friends-room replies,
+ordinary welcome ordering, the 720px battle layout and the weekly warning
+check. The original weekly saved-team exception and abandoned-score
+ordering are retained, with their source-supported distinctions recorded
+in DECISIONS.md. No new final commit or result is claimed yet.
+
+**Pre-review integrated verification:** exact tested code
 `49b5685e368efd6efeecdc348a2202a710715b2f` includes main `73998ffc`
 and its #93 tutorial, with #87's building card and Menu preserved. The
 server ran **440 tests: 431 passed, 9 existing skips** (31.48s); client
 types passed (2.33s), followed by **373/373 rule tests** (7.43s). The full
 browser suite passed **73/73 in 93m 28.38s**, including all five tournament
 checks and shared spells. Checks used local throwaway accounts and
-read-only public art; no production game state was changed. Latest main
-`d4bc1a72` brings #91's completed art-repair documentation; its changes
-since `73998ffc` contain no runtime, test or source-art changes. See
-[the delivery record](docs/verification-92.md) for individual timings,
-screenshot and log review, and the final documentation integration.
+read-only public art; no production game state was changed. Main
+`d4bc1a72` brought #91's completed art-repair documentation, merged at
+`8dccab0d` without runtime, test or source-art changes from the tested
+code. Subsequent review fixes are outside that identity claim. See
+[the delivery record](docs/verification-92.md) for this run's timings,
+screenshot and log review, and the pending final verification.
 
 **Pre-#93 integration checks:** at
 `47471ff44126cad5707a601365beb904d70d23ad`, the server ran **434 tests:
@@ -516,8 +526,8 @@ pass. It now waits for the intended camera movement, with a 30-second
 bound, retaining the click and saved-rotation assertions and adding
 no-zoom/no-vertical-movement checks. Three focused repeats passed in 38s,
 41s and 39s. The saved tournament return through #93's mandatory tutorial
-also passed its focused check in 109s. The final 73-test run above includes
-both fixes and all of #93's tutorial work.
+also passed its focused check in 109s. The pre-review 73-test run above
+includes both fixes and all of #93's tutorial work.
 
 **First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
 editor, with desktop/phone coverage. At that first slice, entry and all
@@ -571,8 +581,9 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 4. Results, the ranking and prizes — built.
 5. Friends' tournaments: create, invite, call off — built.
 
-All five parts are complete. No further tournament slice remains; the
-next queued work is task 4, the shop details. Task 6 remains on hold.
+All five parts are implemented; final review-fix verification is pending.
+No further tournament slice remains. After delivery, the next queued work
+is task 4, the shop details. Task 6 remains on hold.
 
 ### 8. The switch: the long tail of windows (S to M each) - [ ]
 
@@ -687,7 +698,8 @@ If a task needs one of these, stop and say what's needed and why.
 - **Windows that open by themselves** (level ups, "New Mission!", gifts
   waiting) can cover what a test wants to press. The tests go on past a
   level-up window as a player would; copy how they do it.
-- **Phones:** the dock layout takes over below 720 pixels wide, or on a
+- **Phones:** the dock layout takes over at 720 pixels wide or narrower,
+  or on a
   screen held upright up to 1000 wide. Test new windows at a phone's size
   too (`newPlayer(..., { phone: true })`); things have overlapped the
   tools there before.

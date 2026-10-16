@@ -5,6 +5,7 @@ import type { Point } from "./geometry.ts";
 import type { TournamentMatch, TournamentPlayer, TournamentRoom } from "./tournaments.ts";
 
 const HEALERS = new Set([502, 590, 866, 886]);
+const ENGINEER = 570;
 const WAIT_FRAMES = 10 * FPS;
 const POSITION_FRAMES = 10 * FPS;
 export const TOURNAMENT_END_DELAY = 3 * FPS;
@@ -220,6 +221,10 @@ export class TournamentBattle {
   private assignTargets(refresh: boolean): void {
     const foes = this.living(this.targetOrder);
     for (const unit of this.living(this.enemy)) {
+      // The original collective healer list excludes engineers. Their own
+      // mind repairs friendly siege; repeated enemy orders would override it
+      // between the ordinary mind's less frequent updates.
+      if (unit.item.id === ENGINEER) continue;
       if (HEALERS.has(unit.item.id)) {
         if (!unit.target || unit.target.dead) {
           const patient = this.living(this.enemy).find((other) => !HEALERS.has(other.item.id));

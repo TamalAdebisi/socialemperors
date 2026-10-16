@@ -68,7 +68,7 @@ import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
 import { AskFriends } from "./ui/askFriends.ts";
-import { Panel } from "./ui/panel.ts";
+import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -342,7 +342,8 @@ async function start(): Promise<void> {
       survivalWindow.open();
     }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => openTournaments());
     const tournamentConfig = tournamentRules(config);
-    let tournamentAfterLessons = false;
+    let tournamentAfterWelcome = false;
+    let tournamentWelcomePending = true;
     let tournamentTown = town;
     let tournamentWarehouse = (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
     let tournamentFriends = (info.neighbors ?? []).map((neighbor) => String(neighbor.pid));
@@ -412,11 +413,14 @@ async function start(): Promise<void> {
       flush: () => commands.flush(),
     });
     openTournaments = () => {
-      if (learning) {
-        tournamentAfterLessons = true;
+      if (learning || tournamentWelcomePending) {
+        tournamentAfterWelcome = true;
+        // A manual choice from Battle/World must not leave its launcher
+        // blocking the deferred panel after the welcome read completes.
+        if (!learning) closePanel();
         return;
       }
-      tournamentAfterLessons = false;
+      tournamentAfterWelcome = false;
       if (tournamentConfig.enabled && town.level >= MIN_LEVEL_TOURNAMENT) void tournamentWindow.open();
       else editor.tell(tournamentConfig.enabled ? `Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.` : "Tournaments are not available right now.");
     };
@@ -685,11 +689,24 @@ async function start(): Promise<void> {
     };
     afterDrawing = () => {
       defend();
+      const reopenTournament = () => {
+        if (!tournamentAfterWelcome || learning || tournamentWelcomePending) return;
+        // Both ordinary returns and interrupted lessons wait for welcome
+        // dialogs. Opening a panel early would let a late gift read close it.
+        if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window")) {
+          requestAnimationFrame(reopenTournament);
+        } else openTournaments();
+      };
+      const welcomeFinished = () => {
+        tournamentWelcomePending = false;
+        reopenTournament();
+      };
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
-      const welcome = async () => {
+      const welcome = () => {
         editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
         // Gifts waiting on the site: their window, as the classic page opens it when the town is up.
-        if (gifts && await gifts.waiting() > 0) await gifts.open();
+        const welcomed = gifts?.waiting().then((waiting) => waiting > 0 ? gifts.open() : undefined);
+        void Promise.resolve(welcomed).then(welcomeFinished, welcomeFinished);
       };
       const startLessons = (from: number) => {
         learning = true;
@@ -715,18 +732,7 @@ async function start(): Promise<void> {
             finished: () => {
               learning = false;
               levelWindows.show(laterLevels.splice(0));
-              const welcomed = welcome();
-              if (tournamentAfterLessons) {
-                // A saved battle-return URL must wait for Arthur and the
-                // welcome dialogs, then reopen the tournament only once.
-                const reopen = () => {
-                  if (!tournamentAfterLessons) return;
-                  if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window")) {
-                    requestAnimationFrame(reopen);
-                  } else openTournaments();
-                };
-                void welcomed.then(reopen, reopen);
-              }
+              welcome();
             },
           }, from);
           (window as unknown as Record<string, unknown>).seLessons = lessons;

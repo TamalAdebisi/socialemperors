@@ -319,8 +319,8 @@ export class Battle {
   /**
    * Special moves (rules/specials.ts) listen here. `onBeat` hears a unit's
    * attack beat first and returns true when a special move takes it
-   * instead of the normal hit; `onDealt` hears the damage (or healing) a
-   * fighter deals, for its LIMIT bar.
+   * instead of the normal hit; `onDealt` hears damage dealt or healing
+   * attempted (including overheal), as the original LIMIT bar does.
    */
   onBeat: (unit: Fighter, target: Fighter) => boolean = () => false;
   onDealt: (by: Fighter, amount: number, healing: boolean) => void = () => {};
@@ -660,7 +660,11 @@ export class Battle {
       unit.attacking = false;
       return;
     }
-    if (!healer && target.side === unit.side) {
+    // Collective orders and a target changing sides can arrive between mind
+    // updates. Validate before the beat as well, so a healer never mends an
+    // enemy and an engineer never repairs an ordinary soldier.
+    if (healer ? target.side !== unit.side || (unit.item.id === ENGINEER && target.item.subcategory !== SUBCAT.siege)
+      : target.side === unit.side) {
       unit.target = null;
       unit.attacking = false;
       return;
@@ -1056,14 +1060,20 @@ export class Battle {
   }
 
   heal(target: Fighter, amount: number, by: Fighter | null = null): void {
-    if (target.dead || amount <= 0) {
+    const requested = Math.round(amount);
+    if (target.dead || requested <= 0) {
       return;
     }
-    const healed = Math.min(Math.round(amount), target.maxLife - target.life);
-    target.life += healed;
-    this.events.push({ kind: "hit", fighter: target, amount: healed, crit: false, heal: true });
+    const healed = Math.min(requested, target.maxLife - target.life);
+    if (healed > 0) {
+      target.life += healed;
+      this.events.push({ kind: "hit", fighter: target, amount: healed, crit: false, heal: true });
+    }
     if (by) {
-      this.onDealt(by, healed, true);
+      // The original healing LIMIT counts the requested amount, including
+      // overhealing. A whole patient needs no floating +0 number, but still
+      // supplies a healing beat to that rule.
+      this.onDealt(by, requested, true);
     }
   }
 
