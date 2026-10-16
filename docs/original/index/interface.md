@@ -9,7 +9,7 @@ own: the potion offer, the player-attack world map and the dragon-rider
 minigame. The windows themselves are in [windows.md](windows.md), the map
 and its units in [engine.md](engine.md) and [core.md](core.md).
 
-**Count:** 34 built, 17 partly, 18 not yet, 18 not needed, 11 art (98 classes).
+**Count:** 35 built, 17 partly, 17 not yet, 18 not needed, 11 art (98 classes).
 
 **How deep this was read.** Read through: `GuiManager`, `PlayerStatus`,
 `MissionsManager`, `CommandManager`, `CollectableManager`, `KompuManager`,
@@ -115,7 +115,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `managers/UnitCollectionsManager.as` | 151 | The units book: which units of each category the player has ever had (bought, or standing in town when the game opens) and a message when a category fills. | not yet |
 | `managers/TournamentManager.as` | 875 | Tournaments: the list, creating or joining a room (the fee taken with `tournament_substract_resources`), leaving or cancelling (refunds), playing a match against another player's army, the life bars and the results. | built: `rules/tournaments.ts`, `ui/tournaments.ts`, `ui/tournamentResults.ts`, `tournamentPlay.ts`; services own actual fees/prizes |
 | `managers/ServiceManager.as` | 96 | Calls a server page (the tournaments' ones) with a signed request and checks the reply's signature. | built: original tournament service envelopes in `net/server.ts`; this project's unsigned pages do not require signatures |
-| `managers/services/Service.as` | 26 | One waiting service call and its handlers. | not yet |
+| `managers/services/Service.as` | 26 | One waiting service call and its handlers. | built: tournament request parameters and Promise success/error handling in `net/server.ts` and its callers |
 | `managers/SoundManager.as` | 599 | Music and effects: seven tracks (town, battle, ship, attack, quest, troll town, survival) faded into each other over a second; effects a moment after their cause, a few of each at once, only for things on screen; the death cry by kind (women, trolls and bosses, machines, men). | partly: `sound.ts` has the town's music and 16 effects; no other tracks, no fading, no boss or spell sounds |
 | `managers/Projectiles.as` | 594 | The layer of flying shots: arrows and rocks, the puff where they land, smoke trails, a castle's stream of shots, with a cap on puffs at once; pauses with the game. | partly: shots drawn in `view/battleView.ts`; no puffs, trails or streams |
 
