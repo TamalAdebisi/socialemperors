@@ -14,9 +14,11 @@ This is a non-commercial fan project. See [Copyright](#copyright) below.
    <https://game-server-staging-production.up.railway.app>. Staging has its own
    empty database, so testing there never touches real players' empires.
 3. The live game changes **only when a pull request is merged** into `main`:
-   by the owner, or by Claude for its own once all its tests pass, as the
-   owner allows. Railway then rebuilds `main` (about 2 minutes, then a short
-   reconnect for players).
+   **all agents have standing owner authorization to merge ready pull
+   requests**, including another agent's, after completing verification.
+   Do not ask for merge confirmation again. Railway then rebuilds `main`
+   (about 2 minutes, then a short reconnect for players); that automatic
+   deployment is authorized too. CLAUDE.md gives the delivery rules.
 
 Passwords, API keys and tokens never go in chat or in the repository, only in
 GitHub Secrets or Railway variables.
@@ -409,6 +411,7 @@ merging the two wait fixes with that separate failure documented.
 
 | Decision | Why |
 | --- | --- |
+| Agents complete and merge agreed work autonomously | The owner wants implementation, verification, docs and merging handled together, without repeated merge approval; authorized 16 October 2026 |
 | Railway, not Render | Persistent disk on the cheap plan, deploys from GitHub, usage-based price (about $5 a month). Comparison in [DEPLOY.md](DEPLOY.md#appendix-a-railway-vs-render) |
 | Assets on Cloudflare R2 | Free downloads (no egress fees); keeps 1.3 GB out of the server |
 | Exactly one server process | Villages live in memory and are saved every 5 seconds. More processes need them out of memory, not just a database server |
