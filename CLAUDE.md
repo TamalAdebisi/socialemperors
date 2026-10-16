@@ -93,7 +93,8 @@ save. Set `PYTHON` to a Python that has `requirements.txt` installed.
   Cloudflare R2 by a GitHub Action; the interface's icons by
   `tools/art/export_ui.py` into `client/src/ui/art/`.
 - **Docs:** README.md (index), ROADMAP.md, CLIENT.md, DEPLOY.md,
-  MULTIPLAYER.md, FLASH.md, DECISIONS.md.
+  MULTIPLAYER.md, FLASH.md, DECISIONS.md. HANDOFF.md says where the work
+  stands between agents (Claude, Codex); AGENTS.md is this file for Codex.
 - **The map of the original:** `docs/original/`, what every part of the
   Flash client does and how far the new client has got. Look a feature up
   there before building it (its rule book, and the rules with no button),
