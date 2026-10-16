@@ -7,13 +7,16 @@
 import assert from "node:assert/strict";
 import { has } from "../lib.mjs";
 
-const KNIGHT = 512, FROM = [50, 44], TO = [55, 56], CLOSED = [50, 61];
+const KNIGHT = 512, FROM = [50, 44], TO = [54, 55], CLOSED = [50, 61];
 
 export default async function walk({ newPlayer }) {
   const player = await newPlayer();
 
   const knight = await player.select(FROM, "Light Knight");
   assert.match(knight.text, /Tap the ground where it should go/);
+  const destination = player.screenOf(...TO);
+  assert.ok(await player.page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === "CANVAS", destination),
+    "the walk destination is visible above the card");
   await player.tapTile(TO);
   await player.wait(700);
   await player.shot("walking");
