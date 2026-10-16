@@ -1305,7 +1305,8 @@ both clients agree on how far a player got.
   a line or two (DECISIONS.md).
 - **On screen** (`ui/lessons.ts`): Arthur and his speech bubble at the
   right, the game's yellow arrow on what to tap, the screen dimmed around
-  it, red markers over the trees to cut and their count. All the game's
+  it, red markers over the trees to cut and their count inside the
+  instruction bubble. All the game's
   own pictures (`tools/art/export_ui.py`, the `tutor-*` entries). The
   camera goes to each thing on the map, and again if it walks under
   Arthur; an open goals window is closed by the player before going on.

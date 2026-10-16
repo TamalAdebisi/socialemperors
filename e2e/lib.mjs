@@ -233,7 +233,8 @@ export class Player {
   /**
    * Taps ever higher above a tile until the action bar shows what's wanted
    * (text it starts with, or a test): pictures stand higher or lower than a
-   * guess, and the grass between them selects nothing. The point that worked.
+   * guess, and the grass between them selects nothing. Prefer a point
+   * still visible after the card opens, so a later click can reach it too.
    */
   async select([tx, ty], wanted) {
     const ok = typeof wanted === "function" ? wanted : (text) => text.startsWith(wanted);
@@ -243,7 +244,18 @@ export class Player {
       const point = this.screenOf(tx, ty, up);
       await this.click(point);
       const text = await this.bar();
-      if (ok(text)) return { point, text };
+      if (ok(text)) {
+        // The taller panel can cover the feet we just clicked. Find a
+        // visible pixel of the same picture without sending another click.
+        const candidates = Array.from({ length: 15 }, (_, i) => this.screenOf(tx, ty, 10 + i * 15));
+        const visible = await this.page.evaluate(({ point, candidates }) => {
+          const view = window.seHome?.parts.view;
+          const selected = view?.itemAt(point);
+          return selected && candidates.find((at) => document.elementFromPoint(at.x, at.y)?.tagName === "CANVAS"
+            && view.itemAt(at) === selected);
+        }, { point, candidates });
+        return { point: visible || point, text };
+      }
     }
     throw new Error(`nothing right above ${tx}, ${ty}; the bar says "${await this.bar()}"`);
   }

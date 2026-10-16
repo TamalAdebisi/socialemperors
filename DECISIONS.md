@@ -14,6 +14,9 @@ them can be found and reversed. The big, agreed decisions are in
   pointer-leave event before each click; clearing the preview there made
   every tap act like the first. The second tap now completes the upgrade,
   as the existing design intended, with a browser check of its saved cost.
+- **The tutorial's progress count sits inside Arthur's instruction
+  bubble.** Its fixed position crossed the taller card in a passing
+  test's screenshot; keeping it with the instruction makes both readable.
 - **Browser checks use the environment's proxy when configured.**
   Playwright does not pick it up itself; art requests otherwise fail in
   this cloud environment. The throwaway game server stays on localhost.

@@ -3096,11 +3096,8 @@ body {
 }
 
 .lesson-count {
-  position: fixed;
-  bottom: 120px;
-  left: 50%;
-  z-index: 900;
-  transform: translateX(-50%);
+  margin-top: 10px;
+  text-align: center;
   color: #e0161b;
   font: 900 22px var(--round);
   text-shadow: 0 0 3px #fff, 0 0 3px #fff;
