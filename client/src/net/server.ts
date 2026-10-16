@@ -5,6 +5,7 @@
 import type { GameConfig } from "../rules/config.ts";
 import type { PlayerInfo } from "../rules/town.ts";
 import type { Continent } from "../rules/world.ts";
+import type { TournamentInfo } from "../rules/tournaments.ts";
 
 /** What the game page (templates/client.html) tells the client. */
 export interface PageSettings {
@@ -43,6 +44,17 @@ export class GameServer {
   /** Every item, level and text of the game (about 2 MB). */
   gameConfig(): Promise<GameConfig> {
     return this.post("get_game_config.php", {});
+  }
+
+  /** The same service envelope as Flash's ServiceManager; list only. */
+  async tournamentInfo(): Promise<TournamentInfo> {
+    const reply = await this.post<{ data: TournamentInfo }>("tournaments/get_tournament_info.php", {
+      data: "0".repeat(64) + ";" + JSON.stringify({ user_id: this.settings.userId }),
+    });
+    if (!reply.data || !reply.data.tournament_weekly || !reply.data.tournament_reward_id || !Array.isArray(reply.data.tournament_friends)) {
+      throw new Error("The tournament list was not returned.");
+    }
+    return reply.data;
   }
 
   /**

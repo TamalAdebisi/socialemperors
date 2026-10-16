@@ -3,8 +3,8 @@
 // screen Quests and Battle are separate rail buttons; on a phone World holds
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
 // on players from the world map (ui/worldMap.ts, attackPlay.ts), and
-// survival (ui/survival.ts, survivalPlay.ts); tournaments still open the
-// classic game, which plays them on the same empire.
+// survival (ui/survival.ts, survivalPlay.ts). Tournaments open their list
+// and team box here; the later stages continue in the classic game.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -38,10 +38,10 @@ export class WorldWindows {
    * when the town has its button (on a phone it's a row here).
    */
   constructor(classicUrl: string, islands: { toggle(): void; open(): void }, attack: () => void, results: () => void,
-    survival: () => void, towns: (() => void) | null = null) {
+    survival: () => void, towns: (() => void) | null = null, tournaments?: () => void) {
     this.islands = islands;
     const quests = { ...QUESTS, run: () => islands.open() };
-    const runs: Record<string, () => void> = { "Attack a player": attack, "Survival": survival };
+    const runs: Record<string, () => void> = { "Attack a player": attack, "Survival": survival, ...(tournaments ? { "Tournament": tournaments } : {}) };
     const battles = BATTLES.map((mode) => runs[mode.name] ? { ...mode, run: runs[mode.name] } : mode);
     const history = { ...RESULTS, run: results };
     this.battles = window_("battle", "Battles", [...battles, history], classicUrl);
@@ -99,7 +99,7 @@ function window_(key: string, title: string, modes: Mode[], classicUrl: string):
   }
   const note = document.createElement("p");
   note.className = "rows-note";
-  note.textContent = "Tournaments open in the classic game for now, on the same empire.";
+  note.textContent = "Tournament matches continue in the classic game, on the same empire.";
   panel.body.append(list, note);
   return panel;
 }
