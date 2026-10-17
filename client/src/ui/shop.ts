@@ -9,7 +9,7 @@
 import type { ItemInfo } from "../rules/config.ts";
 import { describe, priceOf, tabsOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
 import { resourceIcon } from "./icons.ts";
-import { Panel } from "./panel.ts";
+import { Panel, isSheet } from "./panel.ts";
 
 const numbers = new Intl.NumberFormat();
 const CATEGORY_ICONS:Record<number,string>={
@@ -336,9 +336,9 @@ export class ShopWindow {
     });
     button.classList.add("shop-details-button");button.dataset.item=String(item.id);
     button.setAttribute("aria-expanded","false");card.append(button);
-    card.addEventListener("pointerenter",(event)=>{if(event.pointerType!=="touch"&&!this.pinned)this.showDetails(item,card,false);});
+    card.addEventListener("pointerenter",(event)=>{if(event.pointerType!=="touch"&&!isSheet()&&!this.pinned)this.showDetails(item,card,false);});
     card.addEventListener("pointerleave",()=>this.leaveDetails());
-    card.querySelector<HTMLElement>(".shop-card")?.addEventListener("focus",()=>{if(!this.pinned)this.showDetails(item,card,false);});
+    card.querySelector<HTMLElement>(".shop-card")?.addEventListener("focus",()=>{if(!isSheet()&&!this.pinned)this.showDetails(item,card,false);});
   }
   private showDetails(item:ItemInfo,card:HTMLElement,pinned:boolean):void {
     if(!this.parts.details)return;

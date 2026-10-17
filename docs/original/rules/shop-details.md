@@ -28,7 +28,8 @@ up from the local-calendar expiry and never fall below zero; the badge
 changes no sale eligibility. Early cash unlocking stays disabled.
 
 Built in rules/shopDetails.ts, ui/shopDetails.ts and ui/shop.ts. Hover
-shows the white bubble; Details pins it by tap or keyboard, including for
+shows the white bubble on wide screens; the phone layout uses Details so
+a preview cannot cover a purchase target. Details pins it by tap or keyboard, including for
 locked items. Purchasing remains its separate existing action. Original
 resource/stat icons and training animations are reused. Tests:
 shopDetails.test.ts and e2e/tests/shop-details.mjs.

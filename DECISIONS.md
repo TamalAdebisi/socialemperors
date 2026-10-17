@@ -1,5 +1,12 @@
 # Judgment calls
 
+## 17 October 2026 — narrow shop previews use Details
+
+Automatic hover/focus previews apply to the wide layout. A narrow layout
+uses the explicit Details button, including when driven by a mouse, so a
+preview cannot cover a purchase target as the pointer enters the card.
+Tap and keyboard Details access remain available in both layouts.
+
 Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
