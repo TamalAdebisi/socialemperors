@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: open shop and storage details explicitly
+
+The owner asked to stop item details opening as the pointer crosses the
+shop or Storage. Details now opens only through its button's click, tap
+or keyboard activation, at every screen width; hover and focus leave it
+closed. This supersedes the earlier wide-hover and narrow-only Details
+choices below, whose entries remain as history.
+
+Show the short label Details on each button so long item names do not
+overflow narrow cards. Keep the full item name in its accessible label
+so keyboard and screen-reader users can distinguish the buttons. The
+existing buying, placing and selling actions and saved rules stay intact.
+
 ## 17 October 2026: acknowledge the warning in the no-hall fixture
 
 The new original missing-hall notice is expected when the villager test

@@ -1674,21 +1674,24 @@ start time; its saved reward and reset are checked on the local server.
 ### Shop details
 
 The shop's original category pictures and New badge now accompany its
-existing categories and cards. Hovering an item shows its facts in a white
-bubble; a Details button pins the same information by tap or keyboard,
-including for locked and unaffordable items and units in Storage. Escape
-closes details first, then the shop. Changing category or closing the shop
-puts the details away. Buying and placing retain their existing actions;
-opening details cannot spend money or unlock an item.
+existing categories and cards. An item's white details bubble opens only
+when its Details button is clicked, tapped or activated by keyboard, at
+every screen width. Hovering or focusing a card or button does not open it.
+This includes locked and unaffordable items and units in Storage. The
+visible button says Details so it fits narrow cards; its accessible name
+also includes the item's name. Escape closes details first, then the shop.
+Changing category or closing the shop puts the details away. Buying and
+placing retain their existing actions; opening details cannot spend money
+or unlock an item.
 
 `rules/shopDetails.ts` follows the original per-kind facts: population,
 base harvest/timer/capacity, training-unit stats and animation, defensive
 stats, discounts, trade lots, scout life, healing, refuges, wonders and
 feature descriptions. `ui/shopDetails.ts` draws those values with the
-existing original stat/resource pictures. `ui/shop.ts` handles hover and
-pinned details. Limited-edition cards show the original date-based days
-remaining, including zero after expiry, without changing which items are
-sold. Early cash unlocking stays disabled, as in the original.
+existing original stat/resource pictures. `ui/shop.ts` handles explicit
+details activation and dismissal. Limited-edition cards show the original
+date-based days remaining, including zero after expiry, without changing
+which items are sold. Early cash unlocking stays disabled, as in the original.
 Browser coverage: `e2e/tests/shop-details.mjs` for desktop/phone, locked
 facts, training animation, badges, dismissal and unchanged saved purchases.
 

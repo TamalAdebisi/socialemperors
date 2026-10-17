@@ -9,7 +9,7 @@
 import type { ItemInfo } from "../rules/config.ts";
 import { describe, priceOf, tabsOf, type Obstacle, type ShopCategory } from "../rules/shop.ts";
 import { resourceIcon } from "./icons.ts";
-import { Panel, isSheet } from "./panel.ts";
+import { Panel } from "./panel.ts";
 
 const numbers = new Intl.NumberFormat();
 const CATEGORY_ICONS:Record<number,string>={
@@ -67,8 +67,6 @@ export class ShopWindow {
   private tab = 0;
   private readonly detail=document.createElement("aside");
   private detailId:number|null=null;
-  private pinned=false;
-  private detailTimer:ReturnType<typeof setTimeout>|null=null;
 
   constructor(parts: ShopWindowParts) {
     this.parts = parts;
@@ -80,8 +78,6 @@ export class ShopWindow {
       <ul class="shop-items"></ul>`;
     this.detail.className="shop-details";this.detail.hidden=true;this.detail.setAttribute("role","region");
     this.panel.element.append(this.detail);
-    this.detail.addEventListener("pointerenter",()=>{if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;});
-    this.detail.addEventListener("pointerleave",()=>this.leaveDetails());
     window.addEventListener("keydown",(event)=>{
       if(event.key==="Escape"&&!this.detail.hidden){event.stopImmediatePropagation();this.hideDetails();}
     },true);
@@ -330,20 +326,17 @@ export class ShopWindow {
 
   private addDetails(card:HTMLElement,item:ItemInfo):void {
     if(!this.parts.details)return;
-    const button=this.action(`Details: ${item.name}`,()=>{
-      if(this.pinned&&this.detailId===item.id){this.hideDetails();return;}
-      this.showDetails(item,card,true);
+    const button=this.action("Details",()=>{
+      if(this.detailId===item.id){this.hideDetails();return;}
+      this.showDetails(item,card);
     });
     button.classList.add("shop-details-button");button.dataset.item=String(item.id);
+    button.setAttribute("aria-label",`Details: ${item.name}`);
     button.setAttribute("aria-expanded","false");card.append(button);
-    card.addEventListener("pointerenter",(event)=>{if(event.pointerType!=="touch"&&!isSheet()&&!this.pinned)this.showDetails(item,card,false);});
-    card.addEventListener("pointerleave",()=>this.leaveDetails());
-    card.querySelector<HTMLElement>(".shop-card")?.addEventListener("focus",()=>{if(!isSheet()&&!this.pinned)this.showDetails(item,card,false);});
   }
-  private showDetails(item:ItemInfo,card:HTMLElement,pinned:boolean):void {
+  private showDetails(item:ItemInfo,card:HTMLElement):void {
     if(!this.parts.details)return;
-    if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;
-    this.detailId=item.id;this.pinned=pinned;this.detail.hidden=false;
+    this.detailId=item.id;this.detail.hidden=false;
     this.detail.setAttribute("aria-label",`Details: ${item.name}`);
     const close=this.action("Close details",()=>this.hideDetails());
     const content=this.parts.details(item,()=>!this.detail.hidden&&this.panel.isOpen);
@@ -351,16 +344,10 @@ export class ShopWindow {
     const rect=card.getBoundingClientRect();
     this.detail.style.left=`${Math.max(12,rect.left-312)}px`;
     this.detail.style.top=`${Math.max(12,Math.min(rect.top,innerHeight-this.detail.offsetHeight-12))}px`;
-    for(const button of this.list.querySelectorAll<HTMLElement>(".shop-details-button"))button.setAttribute("aria-expanded",String(pinned&&Number(button.dataset.item)===item.id));
-  }
-  private leaveDetails():void {
-    if(this.pinned)return;
-    if(this.detailTimer!==null)clearTimeout(this.detailTimer);
-    this.detailTimer=setTimeout(()=>this.hideDetails(),150);
+    for(const button of this.list.querySelectorAll<HTMLElement>(".shop-details-button"))button.setAttribute("aria-expanded",String(Number(button.dataset.item)===item.id));
   }
   private hideDetails():void {
-    if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;
-    this.detail.hidden=true;this.detailId=null;this.pinned=false;
+    this.detail.hidden=true;this.detailId=null;
     for(const button of this.list?.querySelectorAll<HTMLElement>(".shop-details-button")??[])button.setAttribute("aria-expanded","false");
   }
 

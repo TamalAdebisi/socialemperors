@@ -532,9 +532,12 @@ info panel. It is verified and delivered in #87.
 
 Completed in [#108](https://github.com/TamalAdebisi/socialemperors/pull/108),
 with the combined verification recorded above. Original per-kind facts,
-hover/pinned tap details, category art, New/limited badges and training
-animation are built. The historical research below remains; early cash
-unlocking stays disabled. Beta 1's run-through remains on hold.
+explicit click/tap/keyboard details, category art, New/limited badges and
+training animation are built. The owner's 17 October follow-up makes
+Details explicit at every width: hover and focus leave it closed. Buttons
+show the short Details label with the item name retained for screen readers.
+The historical research below remains; early cash unlocking stays disabled.
+Beta 1's run-through remains on hold.
 
 PARITY.md, "Windows and messages", Shop: what each thing gives or houses
 (a unit's numbers), on hover or tap; the tabs' own pictures; "new" badges.
