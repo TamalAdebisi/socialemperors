@@ -4,6 +4,9 @@
 // so animations INSIDE that state keep their original duration.
 import { BUILDING_STATES } from "./buildingStates.ts";
 
+/** This incomplete export is shown as its original first idle pose. */
+export const STEADY_BUILDING = "1527_dragonCity_cross";
+
 export function buildingStateCount(art: string, facing: number): number {
   return BUILDING_STATES[art]?.[facing] ?? 1;
 }
@@ -18,7 +21,7 @@ export function buildingStateFrames(art: string, facing: number, pictures: numbe
   // This export has only five idle samples, five seconds apart, and cuts
   // off a longer nested timeline. Playing them would introduce large jumps.
   // Keep its original idle pose until a separately held-state loop exists.
-  if (art === "1527_dragonCity_cross") {
+  if (art === STEADY_BUILDING) {
     return [first];
   }
   const last = first + Math.floor((pictures - 1 - first) / states) * states;

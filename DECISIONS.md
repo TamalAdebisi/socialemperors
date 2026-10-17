@@ -25,6 +25,14 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 17 October 2026: Safari texture decoding
 
+- **Load only the images used by the deliberately fixed pose.** That one
+  incomplete export has 100 image pages, over 4 GB decoded. Loading all of
+  them after the Safari decode repair exhausted the 8 GB test machine.
+  Read its atlas indexes, preserve the first frame of each facing and the
+  original bounds, and decode only their two image pages. This changes no
+  displayed pose and needs no new public art. Other structures retain their
+  full animations. The browser regression checks the actual image requests
+  against the pages used by both rendered facings.
 - **Keep image decoding on the page in Safari.** A large atlas transferred
   from Pixi's worker contained transparent pixels despite the source file
   having visible artwork. Re-uploading that bitmap did not help. Decoding

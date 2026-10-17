@@ -5,12 +5,17 @@ import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BUILDING_STATES } from "../../client/src/view/buildingStates.ts";
-import { BLANK_BUILDING_ENDS } from "../../client/src/view/buildingAnimation.ts";
+import { BLANK_BUILDING_ENDS, STEADY_BUILDING } from "../../client/src/view/buildingAnimation.ts";
 import { has } from "../lib.mjs";
 
 export default async function structureIdle({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
+  const steadyImages = new Set();
+  page.context().on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (/\/1527_dragonCity_cross(?:-\d+)?\.webp$/.test(path)) steadyImages.add(path);
+  });
   await player.send([
     { cmd: "buy", args: [77, 55, 56, 0, 0, 1, 1] },
     { cmd: "buy", args: [500, 51, 58, 0, 0, 1, 1] },
@@ -116,7 +121,7 @@ export default async function structureIdle({ newPlayer }) {
         for (let i = 3; i < pixels.pixels.length; i += 4) if (pixels.pixels[i] > 0) visible++;
         captures.push(await renderer.extract.base64({ target: slot, format: "png", clearColor: 0x5b9f30 }));
         faces.push({ facing, frames: frames.length, unique: new Set(frames).size, valid, synchronized,
-          visible,
+          visible, image: picture.texture.source.label,
           blank: frames.some((texture) => texture.frame.width <= 1 && texture.frame.height <= 1),
           first: picture.texture === original[0] });
       }
@@ -129,6 +134,11 @@ export default async function structureIdle({ newPlayer }) {
       writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }
     delete result.captures;
+    if (name === STEADY_BUILDING) {
+      const used = new Set(result.faces.map((face) => new URL(face.image).pathname));
+      assert.deepEqual(steadyImages, used, "the fixed pose downloads only the image pages its facings use");
+      assert.equal(steadyImages.size, 2, "the current export needs two images, not all 100 pages");
+    }
     if (["aserradero1", "oiltower", "torreagua", "adiestramientocaballos", "1527_dragonCity_cross"].includes(name)) {
       assert.ok(result.faces.every((f) => f.unique === 1), `${name} holds its empty/idle picture`);
     }
