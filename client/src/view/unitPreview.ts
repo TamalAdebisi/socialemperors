@@ -29,7 +29,8 @@ export function unitPreview(art: ArtLibrary, item: ItemInfo, canvas: HTMLCanvasE
     const started = performance.now();
     const draw = (now: number) => {
       if (stopped || !active() || !canvas.isConnected) return;
-      const elapsed = now - started;
+      // A delayed first RAF can carry a timestamp just before setup ran.
+      const elapsed = Math.max(0, now - started);
       const run = runs[Math.floor(elapsed / 3000) % runs.length]!;
       const texture = run[Math.floor((elapsed % 3000) * sheet.fps / 1000) % run.length];
       const source = texture.source.resource as CanvasImageSource | undefined;

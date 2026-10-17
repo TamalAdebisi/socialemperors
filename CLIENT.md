@@ -1694,6 +1694,11 @@ date-based days remaining, including zero after expiry, without changing
 which items are sold. Early cash unlocking stays disabled, as in the original.
 Browser coverage: `e2e/tests/shop-details.mjs` for desktop/phone, locked
 facts, training animation, badges, dismissal and unchanged saved purchases.
+It also checks explicit activation and button/text bounds at eight widths
+from 320 to 1280 pixels. Unit previews clamp an earlier first frame timestamp
+to zero elapsed time, so a delayed frame cannot select a negative animation
+index; `view/unitPreview.test.ts` reproduces that timing and checks progression
+and cancellation.
 
 ### Profiles and basic notices
 

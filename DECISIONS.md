@@ -17,6 +17,11 @@ overflow narrow cards. Keep the full item name in its accessible label
 so keyboard and screen-reader users can distinguish the buttons. The
 existing buying, placing and selling actions and saved rules stay intact.
 
+The resize checks exposed a unit-preview clock error. Clamp a delayed first
+frame's earlier timestamp to zero elapsed time; retain the original pictures,
+frame rate and animation order. A deterministic renderer test reproduces
+the old crash and checks that the corrected preview advances and stops.
+
 ## 17 October 2026: acknowledge the warning in the no-hall fixture
 
 The new original missing-hall notice is expected when the villager test
