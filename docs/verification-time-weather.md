@@ -93,3 +93,27 @@ all 25 leaf warehouse/time/pastimes tests passed again with the expanded
 malformed-text cases. The earlier five-format integrated diagnostic above
 belongs to the intermediate decimal parser; its decimal/exponent text
 forms are intentionally refused by the final shared wire contract.
+
+## Combined verification after integration
+
+These results belong to the combined special-building integration, not a
+standalone run of this leaf branch. Exact clean `22f5fd02` passed both
+WebKit machine cases: **time-machine in 123 seconds** and **weather-machine
+in 46 seconds**. All **ten fresh captures** were reviewed individually
+(six time, four weather), with no material visual issue. The final recovery
+stacking fix and the hit checks across the reload button passed; the phone
+failure message and complete Reload saved town button are visible above
+the generic warning. Packet names remain complete, snow ground/tree skins
+match the selected look, owned looks remain free, and phone docks stay
+clear. Per-file SHA-256 hashes and review notes are retained in the
+integration workspace's ignored `work/review-webkit-machines.json`.
+
+Combined post-focus checks at `db5d614d` also passed: **467 server tests
+run, 458 passed, nine existing skips**, in **34.338 seconds** of test time
+(**34.938 seconds** for the command); client types and **447 client tests**
+passed, with **13.265896 seconds** of test time (**16.711 seconds** for the
+command). The final complete **85-case browser run remains pending** in
+the integration delivery record. These results do not claim all selected
+WebKit cases passed: the separate rider fixture follow-up remains recorded
+there. Screenshot review covers visible viewport areas and normal panel
+scrolling; Linux WebKit does not reproduce Safari on a Mac GPU.
