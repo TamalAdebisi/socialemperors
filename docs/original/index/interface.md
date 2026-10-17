@@ -9,7 +9,7 @@ own: the potion offer, the player-attack world map and the dragon-rider
 minigame. The windows themselves are in [windows.md](windows.md), the map
 and its units in [engine.md](engine.md) and [core.md](core.md).
 
-**Count:** 36 built, 16 partly, 17 not yet, 18 not needed, 11 art (98 classes).
+**Count:** 39 built, 16 partly, 14 not yet, 18 not needed, 11 art (98 classes).
 
 **How deep this was read.** Read through: `GuiManager`, `PlayerStatus`,
 `MissionsManager`, `CommandManager`, `CollectableManager`, `KompuManager`,
@@ -111,7 +111,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `managers/TownManager.as` | 69 | Switching between the player's towns: sends what's waiting, loads the other town and resets its markers. | built: travelling sends what's waiting and opens the other town as a new page (`ui/towns.ts`) |
 | `managers/HonorManager.as` | 86 | Honour from an attack, 1 to 10, from both armies' worth (each unit counts a hundredth of its price, capped at 1,000) and what was lost; and the rank for a score. | built: `honour` in `rules/pvp.ts` (`pvp.py` works it out again); the configured rank and original badge now shown by `rules/profile.ts` and `ui/profile.ts` |
 | `managers/DomeManager.as` | 143 | The domes: the Protection Dome halves hits on the owner's things within its square; the Tower Enhancer halves the attack interval of towers in its square when a tower is placed or moved. | not yet (PARITY.md, "Domes") |
-| `managers/CollectableManager.as` | 452 | The 23 collections, five pieces each: which source drops each piece and how often (see Surprises), `add_collectable` sent at once, completing one for its prize (into storage) and its cash price. Human towns only. | not yet: collections come later |
+| `managers/CollectableManager.as` | 452 | The 23 collections, five pieces each: which source drops each piece and how often (see Surprises), `add_collectable` sent at once, completing one for its prize (into storage) and its cash price. Human towns only. | partly: harvest drops in `rules/collections.ts`; saved exchanges/cash in `rules/collectionBook.ts` and `ui/collections.ts`; battle drops remain separate |
 | `managers/UnitCollectionsManager.as` | 151 | The units book: which units of each category the player has ever had (bought, or standing in town when the game opens) and a message when a category fills. | built: `rules/unitBook.ts`, `ui/unitBook.ts`; configured categories, recognition and reward notices |
 | `managers/TournamentManager.as` | 875 | Tournaments: the list, creating or joining a room (the fee taken with `tournament_substract_resources`), leaving or cancelling (refunds), playing a match against another player's army, the life bars and the results. | built: `rules/tournaments.ts`, `ui/tournaments.ts`, `ui/tournamentResults.ts`, `tournamentPlay.ts`; services own actual fees/prizes |
 | `managers/ServiceManager.as` | 96 | Calls a server page (the tournaments' ones) with a signed request and checks the reply's signature. | built: original tournament service envelopes in `net/server.ts`; this project's unsigned pages do not require signatures |
