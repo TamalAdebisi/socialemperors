@@ -4989,7 +4989,7 @@ button.world-piece:hover img {
 .unit-book-items summary { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .unit-book-items summary img { width: 64px; height: 64px; object-fit: contain; }
 .unit-book-items .missing { filter: grayscale(1); opacity: .65; }
-.unit-book-stats { display: grid; grid-template-columns: repeat(3, auto auto); align-items: center; gap: 4px; font-size: 12px; }
+.unit-book-stats { display: grid; grid-template-columns: repeat(2, auto auto); align-items: center; gap: 4px; font-size: 12px; }
 .unit-book-stats img { width: 18px; height: 18px; object-fit: contain; }
 .unit-book-stats dd { margin: 0; }
 .unit-book .shop-tabs { justify-content: space-between; align-items: center; }
@@ -5017,8 +5017,11 @@ button.world-piece:hover img {
 .shop-category-icon { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
 .shop-new { position: absolute; top: 5px; left: 5px; width: 38px; height: auto; }
 .shop-card { position: relative; }
+/* A Details action belongs below its card, inside the same grid row. */
+.shop-items > li { display: flex; flex-direction: column; min-width: 0; }
+.shop-items > li > .shop-card { height: auto; flex: 1; }
 .shop-limited { font-size: 10px; color: #8a331b; }
-.shop-details-button { display: block; width: 100%; margin: 4px 0; font-size: 11px; }
+.shop-details-button { flex: none; display: block; width: 100%; margin: 4px 0; font-size: 11px; }
 .shop-details { position: fixed; z-index: 4; width: 300px; max-height: min(70vh,600px); overflow: auto; padding: 12px; border: 2px solid var(--wood); border-radius: 12px; background: white; color: var(--ink); box-shadow: 0 6px 20px #0005; }
 .shop-details[hidden] { display: none; }
 .shop-details h3 { margin: 6px 0; }

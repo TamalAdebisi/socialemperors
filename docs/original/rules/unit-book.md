@@ -26,4 +26,5 @@ Individual category counters stay independent.
 
 Built: rules/unitBook.ts, ui/unitBook.ts, view/unitPreview.ts. Army opens it
 on desktop and phone. Details expand on tap or keyboard and only one
-preview plays at once. Tests: unitBook.test.ts and e2e/tests/units-book.mjs.
+preview plays at once. Two stat pairs per row keep large values inside
+narrow cards; a local layout-only fixture checks their bounds. Tests: unitBook.test.ts and e2e/tests/units-book.mjs.

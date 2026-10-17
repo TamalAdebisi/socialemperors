@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PHONE,stored } from "../lib.mjs";
-const RECRUIT=[54,50],WONDER=[50,54],ROUND=[56,56];
+const RECRUIT=[57,50],WONDER=[45,55],ROUND=[56,56];
 export default async function socialFriends({newPlayer}) {
   const asker=await newPlayer(),helpers=[];
   for(let i=0;i<4;i++) {
@@ -26,6 +26,12 @@ export default async function socialFriends({newPlayer}) {
     await asker.reload();
     if((await asker.bar())?.includes("your")) await asker.press("OK");
   };
+  await asker.saved();const fixture=await read();
+  for(const [id,at] of [[387,RECRUIT],[470,WONDER],[389,ROUND]]) {
+    const placed=fixture.map.items.find((p)=>p[0]===id);
+    assert.ok(placed,`fixture building ${id} survives ordinary overlap cleanup`);
+    assert.deepEqual(placed.slice(1,3),at);
+  }
   await open(RECRUIT,"Recruitment Prize");
   assert.equal(await panel.getByRole("button",{name:/Hire helper/}).count(),0,"recruitment has no cash hire");
   await ask(helpers.slice(0,3));

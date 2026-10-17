@@ -849,8 +849,9 @@ The windows still "not yet" in `docs/original/index/windows.md`, nearly
 all with their server side done. One slice each, or a few small ones
 together:
 
-- [ ] Collections: implemented on `codex/collections-menu`; verification and
-      merge pending. Army → Collections, goal 54, saved piece counts,
+- [ ] Collections: implemented on `codex/collections-menu`; collections-only
+      verification passed 80/80, plus focus 2/2. Combined progression
+      verification and merge pending (`docs/verification-99.md`). Army → Collections, goal 54, saved piece counts,
       exchanges/cash and Storage, desktop/phone. Harvest drops update
       live counts; combat owns kill drops.
 - [ ] Units book implemented on `codex/units-book`; browser verification
