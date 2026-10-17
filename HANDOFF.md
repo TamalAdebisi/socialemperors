@@ -167,7 +167,7 @@ next agent knows where to start.
   the Flash client's 829 classes that hold the game's own behaviour, about
   50% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  10% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  10% not yet (mostly windows). 49 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
@@ -843,8 +843,10 @@ The windows still "not yet" in `docs/original/index/windows.md`, nearly
 all with their server side done. One slice each, or a few small ones
 together:
 
-- [ ] Collections: the pieces found, trading a full set for its reward or
-      finishing it for cash (`game_collections.py`). Pieces already drop.
+- [ ] Collections: implemented on `codex/collections-menu`; verification and
+      merge pending. Army → Collections, goal 54, saved piece counts,
+      exchanges/cash and Storage, desktop/phone. Harvest drops update
+      live counts; combat owns kill drops.
 - [ ] The units book: every unit by kind, grey until owned, buying a
       missing one for cash.
 - [ ] The unit warehouse (`warehouse.py`).

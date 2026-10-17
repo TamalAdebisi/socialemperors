@@ -1132,7 +1132,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they are not available yet (50 of the 227); the server
+  they are not available yet (49 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
@@ -1567,8 +1567,25 @@ from the tree or rock, a message names it and its collection (the game's
 own words), and the server hears `add_collectable` (collection, piece),
 which keeps it in `privateState.collections`. The original dropped it on
 the ground to tap, as it did the wood; ours gives it at once, like the
-wood. The collections' window, to trade a full set for its prize, is for
-later; until then the classic game has it. Test: `e2e/tests/collections.mjs`.
+wood. Test: `e2e/tests/collections.mjs`.
+
+**The collections window** opens from Army → Collections, on desktop and
+phone. It shows three collections a page, five original piece pictures
+with their counts, the reward and its picture. Missing pieces are faded.
+A full set exchanges through `finish_collection`; the reward arrives in
+Storage and one of each piece is consumed. Cash completion uses the
+original discount (one cash per different piece, with the two original
+fixed-price exceptions); the last collection cannot be bought. The two
+one-time collections stay completed. Other sets can be exchanged again;
+non-decoration rewards already on the map or in Gifts cannot be exchanged
+again until that reward is gone, as in the original. Cash completion
+keeps the original separate behavior. No Facebook sharing is added.
+`rules/collectionBook.ts` mirrors the saved counts and commands;
+`ui/collections.ts` draws the panel. Harvest pieces update its live counts.
+Goal 54 now counts opening it. Browser coverage:
+`e2e/tests/collection-book.mjs`, checking desktop/phone, exchanges, cash,
+Storage, page bounds and reloads. Battle drop triggers belong to the
+separate combat work.
 
 ### The building card
 

@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: collection window in the existing menus
+
+- Put Collections under Army on desktop and phone, using the existing
+  rail and dock rather than adding another phone dock button. Keep the
+  original three sets per page and original piece/reward art.
+- Keep cash completion distinct from exchanging a full set: the original
+  checks existing non-decoration rewards only for exchanges. Preserve
+  its one-time collections, fixed-price exceptions and exchange-only set.
+- Show the reward arriving in Storage with the existing notice system;
+  omit the original Facebook sharing prompt. No prices or drop odds change.
+- Preserve the shared Piece/addPiece drop interface. Combat owns kill
+  drop triggers; this slice updates live counts for existing harvests.
+
 ## 17 October 2026: preserve real visibility in background-play fixtures
 
 - **Simulate hidden tabs without overriding actual page unloading.** A local

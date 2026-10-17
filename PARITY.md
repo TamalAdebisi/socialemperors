@@ -354,7 +354,7 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 ## Not for Beta 1
 
-**Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
+**Originally deferred beyond Beta 1:** the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
 Survival, tournaments, the nests and the mandatory tutorial are now built;
@@ -362,3 +362,8 @@ ROADMAP.md tracks the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.
+
+- [x] Collections window: Army → Collections shows saved pieces and rewards,
+      exchanges full sets and completes eligible sets for cash. Original
+      repeat/unique restrictions remain; goal 54 opens here. Battle drops
+      remain the combat chat's separate scope.

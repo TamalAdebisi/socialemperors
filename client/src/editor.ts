@@ -92,7 +92,7 @@ export interface EditorParts {
    */
   friendHelp?: { ask: (placed: PlacedItem) => void; name: (empire: string) => string; words: FriendWords & { hour: string }; seconds: number };
   /** Collection pieces (rules/collections.ts): the game's sheet of their pictures, and its text lines for their names. */
-  pieces?: { sheet: string; line: (id: number) => string };
+  pieces?: { sheet: string; line: (id: number) => string; found?: (piece: Piece) => void };
   /** A line of the game's words (config localization_strings) by its id, or ours when it hasn't it: the card's tips. */
   line?: (id: number, fallback: string) => string;
 }
@@ -1538,6 +1538,7 @@ export class TownEditor {
    */
   private foundPiece(resource: PlacedItem, piece: Piece): void {
     this.send([addPiece(piece)]);
+    this.pieces?.found?.(piece);
     if (!this.pieces) {
       return;
     }

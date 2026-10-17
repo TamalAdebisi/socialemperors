@@ -52,6 +52,8 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { CollectionBook } from "./rules/collectionBook.ts";
+import { CollectionsWindow } from "./ui/collections.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
@@ -467,7 +469,18 @@ async function start(): Promise<void> {
       };
     }
     openIslands = () => islands.open(undefined, "back");
+    const collectionBook = new CollectionBook(attackState);
+    const collections = new CollectionsWindow({
+      book: collectionBook, town, items,
+      sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`,
+      words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => { commands.add(command.cmd, ...command.args); void commands.flush(); },
+      changed: () => { hud.update(town); shop.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
     const army = new ArmyWindow({
+      collections: () => { doings.collectionsOpened = true; collections.open(); },
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -605,7 +618,8 @@ async function start(): Promise<void> {
         words: { hurry: line(91, "Hurry Up?"), accept: line(90, "Accept"), hour: line(98, "#0# hour") },
         seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
       } : undefined,
-      pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" },
+      pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "",
+        found: (piece) => { collectionBook.found(piece); collections.refresh(); } },
       showLevels: (reached) => {
         const notices = reached.map((r) => ({ ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0 }));
         if (learning) laterLevels.push(...notices); else levelWindows.show(notices);

@@ -208,3 +208,11 @@ test("goal 18: the nearest 20 of the player's units within a circle of 3 tiles r
   // A corner of the old 7 by 7 square (3 and 3 away: further than 3) doesn't count.
   assert.deepEqual(progress(town([hall, near(55, 52), near(55, 55)]), goal, new Doings(), 0, ITEMS), { done: 0, of: 1 });
 });
+
+test("goal 54 counts the collections window opening", () => {
+  const goal = { id: 54, title: "", description: "", reward: 1, need: ["collections-opened"] as Need };
+  const doings = new Doings();
+  assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 0, of: 1 });
+  doings.collectionsOpened = true;
+  assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 1, of: 1 });
+});
