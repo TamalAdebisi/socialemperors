@@ -24,7 +24,11 @@ next agent knows where to start.
   `docs/original/rules/machines.md`. Browser focus and combined pre-merge
   checks are coordinated by the special-buildings chat; do not infer a
   merge or full-suite pass from this implementation note. Unit/type and
-  focused server checks pass; exact browser results follow verification.
+  focused server checks pass. Exact `4a81d5ae` passed both desktop/phone
+  browser cases (136s time, 99s weather); all ten captures were reviewed.
+  The later recovery-warning stacking fix needs combined verification;
+  [the slice record](docs/verification-time-weather.md) retains the initial
+  camp-notice failure and each exact revision.
   Machine goal 220 already has the ordinary build hook, so there is no
   progression-runtime edit and the unfinished-goal count stays unchanged.
   The narrow server fix advances sent PvP attacks/reset with time travel;

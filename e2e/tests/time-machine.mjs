@@ -118,6 +118,13 @@ export default async function timeMachine({ newPlayer }) {
   const unsent = await info(phone);
   assert.equal(unsent.playerInfo.cash, afterPhone.playerInfo.cash);
   assert.deepEqual(unsent.privateState.countTimePacket, afterPhone.privateState.countTimePacket);
+  assert.ok(await phone.button("Reload saved town").evaluate((button) => {
+    const rect = button.getBoundingClientRect();
+    return [0.25, 0.5, 0.75].every((part) => {
+      const hit = document.elementFromPoint(rect.left + rect.width * part, rect.top + rect.height / 2);
+      return hit === button || button.contains(hit);
+    });
+  }), "the complete recovery button stays above the generic save warning");
   await phone.shot("phone-save-recovery");
   await phone.page.unroute("**/command.php", refuse);
   await Promise.all([phone.page.waitForEvent("domcontentloaded"), phone.press("Reload saved town")]);
