@@ -20,6 +20,14 @@ export default async function villagers({ newPlayer }) {
     ...TREES.map(([x, y]) => ({ cmd: "buy", args: [TREE, x, y, 0, 0, 1, 1] })),
   ]);
   await player.reload();
+  // This fixture removes its hall. Acknowledge the original warning before
+  // trying to select the worker underneath it, just as a player must.
+  const notice = player.page.locator(".notice", {
+    has: player.page.getByRole("heading", { name: "Missing Townhall", exact: true }),
+  });
+  await notice.waitFor({ state: "visible" });
+  await notice.getByRole("button", { name: "OK", exact: true }).click();
+  await notice.waitFor({ state: "hidden" });
   const spot = async (tile, name) => {
     const { point, text } = await player.select(tile, name);
     await player.press("Close");
