@@ -85,10 +85,19 @@ local ignored evidence under `work/`; they are not published game source.
 | Early calibrated retry | Interrupted to release the shared browser slot after 13 s. Runner reported its closed page, shell exited 143. No completed feature result. Calibration was reverted before reviewed replacement. | `work/rider-focus-attempt-3-interrupted/` |
 | Strengthened focus 4, `d590401d` | 0/1 in 212 s. Actual normal-input first victory within 600 frames; zero-delay mouse click did not dispatch the original End Game handler, so the required recovery never appeared within 30 s. | `work/rider-focus-attempt-4/` |
 | Strengthened focus 5, `df2effdc` | 0/1 in 220 s. Again won normally within 600 frames; separate real mouse phases still did not dispatch the original callback. | `work/rider-focus-attempt-5/` |
+| Strengthened focus 6, `fa300650` | 0/1 in 261 s. Genuine original win callback `won,1`, recovery saves, every paid recovery/shortcut and ordered free-claim/reset passed. Later map-selection probing accidentally admitted the wide dragon first; selecting it again then failed. | `work/rider-focus-attempt-6/` |
 | Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
 | Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
 | Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
 | Mouse diagnostic 4 | 40 s. Asserted/captured actual standard renderer advice, clicked its X, verified dismissal and then observed genuine original stage down/up/click. | `work/rider-mouse-probe-attempt-4/` |
+| Entry diagnostic 1 | Failed in 18 s: the temporary probe misread the existing helper's map-only return shape. | `work/rider-entry-probe-attempt-1/` |
+| Entry diagnostic 2 | Failed in 18 s: moving the wide dragon alone did not prevent the searching building clicks admitting it first. | `work/rider-entry-probe-attempt-2/` |
+| Entry diagnostic 3 | Failed in 44 s: the first globally visible top-wing pixel changed with animation and the later click sent the rider to ground. | `work/rider-entry-probe-attempt-3/` |
+| Tail diagnostic 4 | Failed in 31 s after correct rider-first admission: the extracted temporary scope lacked its local saved-state variable. The permanent fixture already declares it. | `work/rider-entry-probe-attempt-4/` |
+| Tail diagnostic 5 | Failed in 40 s after both correct admissions: the extracted temporary scope also lacked its window locator. The permanent fixture already declares it. | `work/rider-entry-probe-attempt-5/` |
+| Tail diagnostic 6 | Failed in 282 s at the unchanged 600-frame adventure budget. Genuine boss damage reduced health to 135, but very close actors caused many displayed attack regions to miss. No freeze or runtime error. | `work/rider-entry-probe-attempt-6/` |
+| Tail diagnostic 7 | Failed in 289 s at the same budget. Earlier ordinary movement release improved spacing and health fell to 83; read-only geometry proved remaining magic attacks missed the right-facing actor. | `work/rider-entry-probe-attempt-7/` |
+| Tail diagnostic 8 | Passed in 306 s: exact rider-first/pair admissions, genuine eighth-adventure loss and original `lost,8` callback preserving both units, real phone attack input, phone success-adapter transformation/save and picker fit. Rider was seeded for this diagnostic; it does not prove the training section as one complete run. | `work/rider-entry-probe-attempt-8/` |
 
 The failed native-win images still show the original victory screen and
 the correct button highlighted. Local source inspection establishes that
@@ -110,6 +119,38 @@ records genuine callback arguments before forwarding them unchanged.
 The existing 30-second recovery/save requirements remain. Temporary
 mouse instrumentation was removed and the original authored loader
 artifact restored before the next focused run.
+
+Focus 6's saved order was dragon then rider. The existing map helper
+searches by clicking successively higher pixels; with this large dragon
+nearby, its first clicks selected the dragon and its next click correctly
+ordered that selected unit into the building. The fixture now checks one
+stable building-body pixel with the existing read-only hit test, makes
+one ordinary mouse click, and verifies the displayed card. It asserts an
+initially empty building and an exact rider-only first admission before
+the dragon's ordinary entry. No shared click/cursor behavior was changed.
+The native attack loop also faces the actual enemy before every ordinary
+attack, including an enemy that crossed behind at close range; its game
+clock and liveness caps are unchanged.
+
+The separate taming-loss diagnostic also exposed a deliberately losing
+input strategy that was inefficient, rather than a game-speed problem.
+Releasing movement too close let the actors coast through each other;
+the original displayed attack regions missed. Earlier release left the
+boss 44.5 pixels away: its basic attack rectangle overlapped the hero,
+but several magic rectangles ended just left of the right-facing hero's
+body. The 600-frame budget correctly failed both probes. Position,
+health, original animation frames and hit-region rectangles were recorded
+read-only by temporary instrumentation in our own loader. Releasing at
+220 pixels and making one ordinary left turn aligned the original body
+with the attacks: observed left-facing body bounds were about 274.85 to
+353.95 at hero origin 300, with the boss 58.65 pixels to its right.
+Health reached zero at movie frame 547; the original loss animation and
+end-screen button produced `lost,8` within the same 600-frame journey
+budget. Phone touch then reset the original attack cooldown without
+stealing focus, and the separate success adapter saved the transformation.
+The diagnostic was archived and all temporary geometry instrumentation
+removed before the complete permanent case is rerun. No original game
+state, drawing quality, speed or verification cap changed.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.
