@@ -432,7 +432,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `BubbleSpeech.as` | 15 | The speech bubble's outline. | art |
 | `BubbleSpeechText.as` | 18 | The speech bubble's words. | art |
 | `CortinaMC.as` | 15 | The curtain drawn over the map when paused. | art |
-| `CursorMC.as` | 15 | The mouse pointers, one frame each (axe, pick, go inside, repair...). | art; ours uses it: the work pointers (`ui/art/cursor-*.png`, `axe`, `pick`, `inside`, `repair`) and the tools' (`square`, `remove`, `collect`) |
+| `CursorMC.as` | 15 | The mouse pointers, one frame each (axe, pick, go inside, repair...). | art; ours uses it: the attack sword and work pointers (`ui/art/cursor-*.png`, `axe`, `pick`, `inside`, `repair`) and the tools' (`square`, `remove`, `collect`) |
 | `DebugTile.as` | 15 | A debug tile mark. | art |
 | `DebugTileBlue.as` | 15 | A blue debug tile mark. | art |
 | `DebugTileEnemy.as` | 15 | An enemy debug tile mark. | art |

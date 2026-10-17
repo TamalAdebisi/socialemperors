@@ -179,6 +179,7 @@ export function iconImage(name: IconName, label = ""): HTMLImageElement {
  * points) from the top left.
  */
 export const CURSORS = {
+  attack: `url("${new URL("./art/cursor-attack.png", import.meta.url).href}") 4 4, crosshair`,
   square: `url("${new URL("./art/cursor-square.png", import.meta.url).href}") 13 9, crosshair`,
   remove: `url("${new URL("./art/cursor-remove.png", import.meta.url).href}") 16 13, crosshair`,
   collect: `url("${new URL("./art/cursor-collect.png", import.meta.url).href}") 16 13, pointer`,

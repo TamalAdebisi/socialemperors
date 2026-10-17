@@ -194,6 +194,21 @@ them can be found and reversed. The big, agreed decisions are in
 - **Preserve ownership boundaries.** The weather build goal already works;
   no goal hooks, progression runtime, combat, menus or click controls change.
   Local source reading is summarized in `docs/original/rules/machines.md`.
+## 17 October 2026: Bull Gladiator clicks and the attack pointer
+
+- **Measure the visible frame, keeping the original artwork.** Bull
+  Gladiator's exported canvas is 1060 by 745 pixels, with substantial
+  transparent padding. The unit's forgiving click target now follows the
+  current trimmed sprite, transformed with its mirror, zoom and camera.
+  This applies to every unit in town and battle; the eight-pixel margin,
+  44-pixel minimum and priority of exact picture hits remain.
+- **Show the original sword for an available attack.** With an armed unit
+  selected, hovering an enemy shows CursorMC's attack frame. Shared battle
+  controls cover town defense, quests, player attacks, survival and
+  tournaments. The pointer uses the current click target as units and the
+  camera move, clears when selection ends or the mouse leaves, and yields
+  to spell aiming and the existing repair bucket. This changes feedback,
+  not attack rules or the saved army.
 
 ## 17 October 2026: preserve real visibility in background-play fixtures
 
