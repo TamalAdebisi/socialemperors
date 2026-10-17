@@ -124,14 +124,14 @@ focus assertion failed. An exact-listener probe in both engines reproduced
 WebKit emitting a compatibility mousedown after the cancelled pointerdown.
 The narrow fix cancels that mouse default on adventure controls; Tab,
 Enter and pointer release remain intact. No gameplay, timing limit,
-assertion or error check changes. The complete rider case needs a repeat.
+assertion or error check changes. Its complete repeat is recorded below.
 
 All **36 fresh PNGs** were reviewed. The machine recovery control now
 remains fully visible above the generic warning. Warehouse Storage's three
 ordinary thumbnails were still loading in its final capture: the fixture
 now scrolls each card normally into view and checks all three exact
 original images before capture. No shared Storage behavior changed; this
-stronger fixture also needs a repeat. Phone screenshots cover the visible
+stronger fixture's repeat is recorded below. Phone screenshots cover the visible
 fold; they do not alone prove scrolling or off-screen controls.
 
 The complete first output, all captures, SHA256 manifest, exact clean
@@ -146,8 +146,47 @@ WebKit 2215 uses locally extracted Debian libraries, as recorded in the
 ignored browser-dependency recipe. Only its host-package validator is
 bypassed because it cannot see those extracted libraries; browser errors
 and tests stay enabled. Linux WebKit does not establish Mac/iPhone GPU
-behavior. The repeat and full integrated **85-case Chromium** run remain
-pending, as do their final screenshot/log review and delivery.
+behavior.
+
+## Passing repeat and latest main
+
+The focus fix and stronger Storage fixture are included at exact clean
+start/end `db5d614dff4ba271466718c8bd5df2e40935e6e6`. Complete checks pass:
+
+- Server: **467 run, 458 passed, nine existing PostgreSQL skips**;
+  unittest 34.338s, command 34.938s.
+- Client types and **447/447 tests passed**; tests 13.265896s,
+  command 16.711s.
+
+The same clean revision passes the affected WebKit scenarios **2/2 in
+488.296s**: warehouse 65s, rider training/taming 419s. The unchanged focus
+assertion passes after real touch attack. All three exact original Storage
+images load before capture; all **15 fresh PNGs** were reviewed. The server
+log has no traceback, exception, HTTP 5xx or unhandled command; the final
+output has no captured rider runtime error. Receipts, selected fresh
+captures and manifests are retained in
+`work/checks/integrated-webkit-followup/`; save `/tmp/se-e2e-dZoW9L`.
+Unit/type receipts use `integrated-*-focus-fix/`. All six new scenarios now
+have passing WebKit results across the first and repeat runs, not a single
+final-revision 6/6 run. Original adventure and phone-adapter coverage limits
+remain unchanged.
+
+Main's combat-controls delivery #98 (`aee3b7b2`) then arrived and is merged
+without altering its runtime or fixtures. Both documentation conflict sides
+are preserved, including the workstream ownership note and controls review.
+It adds one browser case, so the full candidate now contains **86 cases**.
+Exact clean `b6ed51757115ac0e5c09c0e0cb81f06d355217e8`, including that main,
+passes all checks again:
+
+- Server: **467 run, 458 passed, nine existing PostgreSQL skips**;
+  unittest 34.075s, command 34.660s.
+- Client types and **451/451 tests passed**; tests 13.541746s,
+  command 17.134s.
+
+Receipts: `work/checks/integrated-server-main98/` and
+`integrated-client-main98/`. Subsequent slice-record merges change only
+documentation. The full integrated **86-case Chromium** run, its fresh
+screenshot/log review and delivery remain pending.
 
 All testing uses local temporary empires. Browser art requests read the
 public art bucket; no production game account or saved game is tested.

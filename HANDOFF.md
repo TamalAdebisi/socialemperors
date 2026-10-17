@@ -40,12 +40,14 @@ next agent knows where to start.
   combined on `codex/special-building-verification` for their full local
   release checks. After final queue-parsing, machine recovery stacking
   and ordered rider-claim corrections plus the legacy output-type guard,
-  exact `f3529ef2` passes 467 server tests (458 passed, nine existing skips),
-  client types and all 447 client tests. The complete rider Chromium focus
+  latest main #98 is included. Exact `b6ed5175` passes 467 server tests
+  (458 passed, nine existing skips), client types and all 451 client tests.
+  The complete rider Chromium focus
   passes 1/1 in 540s. Initial combined WebKit passes 5/6; a narrow adventure
-  touch-focus fix and a stronger Storage-picture capture need their repeats.
-  Complete checks after that fix and the full 85-case Chromium run remain
-  in progress.
+  touch-focus fix and a stronger Storage-picture capture pass their combined
+  repeat 2/2 in 488.296s at `db5d614d`, with all 15 fresh captures reviewed.
+  All six new cases have passing WebKit results across runs. The full
+  86-case Chromium run remains in progress.
   [The integration record](docs/verification-special-buildings.md)
   retains exact scope and results; no full browser pass or merge is
   claimed yet. Soul Mixer remains explicitly blocked on original data.
@@ -59,7 +61,7 @@ next agent knows where to start.
   browser cases (136s time, 99s weather); all ten captures were reviewed.
   The later recovery-warning stacking fix passes in combined WebKit at
   `22f5fd02` (123s time, 46s weather); all ten fresh captures were reviewed.
-  [the slice record](docs/verification-time-weather.md) retains the initial
+  [The slice record](docs/verification-time-weather.md) retains the initial
   camp-notice failure and each exact revision.
   Machine goal 220 already has the ordinary build hook, so there is no
   progression-runtime edit and the unfinished-goal count stays unchanged.
@@ -99,8 +101,9 @@ next agent knows where to start.
   retained DOM focus after the touch attack. An exact-listener two-engine
   probe proved WebKit's compatibility mousedown bypasses the cancelled
   pointerdown. A scoped mousedown cancellation preserves focus and native
-  Tab/Enter defaults; the full rider case must be repeated. That repeat
-  and the complete combined browser run remain with the coordinator.
+  Tab/Enter defaults; the complete rider repeat passed in 419s at
+  `db5d614d`, including phone focus/input/save, with all 11 fresh captures
+  reviewed. The complete combined browser run remains with the coordinator.
   [The verification record](docs/verification-dragon-riders.md) preserves
   every failed/interrupted attempt and the measured new-fixture calibration.
 
