@@ -1,0 +1,13 @@
+.warehouse-counts { font-weight: bold; text-align: center; }
+.warehouse-status:empty { display: none; }
+.warehouse-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.warehouse-slot { min-width: 0; min-height: 116px; background-size: 100% 100%; background-repeat: no-repeat; }
+.warehouse-slot.occupied { display: flex; flex-direction: column; align-items: center; justify-content: end; padding: 5px; }
+.warehouse-slot > img { width: 60px; height: 60px; object-fit: contain; border-radius: 5px; }
+.warehouse-name { font-size: 11px; line-height: 1.2; text-align: center; min-height: 27px; }
+.warehouse-use { width: 100%; min-height: 30px; border: 0; background-color: transparent; background-size: 100% 100%; color: white; font-weight: bold; font-size: 10px; cursor: pointer; }
+.warehouse-pages, .warehouse-buy { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.warehouse-pages .button { font-size: 11px; }
+.warehouse-buy > span { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.warehouse-buy .icon { width: 24px; height: 24px; }
+.warehouse-pages button:disabled { opacity: 0.4; cursor: default; }

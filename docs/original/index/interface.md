@@ -89,7 +89,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `GUI/PortraitAssault.as` | 40 | A unit picture with a count, in the army and after-battle windows. | partly: the island's end window in `questPlay.ts`; the attack windows aren't built |
 | `GUI/PortraitAssaultRecovered.as` | 43 | A recovered unit with half its price. | not needed: only a window the admin panel opens uses it |
 | `GUI/UnitTooltip.as` | 172 | A unit's numbers and animation, for the dragon and monster nests and the super mystery box. | not yet |
-| `GUI/AnimatedUnit.as` | 212 | Plays a unit's animation in a window (darts, dragon taming, unit warehouse, potion offer). | not yet: none of those windows is built |
+| `GUI/AnimatedUnit.as` | 212 | Plays a unit's animation in a window (darts, dragon taming, unit warehouse, potion offer). | warehouse built with original thumbnails in `ui/warehouse.ts`; this shared animation player is not yet ported |
 
 ## Friends and neighbours
 

@@ -14,7 +14,7 @@ Commands from the client:
     "buy_warehouse_capacity_single" [town]   one more place for
                                              WAREHOUSE_CAPACITY_INCREASE_PRICE_SINGLE
                                              cash, up to WAREHOUSE_MAX_CAPACITY
-    "reset_warehouse"               [town]   the warehouse was sold or put away:
+    "reset_warehouse"               [town]   the warehouse was put away:
                                              the units inside go to storage
 """
 

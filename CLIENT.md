@@ -945,10 +945,31 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
 extra villager at a tree or rock, which the Flash client never showed; it
 now gives the same as the client (`production.py`).
 
-**Not yet:** the Unit Warehouse, the hatchery's own work, the sacrifice
+**Not yet:** the hatchery's own work, the sacrifice
 altar and the dragon nest (in the classic game for now; animals go into
 ranches, "The living map"); villagers putting out fires after a battle; the collection pieces
 the Flash client sometimes drops from a harvest.
+
+### The Unit Warehouse
+
+The warehouse's Open button shows eighteen slots per page, including its
+empty pages. Units walk inside through the ordinary map controls and stop
+using population. Use calls one back beside the building, checking its
+kind's limit and room for people. Buying room adds one slot for the
+config's cash price, up to its maximum. Putting the building in storage
+puts its units there too; bought room is retained. Moving or selling it
+preserves its separate box, as in the original.
+
+Code: `rules/warehouse.ts`, `ui/warehouse.ts`, `rules/town.ts`,
+`rules/work.ts` and the warehouse hooks in `editor.ts` and
+`rules/cleanup.ts`. The original slot and button art is exported by
+`tools/art/export_ui.py`. Its page uses three columns in the shared panel;
+the original thumbnails and visible unit names suit touch. The source
+reading is in `docs/original/rules/warehouse.md`; judgment calls are in
+DECISIONS.md. Test: `e2e/tests/warehouse.mjs`, desktop and phone, including
+the server's saved box, map, cash, capacity and ordinary storage.
+There is no warehouse-specific goal among the 227 mission entries, so
+this slice does not change the remaining-goal count.
 
 ### The living map
 

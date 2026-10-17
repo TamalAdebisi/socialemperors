@@ -352,12 +352,27 @@ and shared save support remain.
 The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
+## The Unit Warehouse
+
+- [x] Read this town's saved unit counts and total capacity; warehoused
+      units take no population and do not fill ordinary building slots.
+- [x] Walking admission, immediate command batch, eighteen-slot pages and
+      one-unit deployment with kind limit, housing and four-ring exit checks.
+- [x] One-slot cash purchases up to the configured maximum; storing the
+      warehouse, including collision storage on opening, empties it into
+      town storage and retains bought room. Moving and selling preserve
+      the separate warehouse box, following the original.
+
+The shared panel uses three columns and original thumbnails with visible
+touch names; the original portrait animation is omitted. See
+DECISIONS.md and `docs/original/rules/warehouse.md`.
+
 ## Not for Beta 1
 
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
-Survival, tournaments, the nests, the mandatory tutorial and the time/weather machines are now built;
+Survival, tournaments, the nests, the Unit Warehouse, the mandatory tutorial and the time/weather machines are now built;
 ROADMAP.md tracks the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or

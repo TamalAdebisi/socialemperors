@@ -61,7 +61,8 @@ test("tips with the game's numbers: the blacksmith's tenth, the eagles' life aft
 test("a fort and refuges: who's inside, to keep them safe", () => {
   const fort = cardFacts(item({ id: 469, subcategory: 221, capacity: 4 }));
   assert.deepEqual([fort.inside, fort.tip!.id], [true, 300]);
-  assert.deepEqual(cardFacts(item({ id: 1284, subcategory: 1311 })).stats, [], "the warehouse has a window of its own");
+  const warehouse = cardFacts(item({ id: 1284, subcategory: 139, capacity: 50 }));
+  assert.deepEqual([warehouse.stats, warehouse.inside], [[], false], "the configured warehouse has a separate box and window");
 });
 
 test("the numbers' tooltips are the game's words", () => {

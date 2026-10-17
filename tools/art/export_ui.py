@@ -150,6 +150,11 @@ PICTURES = {
     "open-market": ("EP_Market_MC/btMarket", 0),
     "market-card": ("ButtonMarketMC@1", 0, 400),
     "market-button": ("ButtonMarketMC/btnBuy@1", 0, 300),
+    # The warehouse: its card's Open button, occupied and empty slots, Use.
+    "open-warehouse": ("EP_WarehouseMC/butOpenWarehouse", 0),
+    "warehouse-card": ("UnitWarehouseCardMC@1", 0, 300),
+    "warehouse-empty": ("UnitWarehouseCardEmptyMC", 0, 300),
+    "warehouse-use": ("UnitWarehouseCardMC/butUse@1", 0, 300),
     # The army window's defence plans (another player's attack): each plan's picture, and the tick on the one chosen.
     "plan-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 0, 330),
     "plan-mid-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 1, 330),

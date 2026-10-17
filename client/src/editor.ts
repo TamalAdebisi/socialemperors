@@ -42,6 +42,7 @@ import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPr
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
 import { caught, homeFor } from "./rules/animals.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, goldMultiplier, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
+import { UNIT_WAREHOUSE, resetWarehouse } from "./rules/warehouse.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -990,7 +991,7 @@ export class TownEditor {
       earns = { resource: item.production.resource, amount: harvest(placed) };
     }
     let inside: ActionChoices["inside"] = null;
-    if (item.capacity > 0 && !item.isUnit) {
+    if (item.capacity > 0 && !item.isUnit && item.id !== UNIT_WAREHOUSE) {
       const units = (placed.units ?? []).map((id) => this.items.get(id)).filter((unit): unit is ItemInfo => unit !== undefined);
       inside = {
         capacity: fill(this.line(CAPACITY.id, CAPACITY.fallback), [placed.unitsInside, item.capacity]),
@@ -1551,6 +1552,7 @@ export class TownEditor {
 
   /** A unit sent into a building: it walks to its door and goes in, if there's still room (stopped short, it tries once more). */
   private goInto(unit: PlacedItem, building: PlacedItem, tries = 2): void {
+    const destination = { x: building.tx, y: building.ty };
     const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
@@ -1559,6 +1561,13 @@ export class TownEditor {
     this.walkTo(unit, tile, () => {
       if (!this.town.items.includes(building) || !canGoInside(this.town, unit.item, building)) {
         this.unitStopped(unit);
+        return;
+      }
+      if (building.item.id === UNIT_WAREHOUSE && (building.tx !== destination.x || building.ty !== destination.y)) {
+        // A warehouse can move while the unit walks. Its old doorway
+        // cannot admit a unit into the building's new position.
+        this.unitStopped(unit);
+        if (tries > 1) this.goInto(unit, building, tries - 1);
         return;
       }
       if (!this.reached(unit, tile)) {
@@ -1571,6 +1580,7 @@ export class TownEditor {
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
       this.savedAt.delete(unit);
       this.send([goInside(this.town, unit, building, from, this.clock())]);
+      if (building.item.id === UNIT_WAREHOUSE) void this.commands.flush();
       this.emit({ kind: "inside", unit: unit.item, building: building.item });
       this.doings.pushedInto(unit.item, building.item);
       this.view.remove(unit);
@@ -1941,6 +1951,7 @@ export class TownEditor {
     this.letGo(placed);
     this.emptyOut(placed);
     this.send([store(this.town, placed)]);
+    if (placed.item.id === UNIT_WAREHOUSE) this.send([resetWarehouse(this.town)]);
     this.doings.stored(placed.item);
     this.view.remove(placed);
     this.select(null);

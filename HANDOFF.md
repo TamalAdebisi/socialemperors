@@ -858,7 +858,7 @@ together:
       finishing it for cash (`game_collections.py`). Pieces already drop.
 - [ ] The units book: every unit by kind, grey until owned, buying a
       missing one for cash.
-- [ ] The unit warehouse (`warehouse.py`).
+- [x] The unit warehouse (`warehouse.py`, `rules/warehouse.ts`, `ui/warehouse.ts`): admission, paging, deployment, capacity and storage/reset; desktop/phone save coverage. Delivery verification is recorded with the special-building work.
 - [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
 - [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
 - [ ] Darts (`darts.py`).
