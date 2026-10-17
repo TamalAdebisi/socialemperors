@@ -126,11 +126,12 @@ export default async function riderTraining({ newPlayer }) {
     assert.notEqual(state.state, "lost", "the rider survived the first adventure");
     if (state.enemies === 0 || state.state === "won") break;
     if (Math.abs(state.distanceToEnemy) > 105) await approach();
+    const attacking = budget(await progress());
     await page.keyboard.press("1");
     await page.waitForFunction((before) => {
       const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
       return state.frames >= before + 28 || state.state !== "playing";
-    }, state.frames, { timeout: 30_000, polling: 250 });
+    }, attacking.frames, { timeout: 30_000, polling: 250 });
   }
   assert.equal((await progress()).enemies, 0, "the first opponent was defeated through normal input");
   await page.keyboard.down("ArrowRight");
