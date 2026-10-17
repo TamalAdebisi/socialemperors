@@ -86,17 +86,18 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 
 - **Latest structure verification (#96):** server 449 run (440 passed,
   nine existing skips), client types and all 404 tests passed. Complete
-  combined Chromium: 77/79 in 2h 22m 31.78s. Final `862d9893` collection,
-  unchanged siege and one-atlas alpha/ground follow-ups passed 3/3 in
-  255.75s; all 79 current cases have passing results across runs, not one
-  final-head 79/79 run. Final WebKit: 6/7 in 671.57s. All 98 files / 199
-  facings pass and match the reviewed reference exactly; the tournament
-  completed gameplay but failed its page-error gate on Friends polling
-  errors. A local probe traced these to the test overriding real visibility
-  during page unloading; the corrected-fixture follow-up and earlier
-  construction timing limit remain in
-  [the delivery record](docs/verification-96.md), with exact revisions,
-  failures, screenshot review and the Linux WebKit/Mac GPU limit.
+  combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege
+  and one-atlas alpha/ground checks passed 3/3 in 255.75s. All 79 cases have
+  passing results across runs, not one final-head 79/79 run. WebKit's full
+  structure gallery passes all 98 files / 199 facings with exact reference
+  images. The seven-case run was 6/7; a reproduced test visibility bug caused
+  its tournament polling errors. After correcting the fixtures, WebKit
+  tournament/controls passed 2/2 in 289.41s, and Chromium controls passed 1/1
+  in 68.31s. All seven selected WebKit cases have passing results across runs.
+  Game runtime remains `862d9893`; final fixture commit is `ab8c3d60`.
+  [The delivery record](docs/verification-96.md) retains every failed run,
+  exact revisions, screenshot review, the earlier construction timing limit
+  and the Linux WebKit/Mac GPU distinction. No error or test was disabled.
 - **Tournament implementation and required verification are complete.**
   Exact clean `f798788b6529388f918098989b8f4997eab553c8`, including
   main `8f8c57ab`, passed **78/78 browser cases in 92m 33.33s**.

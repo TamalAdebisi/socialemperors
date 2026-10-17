@@ -87,6 +87,9 @@ setup and teardown.
 | Combined WebKit, six affected cases | 5/6; tournament page errors and one gallery visual mismatch below | 545.66s |
 | Final repair WebKit at `862d9893`, seven cases | 6/7; full 199-facing gallery and collection passed; tournament polling warnings retained | 671.57s |
 | Final repair Chromium at `862d9893`, one-atlas focus / collect / siege | 3/3 | 255.75s |
+| Native-visibility reload diagnostic at `ab8c3d60` | 1/1; test probe only | 19.28s |
+| Corrected visibility fixtures, WebKit | 2/2: tournament-battle and playthrough-controls | 289.41s |
+| Corrected visibility fixture, Chromium | 1/1: playthrough-controls | 68.31s |
 | Pre-#92 server, including main #97 | 442 run: 433 passed, 9 existing skips | 47.173s |
 | Client after main #97 | Types passed; 368/368 tests passed | 20.035s |
 | Build after main #97 | Passed | 1.01s |
@@ -680,8 +683,27 @@ Both background-play fixtures now return simulated hidden **or** native
 visibilityState=hidden. They still withhold animation frames and check
 independent background progress, explicit Pause and no time replay on return.
 All assertions, speeds and deadlines remain; no error is filtered out.
-Game runtime and the `862d9893` production bundle are unchanged. Focused
-verification of the corrected fixtures follows below.
+Game runtime and the `862d9893` production bundle are unchanged.
+
+The corrected reload probe passed **1/1 in 19.28s**, with its fresh capture
+reviewed and no page errors. Full WebKit tournament and playthrough-controls
+then passed **2/2 in 289.41s**; Chromium playthrough-controls passed **1/1 in
+68.31s**. These run at fixture commit `ab8c3d60`, on the unchanged production
+bundle SHA-256 `c2cc90e157c74d2caaf6e344f3172098e3755c725587760a0cebd61c0ddc5d09`.
+The normal error gate stays enabled. Both final traces have no page or console
+error. The WebKit trace records two command requests cancelled during
+navigation; the complete gameplay and saved-state assertions passed. All 11
+WebKit and both Chromium fresh screenshots were reviewed. Server logs have zero HTTP
+5xx, Python tracebacks or unhandled commands; memory counters did not increase.
+
+All seven selected WebKit cases now have passing results across the 6/7
+repair run and 2/2 corrected-fixture run, including the full 199-facing
+structure gallery. This does not turn the earlier 6/7 into a single 7/7 run.
+Chromium's full 407-second tournament pass remains attributed to `46f61c94`;
+it was not repeated after the test-only visibility correction. The final
+Chromium controls check covers the same synthetic visibility mechanism.
+The earlier unchanged WebKit construction timing failure remains recorded.
+Linux WebKit cannot verify the owner's Mac GPU or installed Safari version.
 
 ## Earlier runs retained
 
@@ -866,3 +888,12 @@ Linux WebKit does not reproduce the owner's Mac GPU or installed Safari.
 | --- | ---: | --- |
 | scripted | 122 | Passed |
 | scripted-stories | 150 | Passed |
+
+## Delivery review
+
+The implementing agent reviewed state precedence, native input timestamps,
+frame/outline synchronization, bounded fixed-pose loading, the narrow Safari
+recovery and the visibility-fixture correction. This is not an independent
+review or a fresh automated reviewer result. GitHub showed no unresolved
+review threads before readiness. No required check is bypassed. Delivery
+metadata, including merge and deployment status, is recorded on PR #96.

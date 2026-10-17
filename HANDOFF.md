@@ -36,21 +36,21 @@ next agent knows where to start.
   [the audit](docs/structure-idle-audit.md). No new public art is required.
 - **#96 verification:** server 449 run (440 passed,
   nine existing skips), client types and all 404 tests passed. Complete
-  combined Chromium: 77/79 in 2h 22m 31.78s. Final `862d9893` collection,
-  unchanged siege and one-atlas alpha/ground follow-ups passed 3/3 in
-  255.75s; all 79 current cases have passing results across runs, not one
-  final-head 79/79 run. Final WebKit: 6/7 in 671.57s. All 98 files / 199
-  facings pass and match the reviewed reference exactly; the tournament
-  completed gameplay but failed its page-error gate on Friends polling
-  errors. A local probe traced these to the test overriding real visibility
-  during page unloading; the corrected-fixture follow-up and earlier
-  construction timing limit remain in
-  [the delivery record](docs/verification-96.md), with exact revisions,
-  failures, screenshot review and the Linux WebKit/Mac GPU limit.
-  Full Chromium review covers all 461 fresh PNGs. The final WebKit gallery
-  matches all 199 reference images; 31 other WebKit and 11 other Chromium
-  images were reviewed. Final server logs are clean and memory-limit/OOM
-  counters did not increase. No tests or errors were disabled.
+  combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege
+  and one-atlas alpha/ground checks passed 3/3 in 255.75s. All 79 cases have
+  passing results across runs, not one final-head 79/79 run. WebKit's full
+  structure gallery passes all 98 files / 199 facings with exact reference
+  images. The seven-case run was 6/7; a reproduced test visibility bug caused
+  its tournament polling errors. After correcting the fixtures, WebKit
+  tournament/controls passed 2/2 in 289.41s, and Chromium controls passed 1/1
+  in 68.31s. All seven selected WebKit cases have passing results across runs.
+  Game runtime remains `862d9893`; final fixture commit is `ab8c3d60`.
+  [The delivery record](docs/verification-96.md) retains every failed run,
+  exact revisions, screenshot review, the earlier construction timing limit
+  and the Linux WebKit/Mac GPU distinction. No error or test was disabled.
+  Full Chromium review covers all 461 fresh PNGs; final gallery comparisons
+  and every later fresh capture were reviewed. Final server logs are clean
+  and memory-limit/OOM counters did not increase.
 
 - **Getting in touch:** `SE_DISCORD_URL` (DEPLOY.md) puts a Discord link
   on the pages around the game, the classic bar, the new client's Menu and
