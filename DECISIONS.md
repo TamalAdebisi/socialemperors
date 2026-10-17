@@ -4,6 +4,37 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: idle-pass verification fixtures
+
+- Close completed test towns, after flushing their saves, before the next
+  scripted scenario. They otherwise keep competing for software drawing.
+  Keep the same gameplay assertions, simulation speeds and deadlines.
+- Keep the original construction test. A controlled-clock experiment
+  changed browser timing as well as the construction deadline and produced
+  new fixture failures; it is not part of the delivered change. The original
+  WebKit timing failure also reproduces on previous main; retain both results.
+- Wait for rendered frames before sampling outline colors and phone target
+  coordinates. Check the full worker queue before screenshots can finish
+  its first job; read the fading message atomically within the same deadline.
+  Keep the original pixel thresholds, saved-tree checks and native near-miss tap.
+  Retain visible-pixel checks for every gallery facing; no retry hides a
+  blank picture. The apparent capture failure was traced to decoded art.
+- Retain failed runs and unrelated old-main WebKit failures in
+  [the verification record](docs/verification-96.md). Linux WebKit verifies
+  the engine here, not the owner's Mac graphics driver.
+
+## 17 October 2026: Safari texture decoding
+
+- **Keep image decoding on the page in Safari.** A large atlas transferred
+  from Pixi's worker contained transparent pixels despite the source file
+  having visible artwork. Re-uploading that bitmap did not help. Decoding
+  the same file on the page restored all 42,784 visible pixels in the tested
+  frame, while the old worker bitmap stayed empty. Use Pixi's existing
+  Safari check and its supported `preferWorkers: false` setting. Fetching
+  and bitmap decoding remain asynchronous, with the original image and
+  mipmaps; other engines keep their existing loading path. This shared fix
+  covers any affected atlas, without a list of special building names.
+
 ## 16 October 2026: getting in touch, and who can join
 
 - **No in-game chat for now.** The original had none: players talked

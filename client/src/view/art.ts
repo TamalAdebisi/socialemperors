@@ -2,9 +2,13 @@
 // files: <img_name>.json and .webp (and <img_name>-1.json... for big items),
 // each loaded once and only when something on screen needs it.
 
-import { Assets, Spritesheet, Texture, type SpritesheetData } from "pixi.js";
+import { Assets, Spritesheet, Texture, isSafari, type SpritesheetData } from "pixi.js";
 
 import type { Bounds } from "../rules/geometry.ts";
+
+// WebKit can receive transparent pixels in large worker-created ImageBitmaps.
+// Decode on the page there: still asynchronous, without the worker transfer.
+if (isSafari()) Assets.setPreferences({ preferWorkers: false });
 
 interface SheetMeta {
   image: string;
