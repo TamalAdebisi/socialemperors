@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve the darts schedule
+
+- The supplied schedule ends with an empty prize pool dated September
+  2012. The original treats it as inactive. Keep that behavior; do not
+  create a new prize rotation or free-dart economy. Active-round tests
+  alter only the local browser fixture's dates, using original prizes.
+- Keep the seeded prize distribution, local-calendar free days and the
+  existing command order, including Storage before the throw is reported.
+- Darts opens through Army on both layouts. Let the sheet close before a
+  throw without charging cash, and keep prize text until the next Play
+  rather than hiding it after three seconds. The completed throw still
+  pays the original cash cost and prizes; neither convenience changes odds.
+
 ## 17 October 2026: units book in Army
 
 - Keep the original category order, prices, acquisition recognition and

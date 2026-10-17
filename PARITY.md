@@ -371,3 +371,7 @@ Social Point's admin tools used.
 - [x] Units book: original categories, grey missing units, stats and animated
       previews; cash purchases and once-only category prizes saved with
       the existing commands. Desktop/phone through Army.
+
+- [x] Darts: original schedule-aware panel and commands, saved seed/board,
+      daily free dart, paid throws and the six-prize bonus. The original
+      shipped schedule has no active round today; no event is invented.

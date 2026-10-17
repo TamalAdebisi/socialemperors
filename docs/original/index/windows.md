@@ -38,7 +38,7 @@ The plain boxes the rest of the game opens.
 | `popups/ConfirmPopup.as` | 86 | A yes-or-no question, with what to do on each answer. | built: the bar's prompts (`ui/actions.ts`, `editor.ts`) |
 | `popups/PopupAlerta.as` | 67 | A message with a title and one of the game's pictures; used for a camp's end and similar news. | built: `ui/notice.ts` (with a picture) |
 | `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: first-time survival and tournament help saved with `set_help_map`; other windows later |
-| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts remains classic; unit collection rewards use `ui/unitBook.ts` |
+| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts and unit collection rewards use their respective panels |
 | `popups/PopupLore.as` | 148 | A picture book, page by page: the story of the gods and colossi, opened from the news and from a gods icon at the side of the screen. | not yet |
 | `popups/PopupMoreCash.as` | 63 | "Not enough cash", with a button to the page that sold cash. | not needed: payments |
 | `popups/tournament/Alert.as` | 69 | A small yes/no or OK box drawn inside another window; used by the temple, the team window and tournaments. | built: our windows ask in their own way (`questPlay.ts`) |
@@ -75,7 +75,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupNewDaily.as` | 459 | The daily bonus: five days of gold, cash or a hero, today's highlighted; the day comes from `bonusNextId` or the server's count of days in a row. Sends `win_bonus`. | built: `rules/bonuses.ts`, `bonuses.ts` |
 | `popups/MondayBonusPopUp.as` | 186 | Monday's chest: three closed chests, one prize drawn at random from gold, a unit or cash; the unit is drawn from `MONDAY_BONUS_UNITS` and stored. Sends `weekly_reward`. | built: `rules/bonuses.ts` |
 | `popups/ComebackBonusPopUp.as` | 276 | The welcome-back chest on the second and third day, drawn the same way, the day's own unit from `COMEBACK_BONUS_UNITS`. Sends `comeback_reward`. Switched off in the client as built; our classic game switches it on. | built: `rules/bonuses.ts` |
-| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | not yet; `darts.py` |
+| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | built: `rules/darts.ts`, `ui/darts.ts`; original schedule, seeded board, daily free dart, prizes and bonus. Shipped empty pool stays inactive |
 
 ## Army, graveyards, heroes and magic
 
@@ -245,7 +245,8 @@ and the neighbour's arrival request are in `core.md`.)
 2. **Darts move on by themselves at start.** On the first start of a
    session the classic game checks the darts: a new round (the config's
    dates) sends `darts_reset` with a new seed, and a new day sends
-   `darts_new_free`, both with no button, then offers the free dart.
+   `darts_new_free`, both with no button, then offers the free dart. *Built in `rules/darts.ts` and `ui/darts.ts`;
+   the shipped schedule ends with an empty/inactive pool.*
 3. **The defence plan.** The army window has a second tab with four
    defence plans for when another player attacks (all stay, archers go for
    siege engines, half go out, all go for siege engines). The choice is

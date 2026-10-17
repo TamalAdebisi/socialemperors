@@ -24,6 +24,7 @@ const WORDS = { army: 673, plans: 674, header: 675 } as const;
 export interface ArmyParts {
   collections?: () => void;
   unitsBook?: () => void;
+  darts?: () => void;
   /** The town's units now, by kind. */
   units: () => { item: ItemInfo; count: number }[];
   /** The item's picture in the Flash client's windows. */
@@ -105,6 +106,11 @@ export class ArmyWindow {
       button.textContent = "Collections";
       button.addEventListener("click", this.parts.collections);
       tabs.append(button);
+    }
+    if (this.parts.darts) {
+      const button = document.createElement("button"); button.type = "button";
+      button.className = "shop-toggle"; button.textContent = "Darts";
+      button.addEventListener("click", this.parts.darts); tabs.append(button);
     }
     if (this.tab === "plan") {
       this.renderPlans(tabs);

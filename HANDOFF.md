@@ -853,7 +853,10 @@ together:
 - [ ] The unit warehouse (`warehouse.py`).
 - [ ] The time machine (`time_machine.py`) and its help page.
 - [ ] The weather machine: the island's looks (`unlock_skin`, `set_skin`).
-- [ ] Darts (`darts.py`).
+- [ ] Darts implemented on `codex/darts-menu`; browser verification and
+      merge pending. The original shipped schedule is inactive; the full
+      seeded/free/paid/bonus flow is exercised with a local active fixture.
+      No new event or live schedule change is introduced.
 - [ ] The social buildings: the Summit, the allied markets and their choice
       of resource, the recruitment camp, the wonder of people, the Round
       Table (`social.py`, `helps.py`; friends' help goes through our own
