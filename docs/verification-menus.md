@@ -1,6 +1,6 @@
 # Menus and progression delivery record
 
-This record covers the six feature slices in #99 and #105–109. Browser
+This record covers the six feature slices in #99 and #105–109. Full combined browser
 verification and merges are still pending; this is not a release claim.
 The collections-only record is `docs/verification-99.md` in #99.
 
@@ -124,3 +124,21 @@ relabelled as a pass by these corrections.
 Large unit values use two stat pairs per row, with a local layout fixture
 checking all six numbers remain inside the card. That fixture restores
 ordinary stats before purchases and never alters server item data.
+
+## Corrected focus and latest-main integration
+
+Exact `248db71e15714d386f78c686ccb3a5537df81a13` passed all nine focused
+Chromium cases in **11m 51.945s**: social-market 121s, social-friends 117s,
+shop-details 103s, profiles 72s, menu-progress 51s, units-book 91s,
+phone-place 65s, storage 38s and cash 44s. All 45 screenshots were reviewed
+at contact scale, with native additional views of social, shop and profile
+panels. No new layout defect was identified. Some New-shop thumbnails were
+not loaded at capture, and a scrolled phone panel can show only part of its
+contents. This is not a claim to inspect fine text or every animated frame.
+The complete local server log has no tracebacks, HTTP 5xx or unhandled commands.
+Archive: `work/menu-focus-review/`, including results, image hashes and review ledger.
+
+Main `aee3b7b2` brings the separately owned combat controls from #98. It is
+merged through every slice, preserving both decision records and all game
+changes; final combined verification follows this integration. No combat
+kill-drop completion is inferred from the controls merge.
