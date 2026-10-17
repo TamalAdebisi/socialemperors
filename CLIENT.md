@@ -1635,7 +1635,7 @@ requires room for nine allies. Allied Markets order a resource for a day,
 pay 125 per helper plus the base 125, and can finish early for 2 cash.
 Recruitment offers its five configured rewards. The Great Church keeps
 its cumulative staff through five population increases. The Round Table
-asks one player at a time, respects its invitation limit and daily clock,
+asks one player at a time by their empire ID, respects its invitation limit and daily clock,
 and pays the original four/six/eight-knight tiers. Its hero goes to town
 Storage; recruits and allied knights appear beside their building.
 

@@ -34,6 +34,11 @@ them can be found and reversed. The big, agreed decisions are in
   remain deferred. No combat controls or other special-building work is
   included.
 
+- The help directory now includes each eligible account's empire ID.
+  Round Table requests use the existing seat endpoint and record that
+  empire ID in `assist_send_feed`, preserving classic shared-save keys.
+  Accounts without an empire retain their disabled state.
+
 ## 17 October 2026: preserve the darts schedule
 
 - The supplied schedule ends with an empty prize pool dated September
