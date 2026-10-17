@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: shop details without changing buying
+
+- Preserve direct buying/placing. A separate Details button pins the
+  original per-kind facts on phones and keyboards; desktop hover opens
+  the same white bubble. Locked and unaffordable cards remain readable.
+  Escape dismisses details before the shop.
+- Reuse the original category icons with their actual category mapping,
+  omitting the Flash placeholder caption. Retain the original New badge
+  and date-based limited badge, including zero days after expiry.
+- Keep base shop numbers distinct from current workers or map progress.
+  Scout life is the eagle's configured tier value, not the building's HP.
+  Early cash unlocking remains inactive; no new offers or boxes are shown.
+
 ## 17 October 2026: social-building windows and local friends
 
 - Use the existing Open action and panel for the six repeatable social

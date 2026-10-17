@@ -12,6 +12,15 @@ import { resourceIcon } from "./icons.ts";
 import { Panel } from "./panel.ts";
 
 const numbers = new Intl.NumberFormat();
+const CATEGORY_ICONS:Record<number,string>={
+  1:new URL("./art/shop-category-1.webp",import.meta.url).href,
+  2:new URL("./art/shop-category-2.webp",import.meta.url).href,
+  3:new URL("./art/shop-category-3.webp",import.meta.url).href,
+  4:new URL("./art/shop-category-4.webp",import.meta.url).href,
+  5:new URL("./art/shop-category-5.webp",import.meta.url).href,
+  12:new URL("./art/shop-category-12.webp",import.meta.url).href,
+};
+const NEW_BADGE=new URL("./art/shop-new.webp",import.meta.url).href;
 /** The storage's place among the categories. */
 export const STORAGE = -1;
 
@@ -29,6 +38,8 @@ export interface StorageCard {
 
 export interface ShopWindowParts {
   categories: ShopCategory[];
+  details?: (item:ItemInfo,active:()=>boolean)=>HTMLElement;
+  limitedDays?: ()=>number;
   /** What a category (and tab: 0 for all) shows. */
   items: (category: number, tab: number) => ItemInfo[];
   /** What stops buying an item now, or null. */
@@ -54,15 +65,26 @@ export class ShopWindow {
   private readonly waiting = new Map<Element, ItemInfo>();
   private category: number;
   private tab = 0;
+  private readonly detail=document.createElement("aside");
+  private detailId:number|null=null;
+  private pinned=false;
+  private detailTimer:ReturnType<typeof setTimeout>|null=null;
 
   constructor(parts: ShopWindowParts) {
     this.parts = parts;
     this.category = parts.categories[0]?.id ?? 0;
-    this.panel = new Panel("build", "Shop", { className: "shop" });
+    this.panel = new Panel("build", "Shop", { className: "shop",onClose:()=>this.hideDetails() });
     this.panel.body.innerHTML = `
       <nav class="shop-categories" aria-label="Categories"></nav>
       <nav class="shop-tabs" aria-label="Kinds"></nav>
       <ul class="shop-items"></ul>`;
+    this.detail.className="shop-details";this.detail.hidden=true;this.detail.setAttribute("role","region");
+    this.panel.element.append(this.detail);
+    this.detail.addEventListener("pointerenter",()=>{if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;});
+    this.detail.addEventListener("pointerleave",()=>this.leaveDetails());
+    window.addEventListener("keydown",(event)=>{
+      if(event.key==="Escape"&&!this.detail.hidden){event.stopImmediatePropagation();this.hideDetails();}
+    },true);
     this.categoryBar = this.panel.body.querySelector(".shop-categories")!;
     this.tabBar = this.panel.body.querySelector(".shop-tabs")!;
     this.list = this.panel.body.querySelector(".shop-items")!;
@@ -133,13 +155,18 @@ export class ShopWindow {
   }
 
   private render(): void {
+    this.hideDetails();
     const storing = this.category === STORAGE;
     this.panel.title = storing ? "Storage" : "Shop";
     this.panel.key = storing ? "storage" : "build";
     const stored = this.parts.storage();
     const inStorage = stored.reduce((sum, card) => sum + card.count, 0);
     this.categoryBar.replaceChildren(
-      ...this.parts.categories.map((c) => this.pill(c.name, c.id === this.category, () => this.show(c.id, 0, "categories"))),
+      ...this.parts.categories.map((c) => {
+        const button=this.pill(c.name,c.id===this.category,()=>this.show(c.id,0,"categories"));
+        const url=CATEGORY_ICONS[c.id];if(url){const image=new Image();image.src=url;image.alt="";image.className="shop-category-icon";button.prepend(image);}
+        return button;
+      }),
       this.pill(inStorage ? `Storage (${inStorage})` : "Storage", storing, () => this.show(STORAGE, 0, "categories"), "shop-storage"),
     );
     const current = this.parts.categories.find((c) => c.id === this.category);
@@ -180,6 +207,12 @@ export class ShopWindow {
     name.className = "shop-name";
     name.textContent = item.name;
     card.append(picture, name);
+    if(this.category!==STORAGE && item.shopTab===121){
+      const badge=document.createElement("span");badge.className="shop-limited";
+      badge.textContent=`Limited edition · ${this.parts.limitedDays?.()??0} days left`;card.append(badge);
+    }else if(this.category!==STORAGE && item.isNew){
+      const badge=new Image();badge.src=NEW_BADGE;badge.alt="New";badge.className="shop-new";card.append(badge);
+    }
     this.waiting.set(picture, item);
     this.pictures.observe(picture);
   }
@@ -214,6 +247,7 @@ export class ShopWindow {
       card.append(...button.childNodes);
       card.append(this.note(`Level ${blocked.level}`, "level"));
       li.append(card);
+      this.addDetails(li,item);
       return li;
     }
     const price = priceOf(item);
@@ -239,6 +273,7 @@ export class ShopWindow {
       });
     }
     li.append(button);
+    this.addDetails(li,item);
     return li;
   }
 
@@ -289,7 +324,44 @@ export class ShopWindow {
     }
     box.append(actions);
     li.append(box);
+    this.addDetails(li,card.item);
     return li;
+  }
+
+  private addDetails(card:HTMLElement,item:ItemInfo):void {
+    if(!this.parts.details)return;
+    const button=this.action(`Details: ${item.name}`,()=>{
+      if(this.pinned&&this.detailId===item.id){this.hideDetails();return;}
+      this.showDetails(item,card,true);
+    });
+    button.classList.add("shop-details-button");button.dataset.item=String(item.id);
+    button.setAttribute("aria-expanded","false");card.append(button);
+    card.addEventListener("pointerenter",(event)=>{if(event.pointerType!=="touch"&&!this.pinned)this.showDetails(item,card,false);});
+    card.addEventListener("pointerleave",()=>this.leaveDetails());
+    card.querySelector<HTMLElement>(".shop-card")?.addEventListener("focus",()=>{if(!this.pinned)this.showDetails(item,card,false);});
+  }
+  private showDetails(item:ItemInfo,card:HTMLElement,pinned:boolean):void {
+    if(!this.parts.details)return;
+    if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;
+    this.detailId=item.id;this.pinned=pinned;this.detail.hidden=false;
+    this.detail.setAttribute("aria-label",`Details: ${item.name}`);
+    const close=this.action("Close details",()=>this.hideDetails());
+    const content=this.parts.details(item,()=>!this.detail.hidden&&this.panel.isOpen);
+    this.detail.replaceChildren(close,content);
+    const rect=card.getBoundingClientRect();
+    this.detail.style.left=`${Math.max(12,rect.left-312)}px`;
+    this.detail.style.top=`${Math.max(12,Math.min(rect.top,innerHeight-380))}px`;
+    for(const button of this.list.querySelectorAll<HTMLElement>(".shop-details-button"))button.setAttribute("aria-expanded",String(pinned&&Number(button.dataset.item)===item.id));
+  }
+  private leaveDetails():void {
+    if(this.pinned)return;
+    if(this.detailTimer!==null)clearTimeout(this.detailTimer);
+    this.detailTimer=setTimeout(()=>this.hideDetails(),150);
+  }
+  private hideDetails():void {
+    if(this.detailTimer!==null)clearTimeout(this.detailTimer);this.detailTimer=null;
+    this.detail.hidden=true;this.detailId=null;this.pinned=false;
+    for(const button of this.list?.querySelectorAll<HTMLElement>(".shop-details-button")??[])button.setAttribute("aria-expanded","false");
   }
 
   private action(label: string, run: () => void): HTMLButtonElement {

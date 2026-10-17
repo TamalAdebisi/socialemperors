@@ -52,6 +52,8 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { renderShopDetails } from "./ui/shopDetails.ts";
+import { limitedDays } from "./rules/shopDetails.ts";
 import { SocialWindow } from "./ui/social.ts";
 import { socialRules } from "./rules/socialMenus.ts";
 import { DartsGame, type DartsRound } from "./rules/darts.ts";
@@ -239,6 +241,10 @@ async function start(): Promise<void> {
     };
     const shop = new ShopWindow({
       categories: readShop(config.categories),
+      details: (item,active) => renderShopDetails(item,{items,words:(id,fallback)=>lines.get(id)??fallback,
+        thumbnail:(unit)=>`${settings.assetsUrl}/buildingthumbs/${unit.art}.jpg`,
+        preview:(unit,canvas,playing)=>unitPreview(art,unit,canvas,playing)},active),
+      limitedDays: () => limitedDays(config.globals?.LIMITED_EDITION_EXPIRATION as string|undefined,clock()),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
       obstacle: (item) => obstacle(town, item),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,

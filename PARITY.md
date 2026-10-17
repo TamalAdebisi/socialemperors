@@ -142,9 +142,11 @@ The card's look is the owner's pick: mockup A, the original's panel
 - [x] **Messages from the server at start** ("Bob helped your farm", "a
       gift is waiting") are shown once, then cleared. Ours ignored them,
       so they piled up for the classic game. S
-- [ ] **Shop:** what each item gives or houses (and a trained unit's
-      numbers), shown on hover or tap; a confirmation before opening a
-      building early for cash; the tabs' own pictures; "new" badges. M
+- [x] **Shop:** each item's production, capacity, trained-unit numbers,
+      original category pictures and New/limited badges. Hover or use
+      Details by tap/keyboard, including locked cards. Early cash
+      unlocking stays disabled, matching the original; no confirmation
+      for that inactive action is added.
 - [x] **Goals:** a window per goal with its picture, text and a help arrow;
       "New mission!" notices. M
 - [x] **Gifts:** the gifts window (taking gifts in, giving from storage,
@@ -185,7 +187,8 @@ reader. Each links to its rule book, which has the details and our file.
 The rule books list more that only look or feel different.
 
 - [x] **Opening buildings early** is switched off in the original: the
-      "Level N" tag on a shop card does nothing. Ours sells it for cash.
+      "Level N" tag on a shop card does nothing. Ours also leaves it locked;
+      the old cash-unlock action was removed.
       ([progress](docs/original/rules/progress.md#differences)) S
 - [x] **Reaching level 35** stops goals at once and places a free Wizardry
       Academy near the middle; ours keeps goals until the next load and
