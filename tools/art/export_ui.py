@@ -213,6 +213,7 @@ PICTURES = {
 # (the game's CursorMC, one frame each). Pointers must be small pictures, so
 # these are PNGs at most 32 px across: client/src/ui/art/<name>.png.
 CURSORS = {
+    "cursor-attack": ("CursorMC", 3),  # an enemy the selected army can attack
     "cursor-axe": ("CursorMC", 11),     # a tree to chop
     "cursor-pick": ("CursorMC", 4),     # a rock or gold to mine
     "cursor-inside": ("CursorMC", 10),  # a building to go into

@@ -11,7 +11,7 @@ import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
 import { pouringTower } from "./buildingAnimation.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt, unitHitDistance } from "./hit.ts";
+import { isOpaqueAt, unitHitDistance, visualScreenBox } from "./hit.ts";
 import { Markers } from "./markers.ts";
 import { animated, buildingSprite, unitSprite, type Pose } from "./townView.ts";
 import type { Effect as SoundEffect } from "../sound.ts";
@@ -532,7 +532,7 @@ export class BattleView {
     for (const [fighter, drawn] of slots) {
       const picture = drawn.slot.children[0];
       if (fighter.dead || !fighter.item.isUnit || !picture) continue;
-      const d = unitHitDistance(picture.getBounds(), screen);
+      const d = unitHitDistance(visualScreenBox(picture), screen);
       if (d < distance) {
         nearest = fighter;
         distance = d;

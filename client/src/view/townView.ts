@@ -28,7 +28,7 @@ import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
 import { buildingLoopLength, buildingStateCount, buildingStateFrames, pouringTower } from "./buildingAnimation.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt, unitHitDistance } from "./hit.ts";
+import { isOpaqueAt, unitHitDistance, visualScreenBox } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { HOVER_LIFE, LIFE, SELECTED, loadSelected, markLife, markSelected, unmarkLife, unmarkSelected } from "./selected.ts";
@@ -368,7 +368,7 @@ export class TownView {
       if (!placed.item.isUnit || !slot.visible) continue;
       const picture = pictureOf(slot);
       if (!picture) continue;
-      const d = unitHitDistance(picture.getBounds(), screen);
+      const d = unitHitDistance(visualScreenBox(picture), screen);
       if (d < distance || (nearest && d === distance && depth(placed) > depth(nearest))) {
         nearest = placed;
         distance = d;

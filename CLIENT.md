@@ -757,7 +757,10 @@ following a unit home: "The living map".
 Units keep their original appearance, with an eight-pixel click margin
 and at least a 44-pixel target at every zoom. Exact picture hits and ready
 bubbles keep priority; a nearby unit is considered before an empty-ground
-move. This applies in town and battle (`view/hit.ts`, `townView.ts`,
+move. Targets use the current frame's trimmed visible bounds, including
+mirror and zoom, rather than its padded export canvas. This fixes Bull
+Gladiator catching distant ground clicks without shrinking the artwork.
+This applies in town and battle (`view/hit.ts`, `townView.ts`,
 `battleView.ts`). A ground click briefly shows the original gold ring at
 the exact click position, fixed in screen size while following the map,
 then fades; it cannot intercept another click (`view/markers.ts`).
@@ -767,7 +770,16 @@ and passes that time to the editor for double-click selection. Slow drawing
 or a first pixel read can delay JavaScript handlers without changing how
 long the player actually held the button. The existing gesture limits stay
 the same (`view/camera.ts`, `editor.ts`).
-Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs`.
+Tests: `view/hit.test.ts`, `e2e/tests/playthrough-controls.mjs` and
+`e2e/tests/combat-controls.mjs` (original Bull art, selection, ground move
+and saved destination in town, plus battle selection and padding).
+
+With armed units selected, an enemy under the mouse shows the original
+sword pointer (`ui/art/cursor-attack.png`, exported from CursorMC). All
+battle modes share this through `battleControls.ts`. It tracks the current
+click target under a stationary mouse, clears on deselection, leaving or
+ending the battle, and yields to spell aiming and repair. The same browser
+test checks the actual attack order and keyboard selection changes.
 
 Building previews snapshot their drawing origin before loading art, so
 pointer movement during loading cannot offset the picture twice. Old
