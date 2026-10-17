@@ -141,6 +141,29 @@ class SoulMixerTest(unittest.TestCase):
         self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], 533)
 
+    def test_time_travel_never_turns_an_unreadable_mix_into_a_free_output(self):
+        self.assertFalse(soul_mixer.available())
+        self.map["items"][0][7]["bq"] = "1"
+        cash = self.save["playerInfo"]["cash"]
+        items = copy.deepcopy(self.map["items"])
+        for timestamp in [None, "", " ", False, True, -1, -0.5, 0.5, "bad", float("inf")]:
+            with self.subTest(timestamp=repr(timestamp)):
+                self.map["items"] = copy.deepcopy(items)
+                queue = {"ts": timestamp, "amount": 1, "unit": 533}
+                self.save["privateState"]["barracksQueues"] = {"1": queue}
+                self.save["privateState"]["countTimePacket"] = [0, 1, 0, 0, 0, 0]
+                self.send("pop_queue_unit", 1, 56, 56, 1529)
+                self.assertEqual(len(self.map["items"]), 1)
+                self.send("time_ff", 1)
+                self.send("pop_queue_unit", 1, 56, 56, 1529)
+                self.assertEqual(len(self.map["items"]), 1, "time travel cannot validate unreadable work")
+                self.assertIs(type(queue["ts"]), type(timestamp))
+                self.assertEqual(queue["ts"], timestamp)
+                self.assertEqual(queue["amount"], 1)
+                self.assertEqual(self.map["items"][0][6], [509, 514])
+                self.assertEqual(self.save["playerInfo"]["cash"], cash)
+                self.assertEqual(self.save["privateState"]["countTimePacket"], [0] * 6)
+
     def test_active_queue_rejects_late_edit_commands_but_still_allows_turning(self):
         self.map["items"][0][7]["bq"] = "1"
         self.save["privateState"]["barracksQueues"] = {"1": {"ts": 100, "amount": 1, "unit": 533}}
