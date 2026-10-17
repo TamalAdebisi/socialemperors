@@ -139,6 +139,7 @@ const fighting = (item: ItemInfo, ...more: Stat[]) => {
 /** What the card shows for a thing (built: under construction it shows only its name and bar). */
 export function cardFacts(item: ItemInfo): CardFacts {
   const none: CardFacts = { stats: [], tip: null, earns: false, inside: false, harvest: false };
+  if (item.id === WAREHOUSE) return none;
   const s = item.subcategory;
   if (item.isUnit) {
     return { ...none, stats: [...fighting(item, "range", "speed")] };
@@ -188,9 +189,6 @@ export function cardFacts(item: ItemInfo): CardFacts {
       }
       return { ...none, stats: fighting(item, "range") };
     case SUB.refuge:
-      if (item.id === WAREHOUSE) {
-        return none;
-      }
       return { ...none, stats: fighting(item), inside: true, tip: { id: 300, fallback: "Put units inside to protect them from player assaults" } };
     case SUB.wonder:
       if (item.population > 0) {

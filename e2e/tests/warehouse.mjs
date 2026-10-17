@@ -30,6 +30,7 @@ export default async function warehouse({ newPlayer }) {
   assert.equal(before.map.warehousedUnits[KNIGHT], 19);
 
   const warehouseSpot = await player.select(AT, "Unit Warehouse");
+  assert.doesNotMatch(warehouseSpot.text, /CAPACITY/, "the card does not advertise ordinary building occupants");
   await player.press("Close");
   await player.select(UNIT_AT, "Spearman");
   await player.click(warehouseSpot.point);
@@ -65,7 +66,9 @@ export default async function warehouse({ newPlayer }) {
   await flush();
   const deployed = await info();
   assert.deepEqual(deployed.map.warehousedUnits, { [KNIGHT]: 18, [SPEARMAN]: 1 });
-  const unit = deployed.map.items.find((i) => i[0] === KNIGHT);
+  const knights = deployed.map.items.filter((i) => i[0] === KNIGHT);
+  assert.equal(knights.length, before.map.items.filter((i) => i[0] === KNIGHT).length + 1);
+  const unit = knights.find((i) => !before.map.items.some((previous) => previous[0] === KNIGHT && previous[1] === i[1] && previous[2] === i[2]));
   assert.ok(unit && Math.max(Math.abs(unit[1] - AT[0]), Math.abs(unit[2] - AT[1])) <= 4, "called back beside the building");
   assert.equal(deployed.map.warehouseAditionalCapacitySingle, 51);
   assert.equal(Number(deployed.playerInfo.cash), Number(before.playerInfo.cash) - 2);

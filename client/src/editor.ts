@@ -991,7 +991,7 @@ export class TownEditor {
       earns = { resource: item.production.resource, amount: harvest(placed) };
     }
     let inside: ActionChoices["inside"] = null;
-    if (item.capacity > 0 && !item.isUnit) {
+    if (item.capacity > 0 && !item.isUnit && item.id !== UNIT_WAREHOUSE) {
       const units = (placed.units ?? []).map((id) => this.items.get(id)).filter((unit): unit is ItemInfo => unit !== undefined);
       inside = {
         capacity: fill(this.line(CAPACITY.id, CAPACITY.fallback), [placed.unitsInside, item.capacity]),
