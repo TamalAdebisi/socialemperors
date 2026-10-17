@@ -73,6 +73,9 @@ export interface ConfigItem {
   groups?: string;
   /** Buildings: what Upgrade turns it into (its id, 0 none). */
   upgrades_to?: string;
+  /** Later original Soul Mixer content. Absent from the archived 2012 config. */
+  breeding_order?: string;
+  sm_training_time?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -167,8 +170,12 @@ export interface ItemInfo {
   /** 0: something units walk over (crops, flowers); buildings are 1. */
   elevation: number;
   groups: string;
+  /** An untamed dragon's rider type, from globals.DRAGONS; absent for mounted dragons. */
+  dragonRider?: number;
   /** Buildings: the item Upgrade turns it into, or 0. */
   upgradesTo: number;
+  breedingOrder?: number;
+  soulMixingTime?: number;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -214,6 +221,8 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     elevation: item.elevation === undefined ? 1 : Number(item.elevation),
     groups: item.groups ?? "",
     upgradesTo: Number(item.upgrades_to) || 0,
+    breedingOrder: Number(item.breeding_order) || 0,
+    soulMixingTime: Number(item.sm_training_time) || 0,
   };
 }
 
@@ -223,8 +232,10 @@ export function itemsById(config: GameConfig): Map<number, ItemInfo> {
   const social = new Map(((config.social_items ?? []) as { id: number | string; workers?: string; worker_cost?: number | string }[])
     .map((s) => [Number(s.id), s]));
   const items = new Map<number, ItemInfo>();
+  const dragons = config.globals?.DRAGONS as Record<string, { rider?: unknown }> | undefined;
   for (const item of config.items) {
     const info = itemInfo(item, chosenTime);
+    if (dragons?.[info.id]) info.dragonRider = Number(dragons[info.id]!.rider);
     const staff = social.get(info.id);
     if (staff) {
       info.social = true;

@@ -8,12 +8,14 @@
 import type { Command } from "../net/commands.ts";
 import { canLiveIn, isAnimal } from "./animals.ts";
 import type { ItemInfo } from "./config.ts";
+import { DRAGON_TAMING, RIDER_IDS } from "./dragonRiders.ts";
 import { inConstruction } from "./construction.ts";
 import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
 import { gridFor, isWalkable, reachable } from "./walking.ts";
+import { UNIT_WAREHOUSE, warehouseCapacity, warehouseCount, warehouseUnits } from "./warehouse.ts";
 
 export const SUBCAT = {
   villager: 71, siege: 81,
@@ -52,7 +54,7 @@ export function canHarvest(unit: ItemInfo, target: ItemInfo): boolean {
  */
 export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, now = Date.now()): boolean {
   const target = building.item;
-  if (target.isUnit || building.unitsInside >= target.capacity || inConstruction(building, now)) {
+  if (target.isUnit || inConstruction(building, now)) {
     return false;
   }
   if (building.ruined) {
@@ -61,8 +63,24 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, no
   if (target.race !== town.race && target.race !== "a") {
     return false;
   }
+  if (target.id === UNIT_WAREHOUSE) {
+    return unit.isUnit && warehouseCount(town) < warehouseCapacity(town);
+  }
+  if (building.unitsInside >= target.capacity) return false;
+
+  if (target.id === 1529) {
+    return town.soulMixerReady === true && !building.soulMixing && (unit.breedingOrder ?? 0) > 0;
+  }
   if (target.subcategory === SUBCAT.refuge) {
     return true;
+  }
+  if (target.id === DRAGON_TAMING) {
+    const rider = RIDER_IDS.some((id) => id === unit.id);
+    if (!rider && !unit.dragonRider) return false;
+    // A dragon and a rider, in either order. A wrong rider type can enter;
+    // the original explains that mismatch inside the taming window.
+    const inside = building.units ?? [];
+    return inside.length === 0 || (inside.length === 1 && RIDER_IDS.some((id) => id === inside[0]) !== rider);
   }
   if (isAnimal(unit)) {
     return canLiveIn(unit, target, building.units ?? []);
@@ -229,6 +247,11 @@ export function regrow(town: Town, placed: PlacedItem, now: number, items: Map<n
  */
 export function goInside(town: Town, unit: PlacedItem, building: PlacedItem, from: Point, now: number): Command {
   remove(town, unit);
+  if (building.item.id === UNIT_WAREHOUSE) {
+    const units = warehouseUnits(town);
+    units.set(unit.item.id, (units.get(unit.item.id) ?? 0) + 1);
+    return { cmd: "add_unit_warehouse", args: [from.x, from.y, town.id, unit.item.id] };
+  }
   if (building.unitsInside === 0) {
     building.startedAt = now;
   }

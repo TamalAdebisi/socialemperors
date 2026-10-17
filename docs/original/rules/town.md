@@ -33,8 +33,8 @@ going in, harvesting, repairing; its fighting and special moves not read),
 timer), `managers/PopupManager` (the start-up checks), `GUI/GiftWindow`
 (how cards are grouped) and `GUI/GuiManager` (the tool buttons only).
 **Not read:** the shop window (`GUI/BuildingWindow`), the social-building,
-recruitment, market and unit-warehouse windows, `MissionsManager` and
-`NeighbourManager`. The building delegates were taken from
+recruitment and market windows, `MissionsManager` and
+`NeighbourManager`. The warehouse follow-up is read end to end in [warehouse.md](warehouse.md). The building delegates were taken from
 `docs/original/index/delegates.md`: they are all about fighting. Numbers
 from the config come from `config/game_config_20120826.json`. On our side:
 `client/src/rules/` (town, geometry, editing, walking, work, villagers,
@@ -165,7 +165,7 @@ of the original's searches measure from.
 - **Store** is refused while moving or while a bar runs. Units inside come
   out first; then `store_item` (x, y, town, item) and it goes to the
   town's storage. Storing the Unit Warehouse also puts its units in
-  storage and sends `reset_warehouse`. *Same: `client/src/rules/editing.ts` (`store`), `client/src/editor.ts` (`emptyOut`); different: ours lets a building in training be stored; the warehouse: missing.*
+  storage and sends `reset_warehouse`. *Same: `client/src/rules/editing.ts` (`store`), `client/src/editor.ts` (`emptyOut`, `store`), `rules/warehouse.ts`; different: ours lets a building in training be stored.*
 - **Selling is a tool, not a button.** The bulldozer on the bottom bar is
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
@@ -396,7 +396,7 @@ of the original's searches measure from.
   the Nursery an animal of the kind already there (any, if empty); into
   the Sacrifice Altar anything but siege engines; into the Fortress units
   with a range over 1 but not siege engines; dragons and riders into the
-  Dragon Taming. *Same for refuges, mills, mines, farms and ranches: `client/src/rules/work.ts` (`canGoInside`), `client/src/rules/animals.ts`; different: our nursery takes any kind; missing: the warehouse, altar (a recorded call), fortress and taming.*
+  Dragon Taming. *Same for refuges, mills, mines, farms and ranches: `client/src/rules/work.ts` (`canGoInside`), `client/src/rules/animals.ts`; different: our nursery takes any kind; warehouse built: `rules/warehouse.ts`; missing: altar (a recorded call) and fortress. Dragon Taming now accepts one configured untamed dragon and one rider in either order; the window checks the rider type (`rules/dragonRiders.ts`).*
 - **Going in:** the unit walks beside it and goes in: `push_unit` (tile
   last sent, item, building's tile, town), sent at once for a refuge.
   *Same: `client/src/rules/work.ts` (`goInside`).*
@@ -513,10 +513,10 @@ of the original's searches measure from.
 - **The wall gate** opens and closes from its panel, so units can pass;
   not saved. *Same: Open door and Close door on the card, the open picture while it's open, `client/src/editor.ts` (`gateButton`, `openGate`), `client/src/rules/walking.ts`, `client/src/view/townView.ts`.*
 - **The Unit Warehouse** takes units off the map up to its capacity
-  (`add_unit_warehouse`) and has its own window. *Missing.*
+  (`add_unit_warehouse`) and has its own window. *Built: `rules/warehouse.ts`, `rules/work.ts`, `ui/warehouse.ts`; [full rules](warehouse.md).*
 - **Buildings with their own window** (the spell academy, weather and
   time machines, graveyards, the altar of heroes, nests, markets): opened
-  from the panel. *Not checked (other books).*
+  from the panel. *Machines built in `ui/machines.ts`; their complete rules are in [machines.md](machines.md). Other windows: see their own books.*
 
 ## The town hall
 

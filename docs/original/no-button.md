@@ -1,5 +1,13 @@
 # Rules with no button
 
+**Later Soul Mixer supplement (1.4.07):** original map-initialization and
+level-up listeners can grant its free building at
+`SOUL_MIXER_MIN_LEVEL`, checking placed/stored copies. Queues restore before
+opening the window; finished mixer output waits for Get unit. Generic
+support is built, but the archived config lacks that minimum level and
+the original rank/time/power-up tables, so new mixing/grants remain safely
+unavailable. See [source coverage and blocker](rules/soul-mixer.md).
+
 Everything the original Flash client does by itself, with nobody pressing
 anything: what happens between loading the save and the player being able
 to play, what runs on a clock while they play, what follows from an event
@@ -91,8 +99,9 @@ another.
    a Monday unless taken that day, a preview on a Sunday). *Built:
    `client/src/rules/bonuses.ts`, `client/src/bonuses.ts`
    ([progress.md](rules/progress.md)).*
-9. **The Unit Warehouse's contents and room** are read. *Not yet (no
-   warehouse in the new client).*
+9. **The Unit Warehouse's contents and room** are read. *Built:
+   `rules/town.ts`, `rules/warehouse.ts`; automatic collision storage also
+   resets its contents into town storage (`rules/cleanup.ts`).*
 10. **Lost things are not saved:** whatever lost things, wild animals'
     ownership or raiders were on the map last time are not in the save;
     they are made afresh below. *Built, the same.*
@@ -428,6 +437,16 @@ window to close before the next is looked at.
     practice on our pages. *Not needed.*
 83. **Dead code:** the special units' 24-hour expiry and the daily
     upgrade count are kept but never acted on. *Not needed.*
+84. **The Supreme temple's wait shortcut is admin-only.** The ordinary
+    offering window runs its saved 48-hour timer, including offering
+    twelve, before selecting the next unfinished offering or enabling
+    the free final dragon. Its 5-cash skip function is bound only by
+    Social Point's admin panel. The Heart remains stored after its
+    offering and is consumed only at claim, if still present. The helper
+    checks the combined shared-gift/current-town store list.
+    *Built: `client/src/rules/temple.ts`, `ui/temple.ts`;
+    [complete rules](rules/temple.md). Earlier window-index notes about
+    a public skip and gifts-only Heart eligibility are corrected.*
 
 ## What the new client lacks
 
@@ -482,3 +501,13 @@ the original never shows it).
 17. **Attacks received while away** (rule 14) and the attack and spying
     counters (rules 7, 45): with attacks on players, at the switch.
     (checked twice)
+
+## Time/weather follow-up, 17 October 2026
+
+The machine slice reread the selected-building entry points and all
+window/help/reload paths. First opening the Time Machine automatically
+shows help and saves `timeMachineHelp` with `set_help_map`; repeat openings
+use the saved flag. A time jump reloads the current town and rereads its
+waits. Choosing a locked weather look also applies it immediately and
+reloads. Built in `ui/machines.ts`; [the complete source notes](rules/machines.md)
+record preserved calendar boundaries and the omitted travel-animation delay.

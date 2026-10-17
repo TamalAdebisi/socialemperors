@@ -29,6 +29,9 @@ SCALE = 3
 # Shown at most about 56 px wide, on screens with up to three pixels to the point.
 LONGEST = 160
 
+# Later windows externalized their original art as images, outside the 2012 SWF.
+EXTERNAL_IMAGES = {"open-soul-mixer": "externalized/RecuadroInfo/soulmixer.png"}
+
 # Our name: (the picture in the game's file, which frame[, its longest side
 # if not LONGEST[, "top": only what's above its first empty row]]). A
 # picture is a class, or a part of one by the names the game's code gives
@@ -154,6 +157,11 @@ PICTURES = {
     "open-market": ("EP_Market_MC/btMarket", 0),
     "market-card": ("ButtonMarketMC@1", 0, 400),
     "market-button": ("ButtonMarketMC/btnBuy@1", 0, 300),
+    # The warehouse: its card's Open button, occupied and empty slots, Use.
+    "open-warehouse": ("EP_WarehouseMC/butOpenWarehouse", 0),
+    "warehouse-card": ("UnitWarehouseCardMC@1", 0, 300),
+    "warehouse-empty": ("UnitWarehouseCardEmptyMC", 0, 300),
+    "warehouse-use": ("UnitWarehouseCardMC/butUse@1", 0, 300),
     # The army window's defence plans (another player's attack): each plan's picture, and the tick on the one chosen.
     "plan-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 0, 330),
     "plan-mid-defensive": ("PopUpBattleOptionsMC/strat/s1@3", 1, 330),
@@ -172,6 +180,10 @@ PICTURES = {
     "survival-life": ("PopupSurvivalMC/life1", 0, 120),
     "survival-life-used": ("PopupSurvivalMC/life1", 1, 120),
     "survival-lock": ("SurvivalMapMC/mcLock", 0, 200),
+    # The time/weather cards and the six hourglasses (one original frame each).
+    "open-time-machine": ("EP_TimeMachine_MC/btnAbrir", 0),
+    "open-weather-machine": ("EP_Weather_MC/btnAbrir", 0),
+    **{f"time-packet-{n}": ("ButtonTimeMC/bgd_mc", n) for n in range(6)},
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),
@@ -338,9 +350,19 @@ def main():
             print(f"{name}: {picture.width}x{picture.height}")
         export_map_pictures(folder)
         export_scaffolds(folder)
+        export_external_images()
     finally:
         shutil.rmtree(folder, ignore_errors=True)
     return 0
+
+
+def export_external_images():
+    for name, source in EXTERNAL_IMAGES.items():
+        with Image.open(os.path.join(ROOT, "assets", source)) as image:
+            picture = trimmed(image.convert("RGBA"))
+        picture.thumbnail((LONGEST, LONGEST), Image.LANCZOS)
+        picture.save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)
+        print(f"{name}: {picture.width}x{picture.height}")
 
 
 def export_map_pictures(folder):

@@ -70,7 +70,13 @@ import { CollectionsWindow } from "./ui/collections.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
+import { Machines } from "./ui/machines.ts";
 import { MarketWindow } from "./ui/market.ts";
+import { WarehouseWindow } from "./ui/warehouse.ts";
+import { warehouseRules } from "./rules/warehouse.ts";
+
+import { SoulMixerWindow } from "./ui/soulMixer.ts";
+import { givenMixer, mixerRules, readMixer } from "./rules/soulMixer.ts";
 import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
@@ -83,6 +89,10 @@ import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
+import { SUPREME_TEMPLE } from "./rules/temple.ts";
+import { TempleWindow } from "./ui/temple.ts";
+
+import { DragonRidersWindow } from "./ui/dragonRiders.ts";
 import { AskFriends } from "./ui/askFriends.ts";
 import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
@@ -560,11 +570,12 @@ async function start(): Promise<void> {
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
     // The Wizardry Academy's spells (ui/spells.ts): learnt and mana bought at home, cast in battle.
-    const spells = new SpellsWindow(magicParts(config, info.privateState as Record<string, unknown> | undefined, town,
+    const academyMagic = magicParts(config, (info.privateState ??= {}) as Record<string, unknown>, town,
       settings.assetsUrl, (cmd, ...args) => {
         commands.add(cmd, ...args);
         void commands.flush();  // as the Flash client: at once
-      }, () => hud.update(town)));
+      }, () => hud.update(town));
+    const spells = new SpellsWindow(academyMagic);
     // The graveyards and the Altar of Heroes (ui/graveyard.ts): the fallen as the save keeps them, and the potions.
     const saved = (info.privateState ?? {}) as Record<string, unknown>;
     const dead = readDead(saved.deadHeroes);
@@ -581,6 +592,17 @@ async function start(): Promise<void> {
       },
       arrived: (placed, lines) => editor.arrived(placed, lines),
       changed: () => hud.update(town),
+    });
+    const machines = new Machines({
+      town, config, saved,
+      words: (id) => ((config.localization_strings as { id: number; text: string }[]).find((line) => Number(line.id) === id)?.text ?? ""),
+      picture: (name) => {
+        const folder = (config.images as Record<string, string> | undefined)?.[name];
+        return `${settings.assetsUrl}/images_new/${folder ? `${folder}/` : ""}${name}`;
+      },
+      send: (cmd, ...args) => { commands.add(cmd, ...args); return commands.flush(); },
+      changed: () => hud.update(town),
+      travel: (message) => { showStatus(message); location.reload(); },
     });
     let learning = firstLesson !== null;
     const laterLevels: Parameters<LevelUpWindows["show"]>[0] = [];
@@ -661,7 +683,53 @@ async function start(): Promise<void> {
         void bank.open();
       },
     });
+    const temple = new TempleWindow({
+      town, items, privateState: saved, magic: academyMagic.state,
+      syncMana: () => { academyMagic.level(); },
+      line: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      clock, available: () => !fighting(),
+      send: async (sent) => {
+        sent.forEach((command) => commands.add(command.cmd, ...command.args));
+        return commands.flush();
+      },
+      removed: (unit) => view.remove(unit),
+      prepareRemoval: (unit) => editor.prepareUnitRemoval(unit),
+      arrived: (unit) => editor.arrived(unit, []),
+      spent: (resource, amount) => doings.spend(resource, amount),
+      changed: () => {
+        hud.update(town);
+        editor.refresh();
+        menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
+      },
+    });
+
+    const soulRules = mixerRules(config, items);
+    const soulMixer = new SoulMixerWindow({
+      town, items, rules: soulRules, state: readMixer(saved.barracksQueues), clock, assets: settings.assetsUrl, line,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => { commands.add(command.cmd, ...command.args); void commands.flush(); },
+      enter: (unit, building) => editor.putInsideFromWindow(unit, building),
+      arrived: (unit) => editor.arrived(unit, []),
+      changed: () => { hud.update(town); editor.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
+    const giveMixer = () => {
+      const given = givenMixer(town, soulRules, items);
+      if (given) {
+        given.commands.forEach((command) => commands.add(command.cmd, ...command.args));
+        editor.arrived(given.placed, []);
+      }
+    };
     const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
+    const warehouse = new WarehouseWindow({
+      town, items, rules: warehouseRules(config),
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => commands.add(command.cmd, ...command.args),
+      arrived: (unit) => editor.arrived(unit, []),
+      changed: () => hud.update(town),
+      spent: (cash) => doings.spend("c", cash),
+    });
     const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
     const levelWindows = new LevelUpWindows(
       { title: line(467, "LEVEL #0#!"), rank: line(468, "You've reached #0# rank"), canBuy: line(469, "You can now buy:"), reward: line(470, "Level reward:") },
@@ -718,13 +786,17 @@ async function start(): Promise<void> {
           return { label: "Enter Survival", icon: "open-survival", run: () => survivalWindow.open() };
         }
         // The dragon nest and the monster nest (ui/nest.ts): the original's Open button.
+        if (placed.item.id === SUPREME_TEMPLE) {
+          return { label: "Open", icon: "open-nest", run: () => temple.open(placed) };
+        }
         const kind = NESTS.find((n) => n.building === placed.item.id);
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return social.windowOf(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
+        return social.windowOf(placed) ?? soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
+        giveMixer();
         bonuses?.levelled();
         if (level === GOALS_END_LEVEL) {
           // Level 35, as the Flash client marks it: the goals stop, and a Wizardry Academy is given.
@@ -737,6 +809,7 @@ async function start(): Promise<void> {
           }
         }
       } });
+    giveMixer();
     hud.offerCollectAll(() => editor.collectAll());
     hud.offerSquareTool(() => editor.takeSquareTool());
     // Naming the empire, from the top bar as in the Flash client: `name_map` (town, name).
@@ -897,6 +970,18 @@ async function start(): Promise<void> {
         void bank.open();
       },
       askFriends: asking,
+    });
+
+    const dragonRiders = new DragonRidersWindow({
+      town, items, saved, globals: (config.globals ?? {}) as Record<string, unknown>, clock,
+      line: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      riderPicture: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}_training.png`,
+      assets: settings.assetsUrl,
+      send: (list) => { for (const command of list) commands.add(command.cmd, ...command.args); void commands.flush(); },
+      arrived: (placed) => editor.arrived(placed, []),
+      changed: () => hud.update(town), bank: () => void bank.open(), tell: (words) => editor.tell(words),
+      paused: (pause) => { if (pause) loop.stop(); else loop.start(); },
     });
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;

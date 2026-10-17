@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 71 built, 12 partly, 24 not yet, 24 not needed, 5 art (136 classes).
+**Count:** 81 built, 12 partly, 14 not yet, 24 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -27,6 +27,17 @@ is dead in the original too. The new client's windows are in
 of a command is named when it's in its own file. A few rows say "not yet"
 though the classic game on our server doesn't show the window either (the
 potion offer, buying a place on the player-attack world); the row says why.
+
+## Later preserved client: Soul Mixer (1.4.07)
+
+These classes are absent from the 0926 inventory counted above. Researched
+locally on 17 October; [rules and missing data](../rules/soul-mixer.md).
+
+| Class | What it does | Status |
+| --- | --- | --- |
+| `popups/PopupSoulMixer.as` (including `SoulMixerItem`, `SoulMixerPoweredUnit`) | Two surviving souls, random ranked preview, power-ups, timed queue, Get unit | built generic rules/window/protocol; playable mixing blocked by missing original tables |
+| `popups/params/SoulMixerParams.as` | Names its building | built: `ui/soulMixer.ts` |
+| `popups/PopupGenericUnitSelector.as`, `popups/params/GenericUnitSelectorParams.as` | Eligible owned units on the map | built: `mixingChoices` and window selector; no fabricated eligible units |
 
 ## Messages, confirmations and help
 
@@ -58,11 +69,11 @@ The plain boxes the rest of the game opens.
 | `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
 | `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | built: `rules/market.ts`; `market.py` uses the same sums |
 | `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
-| `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | not yet; `shop.py` |
-| `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | not yet; `warehouse.py` |
-| `popups/tournament/UnitWarehouseCard.as` | 55 | A card in the unit warehouse: the unit's picture, its name on hover. | not yet (with the warehouse) |
-| `popups/PopupSelectTime.as` | 241 | The time machine: buy time packs (30 min to 1 day, 2 to 75 cash; `buy_time_packet`) and use one (`time_ff`), which reloads the town moved forward. Shows its help by itself the first time. | not yet; `time_machine.py` |
-| `popups/PopupHelpTimeMachine.as` | 74 | The time machine's help page, recording it as seen with `set_help_map`. | not yet |
+| `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | built: `ui/machines.ts`, `rules/machines.ts`; `shop.py` |
+| `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | built: `ui/warehouse.ts`, `rules/warehouse.ts`; [rules](../rules/warehouse.md) |
+| `popups/tournament/UnitWarehouseCard.as` | 55 | A card in the unit warehouse: the unit's picture, its name on hover. | built: `ui/warehouse.ts`; original thumbnail art, visible touch name; portrait animation omitted (DECISIONS.md) |
+| `popups/PopupSelectTime.as` | 241 | The time machine: buy time packs (30 min to 1 day, 2 to 75 cash; `buy_time_packet`) and use one (`time_ff`), which reloads the town moved forward. Shows its help by itself the first time. | built: `ui/machines.ts`, `rules/machines.ts`; `time_machine.py` |
+| `popups/PopupHelpTimeMachine.as` | 74 | The time machine's help page, recording it as seen with `set_help_map`. | built: `ui/machines.ts`, first-open and ? help |
 | `popups/PopupExpand.as` | 126 | "Congratulations" after buying land, to share on Facebook. | not needed: Facebook share; the land itself is built (`rules/land.ts`) |
 | `popups/PopupBuilding.as` | 128 | "Congratulations" for a building: half the time a building is bought for the first time (always for a unit), and when a social building opens. Only offers a Facebook share. | not needed: Facebook share |
 
@@ -102,11 +113,11 @@ The plain boxes the rest of the game opens.
 | `popups/PopupDragons.as` | 643 | The dragon nest: six dragons in turn, ten steps each (care and feed), one step every 6 hours, the wait skipped for 3 or 15 cash; friends' help counts as steps (`finish_dragon_help`). Sends `next_step`, `buy_step_cash`, `next_dragon`; after the sixth the nest goes back to sleep (`desactivate_dragon`). | built: `client/src/ui/nest.ts`, rules in `client/src/rules/nest.ts` |
 | `popups/PopupHireFriendsGeneric.as` | 120 | The friends who helped at the nest, shown inside the nest's window. | partly: a "Congratulations!!" with OK takes the steps, without the friends' pictures (`client/src/ui/nest.ts`) |
 | `popups/PopupMonstersNest.as` | 500 | The monster nest: four monsters, ten steps each, 6 hours apart, 7 cash to skip; no friends' help. | built: `client/src/ui/nest.ts` |
-| `popups/PopupDragonRiders.as` | 317 | Choose one of three dragon riders (from levels 35, 40 and 45); hovering shows the dragons each can ride and what riding adds (attack +15/20/25, life +100/150/200). Sends `rider_select`. | not yet |
-| `popups/PopupDragonRiderTraining.as` | 342 | Training the rider: 5 to 7 steps, each a mini-game, 15 hours apart, 15 cash to skip; then the rider comes out (`rider_next_step`, `rider_buy_step_cash`). After one paid skip a "Fast train" button lets every later step skip the mini-game. | not yet |
-| `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | not yet |
-| `popups/PopupBahamutSupremeInvocationTemple.as` | 816 | The Supreme Bahamut temple: 12 offerings (100,000 each of gold, stone, wood and food; 50 mana; 50 cash; five big dragons sacrificed; one finished collection), one every 48 hours, the wait skipped for 5 cash; then the final dragon is placed free and the temple starts over. Sends `next_temple_step`, `buy_temple_step_cash`, `reset_temple`. | not yet; `temple.py` |
-| `popups/invocationtemple/InvocationStep.as` | 227 | One offering on the temple's strip: its picture or prices, a tick when done. | not yet |
+| `popups/PopupDragonRiders.as` | 317 | Choose one of three dragon riders (from levels 35, 40 and 45); hovering shows the dragons each can ride and what riding adds (attack +15/20/25, life +100/150/200). Sends `rider_select`. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
+| `popups/PopupDragonRiderTraining.as` | 342 | Training the rider: 5 to 7 steps, each a mini-game, 15 hours apart, 15 cash to skip; then the rider comes out (`rider_next_step`, `rider_buy_step_cash`). After one paid skip a "Fast train" button lets every later step skip the mini-game. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
+| `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
+| `popups/PopupBahamutSupremeInvocationTemple.as` | 816 | The Supreme Bahamut temple: 12 offerings in any order, each followed by 48 hours, then a free dragon and reset. The 5-cash wait command is bound only in the admin panel. | built: `rules/temple.ts`, `ui/temple.ts`; [rules](../rules/temple.md) |
+| `popups/invocationtemple/InvocationStep.as` | 227 | One freely selected offering: its picture or prices, availability, information and a tick when done. | built: `ui/temple.ts` |
 | `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | built: `client/src/ui/draggy.ts`, `client/src/lessons.ts`; mandatory, retry-safe saved reward |
 | `popups/SelectYourDragonReminderNestPopup.as` | 93 | Then a pointer to the dragon nest. | built: `client/src/ui/draggy.ts` |
 
@@ -280,11 +291,12 @@ and the neighbour's arrival request are in `core.md`.)
    checks that the collection's reward is in storage; it is taken (sold,
    `sell_stored_item`) only when the final dragon is claimed and the temple
    starts over, and only if it's still there. Each offering waits 48 hours
-   (an unused 6-hour figure sits beside it).
+   (an unused 6-hour figure sits beside it). *Built: `rules/temple.ts`.
+   The old 5-cash skip has only an admin-panel binding, not a normal button.*
 10. **A shortcut left in the dragon riders' training.** After paying once to
     skip a wait, a "Fast train" button (in English, not from the language
     file) appears and skips the mini-game for every later step of the
-    session.
+    session. Built in `ui/dragonRiders.ts`; the flag resets on page reload.
 11. **Survival picks the army itself**: the 30 strongest units by attack.
     A window to pick them by hand exists but nothing opens it. Only the
     first two of the five maps can be played; the other three say "coming

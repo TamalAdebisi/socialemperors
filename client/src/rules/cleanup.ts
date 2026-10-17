@@ -12,6 +12,7 @@ import { footprintTiles, isOpenLand } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
 import { nearestFree } from "./nature.ts";
 import type { PlacedItem, Town } from "./town.ts";
+import { UNIT_WAREHOUSE, resetWarehouse } from "./warehouse.ts";
 
 const TOWN_HALL = 135, FARM = 122, VILLAGER = 71;
 /** Where a villager works out of sight: mills, farms and mines. */
@@ -51,12 +52,13 @@ export function cleanUp(town: Town): { commands: Command[]; stored: PlacedItem[]
     const offMap = tiles.some(([x, y]) => x < 0 || y < 0 || x >= MAP_TILES || y >= MAP_TILES);
     const under = tiles.map(([x, y]) => on.get(`${x},${y}`)).filter((other) => other !== undefined);
     if (!placed.item.isUnit) {
-      const theirs = placed.item.race === town.race;
+      const theirs = placed.item.race === town.race || placed.item.id === UNIT_WAREHOUSE;
       if (offMap || under.length > 0) {
         if (theirs) {
           town.items.splice(town.items.indexOf(placed), 1);
           town.store.set(placed.item.id, (town.store.get(placed.item.id) ?? 0) + 1);
           commands.push({ cmd: "store_item_frombug", args: [placed.tx, placed.ty, town.id, placed.item.id] });
+          if (placed.item.id === UNIT_WAREHOUSE) commands.push(resetWarehouse(town));
           stored.push(placed);
         } else if (offMap) {
           town.items.splice(town.items.indexOf(placed), 1);

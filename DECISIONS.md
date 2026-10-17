@@ -64,6 +64,196 @@ uses the explicit Details button, including when driven by a mouse, so a
 preview cannot cover a purchase target as the pointer enters the card.
 Tap and keyboard Details access remain available in both layouts.
 
+## 17 October 2026: preserve unreadable training timestamps during time travel
+
+- **A time jump cannot make malformed work valid.** Final integration
+  review reproduced a false/boolean queue timestamp being refused by the
+  Soul Mixer, then converted by the time machine into zero, the ready
+  marker. Restrict only generic-queue shifting to finite, safe,
+  nonnegative wire integers and shift only positive starts. Keep explicit
+  zero and unreadable values exactly as saved; never repair them into
+  claimable output. Text follows the Soul reader's exact bounded ASCII
+  decimal-digit grammar: no signs, spaces, decimal points, exponents,
+  underscores or Unicode digits. This also excludes underflow and rounding
+  before they can create a ready marker. Existing building,
+  PvP and other timer handling is unchanged. Focused server regressions
+  retain malformed values, valid whole wire formats and zero markers;
+  the combined integration also checks the real time-jump/claim sequence.
+
+## 17 October 2026: preserve the Soul Mixer without inventing missing content
+
+- **Require the later original data before enabling new mixes.** The 0926
+  classic predates it. Local 1.4.07 research recovered behaviour, but all
+  preserved/historical configs and the preservation upstream lack ranks,
+  waits, power-up levels and the passive-grant level. Build original-art
+  help/window, generic rules and queue commands with a safe unavailable
+  state. No cash or units move and no replacement tables ship. This is
+  an explicit content blocker, not completed playable mixing. Full
+  validation gates ordinary map entry as well as the window and every
+  cash-spending action, even with partially restored ranks/times. Known
+  completed legacy work remains collectable without spending.
+- **Refuse a power-up beyond the final eligible result before charging.**
+  The later original could run past its list. Preserve weighted ranks,
+  random ranges and current-price/next-increment ordering while bounding
+  that terminal case. Synthetic content stays confined to tests.
+- **Protect saved work and both surviving parents.** Use original
+  `attrs.bq`/`barracksQueues` and queue commands. Finished work waits for
+  Get unit; unknown waits remain unknown. Repeated output collection is
+  ignored, malformed timestamps never become zero, and active work cannot
+  discard its building or parents. Execution-time guards cover captured
+  card/confirmation callbacks as well as their displayed button state;
+  window actions recheck live building and current parents. Turning
+  remains available as in the original. Queue identifiers remain globally
+  reserved after collection and across towns, preventing new work from
+  colliding with another building's original `bq`. No
+  combat behaviour or later progression goal is added.
+- **Parse saved integer text exactly, before conversion.** Floating-point
+  conversion can turn fractional exponent text into zero or round a
+  fractional amount into one. Require 1–16 ASCII digits within the safe
+  integer range for text; numeric values must also be finite, nonnegative
+  safe integers. Explicit numeric/text zero stays collectable. Signs,
+  spaces, decimal points and exponents do not identify valid saved work.
+  The independent Time Machine parser follows the same rule so it cannot
+  make malformed queue text valid while advancing time.
+- **A legacy Soul Mixer output must be a unit.** A known item id alone is
+  insufficient: malformed saved work naming a building is refused before
+  granting anything or returning parents. Existing unit outputs remain
+  collectable without the missing later content tables.
+
+## 17 October 2026: preserve the original rider adventures
+
+- **Play the shipped mini-game unchanged.** Rider training and taming
+  originally load a separate action platformer. Keep that asset and the
+  existing pinned Ruffle runtime, connected to native windows by our own
+  small loader. This preserves every adventure's original rules, art and
+  words. The town pauses during play. Touch keys send the same game input
+  and release on cancellation/focus loss; they are a phone convenience.
+  Their pointer presses preserve keyboard focus, including WebKit's touch
+  compatibility mouse event, while native Tab/Enter defaults remain.
+- **Read both existing mounted-output spellings.** Later `DRAGONS` rows use
+  `tamed_id`; the old window expects `tamedId`. Normalize both when reading
+  the config so those intended pairings have their configured output.
+  Pair eligibility, recovery prices and command formats do not change.
+- **Use a renderer that supports the original collision checks.** The
+  legacy Ruffle WebGL renderer drew the stage but failed its bitmap-reading
+  operation, leaving the actor still while the wrapper clock advanced.
+  Select Ruffle's bitmap-capable `wgpu-webgl` backend. Actual position and
+  ordinary input, plus the runtime's error logger, are checked. Keep the
+  shipped asset, game speed, drawing quality and frame rate unchanged.
+- **Calibrate the new native-play fixture against its game clock.** Its
+  initial, unmeasured 60-second journey limit failed on local software
+  drawing measured around three frames per second. Replace that new limit
+  with at most 600 original movie frames per adventure and 30-second wall
+  liveness for each segment of at most 30 frames. Require actual gameplay
+  progress beyond the wrapper clock, and retain all screen/save assertions.
+  No established test is relaxed. The failed runs and interrupted retry
+  remain in [the verification record](docs/verification-dragon-riders.md).
+- **Bound the verification claim.** The focused fixture requires the real
+  first-adventure win and eighth-adventure loss through ordinary input and
+  the original end-screen buttons. Its phone success adapter checks the
+  final transformation separately. Those checks do not claim a complete
+  eight-adventure playthrough. The complete Chromium focus passed at
+  `54a1ad0a`; cross-engine and combined results are recorded separately.
+- **Keep rider reward and reset in one command batch.** The original
+  queues its free unit and training reset together. Preserve that order
+  in one retryable request, so leaving after a reward cannot strand a
+  separate unsent reset. Reopening shows the picker and cannot claim twice.
+
+## 17 October 2026: acknowledge the camp made due by time travel in its browser fixture
+
+- **Keep the automatic camp and continue through its dialog.** The first
+  machine browser run passed the purchase, panel-switch, cash/stock and
+  saved timer assertions, then could not reselect the machine. Its failure
+  screenshot shows the normal chapter-four camp notice covering the town;
+  the server log confirms the time jump made that wait due and spawned the
+  camp. The fixture now checks and acknowledges that notice before tapping
+  the machine, including fresh phone contexts. All machine assertions and
+  deadlines remain; no camp rule, timer or runtime code changes.
+- **Wrap the full packet name.** The same screenshots showed the twelve-hour
+  label truncated by the ordinary list-row style. Allow wrapping only in
+  machine rows and check its full width on desktop and phone; prices and
+  buttons remain alongside it.
+- **Keep save recovery above the generic warning.** The successful focused
+  run still showed the sender's central error covering part of the phone
+  panel's local reload text. Raise only a machine panel with an active
+  recovery button; the generic warning remains available when it closes.
+  Check the button across its width, as well as performing the real reload.
+
+## 17 October 2026: include generic training queues in time travel
+
+- **Treat a queued unit's start as the same kind of wait as a building's.**
+  The later original Soul Mixer keeps its start timestamp in
+  `privateState.barracksQueues[id].ts`, with the unit and count alongside;
+  a speed-up sets that timestamp to zero. The time-machine help promises
+  building/training waits advance. Move positive generic-queue starts back
+  with the other waits, preserving zero as already finished and retaining
+  unit/count metadata. The original server is unavailable, so this is the
+  narrow integration judgment between its restored command formats. A
+  server regression covers waiting, ready, claimed and very early starts;
+  no missing Soul Mixer content is invented or enabled.
+
+## 17 October 2026: preserve the Supreme temple's ordinary wait
+
+- **Keep the cash shortcut private.** The full local source reading found
+  the 5-cash wait function bound only in Social Point's admin panel. Earlier
+  index notes described it as a normal temple button. The modern temple
+  preserves the ordinary 48-hour wait, including offering twelve, without
+  exposing that admin control. Existing server command support remains.
+- **Use the responsive panel with original artwork and words.** All
+  twelve offerings remain freely selectable, with original information,
+  help, confirmation, marks, illustration and controls. A phone uses the
+  project's scrolling sheet. The original four-second cosmetic ritual
+  playback is replaced by its still illustration and immediate saved
+  progress; payment, command order and the 48-hour deadline stay the same.
+- **Keep the original Heart timing and free reward.** The Heart is checked
+  in the combined gift/store list at offering, retained until claim and
+  consumed only if still present. The current town's store is used before
+  shared gifts, matching the existing command. The free dragon has no
+  extra population/limit gate or XP.
+  Temple actions pause during a home fight so temporary or converted
+  battle units cannot become sacrifices through the town panel.
+
+## 17 October 2026: finish the Unit Warehouse in the shared panel
+
+- **Keep eighteen slots on a page, arranged for the panel.** The original
+  six columns do not fit its narrow desktop panel or a phone sheet. Use
+  three columns with the same slot count, original slot/button pictures,
+  original thumbnail art and visible names for touch. Static portraits
+  replace the original eighteen animated portraits; their units and rules
+  are unchanged. The stale help text's old 200-slot claim is not shown;
+  purchases follow the current config's 1,000 maximum.
+- **Refuse a full warehouse before a unit walks there.** The original
+  walks the unit over and rejects it on arrival. Our ordinary admission
+  check knows the separate box's current room and refuses the trip at
+  once; arrival rechecks room for simultaneous units.
+- **Follow the distinct storage and selling paths.** Locally reading all
+  warehouse references showed `reset_warehouse` when the building goes
+  into storage, including the collision tidy-up. Moving and ordinary
+  selling do not send it. Preserve that behavior and retain bought room;
+  correcting the old server comment needs no server runtime change.
+
+## 17 October 2026: finish the time and weather machines
+
+- **Preserve buying separately from using.** Time packets keep the config's
+  six sizes/prices and saved counts; missing stock gives the original
+  warning. First-open help uses the original `timeMachineHelp` key. Weather
+  unlock immediately applies and reloads; grass and already-owned looks
+  stay free, with the original gap at theme 3.
+- **Save before travelling.** Wait for acknowledged commands instead of
+  the original fixed half-second timeout. On failure, stop further writes
+  on the uncertain balance and offer Reload saved town. Keep the original
+  travelling words/duration but omit its extra three-second animation
+  delay, following the existing panel/loading presentation.
+- **Fill the advertised outgoing-PvP wait.** The original help explicitly
+  says time travel speeds PvP. Our server already moved the other supported
+  waits but omitted sent attack times; move those and their reset threshold
+  together. Received attack history, spy visits and calendar-event dates
+  retain their existing behavior. The original server is unavailable; this
+  is a narrow judgment based on the shipped help and existing attack-counter
+  calculation, covered by server tests.
+- **Preserve ownership boundaries.** The weather build goal already works;
+  no goal hooks, progression runtime, combat, menus or click controls change.
+  Local source reading is summarized in `docs/original/rules/machines.md`.
 ## 17 October 2026: Bull Gladiator clicks and the attack pointer
 
 - **Measure the visible frame, keeping the original artwork.** Bull

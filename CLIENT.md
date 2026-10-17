@@ -957,10 +957,34 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
 extra villager at a tree or rock, which the Flash client never showed; it
 now gives the same as the client (`production.py`).
 
-**Not yet:** the Unit Warehouse, the hatchery's own work, the sacrifice
+**Not yet:** the hatchery's own work, the sacrifice
 altar and the dragon nest (in the classic game for now; animals go into
 ranches, "The living map"); villagers putting out fires after a battle; the collection pieces
 the Flash client sometimes drops from a harvest.
+
+### The Unit Warehouse
+
+The warehouse's Open button shows eighteen slots per page, including its
+empty pages. Units walk inside through the ordinary map controls and stop
+using population. Use calls one back beside the building, checking its
+kind's limit and room for people. Buying room adds one slot for the
+config's cash price, up to its maximum. Putting the building in storage
+puts its units there too; bought room is retained. Moving or selling it
+preserves its separate box, as in the original.
+
+Code: `rules/warehouse.ts`, `ui/warehouse.ts`, `rules/town.ts`,
+`rules/work.ts` and the warehouse hooks in `editor.ts` and
+`rules/cleanup.ts`. The original slot and button art is exported by
+`tools/art/export_ui.py`. Its page uses three columns in the shared panel;
+the original thumbnails and visible unit names suit touch. The source
+reading is in `docs/original/rules/warehouse.md`; judgment calls are in
+DECISIONS.md. Test: `e2e/tests/warehouse.mjs`, desktop and phone, including
+the server's saved box, map, cash, capacity and ordinary storage.
+There is no warehouse-specific goal among the 227 mission entries, so
+this slice does not change the remaining-goal count.
+Focused Chromium passes desktop and phone saving; the
+[verification record](docs/verification-warehouse.md) retains the earlier
+fixture failures, final trace and screenshot review.
 
 ### The living map
 
@@ -1063,8 +1087,8 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
   (unit, tile, 0, town).
 
 **Not yet:** hurrying a training with cash isn't in the Flash client
-either; the dragon nest's riders, the hatchery and other special training
-windows are in the classic game for now.
+either; the hatchery and other special training windows are in the classic
+game for now. Dragon riders have their own completed flow below.
 
 ### Land and cash
 
@@ -1508,6 +1532,66 @@ reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
 the dragon got, the friends' list and the monster nest opened, with checks
 on the server's save.
 
+### The time and weather machines
+
+The Time Machine's **Open** and Weather Machine's **Set weather** buttons
+use their original pictures. Both windows use the shared panel and phone
+sheet (`ui/machines.ts`; configuration and save readers in
+`rules/machines.ts`). The time window has the six original hourglasses,
+prices from `TIME_MACHINE`, owned counts, separate Buy and Use buttons and
+the original first-opening help, remembered with `timeMachineHelp`.
+Buying sends `buy_time_packet`; using sends `time_ff` and reloads the saved
+town. The existing server also advances outgoing PvP's wait and generic
+training-queue starts now, as the original help promises, while completed
+queue markers and calendar events retain their meaning.
+
+The weather window shows the six original terrain previews, names and
+unlock price. IDs skip 3. Grass is free; unlocking a look immediately
+applies it with `unlock_skin` then `set_skin`, as the original does. Owned
+looks remain free and the current one is marked Selected. Terrain belongs
+to a town and unlocked looks belong to the player.
+
+Both machines wait for the server to save before reloading. A failed save
+gives a Reload saved town button and prevents another purchase on an
+uncertain balance. The original travelling words replace its extra
+three-second animation delay. Source notes and the narrow server judgment
+are in [the machine rule book](docs/original/rules/machines.md).
+Tests: `e2e/tests/time-machine.mjs`, `e2e/tests/weather-machine.mjs`, including
+desktop/phone screens and saved cash, timers, help, stock and terrain.
+Goal 220 already uses the ordinary weather-building requirement; no
+progression code or unfinished-goal count changes here.
+
+### Dragon riders and taming
+
+The Rider Academy and Dragon Riding open native windows from their building
+cards (`ui/dragonRiders.ts`; `rules/dragonRiders.ts`). The picker retains
+the three configured unlock levels, compatible dragon previews, original
+portraits and gain text. Training retains the five-to-seven adventures,
+15-hour recoveries, cash recovery, session-only **Fast train**, and the
+free rider claim after the final wait. Progress maps come from the original
+labelled illustrations, exported by `tools/art/export_riders.py`.
+
+Taming accepts one configured untamed dragon and one rider. Its window
+shows compatibility, the mounted result and its stats, help and **Take out**.
+Only winning the original eighth adventure transforms the pair; failure,
+closing or lack of free space preserves them. The ordinary Flash command
+sequence keeps both clients' saves compatible.
+
+The original action adventures remain the untouched shipped
+`SagaOTDC.swf`, played by the already pinned Ruffle runtime, loaded only
+when needed. Our small loader starts the selected adventure and connects
+its original parent callbacks (`ui/riderAdventure.ts`;
+`tools/art/build_minigame_bridge.sh`). The town pauses during play. Touch
+keys supplement its original keyboard controls. Pointer presses preserve
+the existing keyboard focus, while ordinary Tab access remains available.
+Later config rows' two
+output-key spellings are normalized, as recorded in DECISIONS.md. Ruffle's
+bitmap-capable renderer preserves the original pixel-based collision checks;
+the legacy renderer could draw the stage without advancing its physics.
+See [the rule book](docs/original/rules/dragon-riders.md) and
+[the verification record](docs/verification-dragon-riders.md) for coverage,
+failed attempts and the platformer-playthrough limit.
+
 ### The market
 
 Built with Beta 1's parity list. A market (the first, second or third,
@@ -1543,6 +1627,30 @@ warnings, the server's save, the three goals done, a reload and a phone.
 Before asking for either warning, it waits for the earlier messages to
 finish: goal rewards share the queue, and a full queue drops new messages.
 The wait has a 30-second limit; the warning and save checks stay the same.
+
+### The Soul Mixer
+
+The building opens its original-art window and help. Its later original
+rules and queue commands are implemented with tests, but **mixing remains
+unavailable with the archived config**: original unit ranks, mixing times,
+power-up prices and minimum level were not preserved. The window says so
+and blocks new selection/mixing and all cash spending. No replacement
+rules are invented. Known completed legacy queues remain collectable
+without spending when their output is a known unit; unknown waits remain
+unknown. Saved queue fields accept
+only exact safe integers; decimal/exponent strings cannot round into
+completed work.
+
+Files: `rules/soulMixer.ts`, `ui/soulMixer.ts`, `soul_mixer.py` and their
+tests; browser check `e2e/tests/soul-mixer.mjs`. The exact source contract,
+passive grant and recovery search are in
+[the original-rule notes](docs/original/rules/soul-mixer.md). No later
+Soul Mixer goal exists in the 227 shipped missions; the unfinished-goal
+count is unchanged.
+
+Focused Chromium passed 1/1 at `c944e853`, including desktop/phone saved
+state, original help and reload. All three fresh captures and the clean
+server log were reviewed. [Evidence and limits](docs/verification-soul-mixer.md).
 
 ### The troll town
 
@@ -2694,6 +2802,29 @@ No dedicated tournament goal exists in the shipped missions, so the
 unfinished-goal count does not change; ordinary resource-spending
 progress still receives successful entry fees. All tournament parts
 are complete; PR #92 records the release metadata.
+
+### The Supreme temple
+
+The Supreme Dragon Temple's Open now shows its twelve freely selected
+offerings, original information and laws, progress and deadline. Its
+offerings share resource and mana balances with the rest of the town;
+sacrifices require confirmation and remove one eligible map dragon
+without sale money or a graveyard entry. All twelve offerings wait 48
+hours, including the last. The Heart remains in Storage until the free
+dragon is claimed beside the temple and progress resets. Reopening and
+reloading preserve the saved ritual. Details and command order are in
+[the original rules](docs/original/rules/temple.md).
+
+`rules/temple.ts` owns payments and commands; `ui/temple.ts` presents the
+original art and words inside the project's desktop/phone panel. The
+Academy, home battles and temple share a live mana state. A narrow editor
+removal hook preserves the last server position of a walking sacrifice.
+The original admin-only
+5-cash wait shortcut stays hidden, and the original illustration is a
+still image rather than a four-second cosmetic delay. No dedicated
+temple goal exists in the shipped missions, so the unfinished-goal count
+does not change; normal spending goals hear resource offerings.
+Verification: [temple record](docs/verification-temple.md).
 
 ### Making the art look better
 

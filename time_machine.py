@@ -23,7 +23,7 @@ from village import STARTED, take
 
 # Waits kept for the whole player, and in each town.
 PLAYER_WAITS = ("timestampLastBonus", "timeStampTakeCare", "timeStampTakeCareMonster",
-                "riderTimeStamp", "timeStampTemple", "timeStampDartsNewFree")
+                "riderTimeStamp", "timeStampTemple", "timeStampDartsNewFree", "tsAttacksReset")
 TOWN_WAITS = ("timestampLastTreasure",)
 
 
@@ -49,6 +49,19 @@ def _earlier(when, seconds: int):
     return max(when - seconds, 1) if when > 0 else when
 
 
+def _queue_start(value):
+    """Match readable queue wire integers without repairing invalid data."""
+    if isinstance(value, str):
+        # Match the Soul reader's bounded ASCII decimal grammar exactly.
+        # Decimal/exponent/underscore/Unicode forms stay unreadable.
+        if not 1 <= len(value) <= 16 or not value.isascii() or not value.isdecimal():
+            return None
+        value = int(value)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 2 ** 53 - 1:
+        return None
+    return int(value) if isinstance(value, int) or value.is_integer() else None
+
+
 def buy(save: dict, jump: int) -> str:
     if not 0 <= jump < len(_jumps()):
         return f"There is no time jump {jump}."
@@ -70,6 +83,20 @@ def jump(save: dict, jump: int) -> str:
     for key in PLAYER_WAITS:
         if key in pState:
             pState[key] = _earlier(pState[key], seconds)
+    # The original help explicitly includes PvP: the next attack allowance is
+    # calculated from the attacks the player sent, not received history.
+    for attack in pState.get("attacksSent", []) or []:
+        if isinstance(attack, dict) and "time" in attack:
+            attack["time"] = _earlier(attack["time"], seconds)
+    queues = pState.get("barracksQueues")
+    if isinstance(queues, dict):
+        for queue in queues.values():
+            started = _queue_start(queue.get("ts")) if isinstance(queue, dict) else None
+            if started is not None and started > 0:
+                # Generic queues keep the work's start here instead of on
+                # the building. Never turn malformed data into ready work;
+                # an explicit zero is the existing speed-up completion mark.
+                queue["ts"] = _earlier(started, seconds)
     if isinstance(pState.get("survivalVidaTimeStamp"), list):  # survival lives come back sooner
         pState["survivalVidaTimeStamp"] = [_earlier(t, seconds) for t in pState["survivalVidaTimeStamp"]]
 

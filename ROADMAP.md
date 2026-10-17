@@ -479,6 +479,31 @@ merging the two wait fixes with that separate failure documented.
   - [x] The dragon and monster nests' window: raising them step by step,
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
+  - [x] The Unit Warehouse: walking units in, eighteen-slot pages, calling
+        units back, buying room and storing the building with its contents
+        ([CLIENT.md](CLIENT.md#the-unit-warehouse)). Its commands and save
+        fields match the original; desktop/phone coverage checks saving.
+
+  - [x] The time and weather machines: original building buttons, time
+        packets and first-use help, saved time travel, six terrain looks,
+        paid unlock-and-apply and free reuse, on desktop and phone
+        ([CLIENT.md](CLIENT.md#the-time-and-weather-machines)).
+
+  - [x] The Supreme Bahamut temple: twelve offerings in any order, saved
+        waits, sacrifice confirmation, the Heart and free claim/reset
+        ([CLIENT.md](CLIENT.md#the-supreme-temple)). The ordinary window
+        retains its wait; the original 5-cash shortcut is admin-only.
+
+  - [x] Dragon riders: picker, training/recovery and free claim; dragon
+        taming with compatibility, take out and the unchanged original
+        adventures in the pinned Ruffle runtime
+        ([CLIENT.md](CLIENT.md#dragon-riders-and-taming)).
+
+The Soul Mixer has its original-art window, generic later rules and queue
+protocol. **Play remains blocked by missing original content**:
+`breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` and
+`SOUL_MIXER_MIN_LEVEL` are absent from preserved config/history/upstream.
+No substitute tables ship. See [research and limits](docs/original/rules/soul-mixer.md).
 
 ## How we add a missing feature
 

@@ -363,13 +363,60 @@ and shared save support remain.
 The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
+## The Unit Warehouse
+
+- [x] Read this town's saved unit counts and total capacity; warehoused
+      units take no population and do not fill ordinary building slots.
+- [x] Walking admission, immediate command batch, eighteen-slot pages and
+      one-unit deployment with kind limit, housing and four-ring exit checks.
+- [x] One-slot cash purchases up to the configured maximum; storing the
+      warehouse, including collision storage on opening, empties it into
+      town storage and retains bought room. Moving and selling preserve
+      the separate warehouse box, following the original.
+
+The shared panel uses three columns and original thumbnails with visible
+touch names; the original portrait animation is omitted. See
+DECISIONS.md and `docs/original/rules/warehouse.md`.
+
+## The Supreme temple
+
+- [x] Building-card entry, original art/text/help, twelve offerings in
+      any order, availability and completed marks.
+- [x] Exact resource payments with shared mana; map-only sacrifices,
+      confirmation, last saved coordinates and no death/sale rewards.
+- [x] Combined gift/store Heart check, retention until claim, all twelve 48-hour
+      waits and saved progress/deadline across reloads.
+- [x] Free dragon beside the temple, optional Heart consumption at claim,
+      original command order and reset.
+- The 5-cash skip is bound only in the original admin panel and stays
+  hidden. The original illustration is retained as a still image inside
+  the responsive panel; the cosmetic four-second playback is omitted.
+  [Rules](docs/original/rules/temple.md), [verification](docs/verification-temple.md).
+
+## Soul Mixer
+
+- [x] Later original window/art, generic ranking and power-up rules,
+  original queue protocol, saved work, explicit collection and safe parents.
+- [x] Safe missing-data window and desktop/phone saved-state coverage.
+  Exact `c944e853` passed focused Chromium 1/1 (67s), with all three captures
+  reviewed; [evidence and limits](docs/verification-soul-mixer.md).
+- [ ] Restore genuine later original ranks, waits, power-up table and
+  passive-grant level before enabling playable mixing. The 0926 classic
+  predates it. See [exact missing data](docs/original/rules/soul-mixer.md).
+
 ## Not for Beta 1
 
 **Originally deferred beyond Beta 1:** offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
-Survival, tournaments, the nests and the mandatory tutorial are now built;
+Survival, tournaments, the nests, the Unit Warehouse, the time/weather machines, dragon rider training/taming and the mandatory tutorial are now built;
 ROADMAP.md tracks the remaining work.
+
+Rider windows use the original unlocks, steps, recovery/shortcut, pair
+matching and free rewards. The shipped action adventures run unchanged
+through the existing pinned runtime; the surrounding windows are native.
+Touch keys and normalization of the config's two mounted-output key
+spellings are recorded calls. See [the rules and verification limit](docs/original/rules/dragon-riders.md).
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.
@@ -396,3 +443,18 @@ Social Point's admin tools used.
       and stale-reply protection; the own-town missing-hall notice. New
       menu cash purchases count toward the existing spending mission.
       Assault behavior remains with combat.
+
+### Time and weather machines
+
+- [x] Original card actions and pictures; six time packets with config
+      prices, saved counts, separate buy/use and first-opening help.
+- [x] Successful-save-before-reload travel, with the original travelling
+      words and duration; recovery after a failed save. The original
+      three-second travel animation delay is omitted (DECISIONS.md).
+- [x] Outgoing PvP attack allowance advances with time travel; existing
+      calendar-event dates and received history stay unchanged.
+- [x] Six weather themes, IDs 0/1/2/4/5/6, original previews/words,
+      immediate unlock-and-apply, free grass and retained paid ownership.
+
+Source notes: [machines](docs/original/rules/machines.md). Desktop/phone
+browser checks read the saved cash, counts, help, working timer and skin.

@@ -1,5 +1,13 @@
 # The interface, managers and small modules
 
+**Later Soul Mixer supplement (1.4.07, outside the 0926 inventory):**
+`GUI/extendedPortraits/EP_SelfSoulMixer`, `managers/BuildingQueueManager`
+and `managers/BuildingQueue/BuildingQueueData` are researched through for
+the Soul Mixer. Its card, generic queue/save contract and explicit output
+collection are built; missing original tables block new mixing.
+`managers/goals/GoalSoulMixerGet` has no matching shipped mission and adds
+no progression goal. See [rules and source coverage](../rules/soul-mixer.md).
+
 This part of the original Flash client is what sits around the map: the
 top bar and the menus at the bottom, the card for the thing selected, the
 shop and storage, the friends strip, and the managers that keep the
@@ -9,7 +17,7 @@ own: the potion offer, the player-attack world map and the dragon-rider
 minigame. The windows themselves are in [windows.md](windows.md), the map
 and its units in [engine.md](engine.md) and [core.md](core.md).
 
-**Count:** 39 built, 16 partly, 14 not yet, 18 not needed, 11 art (98 classes).
+**Count:** 40 built, 17 partly, 12 not yet, 18 not needed, 11 art (98 classes).
 
 **How deep this was read.** Read through: `GuiManager`, `PlayerStatus`,
 `MissionsManager`, `CommandManager`, `CollectableManager`, `KompuManager`,
@@ -89,7 +97,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `GUI/PortraitAssault.as` | 40 | A unit picture with a count, in the army and after-battle windows. | partly: the island's end window in `questPlay.ts`; the attack windows aren't built |
 | `GUI/PortraitAssaultRecovered.as` | 43 | A recovered unit with half its price. | not needed: only a window the admin panel opens uses it |
 | `GUI/UnitTooltip.as` | 172 | A unit's numbers and animation, for the dragon and monster nests and the super mystery box. | not yet |
-| `GUI/AnimatedUnit.as` | 212 | Plays a unit's animation in a window (darts, dragon taming, unit warehouse, potion offer). | not yet: none of those windows is built |
+| `GUI/AnimatedUnit.as` | 212 | Plays a unit's animation in a window (darts, dragon taming, unit warehouse, potion offer). | not yet: warehouse uses original still thumbnails in `ui/warehouse.ts`; this shared animation player is not yet ported |
 
 ## Friends and neighbours
 
@@ -132,11 +140,11 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `utils/FontsLoader.as` | 214 | Loads the game's fonts at start, by language. | built: the page's fonts come by CSS (`ui/style.css`) |
 | `fonts/IRuntimeLoadedFont.as` | 15 | What a loaded font must offer. | built: as above |
 | `utils/TextFieldUtil.as` | 121 | Puts text in a field, shrinking it to fit. | built: our windows are HTML |
-| `utils/StageBlocker.as` | 204 | The "loading" cover that stops clicks while waiting for the server, and the time machine's "travelling" screen. | partly: the loading message (`ui/hud.ts`); no time-machine screen |
+| `utils/StageBlocker.as` | 204 | The "loading" cover that stops clicks while waiting for the server, and the time machine's "travelling" screen. | partly: loading/travelling text (`ui/hud.ts`, `ui/machines.ts`); the original extra travel-animation delay is omitted |
 | `btns/Buttonize.as` | 358 | Makes a picture act as a button: grows on hover, fades when off. | built: the buttons' styles in `ui/style.css` |
 | `utils/ExpandSprite.as` | 173 | A frame that stretches without blurring its corners, for tooltips. | art |
-| `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | not yet: those windows aren't built |
-| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | partly: tournament refresh, availability and deadline clocks; darts/temple later and heavy siege off |
+| `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | partly: temple information and native tooltips; cursor-following tooltip not reproduced |
+| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | partly: tournament refresh, availability/deadline and temple offering clocks; darts later and heavy siege off |
 | `utils/countdown/DigitCountDown.as` | 66 | One flipping digit of that clock. | art |
 | `utils/paginator/Paginator.as` | 246 | Pages through a list of things. | not needed: only the iPhone gifts window uses it |
 | `utils/paginator/PaginatorConfig.as` | 228 | The paginator's settings. | not needed: as above |
@@ -156,7 +164,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | Class | Lines | What it does | Status |
 |---|---|---|---|
 | `newTowns/ExplorationsManager.as` | 1061 | The world map for attacking players: continents of islands by level, attack (`attack_player`) and spy (`spy_player`) with their counters, profiles, history and the army. Opening it can move the player's own island and clear the "next continent" flag without a button (see Surprises). Relocating sends `reset_position_univers`. Drawing and tweens skimmed. | partly: `ui/worldMap.ts` and `rules/world.ts` (the map, islands, menu, attack, spy, profile, browsing, relocating, the prize); no first-time help yet; `worlds.py` serves the map |
-| `minigames/WindowMiniGameDragonRider.as` | 96 | Loads a separate minigame for a dragon rider's training level and reports won or lost. | not yet |
+| `minigames/WindowMiniGameDragonRider.as` | 96 | Loads a separate minigame for a dragon rider's training level and reports won or lost. | built: unchanged shipped adventure through the pinned runtime and our own `ui/riderAdventure.ts` loader |
 | `managers/offers/KompuManager.as` | 354 | The timed potion offer: on from `KOMPU_MIN_LEVEL` (10) while the config has an offer, a try every so often through `kompu_try.php`, a prize (into storage) at certain potion counts, done when all are brewed. | not yet: our server sends no offer, so neither game shows it |
 | `managers/offers/KompuReward.as` | 83 | One potion prize: its count and unit. | not yet |
 | `managers/offers/KompuViralIcon.as` | 58 | The offer's animated icon with its time left. | not yet |

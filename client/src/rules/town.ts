@@ -25,6 +25,10 @@ export interface SaveMap {
   items: SaveItem[];
   /** What this town put away: { "<item id>": count } (older saves: a list indexed by id). */
   store?: Box;
+  /** Units kept off the map in this town's Unit Warehouse. */
+  warehousedUnits?: Box;
+  /** The original save's spelling: its total room, including bought slots. */
+  warehouseAditionalCapacitySingle?: number;
   /** The Great Church's steps done: each adds room for people. */
   increasedPopulation?: number;
   /** The troll camps (rules/camps.ts): which comes next, and when the last chest was opened (seconds). */
@@ -119,6 +123,10 @@ export interface PlacedItem {
   helpers?: string[];
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
+  /** Later original building queue identifier (the save's attrs.bq). */
+  queueId?: string;
+  /** The Soul Mixer's parents stay inside until its queued output is collected. */
+  soulMixing?: boolean;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */
   nobodys?: boolean;
   /** A scripted camp's boss's own rules in a fight (rules/battle.ts): it gets away, can't be hurt yet, is drawn bigger. Not saved. */
@@ -126,6 +134,8 @@ export interface PlacedItem {
 }
 
 export interface Town {
+  /** Full original Soul Mixer content has been validated for this loaded town. Never saved. */
+  soulMixerReady?: boolean;
   /** Which of the player's towns this is (the server's town number, 0 or 1). */
   id: number;
   name: string;
@@ -145,6 +155,9 @@ export interface Town {
   /** Storage, by item id: gifts and prizes (shared by the player's towns), and what this town put away. */
   gifts: Map<number, number>;
   store: Map<number, number>;
+  /** Warehouse units take no population until called back onto the map. */
+  warehouse?: Map<number, number>;
+  warehouseCapacity?: number;
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
@@ -171,6 +184,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       workTime: Number(attributes?.cp) || 0,
       ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length, staffIds: attributes.si.map(String) } : {}),
       ...(attributes?.sif && typeof attributes.sif === "object" ? { staffAsked: new Set(Object.keys(attributes.sif).map((id) => id.replace(/^u/, ""))) } : {}),
+      ...(attributes?.bq !== undefined ? { queueId: String(attributes.bq) } : {}),
       ...(readHelpers(attributes?.hc).length > 0 ? { helpers: readHelpers(attributes?.hc) } : {}),
     });
   }
@@ -191,6 +205,8 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
     gifts: readBox(info.privateState?.gifts),
     store: readBox(map.store),
+    warehouse: readBox(map.warehousedUnits),
+    warehouseCapacity: Number(map.warehouseAditionalCapacitySingle) || 50,
     items: placed,
     unknown,
     increasedPopulation: Number(map.increasedPopulation) || 0,

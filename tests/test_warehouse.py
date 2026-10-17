@@ -117,6 +117,82 @@ class TimeMachineTest(unittest.TestCase):
         self.assertEqual(self.pState["survivalVidaTimeStamp"], [hour_ago])
         self.assertEqual(self.pState["timeStampDartsReset"], now)  # the season is a date
 
+    def test_a_jump_brings_the_pvp_allowance_nearer_without_changing_other_history(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], tsAttacksReset=now - 100,
+                           attacksSent=[{"time": now, "victim_id": "42", "description": {"win": 1}}],
+                           attacksReceived=[{"time": now, "attacker_id": "24"}],
+                           spyings=[{"time": now, "victim_id": "84"}])
+        self.send("time_ff", 1)
+        self.assertEqual(self.pState["attacksSent"], [{"time": now - 3600, "victim_id": "42", "description": {"win": 1}}])
+        self.assertEqual(self.pState["tsAttacksReset"], now - 3700)
+        self.assertEqual(self.pState["attacksReceived"], [{"time": now, "attacker_id": "24"}])
+        self.assertEqual(self.pState["spyings"], [{"time": now, "victim_id": "84"}])
+
+    def test_a_jump_preserves_calendar_events_and_reaches_every_town(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[1, 0, 0, 0, 0, 0], timeStampMondayBonus=now,
+                           timeStampDartsReset=now, timeStampDartsNewFree=now,
+                           riderTimeStamp=now, timeStampTemple=now, timeStampTakeCareMonster=now)
+        self.save["maps"].append({"items": [[SWORDSMAN, X, Y, 0, now, 0]], "questTimes": {"1": now}})
+        self.send("time_ff", 0)
+        self.assertEqual(self.save["maps"][1]["items"][0][4], now - 1800)
+        self.assertEqual(self.save["maps"][1]["questTimes"], {"1": now - 1800})
+        for key in ("timeStampDartsNewFree", "riderTimeStamp", "timeStampTemple", "timeStampTakeCareMonster"):
+            self.assertEqual(self.pState[key], now - 1800, key)
+        self.assertEqual(self.pState["timeStampMondayBonus"], now)
+        self.assertEqual(self.pState["timeStampDartsReset"], now)
+
+    def test_a_jump_advances_generic_training_queues_without_unfinishing_ready_work(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+            "1": {"ts": now, "amount": 1, "unit": 533},
+            "2": {"ts": 0, "amount": 1, "unit": 534},
+            "3": {"ts": 0, "amount": 0, "unit": 535},
+            "4": {"ts": 100, "amount": 1, "unit": 550},
+        })
+        self.send("time_ff", 1)
+        self.assertEqual(self.pState["barracksQueues"], {
+            "1": {"ts": now - 3600, "amount": 1, "unit": 533},
+            "2": {"ts": 0, "amount": 1, "unit": 534},
+            "3": {"ts": 0, "amount": 0, "unit": 535},
+            "4": {"ts": 1, "amount": 1, "unit": 550},
+        })
+
+    def test_time_travel_preserves_malformed_generic_queue_starts_without_normalizing_them(self):
+        malformed = [False, True, None, "", " ", "not a timestamp", 1.5, "1.5", -1, "-1",
+                     float("nan"), float("inf"), [], {}, 2 ** 53, "9007199254740990.5", "1.0000000000000001",
+                     "1.0", "1e0", "1e-400", "1e309", "0.0", "0e0", "1__0", "1_0", "١", "１",
+                     " 1", "1 ", "+1", "-0", "00000000000000000", "9007199254740992"]
+        for value in malformed:
+            with self.subTest(value=repr(value)):
+                self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+                    "1": {"ts": value, "amount": 1, "unit": 533},
+                })
+                self.send("time_ff", 1)
+                queue = self.pState["barracksQueues"]["1"]
+                self.assertIs(queue["ts"], value, "an unreadable start must remain unreadable, never become ready")
+                self.assertEqual((queue["amount"], queue["unit"]), (1, 533))
+
+    def test_time_travel_accepts_whole_wire_starts_and_preserves_explicit_zero_markers(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+            "1": {"ts": now, "amount": 1, "unit": 533},
+            "2": {"ts": str(now), "amount": 1, "unit": 534},
+            "3": {"ts": float(now), "amount": 1, "unit": 535},
+            "4": {"ts": str(now).rjust(16, "0"), "amount": 1, "unit": 550},
+            "6": {"ts": 0, "amount": 1, "unit": 555},
+            "7": {"ts": "0", "amount": 1, "unit": 556},
+            "8": {"ts": 0.0, "amount": 1, "unit": 557},
+        })
+        self.send("time_ff", 1)
+        queues = self.pState["barracksQueues"]
+        for key in ("1", "2", "3", "4"):
+            self.assertEqual(queues[key]["ts"], now - 3600, key)
+        for key, value in (("6", 0), ("7", "0"), ("8", 0.0)):
+            self.assertEqual(queues[key]["ts"], value, key)
+            self.assertIs(type(queues[key]["ts"]), type(value), "zero markers retain their wire type")
+
     def test_no_jump_left(self):
         now = timestamp_now()
         self.map["timestampLastTreasure"] = now

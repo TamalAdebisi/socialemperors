@@ -26,6 +26,21 @@ next agent knows where to start.
   address from `SE_E2E_LIVE_ASSETS`. If it isn't set and there's no
   `art/sheets/`, `e2e/run.mjs` stops at once and says so: ask the owner
   to add it to the environment (AGENTS.md, Setting up).
+
+- **Special-building release checks complete:** latest main `f88ea31f`
+  (#113, including privacy/art-setting #114) is integrated at clean
+  `dc920d60`. Client types and **480/480 tests** pass; server **467 run,
+  458 passed, nine existing PostgreSQL skips**. Final affected Chromium
+  passes **9/9 in 1780.184s (29m 40.184s)**, including all six building scenarios,
+  Shop Details, Storage and the units book. All 74 fresh captures and
+  the 10,029-line server log were reviewed and hash-checked. The earlier
+  full attempt remains **94/95**, followed by unchanged Shop **1/1** at
+  `f3c55854`; all 95 pass across those runs, not one final-head 95/95.
+  Earlier preview failures and their incoming menus fix remain recorded in
+  [the integration record](docs/verification-special-buildings.md).
+  New Soul mixing still requires four genuine original configuration fields. Merge
+  remains the delivery step; all standing owner holds remain.
+
 - **Shop/Storage details follow-up in
   [#113](https://github.com/TamalAdebisi/socialemperors/pull/113):** details
   open only by click, tap or keyboard activation at every width. Buttons
@@ -82,6 +97,109 @@ next agent knows where to start.
   All full/focused captures and server logs were reviewed. Exact revisions,
   retained failures and coverage limits are in
   [the controls record](docs/verification-combat-controls.md).
+- **Special-building integration:** the five scoped branches/PRs are
+  combined on `codex/special-building-verification` for their full local
+  release checks. After final queue-parsing, machine recovery stacking
+  and ordered rider-claim corrections plus the legacy output-type guard,
+  latest main #98 is included. Exact `b6ed5175` passes 467 server tests
+  (458 passed, nine existing skips), client types and all 451 client tests.
+  The complete rider Chromium focus
+  passes 1/1 in 540s. Initial combined WebKit passes 5/6; a narrow adventure
+  touch-focus fix and a stronger Storage-picture capture pass their combined
+  repeat 2/2 in 488.296s at `db5d614d`, with all 15 fresh captures reviewed.
+  All six new cases have passing WebKit results across runs. The full
+  earlier 86-case Chromium run passed at exact `56d1bdbe` in 8305.262s;
+  all 507 captures and the 78,774-line server log were reviewed. The later
+  `a75d1e05` legacy Soul fixture passed focused Chromium/WebKit separately.
+  The complete `f3c55854` 94/95 attempt and unchanged 1/1 `shop-details`
+  repeat are recorded separately in
+  [the integration record](docs/verification-special-buildings.md#latest-main-integration-and-current-release-checks).
+  The earlier full pass does not verify this newer merge or erase its
+  111s phone-preview failure. Soul Mixer remains blocked on all four
+  genuine original fields/tables; no special-building merge is claimed.
+
+- **Time/weather machine slice:** implemented in `ui/machines.ts` and
+  `rules/machines.ts`, with original art and local-source notes in
+  `docs/original/rules/machines.md`. Browser focus and combined pre-merge
+  checks are coordinated by the special-buildings chat; do not infer a
+  merge or full-suite pass from this implementation note. Unit/type and
+  focused server checks pass. Exact `4a81d5ae` passed both desktop/phone
+  browser cases (136s time, 99s weather); all ten captures were reviewed.
+  The later recovery-warning stacking fix passes in combined WebKit at
+  `22f5fd02` (123s time, 46s weather); all ten fresh captures were reviewed.
+  [The slice record](docs/verification-time-weather.md) retains the initial
+  camp-notice failure and each exact revision.
+  Machine goal 220 already has the ordinary build hook, so there is no
+  progression-runtime edit and the unfinished-goal count stays unchanged.
+  The narrow server fix advances sent PvP attacks/reset with time travel;
+  generic training queues also advance their positive start timestamp,
+  preserving completed zero markers. Other existing calendar behavior is
+  preserved; Soul Mixer content remains gated by genuine original data.
+
+- **Supreme temple special-building slice:** implemented on
+  `codex/supreme-temple`; no merge claimed yet. Original rules and complete
+  entry/window/step/helper reading are in `docs/original/rules/temple.md`.
+  The ordinary 48-hour wait is preserved: its cash skip is admin-only in
+  the original. All 410 client checks and types pass; existing temple
+  server replay passes 7/7. Exact clean `9bfa2581` passes the focused
+  Chromium desktop/phone screen/save check 1/1 in 199 seconds. All ten
+  fresh screenshots were reviewed and the server log is clean.
+  `docs/verification-temple.md` records exact scope, archive and limits.
+  The root coordinating chat owns integration, full checks and delivery.
+
+- **Dragon riders and taming implemented, merge pending:** native picker,
+  recovery/shortcut, free rider claim and compatible-pair taming. The
+  original action adventures remain unchanged in their shipped asset,
+  loaded only on demand with the pinned Ruffle runtime and our own bridge.
+  See CLIENT.md and `docs/original/rules/dragon-riders.md`; touch keys and
+  config-output spelling repair are recorded in DECISIONS.md. The early
+  36-second adapter smoke did not prove physics: a later real-input check
+  caught an unsupported bitmap operation in Ruffle's legacy renderer.
+  The bitmap-capable renderer now proves actual movement. Complete focused
+  Chromium passed 1/1 in 540 seconds at `54a1ad0a`: real first-adventure win
+  and eighth-adventure loss through their original buttons, recovery/claim,
+  ordinary pair admission and phone input/save. All 15 fresh captures and
+  final logs were reviewed. The phone victory uses the success adapter;
+  no complete eight-adventure playthrough is claimed. Shared integration
+  at `f3529ef2` passed types, all 447 client tests and 467 server tests
+  (458 passed, nine existing skips). First combined Linux WebKit passed
+  five of six cases; rider native callbacks passed, but its phone control
+  retained DOM focus after the touch attack. An exact-listener two-engine
+  probe proved WebKit's compatibility mousedown bypasses the cancelled
+  pointerdown. A scoped mousedown cancellation preserves focus and native
+  Tab/Enter defaults; the complete rider repeat passed in 419s at
+  `db5d614d`, including phone focus/input/save, with all 11 fresh captures
+  reviewed. The complete combined browser run remains with the coordinator.
+  [The verification record](docs/verification-dragon-riders.md) preserves
+  every failed/interrupted attempt and the measured new-fixture calibration.
+
+- **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
+  recovered its window, generic rules and queue commands; 0926 predates it.
+  Archived/historical config and preservation upstream have no
+  `breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` or
+  `SOUL_MIXER_MIN_LEVEL`. Its original-art window/help are built, but new
+  mixing safely stays unavailable; all entry and cash spending are blocked.
+  Known completed legacy work can be collected without spending, never by
+  treating an unknown or malformed timestamp as finished.
+  Recover genuine later config to enable it; never infer those tables
+  from unit strength or community guesses. [Research and coverage](docs/original/rules/soul-mixer.md).
+  Exact `c944e853` passed server 459 (450 passed, nine existing skips), types,
+  client 420/420 and focused Chromium 1/1 (67s). All three desktop/help/phone
+  captures and the clean server log were reviewed. A later saved-integer
+  parser correction prevents underflow/fractional text from rounding into
+  completed work, and legacy outputs must resolve to actual units. Types,
+  18 focused client tests and 12 real server tests pass after these guards.
+  Root integration verifies the combined change separately.
+  [Verification and limitation](docs/verification-soul-mixer.md).
+
+- **Unit Warehouse implementation:** its window, walking admission,
+  deployment, bought room and storage/reset follow the original rules.
+  Client types and 412 client tests pass; the existing warehouse/time
+  server suite passes 8/8. Focused Chromium passes 1/1 in 106 seconds at
+  `76a20d73`, including phone saving and reload. All four captures and the
+  clean server log were reviewed. [The verification record](docs/verification-warehouse.md)
+  retains the earlier failures and the final admission trace; integrated
+  delivery checks and merge remain the coordinating task.
 
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
@@ -229,9 +347,9 @@ next agent knows where to start.
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  50% are built in the new client, 40% partly (mostly special buildings
+  53% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  10% not yet (mostly windows). 47 of the 227 goals still need unfinished
+  7% not yet (mostly windows). 47 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
@@ -922,9 +1040,11 @@ together:
       drops update live counts; combat still owns kill-drop triggers.
 - [x] Units book completed in #105: original configured categories,
       recognition, missing-unit purchases, previews and saved rewards.
-- [ ] The unit warehouse (`warehouse.py`).
-- [ ] The time machine (`time_machine.py`) and its help page.
-- [ ] The weather machine: the island's looks (`unlock_skin`, `set_skin`).
+- [x] The unit warehouse (`warehouse.py`, `rules/warehouse.ts`, `ui/warehouse.ts`): admission, paging, deployment, capacity and storage/reset; desktop/phone save coverage. Delivery verification is recorded with the special-building work.
+- [ ] Soul Mixer: window/generic queue support built; playable mixing
+      waits for missing original content described above.
+- [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
+- [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
 - [x] Darts completed in #106: original schedule, seeded board,
       free-day/paid rules and saved prizes. The shipped final pool is
       inactive; no replacement rotation is invented.

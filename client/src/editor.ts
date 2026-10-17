@@ -18,7 +18,7 @@ import { useHelp } from "./rules/friendsHelp.ts";
 import { addPiece, harvestLoot, pieceFrame, pieceLines, type Piece } from "./rules/collections.ts";
 import { CAPACITY, STAT_WORDS, cardFacts, fill, type Words } from "./rules/card.ts";
 import { cantUpgrade, upgrade, upgradeOf, upgradePrice } from "./rules/upgrade.ts";
-import type { PlacedItem, Town } from "./rules/town.ts";
+import { savedTile, type PlacedItem, type Town } from "./rules/town.ts";
 import type { ActionBar, ActionChoices } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
 import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
@@ -42,6 +42,8 @@ import { TRAINING_MS, cantTrain, population, payForTraining, trained, trainingPr
 import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers.ts";
 import { caught, homeFor } from "./rules/animals.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, goldMultiplier, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
+import { UNIT_WAREHOUSE, resetWarehouse } from "./rules/warehouse.ts";
+import { DRAGON_TAMING } from "./rules/dragonRiders.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -990,7 +992,7 @@ export class TownEditor {
       earns = { resource: item.production.resource, amount: harvest(placed) };
     }
     let inside: ActionChoices["inside"] = null;
-    if (item.capacity > 0 && !item.isUnit) {
+    if (item.capacity > 0 && !item.isUnit && item.id !== UNIT_WAREHOUSE) {
       const units = (placed.units ?? []).map((id) => this.items.get(id)).filter((unit): unit is ItemInfo => unit !== undefined);
       inside = {
         capacity: fill(this.line(CAPACITY.id, CAPACITY.fallback), [placed.unitsInside, item.capacity]),
@@ -1254,6 +1256,42 @@ export class TownEditor {
     this.levelUp();
     this.hud.update(this.town);
     this.refresh();
+  }
+
+  /** A temple sacrifice removes a walking unit where the server last had it. */
+  prepareUnitRemoval(unit: PlacedItem): Point {
+    const at = this.savedAt.get(unit) ?? savedTile(unit);
+    this.letGo(unit);
+    this.stopRepair(unit);
+    this.savedAt.delete(unit);
+    this.group = this.group.filter((chosen) => chosen !== unit);
+    if (this.selected === unit) this.select(null);
+    if (this.lastTap?.placed === unit) this.lastTap = null;
+    // The caller removes the view immediately afterwards, cancelling its
+    // walker without firing the arrival callback or queueing a late move.
+    return { ...at };
+  }
+
+  /** The Soul Mixer's selector puts an owned unit straight inside, as the original window does. */
+  putInsideFromWindow(unit: PlacedItem, building: PlacedItem): boolean {
+    if (this.paused || !this.town.items.includes(unit) || !this.town.items.includes(building)
+      || building.item.id !== 1529 || this.town.soulMixerReady !== true || !unit.item.isUnit || (unit.item.breedingOrder ?? 0) <= 0
+      || inConstruction(building, Date.now()) || building.ruined || building.soulMixing
+      || (building.units?.length ?? 0) >= 2 || unit.wild || !isTheirs(this.town, unit.item)) return false;
+    this.stopWorking(unit);
+    this.stopRepair(unit);
+    this.clearLine(unit);
+    this.headingTo.delete(unit);
+    const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
+    this.savedAt.delete(unit);
+    this.send([goInside(this.town, unit, building, from, this.clock())]);
+    this.emit({ kind: "inside", unit: unit.item, building: building.item });
+    this.doings.pushedInto(unit.item, building.item);
+    this.view.remove(unit);
+    this.select(building);
+    this.hud.update(this.town);
+    this.refresh();
+    return true;
   }
 
   /** Who hears what the player does: Arthur's lessons (lessons.ts). */
@@ -1552,6 +1590,7 @@ export class TownEditor {
 
   /** A unit sent into a building: it walks to its door and goes in, if there's still room (stopped short, it tries once more). */
   private goInto(unit: PlacedItem, building: PlacedItem, tries = 2): void {
+    const destination = { x: building.tx, y: building.ty };
     const tile = this.standingTile(unit, building);
     if (!tile) {
       this.say(`${unit.item.name} can't get to ${building.item.name}.`);
@@ -1560,6 +1599,14 @@ export class TownEditor {
     this.walkTo(unit, tile, () => {
       if (!this.town.items.includes(building) || !canGoInside(this.town, unit.item, building)) {
         this.unitStopped(unit);
+        return;
+      }
+      if ((building.item.id === UNIT_WAREHOUSE || building.item.id === DRAGON_TAMING)
+        && (building.tx !== destination.x || building.ty !== destination.y)) {
+        // These buildings can move while the unit walks. Their old doorway
+        // cannot admit a unit into the building's new position.
+        this.unitStopped(unit);
+        if (tries > 1) this.goInto(unit, building, tries - 1);
         return;
       }
       if (!this.reached(unit, tile)) {
@@ -1572,6 +1619,7 @@ export class TownEditor {
       const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
       this.savedAt.delete(unit);
       this.send([goInside(this.town, unit, building, from, this.clock())]);
+      if (building.item.id === UNIT_WAREHOUSE) void this.commands.flush();
       this.emit({ kind: "inside", unit: unit.item, building: building.item });
       this.doings.pushedInto(unit.item, building.item);
       this.view.remove(unit);
@@ -1584,6 +1632,10 @@ export class TownEditor {
 
   /** Let one unit out of the selected building, beside it: the one tapped on the card. */
   private letOne(building: PlacedItem, index = -1): void {
+    if (building.soulMixing) {
+      this.say("Collect the mixed unit before taking its parents out.");
+      return;
+    }
     const out = letOut(this.town, building, this.items, index);
     if (!out) {
       this.say(`There's no room around ${building.item.name}.`);
@@ -1851,6 +1903,7 @@ export class TownEditor {
    * and that stays so if the move is cancelled.
    */
   private startMove(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.light(null);
     this.emptyOut(placed);
     this.refresh();
@@ -1925,6 +1978,7 @@ export class TownEditor {
   }
 
   private sell(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.letGo(placed);
     // What comes back rises from it, as in the Flash client.
     const back = refund(placed.item);
@@ -1939,13 +1993,22 @@ export class TownEditor {
   }
 
   private store(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.letGo(placed);
     this.emptyOut(placed);
     this.send([store(this.town, placed)]);
+    if (placed.item.id === UNIT_WAREHOUSE) this.send([resetWarehouse(this.town)]);
     this.doings.stored(placed.item);
     this.view.remove(placed);
     this.select(null);
     this.say(`${placed.item.name} is in your storage.`);
+  }
+
+  /** Recheck when a captured card/confirmation callback runs; a mix may have started since it was drawn. */
+  private mixerLocked(placed: PlacedItem): boolean {
+    if (placed.item.id !== 1529 || !placed.soulMixing) return false;
+    this.say("Collect the mixed unit before moving, storing or selling this building.");
+    return true;
   }
 
   private send(commands: Command[]): void {

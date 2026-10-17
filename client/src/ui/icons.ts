@@ -94,6 +94,11 @@ export const ICONS = {
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
   "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  "open-time-machine": new URL("./art/open-time-machine.webp", import.meta.url).href,
+  "open-weather-machine": new URL("./art/open-weather-machine.webp", import.meta.url).href,
+
+  "open-rider-training": new URL("./art/riders/open-training.webp", import.meta.url).href,
+  "open-dragon-taming": new URL("./art/riders/open-taming.webp", import.meta.url).href,
   // Arthur's lessons, and the free draggy at their end.
   "tutor-arthur": new URL("./art/tutor-arthur.webp", import.meta.url).href,
   "tutor-arrow": new URL("./art/tutor-arrow.webp", import.meta.url).href,
@@ -123,8 +128,13 @@ export const ICONS = {
   "click-here": new URL("./art/click-here.webp", import.meta.url).href,
   // The market (ui/market.ts): its card's button, a trade's card and its button.
   "open-market": new URL("./art/open-market.webp", import.meta.url).href,
+  "open-soul-mixer": new URL("./art/open-soul-mixer.webp", import.meta.url).href,
   "market-card": new URL("./art/market-card.webp", import.meta.url).href,
   "market-button": new URL("./art/market-button.webp", import.meta.url).href,
+  "open-warehouse": new URL("./art/open-warehouse.webp", import.meta.url).href,
+  "warehouse-card": new URL("./art/warehouse-card.webp", import.meta.url).href,
+  "warehouse-empty": new URL("./art/warehouse-empty.webp", import.meta.url).href,
+  "warehouse-use": new URL("./art/warehouse-use.webp", import.meta.url).href,
   // The nests' window (ui/nest.ts).
   "nest-button": new URL("./art/nest-button.webp", import.meta.url).href,
   "nest-marker": new URL("./art/nest-marker.webp", import.meta.url).href,
