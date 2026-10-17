@@ -19,6 +19,24 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Current workstreams, 17 October:** the coordinating chat owns combat,
+  Medusa availability research and integration. Separate owner-started chats
+  own special buildings (Soul Mixer, warehouse, machines, dragon training,
+  temple) and menus/progression (collections, units book, darts, social
+  buildings, shop and profiles). Coordinate collection kill drops across
+  those streams. Existing feature holds remain.
+- **Combat controls in [#98](https://github.com/TamalAdebisi/socialemperors/pull/98):**
+  Bull Gladiator's click margin now excludes transparent export padding in
+  town and battle. Original sword cursor is shared by battle modes, with
+  selection, movement and aiming updates. Server 449 run (440 passed,
+  nine existing skips), client types and all 408 tests passed. Full Chromium
+  attempted all 80: 70 passed, ten failed; final isolated follow-ups passed
+  **10/10 in 15m 19.58s**. All 80 have passing results across runs, not one
+  final-head 80/80 run. Linux WebKit controls passed **1/1 in 89s**.
+  All full/focused captures and server logs were reviewed. Exact revisions,
+  retained failures and coverage limits are in
+  [the controls record](docs/verification-combat-controls.md).
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven

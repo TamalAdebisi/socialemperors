@@ -16,6 +16,7 @@ import type { Town } from "./rules/town.ts";
 import { tournamentSpellAllowed } from "./rules/tournamentBattle.ts";
 import type { Sound } from "./sound.ts";
 import { showMessage } from "./ui/hud.ts";
+import { CURSORS } from "./ui/icons.ts";
 import { SpecialButtons } from "./ui/specialButtons.ts";
 import { BattleSelection } from "./ui/battleSelection.ts";
 import { SpellBook, magicParts } from "./ui/spells.ts";
@@ -38,7 +39,7 @@ export interface ControlParts {
   random: () => number;
   /** A tap the battle's owner looks at first (the island's chest, a building to repair): true when it took it. */
   tapFirst?: (tapped: Fighter | null, tile: Point, selected: Fighter[]) => boolean;
-  /** The mouse pointer over a fighter with these selected (the repair bucket at home), or "" for the usual. */
+  /** A mode-specific pointer (the repair bucket at home), or "" to use the shared attack/default pointer. */
   cursorFor?: (hovered: Fighter | null, selected: Fighter[]) => string;
   /** Mana and gold changed (the town's numbers at the top, at home). */
   changed?: () => void;
@@ -56,6 +57,7 @@ export class BattleControls {
   private readonly selection: BattleSelection;
   private aimAt: Point | null = null;
   private hovering = false;
+  private pointerAt: Point | null = null;
   private stopped = false;
   private readonly keys = (e: KeyboardEvent) => this.key(e);
   /** Told when the selection changes (the island's bar). */
@@ -77,6 +79,7 @@ export class BattleControls {
       } else {
         view.aim(null);
       }
+      this.updateCursor();
     }) : null;
     this.moves = new SpecialButtons(parts.specials, (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`, (text) => {
       showMessage(text);
@@ -85,6 +88,11 @@ export class BattleControls {
     this.selection = new BattleSelection((units) => this.select(units), (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`);
     parts.camera.onTap = (at, _touch, shift) => this.tap(at, shift);
     parts.camera.onHover = (at) => this.hover(at);
+    parts.camera.onLeave = () => {
+      this.pointerAt = null;
+      view.hover(null);
+      parts.camera.setCursor("");
+    };
     // Combat shortcuts win over the town's A (Army) and Space (box tool).
     window.addEventListener("keydown", this.keys, true);
   }
@@ -100,6 +108,7 @@ export class BattleControls {
     this.parts.view.selected = new Set(units);
     this.moves.select(this.selected);
     this.selection.update(units);
+    this.updateCursor();
     this.onSelect();
   }
 
@@ -114,6 +123,7 @@ export class BattleControls {
     if (!this.stopped) {
       this.moves.update();
       this.selection.update([...this.parts.view.selected].filter((f) => !f.dead || f.ruined));
+      this.updateCursor();
     }
   }
 
@@ -126,6 +136,8 @@ export class BattleControls {
     this.moves.remove();
     this.selection.remove();
     this.parts.view.selected = new Set();
+    this.pointerAt = null;
+    this.parts.camera.setCursor("");
     window.removeEventListener("keydown", this.keys, true);
   }
 
@@ -188,14 +200,27 @@ export class BattleControls {
     }
     const { view, camera } = this.parts;
     this.hovering = true;
+    this.pointerAt = at;
     if (this.book?.isAiming) {
       this.aimOver(tileUnder(camera.toMap(at)));
       view.hover(null);
+      this.updateCursor();
       return;
     }
-    const hovered = view.fighterAt(at);
-    view.hover(hovered);
-    camera.setCursor(this.parts.cursorFor?.(hovered, this.selected) ?? "");
+    this.updateCursor();
+  }
+
+  /** Keep the action pointer in step with selection, deaths and spell aiming, even without mouse movement. */
+  private updateCursor(): void {
+    // Fighters and the camera can move under a stationary mouse. Use the
+    // same current hit test as a click, rather than retaining an old target.
+    const hovered = this.pointerAt && !this.stopped && !this.book?.isAiming
+      ? this.parts.view.fighterAt(this.pointerAt) : null;
+    this.parts.view.hover(hovered);
+    const selected = this.selected;
+    const special = this.parts.cursorFor?.(hovered, selected);
+    const attack = hovered?.side === ENEMY && !hovered.dead && selected.some((unit) => unit.attack > 0);
+    this.parts.camera.setCursor(this.stopped || this.book?.isAiming ? "" : special || (attack ? CURSORS.attack : ""));
   }
 
   private key(e: KeyboardEvent): void {
