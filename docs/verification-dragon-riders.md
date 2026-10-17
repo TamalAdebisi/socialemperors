@@ -1,5 +1,7 @@
 # Dragon rider and taming verification
 
+Delivered in [#103](https://github.com/TamalAdebisi/socialemperors/pull/103) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
+
 Local work on 17 October 2026. No live accounts or live game server were
 used. Original source was inspected locally only; no original source is
 published. Browser runs are serialized with the other special-building

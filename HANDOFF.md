@@ -19,6 +19,25 @@ next agent knows where to start.
 
 ## Where things stand
 
+### Delivery receipt, 17 October 2026
+
+[Integration #110](https://github.com/TamalAdebisi/socialemperors/pull/110)
+merged normally at `064dd7bd961e554a5325906dc1c4276d1a1388ab` on 2026-10-17T16:19:23Z. GitHub reports all five
+scoped PRs [#100](https://github.com/TamalAdebisi/socialemperors/pull/100),
+[#101](https://github.com/TamalAdebisi/socialemperors/pull/101),
+[#102](https://github.com/TamalAdebisi/socialemperors/pull/102),
+[#103](https://github.com/TamalAdebisi/socialemperors/pull/103) and
+[#104](https://github.com/TamalAdebisi/socialemperors/pull/104) **merged**.
+The merge commit retains their histories and latest menus/control work.
+No required check or merge rule was bypassed. The automatic deployment is
+authorized; these local checks do not assert a production gameplay test.
+New Soul Mixer recipes remain blocked by four missing original configuration fields;
+window/help and safe legacy collection are delivered. Existing Beta 1,
+combat and later-content holds remain. Exact checks and retained failures
+follow below; status-only receipt edits change no game, art or test file.
+
+### Current status
+
 - **The repository no longer names the live game (17 October).** It
   stays public (GitHub won't make a public fork private), so its docs use
   "the live site" or `example.com`; don't write the real addresses back
@@ -27,7 +46,7 @@ next agent knows where to start.
   `art/sheets/`, `e2e/run.mjs` stops at once and says so: ask the owner
   to add it to the environment (AGENTS.md, Setting up).
 
-- **Special-building release checks complete:** latest main `f88ea31f`
+- **Special-building delivery in [#110](https://github.com/TamalAdebisi/socialemperors/pull/110):** latest main `f88ea31f`
   (#113, including privacy/art-setting #114) is integrated at clean
   `dc920d60`. Client types and **480/480 tests** pass; server **467 run,
   458 passed, nine existing PostgreSQL skips**. Final affected Chromium
@@ -39,7 +58,7 @@ next agent knows where to start.
   Earlier preview failures and their incoming menus fix remain recorded in
   [the integration record](docs/verification-special-buildings.md).
   New Soul mixing still requires four genuine original configuration fields. Merge
-  remains the delivery step; all standing owner holds remain.
+  `064dd7bd` completed normally; all standing owner holds remain.
 
 - **Shop/Storage details follow-up in
   [#113](https://github.com/TamalAdebisi/socialemperors/pull/113):** details
@@ -116,14 +135,13 @@ next agent knows where to start.
   [the integration record](docs/verification-special-buildings.md#latest-main-integration-and-current-release-checks).
   The earlier full pass does not verify this newer merge or erase its
   111s phone-preview failure. Soul Mixer remains blocked on all four
-  genuine original fields/tables; no special-building merge is claimed.
+  genuine original fields/tables; the delivery receipt above records the merge.
 
-- **Time/weather machine slice:** implemented in `ui/machines.ts` and
+- **Time/weather machines delivered in #100 through #110:** implemented in `ui/machines.ts` and
   `rules/machines.ts`, with original art and local-source notes in
-  `docs/original/rules/machines.md`. Browser focus and combined pre-merge
-  checks are coordinated by the special-buildings chat; do not infer a
-  merge or full-suite pass from this implementation note. Unit/type and
-  focused server checks pass. Exact `4a81d5ae` passed both desktop/phone
+  `docs/original/rules/machines.md`. Earlier focused checks below retain their own revisions; the combined
+  verification and actual merged delivery are recorded above. Initial unit/type and
+  focused server checks passed. Exact `4a81d5ae` passed both desktop/phone
   browser cases (136s time, 99s weather); all ten captures were reviewed.
   The later recovery-warning stacking fix passes in combined WebKit at
   `22f5fd02` (123s time, 46s weather); all ten fresh captures were reviewed.
@@ -137,17 +155,17 @@ next agent knows where to start.
   preserved; Soul Mixer content remains gated by genuine original data.
 
 - **Supreme temple special-building slice:** implemented on
-  `codex/supreme-temple`; no merge claimed yet. Original rules and complete
+  `codex/supreme-temple`; delivered in #102 through #110. Original rules and complete
   entry/window/step/helper reading are in `docs/original/rules/temple.md`.
   The ordinary 48-hour wait is preserved: its cash skip is admin-only in
-  the original. All 410 client checks and types pass; existing temple
-  server replay passes 7/7. Exact clean `9bfa2581` passes the focused
+  the original. Initial checks passed all 410 client tests and types; temple
+  server replay passed 7/7. Exact clean `9bfa2581` passes the focused
   Chromium desktop/phone screen/save check 1/1 in 199 seconds. All ten
   fresh screenshots were reviewed and the server log is clean.
   `docs/verification-temple.md` records exact scope, archive and limits.
-  The root coordinating chat owns integration, full checks and delivery.
+  Combined verification and actual merged delivery are recorded above.
 
-- **Dragon riders and taming implemented, merge pending:** native picker,
+- **Dragon riders and taming delivered in #103 through #110:** native picker,
   recovery/shortcut, free rider claim and compatible-pair taming. The
   original action adventures remain unchanged in their shipped asset,
   loaded only on demand with the pinned Ruffle runtime and our own bridge.
@@ -169,7 +187,7 @@ next agent knows where to start.
   pointerdown. A scoped mousedown cancellation preserves focus and native
   Tab/Enter defaults; the complete rider repeat passed in 419s at
   `db5d614d`, including phone focus/input/save, with all 11 fresh captures
-  reviewed. The complete combined browser run remains with the coordinator.
+  reviewed. The complete combined attempt and final affected follow-up are recorded above.
   [The verification record](docs/verification-dragon-riders.md) preserves
   every failed/interrupted attempt and the measured new-fixture calibration.
 
@@ -192,14 +210,14 @@ next agent knows where to start.
   Root integration verifies the combined change separately.
   [Verification and limitation](docs/verification-soul-mixer.md).
 
-- **Unit Warehouse implementation:** its window, walking admission,
+- **Unit Warehouse delivered in #101 through #110:** its window, walking admission,
   deployment, bought room and storage/reset follow the original rules.
-  Client types and 412 client tests pass; the existing warehouse/time
-  server suite passes 8/8. Focused Chromium passes 1/1 in 106 seconds at
+  Initial client types and 412 client tests passed; the warehouse/time
+  server suite passed 8/8. Focused Chromium passes 1/1 in 106 seconds at
   `76a20d73`, including phone saving and reload. All four captures and the
   clean server log were reviewed. [The verification record](docs/verification-warehouse.md)
   retains the earlier failures and the final admission trace; integrated
-  delivery checks and merge remain the coordinating task.
+  delivery checks and merge are complete in #110.
 
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
@@ -1052,8 +1070,8 @@ together:
       markets, recruitment, population wonder and Round Table. Real local
       help, original empire-keyed invitations, rewards, clocks and goals
       104/115 are verified. Ordinary buildings keep automatic opening.
-- [ ] Dragon riders, their training and taming dragons.
-- [ ] The Supreme Bahamut temple (`temple.py`).
+- [x] Dragon riders, their training and taming dragons: merged in #103 through #110.
+- [x] The Supreme Bahamut temple (`temple.py`): merged in #102 through #110.
 - [x] Profiles completed in #109: own/neighbour/world public fields,
       original honour badges/ranks, retry and late-reply protection.
 - [x] Missing-hall notice completed in #109: acknowledge the original

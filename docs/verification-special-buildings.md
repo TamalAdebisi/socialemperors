@@ -1,5 +1,25 @@
 # Special-building integration verification
 
+## Delivery receipt, 17 October 2026
+
+[Integration #110](https://github.com/TamalAdebisi/socialemperors/pull/110)
+merged normally at `064dd7bd961e554a5325906dc1c4276d1a1388ab` on 2026-10-17T16:19:23Z. GitHub reports all five
+scoped PRs [#100](https://github.com/TamalAdebisi/socialemperors/pull/100),
+[#101](https://github.com/TamalAdebisi/socialemperors/pull/101),
+[#102](https://github.com/TamalAdebisi/socialemperors/pull/102),
+[#103](https://github.com/TamalAdebisi/socialemperors/pull/103) and
+[#104](https://github.com/TamalAdebisi/socialemperors/pull/104) **merged**.
+The merge commit retains their histories and latest menus/control work.
+No required check or merge rule was bypassed. The automatic deployment is
+authorized; these local checks do not assert a production gameplay test.
+New Soul Mixer recipes remain blocked by four missing original configuration fields;
+window/help and safe legacy collection are delivered. Existing Beta 1,
+combat and later-content holds remain. Exact checks and retained failures
+follow below; status-only receipt edits change no game, art or test file.
+No-merge statements in the historical sections describe their pre-merge checks.
+The delivery-head Cubic check completed NEUTRAL; no fresh automated review
+pass is claimed. Independent source reviews are recorded with their exact scope.
+
 17 October 2026. This delivery combines the five independently scoped
 building branches, retaining each branch's history and pull request:
 [machines #100](https://github.com/TamalAdebisi/socialemperors/pull/100),

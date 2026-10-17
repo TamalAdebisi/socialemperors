@@ -91,7 +91,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Special-building release checks complete:** latest main `f88ea31f`
+- **Special-building delivery in [#110](https://github.com/TamalAdebisi/socialemperors/pull/110):** latest main `f88ea31f`
   (#113, including privacy/art-setting #114) is integrated at clean
   `dc920d60`. Client types and **480/480 tests** pass; server **467 run,
   458 passed, nine existing PostgreSQL skips**. Final affected Chromium
@@ -103,7 +103,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   Earlier preview failures and their incoming menus fix remain recorded in
   [the integration record](docs/verification-special-buildings.md).
   New Soul mixing still requires four genuine original configuration fields. Merge
-  remains the delivery step; all standing owner holds remain.
+  `064dd7bd` completed normally; all standing owner holds remain.
 
 - **Latest combat-controls verification (#98):** server 449 run (440 passed,
   nine existing PostgreSQL skips), client types and all 408 tests passed.

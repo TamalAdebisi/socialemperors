@@ -1,5 +1,7 @@
 # Supreme temple verification, 17 October 2026
 
+Delivered in [#102](https://github.com/TamalAdebisi/socialemperors/pull/102) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
+
 The special-building slice adds the original Supreme temple window and
 ritual to the modern client. Browser checks use a local throwaway server
 and accounts. Original artwork is read locally or from the public art

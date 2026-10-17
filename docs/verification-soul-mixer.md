@@ -1,5 +1,7 @@
 # Soul Mixer support verification
 
+Delivered in [#104](https://github.com/TamalAdebisi/socialemperors/pull/104) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
+
 17 October 2026. This slice adds the later original Soul Mixer window,
 generic rules and queue commands. **Playable new mixing remains blocked
 by missing original content.** The data search, exact missing fields and
