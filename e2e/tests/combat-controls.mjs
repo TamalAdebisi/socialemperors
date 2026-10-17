@@ -91,9 +91,19 @@ export default async function combatControls({ newPlayer }) {
   assert.equal(await cursor(page), "", "deselect clears the sword without moving the mouse");
   await page.keyboard.press("a");
   assert.ok(isSword(await cursor(page)), "keyboard selection restores the action under a stationary mouse");
+  await page.evaluate(() => {
+    const { camera } = window.seHome.parts;
+    const bull = window.seHome.fighting.battle.fighters.find((f) => f.item.id === 2126);
+    camera.lookAt({ x: bull.at.x, y: bull.at.y - 160 });
+  });
+  await page.waitForFunction(() => document.querySelector("canvas").style.cursor === "");
+  assert.notEqual(await page.evaluate((at) => window.seHome.fighting.view.fighterAt(at)?.side, enemy), 2,
+    "camera movement removes the attack target under the stationary mouse");
   await page.mouse.move(1, 1);
   assert.equal(await cursor(page), "", "leaving the map clears the sword");
   await player.shot("battle-controls");
+  await page.evaluate(() => window.seHome.fighting.controls.stop());
+  assert.equal(await cursor(page), "", "ending battle controls leaves no action cursor");
 }
 
 async function cursor(page) {
