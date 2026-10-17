@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: units book in Army
+
+- Keep the original category order, prices, acquisition recognition and
+  once-only reward commands. A unit in Gifts/storage alone does not count
+  as acquired unless bought through the book, matching the original.
+- Expand details by tap or keyboard in the panel so phone users can read
+  and buy without hover. Only one original-art animation plays at once;
+  closing or paging stops it and ignores late loads.
+- Preserve the configured overall denominator, including its one repeated
+  unit; category counters and reward eligibility use each category's list.
+
 ## 17 October 2026: collection window in the existing menus
 
 - Put Collections under Army on desktop and phone, using the existing

@@ -354,7 +354,7 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 ## Not for Beta 1
 
-**Originally deferred beyond Beta 1:** the units book, offer packs, markets for allies,
+**Originally deferred beyond Beta 1:** offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
 Survival, tournaments, the nests and the mandatory tutorial are now built;
@@ -367,3 +367,7 @@ Social Point's admin tools used.
       exchanges full sets and completes eligible sets for cash. Original
       repeat/unique restrictions remain; goal 54 opens here. Battle drops
       remain the combat chat's separate scope.
+
+- [x] Units book: original categories, grey missing units, stats and animated
+      previews; cash purchases and once-only category prizes saved with
+      the existing commands. Desktop/phone through Army.

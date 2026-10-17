@@ -847,8 +847,9 @@ together:
       merge pending. Army → Collections, goal 54, saved piece counts,
       exchanges/cash and Storage, desktop/phone. Harvest drops update
       live counts; combat owns kill drops.
-- [ ] The units book: every unit by kind, grey until owned, buying a
-      missing one for cash.
+- [ ] Units book implemented on `codex/units-book`; browser verification
+      and merge pending. Army entry, original categories and animated
+      details, cash purchases, once-only prizes and saved reloads.
 - [ ] The unit warehouse (`warehouse.py`).
 - [ ] The time machine (`time_machine.py`) and its help page.
 - [ ] The weather machine: the island's looks (`unlock_skin`, `set_skin`).

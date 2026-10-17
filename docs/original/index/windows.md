@@ -38,7 +38,7 @@ The plain boxes the rest of the game opens.
 | `popups/ConfirmPopup.as` | 86 | A yes-or-no question, with what to do on each answer. | built: the bar's prompts (`ui/actions.ts`, `editor.ts`) |
 | `popups/PopupAlerta.as` | 67 | A message with a title and one of the game's pictures; used for a camp's end and similar news. | built: `ui/notice.ts` (with a picture) |
 | `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: first-time survival and tournament help saved with `set_help_map`; other windows later |
-| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts and unit collections remain classic |
+| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts remains classic; unit collection rewards use `ui/unitBook.ts` |
 | `popups/PopupLore.as` | 148 | A picture book, page by page: the story of the gods and colossi, opened from the news and from a gods icon at the side of the screen. | not yet |
 | `popups/PopupMoreCash.as` | 63 | "Not enough cash", with a button to the page that sold cash. | not needed: payments |
 | `popups/tournament/Alert.as` | 69 | A small yes/no or OK box drawn inside another window; used by the temple, the team window and tournaments. | built: our windows ask in their own way (`questPlay.ts`) |
@@ -90,7 +90,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupMagic.as` | 321 | The spell book in battle: the spells learnt, three at a time round the book, and mana; Crack and Black Hole are off in tournaments. | built: `ui/spells.ts` |
 | `popups/PopupBuyMana.as` | 128 | 5 mana for 20,000 gold or 1 cash (`buy_mana_new`). | built: `ui/spells.ts` |
 | `popups/PopupBuyGold.as` | 79 | 2,500 gold for 5 cash (`exchange_cash_new`). | built: `ui/bank.ts`, `main.ts` |
-| `popups/PopupAllUnits.as` | 579 | The units book (unit collections): units by category, grey until owned; buy a missing one for cash (`buy_stored_item_cash`); a full category pays a reward unit and 1 cash (`unit_collections_completed`). | not yet; `shop.py` |
+| `popups/PopupAllUnits.as` | 579 | The units book (unit collections): units by category, grey until owned; buy a missing one for cash (`buy_stored_item_cash`); a full category pays a reward unit and 1 cash (`unit_collections_completed`). | built: `rules/unitBook.ts`, `ui/unitBook.ts`, `view/unitPreview.ts`; original categories, owned counts, cash buying and category rewards |
 | `popups/PopupRecover.as` | 103 | A list of units recovered after a fight, filled with test data. | not needed: only Social Point's admin panel opens it |
 | `popups/PopupHeavySiege.as` | 108 | The heavy siege: wait, attack now, or pay 20 cash to send it away. | not needed: switched off (`Config.HEAVY_SIEGE`) |
 
@@ -150,7 +150,7 @@ Player battles are for the last stop ("The switch"); the World window sends play
 | `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
 | `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
-| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; not the unit collection's |
+| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; unit collection prizes use `ui/unitBook.ts` |
 | `popups/PopupBuyTerritoryPvp.as` | 101 | Buy a place on the player-attack world for 5 cash (`buy_pvp_territory`). | not yet: our server doesn't handle `buy_pvp_territory` either |
 | `popups/PopUpBuyAssault.as` | 100 | Out of attacks or spy visits: wait, or buy 50 for 30 or 15 cash. | not needed: nothing opens it |
 

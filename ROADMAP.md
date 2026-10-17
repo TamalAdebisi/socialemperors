@@ -444,6 +444,9 @@ merging the two wait fixes with that separate failure documented.
   - [x] Collections window: saved pieces, set exchanges and cash completion,
         original reward restrictions, desktop/phone, Storage and goal 54
         ([CLIENT.md](CLIENT.md#collection-pieces))
+  - [x] Units book: original categories, acquired/missing units, cash buying,
+        animated details and saved category rewards, desktop/phone
+        ([CLIENT.md](CLIENT.md#the-units-book))
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

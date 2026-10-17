@@ -1587,6 +1587,21 @@ Goal 54 now counts opening it. Browser coverage:
 Storage, page bounds and reloads. Battle drop triggers belong to the
 separate combat work.
 
+### The units book
+
+Army → Units book shows the original configured categories in their order,
+three per page. Original thumbnails are grey until acquired. Tap or expand
+a unit to see its six stats and walking/attack/special animation; only one
+preview draws at once. Missing units can be bought for each category's
+cash price and appear in this town's Storage. A full category pays its
+reward into Gifts and one cash, once only. Book purchases and claims survive
+reloads; current map units count, and newly acquired map units remain
+recognized for this session, following the original's separate behavior.
+Unplaced Gifts and units inside buildings do not add book credit by
+themselves. `rules/unitBook.ts`, `ui/unitBook.ts` and `view/unitPreview.ts`
+implement it; `e2e/tests/units-book.mjs` checks desktop/phone, the preview,
+buying, category rewards and saved reloads.
+
 ### The building card
 
 The card for the thing selected is the Flash client's info panel
