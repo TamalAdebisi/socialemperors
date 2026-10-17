@@ -80,7 +80,7 @@ those commands run outside the sandbox when asked.
 ```
 .venv/bin/python -m unittest discover tests          # the server's unit tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 80 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 89 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
