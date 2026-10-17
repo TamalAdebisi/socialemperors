@@ -10,7 +10,174 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Completed correction focus at 60eba9ff; full checks pending
+## Final required verification at f798788b: 78/78
+
+Exact clean tested commit: `f798788b6529388f918098989b8f4997eab553c8`.
+It includes main `8f8c57abe132c5b0ff805159e276e668403fb5ef`, unchanged
+through completion. PR #96 remained a draft at `f9ed9060`; it was not
+merged into this run. Checks used local throwaway accounts and saved
+state, with read-only public artwork and no production game writes.
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| Server unit tests | 449 run: 440 passed, 9 existing PostgreSQL skips | 29.763578436s; unittest 29.297s |
+| Client types | Passed | 2.120334289s |
+| Client rules | 393/393 passed | 7.087552535s |
+| Full Chromium suite | 78/78 passed | 92m 33.33s (5553.33s; outer wrapper 5553.365349s) |
+
+All five tournament cases passed, alongside shared spells, `team` (36s),
+`world` (115s) and `scripted-bosses` (144s). No failed assertion was
+removed or weakened. The archive `tournament-evidence-full-f798788b`
+contains 260 fresh PNGs in 73 image folders, with no stale images
+included. The complete server log has zero Python tracebacks, HTTP 5xx
+responses or unhandled commands. All **260/260 screenshots were reviewed**;
+the coverage audit matches each archived path and SHA-256 to a completed
+review, with no gaps, stale records or hash mismatches. Its 261 review
+entries include the weekly 720px image twice, counted once. These full-run
+images are separate from the 31 reviewed focus images below. Exact local
+records are `tournament-f798788b-browser-record.json`,
+`tournament-final-check-status-f798788b.json`,
+`tournament-f798788b-log-review.json` and
+`tournament-f798788b-visual-coverage.json`.
+
+All 22 review threads were addressed and resolved. Independent final
+source reviews found no new issue. Cubic's fresh check was **NEUTRAL**:
+its monthly line quota was exhausted, so it did not re-review this code;
+Qodo's trial was also paused. No billing/settings changes were made, and
+this is not a fresh automated review pass. No required checks were
+reported or bypassed. The unavailable branch-protection read does not
+establish additional policy; PR #92 holds the actual release metadata.
+
+Runtime matches `97fb6e79` through `60eba9ff`; that transition changed
+the rooms test and documentation. From 60 through exact tested f798,
+only seven Markdown files changed, so runtime, tests and artwork match.
+This final documentation update also changes only AGENTS, CLIENT,
+DECISIONS, HANDOFF, PARITY, ROADMAP and this record. The delivery commit
+will be identified in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92)
+after that documentation-only diff is committed; f798 remains the exact
+tested SHA. Merge and deployment are not claimed here.
+
+The earlier 47 run remains **77/78**, with its genuine intermittent
+mummy-gem reload failure and diagnostic limits intact below. The present
+144-second pass does not establish or fix that earlier cause. No quest
+runtime, immediate-reload assertion or deadline was changed to obtain
+this pass; the separate save/read-boundary follow-up remains.
+
+### Screenshot findings and limits
+
+Tournament desktop/phone panels, original artwork, result labels and
+exact-720px controls fit the captured states. The weekly 720px image
+reviewed by two agents counts only once. Large or moving armies cross
+camera edges; the weekly advance image shows empty terrain, so movement
+comes from the passing frame/target assertions. Scroll positions leave
+some buttons, team slots and ranking rows outside individual captures;
+separate scroll/action assertions cover them. The shared-spell summon
+image shows its glow, not a completed sprite, and that six-image set is
+desktop only. The Storage capture shows the public prize rather than a
+separate weekly Storage view.
+
+The wider review also retains concrete presentation observations:
+`team/picked.png` has blank selected/available portraits despite its
+2/20 count, while the earlier picker shows portraits. `menus/shop.png`
+also captures blank thumbnails, while a later phone shop shows them.
+Those frames do not establish cause, duration or persistence, and are
+not claimed fixed or proven tournament regressions. A phone upgrade
+tooltip's pointer sits above Store instead of Upgrade; transient notices
+cover parts of Menu/resources, and some decorative cues sit behind
+cards. The classic capture has Ruffle acceleration/unmute overlays.
+These observations are not hidden by the passing test results, and no
+new art investigation was substituted for the other chat's completed audit.
+
+Screenshots establish visible states, not saved fees, prize idempotence,
+keyboard/dialog ownership, timing or complete animations. Passing browser
+assertions and server observations supply that evidence. Five passing
+cases (`camp-again`, `keys`, `scripted-stories`, `tidy`, `town-rules`)
+produced no PNGs and therefore have no independent screenshot evidence.
+
+### Final browser timings
+
+| Test | Result | Time |
+| --- | --- | ---: |
+| `site-menu` | Passed | 57s |
+| `contact` | Passed | 105s |
+| `recurring-raids` | Passed | 26s |
+| `tournament-weekly` | Passed | 126s |
+| `tournament-rooms` | Passed | 215s |
+| `tournaments` | Passed | 113s |
+| `tournament-battle` | Passed | 285s |
+| `tournament-results` | Passed | 157s |
+| `spells` | Passed | 46s |
+| `building-overlay` | Passed | 84s |
+| `playthrough-controls` | Passed | 47s |
+| `battle-selection` | Passed | 41s |
+| `animals` | Passed | 27s |
+| `attack` | Passed | 129s |
+| `bonus` | Passed | 34s |
+| `bosses` | Passed | 34s |
+| `bubble` | Passed | 62s |
+| `camp` | Passed | 49s |
+| `camp-again` | Passed | 28s |
+| `card` | Passed | 113s |
+| `cash` | Passed | 39s |
+| `classic` | Passed | 47s |
+| `collect` | Passed | 102s |
+| `collections` | Passed | 32s |
+| `construction` | Passed | 59s |
+| `defence` | Passed | 26s |
+| `dock` | Passed | 50s |
+| `dragons` | Passed | 79s |
+| `edit` | Passed | 40s |
+| `friends-help` | Passed | 60s |
+| `gifts` | Passed | 43s |
+| `goal-window` | Passed | 48s |
+| `graveyard` | Passed | 27s |
+| `group` | Passed | 85s |
+| `heroes` | Passed | 38s |
+| `hover` | Passed | 48s |
+| `keys` | Passed | 37s |
+| `lessons` | Passed | 178s |
+| `lessons-phone` | Passed | 219s |
+| `lessons-recovery` | Passed | 83s |
+| `levelup` | Passed | 49s |
+| `look` | Passed | 64s |
+| `looks` | Passed | 105s |
+| `market` | Passed | 64s |
+| `menus` | Passed | 109s |
+| `messages` | Passed | 18s |
+| `monks` | Passed | 18s |
+| `nature` | Passed | 22s |
+| `neighbours` | Passed | 97s |
+| `nests` | Passed | 58s |
+| `phone-place` | Passed | 59s |
+| `pointers` | Passed | 68s |
+| `quest` | Passed | 126s |
+| `raids` | Passed | 63s |
+| `rename` | Passed | 29s |
+| `scripted` | Passed | 107s |
+| `scripted-bosses` | Passed | 144s |
+| `scripted-stories` | Passed | 236s |
+| `selected` | Passed | 87s |
+| `shop` | Passed | 43s |
+| `siege` | Passed | 36s |
+| `sound` | Passed | 27s |
+| `specials` | Passed | 23s |
+| `speed` | Passed | 15s |
+| `spy` | Passed | 40s |
+| `storage` | Passed | 37s |
+| `stuck` | Passed | 44s |
+| `survival` | Passed | 50s |
+| `team` | Passed | 36s |
+| `tidy` | Passed | 35s |
+| `tools` | Passed | 69s |
+| `town-rules` | Passed | 37s |
+| `train` | Passed | 38s |
+| `troll-town` | Passed | 37s |
+| `villagers` | Passed | 73s |
+| `walk` | Passed | 43s |
+| `work` | Passed | 51s |
+| `world` | Passed | 115s |
+
+## Historical correction focus at 60eba9ff: 3/3
 
 Exact tested code: `60eba9ffc910a06b2375aa0afe54c1c641510ac0`.
 Rooms/results/list passed **3/3 in 8m 22.94s** (502.937054269s):
@@ -31,13 +198,11 @@ from `97fb6e79` through `60eba9ff`; that intervening commit changes only
 the rooms test and documentation. The 97 failures and both intended
 old-runtime negative proofs remain recorded below.
 
-A fresh fetch still places main at
-`8f8c57abe132c5b0ff805159e276e668403fb5ef`, already merged. PR #96 remains
-a draft at `0185b420`, not merged. All 22 review threads on #92 have been
-addressed and resolved; the next automated re-review is pending. The
-required full server/types/client/browser checks will run on the next
-documentation commit. Its exact SHA and results are not yet known. This
-focused pass is not a full-suite result or a merge/deployment claim.
+At this focus, main was `8f8c57ab`, already merged, and PR #96 was still
+a draft at `0185b420`. All 22 review threads had been addressed/resolved;
+full checks and re-review had not yet occurred. The completed full
+result and actual automated-review limitation are recorded in the final
+section above. This historical focus is not itself a full-suite result.
 
 ## Review corrections verified by the 60 focus
 
@@ -58,7 +223,7 @@ completion cannot clear a newer operation. These corrections were
 committed at `97fb6e79a437e287b69a55a950629cc6ffe8f7e2`. Its first focused
 run failed because the delayed-response fixture released a newer request
 unexpectedly, as recorded below. The test-helper correction subsequently
-passed the 60 focus above; required full checks remain pending. The
+passed the 60 focus and then the final f798 full suite above. The
 completed 95 and 47 evidence does not verify these later changes.
 
 The new delayed-refresh/reopen regression was deliberately run against
@@ -132,8 +297,9 @@ Evidence is in `tournament-review3-red-corrected-status.json` and
 `tournament-review3-red-corrected-95e098f3.log`. This completed negative
 proof confirms the corrected fixture still detects the old runtime bug;
 it is not a candidate failure. The corrected candidate subsequently
-passed all three focused checks at `60eba9ff`; the full suite remains
-pending.
+passed all three focused checks at `60eba9ff`, followed by the final
+f798 full pass above. Both negative proofs remain historical failures
+of unchanged old runtime, not failures of the corrected candidate.
 
 ## Completed focus and interrupted full run at 95e098f3
 
@@ -211,8 +377,8 @@ Three findings require no runtime change:
   tournaments, nests and mandatory lessons built. Git history confirms
   that sequence, so no parity-status correction is needed.
 
-Main remains `8f8c57ab`. The later 60 correction focus passed; required
-full checks remain pending. All tournament parts are implemented; no further
+Main remained `8f8c57ab` through the later 60 focus and final f798 full
+pass recorded above. All tournament parts are implemented; no further
 feature slice remains. The completed 47 baseline and its unresolved
 quest follow-up remain intact below.
 
@@ -1192,16 +1358,14 @@ includes build, startup and cleanup. This pre-review run had no failures.
 
 The list/team slice is in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89);
 [#92](https://github.com/TamalAdebisi/socialemperors/pull/92) implements
-every remaining tournament stage. Integrated code at `47db7f44` passed
-all tournament checks and 77/78 cases overall. The sole quest failure did
-not recur in ordinary main/tested-code repeats. A forced baseline
-diagnostic establishes an existing save/read weakness but does not prove
-the full-run cause; that quest issue remains a separate follow-up.
-All tournament parts are implemented. The latest Done/profile/protocol
-corrections still need focused and full verification before #92 is ready
-to merge; this record does not claim merge or deployment.
-The earlier #94 integration passed all 75 cases at
-`5d220abf` and remains a separate historical result.
+every remaining tournament stage. Exact `f798788b` passed all required
+checks, including 78/78 browser cases. All tournament parts and the
+review corrections are verified. The earlier 47 quest failure and
+ordering diagnostic remain historical evidence with an unresolved cause;
+the present pass does not close that separate follow-up. The earlier
+75/75 and 73/73 runs also retain their exact commits and results.
+See the PR for the eventual release commit, merge and deployment metadata;
+this record does not claim those actions have already occurred.
 The other chats' #87, #91, #93, #94, #95 and #97 work is preserved. Merging #92
 uses the owner's
 standing authorization for automatic deployment after the required checks.

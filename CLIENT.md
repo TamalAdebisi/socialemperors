@@ -2467,31 +2467,24 @@ Browser coverage is split across `e2e/tests/tournaments.mjs` and the
 `tournament-*` tests, using local throwaway accounts and checking screens
 against saved rooms, matches and resources. Rule and protocol tests sit
 beside their modules; `tests/test_tournaments.py` covers the server's
-fees, state transitions, prizes and idempotency. The pre-#95 suite,
-including #94 and all five tournament checks, passed all 75 cases.
-Exact integrated `47db7f44`, including #97, ran all 78 browser cases:
-77 passed, including all five tournament checks and shared spells.
-The sole mummy-gem quest reload failure did not recur on ordinary main
-or tested-code repeats. A controlled baseline diagnostic exposes an
-existing save/read ordering weakness but does not establish the exact
-full-run cause. That quest issue remains a separate follow-up; tournaments
-are implemented. Done, profile reply ordering and top-level weekly/reward
-record corrections passed the `95e098f3` focused checks 3/3 in 7m 50.29s,
-along with server/types and 390 client tests. Its full run was intentionally
-stopped after five passes and no observed failure for two further fixes:
-room/player validation and reopening during a pending refresh. Those
-corrections at `97fb6e79` passed lists but hit a delayed-response test-helper
-fault in rooms and a downstream results fixture failure: focus 1/3 in
-2m 51.30s. The test-only correction at `60eba9ff` then passed all three
-focused cases in 8m 22.94s, with runtime unchanged from 97. Required full
-checks remain pending.
-A profile reply belongs to its window,
-room and latest selection; rendering another view or closing the profile
-invalidates it. See
-[the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in
-`docs/original/rules/tournaments.md`. No dedicated tournament goal exists
-in the shipped missions, so the count of unfinished goals does not change;
-ordinary resource-spending progress still receives successful entry fees.
+fees, state transitions, prizes and idempotency. Exact integrated
+`f798788b6529388f918098989b8f4997eab553c8`, including main #97, passed
+all **78 browser cases in 92m 33.33s**, server **449 run (440 passed,
+9 existing skips)**, types and **393 client tests**. This includes all
+five tournament cases and the review corrections for stale Done,
+profile ordering, nested response validation and refresh/reopen recovery.
+A profile reply belongs to its window, room and latest selection;
+rendering another view or closing the profile invalidates it.
+
+[The delivery record](docs/verification-92.md) preserves exact evidence,
+previous failures and the automated-review quota limit. The historical
+47 mummy-gem reload failure did not recur in the final run; its exact
+cause remains unproven, so the separate quest save/read follow-up stays
+open. Original-source notes are in `docs/original/rules/tournaments.md`.
+No dedicated tournament goal exists in the shipped missions, so the
+unfinished-goal count does not change; ordinary resource-spending
+progress still receives successful entry fees. All tournament parts
+are complete; PR #92 records the release metadata.
 
 ### Making the art look better
 
