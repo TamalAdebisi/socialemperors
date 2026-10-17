@@ -54,9 +54,9 @@ existing data mismatch without changing pair eligibility or rewards.
 `ui/riderAdventure.ts`, the configured dragon entry metadata and
 `rules/work.ts`. `tools/art/export_riders.py` exports only original art;
 `tools/art/build_minigame_bridge.sh` compiles only our loader source.
-The focused fixture requires genuine first-adventure success and eighth-
-adventure loss via their original end-screen callbacks, and uses a phone
-success adapter separately for the saved transformation. See
+The focused Chromium fixture passed with genuine first-adventure success
+and eighth-adventure loss via their original end-screen callbacks, and a
+phone success adapter separately for the saved transformation. See
 [the verification record](../../verification-dragon-riders.md) for actual
 run status, renderer evidence and failed attempts. It does not claim a
 full playthrough of all eight platformer adventures.

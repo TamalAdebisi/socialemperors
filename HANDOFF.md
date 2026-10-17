@@ -27,11 +27,17 @@ next agent knows where to start.
   config-output spelling repair are recorded in DECISIONS.md. The early
   36-second adapter smoke did not prove physics: a later real-input check
   caught an unsupported bitmap operation in Ruffle's legacy renderer.
-  The bitmap-capable renderer now proves actual movement. Genuine native
-  end-screen callbacks, phone/save focus and Linux WebKit verification
-  remain pending. [The verification record](docs/verification-dragon-riders.md)
-  preserves failed/interrupted attempts and the measured new-fixture
-  calibration; shared integration checks remain before merge.
+  The bitmap-capable renderer now proves actual movement. Complete focused
+  Chromium passed 1/1 in 540 seconds at `54a1ad0a`: real first-adventure win
+  and eighth-adventure loss through their original buttons, recovery/claim,
+  ordinary pair admission and phone input/save. All 15 fresh captures and
+  final logs were reviewed. The phone victory uses the success adapter;
+  no complete eight-adventure playthrough is claimed. Shared integration
+  at `f3529ef2` passed types, all 446 client tests and 466 server tests
+  (457 passed, nine existing skips). Linux WebKit and the complete combined
+  browser run remain with the coordinator before merge.
+  [The verification record](docs/verification-dragon-riders.md) preserves
+  every failed/interrupted attempt and the measured new-fixture calibration.
 
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,

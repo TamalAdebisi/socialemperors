@@ -20,8 +20,15 @@ tests passed; focused command tests passed 38/38. Shared integration at
 `97b12e13`, including `09dcb608` and the doorway-arrival correction for
 Dragon Riding, passed types, all 445 client tests and 462 server tests
 (453 passed, nine existing skips). These results precede `cd8b6eec` and
-the later single-batch rider-claim correction. Complete focused Chromium,
-Linux WebKit and combined integration verification remain pending.
+the later single-batch rider-claim correction. The later clean shared
+integration at `f3529ef2`, including all rider product corrections, passed
+types, all 446 client tests and 466 server tests (457 passed, nine existing
+skips). Its recorded command times were 16.202 and 35.337 seconds.
+
+The complete permanent Chromium focus passed **1/1 in 540 seconds** at
+clean `54a1ad0a9213593e7e7f4f945798e8f828e345fc`, runner exit 0.
+Linux WebKit and combined full-browser integration verification remain
+with the coordinating slice before merge.
 
 The permanent fixture checks original picker art/locks, close without
 progress, an ignored stale-session callback, genuine first-adventure win,
@@ -31,6 +38,41 @@ genuine eighth-adventure loss preserving the pair, and phone layout/input
 and saved transformation. The phone win is a deterministic success-adapter
 event. It does not prove a genuine eighth-adventure win or all eight
 adventures. No result below should be read as that broader claim.
+
+## Complete focused Chromium result
+
+Command: `PYTHON=.venv/bin/python node e2e/run.mjs rider-training --keep`.
+The retained ninth attempt is `work/rider-focus-attempt-9/`, containing
+the full output, server log, exact revision/result receipt and all 15
+fresh screenshots. The throwaway save is `/tmp/se-e2e-DtuHwG`.
+
+The genuine original first-adventure button produced `won,1` and the
+eighth-adventure button produced `lost,8`. Both gameplay outcomes and the
+ready loss menu met the unchanged 600-movie-frame budget. First-stage
+ordinary inputs used the available third skill and basic attacks; the
+loss used ordinary movement and no attacks. The loss reached zero health
+at movie frame 541 and the original animation then completed normally.
+The callback arguments were observed and forwarded unchanged, rather
+than substituted by the fixture.
+
+The same run verified the close/stale-session guards, every cash recovery
+and session shortcut, the final free rider and reset in one ordered real
+command request, exactly 75 cash spent, reopening without a second claim,
+and exact rider-first admission before the compatible dragon. Genuine
+loss preserved both saved inputs. The phone then rendered the original
+eighth adventure and accepted a real touchscreen basic attack, observed
+through its original cooldown and visible attack pose. Touch controls
+did not take keyboard focus. Its separate success adapter saved the configured mounted
+output, consumed both inputs and spent no further cash.
+
+All 15 fresh captures were inspected: picker, original first adventure
+and victory, recovery and ready claim, taming pair, original eighth
+adventure and loss, phone pair/adventure/picker, and the four actual CPU
+renderer notices. Original images and text render, desktop cards fit,
+and the phone's pair and three choices fit across its scrollable sheet.
+The phone attack pose and both native result screens are visible. The
+server log has no traceback, exception or HTTP 5xx, and the focused output
+contains no runtime-error capture. No failed attempt below was removed.
 
 ## Renderer evidence and fixture calibration
 
@@ -88,6 +130,7 @@ local ignored evidence under `work/`; they are not published game source.
 | Strengthened focus 6, `fa300650` | 0/1 in 261 s. Genuine original win callback `won,1`, recovery saves, every paid recovery/shortcut and ordered free-claim/reset passed. Later map-selection probing accidentally admitted the wide dragon first; selecting it again then failed. | `work/rider-focus-attempt-6/` |
 | Permanent focus 7, `dca56ac4` | 0/1 in 494 s. Both gameplay outcomes, including the ready loss menu, met the 600-frame budget. A redundant post-screenshot mouse-phase check then counted idle finished-screen frames against that gameplay budget. | `work/rider-focus-attempt-7/` |
 | Permanent focus 8, `ecf4b6d2` | 0/1 in 236 s. Normal basic attacks defeated the opponent, but blocked/missed swings exhausted the 600-frame budget before reaching the last screen edge. No runtime error; the budget was retained. | `work/rider-focus-attempt-8/` |
+| Permanent focus 9, `54a1ad0a` | 1/1 in 540 s, runner exit 0. Genuine original first win and eighth loss callbacks, paid recovery/ordered claim, ordinary pair admission, phone input and saved transformation all passed. All 15 fresh captures and final logs were reviewed. | `work/rider-focus-attempt-9/` |
 | Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
 | Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
 | Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
@@ -177,10 +220,9 @@ health, enemies and all save/callback assertions remain unchanged.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.
-The early picker/adventure/recovery captures and both failed-focus captures
-were inspected. The actual genuine-win/loss and phone images must be
-reviewed after the pending focused runs. Earlier local server logs contain
-no traceback or HTTP 5xx; that does not substitute for checking final logs.
+The early and failed captures remain historical evidence. The complete
+ninth attempt's genuine-win/loss and phone images and its final server
+and runtime logs were separately reviewed, as recorded above.
 
 Linux WebKit needs the locally extracted library recipe in
 `work/browser-deps/README.md` in the main execution worktree. That setup
