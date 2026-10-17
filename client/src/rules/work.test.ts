@@ -56,6 +56,26 @@ test("a unit stands on the free tile beside the thing nearest to it", () => {
   assert.deepEqual(standingTile(t, villager, tree), { x: 46, y: 47 }, "next to it, not where the knight stands");
 });
 
+test("Dragon Riding takes one configured untamed dragon and one rider; matching is checked in its window", () => {
+  const t = town();
+  const taming = placed(item({ id: 1346, capacity: 2, subcategory: 139 }), 60, 60);
+  const rider = item({ id: 822, isUnit: true });
+  const otherRider = item({ id: 824, isUnit: true });
+  const dragon = item({ id: 684, isUnit: true, dragonRider: 1, groups: "dragon" });
+  assert.equal(canGoInside(t, rider, taming), true);
+  assert.equal(canGoInside(t, dragon, taming), true);
+  assert.equal(canGoInside(t, KNIGHT, taming), false);
+  assert.equal(canGoInside(t, item({ id: 833, isUnit: true, groups: "dragon" }), taming), false, "a mounted dragon cannot go in");
+  taming.units = [822]; taming.unitsInside = 1;
+  assert.equal(canGoInside(t, otherRider, taming), false, "no second rider");
+  assert.equal(canGoInside(t, dragon, taming), true);
+  taming.units = [684];
+  assert.equal(canGoInside(t, dragon, taming), false, "no second dragon");
+  assert.equal(canGoInside(t, otherRider, taming), true, "wrong rider type is explained by the taming window");
+  taming.units = [684, 822]; taming.unitsInside = 2;
+  assert.equal(canGoInside(t, dragon, taming), false, "full");
+});
+
 test("a tree takes 4 seconds, a rock 7; gold gives more with the level", () => {
   assert.equal(harvestSeconds(TREE), 4);
   assert.equal(harvestSeconds(STONE), 7);

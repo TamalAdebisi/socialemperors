@@ -41,6 +41,15 @@ next agent knows where to start.
   machine slot; `docs/verification-temple.md` records exact scope and limits.
   The root coordinating chat owns integration, full checks and delivery.
 
+- **Dragon riders and taming implemented, merge pending:** native picker,
+  recovery/shortcut, free rider claim and compatible-pair taming. The
+  original action adventures remain unchanged in their shipped asset,
+  loaded only on demand with the pinned Ruffle runtime and our own bridge.
+  See CLIENT.md and `docs/original/rules/dragon-riders.md`; touch keys and
+  config-output spelling repair are recorded in DECISIONS.md. Focused
+  bridge smoke passed 1/1 in 36 seconds. Complete focused verification
+  and shared integration checks remain before merge.
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven

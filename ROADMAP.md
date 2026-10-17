@@ -463,6 +463,11 @@ merging the two wait fixes with that separate failure documented.
         ([CLIENT.md](CLIENT.md#the-supreme-temple)). The ordinary window
         retains its wait; the original 5-cash shortcut is admin-only.
 
+  - [x] Dragon riders: picker, training/recovery and free claim; dragon
+        taming with compatibility, take out and the unchanged original
+        adventures in the pinned Ruffle runtime
+        ([CLIENT.md](CLIENT.md#dragon-riders-and-taming)).
+
 ## How we add a missing feature
 
 1. **Find it.** The bug radar or a player report names a command the server ignores.

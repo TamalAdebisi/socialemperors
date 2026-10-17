@@ -396,7 +396,7 @@ of the original's searches measure from.
   the Nursery an animal of the kind already there (any, if empty); into
   the Sacrifice Altar anything but siege engines; into the Fortress units
   with a range over 1 but not siege engines; dragons and riders into the
-  Dragon Taming. *Same for refuges, mills, mines, farms and ranches: `client/src/rules/work.ts` (`canGoInside`), `client/src/rules/animals.ts`; different: our nursery takes any kind; warehouse built: `rules/work.ts`, `rules/warehouse.ts`; missing: altar (a recorded call), fortress and taming.*
+  Dragon Taming. *Same for refuges, mills, mines, farms and ranches: `client/src/rules/work.ts` (`canGoInside`), `client/src/rules/animals.ts`; different: our nursery takes any kind; warehouse built: `rules/warehouse.ts`; missing: altar (a recorded call) and fortress. Dragon Taming now accepts one configured untamed dragon and one rider in either order; the window checks the rider type (`rules/dragonRiders.ts`).*
 - **Going in:** the unit walks beside it and goes in: `push_unit` (tile
   last sent, item, building's tile, town), sent at once for a refuge.
   *Same: `client/src/rules/work.ts` (`goInside`).*

@@ -73,6 +73,8 @@ import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
 import { SUPREME_TEMPLE } from "./rules/temple.ts";
 import { TempleWindow } from "./ui/temple.ts";
+
+import { DragonRidersWindow } from "./ui/dragonRiders.ts";
 import { AskFriends } from "./ui/askFriends.ts";
 import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
@@ -685,7 +687,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
+        return dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();
@@ -856,6 +858,18 @@ async function start(): Promise<void> {
         void bank.open();
       },
       askFriends: asking,
+    });
+
+    const dragonRiders = new DragonRidersWindow({
+      town, items, saved, globals: (config.globals ?? {}) as Record<string, unknown>, clock,
+      line: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      riderPicture: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}_training.png`,
+      assets: settings.assetsUrl,
+      send: (list) => { for (const command of list) commands.add(command.cmd, ...command.args); void commands.flush(); },
+      arrived: (placed) => editor.arrived(placed, []),
+      changed: () => hud.update(town), bank: () => void bank.open(), tell: (words) => editor.tell(words),
+      paused: (pause) => { if (pause) loop.stop(); else loop.start(); },
     });
 
     const thumbnail = (item: ItemInfo) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`;

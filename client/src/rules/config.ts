@@ -167,6 +167,8 @@ export interface ItemInfo {
   /** 0: something units walk over (crops, flowers); buildings are 1. */
   elevation: number;
   groups: string;
+  /** An untamed dragon's rider type, from globals.DRAGONS; absent for mounted dragons. */
+  dragonRider?: number;
   /** Buildings: the item Upgrade turns it into, or 0. */
   upgradesTo: number;
 }
@@ -223,8 +225,10 @@ export function itemsById(config: GameConfig): Map<number, ItemInfo> {
   const social = new Map(((config.social_items ?? []) as { id: number | string; workers?: string; worker_cost?: number | string }[])
     .map((s) => [Number(s.id), s]));
   const items = new Map<number, ItemInfo>();
+  const dragons = config.globals?.DRAGONS as Record<string, { rider?: unknown }> | undefined;
   for (const item of config.items) {
     const info = itemInfo(item, chosenTime);
+    if (dragons?.[info.id]) info.dragonRider = Number(dragons[info.id]!.rider);
     const staff = social.get(info.id);
     if (staff) {
       info.social = true;

@@ -4,6 +4,23 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve the original rider adventures
+
+- **Play the shipped mini-game unchanged.** Rider training and taming
+  originally load a separate action platformer. Keep that asset and the
+  existing pinned Ruffle runtime, connected to native windows by our own
+  small loader. This preserves every adventure's original rules, art and
+  words. The town pauses during play. Touch keys send the same game input
+  and release on cancellation/focus loss; they are a phone convenience.
+- **Read both existing mounted-output spellings.** Later `DRAGONS` rows use
+  `tamed_id`; the old window expects `tamedId`. Normalize both when reading
+  the config so those intended pairings have their configured output.
+  Pair eligibility, recovery prices and command formats do not change.
+- **Bound the verification claim.** Browser checks load the real adventure
+  and use real input, then inject deterministic success/failure adapter
+  events to check save effects. They do not claim a complete eight-adventure
+  platformer playthrough. The original asset itself is unchanged.
+
 ## 17 October 2026: acknowledge the camp made due by time travel in its browser fixture
 
 - **Keep the automatic camp and continue through its dialog.** The first
