@@ -12,8 +12,10 @@ them can be found and reversed. The big, agreed decisions are in
   marker. Restrict only generic-queue shifting to finite, safe,
   nonnegative wire integers and shift only positive starts. Keep explicit
   zero and unreadable values exactly as saved; never repair them into
-  claimable output. Parse numeric text exactly before testing integrality,
-  so fractional text cannot round into a valid start. Existing building,
+  claimable output. Text follows the Soul reader's exact bounded ASCII
+  decimal-digit grammar: no signs, spaces, decimal points, exponents,
+  underscores or Unicode digits. This also excludes underflow and rounding
+  before they can create a ready marker. Existing building,
   PvP and other timer handling is unchanged. Focused server regressions
   retain malformed values, valid whole wire formats and zero markers;
   the combined integration also checks the real time-jump/claim sequence.

@@ -18,8 +18,6 @@ that much earlier. Dates on the calendar (events, Mondays, the darts game's
 season) are not waits and stay as they are.
 """
 
-from decimal import Decimal, InvalidOperation
-
 from get_game_config import get_game_config
 from village import STARTED, take
 
@@ -52,21 +50,16 @@ def _earlier(when, seconds: int):
 
 
 def _queue_start(value):
-    """A readable wire timestamp, never a coerced ready marker.
-
-    Like the Soul Mixer reader, only finite safe nonnegative whole numbers
-    and numeric text are valid. Parse text exactly so a fractional value
-    cannot round into an integer before this check.
-    """
-    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+    """Match readable queue wire integers without repairing invalid data."""
+    if isinstance(value, str):
+        # Match the Soul reader's bounded ASCII decimal grammar exactly.
+        # Decimal/exponent/underscore/Unicode forms stay unreadable.
+        if not 1 <= len(value) <= 16 or not value.isascii() or not value.isdecimal():
+            return None
+        value = int(value)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 2 ** 53 - 1:
         return None
-    try:
-        number = Decimal(str(value))
-    except (InvalidOperation, ValueError):
-        return None
-    if not number.is_finite() or number != number.to_integral_value() or not 0 <= number <= 2 ** 53 - 1:
-        return None
-    return int(number)
+    return int(value) if isinstance(value, int) or value.is_integer() else None
 
 
 def buy(save: dict, jump: int) -> str:

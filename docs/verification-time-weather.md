@@ -83,3 +83,13 @@ locally in `work/integrated-queue-old-*` and
 `work/integrated-queue-validation.log`. The combined delivery keeps its
 permanent cross-command regression in the Soul Mixer tests; this leaf
 branch's tests remain independently runnable.
+
+The final parser aligns with the Soul Mixer's bounded ASCII decimal-digit
+text grammar (1–16 digits, no sign/space/decimal/exponent/underscore/Unicode
+forms, at most JavaScript's largest safe integer). Numeric values still
+must be finite nonnegative safe whole numbers. This stricter text boundary
+keeps any value rejected by the Soul reader rejected after time travel;
+all 25 leaf warehouse/time/pastimes tests passed again with the expanded
+malformed-text cases. The earlier five-format integrated diagnostic above
+belongs to the intermediate decimal parser; its decimal/exponent text
+forms are intentionally refused by the final shared wire contract.
