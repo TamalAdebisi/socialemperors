@@ -88,8 +88,10 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   `a75d1e05` and latest main `a0f3ab19` are merged locally; the combined
   tree contains 95 browser cases. Previous special-building 86/86 and
   menus' 88/89 plus corrected focus remain attributed to their own exact
-  revisions. Complete checks and latest-main browser verification are
-  still required; no special-building merge/deployment is claimed.
+  revisions. Exact clean `2f7eb080` passes 467 server tests run (458 passed,
+  nine existing PostgreSQL skips), client types and all 479 client tests.
+  The complete 95-case browser run remains required; no special-building
+  merge/deployment is claimed.
 - **Latest combat-controls verification (#98):** server 449 run (440 passed,
   nine existing PostgreSQL skips), client types and all 408 tests passed.
   Complete Chromium attempted all 80 cases in two isolated 40-case shards

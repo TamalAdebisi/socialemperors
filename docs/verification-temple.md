@@ -14,8 +14,9 @@ bucket; no production game state is used.
   the scenario, at exact clean
   `9bfa2581634af70f26588e69d4cf958308fe74fa`. The build also passed
   (Vite 0.590 seconds). No failed attempt preceded this pass.
-- Full server/browser verification and latest-main integration are owned
-  by the coordinating chat before delivery. No merge is claimed here.
+- At this initial stage, full server/browser verification and latest-main
+  integration remained with the coordinator. Final combined checks are
+  recorded below; no merge is claimed here.
 
 All **10 fresh screenshots** were reviewed: original laws, desktop
 offerings and wait, phone saved wait, sacrifice confirmation, phone
@@ -71,9 +72,10 @@ temple-leaf run. After the focus follow-up, integrated `db5d614d` passed
 **467 server tests: 458 passed, nine existing skips** (34.338 seconds
 for the tests; 34.938 seconds for the command). Client types passed and
 all **447 client tests** passed (13.265896 seconds for the tests;
-16.711 seconds for the combined type/test command). The complete
-**85-case Chromium run remains pending** in the integration record;
-the focused WebKit pass does not establish a full-suite pass.
+16.711 seconds for the combined type/test command). At that stage, the
+planned **85-case Chromium run was still pending**; the later complete
+86-case result including main #98 follows below. This focused WebKit
+pass alone does not establish a full-suite pass.
 
 The screenshots alone do not prove storage-box priority or a walking
 dragon's last saved position; the passing browser assertions check both.
@@ -82,3 +84,28 @@ confirmation or uncertain-save recovery. Some final controls lie below
 the captured scroll position. Linux WebKit is not a real iPhone or Mac
 GPU comparison. Local review hashes and notes are retained in the
 integration worktree's ignored `work/review-webkit-temple.json`.
+
+## Combined verification before the menus merge
+
+Exact clean `56d1bdbeb895b9eaed1b1a1804bea19a8a2cca78`, including main #98,
+passed **86/86 Chromium cases in 8305.262s**; temple passed in **176s**.
+All 507 fresh run captures were reviewed and matched the archived
+filename/hash manifest; the complete 78,774-line server log has no
+recorded server error. These are combined results, not a new isolated
+full run of the temple leaf. Prepared ritual stages and visual limits
+above remain unchanged.
+
+Product source for that 86-case run matches clean `b6ed5175`: **467 server tests run, 458 passed,
+nine existing PostgreSQL skips**, types and **451 client tests passed**.
+The earlier `db5d614d` retains its 447-test result. Selected Linux WebKit
+cases have passing results across the initial 5/6 and affected 2/2 repeat,
+not one final-revision 6/6. The later test-only `a75d1e05` legacy Soul
+follow-up and remaining delivery checks belong to
+[the integration record](verification-special-buildings.md). The temple
+queue stays unticked until its delivery is merged; no deployment or
+Mac/iPhone GPU result is claimed.
+
+Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
+95-case browser verification remains pending in
+[the integration record](verification-special-buildings.md); prior runs
+stay attributed to their earlier revisions.

@@ -22,9 +22,10 @@ next agent knows where to start.
 - **Latest-main integration; verification pending:** the special-building
   candidate now merges main `a0f3ab19` (#99, #105–109 and their delivery
   records) with `a75d1e05`. Both streams' runtime, original-art and test
-  histories are retained. The combined tree contains 95 browser cases;
-  complete server/client checks and the new integrated browser run are
-  pending. The earlier 86/86 at `56d1bdbe` and menus' 88/89 plus corrected
+  histories are retained. Exact clean `2f7eb080` passes 467 server tests
+  run (458 passed, nine existing PostgreSQL skips), client types and all
+  479 client tests. The complete 95-case browser run remains pending.
+  The earlier 86/86 at `56d1bdbe` and menus' 88/89 plus corrected
   focus remain evidence for their exact earlier revisions, not this merge.
   No special-building merge or deployment is claimed.
 

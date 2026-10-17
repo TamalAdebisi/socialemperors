@@ -5,7 +5,7 @@ rules are in [the rule book](original/rules/warehouse.md). Judgment calls
 are in DECISIONS.md. Testing uses local throwaway empires and read-only
 public art; no production game state is tested or changed.
 
-## Latest state
+## Initial leaf verification
 
 Game code is unchanged after `d9765e1a`; later commits change the browser
 fixture only. At `6af50f26`, client types and all **412 client tests
@@ -19,8 +19,8 @@ All four fresh captures were reviewed: the occupied and empty desktop
 pages, the phone warehouse and the phone storage after reload. The phone
 sheet fits without horizontal overflow; the final storage shows the exact
 saved contents. The server log has no tracebacks, HTTP 5xx replies or
-unhandled commands. This record does not claim a full suite pass, merge,
-or deployment.
+unhandled commands. These initial leaf results do not themselves claim
+a full suite pass, merge or deployment.
 
 ## Integrated WebKit capture review
 
@@ -74,8 +74,8 @@ no movement speed, drawing clock or game rule changed.
 
 ## Integrated checks before delivery
 
-The focused scenario and its capture/log review are complete. Run the
-integrated required checks on the delivery branch. The scenario covers
+The focused scenario and its capture/log review completed before the
+integrated checks recorded below. The scenario covers
 walking admission and its saved tile, box
 counts, ordinary occupants remaining empty, 18-slot pages and empty final
 pages, one-unit deployment, no deployment experience, bought capacity,
@@ -107,5 +107,30 @@ nine existing PostgreSQL skips**, in 34.338 seconds of unittest time
 (34.938 seconds command duration). Client types and **447/447 tests
 passed**, with 13.265896 seconds of test time (16.711 seconds combined
 command duration). These are combined-branch results, not standalone
-warehouse-leaf checks. The complete 85-case browser run remains pending;
-no full-suite pass, merge or deployment is claimed here.
+warehouse-leaf checks. The planned 85-case browser run was still pending
+at that stage; the later 86-case result including main #98 follows below.
+Neither this earlier WebKit run nor the final evidence claims a merge or
+deployment.
+
+## Combined verification before the menus merge
+
+Exact clean `56d1bdbeb895b9eaed1b1a1804bea19a8a2cca78`, including main #98,
+passed **86/86 Chromium cases in 8305.262s**; warehouse passed in **115s**.
+All 507 fresh run captures were reviewed and matched their archived
+filename/hash manifest; the full 78,774-line server log has no recorded
+server error. These are combined results, not a standalone warehouse full
+run. Phone paging/fold limits above remain.
+
+Product source for that 86-case run matches clean `b6ed5175`: **467 server tests run, 458 passed,
+nine existing PostgreSQL skips**, types and **451 client tests passed**.
+The earlier `db5d614d` result remains 447 client tests. All six selected
+WebKit cases have passing results across the initial 5/6 and affected
+2/2 repeat, rather than a single final-revision 6/6. The test-only
+`a75d1e05` legacy Soul follow-up and remaining delivery checks are tracked
+in [the integration record](verification-special-buildings.md). No merge,
+deployment or native Apple GPU result is claimed.
+
+Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
+95-case browser verification remains pending in
+[the integration record](verification-special-buildings.md); prior runs
+stay attributed to their earlier revisions.

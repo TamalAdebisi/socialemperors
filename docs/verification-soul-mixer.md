@@ -116,8 +116,10 @@ the narrow focus follow-up, server checks ran **467 tests: 458 passed and
 nine existing PostgreSQL skips** (34.338s test time, 34.938s command time).
 Types passed and **447/447 client tests passed** (13.265896s test time,
 16.711s command time). These are combined integration results, not a new
-leaf-only run. The full **85-case Chromium** run and final integrated
-review remain pending in [the integration record](verification-special-buildings.md).
+leaf-only run. At that stage, the planned **85-case Chromium** run and
+final review were still pending. The later complete 86-case result includes
+main #98, as recorded below and in
+[the integration record](verification-special-buildings.md).
 
 The original-data blocker persists: genuine later ranks, mixing times,
 power-up levels and passive-grant level are still missing. These checks
@@ -130,7 +132,11 @@ The complete combined Chromium run at clean `56d1bdbe` passes 86/86 in
 8305.262 seconds. Its Soul case passes in 61 seconds and verifies only
 the unavailable/help state. The game source matches unit-tested
 `b6ed5175`: 467 server tests run (458 passed, nine existing skips), types
-and all 451 client tests passed. The full archive contains 507 fresh PNGs.
+and all 451 client tests passed. All **507 fresh PNGs** were reviewed
+and matched the archived filename/hash manifest. The complete 78,774-line
+server log has no traceback, HTTP 5xx, unhandled command or server/command
+exception. These combined results do not upgrade the earlier `db5d614d`
+447-test count or claim enabled new mixing.
 
 A stronger test-only extension now restores an explicit-ready historical
 queue in the isolated runner's SQLite save while its server is stopped,
@@ -141,6 +147,18 @@ unavailable/help/phone assertions remain. All four original tables stay
 absent; the fixture is protocol coverage, not a recovered combination.
 The optional test harness also awaits clean shutdown before editing or
 deleting temporary data. No game source or production hook changes.
-Independent review and static syntax checks pass; focused Chromium,
-WebKit and fresh capture/log review remain pending. Exact results belong
-in [the integration record](verification-special-buildings.md).
+Independent review and static syntax checks pass. The extension and
+shutdown harness are test-only `a75d1e0529e59b72c4491751d1d757713dda75bf`;
+product source is identical to the full-run source. Focused Chromium/WebKit
+and fresh capture/log result: **Chromium 1/1 in 342.443s and Linux WebKit 1/1 in 128.023s** at clean `a75d1e05`, with all 14 fresh captures and complete logs reviewed.
+All six original selected WebKit cases already have passing results across
+the initial 5/6 and affected 2/2 repeat, not one final-revision 6/6.
+Linux WebKit does not establish native Mac/iPhone GPU behavior. New mixing
+still requires all four genuine original fields/tables; no merge or
+deployment is claimed. Exact evidence belongs in
+[the integration record](verification-special-buildings.md).
+
+Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
+95-case browser verification remains pending in
+[the integration record](verification-special-buildings.md); prior runs
+stay attributed to their earlier revisions.

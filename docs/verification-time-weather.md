@@ -1,9 +1,9 @@
 # Time/weather machine verification, 17 October 2026
 
 This slice uses local throwaway empires and read-only original art. No live
-account or production game-state action was used. The combined special-building
-delivery still requires its own final integration checks; these records do not
-claim a merge or deployment.
+account or production game-state action was used. Initial slice results below
+precede the final combined checks recorded at the end. Merge and deployment
+are not claimed.
 
 ## Exact checks
 
@@ -112,8 +112,32 @@ Combined post-focus checks at `db5d614d` also passed: **467 server tests
 run, 458 passed, nine existing skips**, in **34.338 seconds** of test time
 (**34.938 seconds** for the command); client types and **447 client tests**
 passed, with **13.265896 seconds** of test time (**16.711 seconds** for the
-command). The final complete **85-case browser run remains pending** in
-the integration delivery record. These results do not claim all selected
-WebKit cases passed: the separate rider fixture follow-up remains recorded
-there. Screenshot review covers visible viewport areas and normal panel
+command). At that revision, the planned **85-case browser run was still
+pending**. The later complete 86-case run includes main #98 and is recorded
+below. These earlier results do not themselves claim every selected WebKit
+case passed; its rider follow-up remains in the integration history.
+Screenshot review covers visible viewport areas and normal panel
 scrolling; Linux WebKit does not reproduce Safari on a Mac GPU.
+
+## Combined verification before the menus merge
+
+Exact clean `56d1bdbeb895b9eaed1b1a1804bea19a8a2cca78`, including main #98,
+passed **86/86 Chromium cases in 8305.262s**. Time Machine passed in
+**134s** and Weather Machine in **101s**. All 507 fresh run captures were
+reviewed and matched the archived filename/hash manifest; the full
+78,774-line server log has no recorded server error. These are combined
+results, not a separate full run on the machine leaf.
+
+Product source for that 86-case run matches clean `b6ed5175`: **467 server tests run, 458 passed,
+nine existing PostgreSQL skips**, types and **451 client tests passed**.
+Earlier `db5d614d` retains its own 447-test result above. Linux WebKit's
+initial 5/6 and affected 2/2 repeat give all six selected cases passing
+results across runs, not a single final-revision 6/6. The later test-only
+`a75d1e05` legacy Soul follow-up and remaining merge status are tracked in
+[the integration record](verification-special-buildings.md). No Mac GPU,
+merge or deployment claim is added.
+
+Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
+95-case browser verification remains pending in
+[the integration record](verification-special-buildings.md); prior runs
+stay attributed to their earlier revisions.

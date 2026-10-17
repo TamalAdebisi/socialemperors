@@ -8,8 +8,9 @@ building branches, retaining each branch's history and pull request:
 [dragon riders #103](https://github.com/TamalAdebisi/socialemperors/pull/103)
 and [Soul Mixer #104](https://github.com/TamalAdebisi/socialemperors/pull/104).
 The integration branch contains their shared editor and save contracts.
-It retains the full required local checks below. Final delivery awaits
-the stronger legacy browser follow-up; no merge or deployment is claimed.
+It retains the earlier complete 86-case run and legacy browser follow-up
+below. Latest main adds nine cases; its combined 95-case run remains
+pending. No special-building merge or deployment is claimed.
 
 ## Scope and original-data limit
 
@@ -186,7 +187,8 @@ passes all checks again:
 Receipts: `work/checks/integrated-server-main98/` and
 `integrated-client-main98/`. Subsequent slice-record merges change only
 documentation. The full integrated **86-case Chromium** run is recorded
-below; final delivery awaits the legacy browser follow-up.
+below, followed by the completed legacy browser follow-up. A subsequent
+latest-main integration requires its own 95-case verification.
 
 ## Complete integrated Chromium run
 
@@ -235,7 +237,25 @@ collection in a browser. Real command/client tests already cover known
 completed work and malformed output. A test-only extension now prepares
 an explicit-ready historical save, then exercises the real desktop/phone
 window, claim commands, returned parents, zero spending/XP, reload/retry
-and malformed-building refusal. Its focused browser results remain pending.
+and malformed-building refusal. Both focused engines pass at exact clean
+start/end `a75d1e0529e59b72c4491751d1d757713dda75bf`:
+
+| Engine | Result | Case time | Command including build |
+| --- | --- | --- | --- |
+| Chromium | 1/1 passed | 332s | 342.443s |
+| Linux WebKit | 1/1 passed | 123s | 128.023s |
+
+All **14 fresh PNGs** (seven per engine) were reviewed with exact hashes
+and dimensions. Each complete server log has three normal starts and no
+traceback, exception, HTTP 5xx, unhandled command, command or save failure.
+Post-shutdown SQLite checks confirm the valid claimed marker, one output
+and both parents returned once; malformed output remains unclaimed with
+both parents contained. Cash and XP remain unchanged. Evidence and receipts
+are in `work/checks/integrated-soul-legacy-{chromium,webkit}/`; review files
+are `work/review-soul-legacy-{chromium,webkit}.json`. Local saves are
+`/tmp/se-e2e-8PlcUd` and `/tmp/se-e2e-oD2lkH`. The phone claim control was
+normally scrolled fully into view and clicked; stills show their captured
+fold. Linux WebKit does not establish native Apple GPU behavior.
 
 Ordinary new-work commands correctly refuse while all four genuine tables
 are missing, so they cannot manufacture this historical fixture. The
@@ -248,8 +268,30 @@ unclean shutdown fails verification and retains the data. No production
 server hook, game source or configuration changes. Fixture queues describe
 saved protocol shapes, not recovered breeding combinations. Independent
 source review found and corrected shutdown/image-readiness issues; static
-syntax and diff checks pass. Both focused engines and fresh evidence
-review remain required.
+syntax, both focused engines and fresh evidence review pass. Product
+source for these follow-ups remains byte-identical to the 86-case run.
+
+## Latest-main integration and current release checks
+
+Menus/progression main `a0f3ab194875d5d9de7f1efedab23ed68815b618` arrived
+after those runs. Reviewed merge
+`2f7eb08009294c30b2030deeabd16ddfdfa91729` preserves both histories and
+all menu/special-building contracts. Independent source review found no
+material issue in the shared window setup, editor, town/staff/queue data,
+styles, cash/goal hooks or collection integration. Special-building modules
+remain byte-identical to `a75d1e05`.
+
+Exact clean start/end `2f7eb080` passes all complete unit/type checks:
+
+- Server: **467 run, 458 passed, nine existing PostgreSQL skips**;
+  unittest 35.032s, command 35.628s.
+- Client types and **479/479 tests passed**; tests 14.193763s,
+  command 17.592s.
+
+Receipts: `work/checks/integrated-server-main112/` and
+`integrated-client-main112/`. The complete **95-case Chromium** release
+run remains pending. Earlier 86/86 and focused results retain their exact
+revisions; they do not claim a complete browser pass on this newer merge.
 
 All testing uses local temporary empires. Browser art requests read the
 public art bucket; no production game account or saved game is tested.

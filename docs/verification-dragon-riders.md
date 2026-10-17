@@ -27,9 +27,9 @@ existing skips). Its recorded command times were 16.202 and 35.337 seconds.
 
 The complete permanent Chromium focus passed **1/1 in 540 seconds** at
 clean `54a1ad0a9213593e7e7f4f945798e8f828e345fc`, runner exit 0.
-That pass precedes the later WebKit touch-focus correction. Linux WebKit
-and combined full-browser integration verification remain with the
-coordinating slice before merge.
+That pass precedes the later WebKit touch-focus correction. The subsequent
+Linux WebKit repeat and final combined Chromium results are recorded below;
+merge remains pending with the coordinating slice.
 
 The permanent fixture checks original picker art/locks, close without
 progress, an ignored stale-session callback, genuine first-adventure win,
@@ -261,8 +261,9 @@ worked regardless of the focused element, so retained button focus did
 not itself establish a lost input or stuck key. The existing phone-focus
 assertion, native callbacks, save checks, 600-frame adventure budget and
 30-second liveness limits are retained. Client types pass after this
-listener change. A complete rider WebKit rerun and the final combined
-Chromium suite remain required on the corrected code.
+listener change. At that stage, a complete rider WebKit rerun and the
+final combined Chromium suite were still required; their later results
+are recorded below.
 
 Linux WebKit needs the locally extracted library recipe in
 `work/browser-deps/README.md` in the main execution worktree. That setup
@@ -312,4 +313,29 @@ This verifies Linux software WebKit on the corrected integrated code.
 The phone victory remains an adapter check, and no genuine eighth win,
 complete eight-adventure playthrough or Mac GPU/Safari result is claimed.
 The final combined Chromium suite, including the coordinator's latest
-main integration, remains required and is recorded by the coordinator.
+main integration, is recorded below.
+
+## Combined verification before the menus merge
+
+Exact clean `56d1bdbeb895b9eaed1b1a1804bea19a8a2cca78`, including main #98,
+passed **86/86 Chromium cases in 8305.262s**; rider training/taming passed
+in **516s**. All 507 fresh run captures were reviewed and matched their
+archived filename/hash manifest; the complete 78,774-line server log has
+no recorded server error. Genuine first-adventure success and eighth
+loss remain distinct from the phone success adapter. No genuine eighth
+win, all-eight-adventure completion or native Apple GPU claim is added.
+
+Product source for that 86-case run matches clean `b6ed5175`: **467 server tests run, 458 passed,
+nine existing PostgreSQL skips**, types and **451 client tests passed**.
+Earlier 447-test results stay attributed to their own revisions. All six
+selected WebKit cases have passing results across the initial 5/6 and
+affected 2/2 repeat, not one final-revision 6/6. The later `a75d1e05`
+changes only the harness/Soul legacy fixture and pending record; its
+follow-up and remaining delivery checks are in
+[the integration record](verification-special-buildings.md). The rider
+queue stays unticked until delivery is merged; no deployment is claimed.
+
+Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
+95-case browser verification remains pending in
+[the integration record](verification-special-buildings.md); prior runs
+stay attributed to their earlier revisions.
