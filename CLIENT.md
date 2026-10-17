@@ -1631,6 +1631,10 @@ passive grant and recovery search are in
 Soul Mixer goal exists in the 227 shipped missions; the unfinished-goal
 count is unchanged.
 
+Focused Chromium passed 1/1 at `c944e853`, including desktop/phone saved
+state, original help and reload. All three fresh captures and the clean
+server log were reviewed. [Evidence and limits](docs/verification-soul-mixer.md).
+
 ### The troll town
 
 The player's second town, as the Flash client offers it (`rules/towns.ts`,

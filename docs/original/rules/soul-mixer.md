@@ -114,4 +114,8 @@ retries, malformed timestamps, late edit commands and safe collection. Their
 synthetic tables are confined to tests and never shipped.
 `e2e/tests/soul-mixer.mjs` checks original help art, desktop/phone fit,
 reload and unchanged saved units, cash and queues in the current
-unavailable state. Full results are recorded with delivery.
+unavailable state. Exact clean `c944e853` passed focused Chromium 1/1 in 67s;
+all three fresh captures and the clean local server log were reviewed.
+Server459 (nine existing skips), types and client 420/420 also passed.
+The [delivery record](../../verification-soul-mixer.md) preserves scope
+and the original-data blocker. No playable new mixing is claimed.
