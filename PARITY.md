@@ -142,9 +142,11 @@ The card's look is the owner's pick: mockup A, the original's panel
 - [x] **Messages from the server at start** ("Bob helped your farm", "a
       gift is waiting") are shown once, then cleared. Ours ignored them,
       so they piled up for the classic game. S
-- [ ] **Shop:** what each item gives or houses (and a trained unit's
-      numbers), shown on hover or tap; a confirmation before opening a
-      building early for cash; the tabs' own pictures; "new" badges. M
+- [x] **Shop:** each item's production, capacity, trained-unit numbers,
+      original category pictures and New/limited badges. Hover or use
+      Details by tap/keyboard, including locked cards. Early cash
+      unlocking stays disabled, matching the original; no confirmation
+      for that inactive action is added.
 - [x] **Goals:** a window per goal with its picture, text and a help arrow;
       "New mission!" notices. M
 - [x] **Gifts:** the gifts window (taking gifts in, giving from storage,
@@ -191,7 +193,8 @@ reader. Each links to its rule book, which has the details and our file.
 The rule books list more that only look or feel different.
 
 - [x] **Opening buildings early** is switched off in the original: the
-      "Level N" tag on a shop card does nothing. Ours sells it for cash.
+      "Level N" tag on a shop card does nothing. Ours also leaves it locked;
+      the old cash-unlock action was removed.
       ([progress](docs/original/rules/progress.md#differences)) S
 - [x] **Reaching level 35** stops goals at once and places a free Wizardry
       Academy near the middle; ours keeps goals until the next load and
@@ -401,7 +404,7 @@ DECISIONS.md and `docs/original/rules/warehouse.md`.
 
 ## Not for Beta 1
 
-**Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
+**Originally deferred beyond Beta 1:** offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
 Survival, tournaments, the nests, the Unit Warehouse, the time/weather machines, dragon rider training/taming and the mandatory tutorial are now built;
@@ -415,6 +418,29 @@ spellings are recorded calls. See [the rules and verification limit](docs/origin
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.
+
+- [x] Collections window: Army → Collections shows saved pieces and rewards,
+      exchanges full sets and completes eligible sets for cash. Original
+      repeat/unique restrictions remain; goal 54 opens here. Battle drops
+      remain the combat chat's separate scope.
+
+- [x] Units book: original categories, grey missing units, stats and animated
+      previews; cash purchases and once-only category prizes saved with
+      the existing commands. Desktop/phone through Army.
+
+- [x] Darts: original schedule-aware panel and commands, saved seed/board,
+      daily free dart, paid throws and the six-prize bonus. The original
+      shipped schedule has no active round today; no event is invented.
+
+- [x] Social-building panels: cash/friends staffing, allied troops and
+      market deliveries, selected recruits, cumulative population steps,
+      Round Table timing/prizes, and the two corresponding goals. Ordinary
+      buildings retain the server's automatic opening.
+
+- [x] Full public profiles and honour ranks, with original badges, retry
+      and stale-reply protection; the own-town missing-hall notice. New
+      menu cash purchases count toward the existing spending mission.
+      Assault behavior remains with combat.
 
 ### Time and weather machines
 

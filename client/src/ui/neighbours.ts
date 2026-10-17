@@ -33,7 +33,7 @@ export class NeighboursWindow {
    * `gifts`: the gifts window (ui/gifts.ts), first in the list, as the original's Send gift was on a neighbour.
    */
   constructor(neighbours: Neighbour[], visitUrl: (pid: string) => string, attackUrl: ((pid: string) => string) | null = null,
-    gifts: (() => void) | null = null) {
+    gifts: (() => void) | null = null, profile?: (pid: string) => void) {
     this.panel.title = `Neighbours (${neighbours.length})`;
     const list = document.createElement("ul");
     list.className = "rows";
@@ -90,6 +90,10 @@ export class NeighboursWindow {
       visit.textContent = "Visit";
       visit.setAttribute("aria-label", `Visit ${name}`);
       row.append(portrait, text, visit);
+      if(profile){
+        const button=document.createElement("button");button.type="button";button.className="button tiny gold";button.textContent="Profile";button.setAttribute("aria-label",`Profile of ${name}`);
+        button.addEventListener("click",()=>profile(String(neighbour.pid)));row.append(button);
+      }
       if (attackUrl && !neighbour.noAttack) {
         const attack = document.createElement("a");
         attack.className = "button tiny danger";

@@ -37,6 +37,10 @@ EXTERNAL_IMAGES = {"open-soul-mixer": "externalized/RecuadroInfo/soulmixer.png"}
 # picture is a class, or a part of one by the names the game's code gives
 # it, or "<class>@n" for its n-th layer alone.
 PICTURES = {
+    **{f"shop-category-{id}": ("TabMC/icon@1", frame) for id,frame in {1:0,2:2,3:3,4:1,5:6,12:7}.items()},
+    "shop-new": ("BuildButtonLargeMC/newIcon", 0),
+    "darts-balloon": ("PopupDartsMC/balloon01", 0),
+    "darts-target": ("DartTargetMC", 0),
     # The resource icons: one picture, a frame for each resource.
     "cash": ("IconResourcesMC", 0),
     "gold": ("IconResourcesMC", 1),
@@ -241,6 +245,10 @@ CURSOR_SIZE = 32
 # with the point the game places them by, in client/src/view/art/ and its
 # anchors.json. Our name: (the picture, which frame).
 MAP_PICTURES = {
+    **{f"shop-category-{id}": ("TabMC/icon@1", frame) for id,frame in {1:0,2:2,3:3,4:1,5:6,12:7}.items()},
+    "shop-new": ("BuildButtonLargeMC/newIcon", 0),
+    "darts-balloon": ("PopupDartsMC/balloon01", 0),
+    "darts-target": ("DartTargetMC", 0),
     # A building's fire as it loses life: below 100%, 67%, 34%, and burnt out.
     "fire-1": ("FireMC", 0),
     "fire-2": ("FireMC", 1),

@@ -4991,3 +4991,77 @@ button.world-piece:hover img {
   .machine-window .machine-packet .button { padding: 6px 8px; }
   .machine-theme { width: 72px; height: 58px; }
 }
+
+/* Collections use the game's original 60px piece sheet, five per row. */
+.collection-card { padding: 12px 8px; border-bottom: 1px solid #b99a63; }
+.collection-card h3 { margin: 0 0 8px; }
+.collection-pieces { display: flex; justify-content: space-between; padding: 0; list-style: none; gap: 2px; }
+.collection-pieces li { display: flex; flex-direction: column; align-items: center; }
+.collection-piece { display: block; width: 60px; height: 60px; }
+.collection-piece.missing { opacity: .3; }
+.collection-reward { width: 56px; height: 56px; object-fit: contain; vertical-align: middle; margin-right: 6px; }
+.collection-card .button { margin: 4px; }
+.collections .shop-tabs { align-items: center; justify-content: space-between; }
+
+.unit-category { padding: 12px 8px; border-bottom: 1px solid #b99a63; }
+.unit-category h3 { margin: 0; }
+.unit-book-items { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.unit-book-items li { min-width: 0; border: 1px solid #b99a63; border-radius: 6px; padding: 6px; }
+.unit-book-items summary { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.unit-book-items summary img { width: 64px; height: 64px; object-fit: contain; }
+.unit-book-items .missing { filter: grayscale(1); opacity: .65; }
+.unit-book-stats { display: grid; grid-template-columns: repeat(2, auto auto); align-items: center; gap: 4px; font-size: 12px; }
+.unit-book-stats img { width: 18px; height: 18px; object-fit: contain; }
+.unit-book-stats dd { margin: 0; }
+.unit-book .shop-tabs { justify-content: space-between; align-items: center; }
+
+.unit-book-preview { display: block; width: 140px; height: 100px; max-width: 100%; margin: 6px auto; }
+
+.darts-board { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; margin: 12px 0; }
+.darts-balloon { position: relative; min-width: 0; min-height: 62px; padding: 2px; border: 0; background: none; color: #40250d; cursor: pointer; }
+.darts-balloon img { width: 42px; height: 46px; object-fit: contain; display: block; margin: auto; }
+.darts-balloon:disabled { cursor: default; opacity: 1; }
+.darts-board.armed .darts-balloon:not(:disabled):hover { background: #f5d776; border-radius: 8px; }
+.darts-balloon.popped { opacity: .55; }
+.darts-balloon .darts-target { display: none; position: absolute; height: 34px; width: 12px; right: 2px; bottom: 0; }
+.darts-balloon:hover .darts-target, .darts-balloon:focus-visible .darts-target { display: block; }
+.darts-prizes { list-style: none; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; padding: 0; font-size: 12px; }
+.darts-prizes .collection-reward { width: 40px; height: 40px; }
+.darts-result:empty { display: none; }
+
+.social-window .panel-body > .button { margin: 4px; }
+.social-staff { padding-left: 24px; line-height: 1.7; }
+.social-resources { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-window .shop-tabs { margin: 12px 0; }
+.social-clock { font-weight: bold; }
+
+.shop-category-icon { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+.shop-new { position: absolute; top: 5px; left: 5px; width: 38px; height: auto; }
+.shop-card { position: relative; }
+/* A Details action belongs below its card, inside the same grid row. */
+.shop-items > li { display: flex; flex-direction: column; min-width: 0; }
+.shop-items > li > .shop-card { height: auto; flex: 1; }
+.shop-limited { font-size: 10px; color: #8a331b; }
+.shop-details-button { flex: none; display: block; width: 100%; margin: 4px 0; font-size: 11px; }
+.shop-details { position: fixed; z-index: 4; width: 300px; max-height: min(70vh,600px); overflow: auto; padding: 12px; border: 2px solid var(--wood); border-radius: 12px; background: white; color: var(--ink); box-shadow: 0 6px 20px #0005; }
+.shop-details[hidden] { display: none; }
+.shop-details h3 { margin: 6px 0; }
+.shop-details p { margin: 8px 0; white-space: pre-line; }
+.shop-details > button { float: right; }
+.shop-detail-stats { display: grid; grid-template-columns: repeat(3,auto auto); align-items: center; gap: 8px; clear: both; }
+.shop-detail-stats img { width: 22px; height: 22px; object-fit: contain; }
+.shop-detail-stats dd, .shop-detail-values dd { margin: 0; }
+.shop-detail-values { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+.shop-detail-values .icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 4px; }
+@media (max-width:720px),(orientation:portrait) and (max-width:1000px) {
+  .shop-details { left: 12px !important; right: 12px; top: auto !important; bottom: calc(var(--dock-h) + 12px); width: auto; max-height: 48vh; }
+}
+
+.profile-portrait { display: inline-flex; align-items: center; justify-content: center; float: left; margin: 0 10px 8px 0; color: var(--ink); cursor: default; }
+.profile-badge { width: 56px; height: 56px; object-fit: contain; vertical-align: middle; }
+.profile-content h3 { margin-top: 0; }
+.profile-ranks { list-style: none; padding: 0; }
+.profile-ranks li { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+.world-profile .profile-ranks { max-height: 180px; overflow: auto; }
+.profile-window .panel-body { overflow: auto; }
+.world-menu.showing-profile { left: 50% !important; top: 50% !important; transform: translate(-50%,-50%); width: min(320px,calc(100% - 20px)); max-width: none; max-height: calc(100% - 12px); overflow-y: auto; }

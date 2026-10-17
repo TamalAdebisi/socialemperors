@@ -346,6 +346,9 @@ merging the two wait fixes with that separate failure documented.
       the new client opens in the classic game, and Arthur's lessons are
       offered there). Players can use the new client for everything but
       battles, which open in the classic game.
+      Shop details now show per-kind facts by hover/tap, original category
+      pictures and New badges; early unlocking remains disabled
+      ([CLIENT.md](CLIENT.md#shop-details)).
       **#87 verified and delivered:** the building card, Upgrade and the
       site's Menu; [all integrated checks](docs/verification-87.md) pass.
       The final Beta 1 comparison remains on hold (HANDOFF.md, task 6).
@@ -448,6 +451,23 @@ merging the two wait fixes with that separate failure documented.
         Existing rooms and unfinished
         matches reopen from the server save. Classic choices stay hidden at
         the owner's request; their routes and shared saves remain.
+  - [x] Collections window: saved pieces, set exchanges and cash completion,
+        original reward restrictions, desktop/phone, Storage and goal 54
+        ([CLIENT.md](CLIENT.md#collection-pieces))
+  - [x] Units book: original categories, acquired/missing units, cash buying,
+        animated details and saved category rewards, desktop/phone
+        ([CLIENT.md](CLIENT.md#the-units-book))
+  - [x] Darts panel and original scheduled-round rules: seeded board,
+        daily free dart, cash throws, Storage and the all-six bonus.
+        The shipped empty ending remains inactive; local active fixtures
+        cover the full flow ([CLIENT.md](CLIENT.md#darts)).
+  - [x] Social buildings: Summit, Allied Markets, recruitment, population
+        wonder and Round Table, with help through Everybody and goals
+        104/115 ([CLIENT.md](CLIENT.md#social-buildings)). Ordinary
+        automatic-opening buildings retain their existing behavior.
+  - [x] Profiles and honour ranks, own-town missing-hall notice, and
+        spending-mission credit for the new menu purchases
+        ([CLIENT.md](CLIENT.md#profiles-and-basic-notices)).
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

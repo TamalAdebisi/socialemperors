@@ -35,17 +35,17 @@ The index, by area:
 | [index/core.md](index/core.md): the game's core (loading, the save, the start) | 42 | 19 | 12 | 7 |
 | [index/engine.md](index/engine.md): the map engine, units, attacks, magic | 183 | 107 | 65 | 2 |
 | [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 125 | 215 | 6 |
-| [index/windows.md](index/windows.md): the windows | 136 | 73 | 11 | 24 |
-| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 37 | 17 | 15 |
+| [index/windows.md](index/windows.md): the windows | 136 | 81 | 12 | 14 |
+| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 40 | 17 | 12 |
 | [index/quests.md](index/quests.md): quests and battles | 99 | 66 | 10 | 15 |
 | [index/art-and-libraries.md](index/art-and-libraries.md): picture holders, others' libraries | 597 | 2 | 0 | 0 |
-| **All** | **1,505** | **429** | **330** | **69** |
+| **All** | **1,505** | **440** | **331** | **56** |
 
 The rest are picture holders (508), other people's libraries (79), parts
 we don't need (89: Facebook, the iPhone app, payments, adverts, Social
 Point's tools) and one handled by the server alone. So of the 829
-classes that hold the game's own behaviour, about 52% are built in the
-new client, 40% partly and 8% not yet. The later Soul Mixer supplements
+classes that hold the game's own behaviour, about 53% are built in the
+new client, 40% partly and 7% not yet. The later Soul Mixer supplements
 are listed separately and do not add to the 1,505-class inventory.
 "Partly" is mostly the special
 buildings and units, whose plain fighting works but whose own moves

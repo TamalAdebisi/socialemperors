@@ -126,6 +126,8 @@ export class Doings {
   attacksWon = 0;
   /** The Battle Results window opened. */
   historyOpened = false;
+  collectionsOpened = false;
+  socialIds = new Map<number, number>();
   /**
    * The goal kinds listened for: the open goals' (GoalKeeper sets them before
    * each check), or null for all. As in the Flash client, most doings count
@@ -244,6 +246,10 @@ export class Doings {
     }
   }
 
+  socialCompleted(item: ItemInfo, helpers: number): void {
+    if (this.hears("social-id")) this.socialIds.set(item.id, helpers);
+  }
+
   spend(letter: string, amount: number): void {
     if (amount > 0 && this.hears("spend")) {
       this.spent.set(letter, (this.spent.get(letter) ?? 0) + amount);
@@ -356,6 +362,10 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.attacksHigherLevel, n(0));
     case "attack-neighbour":
       return of(doings.neighboursAttacked.size ? 1 : 0, 1);
+    case "social-id":
+      return of(doings.socialIds.get(n(0)) ?? 0, n(1));
+    case "collections-opened":
+      return of(doings.collectionsOpened ? 1 : 0, 1);
     case "history-opened":
       return of(doings.historyOpened ? 1 : 0, 1);
     case "defence-plan":
@@ -467,4 +477,18 @@ export function completeGoal(goal: Goal, skipped: boolean): Command {
 export function payGoal(town: Town, goal: Goal): Command {
   town.gold += goal.reward;
   return { cmd: "reward_mission", args: [town.id, goal.id] };
+}
+
+/** Cash adjustments from new menu commands, credited once when queued. */
+export function menuCashSpent(command: Command, dartCost: number): number {
+  let amount=0;
+  if(command.cmd==="finish_collection"&&Number(command.args[1])===1)amount=Number(command.args[2]);
+  else if(command.cmd==="buy_stored_item_cash")amount=Number(command.args[2]);
+  else if(command.cmd==="darts_shoot_balloon"&&Number(command.args[1])===1)amount=dartCost;
+  return Number.isFinite(amount)&&amount>0?amount:0;
+}
+
+/** The balance poll is a fallback for costs without an explicit event. */
+export function unrecordedCashSpent(previous: number, current: number, recorded: number): number {
+  return Math.max(0, previous - current - Math.max(0, recorded));
 }

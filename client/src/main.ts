@@ -11,7 +11,7 @@ import { TownEditor } from "./editor.ts";
 import islandData from "./rules/islands.json" with { type: "json" };
 import { armyOf, type Island } from "./rules/quest.ts";
 import { IslandsWindow } from "./ui/islandMap.ts";
-import { CommandSender } from "./net/commands.ts";
+import { CommandSender,type Command } from "./net/commands.ts";
 import { GameServer, readPageSettings } from "./net/server.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, skinColour, type Point } from "./rules/geometry.ts";
@@ -52,6 +52,21 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { menuCashSpent } from "./rules/goals.ts";
+import { honourRanks,readProfile,missingTownHall } from "./rules/profile.ts";
+import { ProfileWindow,renderProfile } from "./ui/profile.ts";
+import { notice } from "./ui/notice.ts";
+import { renderShopDetails } from "./ui/shopDetails.ts";
+import { limitedDays } from "./rules/shopDetails.ts";
+import { SocialWindow } from "./ui/social.ts";
+import { socialRules } from "./rules/socialMenus.ts";
+import { DartsGame, type DartsRound } from "./rules/darts.ts";
+import { DartsWindow } from "./ui/darts.ts";
+import { unitPreview } from "./view/unitPreview.ts";
+import { UnitBook, type UnitCategory } from "./rules/unitBook.ts";
+import { UnitsBookWindow } from "./ui/unitBook.ts";
+import { CollectionBook } from "./rules/collectionBook.ts";
+import { CollectionsWindow } from "./ui/collections.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
@@ -208,6 +223,13 @@ async function start(): Promise<void> {
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
+    const sendMenuCommands=(sent:Command[])=>{
+      for(const command of sent){
+        commands.add(command.cmd,...command.args);
+        doings.spend("c",menuCashSpent(command,Number(config.globals?.DART_COST_CASH)||20));
+      }
+      if(sent.length)void commands.flush();
+    };
     // As the town opens, as in the Flash client: things on top of each other sorted out, and
     // a villager for a town with none (rules/cleanup.ts; not before Arthur's lessons are
     // completed); animals off the player's land are wild (rules/animals.ts); then
@@ -240,6 +262,10 @@ async function start(): Promise<void> {
     };
     const shop = new ShopWindow({
       categories: readShop(config.categories),
+      details: (item,active) => renderShopDetails(item,{items,words:(id,fallback)=>lines.get(id)??fallback,
+        thumbnail:(unit)=>`${settings.assetsUrl}/buildingthumbs/${unit.art}.jpg`,
+        preview:(unit,canvas,playing)=>unitPreview(art,unit,canvas,playing)},active),
+      limitedDays: () => limitedDays(config.globals?.LIMITED_EDITION_EXPIRATION as string|undefined,clock()),
       items: (category, tab) => shopItems(items.values(), town, category, tab),
       obstacle: (item) => obstacle(town, item),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -261,9 +287,17 @@ async function start(): Promise<void> {
       flush: () => commands.flush(),
       reload: () => void commands.flush().then(() => location.reload()),
     }) : null;
+    const profileArt={ranks:honourRanks(config.honor_levels),badge:(rank:ReturnType<typeof honourRanks>[number])=>{
+      const name=`b_${rank.badge}.png`,folder=(config.images as Record<string,string>|undefined)?.[name]??"";
+      return `${settings.assetsUrl}/images_new/${folder?`${folder}/`:""}${name}`;
+    }};
+    const profiles=new ProfileWindow({...profileArt,load:async(pid)=>{
+      if(!await commands.flush())return null;
+      return readProfile(await server.publicProfile(pid));
+    }});
     const neighbours = new NeighboursWindow(neighbourList, (pid) => `/client.html?visit=${encodeURIComponent(pid)}`,
       town.level >= MIN_LEVEL_PVP ? (pid) => `/client.html?attack=${encodeURIComponent(pid)}` : null,
-      gifts ? () => void gifts.open() : null);
+      gifts ? () => void gifts.open() : null,(pid)=>profiles.open(pid));
     const islands = new IslandsWindow({
       islands: islandData.islands as unknown as Island[], items,
       unlockedIndex: () => Number((info.privateState as Record<string, unknown> | undefined)?.unlockedQuestIndex ?? 0),
@@ -321,6 +355,11 @@ async function start(): Promise<void> {
       eagles: () => eaglesOf(town, (p) => !inConstruction(p, clock() * 1000)) !== null,
       spyingsLeft: () => spyingsLeft((attackState.spyings ?? []) as AttackEntry[], clock(), Number(attackState.tsSpyingsReset) || 0),
       profile: async (pid) => (await server.publicProfile(pid)) as PlayerProfile | null,
+      profileDetails: (raw) => {
+        const profile=readProfile(raw);
+        if(profile)return renderProfile(profile,profileArt);
+        const text=document.createElement("p");text.textContent="No profile for this empire.";return text;
+      },
       results: () => history.open("sent"),
       options: () => army.openPlans(),
       sail: (page) => islands.open(page, "dock"),
@@ -477,7 +516,37 @@ async function start(): Promise<void> {
       };
     }
     openIslands = () => islands.open(undefined, "back");
+    const collectionBook = new CollectionBook(attackState);
+    const collections = new CollectionsWindow({
+      book: collectionBook, town, items,
+      sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`,
+      words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => sendMenuCommands([command]),
+      changed: () => { hud.update(town); shop.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
+    const unitBook = new UnitBook((config.units_collections_categories ?? {}) as Record<string, UnitCategory>, attackState, town);
+    const unitsBook = new UnitsBookWindow({
+      preview: (item, canvas, active) => unitPreview(art, item, canvas, active),
+      book: unitBook, town, items, words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => sendMenuCommands([command]),
+      changed: () => { hud.update(town); shop.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
+    const dartsGame = new DartsGame((config.darts_items ?? []) as DartsRound[], attackState, Number(config.globals?.DART_COST_CASH) || 20);
+    const darts = new DartsWindow({
+      game: dartsGame, town, items, clock, words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: sendMenuCommands,
+      changed: () => { hud.update(town); shop.refresh(); },
+    });
     const army = new ArmyWindow({
+      darts: () => darts.open(),
+      profile: () => profiles.open(settings.userId),
+      unitsBook: () => unitsBook.open(),
+      collections: () => { doings.collectionsOpened = true; collections.open(); },
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
@@ -564,6 +633,18 @@ async function start(): Promise<void> {
     // whose answers wait over it as their pictures (rules/friendsHelp.ts).
     const asking = settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null;
     const askPanel = new Panel("ask", "Ask friends", { className: "list-window" });
+    const socialState = { resource: String((info.map as unknown as { resourceAlliesMarket?: unknown }).resourceAlliesMarket ?? "n") };
+    const social = new SocialWindow({
+      town, items, state: socialState, rules: socialRules(config.globals ?? {}), clock, asking,
+      roles: (id) => String(((config.social_items ?? []) as { id:number; workers:string }[]).find((s) => Number(s.id)===id)?.workers ?? "").split(","),
+      name: (id) => friendNames.get(id) ?? "Friend",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      flush: () => commands.flush(),
+      send: (sent) => { sent.forEach((c) => commands.add(c.cmd,...c.args)); if(sent.length) void commands.flush(); },
+      changed: (added) => { added.forEach((placed) => void view.redraw(placed)); editor.gained(); },
+      completed: (placed,helpers) => doings.socialCompleted(placed.item,helpers),
+      spent: (amount) => doings.spend("c",amount), tell: (text) => editor.tell(text),
+    });
     const friendNames = new Map((info.neighbors ?? []).map((n) => [String(n.pid), n.name?.trim() || "Friend"]));
     // The towns (ui/towns.ts): founding the troll town, and travelling between the two.
     const towns = new TownsWindow({
@@ -673,14 +754,18 @@ async function start(): Promise<void> {
         words: { hurry: line(91, "Hurry Up?"), accept: line(90, "Accept"), hour: line(98, "#0# hour") },
         seconds: helpSeconds((config.globals ?? {}) as Record<string, unknown>),
       } : undefined,
-      pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" },
+      pieces: { sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "",
+        found: (piece) => { collectionBook.found(piece); collections.refresh(); } },
       showLevels: (reached) => {
         const notices = reached.map((r) => ({ ...r, unlocked: unlockedAt(items.values(), r.level, town.race), mana: r.level >= manaFrom ? manaPerLevel : 0 }));
         if (learning) laterLevels.push(...notices); else levelWindows.show(notices);
       },
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
-      waiting: (gifts) => menus.count("storage", gifts),
+      waiting: (gifts) => {
+        menus.count("storage", gifts);
+        for (const _category of unitBook.observe(town)) editor.tell("A unit collection is complete! Open the Units book in Army to claim its reward.");
+      },
       windowOf: (placed) => {
         if (placed.item.id === WIZARDRY_ACADEMY) {
           return { label: "Spells", run: () => spells.open() };
@@ -708,7 +793,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
+        return social.windowOf(placed) ?? soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         giveMixer();
@@ -770,12 +855,15 @@ async function start(): Promise<void> {
         if (!tournamentAfterWelcome || learning || tournamentWelcomePending) return;
         // Both ordinary returns and interrupted lessons wait for welcome
         // dialogs. Opening a panel early would let a late gift read close it.
-        if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window")) {
+        if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window, .notice")) {
           requestAnimationFrame(reopenTournament);
         } else openTournaments();
       };
       const welcomeFinished = () => {
         tournamentWelcomePending = false;
+        const openingDarts = dartsGame.opening(clock(), Math.floor(performance.now()));
+        openingDarts.forEach((c) => commands.add(c.cmd, ...c.args));
+        if (openingDarts.length) darts.offer();
         reopenTournament();
       };
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
@@ -816,8 +904,9 @@ async function start(): Promise<void> {
         });
       };
       const then = () => {
-        if (firstLesson !== null) startLessons(firstLesson);
-        else welcome();
+        const next=()=>{if(firstLesson!==null)startLessons(firstLesson);else welcome();};
+        if(missingTownHall(town))notice(line(1410,"Missing Townhall"),line(1412,"Your village has no townhall. You will automatically lose if another player attacks."),null,next);
+        else next();
       };
       // Before them, the server's message, if it has one (neighbours' help, gifts).
       const message = String((info.privateState as Record<string, unknown> | undefined)?.message ?? "").trim();

@@ -1168,7 +1168,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they are not available yet (50 of the 227); the server
+  they are not available yet (47 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
@@ -1687,8 +1687,145 @@ from the tree or rock, a message names it and its collection (the game's
 own words), and the server hears `add_collectable` (collection, piece),
 which keeps it in `privateState.collections`. The original dropped it on
 the ground to tap, as it did the wood; ours gives it at once, like the
-wood. The collections' window, to trade a full set for its prize, is for
-later; until then the classic game has it. Test: `e2e/tests/collections.mjs`.
+wood. Test: `e2e/tests/collections.mjs`.
+
+**The collections window** opens from Army → Collections, on desktop and
+phone. It shows three collections a page, five original piece pictures
+with their counts, the reward and its picture. Missing pieces are faded.
+A full set exchanges through `finish_collection`; the reward arrives in
+Storage and one of each piece is consumed. Cash completion uses the
+original discount (one cash per different piece, with the two original
+fixed-price exceptions); the last collection cannot be bought. The two
+one-time collections stay completed. Other sets can be exchanged again;
+non-decoration rewards already on the map or in Gifts cannot be exchanged
+again until that reward is gone, as in the original. Cash completion
+keeps the original separate behavior. No Facebook sharing is added.
+`rules/collectionBook.ts` mirrors the saved counts and commands;
+`ui/collections.ts` draws the panel. Harvest pieces update its live counts.
+Goal 54 now counts opening it. Browser coverage:
+`e2e/tests/collection-book.mjs`, checking desktop/phone, exchanges, cash,
+Storage, page bounds and reloads. Battle drop triggers belong to the
+separate combat work. Collections-only verification passed 80/80 browser
+cases, plus the desktop/phone and harvest focus 2/2. All 468 full-run
+screenshots were reviewed at contact scale; `docs/verification-99.md`
+records the collections-only revision, timings and visual limits. The
+combined menu slices are delivered in #99 and #105–109.
+`docs/verification-menus.md` records full Chromium 88/89 and the corrected
+villager focus 1/1, with unchanged game code; all 89 cases have passing
+results across runs, not one final-head 89/89 run.
+
+### The units book
+
+Army → Units book shows the original configured categories in their order,
+three per page. Original thumbnails are grey until acquired. Tap or expand
+a unit to see its six stats and walking/attack/special animation; only one
+preview draws at once. Missing units can be bought for each category's
+cash price and appear in this town's Storage. A full category pays its
+reward into Gifts and one cash, once only. Book purchases and claims survive
+reloads; current map units count, and newly acquired map units remain
+recognized for this session, following the original's separate behavior.
+Unplaced Gifts and units inside buildings do not add book credit by
+themselves. `rules/unitBook.ts`, `ui/unitBook.ts` and `view/unitPreview.ts`
+implement it; `e2e/tests/units-book.mjs` checks desktop/phone, the preview,
+buying, category rewards and saved reloads.
+
+### Darts
+
+Army → Darts follows the game's original dated prize pools. The shipped
+schedule ends with an empty pool, so no round runs today: no free dart,
+reset or payout is invented. When a configured round is active, the
+25-balloon board uses the classic saved-seed shuffle: two rare prizes,
+four of each uncommon, seven and eight of the common prizes. Each throw
+puts its prize in town Storage; discovering all six different prizes
+awards the extra once. A free dart renews on a new local calendar day,
+without stacking, while paid darts use the configured cash cost. A new
+configured round resets the board and grants a free dart. Startup offers
+that free dart after the ordinary welcome windows; Later keeps it.
+
+`rules/darts.ts` implements dates, shuffle and command batches;
+`ui/darts.ts` draws the original balloon art, help, discovered prizes and
+extra reward. Prize text remains until the next Play so it can be read.
+Choosing Play arms a throw; closing before choosing a balloon spends
+nothing. Charges and storage commands accompany the actual throw.
+`e2e/tests/darts.mjs` checks the real inactive schedule and a local active
+fixture on desktop/phone, including free/paid throws, the bonus and reloads.
+No live schedule is changed by the fixture.
+
+### Social buildings
+
+The building card's Open button serves the Summit, both Allied Markets,
+the recruitment camp, the Great Church and the Round Table. Original
+building pictures and staff-role names appear in the panel. Cash hiring
+is offered only where the configured worker cost is positive; friends
+answer through Everybody, with help appearing after reload. The Summit
+requires room for nine allies. Allied Markets order a resource for a day,
+pay 125 per helper plus the base 125, and can finish early for 2 cash.
+Recruitment offers its five configured rewards. The Great Church keeps
+its cumulative staff through five population increases. The Round Table
+asks one player at a time by their empire ID, respects its invitation limit and daily clock,
+and pays the original four/six/eight-knight tiers. Its hero goes to town
+Storage; recruits and allied knights appear beside their building.
+
+`rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts` and the existing
+social/help server commands implement this. Ordinary social buildings
+continue to open automatically on the server, and the existing opening
+free helpers are preserved. Goals 104 and 115 now count the staff present
+when those buildings complete; the original counter is the latest staff
+count, not the number of times a reward was claimed. The remaining goals
+for ordinary automatic-opening buildings remain deferred.
+Browser checks: `social-market.mjs` for desktop/phone cash hiring, allies,
+orders/delivery, saves and free opening helpers; `social-friends.mjs` for
+real local help answers, recruitment, population steps and Round Table
+invites/rewards. Round Table's elapsed-day fixture changes only its loaded
+start time; its saved reward and reset are checked on the local server.
+
+### Shop details
+
+The shop's original category pictures and New badge now accompany its
+existing categories and cards. Hovering an item shows its facts in a white
+bubble; a Details button pins the same information by tap or keyboard,
+including for locked and unaffordable items and units in Storage. Escape
+closes details first, then the shop. Changing category or closing the shop
+puts the details away. Buying and placing retain their existing actions;
+opening details cannot spend money or unlock an item.
+
+`rules/shopDetails.ts` follows the original per-kind facts: population,
+base harvest/timer/capacity, training-unit stats and animation, defensive
+stats, discounts, trade lots, scout life, healing, refuges, wonders and
+feature descriptions. `ui/shopDetails.ts` draws those values with the
+existing original stat/resource pictures. `ui/shop.ts` handles hover and
+pinned details. Limited-edition cards show the original date-based days
+remaining, including zero after expiry, without changing which items are
+sold. Early cash unlocking stays disabled, as in the original.
+Browser coverage: `e2e/tests/shop-details.mjs` for desktop/phone, locked
+facts, training animation, badges, dismissal and unchanged saved purchases.
+
+### Profiles and basic notices
+
+Army → My profile and each neighbour's Profile button show the public
+profile: the home-town level/name, honour and configured rank, wins/losses,
+last seen, and country when supplied. The rank's original badge and the
+honour-threshold list use the game's own pictures and configuration.
+The world map uses the same content inside its existing profile menu,
+with scrolling on narrow screens. Missing country data stays blank; no
+Facebook photos, messages or new personal data collection are added.
+Last seen uses the browser's accurate local date/time. Loading failures
+have Retry; late replies cannot replace a newer or closed profile.
+`rules/profile.ts` and `ui/profile.ts` implement this; browser coverage is
+`e2e/tests/profiles.mjs`, plus the existing world-map regression.
+
+On opening an own town without a town hall, the original missing-hall
+notice appears and resumes the ordinary welcome flow when acknowledged.
+It does not buy a replacement or change the save. Assault missing-hall
+behavior remains in the combat work's scope. Notice dialogs also hold
+pending tournament reopening until dismissed. Test:
+`e2e/tests/basic-notices.mjs` on desktop/phone.
+
+New collection, units-book and darts cash commands now credit the cash
+spending mission once when queued, through `menuCashSpent` in rules/goals.ts.
+The social panels already report their own costs. No reward or free throw
+counts as spending. `e2e/tests/menu-progress.mjs` checks saved rewards for
+the spending and collection-opening missions after a menu purchase.
 
 ### The building card
 

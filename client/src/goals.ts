@@ -4,7 +4,7 @@
 // ui/goals.ts. (No skipping for cash: the Flash client had it switched off.)
 
 import type { ItemInfo } from "./rules/config.ts";
-import { Doings, OPEN_GOALS, completeGoal, openGoals, payGoal, progress, type Goal } from "./rules/goals.ts";
+import { Doings, OPEN_GOALS, completeGoal, openGoals, payGoal, progress, unrecordedCashSpent, type Goal } from "./rules/goals.ts";
 import type { Town } from "./rules/town.ts";
 import { GoalsView, type GoalsViewParts } from "./ui/goals.ts";
 
@@ -43,6 +43,7 @@ export class GoalKeeper {
   private readonly view: GoalsView;
   private readonly startZoom: number;
   private lastCash: number;
+  private lastCashSpent: number;
   private timer: ReturnType<typeof setInterval> | undefined;
   /** The last of the 15 open goals at the last look: when it changes, a new goal has joined them. */
   private lastOpen = -1;
@@ -55,6 +56,7 @@ export class GoalKeeper {
     this.view = new GoalsView(parts.windows ?? null);
     this.startZoom = parts.zoom();
     this.lastCash = parts.town.cash;
+    this.lastCashSpent = this.doings.spent.get("c") ?? 0;
     this.timer = setInterval(() => this.check(), CHECK_MS);
     this.check();
   }
@@ -62,10 +64,11 @@ export class GoalKeeper {
   /** Check the open goals: those reached are done; the first done one is paid. */
   check(): void {
     const { town } = this.parts;
-    // Cash spent since the last check counts for the goal that asks for it.
-    if (town.cash < this.lastCash) {
-      this.doings.spend("c", this.lastCash - town.cash);
-    }
+    // Explicit payment events already count, even if a reward restores the
+    // balance before this check. Poll only the decrease not recorded there.
+    const recorded = this.doings.spent.get("c") ?? 0;
+    this.doings.spend("c", unrecordedCashSpent(this.lastCash, town.cash, recorded - this.lastCashSpent));
+    this.lastCashSpent = this.doings.spent.get("c") ?? 0;
     this.lastCash = town.cash;
     if (Math.abs(this.parts.zoom() - this.startZoom) > 0.01) {
       this.doings.zoomed = true;

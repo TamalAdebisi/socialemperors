@@ -80,10 +80,16 @@ those commands run outside the sandbox when asked.
 ```
 .venv/bin/python -m unittest discover tests          # the server's unit tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 86 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 95 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
+- **Latest combined integration is not yet verified:** special-building
+  `a75d1e05` and latest main `a0f3ab19` are merged locally; the combined
+  tree contains 95 browser cases. Previous special-building 86/86 and
+  menus' 88/89 plus corrected focus remain attributed to their own exact
+  revisions. Complete checks and latest-main browser verification are
+  still required; no special-building merge/deployment is claimed.
 - **Latest combat-controls verification (#98):** server 449 run (440 passed,
   nine existing PostgreSQL skips), client types and all 408 tests passed.
   Complete Chromium attempted all 80 cases in two isolated 40-case shards
@@ -93,6 +99,18 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   **1/1 in 89s**. All full/focused captures and complete server logs were
   reviewed. [The controls record](docs/verification-combat-controls.md)
   retains every failure, fixture correction, exact revision and visual limit.
+- **Latest menus/progression verification (#99, #105–109):** server 449
+  run (440 passed, nine existing PostgreSQL skips), client types and all
+  436 tests passed. Full combined Chromium: 88/89 in 1h 59m 26.250s at
+  `76b1663f`, including main #98. The no-hall villager fixture needed to
+  acknowledge the new warning before selecting the worker underneath.
+  Test-only `6fcf0646` retains all assertions and passes 1/1 in 1m 24.643s.
+  All 89 cases have passing results across runs, not one final-head 89/89
+  run. All 516 full-run screenshots and both focus captures were reviewed;
+  complete browser logs are clean. Merged runtime/art/tests are identical
+  to `6fcf0646`. [The delivery record](docs/verification-menus.md) retains
+  exact timings, initial failures and screenshot limits. All six slices
+  are merged; the owner's manual run-through and other feature holds stay.
 - **Latest structure verification (#96):** server 449 run (440 passed,
   nine existing skips), client types and all 404 tests passed. Complete
   combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege

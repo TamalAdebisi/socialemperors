@@ -4,6 +4,30 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: acknowledge the warning in the no-hall fixture
+
+The new original missing-hall notice is expected when the villager test
+removes its hall. Click its OK button before selecting the covered worker;
+retain every queue, glow, saved-tree and upgraded-villager assertion. This
+is a test flow correction, with no gameplay or combat-control change.
+Report the full 88/89 and corrected focus 1/1 separately; do not call them
+one final-head 89/89 run. The merged game/art/tests match the corrected
+focus, and the delivery closure changes documentation only.
+
+## 17 October 2026 — count menu spending once
+
+Record actual menu payments so buying and immediately claiming a cash
+reward still counts as spending. The existing balance poll fills only
+unrecorded decreases, rather than counting those same payments again.
+Rewards remain rewards; no prices, payouts or cash supply change.
+
+## 17 October 2026 — narrow shop previews use Details
+
+Automatic hover/focus previews apply to the wide layout. A narrow layout
+uses the explicit Details button, including when driven by a mouse, so a
+preview cannot cover a purchase target as the pointer enters the card.
+Tap and keyboard Details access remain available in both layouts.
+
 ## 17 October 2026: preserve unreadable training timestamps during time travel
 
 - **A time jump cannot make malformed work valid.** Final integration
@@ -209,6 +233,97 @@ them can be found and reversed. The big, agreed decisions are in
   camera move, clears when selection ends or the mouse leaves, and yields
   to spell aiming and the existing repair bucket. This changes feedback,
   not attack rules or the saved army.
+
+## 17 October 2026: profiles, basic notices and menu progression
+
+- Put My profile in Army and Profile on each neighbour; reuse the same
+  public fields/ranks inside the world map's existing menu. Keep the
+  original honour badges and thresholds. Use initials for unavailable
+  Facebook photos and leave unavailable country data blank.
+- Show last seen as an accurate local date/time, rather than reproducing
+  the original hours/seconds formatting bug. Do not collect new data or
+  add Facebook messaging.
+- Closed or replaced profile reads are ignored. Keep world profiles
+  scrollable and let failed own/neighbour reads retry.
+- Add only the own-town missing-hall notice here. It changes no save and
+  resumes the existing welcome flow after OK; assault handling remains
+  combat-owned. Pending tournament reopening waits for notices too.
+- Credit original cash-spending progression when collection, units-book
+  or paid-dart commands are queued. Free darts, exchanges and prizes
+  never count as spending; social panels retain their existing separate
+  cost callback, avoiding double counting.
+
+## 17 October 2026: shop details without changing buying
+
+- Preserve direct buying/placing. A separate Details button pins the
+  original per-kind facts on phones and keyboards; desktop hover opens
+  the same white bubble. Locked and unaffordable cards remain readable.
+  Escape dismisses details before the shop.
+- Reuse the original category icons with their actual category mapping,
+  omitting the Flash placeholder caption. Retain the original New badge
+  and date-based limited badge, including zero days after expiry.
+- Keep base shop numbers distinct from current workers or map progress.
+  Scout life is the eagle's configured tier value, not the building's HP.
+  Early cash unlocking remains inactive; no new offers or boxes are shown.
+
+## 17 October 2026: social-building windows and local friends
+
+- Use the existing Open action and panel for the six repeatable social
+  buildings. Keep ordinary buildings' existing server-side automatic
+  opening; do not recreate their abandoned staff gates.
+- Use Everybody's explicit help requests. The Round Table asks one person
+  at a time and records its original invitation command/limit; answers
+  appear after reloading, as in the existing help flow. Helpers use names
+  or the existing Friend fallback rather than unavailable Facebook photos.
+- Keep the original reward placement: allied troops and chosen recruits
+  on the map, Round Table heroes in town Storage. The population wonder
+  retains earlier staff across its five steps.
+- Goals 104 and 115 follow the original latest completed staff count,
+  rather than counting claims. Ordinary automatic-opening staff goals
+  remain deferred. No combat controls or other special-building work is
+  included.
+
+- The help directory now includes each eligible account's empire ID.
+  Round Table requests use the existing seat endpoint and record that
+  empire ID in `assist_send_feed`, preserving classic shared-save keys.
+  Accounts without an empire retain their disabled state.
+
+## 17 October 2026: preserve the darts schedule
+
+- The supplied schedule ends with an empty prize pool dated September
+  2012. The original treats it as inactive. Keep that behavior; do not
+  create a new prize rotation or free-dart economy. Active-round tests
+  alter only the local browser fixture's dates, using original prizes.
+- Keep the seeded prize distribution, local-calendar free days and the
+  existing command order, including Storage before the throw is reported.
+- Darts opens through Army on both layouts. Let the sheet close before a
+  throw without charging cash, and keep prize text until the next Play
+  rather than hiding it after three seconds. The completed throw still
+  pays the original cash cost and prizes; neither convenience changes odds.
+
+## 17 October 2026: units book in Army
+
+- Keep the original category order, prices, acquisition recognition and
+  once-only reward commands. A unit in Gifts/storage alone does not count
+  as acquired unless bought through the book, matching the original.
+- Expand details by tap or keyboard in the panel so phone users can read
+  and buy without hover. Only one original-art animation plays at once;
+  closing or paging stops it and ignores late loads.
+- Preserve the configured overall denominator, including repeated
+  entries in the served, patched configuration; category counters and reward eligibility use each category's list.
+
+## 17 October 2026: collection window in the existing menus
+
+- Put Collections under Army on desktop and phone, using the existing
+  rail and dock rather than adding another phone dock button. Keep the
+  original three sets per page and original piece/reward art.
+- Keep cash completion distinct from exchanging a full set: the original
+  checks existing non-decoration rewards only for exchanges. Preserve
+  its one-time collections, fixed-price exceptions and exchange-only set.
+- Show the reward arriving in Storage with the existing notice system;
+  omit the original Facebook sharing prompt. No prices or drop odds change.
+- Preserve the shared Piece/addPiece drop interface. Combat owns kill
+  drop triggers; this slice updates live counts for existing harvests.
 
 ## 17 October 2026: preserve real visibility in background-play fixtures
 

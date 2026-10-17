@@ -19,6 +19,36 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Latest-main integration; verification pending:** the special-building
+  candidate now merges main `a0f3ab19` (#99, #105–109 and their delivery
+  records) with `a75d1e05`. Both streams' runtime, original-art and test
+  histories are retained. The combined tree contains 95 browser cases;
+  complete server/client checks and the new integrated browser run are
+  pending. The earlier 86/86 at `56d1bdbe` and menus' 88/89 plus corrected
+  focus remain evidence for their exact earlier revisions, not this merge.
+  No special-building merge or deployment is claimed.
+
+- **Menus/progression delivered in
+  [#99](https://github.com/TamalAdebisi/socialemperors/pull/99) and
+  [#105–109](https://github.com/TamalAdebisi/socialemperors/pull/109):**
+  collections, the units book, darts, repeatable social buildings, shop details,
+  profiles and the missing-hall notice are merged through `a6f24580`. Menu cash
+  payments count once toward their mission. Main #98's combat controls are
+  retained; kill-drop triggers remain combat-owned. Other special-building work
+  and all standing holds remain with their owners.
+- **Menus verification:** server 449 run (440 passed, nine existing PostgreSQL
+  skips), client types and all 436 tests passed. Full Chromium **88/89 in 1h 59m
+  26.250s** on `76b1663f`; `villagers` tried to select its worker behind the new
+  expected missing-hall warning. Test-only `6fcf0646` clicks OK before
+  continuing and passes **1/1 in 1m 24.643s**, retaining every queue/glow/save
+  assertion. All 89 have passing results across runs, not a single final-head
+  89/89 run. All 516 full-run PNGs and both final captures were reviewed;
+  browser server logs are clean. The merged game/art/tests match `6fcf0646`;
+  only verification documentation differs. [The delivery
+  record](docs/verification-menus.md) retains exact revisions, every initial
+  failure and visual limits. The owner’s manual Beta 1 run-through remains on
+  hold.
+
 - **Current workstreams, 17 October:** the coordinating chat owns combat,
   Medusa availability research and integration. Separate owner-started chats
   own special buildings (Soul Mixer, warehouse, machines, dragon training,
@@ -47,10 +77,14 @@ next agent knows where to start.
   touch-focus fix and a stronger Storage-picture capture pass their combined
   repeat 2/2 in 488.296s at `db5d614d`, with all 15 fresh captures reviewed.
   All six new cases have passing WebKit results across runs. The full
-  86-case Chromium run remains in progress.
+  earlier 86-case Chromium run passed at exact `56d1bdbe` in 8305.262s;
+  all 507 captures and the 78,774-line server log were reviewed. The later
+  `a75d1e05` legacy Soul fixture passed focused Chromium/WebKit separately;
+  the latest-main combined 95-case verification is still pending.
   [The integration record](docs/verification-special-buildings.md)
-  retains exact scope and results; no full browser pass or merge is
-  claimed yet. Soul Mixer remains explicitly blocked on original data.
+  retains exact scope and results. The prior full pass does not verify
+  this latest-main merge. Soul Mixer remains blocked on genuine original
+  data; no special-building merge is claimed.
 
 - **Time/weather machine slice:** implemented in `ui/machines.ts` and
   `rules/machines.ts`, with original art and local-source notes in
@@ -245,12 +279,12 @@ next agent knows where to start.
   and Qodo's paused trial. The [delivery record](docs/verification-92.md)
   retains the earlier failures and their limits, including the historical
   quest reload follow-up. No tournament slice remains. Shop details are
-  next; task 6 remains on hold. PR #92 holds release metadata; these checks
+  now delivered in #108; task 6 remains on hold. PR #92 holds release metadata; these checks
   do not themselves claim merge or deployment. Classic choices stay hidden,
   with routes and shared saves supported.
-- **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
+- **Tasks 1–5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
-  agents' work and the later #89 tournament merge preserved. Next is
+  agents' work and the later #89 tournament merge preserved. #108 delivered
   task 4, the shop details; its research below is retained. Task 6 remains
   on hold. **The nine-bundle art follow-up is closed in #91:** all images
   match in both request modes, and `team` passes alone and in the full
@@ -268,8 +302,8 @@ next agent knows where to start.
 - **Phase 4, the new client** (the plan is in CLAUDE.md, "Order of work"):
   - **Beta 1, the town builder:** built. A side-by-side check against the
     Flash game found gaps (PARITY.md); nearly all are fixed. Left: the
-    shop's details and the run-through that closes the beta. The building
-    card and the site's Menu are complete in #87 (tasks 2, 3 and 5).
+    owner's held run-through that closes the beta. Shop details are now
+    delivered in #108. The building card and the site's Menu are complete in #87 (tasks 2, 3 and 5).
   - **Beta 2, battles and quests:** built: combat, every island, spells,
     special moves, defending the town, camps, bosses, graveyards. Left: the
     special units' rarer moves, a short list of battle rules (PARITY.md,
@@ -281,9 +315,9 @@ next agent knows where to start.
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  52% are built in the new client, 40% partly (mostly special buildings
+  53% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  8% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  7% not yet (mostly windows). 47 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
@@ -605,7 +639,13 @@ it out), what a barracks trains, and a tip per kind of building. **The
 card's look was the owner's pick:** they chose mockup A, the original's
 info panel. It is verified and delivered in #87.
 
-### 4. Beta 1: the shop's details (M) - [ ]
+### 4. Beta 1: the shop's details (M) - [x]
+
+Completed in [#108](https://github.com/TamalAdebisi/socialemperors/pull/108),
+with the combined verification recorded above. Original per-kind facts,
+hover/pinned tap details, category art, New/limited badges and training
+animation are built. The historical research below remains; early cash
+unlocking stays disabled. Beta 1's run-through remains on hold.
 
 PARITY.md, "Windows and messages", Shop: what each thing gives or houses
 (a unit's numbers), on hover or tap; the tabs' own pictures; "new" badges.
@@ -950,8 +990,9 @@ was interrupted for further fixes. The later 97 focus was 1/3 because of
 the test-fixture problem described above; the repair passed all three
 focused cases at 60. Final required checks passed 78/78 at f798. The
 separate quest reload follow-up remains recorded above.
-No further tournament slice remains. After delivery, the next queued work
-is task 4, the shop details. Task 6 remains on hold.
+No further tournament slice remains. At that delivery, the next queued
+work was task 4, the shop details, now delivered in #108. Task 6 remains
+on hold.
 
 ### 8. The switch: the long tail of windows (S to M each) - [ ]
 
@@ -959,24 +1000,30 @@ The windows still "not yet" in `docs/original/index/windows.md`, nearly
 all with their server side done. One slice each, or a few small ones
 together:
 
-- [ ] Collections: the pieces found, trading a full set for its reward or
-      finishing it for cash (`game_collections.py`). Pieces already drop.
-- [ ] The units book: every unit by kind, grey until owned, buying a
-      missing one for cash.
+- [x] Collections completed in #99: Army → Collections, goal 54, saved
+      pieces, exchanges/cash, Storage and desktop/phone reloads. Harvest
+      drops update live counts; combat still owns kill-drop triggers.
+- [x] Units book completed in #105: original configured categories,
+      recognition, missing-unit purchases, previews and saved rewards.
 - [x] The unit warehouse (`warehouse.py`, `rules/warehouse.ts`, `ui/warehouse.ts`): admission, paging, deployment, capacity and storage/reset; desktop/phone save coverage. Delivery verification is recorded with the special-building work.
 - [ ] Soul Mixer: window/generic queue support built; playable mixing
       waits for missing original content described above.
 - [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
 - [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
-- [ ] Darts (`darts.py`).
-- [ ] The social buildings: the Summit, the allied markets and their choice
-      of resource, the recruitment camp, the wonder of people, the Round
-      Table (`social.py`, `helps.py`; friends' help goes through our own
-      Friends page, as on the classic page).
+- [x] Darts completed in #106: original schedule, seeded board,
+      free-day/paid rules and saved prizes. The shipped final pool is
+      inactive; no replacement rotation is invented.
+- [x] Repeatable social buildings completed in #107: Summit, both
+      markets, recruitment, population wonder and Round Table. Real local
+      help, original empire-keyed invitations, rewards, clocks and goals
+      104/115 are verified. Ordinary buildings keep automatic opening.
 - [ ] Dragon riders, their training and taming dragons.
 - [ ] The Supreme Bahamut temple (`temple.py`).
-- [ ] A player's profile (honour, rank, wins and losses).
-- [ ] "You have no town hall".
+- [x] Profiles completed in #109: own/neighbour/world public fields,
+      original honour badges/ranks, retry and late-reply protection.
+- [x] Missing-hall notice completed in #109: acknowledge the original
+      warning without replacing a hall or changing the save. New menu
+      spending credits its mission once. Assault handling stays combat-owned.
 - [ ] Offer packs and mystery boxes are for cash. Cash is earned by
       playing here and nothing is sold (ROADMAP.md, "Cash"): check
       `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before

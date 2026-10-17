@@ -673,3 +673,15 @@ so.
     town button. (checked twice; whether the level 20 one shows anything
     is still not verified in the bar's art)
 25. **`rt_publish_score` on opening** (missing, harmless). (checked twice)
+
+## Shop details update, 17 October 2026
+
+Read through GUI/InfoButtonOver, GUI/ItemButtonLarge, GUI/Tab,
+GuiManager.setMenu, GUI/SubCategory and the corresponding interface
+symbols. `rules/shopDetails.ts` and `ui/shopDetails.ts` now implement the
+per-kind facts; `ui/shop.ts` exposes hover and pinned tap/keyboard details.
+Original category symbols use GuiManager's category-to-tab mapping,
+without the embedded placeholder caption. New/limited badges use original
+art and local-calendar expiry, preserving item availability. Early cash
+unlocking remains disabled. See CLIENT.md, Shop details, and the focused
+browser check `e2e/tests/shop-details.mjs`.

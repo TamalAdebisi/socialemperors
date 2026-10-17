@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 73 built, 11 partly, 24 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 81 built, 12 partly, 14 not yet, 24 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -49,7 +49,7 @@ The plain boxes the rest of the game opens.
 | `popups/ConfirmPopup.as` | 86 | A yes-or-no question, with what to do on each answer. | built: the bar's prompts (`ui/actions.ts`, `editor.ts`) |
 | `popups/PopupAlerta.as` | 67 | A message with a title and one of the game's pictures; used for a camp's end and similar news. | built: `ui/notice.ts` (with a picture) |
 | `popups/PopupHelp.as` | 79 | A help page with a title, text and an optional picture. It also keeps the list of help pages the player has seen (`privateState.helpMap`), adding to it with `set_help_map`, so some pages show by themselves only the first time. | partly: first-time survival and tournament help saved with `set_help_map`; other windows later |
-| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts and unit collections remain classic |
+| `popups/PopupRewardsGeneric.as` | 143 | A "you won" window with gold or cash and up to two items; used by darts, unit collections and tournaments. It gives nothing itself. | partly: notices show camp/chest prizes and `ui/tournamentResults.ts` shows server-paid tournament prizes; darts and unit collection rewards use their respective panels |
 | `popups/PopupLore.as` | 148 | A picture book, page by page: the story of the gods and colossi, opened from the news and from a gods icon at the side of the screen. | not yet |
 | `popups/PopupMoreCash.as` | 63 | "Not enough cash", with a button to the page that sold cash. | not needed: payments |
 | `popups/tournament/Alert.as` | 69 | A small yes/no or OK box drawn inside another window; used by the temple, the team window and tournaments. | built: our windows ask in their own way (`questPlay.ts`) |
@@ -60,15 +60,15 @@ The plain boxes the rest of the game opens.
 |---|---|---|---|
 | `popups/PopupCollect.as` | 177 | Choosing a mill's or mine's working time: four cards (5 min, 1 h, 4 h, 8 h) paying half, one, two and three times the harvest; sends `activate` with the choice (0 resets it). Which buildings ask is `COLLECT_VARIABLE_IDS`. | built: `rules/production.ts` (`WORK_TIMES`), `editor.ts` |
 | `popups/PopupHurryup.as` | 115 | Finish a building's work now for 2 cash (`COST_HURRY_UP`), or ask friends; shows the time left, ticking. | built, on the card: hurry and Ask friends in `ui/actions.ts` (DECISIONS.md) |
-| `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | built: `rules/shop.ts` |
+| `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | not needed: original opener is unwired; early unlock remains disabled (legacy command/save support retained) |
 | `popups/MaxBuildingTypePopup.as` | 96 | "You already have the most of these": one of each mill and mine level, one of each special building, one market and one eagle, three nurseries. | built: `rules/shop.ts` (`atLimit`) |
 | `popups/PopupNeighbors.as` | 90 | "You need more neighbours" when land paid in gold needs more neighbours than the player has, with a button to invite friends. | built: `rules/land.ts` says why; the invite was Facebook's |
-| `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | not yet: ours says nothing when the town hall is missing |
+| `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | partly: original own-town notice in main.ts; no save change. Assault handling remains combat-owned |
 | `popups/EnterNamePopUp.as` | 229 | Renaming the town (three letters at least, Enter saves); sends `name_map` and shows the name in the top bar. | built: `ui/rename.ts`, from the level at the top |
 | `popups/PopUpLost.as` | 154 | A lost thing found on the map (cow, sheep, knight, crate, barrel...): the story, then the thing is taken off the map. Its only other effects are a call to `register_found_item.php` and a Facebook post; it pays nothing and saves nothing. | not yet: no lost things on our map |
 | `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
 | `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | built: `rules/market.ts`; `market.py` uses the same sums |
-| `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | not yet; `social.py` |
+| `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
 | `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | built: `ui/machines.ts`, `rules/machines.ts`; `shop.py` |
 | `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | built: `ui/warehouse.ts`, `rules/warehouse.ts`; [rules](../rules/warehouse.md) |
 | `popups/tournament/UnitWarehouseCard.as` | 55 | A card in the unit warehouse: the unit's picture, its name on hover. | built: `ui/warehouse.ts`; original thumbnail art, visible touch name; portrait animation omitted (DECISIONS.md) |
@@ -86,7 +86,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupNewDaily.as` | 459 | The daily bonus: five days of gold, cash or a hero, today's highlighted; the day comes from `bonusNextId` or the server's count of days in a row. Sends `win_bonus`. | built: `rules/bonuses.ts`, `bonuses.ts` |
 | `popups/MondayBonusPopUp.as` | 186 | Monday's chest: three closed chests, one prize drawn at random from gold, a unit or cash; the unit is drawn from `MONDAY_BONUS_UNITS` and stored. Sends `weekly_reward`. | built: `rules/bonuses.ts` |
 | `popups/ComebackBonusPopUp.as` | 276 | The welcome-back chest on the second and third day, drawn the same way, the day's own unit from `COMEBACK_BONUS_UNITS`. Sends `comeback_reward`. Switched off in the client as built; our classic game switches it on. | built: `rules/bonuses.ts` |
-| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | not yet; `darts.py` |
+| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | built: `rules/darts.ts`, `ui/darts.ts`; original schedule, seeded board, daily free dart, prizes and bonus. Shipped empty pool stays inactive |
 
 ## Army, graveyards, heroes and magic
 
@@ -101,7 +101,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupMagic.as` | 321 | The spell book in battle: the spells learnt, three at a time round the book, and mana; Crack and Black Hole are off in tournaments. | built: `ui/spells.ts` |
 | `popups/PopupBuyMana.as` | 128 | 5 mana for 20,000 gold or 1 cash (`buy_mana_new`). | built: `ui/spells.ts` |
 | `popups/PopupBuyGold.as` | 79 | 2,500 gold for 5 cash (`exchange_cash_new`). | built: `ui/bank.ts`, `main.ts` |
-| `popups/PopupAllUnits.as` | 579 | The units book (unit collections): units by category, grey until owned; buy a missing one for cash (`buy_stored_item_cash`); a full category pays a reward unit and 1 cash (`unit_collections_completed`). | not yet; `shop.py` |
+| `popups/PopupAllUnits.as` | 579 | The units book (unit collections): units by category, grey until owned; buy a missing one for cash (`buy_stored_item_cash`); a full category pays a reward unit and 1 cash (`unit_collections_completed`). | built: `rules/unitBook.ts`, `ui/unitBook.ts`, `view/unitPreview.ts`; original categories, owned counts, cash buying and category rewards |
 | `popups/PopupRecover.as` | 103 | A list of units recovered after a fight, filled with test data. | not needed: only Social Point's admin panel opens it |
 | `popups/PopupHeavySiege.as` | 108 | The heavy siege: wait, attack now, or pay 20 cash to send it away. | not needed: switched off (`Config.HEAVY_SIEGE`) |
 
@@ -125,10 +125,10 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupSocialBuilding.as` | 459 | A building that needs a staff (the Summit, the allied markets, the Wonder...): friends fill places, or a place costs cash (`buy_si_help`); when full it opens (`finish_si`). The Summit then brings allied troops (it needs room for 9 people); the allied market shows its resource and clock. | not yet; `social.py` (the harbour and zeppelin get theirs free: `rules/dock.ts`) |
-| `popups/PopupRecruitment.as` | 482 | The recruitment camp: friends recruited fill places; when full it gives the reward units beside it (`finish_si`). | not yet |
-| `popups/PopupRecruitmentPopulation.as` | 360 | The wonder of people: every 4 friends hired adds 10 to the room for people, up to 5 times (`increase_population`). | not yet |
-| `popups/PopupSocialFeeds.as` | 385 | The Round Table: post to friends one by one (`assist_send_feed`, at most 60); when it is ready, 4 answers pay 1,000 gold, 6 add 100 XP, 8 an item (`finish_si`, then `collect_new`). | not yet; `helps.py` |
+| `popups/PopupSocialBuilding.as` | 459 | A building that needs a staff (the Summit, the allied markets, the Wonder...): friends fill places, or a place costs cash (`buy_si_help`); when full it opens (`finish_si`). The Summit then brings allied troops (it needs room for 9 people); the allied market shows its resource and clock. | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupRecruitment.as` | 482 | The recruitment camp: friends recruited fill places; when full it gives the reward units beside it (`finish_si`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupRecruitmentPopulation.as` | 360 | The wonder of people: every 4 friends hired adds 10 to the room for people, up to 5 times (`increase_population`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupSocialFeeds.as` | 385 | The Round Table: post to friends one by one (`assist_send_feed`, at most 60); when it is ready, 4 answers pay 1,000 gold, 6 add 100 XP, 8 an item (`finish_si`, then `collect_new`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
 | `popups/PopOverVisit.as` | 84 | The little menu on a neighbour's picture: Visit, Attack (not for Arthur) and Send gift. | partly: Visit and Attack (from level 6) in `ui/neighbours.ts`; no Send gift |
 | `popups/AssistPopup.as` | 152 | On a visit to a neighbour not helped for 24 hours: a task picked at random from the config's `neighbor_assists`, OK, a short bar, then 10 gold and 3 XP (`assist_neighbor`). | not yet: `visit.ts` has the building helps but not this request (see `core.md`, surprise 2) |
 | `popups/infoFriendAssistPopup.as` | 101 | A neighbour's donkey cart: let it in to go round the buildings helped, or turn it away. | built: `editor.ts` (`welcomeCarts`), `rules/neighbours.ts` |
@@ -160,8 +160,8 @@ Player battles are for the last stop ("The switch"); the World window sends play
 | `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from), and the spy visit's start with its words; no help page |
 | `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
-| `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
-| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; not the unit collection's |
+| `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | built: `rules/profile.ts`, `ui/profile.ts`; own/neighbour/world profiles, original honour badges and ranks, retry and stale-reply guards |
+| `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; unit collection prizes use `ui/unitBook.ts` |
 | `popups/PopupBuyTerritoryPvp.as` | 101 | Buy a place on the player-attack world for 5 cash (`buy_pvp_territory`). | not yet: our server doesn't handle `buy_pvp_territory` either |
 | `popups/PopUpBuyAssault.as` | 100 | Out of attacks or spy visits: wait, or buy 50 for 30 or 15 cash. | not needed: nothing opens it |
 
@@ -215,7 +215,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/PopupMistery.as` | 103 | A mystery pack: one prize from four (rare to common) for cash. | not yet |
 | `popups/PopupSuperMistery.as` | 447 | A super mystery box: one, two or four random prizes for three prices in cash; its XP on closing. | not yet |
 | `popups/PopupNews.as` | 613 | The news: ten items turning every 6 seconds, offer packs, links to the shop and the lore. | not yet: left out by the owner's call (PARITY.md) |
-| `popups/popupCollections.as` | 330 | Collections: pieces found, three collections a page; trade a full one for its reward or finish it for cash (`finish_collection`). | not yet; `game_collections.py` |
+| `popups/popupCollections.as` | 330 | Collections: pieces found, three collections a page; trade a full one for its reward or finish it for cash (`finish_collection`). | built: `ui/collections.ts`, `rules/collectionBook.ts`; original pieces, exchange and cash rules, Storage and goal 54 |
 | `popups/PopUpCollectionComplete.as` | 101 | "Collection complete", to share. | not needed: Facebook share |
 | `popups/kompu/PopupKompuGacha.as` | 393 | A timed potion offer: three wizards (free, gold, cash) try to brew; enough potions win prizes, then a big unique one. | not yet: our server sends no offer and doesn't serve `kompu_try.php`, so neither game shows it |
 | `popups/kompu/PopupKompuResult.as` | 204 | A brewing try: working, then success or failure. | not yet |
@@ -256,7 +256,8 @@ and the neighbour's arrival request are in `core.md`.)
 2. **Darts move on by themselves at start.** On the first start of a
    session the classic game checks the darts: a new round (the config's
    dates) sends `darts_reset` with a new seed, and a new day sends
-   `darts_new_free`, both with no button, then offers the free dart.
+   `darts_new_free`, both with no button, then offers the free dart. *Built in `rules/darts.ts` and `ui/darts.ts`;
+   the shipped schedule ends with an empty/inactive pool.*
 3. **The defence plan.** The army window has a second tab with four
    defence plans for when another player attacks (all stay, archers go for
    siege engines, half go out, all go for siege engines). The choice is
