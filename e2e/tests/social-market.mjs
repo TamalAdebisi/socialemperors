@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PHONE } from "../lib.mjs";
-const SUMMIT=[57,50],MARKET=[56,56];
+const SUMMIT=[56,50],MARKET=[56,56];
 export default async function socialMarket({newPlayer}) {
   for(const phone of [false,true]) {
     const player=await newPlayer(phone?{phone:true,viewport:PHONE}:{}),{page}=player;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PHONE,stored } from "../lib.mjs";
-const RECRUIT=[57,50],WONDER=[45,55],ROUND=[56,56];
+const RECRUIT=[56,50],WONDER=[45,55],ROUND=[56,56];
 export default async function socialFriends({newPlayer}) {
   const asker=await newPlayer(),helpers=[];
   for(let i=0;i<4;i++) {
