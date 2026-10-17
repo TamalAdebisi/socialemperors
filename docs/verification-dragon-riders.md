@@ -86,6 +86,7 @@ local ignored evidence under `work/`; they are not published game source.
 | Strengthened focus 4, `d590401d` | 0/1 in 212 s. Actual normal-input first victory within 600 frames; zero-delay mouse click did not dispatch the original End Game handler, so the required recovery never appeared within 30 s. | `work/rider-focus-attempt-4/` |
 | Strengthened focus 5, `df2effdc` | 0/1 in 220 s. Again won normally within 600 frames; separate real mouse phases still did not dispatch the original callback. | `work/rider-focus-attempt-5/` |
 | Strengthened focus 6, `fa300650` | 0/1 in 261 s. Genuine original win callback `won,1`, recovery saves, every paid recovery/shortcut and ordered free-claim/reset passed. Later map-selection probing accidentally admitted the wide dragon first; selecting it again then failed. | `work/rider-focus-attempt-6/` |
+| Permanent focus 7, `dca56ac4` | 0/1 in 494 s. Both gameplay outcomes, including the ready loss menu, met the 600-frame budget. A redundant post-screenshot mouse-phase check then counted idle finished-screen frames against that gameplay budget. | `work/rider-focus-attempt-7/` |
 | Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
 | Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
 | Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
@@ -151,6 +152,21 @@ stealing focus, and the separate success adapter saved the transformation.
 The diagnostic was archived and all temporary geometry instrumentation
 removed before the complete permanent case is rerun. No original game
 state, drawing quality, speed or verification cap changed.
+
+Permanent focus 7 reached genuine loss at frame 598 and the ready original
+menu around frame 641, from a journey start around frame 44: the required
+gameplay result and ready menu passed the 600-frame check. The screenshot
+then allowed the idle finished movie to reach frame 673 before its first
+mouse phase, where a redundant budget check failed. The mouse phases now
+sample the original frame without reapplying the completed gameplay cap.
+`gameUntil` still enforces 600 frames through victory or the ready loss
+menu, and native mouse phases, callback and save retain 30-second liveness.
+This does not extend the gameplay budget or change its completion goal.
+
+The unchanged 28-frame basic-attack wait was checked against the original
+ready condition: the attack starts its general cooldown at 10; combat
+locks input only below 25, and the separate attack cooldown is one update.
+There is no source requirement to wait 30 updates for that attack.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.

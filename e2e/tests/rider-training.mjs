@@ -112,7 +112,7 @@ export default async function riderTraining({ newPlayer }) {
       window.seRiderAdventure = (...args) => { window.riderEndEvents.push(args); callback(...args); };
     });
     const nextFrame = async () => {
-      const before = budget(await progress());
+      const before = await progress();
       await activePage.waitForFunction((frame) => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").frames > frame,
         before.frames, { timeout: 30_000, polling: 250 });
     };
