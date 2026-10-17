@@ -1,11 +1,13 @@
 // The warehouse's own save box: walking in, paged slots, calling one back,
 // buying room and putting the building away. The phone plays the same save.
 import assert from "node:assert/strict";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 const WAREHOUSE = 1284, KNIGHT = 512, SPEARMAN = 509;
-const AT = [58, 58], UNIT_AT = [59, 58], WALKER_AT = [48, 58];
+const AT = [58, 58], UNIT_AT = [59, 58], WALKER_AT = [52, 59];
 
-export default async function warehouse({ newPlayer }) {
+export default async function warehouse({ newPlayer, out }) {
   const player = await newPlayer();
   const initial = await player.saved({ waitForBatch: false });
   // Make an honest clear footprint, retaining the town hall and housing.
@@ -35,8 +37,36 @@ export default async function warehouse({ newPlayer }) {
   assert.doesNotMatch(warehouseSpot.text, /CAPACITY/, "the card does not advertise ordinary building occupants");
   await player.press("Close");
   await player.select(WALKER_AT, "Spearman");
-  await player.click(warehouseSpot.point);
-  await page.waitForFunction(() => window.seHome.parts.town.warehouse.get(509) === 1, null, { timeout: 30_000 });
+  await page.evaluate(() => {
+    const { town, view, editor } = window.seHome.parts;
+    const started = performance.now();
+    const samples = [];
+    let previous = "";
+    const sample = () => {
+      const unit = town.items.find((p) => p.item.id === 509);
+      const building = town.items.find((p) => p.item.id === 1284);
+      const state = { unit: unit && [unit.tx, unit.ty], walking: unit && view.isWalking(unit),
+        next: unit && view.headingFor(unit), warehouse: building && [building.tx, building.ty],
+        stored: town.warehouse.get(509) ?? 0, selected: editor.lessonSelected?.item.id ?? null };
+      const current = JSON.stringify(state);
+      if (current !== previous) samples.push({ ms: Math.round(performance.now() - started), ...state });
+      previous = current;
+    };
+    sample();
+    window.warehouseEntryTrace = { samples, sample, timer: setInterval(sample, 250) };
+  });
+  try {
+    await player.click(warehouseSpot.point);
+    await page.waitForFunction(() => window.seHome.parts.town.warehouse.get(509) === 1, null, { timeout: 30_000 });
+  } finally {
+    const trace = await page.evaluate(() => {
+      const trace = window.warehouseEntryTrace;
+      trace.sample();
+      clearInterval(trace.timer);
+      return trace.samples;
+    });
+    writeFileSync(join(out, "admission-trace.json"), JSON.stringify({ trace, problems: player.problems }, null, 2));
+  }
   await flush();
   const entered = await info();
   assert.equal(entered.map.warehousedUnits[SPEARMAN], 1);
