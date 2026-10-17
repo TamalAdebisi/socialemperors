@@ -56,7 +56,7 @@ export default async function construction({ newPlayer }) {
   await player.click(villager);
   await player.click(card.point);
   await page.waitForFunction((at) => window.seHome.parts.town.items.some((p) => p.item.id === 10 && p.tx === at[0] && p.ty === at[1] && p.unitsInside === 1),
-    FARM_AT, { timeout: 15_000 });
+    FARM_AT, { timeout: 15_000, polling: 100 });
   const done = await player.select(FARM_AT, "Farm Land");
   assert.ok((await player.barButtons()).some((b) => b.includes("Move")), "Move now");
   assert.match(done.text, /CAPACITY 1\/1/, "built: who's inside, as the game's farm card");

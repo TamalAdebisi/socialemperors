@@ -169,6 +169,12 @@ The card's look is the owner's pick: mockup A, the original's panel
       changes while retaining explicit Pause. Collection is unchanged.
       Friends form styles and delayed building-preview alignment repaired.
 
+- [x] **Owner combat controls:** unit click margins follow the current
+      visible frame, excluding Bull Gladiator's transparent export padding;
+      selected armies show the original sword over attack targets. Art and
+      attack rules stay the same. Verification is recorded in
+      `docs/verification-combat-controls.md`.
+
 ## Your calls (15 October 2026)
 
 - [x] **The troll town** (a second town, from level 20): in Beta 1. L
