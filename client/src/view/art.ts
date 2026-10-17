@@ -197,8 +197,10 @@ export async function bundledArt(name: string, json: string, image: string): Pro
 async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
   const texture = await Assets.load<Texture>({
     src: image,
-    // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
-    data: { autoGenerateMipmaps: true },
+    // Mipmaps reduce shimmer when zoomed out. Safari's generation path can
+    // corrupt later scene draws even when those copies themselves are valid.
+    // Use ordinary linear sampling there; retain mipmaps in other engines.
+    data: { autoGenerateMipmaps: !isSafari() },
   });
   const sheet = new Spritesheet(texture, data);
   await sheet.parse();

@@ -8,11 +8,11 @@ them can be found and reversed. The big, agreed decisions are in
 
 - Read screenshot pixels outside the game page, using the Pillow package
   already installed by setup and the same Python as the local test server.
-  The WebKit overlay check showed corrupted terrain while its helper decoded
-  screenshots back inside the game page. Reading the same PNGs externally
-  passed every unchanged before/after pixel comparison and preview check.
-  Keep those comparisons exact; the helper no longer adds image uploads
-  to the graphics context being measured. This changes tests, not game code.
+  Keep the pixel comparisons exact without adding image decoding to the
+  graphics context being measured. An isolated overlay check passed with
+  this helper, but the normal runner still reproduced corrupt terrain;
+  this is measurement isolation, not a demonstrated rendering repair.
+  This changes tests, not game code.
 - Close completed test towns, after flushing their saves, before the next
   scripted scenario. They otherwise keep competing for software drawing.
   Keep the same gameplay assertions, simulation speeds and deadlines.
@@ -34,6 +34,15 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 17 October 2026: Safari texture decoding
 
+- **Use linear texture sampling in Safari.** Its ordinary-image path still
+  reproduced a corrupt town before selection. The grass image, its GPU
+  pixels and its smaller mipmap copies were intact; re-uploading the ground
+  texture restored drawing. Disabling automatic mipmap generation passed
+  the unchanged overlay and farm scene checks in a fresh build. Keep that
+  Safari-only compatibility setting and verify every gallery facing uses
+  one texture level. Distant textures can shimmer more when zoomed out;
+  original art, sizes and animation timing remain unchanged. Other engines
+  retain mipmaps. This does not establish the owner's exact Mac GPU fault.
 - **Load only the images used by the deliberately fixed pose.** That one
   incomplete export has 100 image pages, over 4 GB decoded. Loading all of
   them after the Safari decode repair exhausted the 8 GB test machine.
@@ -50,7 +59,7 @@ them can be found and reversed. The big, agreed decisions are in
   full-scene pixel check and rendered the correct town. Use Pixi's supported
   `preferCreateImageBitmap: false` and `preferWorkers: false` preferences
   with its existing Safari detection. Loading remains asynchronous, with
-  original images and mipmaps; other engines keep their existing path.
+  original images; other engines keep their existing path.
   The gallery checks the actual source type as well as visible pixels.
   Cached-code injection attempts did not apply the preference and are
   excluded from the comparison; the built variant verified its source type.
