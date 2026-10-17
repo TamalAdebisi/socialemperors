@@ -21,10 +21,11 @@ next agent knows where to start.
 
 - **Special-building integration:** the five scoped branches/PRs are
   combined on `codex/special-building-verification` for their full local
-  release checks. Exact `97b12e13` passes 462 server tests (453 passed,
-  nine existing skips), client types and all 445 client tests. Subsequent
-  machine recovery stacking and rider verification observations still
-  require the final combined checks. [The integration record](docs/verification-special-buildings.md)
+  release checks. After final queue-parsing, machine recovery stacking
+  and ordered rider-claim corrections, exact `dd14398a` passes 466 server
+  tests (457 passed, nine existing skips), client types and all 446 client
+  tests. Complete browser checks remain in progress.
+  [The integration record](docs/verification-special-buildings.md)
   retains exact scope and results; no full browser pass or merge is
   claimed yet. Soul Mixer remains explicitly blocked on original data.
 

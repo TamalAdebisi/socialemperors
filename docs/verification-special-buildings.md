@@ -43,8 +43,19 @@ Exact clean `97b12e13eeacc706d379fe2023e07a4ecb5b5547`:
 
 The local receipts preserve start/end revisions, working-tree state,
 commands, timings and full output in `work/checks/integrated-*-initial/`.
-Later machine recovery stacking and the rider fixture/bridge observations
-require final combined checks; they are not covered by the initial receipt.
+The initial receipt predates the final machine/Soul timestamp corrections,
+machine recovery stacking and rider claim/fixture follow-ups.
+
+Exact clean `dd14398a464f9b7aec3ed169efe7c987d563319d`, including all those
+corrections, passes the complete server and client checks:
+
+- Server: **466 run, 457 passed, nine existing PostgreSQL skips**;
+  unittest time 52.973s, command duration 53.746s.
+- Client types and **446/446 tests passed**; test time 21.537s,
+  combined command duration 25.309s.
+
+Exact clean start/end receipts and full output are retained in
+`work/checks/integrated-server-final/` and `integrated-client-final/`.
 
 Independent integration review reproduced a malformed queue being refused
 by Soul Mixer, then converted to a claimable zero by time travel. A new
