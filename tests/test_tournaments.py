@@ -260,6 +260,42 @@ class TournamentsTest(unittest.TestCase):
         self.assertTrue(all(m["finished"] and m["attacker_points"] == 0 for m in gone["matches"]))
         self.assertEqual(self.play(self.me, pid=others[0]), {"result": "OK"})  # their army can still be beaten
 
+    def test_a_delayed_leave_cannot_leave_the_next_room(self):
+        old = self.join()["tournament"]["tournament_id"]
+        self.ask("leave_tournament", tournament_id=old)
+        current = self.join()["tournament"]["tournament_id"]
+        for service in ("leave_tournament", "cancel_tournament"):
+            self.assertEqual(self.ask(service, tournament_id=old), {"result": "OK"})
+            self.assertEqual(self.tournament()["tournament_id"], current)
+            self.assertEqual(self.gold(), 100000 - 500)
+        # Older clients that omit the room id still retain their contract.
+        self.assertEqual(self.ask("leave_tournament")["resources"]["refund"], 1)
+        self.assertEqual(self.gold(), 100000)
+
+    def test_exact_ties_report_the_paid_winner_to_every_player(self):
+        players = [self.me] + [self.player() for _ in range(3)]
+        for pid in players:
+            self.join(pid=pid)
+        initial = self.tournament()
+        prize = get_game_config()["tournament_type"][NEWBIES]["prize"][initial["reward_id"]]
+        unit, count = next(iter(prize["u"].items()))
+        for pid in players:
+            for victim in players:
+                if victim != pid:
+                    self.play(victim, points="70.00", pid=pid)
+        for pid in players:
+            view = self.tournament(pid)
+            self.assertEqual(view["players"][0]["user_id"], pid)
+            self.assertEqual(view["winner_id"], self.me)  # original seat, not requester's first row
+            self.assertEqual(self.gold(pid), 100000 - 500 + (prize["g"] if pid == self.me else 0))
+            self.assertEqual(self.gift(unit, pid), count if pid == self.me else 0)
+        # A lost finish response may be retried; neither its score nor prize changes.
+        self.ask("finish_tournament_match", players[-1], tournament_id=initial["tournament_id"],
+                 victim_id=self.me, attacker_won=True, attacker_points="100.00")
+        self.assertEqual(self.gold(), 100000 - 500 + prize["g"])
+        self.assertEqual(self.gift(unit), count)
+        self.assertEqual(self.tournament(players[-1])["winner_id"], self.me)
+
     def test_done_looking_at_the_end(self):
         self.join()
         self.now += HOUR
@@ -269,6 +305,39 @@ class TournamentsTest(unittest.TestCase):
         self.assertIsNone(self.tournament())
         self.assertEqual(vars(tournaments)["__tournaments"], {})
         self.assertEqual(self.join()["result"], "OK")  # free for the next one
+
+    def test_delayed_done_cannot_acknowledge_a_newer_finished_room(self):
+        tournaments.BOT_WIN_CHANCE = 0
+        older = self.join()["tournament"]["tournament_id"]
+        self.now += HOUR
+        for bot in BOTS:
+            self.play(bot)
+        self.assertEqual(self.ask("clean_tournament", tournament_id=older), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+
+        current = self.join()["tournament"]["tournament_id"]
+        self.assertNotEqual(current, older)
+        # Even the correct room cannot be acknowledged before it finishes.
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertEqual(self.tournament()["tournament_id"], current)
+        self.now += HOUR
+        for bot in BOTS:
+            self.play(bot)
+        finished = self.tournament()
+        self.assertIsNotNone(finished["date_finished"])
+        saved_rewards = (self.gold(), self.cash(), inventory.gifts(sessions.session(self.me)).copy())
+
+        # Another tab already acknowledged the old room and entered this one.
+        # Retrying its stale Done must leave the newer results available.
+        for _ in range(2):
+            self.assertEqual(self.ask("clean_tournament", tournament_id=older), {"result": "OK"})
+            self.assertEqual(self.tournament(), finished)
+            self.assertEqual((self.gold(), self.cash(), inventory.gifts(sessions.session(self.me))), saved_rewards)
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+        self.assertEqual((self.gold(), self.cash(), inventory.gifts(sessions.session(self.me))), saved_rewards)
 
     # Entering
 
@@ -347,6 +416,43 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(self.gold(), 100000)
         self.assertIsNone(self.tournament())
 
+    def test_community_accounts_create_discover_and_join_without_friend_requests(self):
+        store = sessions.storage()
+        owners, players = [], []
+        for index in range(4):
+            owner = store.create_user(f"tournament{time.time_ns()}{index}", "unused")
+            self.addCleanup(sessions.delete_account, owner)
+            owners.append(owner)
+            pid = sessions.new_village(owner_id=owner)
+            sessions.session(pid)["maps"][0]["coins"] = 100000
+            players.append(pid)
+            self.assertEqual(store.friends_of(owner), [])
+        host, *guests = players
+        own_other = sessions.new_village(owner_id=owners[0])
+        sessions.session(own_other)["maps"][0]["coins"] = 100000
+        unclaimed = self.player()
+        neighbours = sessions.friends(host)  # the real community lookup, not befriend's stub
+        self.assertTrue(set(guests).issubset(neighbours))
+        self.assertNotIn(own_other, neighbours)
+        self.assertNotIn(unclaimed, neighbours)
+
+        reply = self.create(pid=host)
+        self.assertEqual(reply["result"], "OK")
+        room = reply["tournament"]
+        self.assertEqual(self.gold(host), 99500)
+        self.assertEqual(self.ask("get_tournament_info", own_other)["tournament_friends"], [])
+        self.assertEqual(self.join_friend(room, own_other)["result"], "NOK")
+        self.assertEqual(self.gold(own_other), 100000)
+        for guest in guests:
+            cards = self.ask("get_tournament_info", guest)["tournament_friends"]
+            self.assertEqual([card["tournament_id"] for card in cards], [room["tournament_id"]])
+            self.assertEqual(self.join_friend(room, guest)["result"], "OK")
+            self.assertEqual(self.gold(guest), 99500)
+        ready = self.tournament(host)
+        self.assertEqual(ready["date_ready"], self.now)
+        self.assertEqual({player["user_id"] for player in ready["players"]}, set(players))
+        self.assertTrue(all(store.friends_of(owner) == [] for owner in owners))
+
     def test_the_owner_calls_it_off(self):
         friends = [self.player() for _ in range(3)]
         self.befriend(self.me, *friends)
@@ -358,6 +464,18 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual((self.gold(), self.gold(friends[0])), (100000, 100000))  # every fee back
         self.assertIsNone(self.tournament(friends[0]))
         self.assertEqual(self.ask("get_tournament_info", friends[1])["tournament_friends"], [])
+
+    def test_a_delayed_cancel_cannot_cancel_the_owners_next_room(self):
+        friends = [self.player() for _ in range(3)]
+        self.befriend(self.me, *friends)
+        old = self.create()["tournament"]
+        self.ask("cancel_tournament", tournament_id=old["tournament_id"])
+        current = self.create()["tournament"]
+        self.join_friend(current, friends[0])
+        self.assertEqual(self.ask("cancel_tournament", tournament_id=old["tournament_id"]), {"result": "OK"})
+        self.assertEqual(self.tournament()["tournament_id"], current["tournament_id"])
+        self.assertEqual(self.tournament(friends[0])["tournament_id"], current["tournament_id"])
+        self.assertEqual((self.gold(), self.gold(friends[0])), (99500, 99500))
 
     def test_a_friend_leaves_before_the_start(self):
         friends = [self.player() for _ in range(3)]
@@ -432,6 +550,47 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual([row["points"] for row in ranking["top"].values()], [270, 150])
         self.assertEqual(self.gold(rival), 100000 - 500 + 75000)
         self.assertEqual(self.gift(777, rival), 1)
+
+    def test_the_paid_weekly_rank_stays_frozen_and_cleaning_cannot_pay_again(self):
+        rival = self.player()
+        self.join(WEEKLY)
+        self.join(WEEKLY, pid=rival)
+        for bot in BOTS:
+            self.play(bot, points="50.00")
+        self.assertEqual(self.tournament()["ranking"]["user"]["rank"], 1)
+        for bot in BOTS:
+            self.play(bot, points="90.00", pid=rival)
+        for _ in range(2):
+            ranking = self.tournament()["ranking"]
+            self.assertEqual(ranking["top"]["1"]["user_id"], rival)
+            self.assertEqual(ranking["top"]["2"]["user_id"], self.me)
+            self.assertEqual(ranking["user"]["rank"], 1)  # rank used when this prize was paid
+            self.assertEqual(self.gold(), 100000 - 500 + 100000)
+            self.assertEqual(self.gift(847), 1)
+        for _ in range(2):
+            self.assertEqual(self.ask("clean_tournament"), {"result": "OK"})
+            self.assertIsNone(self.tournament())
+            self.assertEqual(self.gold(), 100000 - 500 + 100000)
+            self.assertEqual(self.gift(847), 1)
+        self.assertEqual(self.ask("get_tournament_info")["tournament_weekly"][WEEKLY]["full"], "1")
+
+    def test_the_eleventh_weekly_rank_has_no_prize(self):
+        leaders = [self.player() for _ in range(10)]
+        for pid in leaders:
+            self.join(WEEKLY, pid=pid)
+            for bot in BOTS:
+                self.play(bot, points="90.00", pid=pid)
+        self.join(WEEKLY)
+        gifts_before = inventory.gifts(sessions.session(self.me)).copy()
+        for bot in BOTS:
+            self.play(bot, points="20.00")
+        room = self.tournament()
+        self.assertIsNotNone(room["date_finished"])
+        self.assertEqual(room["ranking"]["user"]["rank"], 11)
+        self.assertEqual(room["ranking"]["total_user"], 11)
+        self.assertEqual(len(room["ranking"]["top"]), 10)
+        self.assertEqual(self.gold(), 100000 - 500)
+        self.assertEqual(inventory.gifts(sessions.session(self.me)), gifts_before)
 
     def test_once_a_week(self):
         self.join(WEEKLY)

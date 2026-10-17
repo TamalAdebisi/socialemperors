@@ -4740,6 +4740,17 @@ button.world-piece:hover img {
 .tournament-choice img { width: 60px; max-width: 100%; aspect-ratio: 1; object-fit: contain; }
 .tournament-choice:disabled { opacity: .5; cursor: default; }
 .tournament-error { color: #9e251e; font-weight: 700; }
+.tournament-window .button { white-space: normal; }
+.tournament-room > .tournament-picture { display: block; width: 180px; max-width: 100%; margin: 0 auto; }
+.tournament-seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; list-style: none; margin: 12px 0; padding: 0; }
+.tournament-seat { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; background: #fff8df; border: 1px solid var(--parchment-edge); border-radius: 8px; min-width: 0; text-align: center; overflow-wrap: anywhere; }
+.tournament-portrait, .tournament-initial, .tournament-empty-seat { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; }
+.tournament-initial { display: grid; place-items: center; background: var(--gold); font: 800 26px var(--round); }
+.tournament-empty-seat { background: url("./art/tournament-empty.webp") center / 60% no-repeat; }
+.tournament-room-refresh { font-size: 13px; }
+.tournament-invite .button { margin: 4px; }
+.tournament-card [aria-pressed="true"] { background: var(--gold); border-color: var(--gold-edge); }
+.tournament-prize-preview { padding: 8px; border: 2px solid var(--gold-edge); border-radius: 8px; }
 
 /* ---- The Survival window (ui/survival.ts) and the arena's bar (survivalPlay.ts) ---- */
 .survival-lives {

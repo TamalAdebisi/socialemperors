@@ -3,11 +3,13 @@
 // and friends-list replies exercise states the local clock cannot schedule.
 import assert from "node:assert/strict";
 import { PHONE } from "../lib.mjs";
+import { requestData, service as tournamentService } from "../tournament-lib.mjs";
 
 const KNIGHT = 514, SWORD = 511, BANNED = 762, LIMITED = 602;
 const padded = (...ids) => [...ids, ...Array(20 - ids.length).fill(0)];
 
 export default async function tournaments({ newPlayer }) {
+  // Other feature tests use the completed mandatory-tutorial fixture.
   const player = await newPlayer();
   const { page } = player;
   const servicePath = "**/tournaments/get_tournament_info.php";
@@ -43,7 +45,7 @@ export default async function tournaments({ newPlayer }) {
     { cmd: "buy", args: [SWORD, 46, 48, 0, 0, 0, 1] },
     { cmd: "push_unit", args: [46, 48, SWORD, 59, 49, 0] },
     { cmd: "store_add_items", args: [JSON.stringify([KNIGHT, ...Array(21).fill(SWORD), BANNED, ...Array(6).fill(LIMITED), ...dragons])] },
-    { cmd: "collect_treasure", args: [10000, 0, 3, 0, 0, 0] },
+    { cmd: "collect_treasure", args: [750, 0, 3, 0, 0, 0] },
     { cmd: "set_attack_team", args: ["quest", JSON.stringify(padded(SWORD))] },
     { cmd: "set_attack_team", args: ["tournament", JSON.stringify([0, BANNED, KNIGHT, KNIGHT, KNIGHT, KNIGHT, 999999, SWORD])] },
   ]);
@@ -113,9 +115,9 @@ export default async function tournaments({ newPlayer }) {
   assert.match(await page.locator(".tournament-countdown").textContent(), /Ends in \d+d \d\d:\d\d:\d\d/);
   await player.press("Your own");
   assert.match(await page.locator(".tournament-cards").textContent(), /No friends' tournaments/);
+  assert.ok(await page.getByRole("button", { name: "Create tournament", exact: true }).isEnabled());
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
-  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "friends creation is implemented");
 
   // Read-only fixtures for closed schedules and a friend's card, with text treated as text.
   await page.route(servicePath, async (route) => {
@@ -131,15 +133,16 @@ export default async function tournaments({ newPlayer }) {
   await player.shot("own-desktop");
   await player.press("Weekly");
   assert.match(await page.locator(".tournament-countdown").textContent(), /Available on 0d 00:01:/);
+  assert.ok(await page.getByRole("button", { name: "Enter tournament", exact: true }).isDisabled(), "a closed weekly schedule cannot be entered");
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
-  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "closed schedules use the implemented entry control");
   await page.unroute(servicePath);
 
   // A malformed response gives retry; retry really reads again.
   await page.route(servicePath, (route) => route.fulfill({ json: { data: {} } }), { times: 1 });
   await player.press("Refresh");
   await page.waitForSelector(".tournament-error");
+  assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
   await player.press("Try again");
   await page.waitForSelector(".tournament-team-box");
   assert.equal(await page.locator(".tournament-help").count(), 0);
@@ -167,25 +170,261 @@ export default async function tournaments({ newPlayer }) {
   await phone.shot("weekly-phone");
   await phone.page.keyboard.press("Escape");
 
-  // An actual server room remains saved while its unavailable stages are hidden.
+  // An actual server room reopens at its ready matches, never replaced or cleaned.
   const joined = await service("join_tournament", { tournament_type_id: "8", category: 1, tournament_id: "", team: padded(LIMITED, SWORD, KNIGHT), flashSubResources: 1 });
   assert.equal(joined.result, "OK");
   await open();
-  await page.waitForSelector(".tournament-current");
-  assert.match(await page.locator(".tournament-current").textContent(), /ready/);
+  await page.waitForSelector(".tournament-results");
+  assert.equal(await page.locator(".tournament-match").count(), 3, "three real server opponents are ready");
+  assert.equal(await page.getByRole("button", { name: "Edit team", exact: true }).count(), 0, "the enrolled team cannot be edited");
   assert.equal(await page.locator(".tournament-window a[href*=ruffle]").count(), 0);
-  assert.ok(await page.locator(".tournament-unavailable").first().isVisible());
-  assert.equal(await page.locator(".tournament-unavailable").first().textContent(), "Coming soon");
-  assert.equal(await page.locator(".tournament-team-box").count(), 0);
+  assert.equal(await page.locator(".tournament-unavailable").count(), 0, "ready rooms use the implemented matches view");
   assert.equal((await service("get_tournament_info")).tournament.tournament_id, joined.tournament.tournament_id);
   await player.shot("existing-room");
   await service("leave_tournament", { tournament_id: joined.tournament.tournament_id });
   await page.keyboard.press("Escape");
   await open();
   await page.waitForSelector(".tournament-team-box");
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(LIMITED, SWORD, KNIGHT),
+    "reopening on desktop preserves the team saved from the phone");
   await player.press("Weekly");
   assert.equal(await page.locator(".tournament-card").count(), 0, "an entered weekly tournament stays hidden after leaving");
 
+  // The phone acquires another copy after the desktop loaded. Its saved team
+  // must be checked against fresh ownership, not pruned by the old town view.
+  await phone.send([
+    { cmd: "store_add_items", args: [JSON.stringify([KNIGHT])] },
+    { cmd: "set_attack_team", args: ["tournament", JSON.stringify(padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT))] },
+  ]);
+  await page.keyboard.press("Escape");
+  await open();
+  await page.waitForSelector(".tournament-team-box");
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT),
+    "new ownership and the saved team from another tab are refreshed together");
+  assert.equal(await page.locator(".tournament-team-box .tournament-team img").count(), 4);
+  await phone.send([{ cmd: "sell_stored_item", args: [KNIGHT, 0] }]);
+  const goldAfterSale = (await getInfo()).map.coins;
+  await player.press("Everyday");
+  await page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
+  await page.waitForSelector(".tournament-error");
+  assert.match(await page.locator(".tournament-error").textContent(), /available units have changed/);
+  assert.equal((await service("get_tournament_info")).tournament, null, "entry rechecks ownership changed while the list stayed open");
+  assert.equal((await getInfo()).map.coins, goldAfterSale, "rejected ownership takes no entry fee");
+  await player.press("Edit team");
+  await page.waitForSelector(".tournament-selected");
+  assert.match(await page.locator(".tournament-selected").textContent(), /3 \/ 20/);
+  await phone.send([{ cmd: "sell_stored_item", args: [KNIGHT, 0] }]);
+  await player.press("Save team");
+  await page.waitForSelector(".tournament-error");
+  assert.match(await page.locator(".tournament-error").textContent(), /available units have changed/);
+  assert.deepEqual((await getInfo()).privateState.teams.tournament, padded(KNIGHT, KNIGHT, KNIGHT, KNIGHT),
+    "the editor does not save a team invalidated while it was open");
+  await player.press("Cancel");
+
+  // The classic routes still share this save, but launch choices stay hidden.
+  // Their direct routes are covered separately by classic.mjs.
   await player.press("Your own");
   assert.equal(await page.getByRole("link", { name: /classic/i }).count(), 0);
+
+  // A saved battle-return URL must not open tournaments over mandatory
+  // lessons. Start from the saved final choice, then complete it normally.
+  for (const finished of [player, phone]) {
+    if (!await finished.page.locator(".pause-curtain").count()) await finished.press("Pause");
+  }
+  const learner = await newPlayer({ lessons: true });
+  await learner.page.waitForFunction(() => window.seLessons?.at === 0);
+  assert.equal(await learner.page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  await learner.send([
+    { cmd: "rt_level_up", args: [15] },
+    { cmd: "store_add_items", args: [JSON.stringify([SWORD])] },
+    { cmd: "set_attack_team", args: ["tournament", JSON.stringify(padded(SWORD))] },
+    { cmd: "complete_tutorial", args: [32, { trees: 3 }] },
+  ]);
+  let lessonTournamentRequests = 0;
+  learner.page.on("request", (request) => {
+    if (new URL(request.url()).pathname.includes("/tournaments/")) lessonTournamentRequests++;
+  });
+  await learner.page.goto(`${learner.base}/client.html?tournaments=1`);
+  await learner.loaded();
+  await learner.page.waitForSelector(".draggy-window.choose");
+  assert.ok(await learner.page.locator('.menus button[aria-label="Battle"]').isDisabled());
+  assert.equal(lessonTournamentRequests, 0, "the return URL makes no tournament service request during lessons");
+  assert.equal(await learner.page.locator(".tournament-window:not([hidden])").count(), 0);
+  assert.deepEqual((await getInfo(learner)).privateState.teams.tournament, padded(SWORD));
+  await learner.page.getByRole("button", { name: "Select Green Draggy", exact: true }).click();
+  await learner.page.waitForSelector(".draggy-window.reminder", { timeout: 30_000 });
+  assert.equal(lessonTournamentRequests, 0, "the final reminder still belongs to the tutorial");
+  assert.equal(await learner.page.locator(".tournament-window:not([hidden])").count(), 0);
+  await learner.page.locator(".draggy-ok").click();
+  await learner.closeLevelUps();
+  await learner.page.waitForSelector(".tournament-team-box", { timeout: 30_000 });
+  assert.equal(lessonTournamentRequests, 1, "the preserved return intent opens the tournament once after completion");
+  assert.ok(await learner.page.locator('.menus button[aria-label="Battle"]').isEnabled());
+  const learned = await getInfo(learner);
+  assert.equal(Number(learned.playerInfo.completed_tutorial), 33);
+  assert.deepEqual(learned.privateState.teams.tournament, padded(SWORD));
+  await learner.shot("after-mandatory-lessons");
+
+  // Ordinary returns also wait for a slow welcome read and the real social
+  // gift it finds; closing Gifts then restores the saved room exactly once.
+  await learner.press("Pause");
+  for (const [one, other] of [[player, learner], [learner, player]]) {
+    const asked = await one.page.request.post(`${one.base}/friends/ask`,
+      { form: { username: other.name, csrf: await one.csrf() } });
+    assert.ok(asked.ok());
+  }
+  const giftState = await (await learner.page.request.get(`${learner.base}/gifts/game?empire=${encodeURIComponent(learner.settings.userId)}`)).json();
+  const recipient = giftState.friends.find((friend) => friend.username === player.name);
+  assert.ok(recipient && giftState.free.length > 0);
+  const gift = await learner.page.request.post(`${learner.base}/gifts/game?empire=${encodeURIComponent(learner.settings.userId)}`,
+    { form: { action: "free", friend: String(recipient.id), item: String(giftState.free[0].id), csrf: await learner.csrf() } });
+  assert.ok((await gift.json()).ok);
+  // The earlier weekly entry spent its fee. Fund this separate room through
+  // a real command; one treasure is capped at 750 gold by the server.
+  const returnFee = Number(config.tournament_type["1"].cost);
+  const beforeReturnFunding = (await getInfo()).map.coins;
+  await player.send([{ cmd: "collect_treasure", args: [returnFee, 0, 3, 0, 0, 0] }]);
+  const beforeReturnEntry = (await getInfo()).map.coins;
+  assert.equal(beforeReturnEntry, beforeReturnFunding + returnFee, "the welcome-return fixture funds its entry fee");
+  const returnRoom = await service("join_tournament", { tournament_type_id: "1", category: 1, tournament_id: "", team: padded(SWORD), flashSubResources: 1 });
+  assert.equal(returnRoom.result, "OK");
+  const returnBalance = (await getInfo()).map.coins;
+  assert.equal(returnBalance, beforeReturnEntry - returnFee, "creating the return room charges its fee exactly once");
+  let releaseWelcome, welcomeRead;
+  const welcomeHeld = new Promise((resolve) => { releaseWelcome = resolve; });
+  const welcomeReading = new Promise((resolve) => { welcomeRead = resolve; });
+  await page.route("**/gifts/game?**", async (route) => {
+    const response = await route.fetch();
+    welcomeRead();
+    await welcomeHeld;
+    await route.fulfill({ response });
+  }, { times: 1 });
+  const readsBeforeReturn = reads;
+  await page.goto(`${player.base}/client.html?tournaments=1`);
+  await player.loaded();
+  await welcomeReading;
+  try {
+    assert.equal(reads, readsBeforeReturn, "ordinary return waits for the welcome read before requesting tournaments");
+    assert.equal(await page.locator(".tournament-window:not([hidden])").count(), 0);
+  } finally { releaseWelcome(); }
+  const giftWindow = page.locator(".panel.gifts-window:not([hidden])");
+  await giftWindow.getByRole("button", { name: `Take ${giftState.free[0].name}`, exact: true }).waitFor();
+  assert.equal(reads, readsBeforeReturn, "the gift window is not replaced by the returning tournament");
+  await giftWindow.getByRole("button", { name: "Close window", exact: true }).click();
+  await page.waitForSelector(".tournament-room", { timeout: 30_000 });
+  assert.equal(reads, readsBeforeReturn + 1);
+  assert.equal((await service("get_tournament_info")).tournament.tournament_id, returnRoom.tournament.tournament_id);
+  assert.equal((await getInfo()).map.coins, returnBalance, "returning neither repeats the fee nor leaves the saved room");
+  await player.shot("after-welcome-gift");
+
+  // Cases share this local server. Release the public seat so the next case's
+  // players are matched together, using the normal leave and refund service.
+  const returnLeft = await service("leave_tournament", { tournament_id: returnRoom.tournament.tournament_id });
+  assert.equal(returnLeft.result, "OK");
+  assert.equal((await service("get_tournament_info")).tournament, null, "the welcome fixture leaves no active room");
+  assert.equal((await getInfo()).map.coins, returnBalance + returnFee, "leaving the waiting room refunds exactly its entry fee");
+
+  // This desktop attempts a cash room with twenty units while the phone
+  // enters a different gold room with one. Lose the desktop's real refusal:
+  // recovery must show the actual enrollment without attributing its fee or
+  // army to the rejected request, or attempting another entry.
+  const requestedType = "2", actualType = "1";
+  const requestedKind = config.tournament_type[requestedType];
+  const actualKind = config.tournament_type[actualType];
+  const requestedTeam = Array(20).fill(SWORD), actualTeam = padded(SWORD);
+  assert.equal(requestedKind.resource_type, "c");
+  assert.equal(actualKind.resource_type, "g");
+  await page.keyboard.press("Escape");
+  await player.send([{ cmd: "set_attack_team", args: ["tournament", JSON.stringify(requestedTeam)] }]);
+  await open();
+  await page.waitForSelector(".tournament-team-box");
+  await player.press("Everyday");
+  assert.equal(await page.locator(".tournament-team-box .tournament-team img").count(), 20);
+  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  const beforeConcurrentEntry = await getInfo();
+  assert.ok(beforeConcurrentEntry.playerInfo.cash >= Number(requestedKind.cost));
+  assert.ok(beforeConcurrentEntry.map.coins >= Number(actualKind.cost));
+  // Observe the real spending callback without changing its behavior. Goal
+  // listeners need not be active for an incorrectly attributed fee to count
+  // as a regression in this scenario.
+  await page.evaluate(() => {
+    const doings = window.seHome.parts.editor.doings;
+    const spend = doings.spend;
+    window.tournamentObservedSpends = [];
+    doings.spend = function (...args) {
+      window.tournamentObservedSpends.push(args);
+      return spend.apply(this, args);
+    };
+    window.restoreTournamentSpend = () => { doings.spend = spend; };
+  });
+  const entryRequests = [], bookkeeping = [];
+  const recordEntry = (request) => {
+    if (/\/tournaments\/(join|create)_tournament\.php$/.test(request.url())) entryRequests.push(requestData(request));
+    if (request.url().endsWith("/command.php")) bookkeeping.push(...requestData(request).commands);
+  };
+  page.on("request", recordEntry);
+  let releaseEntry, rejectedEntry;
+  const entryHeld = new Promise((resolve) => { releaseEntry = resolve; });
+  const joinPath = "**/tournaments/join_tournament.php";
+  await page.route(joinPath, async (route) => {
+    await entryHeld;
+    const response = await route.fetch();
+    rejectedEntry = (await response.json()).data;
+    await route.fulfill({ response, body: "" });
+  }, { times: 1 });
+  try {
+    const entryStarted = page.waitForRequest(joinPath, { timeout: 15_000 });
+    await page.locator(`[data-tournament="${requestedType}"]`).getByRole("button", { name: "Enter tournament", exact: true }).click();
+    await entryStarted;
+    const otherEntry = await tournamentService(phone, "join_tournament", { tournament_type_id: actualType,
+      category: 1, tournament_id: "", team: actualTeam, flashSubResources: 1 });
+    assert.equal(otherEntry.result, "OK");
+    assert.equal(otherEntry.tournament.date_ready, null);
+    releaseEntry();
+    await page.waitForSelector(".tournament-room", { timeout: 30_000 });
+    assert.equal(rejectedEntry.result, "NOK", "the requested cash entry was actually refused by the server");
+    assert.deepEqual(entryRequests, [{ user_id: player.settings.userId, tournament_type_id: requestedType,
+      category: 1, team: requestedTeam, tournament_id: "", flashSubResources: 1 }],
+    "reconciliation does not retry or replace the requested mutation");
+    assert.deepEqual(bookkeeping.filter((command) => command.cmd === "tournament_substract_resources").map((command) => command.args),
+      [["c", Number(requestedKind.cost), requestedType, 0]], "only the original no-op bookkeeping precedes the refused request");
+    const current = (await service("get_tournament_info")).tournament;
+    assert.equal(current.tournament_id, otherEntry.tournament.tournament_id);
+    assert.equal(current.tournament_type_id, actualType);
+    assert.deepEqual(current.players.find((seat) => seat.user_id === player.settings.userId).team, actualTeam);
+    assert.equal(await page.locator(".tournament-window .panel-head h2").textContent(), actualKind.name);
+    assert.notEqual(actualKind.name, requestedKind.name);
+    assert.equal(await page.locator(".tournament-room .tournament-team img").count(), 1,
+      "the displayed army belongs to the actual enrollment, not the twenty-unit request");
+    assert.equal(await page.locator(".tournament-room .tournament-team img").getAttribute("alt"), item(SWORD).name);
+    assert.deepEqual(await page.evaluate(() => window.tournamentObservedSpends.filter(([resource]) => resource === "c")), [],
+      "an ambiguous response never reports the rejected cash fee as confirmed spending");
+    const reconciled = await getInfo();
+    assert.equal(reconciled.playerInfo.cash, beforeConcurrentEntry.playerInfo.cash);
+    assert.equal(reconciled.map.coins, beforeConcurrentEntry.map.coins - Number(actualKind.cost));
+    assert.deepEqual(reconciled.privateState.teams.tournament, requestedTeam, "the saved preference is not overwritten by reconciliation");
+    assert.equal(Number((await page.locator('[data-n="gold"]').textContent()).replace(/,/g, "")), reconciled.map.coins);
+    assert.equal(Number((await page.locator('[data-n="cash"]').textContent()).replace(/,/g, "")), reconciled.playerInfo.cash);
+    await page.locator(".tournament-room .tournament-team img").evaluate((image) => image.decode());
+    await player.shot("reconciled-enrollment-desktop");
+    const leavePrompt = page.waitForEvent("dialog");
+    const leaving = player.button("Leave tournament").click();
+    await (await leavePrompt).accept();
+    await leaving;
+    await page.waitForSelector(".tournament-cards");
+    assert.equal((await service("get_tournament_info")).tournament, null);
+    const afterConcurrentLeave = await getInfo();
+    assert.equal(afterConcurrentLeave.map.coins, beforeConcurrentEntry.map.coins, "leaving refunds the actual gold fee exactly once");
+    assert.equal(afterConcurrentLeave.playerInfo.cash, beforeConcurrentEntry.playerInfo.cash, "no cash fee or refund was invented");
+    assert.equal(entryRequests.length, 1);
+  } finally {
+    releaseEntry();
+    page.off("request", recordEntry);
+    await page.unroute(joinPath);
+    await page.evaluate(() => {
+      window.restoreTournamentSpend();
+      delete window.restoreTournamentSpend;
+      delete window.tournamentObservedSpends;
+    });
+  }
 }

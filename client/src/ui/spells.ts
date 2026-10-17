@@ -29,6 +29,8 @@ export interface MagicParts {
   bank: { amount: number; gold: number; cash: number };
   /** Something changed (mana, gold or cash): redraw what shows it. */
   changed: () => void;
+  /** A battle mode may show a learnt spell but forbid casting it. */
+  canCast?: (spell: SpellInfo) => boolean;
 }
 
 /** The parts for a town: its gold and cash pay, the config's spells and prices, the save's mana. */
@@ -135,6 +137,10 @@ export class SpellsWindow {
     this.said = "";
     this.render();
     this.panel.open();
+  }
+
+  close(): void {
+    this.panel.close();
   }
 
   private tell(text: string): void {
@@ -245,6 +251,7 @@ export class SpellBook {
   private readonly list = document.createElement("ul");
   private readonly aim: (spell: SpellInfo | null) => void;
   private readonly academy: SpellsWindow;
+  private readonly banks = new Set<HTMLElement>();
   private aiming: SpellInfo | null = null;
 
   /** `aim` hears the spell picked to aim, or null when aiming stops. */
@@ -296,6 +303,11 @@ export class SpellBook {
   /** Off the screen: the battle is over. */
   hide(): void {
     this.element.remove();
+    // These windows belong to this battle's book as well. Closing them
+    // prevents new purchases after its final command flush has begun.
+    this.academy.close();
+    for (const bank of this.banks) bank.remove();
+    this.banks.clear();
   }
 
   update(): void {
@@ -347,6 +359,10 @@ export class SpellBook {
       button.className = "spell-button";
       button.classList.toggle("short", parts.state.mana < spell.mana);
       button.title = `${spell.name}: ${spell.description}`;
+      if (parts.canCast && !parts.canCast(spell)) {
+        button.disabled = true;
+        button.title = `${spell.name} cannot be used in tournaments.`;
+      }
       button.setAttribute("aria-label", `Cast ${spell.name} (${spell.mana} mana)`);
       const cost = document.createElement("span");
       cost.className = "spell-cost";
@@ -395,7 +411,10 @@ export class SpellBook {
     close.type = "button";
     close.className = "button gold";
     close.textContent = "Done";
-    close.addEventListener("click", () => box.remove());
+    close.addEventListener("click", () => {
+      box.remove();
+      this.banks.delete(box);
+    });
     const buttons = document.createElement("div");
     buttons.className = "quest-buttons";
     buttons.append(close);
@@ -408,6 +427,7 @@ export class SpellBook {
       }
     }), said, buttons);
     document.body.append(box);
+    this.banks.add(box);
     close.focus();
   }
 }

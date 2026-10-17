@@ -1,5 +1,5 @@
-// Tournament browsing and team selection. The service owns rooms, fees and
-// prizes; this slice only reads its list and saves the player's chosen team.
+// The tournament service owns rooms, fees and prizes. These are the original
+// client's selection, entry and result rules, shared by its windows and battles.
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { SUBCAT } from "./battle.ts";
 import { lastTeam, TEAM_SLOTS, teamSlots } from "./quest.ts";
@@ -22,14 +22,69 @@ export interface TournamentKind {
   prize: TournamentPrize[];
   picture: string;
   weekly_tournaments: number | string;
+  num_players: number | string;
+  duration: number | string;
+  map_id: number | string;
+  weekly_opponent?: Record<string, { user_name: string; level: number | string; country?: string;
+    picture: string; team: number[] }>;
+}
+export interface TournamentMatch {
+  attacker_id: string;
+  victim_id: string;
+  finished: boolean;
+  attacker_won: boolean;
+  attacker_points: number;
+  date_started: number | null;
+  date_finished: number | null;
+}
+export interface TournamentPlayer {
+  user_id: string;
+  user_name: string;
+  level: number;
+  country: string;
+  team: number[];
+  abandonned: number;
+  matches: TournamentMatch[];
+}
+export interface TournamentRankRow {
+  user_id: string;
+  user_name: string;
+  points: number;
+  time: number;
+  matches: number;
+}
+export interface TournamentRanking {
+  total_user: number;
+  top: Record<string, TournamentRankRow>;
+  user: TournamentRankRow & { rank: number };
+}
+export interface TournamentRoom {
+  tournament_id: string;
+  tournament_type_id: string;
+  reward_id: number | string;
+  private: number | string;
+  owner_id: string;
+  owner: string;
+  point_type: number;
+  date_ready: number | null;
+  date_finished: number | null;
+  match_playing: boolean;
+  players: TournamentPlayer[];
+  ranking?: TournamentRanking;
+  /** Authoritative public winner; the view's requester-first order cannot break exact ties. */
+  winner_id?: string | null;
 }
 export interface TournamentInfo {
-  tournament: { tournament_id: string; tournament_type_id: string; date_ready: number | null;
-    date_finished: number | null } | null;
+  tournament: TournamentRoom | null;
   tournament_reward_id: Record<string, number | string>;
   tournament_weekly: Record<string, { open: number | string; full: number | string; timeLeft: number | string }>;
-  tournament_friends: { tournament_id: string; tournament_type_id: string; reward_id: number | string; owner: string }[];
+  tournament_friends: { tournament_id: string; tournament_type_id: string; reward_id: number | string;
+    owner: string; owner_id?: string }[];
 }
+export interface TournamentRefund { refund: number; tournament_type_id: string }
+export interface TournamentMutationReply { result: "OK"; resources?: TournamentRefund }
+export type TournamentEntryReply = (TournamentInfo & TournamentMutationReply) |
+  { result: "NOK" | "NOTEAM" | "NOFRIENDS"; resources?: TournamentRefund };
 export type TournamentTab = "everyday" | "weekly" | "own";
 export interface TournamentCard {
   key: string;
@@ -122,4 +177,67 @@ export function tournamentTeamProblem(team: number[], choices: [number, number][
   }
   if (!team.some((id) => id > 0) && choices.length) return "empty";
   return complexUnits(team, items) > rules.complexLimit ? "complex" : null;
+}
+
+/** Public rooms match the original five level brackets. The menu gates level 15. */
+export function tournamentCategory(level: number): number {
+  return level < MIN_LEVEL_TOURNAMENT ? 0 : level <= 20 ? 1 : level <= 25 ? 2 : level <= 30 ? 3 : level <= 40 ? 4 : 5;
+}
+
+/** Weekly entry skips the public card's ownership/complex check. The list has
+ * already restored owned copies; every entry still obeys the server's unit bans. */
+export function tournamentEntryProblem(team: number[], choices: [number, number][], items: Map<number, ItemInfo>,
+  rules: TournamentRules, weekly = false): "empty" | "unavailable" | "complex" | null {
+  if (team.length !== TEAM_SLOTS || team.some((id) => id !== 0 &&
+    (!Number.isInteger(id) || !items.get(id)?.isUnit || rules.banned.has(id)))) return "unavailable";
+  if (!team.some((id) => id > 0)) return "empty";
+  return weekly ? null : tournamentTeamProblem(team, choices, items, rules);
+}
+
+/** The short-team warning takes precedence; Flash did not ask both warnings. */
+export function tournamentEntryWarning(team: number[], weeklySeconds?: number): "short" | "ending" | null {
+  if (team.filter((id) => id > 0).length < TEAM_SLOTS) return "short";
+  return weeklySeconds !== undefined && weeklySeconds <= 600 ? "ending" : null;
+}
+
+export function tournamentReady(room: TournamentRoom, kind: TournamentKind): boolean {
+  return room.date_ready !== null && Number(kind.num_players) > 0 && room.players.length >= Number(kind.num_players);
+}
+
+export function tournamentFinished(room: TournamentRoom): boolean {
+  return room.date_finished !== null && !room.match_playing;
+}
+
+/** Unix seconds. Waiting rooms instead show the original minute-to-refresh clock. */
+export function tournamentDeadline(room: TournamentRoom, kind: TournamentKind): number | null {
+  return room.date_ready === null ? null : room.date_ready + Number(kind.duration) * 3600;
+}
+
+export function tournamentPlayerScore(player: TournamentPlayer): { points: number; seconds: number; matches: number } {
+  const played = player.matches.filter((match) => match.finished);
+  return {
+    points: Math.round(played.reduce((sum, match) => sum + Number(match.attacker_points), 0) * 100) / 100,
+    seconds: played.reduce((sum, match) => sum + Math.max(0, (match.date_finished ?? 0) - (match.date_started ?? 0)), 0),
+    matches: played.length,
+  };
+}
+
+/** The original score table includes players who left, with their retained
+ * points and time. Its displayed positions are not prize eligibility: an
+ * abandoned high scorer can precede the server's actual winner. */
+export function tournamentLeaderboard(room: TournamentRoom): (ReturnType<typeof tournamentPlayerScore> & { player: TournamentPlayer })[] {
+  return room.players.map((player) => ({ player, ...tournamentPlayerScore(player) }))
+    .sort((a, b) => b.points - a.points || a.seconds - b.seconds ||
+      Number(b.player.user_id === room.winner_id) - Number(a.player.user_id === room.winner_id));
+}
+
+/** Prizes are already paid by the server. Weekly rank is the paid rank even
+ * when later entrants change the live top ten; public ties use its winner id. */
+export function tournamentPrize(room: TournamentRoom, kind: TournamentKind, me: string): TournamentPrize | null {
+  if (!tournamentFinished(room)) return null;
+  if (Number(kind.weekly_tournaments) >= 1) {
+    const rank = room.ranking?.user;
+    return rank?.user_id === me && rank.rank >= 1 && rank.rank <= 10 ? kind.prize[rank.rank - 1] ?? null : null;
+  }
+  return room.winner_id === me ? kind.prize[Number(room.reward_id)] ?? null : null;
 }

@@ -4,6 +4,156 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: deliver against the exact completed verification
+
+- **Keep each result attached to its code.** Exact `f798788b` passed all
+  required checks: 449 server tests (440 passed, nine existing skips),
+  types, 393 client tests and 78/78 browser cases in 92m 33.33s. Final
+  delivery edits are documentation only; the tested runtime, artwork and
+  tests remain unchanged. PR #92 records the eventual delivery metadata.
+- **A later pass does not erase an unexplained failure.** Scripted bosses
+  passed in 144s, but the earlier 47 mummy-gem reload failure remains
+  genuine history. Its forced baseline diagnostic established an ordering
+  weakness, not the exact cause. No quest rule, assertion or deadline was
+  changed; keep the separate save/read-boundary follow-up.
+- **Describe the review limit accurately.** All 22 review threads were
+  addressed/resolved and independent final source reviews found no new
+  issue. Cubic returned NEUTRAL after exhausting its monthly line quota;
+  Qodo's trial was paused. Neither performed a fresh automated re-review.
+  No billing/settings change or required-check bypass was made.
+
+## 17 October 2026: hold each delayed test reply until its own release
+
+- **Correct the request fixture, keep the runtime guard.** The first
+  `97fb6e79` focus passed only lists: rooms failed the new busy-state
+  assertion, then results found the public seat left by that failure.
+  A traced replay showed Playwright continued the newer held request when
+  the older one-use route handler finished. The application ignored the
+  obsolete generation and correctly completed the actual newer reply.
+  Keep each named test handler registered until its own release, retaining
+  the pending-state assertion. Preserve runtime code, deadlines and every
+  existing assertion for this fixture repair.
+- **Preserve both failures and verify the repair.** The focus was 1/3 in
+  171.2956s; its concurrent-entry case passed. The separate instrumented
+  replay intentionally failed in 25.5596s, and temporary tracing was
+  removed. The corrected test also detects the old 95 reopen bug at the
+  original deadline (47s scenario, 53.6751s total). The corrected
+  `60eba9ff` focus then passed all three cases in 502.9371s, with runtime
+  unchanged from 97. Final full checks later passed at f798; neither the
+  earlier failures nor the diagnostics are relabelled as passes.
+
+## 17 October 2026: finish response validation and allow refresh recovery
+
+- **Check the data the views consume.** Review of `95e098f3` found room
+  and player validation incomplete; top-level weekly/reward record checks
+  also do not establish that their nested entries are valid. Check the
+  required room/player/match fields, optional winner/ranking fields and
+  each weekly/reward entry before accepting typed state. Preserve the
+  supported wire formats and weekly eligibility exception. Nine focused
+  network tests and types pass; the first corrected browser focus had
+  the fixture failures recorded above. No original command or fee rule changes.
+- **Closing a pending refresh must permit reopening.** Invalidate that
+  operation's busy state as well as its view generation, and keep a late
+  completion from clearing a newer operation. Add a real delayed-response
+  browser regression. Against unchanged 95 runtime, the new test failed
+  exactly at reopening: the room remained hidden until the original
+  30-second deadline (48s scenario, 55.1332s total). This intended negative
+  diagnostic proves the old bug; the corrected candidate passed the 60
+  focus and the final f798 full checks.
+- **Recover the actual enrollment after an uncertain entry.** Another
+  tab may have entered a different type or team. Display the authoritative
+  room and balances without repeating the request or crediting the
+  unconfirmed attempt as a confirmed fee spend. Keep this behavior; the
+  added concurrent-entry regression passed in the 97 list scenario.
+- **State retention and goals accurately.** Done remains an explicit
+  acknowledgement, but the server can also remove a finished room after
+  its existing 30-day retention. No tournament-specific goal exists in
+  the shipped 227 missions; correct the older first-slice assumption
+  directly rather than leave contradictory guidance.
+- **Keep the successful focus separate from the interrupted full run.**
+  Exact `95e098f3` passed rooms/results/list 3/3 in 7m 50.29s, with all
+  30 images reviewed, and server/types/client checks passed. The full
+  attempt stopped deliberately after five passes and no observed failure
+  for the two runtime fixes above. The later 60 focus passed;
+  final full checks passed at f798; the 47 baseline's quest failure stays recorded.
+
+## 17 October 2026: acknowledge the displayed room and reject stale reads
+
+- **Done acknowledges the room the player saw.** Add its captured room id
+  to cleanup and atomically ignore a supplied mismatch, as for Leave and
+  Cancel. This is an intentional backward-compatible safety extension:
+  the original user-id-only request still works, and the service envelope,
+  fee and prize rules stay unchanged. A repeated old Done cannot hide a
+  newer finished room or affect its rewards.
+- **Keep profile replies with their view.** Check window, room and request
+  identity; invalidate pending reads on rendering another view or closing
+  the profile. A slow answer cannot reopen a closed profile or overwrite
+  the next player selected. Reject array-shaped weekly/reward records as
+  malformed replies instead of treating them as empty data.
+- **Preserve source-supported behavior and accurate history.** Collective
+  healers' initial nonhealer fallback is distinct from their damage-driven
+  retargeting, which can help an injured healer. Keep the runtime and add
+  actual-healing coverage. External Leave excludes that entrant from
+  current-room lookup, so the existing closed-room browser branch is
+  valid. PARITY's explicitly historical deferral list already says the
+  features are built; no status change is needed.
+- **Retest the changed code.** The 47 run remains a completed 77/78
+  baseline, with its quest reload follow-up. Its documentation-only
+  identity ends at `e9765901`. The new browser regressions subsequently
+  passed the `95e098f3` focus 3/3; its full attempt was interrupted for
+  further review fixes, as recorded above. Do not attach the old result
+  to changed code or weaken any assertion.
+
+## 16 October 2026: retain the exact full-run result
+
+- **Record 77/78 accurately.** Exact integrated `47db7f44` completed all
+  78 cases in 90m 46.59s. All tournament checks passed; the sole failure
+  is the mummy-gem immediate-reload assertion in `scripted-bosses`.
+  Ordinary unchanged-main and tested-code repeats passed, as did two
+  traced baseline runs; none naturally reproduced the exact failure.
+  Fourteen relevant source/test blobs are unchanged. Keep the full-run
+  failure and assertion intact, and do not call this an all-passing suite.
+  The first baseline attempt ended in an execution-service disconnect,
+  with no completed-case outcome. Successful traces show an aborted
+  browser request can still reach the server, followed by a retry, so
+  abort is not proof of lost saving. A one-request gate was bypassed by
+  retry. The corrected cohort gate forced the assertion on unchanged
+  main by holding all attempts until the reload read old progress. Late
+  commands reached the server, unlike the full-run failure's missing gem
+  commands. This proves an existing ordering weakness, not the original
+  failure's exact cause or a natural baseline reproduction. No quest
+  runtime, assertion or deadline changed; diagnostics stay outside the
+  repository. No tournament regression was identified. Keep the quest
+  save/read boundary as an explicit follow-up rather than invent a fix
+  from incomplete evidence. Tournament implementation and verification
+  were complete at that baseline. The later review corrections passed
+  the final f798 checks recorded above.
+  [The record](docs/verification-92.md) keeps the exact
+  unit, browser, screenshot and log evidence alongside earlier histories.
+
+## 16 October 2026: preserve #97 and correct the raid fixture
+
+- **Keep main's Menu stacking fix.** Main #97 landed during the `cc218b7e`
+  run and was merged at `36f61871`. Its top-bar stacking already keeps
+  the Menu over the countdown, so remove our redundant countdown-hiding
+  rule. Keep the hit-target regression, now checking all four destinations
+  with Discord configured. Preserve #97's contact/sign-up choices below.
+- **Open the test map's trapped edge, without changing raid rules.** The
+  cc run's movement failure reproduced exactly on unchanged main
+  `a3328da6`: packed fixture resources enclosed a 16-tile pocket. Moving
+  one stone through the normal saved command preserves all resources
+  and opens an exit; replay gives both attackers targets by frame 30.
+  Exercise that edge on the first scheduled wave, retain later random
+  entries and every movement/recovery/reward assertion, including the
+  15-second movement deadline. This is a fixture correction, not a longer
+  timeout or a runtime pathfinding repair.
+- **Keep the interrupted evidence.** At cc, 19 cases passed and one
+  failed; classic was interrupted. Unit checks and the earlier Menu focus
+  passed, but no full 77-case pass occurred. The merged contact case
+  brought the suite to 78. The later `47db7f44` focus passed 3/3 in
+  3m 30.75s; Menu, contact and raids also passed in its full 77/78 run.
+  The separate quest failure and final f798 result remain recorded above.
+
 ## 16 October 2026: getting in touch, and who can join
 
 - **No in-game chat for now.** The original had none: players talked
@@ -27,6 +177,47 @@ them can be found and reversed. The big, agreed decisions are in
 - **TAKTAK and Taka stay.** They are a real player who found the site
   before it was shared, not an agent or a test account. The owner keeps
   the accounts.
+
+## 16 October 2026: the home countdown must leave Menu usable
+
+- **Check the visible control, not just its presence.** Screenshot review
+  of the #95 integration at `3b5da9e9` found the persistent raid countdown
+  covering the desktop Menu's Empires row, although the existing Menu
+  browser assertions passed. The added hit-target assertion reproduced
+  the obstruction at `28f0fa42`, whose runtime was unchanged from `3b`:
+  0/1 in 53.96s. Hiding the home countdown only while Menu was open
+  passed the unchanged regression and recurring-raids focus at cc:
+  2/2 in 1m 35.91s. #97's later stacking solution supersedes this hiding
+  rule, as recorded above. The twelve completed cases at 3b remain a
+  partial run, not a 77-case pass. The interrupted attack scenario is
+  not a completed test failure.
+
+## 16 October 2026: visible dialogs keep battle shortcuts
+
+- **A backdrop touch must not bypass a dialog.** The focused #95
+  integration check at `6f7a5ae6` found that touching behind the phone
+  surrender dialog moved focus to the body, so Escape cleared the paused
+  army selection. The shared battle keyboard handler now also checks for
+  a rendered dialog or alert dialog. Hidden mounted panels do not block
+  shortcuts; existing modifier/form guards and dialog focus behavior stay
+  unchanged. The unchanged assertion and shared selection passed a
+  two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final integration
+  verification at `47db7f44` passed the tournament cases within the
+  completed 77/78 suite after #97; the later f798 full suite passed 78/78.
+
+## 16 October 2026: tournaments join Everybody
+
+- **Use the community the owner requested in #95.** Tournament creation
+  still requires three real player neighbours. These are now the eligible
+  empires in Everybody, without accepted friend requests or the former
+  neighbour cap. Invite remains guidance and the `/friends` link, whose
+  page is now called Everybody. Host, room, fee and refund rules stay
+  unchanged. Preserve the new shared battle inspection controls as well.
+- **Keep each completed run attached to its code.** The 75/75 run at
+  `5d220abf` is a completed pre-#95 baseline, alongside the earlier 67 and
+  49 records. #95 changed runtime and added two cases; its later partial
+  runs remain recorded. #97 added another case; all 78 ran at `47db7f44`,
+  with the sole quest failure retained alongside the final f798 result above.
 
 ## 16 October 2026: playthrough feedback — active defense and everybody
 
@@ -93,6 +284,16 @@ them can be found and reversed. The big, agreed decisions are in
   The new camp timing sentence follows the new client's English interface;
   this change does not introduce a translation framework or invented string IDs.
 
+## 16 October 2026: tournaments use the shared background clock
+
+- **Apply #94's owner-requested background behavior to tournaments too.**
+  Use the same `GameLoop` as other battles so a hidden tab can keep the
+  match advancing. Explicit Pause still stops simulation and excludes
+  paused time. Army, scoring, spell and command rules stay unchanged.
+  The integrated code at `5d220abf` passed all 75 cases. Later #95
+  attempts and #97 integration are recorded above; the combined run at
+  `47db7f44` completed 77/78 with all tournament checks passing.
+
 ## 16 October 2026: playthrough controls and site repairs
 
 - **No auto-collect.** The owner withdrew it; collection and production
@@ -138,6 +339,45 @@ them can be found and reversed. The big, agreed decisions are in
   the canvas frame and on-demand card art before visual review. These are
   test-only changes.
 
+## 16 October 2026: tournament review and original rule distinctions
+
+- **Keep the weekly saved-team exception.** Local source reading confirms
+  that weekly entry checks empty/short teams and its ending warning,
+  while public entry also checks ownership and the complex-unit cap.
+  Opening the list restores eligible copies; weekly entry can still use
+  that saved selection after ownership changes. Refreshing balances does
+  not add the public restriction. The existing rule test covers this
+  deliberate original behavior.
+- **Keep score order separate from winner eligibility.** The original
+  results table retains abandoned entrants and sorts their completed
+  scores by points and time. A departed high scorer can appear first
+  while an eligible lower row wins. Keep that order and the departure
+  label; the server's `winner_id` identifies who receives the prize.
+- **Leave Engineers on their own siege-repair path.** The original
+  tournament's four collective healers exclude Engineer 570. Its normal
+  behavior repairs friendly siege units; repeated tournament attack
+  orders must not overwrite that target. Check healing targets before
+  each beat as well; whole patients remain selected.
+- **Preserve LIMIT from attempted healing.** The original sends the
+  positive healing amount to unit delegates before capping the patient's
+  health. A healing unit can therefore build LIMIT with a whole patient.
+  Correct the shared healing callback to report the positive rounded
+  attempt, retaining the health cap and existing LIMIT cadence. Suppress
+  only the visual `+0` event when no health is restored, not the callback.
+- **Verify the revised runtime again.** The 73/73 run at `49b5685e` remains
+  a passing pre-review record. Its documentation-only identity with
+  `8dccab0d` does not cover subsequent review fixes. Keep those results
+  intact. The corrected runtime at `67d2e02a` subsequently passed all 73
+  browser cases. #94 changed runtime and added two cases during that run,
+  so preserve it as the pre-#94 baseline and verify all 75 after merging.
+- **Give each browser fixture its own funding and release its seat.** The
+  ordinary-welcome case funds its extra fee through a normal command,
+  then uses normal leave/refund after its return assertions. This keeps
+  the shared server's next scenario from inheriting its public room.
+  Screenshot capture waits for all twenty team images; saved-state and
+  fee assertions remain unchanged. The interrupted and focused results
+  remain in the delivery record.
+
 ## 16 October 2026: closing the public-art repair
 
 - **Close this operational repair without a code change.** All 20 images
@@ -170,6 +410,25 @@ them can be found and reversed. The big, agreed decisions are in
   tests run (9 existing skips), types and all 350 client tests passed.
   Attribute #93's results explicitly; keep our two full runs and their
   tested commits intact instead of relabelling them.
+
+## 16 October 2026: wait for keyboard movement in the browser check
+
+- **Measure the movement the test intended to exercise.** The complete
+  tournament run passed 70 of 71 checks at `47471ff4`; the keyboard check
+  failed its old 400ms arrow hold. The unchanged check also failed twice
+  in three repeated runs on main `6c2fa146`, after an initial pass there.
+  It now holds Right until the camera has moved the intended 360 screen
+  pixels, bounded by 30 seconds. The original click-at-the-old-position
+  assertion and both saved building-rotation assertions remain. Extra
+  assertions check that Right neither zooms nor moves vertically. No
+  gameplay timing or keyboard behavior changes.
+- **Keep the tutorial return path consistent with #93.** A saved
+  tournament return URL waits for resumed mandatory lessons and their
+  welcome dialogs to finish. It then opens the tournament once, keeping
+  the saved team. This prevents a tournament panel from opening over
+  Arthur while the ordinary feature menus are locked. Ordinary returns
+  also wait for the initial gifts read and visible welcome dialogs, even
+  when no lessons are pending, before reopening the room once.
 
 ## 16 October 2026: mandatory tutorial and hiding the classic choices
 
@@ -215,6 +474,56 @@ them can be found and reversed. The big, agreed decisions are in
 - **Fresh tutorial browser tests use real fresh towns.** Other feature
   tests explicitly start with a completed tutorial fixture, rather than
   relying on a Skip button that players no longer have.
+
+## 16 October 2026: complete tournaments in the new client
+
+- **Finish the whole tournament feature in one follow-up.** After the
+  first list/team slice merged, the owner expanded the task to all four
+  remaining parts. Entry, rooms, battles, results and friends' creation
+  are integrated together, keeping the original services and shared saves.
+  The owner's later #93 decision hides classic choices; its routes remain
+  supported. #87 and #93 were delivered by their other chats and are
+  preserved here; the other chat completed the separate public-art audit
+  in #91.
+- **Keep the waiting clock's actual meaning.** Its sixty seconds count
+  down to a server refresh, as in Flash; they do not promise bots then.
+  The panel explains the existing thirty-minute public and one-day
+  friends' wait. A manual Refresh button is a convenience. Closing the
+  panel neither leaves the room nor clears results.
+- **Reuse our battle controls with two army life bars.** Armies are
+  copies, spells keep their original tournament exclusions, and score
+  uses the original cumulative-damage rule. An unfinished attempt
+  restarts from the enrolled teams after reopening, including its start
+  timestamp, as the original client/server did. This is not a health or
+  position save. A finished result whose reply failed remains available
+  for Retry and survives a reload in the same tab; a recorded server
+  outcome takes precedence.
+- **Keep finished results until Done or retention expiry.** This replaces
+  Flash's delayed popup/OK with an explicit acknowledgement in the panel, so a player
+  can still inspect matches and rankings. The server has already paid
+  the prize; Done only cleans the viewed room. The server's existing
+  30-day finished-room retention still applies. Unit prizes still appear
+  in Storage. The weekly table may change after a prize is paid, so the
+  panel explains that its awarded rank was fixed at completion.
+- **Ask the server who won an exact tie.** Its existing seat-order rule
+  resolves equal score and time, but each player's response puts them
+  first. An additive `winner_id` supplies the actual winner instead of
+  making the new client guess from that reordered list. Prize rules and
+  request formats do not change.
+- **An old Leave or Cancel cannot touch a new room.** A supplied room id
+  must match the current enrollment before those services change it.
+  Omitted ids keep the legacy behavior. This protects a player from a
+  stale tab or late retry without changing ordinary leave/refund rules.
+- **Invite follows the site's community-page policy.** The waiting
+  host gets the same explanatory notice and `/friends` link as the
+  classic page. Originally labelled Friends, that page is Everybody
+  following #95. Neighbours join through Your own. No Facebook delivery,
+  direct messages or new invitation ledger is added.
+- **No tournament-specific mission count changes.** The complete local
+  source/config review found no dedicated tournament goal among the
+  227 missions. The first-slice note below is corrected to match this
+  finding. Successful fees still count toward applicable ordinary
+  resource-spending goals.
 
 ## 16 October 2026: verifying the building card and Menu
 
@@ -285,8 +594,10 @@ them can be found and reversed. The big, agreed decisions are in
   limit (currently ten). Restoring a saved team does not trim that limit;
   weekly entry exempts it in the original card and on the server. Entry
   remains in classic, including its empty/short-team warnings.
-- **No tournament goals change yet.** This slice does not play or win
-  tournaments; those goals keep their classic-game guidance.
+- **No dedicated tournament goals ship with the game.** Corrected after
+  the complete local source/config review: none of the 227 missions has
+  a tournament-specific goal. This slice changes no mission counts;
+  applicable ordinary spending goals still receive successful entry fees.
 - **Keep unrelated browser repairs outside this slice.** The full run's
   four failures (`construction`, `scripted-bosses`, `siege`, `walk`) all
   reproduce on unchanged main. Record those results and preserve every

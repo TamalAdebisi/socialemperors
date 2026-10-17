@@ -43,7 +43,7 @@ How the client asks: POST tournaments/<service>.php, answered by service().
     cancel_tournament        {tournament_id}            the owner, before it starts
     start_tournament_match   {victim_id, tournament_id}
     finish_tournament_match  {victim_id, attacker_won, attacker_points, tournament_id}
-    clean_tournament         {}                         done looking at a finished one
+    clean_tournament         {tournament_id?}           done looking at a finished one; old clients omit the id
 
 Fees: the client takes the fee on screen and sends "tournament_substract_
 resources", and gives it back on screen when a reply says "refund", sending
@@ -495,6 +495,11 @@ def _view(room: dict, USERID: str) -> dict:
     }
     if room.get("week") is not None:
         view["ranking"] = _ranking(room, USERID)
+    elif room["date_finished"] is not None:
+        # Requester-first presentation loses the seat-order tie-break. Tell
+        # both clients who actually won instead of asking them to guess it.
+        winner = _winner(room)
+        view["winner_id"] = winner["user_id"] if winner is not None else None
     return view
 
 
@@ -600,7 +605,8 @@ def _leave(USERID: str, params: dict, now: int) -> dict:
     out: their matches not played are lost, and the others can still play
     against their army."""
     room = _current(USERID)
-    if room is None:
+    if room is None or (params.get("tournament_id") and str(params["tournament_id"]) != room["id"]):
+        # A delayed click from an older room must not leave a newer one.
         return {"result": "OK"}
     if room.get("private") and room["owner_id"] == USERID and room["date_ready"] is None:
         return _cancel(USERID, params, now)  # the owner can't leave their own room: it is called off
@@ -628,6 +634,8 @@ def _cancel(USERID: str, params: dict, now: int) -> dict:
     fee comes back. The friends' games are never told, so the server gives
     theirs back in their saves; the room is gone from their list."""
     room = _current(USERID)
+    if room is not None and params.get("tournament_id") and str(params["tournament_id"]) != room["id"]:
+        return {"result": "OK"}
     if room is None or not room.get("private") or room["owner_id"] != USERID or room["date_ready"] is not None:
         return _leave(USERID, params, now)
     for player in _humans(room):
@@ -679,6 +687,9 @@ def _finish_match(USERID: str, params: dict, now: int) -> dict:
 
 def _clean(USERID: str, params: dict, now: int) -> dict:
     room = _current(USERID)
+    if room is not None and params.get("tournament_id") and str(params["tournament_id"]) != room["id"]:
+        # A delayed Done from an older room must not acknowledge a newer one.
+        return {"result": "OK"}
     if room is not None and room["date_finished"] is not None:
         _seat(room, USERID)["cleaned"] = 1
         _touch(room)

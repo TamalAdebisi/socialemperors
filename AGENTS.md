@@ -78,13 +78,28 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 436 tests, about a minute
-(cd client && npm run check && npm test)             # the client's types and rules: 357 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 73 tests
+.venv/bin/python -m unittest discover tests          # the server's unit tests, about a minute
+(cd client && npm run check && npm test)             # the client's types and rules
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 78 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest playthrough verification (#95):** server 436 run (427 passed,
+- **Tournament implementation and required verification are complete.**
+  Exact clean `f798788b6529388f918098989b8f4997eab553c8`, including
+  main `8f8c57ab`, passed **78/78 browser cases in 92m 33.33s**.
+  Server: **449 run (440 passed, 9 existing PostgreSQL skips)**;
+  types and **393 client tests passed**. All tournament cases, shared
+  spells, team and scripted bosses passed. The server log is clean;
+  all 260 fresh archived screenshots were reviewed, with concrete visual
+  limits retained in the record. All 22 review threads are resolved
+  and independent final source reviews found no new issue. Cubic's quota
+  and Qodo's paused trial prevented fresh automated re-review; no required
+  check was reported or bypassed. [The delivery record](docs/verification-92.md)
+  preserves screenshot coverage, exact timings and prior failures, including
+  the unresolved cause of the historical 47 quest reload failure. The
+  current pass does not claim to fix it. PR #92 records release metadata;
+  no merge or deployment is claimed by these test results.
+- **Playthrough verification (#95):** server 436 run (427 passed,
   9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
   #94. WebKit selection, recurring raids, cards and Everybody passed
@@ -103,7 +118,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   WebKit buildings, controls, hover and Friends/Menu passed **4/4 in
   3m 50.48s**. [The delivery record](docs/verification-94.md) retains the
   original failures, exact checks, screenshot review and Mac GPU limit.
-- **Latest art verification (#91):** all 20 images match their JSON and
+- **Art verification (#91):** all 20 images match their JSON and
   repair-query copies, both plain and with the game's Origin header.
   With refreshed caches, `team` passed alone (52s) and in the full suite
   (42s). The pre-#93 full run was **66/67 in 79m 48.48s**; its historical
@@ -111,9 +126,9 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   Peak anonymous/shared/kernel memory was 3.76 GiB, with no memory-limit
   or OOM events. After merging #93, the cold-cache team passed again in
   66s, followed by all four tutorial/tournament checks in 10m 28.77s.
-  Current server: 435 run (426 passed, 9 existing skips); client types
-  and all 350 passed. The art follow-up is closed.
-- Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
+  At that check, the server ran 435 tests (426 passed, 9 existing skips);
+  client types and all 350 passed. The art follow-up is closed.
+- Tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
   **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
   Later tutorial recovery/review corrections passed all three tutorial
   checks and tournaments **4/4 in 8m 15.30s** on game code `6754695a`,

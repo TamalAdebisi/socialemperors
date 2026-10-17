@@ -9,7 +9,7 @@ own: the potion offer, the player-attack world map and the dragon-rider
 minigame. The windows themselves are in [windows.md](windows.md), the map
 and its units in [engine.md](engine.md) and [core.md](core.md).
 
-**Count:** 32 built, 18 partly, 19 not yet, 18 not needed, 11 art (98 classes).
+**Count:** 36 built, 16 partly, 17 not yet, 18 not needed, 11 art (98 classes).
 
 **How deep this was read.** Read through: `GuiManager`, `PlayerStatus`,
 `MissionsManager`, `CommandManager`, `CollectableManager`, `KompuManager`,
@@ -23,8 +23,9 @@ upgrading and storing; the text and layout lines were skipped.
 `InfoButtonOver` was read for what it shows per kind, not every text.
 `PopupManager` was read for its start-up sequence and its "not enough"
 prompts; its hundred or so window openers only by name (the windows are in
-windows.md). `TournamentManager` was read by its function names plus the
-entry fee and refund parts. `ExplorationsManager` was read for its set-up,
+windows.md). `TournamentManager` and `ServiceManager` were reread for
+entry, fees/refunds, state routing, battles, results and cleanup (see
+`rules/tournaments.md`). `ExplorationsManager` was read for its set-up,
 relocation and the continent's loading; the drawing and tweens were
 skimmed. `Projectiles` was read in its main parts. `AdminPanel` only by its
 list of buttons and commands. The image loaders and the paginator were read
@@ -112,9 +113,9 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `managers/DomeManager.as` | 143 | The domes: the Protection Dome halves hits on the owner's things within its square; the Tower Enhancer halves the attack interval of towers in its square when a tower is placed or moved. | not yet (PARITY.md, "Domes") |
 | `managers/CollectableManager.as` | 452 | The 23 collections, five pieces each: which source drops each piece and how often (see Surprises), `add_collectable` sent at once, completing one for its prize (into storage) and its cash price. Human towns only. | not yet: collections come later |
 | `managers/UnitCollectionsManager.as` | 151 | The units book: which units of each category the player has ever had (bought, or standing in town when the game opens) and a message when a category fills. | not yet |
-| `managers/TournamentManager.as` | 875 | Tournaments: the list, creating or joining a room (the fee taken with `tournament_substract_resources`), leaving or cancelling (refunds), playing a match against another player's army, the life bars and the results. Read by its function names and fee parts. | partly: list/state and classic continuation in `ui/tournaments.ts`; entry, rooms and matches later |
-| `managers/ServiceManager.as` | 96 | Calls a server page (the tournaments' ones) with a signed request and checks the reply's signature. | partly: original list-service envelope in `net/server.ts`; mutating tournament services later |
-| `managers/services/Service.as` | 26 | One waiting service call and its handlers. | not yet |
+| `managers/TournamentManager.as` | 875 | Tournaments: the list, creating or joining a room (the fee taken with `tournament_substract_resources`), leaving or cancelling (refunds), playing a match against another player's army, the life bars and the results. | built: `rules/tournaments.ts`, `ui/tournaments.ts`, `ui/tournamentResults.ts`, `tournamentPlay.ts`; services own actual fees/prizes |
+| `managers/ServiceManager.as` | 96 | Calls a server page (the tournaments' ones) with a signed request and checks the reply's signature. | built: original tournament service envelopes in `net/server.ts`; this project's unsigned pages do not require signatures |
+| `managers/services/Service.as` | 26 | One waiting service call and its handlers. | built: tournament request parameters and Promise success/error handling in `net/server.ts` and its callers |
 | `managers/SoundManager.as` | 599 | Music and effects: seven tracks (town, battle, ship, attack, quest, troll town, survival) faded into each other over a second; effects a moment after their cause, a few of each at once, only for things on screen; the death cry by kind (women, trolls and bosses, machines, men). | partly: `sound.ts` has the town's music and 16 effects; no other tracks, no fading, no boss or spell sounds |
 | `managers/Projectiles.as` | 594 | The layer of flying shots: arrows and rocks, the puff where they land, smoke trails, a castle's stream of shots, with a cap on puffs at once; pauses with the game. | partly: shots drawn in `view/battleView.ts`; no puffs, trails or streams |
 
@@ -135,7 +136,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `btns/Buttonize.as` | 358 | Makes a picture act as a button: grows on hover, fades when off. | built: the buttons' styles in `ui/style.css` |
 | `utils/ExpandSprite.as` | 173 | A frame that stretches without blurring its corners, for tooltips. | art |
 | `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | not yet: those windows aren't built |
-| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | not yet: those windows aren't built |
+| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | partly: tournament refresh, availability and deadline clocks; darts/temple later and heavy siege off |
 | `utils/countdown/DigitCountDown.as` | 66 | One flipping digit of that clock. | art |
 | `utils/paginator/Paginator.as` | 246 | Pages through a list of things. | not needed: only the iPhone gifts window uses it |
 | `utils/paginator/PaginatorConfig.as` | 228 | The paginator's settings. | not needed: as above |

@@ -1,0 +1,191 @@
+/* Match and ranking rows fit the existing narrow panel and phone sheet.
+   Long empire/unit names wrap; no table needs sideways scrolling. */
+.tournament-results,
+.tournament-results-heading,
+.tournament-matches,
+.tournament-ranking,
+.tournament-outcome,
+.tournament-your-rank,
+.tournament-weekly-prizes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tournament-results {
+  gap: 12px;
+}
+
+.tournament-results h3,
+.tournament-results h4,
+.tournament-weekly-prizes h3 {
+  margin: 0;
+  font-family: var(--round);
+  overflow-wrap: anywhere;
+}
+
+.tournament-results p,
+.tournament-weekly-prizes p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.tournament-results .button {
+  min-height: 36px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.tournament-results-tabs,
+.tournament-player-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.tournament-results-tabs [aria-pressed="true"],
+.tournament-player-tabs [aria-pressed="true"] {
+  border-color: var(--gold-edge);
+  background: var(--gold);
+}
+
+.tournament-match-list,
+.tournament-scoreboard,
+.tournament-prize-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tournament-match,
+.tournament-score-row,
+.tournament-prize-list > li,
+.tournament-your-rank,
+.tournament-outcome {
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid var(--parchment-edge);
+  border-radius: 10px;
+  background: #fff8df;
+  overflow-wrap: anywhere;
+}
+
+.tournament-match {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tournament-match > .tournament-player {
+  flex: 1 1 160px;
+}
+
+.tournament-match > .rows-note,
+.tournament-match-result {
+  flex-basis: 100%;
+  font-size: 13px;
+}
+
+.tournament-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tournament-player .portrait {
+  width: 42px;
+  height: 42px;
+  box-sizing: border-box;
+  color: var(--ink);
+  cursor: default;
+}
+
+.tournament-player .portrait:hover {
+  box-shadow: 0 0 0 2px var(--parchment-edge);
+}
+
+.tournament-player-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tournament-player-details small,
+.tournament-score-stats {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tournament-player-details .button,
+.tournament-rank-name {
+  text-align: left;
+}
+
+.tournament-score-row,
+.tournament-prize-list > li {
+  display: grid;
+  grid-template-columns: 2.5ch minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.tournament-score-row > .tournament-score-stats,
+.tournament-score-row > .tournament-prize {
+  grid-column: 1 / -1;
+}
+
+.tournament-outcome,
+.tournament-your-rank {
+  border-color: var(--gold-edge);
+}
+
+.tournament-outcome > .button {
+  align-self: flex-start;
+  min-width: 96px;
+}
+
+.tournament-results .tournament-prize,
+.tournament-weekly-prizes .tournament-prize {
+  gap: 6px;
+}
+
+.tournament-results .tournament-prize > span,
+.tournament-weekly-prizes .tournament-prize > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tournament-results .tournament-prize .icon,
+.tournament-weekly-prizes .tournament-prize .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tournament-deadline,
+.tournament-score-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  .tournament-results .button {
+    min-height: 44px;
+  }
+
+  .tournament-match,
+  .tournament-score-row,
+  .tournament-prize-list > li {
+    padding: 8px;
+  }
+}
