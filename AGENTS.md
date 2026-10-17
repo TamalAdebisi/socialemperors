@@ -80,10 +80,24 @@ those commands run outside the sandbox when asked.
 ```
 .venv/bin/python -m unittest discover tests          # the server's unit tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 78 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 79 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
+- **Latest structure verification (#96):** server 449 run (440 passed,
+  nine existing skips), client types and all 404 tests passed. Complete
+  combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege
+  and one-atlas alpha/ground checks passed 3/3 in 255.75s. All 79 cases have
+  passing results across runs, not one final-head 79/79 run. WebKit's full
+  structure gallery passes all 98 files / 199 facings with exact reference
+  images. The seven-case run was 6/7; a reproduced test visibility bug caused
+  its tournament polling errors. After correcting the fixtures, WebKit
+  tournament/controls passed 2/2 in 289.41s, and Chromium controls passed 1/1
+  in 68.31s. All seven selected WebKit cases have passing results across runs.
+  Game runtime remains `862d9893`; final fixture commit is `ab8c3d60`.
+  [The delivery record](docs/verification-96.md) retains every failed run,
+  exact revisions, screenshot review, the earlier construction timing limit
+  and the Linux WebKit/Mac GPU distinction. No error or test was disabled.
 - **Tournament implementation and required verification are complete.**
   Exact clean `f798788b6529388f918098989b8f4997eab553c8`, including
   main `8f8c57ab`, passed **78/78 browser cases in 92m 33.33s**.
@@ -99,7 +113,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   the unresolved cause of the historical 47 quest reload failure. The
   current pass does not claim to fix it. PR #92 records release metadata;
   no merge or deployment is claimed by these test results.
-- **Playthrough verification (#95):** server 436 run (427 passed,
+- **Previous playthrough verification (#95):** server 436 run (427 passed,
   9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
   #94. WebKit selection, recurring raids, cards and Everybody passed
@@ -118,7 +132,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   WebKit buildings, controls, hover and Friends/Menu passed **4/4 in
   3m 50.48s**. [The delivery record](docs/verification-94.md) retains the
   original failures, exact checks, screenshot review and Mac GPU limit.
-- **Art verification (#91):** all 20 images match their JSON and
+- **Latest art verification (#91):** all 20 images match their JSON and
   repair-query copies, both plain and with the game's Origin header.
   With refreshed caches, `team` passed alone (52s) and in the full suite
   (42s). The pre-#93 full run was **66/67 in 79m 48.48s**; its historical
@@ -126,9 +140,9 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   Peak anonymous/shared/kernel memory was 3.76 GiB, with no memory-limit
   or OOM events. After merging #93, the cold-cache team passed again in
   66s, followed by all four tutorial/tournament checks in 10m 28.77s.
-  At that check, the server ran 435 tests (426 passed, 9 existing skips);
-  client types and all 350 passed. The art follow-up is closed.
-- Tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
+  Current server: 435 run (426 passed, 9 existing skips); client types
+  and all 350 passed. The art follow-up is closed.
+- Latest tutorial verification in [#93](https://github.com/TamalAdebisi/socialemperors/pull/93):
   **69/69 browser tests passed in 64m 32.58s** on game code `20a87d8d`.
   Later tutorial recovery/review corrections passed all three tutorial
   checks and tournaments **4/4 in 8m 15.30s** on game code `6754695a`,

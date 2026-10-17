@@ -4,6 +4,38 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve real visibility in background-play fixtures
+
+- **Simulate hidden tabs without overriding actual page unloading.** A local
+  WebKit probe kept native visibility for two reloads without errors, then
+  reproduced two Friends polling errors with the tournament fixture's
+  `document.hidden` override. At each error, native `visibilityState` was
+  `hidden` while the override incorrectly said false. Preserve native hiding
+  in both shared background-play fixtures, alongside their simulated flag.
+  All background-progress, explicit-Pause and return-time assertions remain,
+  with unchanged speeds and deadlines. This is a test-only correction;
+  no polling error is suppressed and no game behavior changes.
+
+## 17 October 2026: recover a partially damaged Safari atlas
+
+- **Extend the narrow recovery only where the failure was reproduced.**
+  `1479_chained_levelup-1.webp` sometimes decoded in a WebKit worker with
+  visible but misplaced pixels, so the blank-bitmap check missed it. A
+  repeated probe captured the same damaged shape on CPU and GPU; decoding
+  the identical file on the page restored both. Always perform that second
+  decode for this atlas in Safari. Other visible atlases retain workers,
+  and all original images and mipmaps remain. No global loader preference
+  or new public-art upload is introduced.
+- **Check correctness as well as visibility.** Keep the original gallery
+  assertions and add an exact alpha-grid fingerprint for the affected frame,
+  independently measured from its source WebP. Retain the malformed capture
+  and the earlier passing assertion result; a nonempty image was not enough.
+- **Inspect a short production cycle before unrelated UI work.** Move the
+  collection test's working-farm/ranch inspection ahead of mine setup and
+  screenshots. Keep all assertions, production durations, collection times
+  and saved-state checks. This is a fixture-order correction, with no game
+  rule change. Preserve the failed full run and the siege timeout separately.
+
 ## 17 October 2026: deliver against the exact completed verification
 
 - **Keep each result attached to its code.** Exact `f798788b` passed all
@@ -21,6 +53,59 @@ them can be found and reversed. The big, agreed decisions are in
   issue. Cubic returned NEUTRAL after exhausting its monthly line quota;
   Qodo's trial was paused. Neither performed a fresh automated re-review.
   No billing/settings change or required-check bypass was made.
+## 17 October 2026: idle-pass verification fixtures
+
+- Read screenshot pixels outside the game page, using the Pillow package
+  already installed by setup and the same Python as the local test server.
+  Keep the pixel comparisons exact without adding image decoding to the
+  graphics context being measured. An isolated overlay check passed with
+  this helper, but the normal runner still reproduced corrupt terrain;
+  this is measurement isolation, not a demonstrated rendering repair.
+  This changes tests, not game code.
+- Close completed test towns, after flushing their saves, before the next
+  scripted scenario. They otherwise keep competing for software drawing.
+  Keep the same gameplay assertions, simulation speeds and deadlines.
+- Keep the original construction test. A controlled-clock experiment
+  changed browser timing as well as the construction deadline and produced
+  new fixture failures; it is not part of the delivered change. The original
+  WebKit timing failure also reproduces on previous main; retain both results.
+- Wait for rendered frames before sampling outline colors and phone target
+  coordinates. Check the full worker queue before screenshots can finish
+  its first job; read the fading message atomically within the same deadline.
+  Keep the original pixel thresholds, saved-tree checks and native near-miss tap.
+  Retain visible-pixel checks for every gallery facing; no retry hides a
+  blank picture. The apparent capture failure was traced to decoded art.
+  For ground comparisons, require the textured ground to render before
+  taking the baseline; all 2,800 before/after pixels still match exactly.
+- Retain failed runs and unrelated old-main WebKit failures in
+  [the verification record](docs/verification-96.md). Linux WebKit verifies
+  the engine here, not the owner's Mac graphics driver.
+
+## 17 October 2026: Safari texture recovery
+
+- **Keep the ordinary worker path and recover only blank bitmaps.** A
+  worker-created ImageBitmap could be entirely transparent despite valid
+  source art. Sample its alpha before parsing the atlas. If it is empty,
+  decode the same file on the page and replace the original only when that
+  second decode contains pixels. Truly empty art stays empty. This preserves
+  the original files, mipmaps and normal loading path, with a small check
+  per Safari atlas. Other engines do not perform that check.
+- **Withdraw global decoding and rendering workarounds.** Moving all Safari
+  decoding onto the page, including through HTML images, reproduced corrupt
+  town draws. Previous main and the new animation fixes using the original
+  worker path pass the same strict scene checks. Disabling mipmaps, using
+  WebGL 1, and uploading explicit grass pixels did not resolve the fault.
+  None of those settings is retained. Viewport resets and forced re-uploads
+  remain diagnostics only. Linux WebKit does not establish the owner's
+  exact Mac graphics-driver behavior.
+- **Load only the images used by the deliberately fixed pose.** That one
+  incomplete export has 100 image pages, over 4 GB decoded. Loading all of
+  them after the Safari decode repair exhausted the 8 GB test machine.
+  Read its atlas indexes, preserve the first frame of each facing and the
+  original bounds, and decode only their two image pages. This changes no
+  displayed pose and needs no new public art. Other structures retain their
+  full animations. The browser regression checks the actual image requests
+  against the pages used by both rendered facings.
 
 ## 17 October 2026: hold each delayed test reply until its own release
 
@@ -177,6 +262,45 @@ them can be found and reversed. The big, agreed decisions are in
 - **TAKTAK and Taka stay.** They are a real player who found the site
   before it was shared, not an agent or a test account. The owner keeps
   the accounts.
+
+## 16 October 2026: the structure idle animation pass
+
+- **Restore the original idle state across the structure library.** The
+  lumber mill was alternating its finished art with scaffolding; towers
+  could mix idle and attack pictures. Read all available visual timelines
+  and use their state counts, preserving motion nested inside the selected
+  state at its existing duration. Keep farm work, animal counts, tree
+  skins and explicit quest states. Oil/water towers pour only at a target.
+  The occupied altar retains its existing active sequence.
+- **Repair hover at the same shared point.** Its eight outline copies
+  follow the building's actual frame just before rendering, preventing a
+  stale scaffold or moving part from becoming a large yellow silhouette.
+  Walking offsets are applied once; a rendered movement check covers the
+  shared unit outline too.
+- **Measure clicks by input time, not rendering time.** The WebKit trace
+  showed a 122 ms click rejected after its release handler was delayed
+  1.86 seconds. Pointer and double-click timing now use the browser's
+  event timestamps. The existing short-press and double-click limits stay
+  the same; a genuine long press remains a long press. A browser regression
+  deliberately stalls input handling for 650 ms and checks that selecting
+  another villager still works without redirecting the first.
+  Main #95's battle Shift selection remains a separate modifier when
+  forwarding that input timestamp; neither control replaces the other.
+- **Remove seven measured blank loop endings.** Only those exact art
+  names and lengths are affected; legitimate motion and intentionally
+  empty tree/terrain states remain. No new public art upload is needed.
+- **Use a stable pose for one incomplete idle loop.** The floating-island
+  promotion's export has only five idle samples, five seconds apart, and
+  cuts off a longer nested timeline. Hold its original idle picture rather
+  than introduce large periodic jumps. Restoring that one nested animation
+  smoothly would need a new held-state art export. Other nested effects
+  keep their available samples and timing.
+- **Record the audit's limits.** All 1,010 configured structures were
+  inventoried: 900 readable art files cover 941 entries; 69 names have no
+  usable local source and return 404 publicly. They cannot be visually
+  verified here. The pass covers all available timeline/atlas data and
+  renders every stateful or blank-ending file plus motion controls in the
+  browser. See [the audit](docs/structure-idle-audit.md).
 
 ## 16 October 2026: the home countdown must leave Menu usable
 

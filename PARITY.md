@@ -1,5 +1,14 @@
 # Parity: the new client against the Flash game
 
+Structure idle repair: original state selection replaces scaffold/action
+cycling, nested effects keep moving, hover follows the actual frame, and
+seven blank loop endings are removed. Farm work, animal counts and explicit
+quest states retain priority. Safari keeps worker decoding and recovers
+blank bitmaps plus one atlas with reproduced partial corruption, preserving
+original art and mipmaps. See [coverage and limits](docs/structure-idle-audit.md).
+Click timing uses browser input timestamps, so a short click delayed by
+rendering is still recognized; long presses keep their existing limit.
+
 **16 October playthrough follow-up:** recurring raids after lessons/rescue,
 with five minutes on opening town and five to seven to recover after fights; camps
 return after ten minutes and show a countdown. Shared battle controls expose

@@ -134,7 +134,7 @@ export class TownEditor {
   private tool: Tool = "pointer";
   /** What the glove last passed over: each thing is collected once as it sweeps by. */
   private swept: PlacedItem | null = null;
-  /** The last thing tapped and when (the page's clock, ms): a second tap on a selected unit soon after is a double click. */
+  /** The last thing tapped and its input timestamp: a second tap soon after is a double click. */
   private lastTap: { placed: PlacedItem; at: number } | null = null;
   private moving: PlacedItem | null = null;
   /** The way the thing being moved faced before (Space turns it; cancelling turns it back). */
@@ -191,7 +191,7 @@ export class TownEditor {
     this.land = parts.land ?? { prices: [], neighbours: 0 };
     this.doings = parts.doings ?? new Doings();
     this.sound = parts.sound ?? (() => {});
-    this.camera.onTap = (at, touch) => this.tap(at, touch);
+    this.camera.onTap = (at, touch, _shift, time) => this.tap(at, touch, time);
     this.camera.onHover = (at) => this.hover(at);
     this.camera.onLeave = () => this.light(null);
     this.camera.onPress = (at, touch) => this.startsBox(at, touch);
@@ -496,7 +496,7 @@ export class TownEditor {
     this.bar.hide();
   }
 
-  private tap(at: Point, touch = false): void {
+  private tap(at: Point, touch = false, time = performance.now()): void {
     if (this.paused) {
       return;
     }
@@ -543,8 +543,8 @@ export class TownEditor {
     }
     // A selected unit of theirs tapped again within a second: the double click, its kind near it (rules/group.ts).
     const last = this.lastTap;
-    this.lastTap = placed ? { placed, at: performance.now() } : null;
-    if (placed && last?.placed === placed && performance.now() - last.at < DOUBLE_CLICK_MS && units.includes(placed)) {
+    this.lastTap = placed ? { placed, at: time } : null;
+    if (placed && last?.placed === placed && time - last.at < DOUBLE_CLICK_MS && units.includes(placed)) {
       const kin = sameKindNear(placed, this.town.items.filter((u) => canWalk(this.town, u)));
       if (kin.length > 0) {
         this.lastTap = null;
@@ -1220,7 +1220,7 @@ export class TownEditor {
   resume(moved: PlacedItem[]): void {
     this.paused = false;
     this.bar.hide();
-    this.camera.onTap = (at, touch) => this.tap(at, touch);
+    this.camera.onTap = (at, touch, _shift, time) => this.tap(at, touch, time);
     this.camera.onHover = (at) => this.hover(at);
     this.camera.onLeave = () => this.light(null);
     for (const unit of moved) {

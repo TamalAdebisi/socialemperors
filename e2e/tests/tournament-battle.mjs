@@ -19,7 +19,9 @@ export default async function tournamentBattle({ newPlayer }) {
   // so the independent GameLoop timer must advance the actual battle.
   await player.page.addInitScript(() => {
     window.testHidden = false;
-    Object.defineProperty(document, "hidden", { get: () => window.testHidden });
+    // Simulated tab hiding must still respect real hiding on navigation:
+    // claiming an unloading page is visible starts invalid background polls.
+    Object.defineProperty(document, "hidden", { get: () => window.testHidden || document.visibilityState === "hidden" });
     const request = window.requestAnimationFrame.bind(window);
     const pending = [];
     window.requestAnimationFrame = (run) => request((time) => {

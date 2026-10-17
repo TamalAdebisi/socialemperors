@@ -2,9 +2,10 @@
 // files: <img_name>.json and .webp (and <img_name>-1.json... for big items),
 // each loaded once and only when something on screen needs it.
 
-import { Assets, Spritesheet, Texture, type SpritesheetData } from "pixi.js";
+import { Assets, Spritesheet, Texture, isSafari, type SpritesheetData } from "pixi.js";
 
 import type { Bounds } from "../rules/geometry.ts";
+import { STEADY_BUILDING } from "./buildingAnimation.ts";
 
 interface SheetMeta {
   image: string;
@@ -140,17 +141,38 @@ export class ArtLibrary {
   }
 
   private async load(name: string): Promise<ItemArt> {
+    if (name === STEADY_BUILDING) return this.loadSteady(name);
     const first = await this.page(`${name}.json`);
     const others = await Promise.all((first.data.meta.related_multi_packs ?? []).map((file) => this.page(file)));
-    return itemArt(name, first, others);
+    return itemArt(name, first.data, [first.sheet, ...others.map((page) => page.sheet)]);
   }
 
-  private async page(file: string): Promise<{ data: SheetJson; sheet: Spritesheet }> {
+  /** This fixed pose needs two image pages, not the export's 100 decoded pages. */
+  private async loadSteady(name: string): Promise<ItemArt> {
+    const index = await this.data(`${name}.json`);
+    const animations = Object.fromEntries(Object.entries(index.animations ?? {}).map(([label, frames]) => [label, frames.slice(0, 1)]));
+    const needed = new Set(Object.values(animations).flat());
+    if (needed.size === 0) throw new Error(`${name}: no idle frames`);
+    const pages = [index, ...await Promise.all((index.meta.related_multi_packs ?? []).map((file) => this.data(file)))];
+    const selected = pages.map((page) => ({ ...page, animations: undefined,
+      frames: Object.fromEntries(Object.entries(page.frames).filter(([frame]) => needed.has(frame))) }))
+      .filter((page) => Object.keys(page.frames).length > 0);
+    const found = new Set(selected.flatMap((page) => Object.keys(page.frames)));
+    if ([...needed].some((frame) => !found.has(frame))) throw new Error(`${name}: missing idle frame`);
+    const sheets = await Promise.all(selected.map((page) => sheetOf(page, `${this.base}/${page.meta.image}`)));
+    return itemArt(name, { ...index, animations }, sheets);
+  }
+
+  private async data(file: string): Promise<SheetJson> {
     const response = await fetch(`${this.base}/${file}`);
     if (!response.ok) {
       throw new Error(`${file}: ${response.status}`);
     }
-    const data = (await response.json()) as SheetJson;
+    return await response.json() as SheetJson;
+  }
+
+  private async page(file: string): Promise<{ data: SheetJson; sheet: Spritesheet }> {
+    const data = await this.data(file);
     return { data, sheet: await sheetOf(data, `${this.base}/${data.meta.image}`) };
   }
 }
@@ -165,7 +187,7 @@ export async function bundledArt(name: string, json: string, image: string): Pro
     throw new Error(`${name}: ${response.status}`);
   }
   const data = (await response.json()) as SheetJson;
-  return itemArt(name, { data, sheet: await sheetOf(data, image) }, []);
+  return itemArt(name, data, [await sheetOf(data, image)]);
 }
 
 async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
@@ -174,19 +196,64 @@ async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
     // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
     data: { autoGenerateMipmaps: true },
   });
+  await repairSafariBitmap(texture, image);
   const sheet = new Spritesheet(texture, data);
   await sheet.parse();
   return sheet;
 }
 
-function itemArt(name: string, first: { data: SheetJson; sheet: Spritesheet }, others: { sheet: Spritesheet }[]): ItemArt {
+const checkedBitmaps = new WeakMap<object, Promise<void>>();
+
+/** Keep Safari's worker path, recovering empty bitmaps and one corrupt atlas. */
+function repairSafariBitmap(texture: Texture, image: string): Promise<void> {
+  const source = texture.source;
+  const bitmap = source.resource;
+  if (!isSafari() || typeof ImageBitmap === "undefined" || !(bitmap instanceof ImageBitmap)) {
+    return Promise.resolve();
+  }
+  let checked = checkedBitmaps.get(source);
+  if (!checked) {
+    checked = (async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 64;
+      const context = canvas.getContext("2d", { willReadFrequently: true })!;
+      const visible = (picture: ImageBitmap): boolean => {
+        context.clearRect(0, 0, 64, 64);
+        context.drawImage(picture, 0, 0, 64, 64);
+        return context.getImageData(0, 0, 64, 64).data.some((value, i) => i % 4 === 3 && value > 0);
+      };
+      // This atlas can also arrive partially scrambled, with visible pixels.
+      // A captured worker bitmap differed from the source on the CPU and GPU;
+      // decoding the same file on the page restored its exact silhouette.
+      const corruptAtlas = /(?:^|\/)1479_chained_levelup-1\.webp(?:[?#]|$)/.test(image);
+      if (!corruptAtlas && visible(bitmap)) return;
+      // Some large atlases arrive from WebKit's worker as transparent pixels.
+      // The same file decoded on the page restores them. Do not replace a
+      // genuinely empty atlas or change other already visible textures.
+      const response = await fetch(image);
+      if (!response.ok) throw new Error(`${image}: ${response.status}`);
+      const replacement = await createImageBitmap(await response.blob());
+      if (visible(replacement)) {
+        source.resource = replacement;
+        source.update();
+        bitmap.close();
+      } else {
+        replacement.close();
+      }
+    })();
+    checkedBitmaps.set(source, checked);
+  }
+  return checked;
+}
+
+function itemArt(name: string, data: SheetJson, sheets: Spritesheet[]): ItemArt {
   const textures: Record<string, Texture> = {};
-  for (const page of [first, ...others]) {
-    Object.assign(textures, page.sheet.textures);
+  for (const sheet of sheets) {
+    Object.assign(textures, sheet.textures);
   }
   const animations = new Map<string, Texture[]>();
-  for (const [animation, frames] of Object.entries(first.data.animations ?? {})) {
+  for (const [animation, frames] of Object.entries(data.animations ?? {})) {
     animations.set(animation, frames.map((frame) => textures[frame] ?? Texture.EMPTY));
   }
-  return new ItemArt(name, first.data.meta.fps ?? 30, animations, first.data.meta.bounds ?? {});
+  return new ItemArt(name, data.meta.fps ?? 30, animations, data.meta.bounds ?? {});
 }

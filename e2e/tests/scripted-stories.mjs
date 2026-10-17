@@ -23,6 +23,11 @@ export default async function scriptedStories({ newPlayer }) {
   assert.equal(await chest(), 3);
   assert.ok(await festival.page.evaluate(() => window.seHome.camps.scripted.chestOpen));
 
+  // Each scenario is complete before the next town opens. Flush its save
+  // and release its renderer instead of keeping completed towns running.
+  await festival.saved();
+  await festival.close();
+
   // 23: the dragon gets away.
   const dragon = await town(newPlayer, 23);
   const burnt = await dragon.page.evaluate(() => window.seHome.parts.town.items.filter((p) => p.health !== undefined && !p.item.isUnit).length);
@@ -47,6 +52,9 @@ export default async function scriptedStories({ newPlayer }) {
   }), "it can't die: it gets away");
   await dragon.page.waitForFunction(() => window.seHome.camps.scripted.chestOpen, null, { timeout: 30_000 });
 
+  await dragon.saved();
+  await dragon.close();
+
   // 24: Neptune's doors.
   const neptune = await town(newPlayer, 24);
   const doors = () => neptune.page.evaluate(() => window.seHome.parts.town.items.filter((p) => p.item.id === 37).length);
@@ -68,6 +76,8 @@ export default async function scriptedStories({ newPlayer }) {
   await neptune.wait(3000);
   const saved = await neptune.saved();
   assert.equal(saved.items.filter((i) => i[0] === 37).length, 0, "both doors gone from the save");
+
+  await neptune.close();
 
   // 25: the Ent.
   const ent = await town(newPlayer, 25);

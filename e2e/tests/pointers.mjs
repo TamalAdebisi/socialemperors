@@ -61,7 +61,11 @@ export default async function pointers({ newPlayer }) {
   await phone.select(WORKER, "Villager I");
   const before = await redAbove(phone, phoneMine);
   await phone.page.touchscreen.tap(phoneMine.x, phoneMine.y);
-  await phone.page.waitForTimeout(150);  // it shows for a second, fading in its second half
+  // The icon loads on its first touch; its one-second lifetime starts
+  // after loading. Wait for that picture before measuring its red pixels.
+  await phone.page.waitForFunction(() => window.seHome.parts.view.markers.rising.some((r) =>
+    r.ms === 1000 && r.text.children.some((child) => child.texture)), null, { timeout: 10_000 });
+  await phone.page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const after = await redAbove(phone, phoneMine);
   await phone.shot("arrow-on-tap");
   assert.ok(after > before + 200, `the red arrow pops up over the mine: ${before} -> ${after} red pixels`);

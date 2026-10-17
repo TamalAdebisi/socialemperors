@@ -1,5 +1,16 @@
 # Roadmap
 
+**Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
+idle/action states stay separate, hover outlines follow the current frame,
+and seven blank loop endings are removed. Safari retains worker loading,
+recovering blank bitmaps and one atlas with reproduced partial corruption; broad loader/rendering
+workarounds were withdrawn after scene regressions.
+One incomplete animation holds its original pose and loads only its two
+used image pages. All configured structures were
+inventoried; the 900 available files and 69 unavailable names are recorded
+in [the audit](docs/structure-idle-audit.md). [Verification](docs/verification-96.md)
+records the full/focused runs, retained failures and browser limits.
+
 **16 October playthrough follow-up:** recurring raids after lessons/rescue,
 with five minutes on opening town and five to seven to recover after fights; camps
 return after ten minutes and show a countdown. Shared battle controls expose

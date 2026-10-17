@@ -13,8 +13,16 @@ export default async function buildingOverlay({ newPlayer }) {
     requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const clearGround = { x: 800, y: 580, width: 80, height: 35 };
   await page.mouse.move(20, 10);
-  await drawn();
-  const before = await player.pixels(clearGround);
+  // The first compositor capture can still contain the flat loading color.
+  // Wait for textured ground before comparing it with selected buildings.
+  let before;
+  const readyBy = Date.now() + 10_000;
+  do {
+    await drawn();
+    before = await player.pixels(clearGround);
+    if (new Set(before.map((pixel) => pixel.join(","))).size > 1) break;
+  } while (Date.now() < readyBy);
+  assert.ok(new Set(before.map((pixel) => pixel.join(","))).size > 1, "the ground texture has rendered before selection");
   for (const [tile, name] of [[[44, 52], "House I"], [[51, 47], "Tower I"], [[52, 52], "Town Hall"]]) {
     await player.select(tile, name);
     await drawn();

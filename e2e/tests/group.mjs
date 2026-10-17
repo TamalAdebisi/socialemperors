@@ -65,7 +65,9 @@ export default async function group({ newPlayer }) {
   const one = player.screenOf(...SQUARE[0], 60);
   assert.equal(await page.evaluate((point) => window.seHome.parts.view.itemAt(point)?.item.id, one), VILLAGER,
     "the double click targets a villager's picture");
-  await page.mouse.dblclick(one.x, one.y, { delay: 100 });
+  // Send both clicks together: waiting for each protocol acknowledgment
+  // can stretch them seconds apart while software rendering is busy.
+  await page.mouse.dblclick(one.x, one.y);
   await player.wait(300);
   const kin = await names();
   assert.ok(kin.length >= 4 && kin.every((name) => name === "Villager I"), `the villagers near it: ${kin}`);

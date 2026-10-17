@@ -21,8 +21,8 @@ const MAN_AT_WORK = [1, 20], WOMAN_AT_WORK = [21, 42], RIPE_WITH_MAN = 43, RIPE_
 
 /**
  * Which of a building's pictures to show, in turn ([n] for a still one), or
- * null to play them all: a building whose pictures aren't laid out this way
- * (the Training Stables' are a long animation of their own).
+ * null to use the building's state timeline: pictures not laid out this way
+ * (the Training Stables interleave six states with nested animations).
  */
 export function lookOf(placed: PlacedItem, pictures: number, ready: boolean): number[] | null {
   if (placed.item.subcategory === FARM && pictures === FARM_PICTURES) {

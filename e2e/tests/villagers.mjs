@@ -37,14 +37,17 @@ export default async function villagers({ newPlayer }) {
   for (const tree of trees.slice(0, 3)) {
     await player.click(tree);
   }
+  // Check the full queue before slow screenshots can let its first job finish.
+  // A fourth doesn't fit: the tree is selected instead.
+  await player.click(trees[3]);
+  // Read the transient banner atomically; it can disappear between separate
+  // locator count/text calls while the software renderer is busy.
+  await player.page.waitForFunction(() => /Villager I has 3 lined up already/.test(
+    document.querySelector(".message.shown")?.textContent ?? ""), null, { timeout: 10_000 });
+  assert.match(await player.bar(), /^Tree/);
   const after = await paleYellowAround(player, trees[2]);
   await player.shot("lined-up");
   assert.ok(after > before + 30, `the third tree glows: ${before} -> ${after} pale yellow pixels`);
-
-  // A fourth doesn't fit: the tree is selected instead.
-  await player.click(trees[3]);
-  await player.said(/Villager I has 3 lined up already/);
-  assert.match(await player.bar(), /^Tree/);
 
   // All three are cut, one after another (up to a minute on a slow machine); the fourth stays.
   let saved;
@@ -68,6 +71,8 @@ export default async function villagers({ newPlayer }) {
 
 /** How many of the screen's pixels are the line's pale yellow (0xffffb0), in a box round a point. */
 async function paleYellowAround(player, point) {
+  // A completed click can precede the next canvas frame in WebKit.
+  await player.page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const shot = (await player.page.screenshot()).toString("base64");
   return player.page.evaluate(async ({ shot, point }) => {
     const image = new Image();

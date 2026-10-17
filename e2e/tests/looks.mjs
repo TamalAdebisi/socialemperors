@@ -51,4 +51,8 @@ export default async function looks({ newPlayer }) {
   await player.page.keyboard.press("Escape");
   assert.ok(!(await changes()), "let out: an empty field, still");
   await player.shot("let-out");
+  // A correct farm frame is not enough if a texture upload leaves the whole
+  // scene drawing into a small rectangle. This patch of land stays on screen.
+  const ground = await player.pixels({ x: 800, y: 580, width: 80, height: 35 });
+  assert.ok(new Set(ground.map((pixel) => pixel.join(","))).size > 1, "the ground still fills the scene after a worker leaves");
 }

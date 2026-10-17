@@ -12,7 +12,9 @@ export default async function playthroughControls({ newPlayer }) {
   // The independent timer must do the work, without a test-only game speed.
   await player.page.addInitScript(() => {
     window.testHidden = false;
-    Object.defineProperty(document, "hidden", { get: () => window.testHidden });
+    // Simulated tab hiding must still respect real hiding on navigation:
+    // claiming an unloading page is visible starts invalid background polls.
+    Object.defineProperty(document, "hidden", { get: () => window.testHidden || document.visibilityState === "hidden" });
     const request = window.requestAnimationFrame.bind(window);
     const pending = [];
     window.requestAnimationFrame = (run) => request((time) => {
@@ -45,11 +47,23 @@ export default async function playthroughControls({ newPlayer }) {
     return { x: box.x - 5, y: box.y + box.height / 2 };
   }, SECOND);
   assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, near), "CANVAS");
+  await page.evaluate(() => {
+    const camera = window.seHome.parts.camera;
+    const press = camera.onPress;
+    camera.onPress = (at, touch) => {
+      camera.onPress = press;
+      // A slow first pixel read must not turn a short native click into
+      // a rejected long press. Keep the real browser down/up events.
+      const until = performance.now() + 650;
+      while (performance.now() < until) { /* emulate the stalled render thread */ }
+      return press?.(at, touch) ?? false;
+    };
+  });
   await page.mouse.click(near.x, near.y);
   assert.deepEqual(await page.evaluate(() => {
     const unit = window.seHome.parts.editor.lessonSelected;
     return [unit.tx, unit.ty];
-  }), SECOND, "a near miss selects the second villager instead of redirecting the first");
+  }), SECOND, "a near miss selects the second villager even when input handling stalls");
 
   await page.evaluate(() => {
     window.dispatchEvent(new Event("blur"));
@@ -95,14 +109,21 @@ export default async function playthroughControls({ newPlayer }) {
 
   const phone = await player.onPhone();
   await page.close();
-  const target = await phone.page.evaluate(([tx, ty]) => {
+  const target = await phone.page.evaluate(async ([tx, ty]) => {
     const { town, view, camera } = window.seHome.parts;
     const unit = town.items.find((p) => p.item.id === 500 && p.tx === tx && p.ty === ty);
     camera.lookAt({ x: 54 * (tx - ty), y: 27 * (tx + ty) - 81 });
-    const b = view.screenBox(unit);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const picture = view.slots.get(unit).children.find((p) => !["selected", "life", "hover-life", "outline", "progress"].includes(p.label));
+    const b = picture.getBounds();
     return { x: b.x - 5, y: b.y + b.height / 2 };
   }, SECOND);
+  assert.equal(await phone.page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, target), "CANVAS");
   await phone.page.touchscreen.tap(target.x, target.y);
+  await phone.page.waitForFunction(([tx, ty]) => {
+    const unit = window.seHome.parts.editor.lessonSelected;
+    return unit?.tx === tx && unit?.ty === ty;
+  }, SECOND);
   assert.deepEqual(await phone.page.evaluate(() => {
     const unit = window.seHome.parts.editor.lessonSelected;
     return [unit.tx, unit.ty];

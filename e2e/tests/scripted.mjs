@@ -63,7 +63,11 @@ export default async function scripted({ newPlayer }) {
   assert.equal(saved.idCurrentTreasure, 8, "the next camp");
   await player.page.getByRole("button", { name: "OK" }).first().click();
 
-  // Camp 13, the skeleton statue, in another town (the first now waits 4 hours).
+  // This town is finished. Release its renderer before opening the next
+  // scenario so software drawing does not starve the fight's quiet clock.
+  await player.close();
+
+  // Camp 13, the skeleton statue, in another town.
   const second = await newPlayer({ camp: true });
   await second.page.waitForFunction(() => window.seHome, null, { timeout: 30_000 });
   await second.page.locator(".notice button").first().click();

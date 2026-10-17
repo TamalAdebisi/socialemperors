@@ -1,4 +1,4 @@
-# Handoff: where the work stands, 16 October 2026
+# Handoff: where the work stands, 17 October 2026
 
 > **Standing owner authorization: build and merge autonomously.** Agents
 > should finish agreed work, test it, update the docs, and merge ready
@@ -18,6 +18,39 @@ Update those as you go, as before. In this file, tick a task in
 next agent knows where to start.
 
 ## Where things stand
+
+- **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
+  completed buildings retain their idle state, nested motion stays animated,
+  and outlines follow the current picture, including walking units. Seven
+  fully blank loop endings are removed. Safari keeps worker loading and
+  decodes empty bitmaps again, plus one atlas with reproduced partial
+  corruption. The second decode must have visible pixels. Broad page-decoding and rendering workarounds
+  caused scene regressions and are withdrawn; original mipmaps remain.
+  The gallery checks that recovery preserves every sampled ground pixel.
+  One incomplete legacy animation holds its original first pose; only its
+  two required image pages load, avoiding 100 pages / 4.255 GiB decoded.
+  Click duration uses native input timestamps so slow handlers do not lose
+  short clicks. Main #95's separate Shift selection is preserved.
+  All 1,010 configured entries were inventoried: 900 readable art files
+  cover 941 entries; 69 unavailable names are listed in
+  [the audit](docs/structure-idle-audit.md). No new public art is required.
+- **#96 verification:** server 449 run (440 passed,
+  nine existing skips), client types and all 404 tests passed. Complete
+  combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege
+  and one-atlas alpha/ground checks passed 3/3 in 255.75s. All 79 cases have
+  passing results across runs, not one final-head 79/79 run. WebKit's full
+  structure gallery passes all 98 files / 199 facings with exact reference
+  images. The seven-case run was 6/7; a reproduced test visibility bug caused
+  its tournament polling errors. After correcting the fixtures, WebKit
+  tournament/controls passed 2/2 in 289.41s, and Chromium controls passed 1/1
+  in 68.31s. All seven selected WebKit cases have passing results across runs.
+  Game runtime remains `862d9893`; final fixture commit is `ab8c3d60`.
+  [The delivery record](docs/verification-96.md) retains every failed run,
+  exact revisions, screenshot review, the earlier construction timing limit
+  and the Linux WebKit/Mac GPU distinction. No error or test was disabled.
+  Full Chromium review covers all 461 fresh PNGs; final gallery comparisons
+  and every later fresh capture were reviewed. Final server logs are clean
+  and memory-limit/OOM counters did not increase.
 
 - **Getting in touch:** `SE_DISCORD_URL` (DEPLOY.md) puts a Discord link
   on the pages around the game, the classic bar, the new client's Menu and
