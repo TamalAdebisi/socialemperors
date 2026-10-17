@@ -21,14 +21,15 @@ tests passed; focused command tests passed 38/38. Shared integration at
 Dragon Riding, passed types, all 445 client tests and 462 server tests
 (453 passed, nine existing skips). These results precede `cd8b6eec` and
 the later single-batch rider-claim correction. The later clean shared
-integration at `f3529ef2`, including all rider product corrections, passed
-types, all 446 client tests and 466 server tests (457 passed, nine existing
-skips). Its recorded command times were 16.202 and 35.337 seconds.
+integration at `f3529ef2`, including the rider claim/lifecycle corrections,
+passed types, all 447 client tests and 467 server tests (458 passed, nine
+existing skips). Its recorded command times were 16.202 and 35.337 seconds.
 
 The complete permanent Chromium focus passed **1/1 in 540 seconds** at
 clean `54a1ad0a9213593e7e7f4f945798e8f828e345fc`, runner exit 0.
-Linux WebKit and combined full-browser integration verification remain
-with the coordinating slice before merge.
+That pass precedes the later WebKit touch-focus correction. Linux WebKit
+and combined full-browser integration verification remain with the
+coordinating slice before merge.
 
 The permanent fixture checks original picker art/locks, close without
 progress, an ignored stale-session callback, genuine first-adventure win,
@@ -131,6 +132,7 @@ local ignored evidence under `work/`; they are not published game source.
 | Permanent focus 7, `dca56ac4` | 0/1 in 494 s. Both gameplay outcomes, including the ready loss menu, met the 600-frame budget. A redundant post-screenshot mouse-phase check then counted idle finished-screen frames against that gameplay budget. | `work/rider-focus-attempt-7/` |
 | Permanent focus 8, `ecf4b6d2` | 0/1 in 236 s. Normal basic attacks defeated the opponent, but blocked/missed swings exhausted the 600-frame budget before reaching the last screen edge. No runtime error; the budget was retained. | `work/rider-focus-attempt-8/` |
 | Permanent focus 9, `54a1ad0a` | 1/1 in 540 s, runner exit 0. Genuine original first win and eighth loss callbacks, paid recovery/ordered claim, ordinary pair admission, phone input and saved transformation all passed. All 15 fresh captures and final logs were reviewed. | `work/rider-focus-attempt-9/` |
+| First combined Linux WebKit rider case, `22f5fd02` | 0/1 in 422 s. Genuine first win and eighth loss callbacks, claim and pair admission passed. The real phone attack reset its original cooldown, then the existing assertion found one touch-control button retaining DOM focus. This observes button focus, not a window blur or failed attack. The run stopped before phone transformation and its adventure capture. | Coordinator's `work/checks/integrated-webkit-six-initial/` and `work/e2e-webkit/rider-training/` |
 | Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
 | Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
 | Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
@@ -143,6 +145,17 @@ local ignored evidence under `work/`; they are not published game source.
 | Tail diagnostic 6 | Failed in 282 s at the unchanged 600-frame adventure budget. Genuine boss damage reduced health to 135, but very close actors caused many displayed attack regions to miss. No freeze or runtime error. | `work/rider-entry-probe-attempt-6/` |
 | Tail diagnostic 7 | Failed in 289 s at the same budget. Earlier ordinary movement release improved spacing and health fell to 83; read-only geometry proved remaining magic attacks missed the right-facing actor. | `work/rider-entry-probe-attempt-7/` |
 | Tail diagnostic 8 | Passed in 306 s: exact rider-first/pair admissions, genuine eighth-adventure loss and original `lost,8` callback preserving both units, real phone attack input, phone success-adapter transformation/save and picker fit. Rider was seeded for this diagnostic; it does not prove the training section as one complete run. | `work/rider-entry-probe-attempt-8/` |
+
+All nine fresh captures from the first WebKit rider case were inspected:
+picker, first adventure and victory, recovery and ready claim, taming pair,
+eighth adventure and loss, and phone pair. Original art, text and both
+actual result screens render; desktop cards and the phone pair fit. The
+failure occurs before the phone adventure, final transformation or phone
+picker capture, so those visual checks are not claimed for that attempt.
+The runner's failure capture uses the already closed desktop page; the
+unchanged DOM-focus assertion and output retain the failure without a
+separate phone failure image. This is a failed rider case despite its
+successful native callbacks and phone attack.
 
 The failed native-win images still show the original victory screen and
 the correct button highlighted. Local source inspection establishes that
@@ -223,6 +236,33 @@ discovery. Their assertion summaries are not counted as feature passes.
 The early and failed captures remain historical evidence. The complete
 ninth attempt's genuine-win/loss and phone images and its final server
 and runtime logs were separately reviewed, as recorded above.
+
+## WebKit touch-focus correction
+
+After the coordinator's six-case run exited, an isolated local DOM probe
+used the same phone viewport, mobile/touch settings and exact authored
+pointer listeners in WebKit and Chromium. Its eight variants and complete
+trusted-event sequences are retained in `work/rider-touch-focus-probe.mjs`
+and `.log`. This is browser-behavior diagnosis, not a complete game pass.
+
+WebKit reproduced the focus failure: after a cancelled `pointerdown`, it
+still sent a compatibility `mousedown`, then moved focus from the stage
+to the button. Chromium suppressed that mouse-down and kept the stage
+focused. Adding a `mousedown` default cancellation to these buttons alone
+kept the prior stage focused in both engines. Actual pointer down, up and
+capture-release callbacks still occurred. Ordinary keyboard Tab reached
+the button and Enter produced its native click in every variant; those
+defaults remain available. Diagnostic assertions checked the reproduced
+failure and both corrected outcomes.
+
+The product correction adds only that scoped listener beside the existing
+pointer handler. The adventure's window-captured gameplay keys already
+worked regardless of the focused element, so retained button focus did
+not itself establish a lost input or stuck key. The existing phone-focus
+assertion, native callbacks, save checks, 600-frame adventure budget and
+30-second liveness limits are retained. Client types pass after this
+listener change. A complete rider WebKit rerun and the final combined
+Chromium suite remain required on the corrected code.
 
 Linux WebKit needs the locally extracted library recipe in
 `work/browser-deps/README.md` in the main execution worktree. That setup

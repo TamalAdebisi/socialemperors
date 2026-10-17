@@ -33,9 +33,14 @@ next agent knows where to start.
   ordinary pair admission and phone input/save. All 15 fresh captures and
   final logs were reviewed. The phone victory uses the success adapter;
   no complete eight-adventure playthrough is claimed. Shared integration
-  at `f3529ef2` passed types, all 446 client tests and 466 server tests
-  (457 passed, nine existing skips). Linux WebKit and the complete combined
-  browser run remain with the coordinator before merge.
+  at `f3529ef2` passed types, all 447 client tests and 467 server tests
+  (458 passed, nine existing skips). First combined Linux WebKit passed
+  five of six cases; rider native callbacks passed, but its phone control
+  retained DOM focus after the touch attack. An exact-listener two-engine
+  probe proved WebKit's compatibility mousedown bypasses the cancelled
+  pointerdown. A scoped mousedown cancellation preserves focus and native
+  Tab/Enter defaults; the full rider case must be repeated. That repeat
+  and the complete combined browser run remain with the coordinator.
   [The verification record](docs/verification-dragon-riders.md) preserves
   every failed/interrupted attempt and the measured new-fixture calibration.
 

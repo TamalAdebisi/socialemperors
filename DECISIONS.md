@@ -12,6 +12,8 @@ them can be found and reversed. The big, agreed decisions are in
   small loader. This preserves every adventure's original rules, art and
   words. The town pauses during play. Touch keys send the same game input
   and release on cancellation/focus loss; they are a phone convenience.
+  Their pointer presses preserve keyboard focus, including WebKit's touch
+  compatibility mouse event, while native Tab/Enter defaults remain.
 - **Read both existing mounted-output spellings.** Later `DRAGONS` rows use
   `tamed_id`; the old window expects `tamedId`. Normalize both when reading
   the config so those intended pairings have their configured output.

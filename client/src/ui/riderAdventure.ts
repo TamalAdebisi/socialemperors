@@ -65,6 +65,9 @@ export class RiderAdventure {
       button.textContent = label;
       button.setAttribute("aria-label", `Adventure key ${label}`);
       button.addEventListener("pointerdown", (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); this.key(code, true); });
+      // WebKit still sends a touch compatibility mousedown after cancelling
+      // pointerdown. Keep that press from taking focus; Tab remains available.
+      button.addEventListener("mousedown", (event) => event.preventDefault());
       for (const kind of ["pointerup", "pointercancel", "lostpointercapture"]) button.addEventListener(kind, () => this.key(code, false));
       controls.append(button);
     }
