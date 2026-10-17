@@ -4989,7 +4989,7 @@ button.world-piece:hover img {
 .unit-book-items summary { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .unit-book-items summary img { width: 64px; height: 64px; object-fit: contain; }
 .unit-book-items .missing { filter: grayscale(1); opacity: .65; }
-.unit-book-stats { display: grid; grid-template-columns: repeat(3, auto auto); align-items: center; gap: 4px; font-size: 12px; }
+.unit-book-stats { display: grid; grid-template-columns: repeat(2, auto auto); align-items: center; gap: 4px; font-size: 12px; }
 .unit-book-stats img { width: 18px; height: 18px; object-fit: contain; }
 .unit-book-stats dd { margin: 0; }
 .unit-book .shop-tabs { justify-content: space-between; align-items: center; }
