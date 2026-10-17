@@ -137,5 +137,30 @@ export default async function warehouse({ newPlayer, out }) {
   assert.equal(await phone.page.evaluate(() => window.seHome.parts.town.warehouse.size), 0);
   await phone.menu("Storage");
   assert.match(await phone.page.locator(".panel:not([hidden])").textContent(), /Unit Warehouse/);
+  // Storage loads pictures only when their cards become visible. Check the
+  // actual original portraits before capturing the reloaded storage state.
+  const storedCards = [
+    { name: "Light Knight", count: 18, art: "caballo1" },
+    { name: "Spearman", count: 1, art: "infanteriaunidad1" },
+    { name: "Unit Warehouse", count: 1, art: "1284_unit_warehouse" },
+  ];
+  assert.equal(await phone.page.locator(".panel.shop:not([hidden]) .shop-card.stored").count(), 3);
+  for (const { name, count } of storedCards) {
+    const card = phone.card(name);
+    assert.equal(await card.count(), 1);
+    assert.equal(await card.locator(".shop-count").getAttribute("aria-label"), `${count} in storage`);
+    await card.scrollIntoViewIfNeeded();
+  }
+  await phone.card(storedCards[0].name).scrollIntoViewIfNeeded();
+  await phone.page.waitForFunction((expected) => {
+    const cards = [...document.querySelectorAll(".panel.shop:not([hidden]) .shop-card.stored")];
+    const { assetsUrl } = window.seHome.parts.settings;
+    return cards.length === expected.length && expected.every(({ name, art }) => {
+      const card = cards.find((card) => card.querySelector(".shop-name")?.textContent === name);
+      const image = card?.querySelector(".shop-picture img");
+      return image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0
+        && image.currentSrc === new URL(`${assetsUrl}/buildingthumbs/${art}.jpg`, location.href).href;
+    });
+  }, storedCards, { timeout: 30_000 });
   await phone.shot("phone-stored");
 }
