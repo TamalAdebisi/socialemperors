@@ -1,0 +1,22 @@
+.temple-window .panel-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.temple-progress { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.temple-progress progress { flex: 1; min-width: 70px; accent-color: #55a727; }
+.temple-button { background-size: 100% 100%; background-color: transparent; border: 0; color: #3d260f; min-height: 36px; padding: 7px 20px; }
+.temple-offerings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.temple-offering { min-width: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 11px; cursor: pointer; }
+.temple-offering > span:last-child { display: block; min-height: 27px; line-height: 1.2; margin-top: 3px; overflow-wrap: anywhere; }
+.temple-offering-picture { position: relative; display: flex; align-items: center; justify-content: center; gap: 3px; aspect-ratio: 1; background-color: #e7cf98; background-size: 100% 100%; border: 1px solid #805426; border-radius: 4px; }
+.temple-offering-picture > img { width: 90%; height: 90%; object-fit: contain; }
+.temple-offering-picture > .icon { width: 25px; height: 25px; }
+.temple-offering.unavailable .temple-offering-picture > img:not(.temple-offering-tick) { filter: grayscale(1); opacity: .6; }
+.temple-offering-picture > .temple-offering-tick { position: absolute; width: 45%; height: 55%; right: 0; bottom: 0; }
+.temple-information, .temple-notice, .temple-help, .temple-confirm { margin: 0; white-space: pre-line; line-height: 1.4; }
+.temple-information { min-height: 3em; font-size: 13px; }
+.temple-illustration { width: 100%; height: auto; border-radius: 5px; }
+.temple-stats { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; }
+.temple-stats img { width: 20px; height: 20px; object-fit: contain; }
+.temple-action { text-align: center; }
+.temple-action p { margin: 0; }
+.temple-countdown { font-variant-numeric: tabular-nums; }
+.temple-notice { font-size: 12px; }
+.temple-confirm-buttons { display: flex; gap: 16px; justify-content: center; }

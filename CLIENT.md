@@ -2587,6 +2587,29 @@ unfinished-goal count does not change; ordinary resource-spending
 progress still receives successful entry fees. All tournament parts
 are complete; PR #92 records the release metadata.
 
+### The Supreme temple
+
+The Supreme Dragon Temple's Open now shows its twelve freely selected
+offerings, original information and laws, progress and deadline. Its
+offerings share resource and mana balances with the rest of the town;
+sacrifices require confirmation and remove one eligible map dragon
+without sale money or a graveyard entry. All twelve offerings wait 48
+hours, including the last. The Heart remains in Storage until the free
+dragon is claimed beside the temple and progress resets. Reopening and
+reloading preserve the saved ritual. Details and command order are in
+[the original rules](docs/original/rules/temple.md).
+
+`rules/temple.ts` owns payments and commands; `ui/temple.ts` presents the
+original art and words inside the project's desktop/phone panel. The
+Academy, home battles and temple share a live mana state. A narrow editor
+removal hook preserves the last server position of a walking sacrifice.
+The original admin-only
+5-cash wait shortcut stays hidden, and the original illustration is a
+still image rather than a four-second cosmetic delay. No dedicated
+temple goal exists in the shipped missions, so the unfinished-goal count
+does not change; normal spending goals hear resource offerings.
+Verification: [temple record](docs/verification-temple.md).
+
 ### Making the art look better
 
 - **Smoothness comes from the engine**, and step 2 has it: drawing at the

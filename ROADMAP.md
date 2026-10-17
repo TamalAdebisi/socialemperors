@@ -458,6 +458,11 @@ merging the two wait fixes with that separate failure documented.
         paid unlock-and-apply and free reuse, on desktop and phone
         ([CLIENT.md](CLIENT.md#the-time-and-weather-machines)).
 
+  - [x] The Supreme Bahamut temple: twelve offerings in any order, saved
+        waits, sacrifice confirmation, the Heart and free claim/reset
+        ([CLIENT.md](CLIENT.md#the-supreme-temple)). The ordinary window
+        retains its wait; the original 5-cash shortcut is admin-only.
+
 ## How we add a missing feature
 
 1. **Find it.** The bug radar or a player report names a command the server ignores.

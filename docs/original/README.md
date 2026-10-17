@@ -23,7 +23,8 @@ update its status here.
 | [rules/tournaments.md](rules/tournaments.md) | **Rule book: tournaments.** Lists and teams, entry/fees, rooms, copied-army battles, scoring, results/prizes and friends' creation/invitation policy |
 | [rules/machines.md](rules/machines.md) | **Rule book: time/weather machines.** Original entry points, first-use help, packets, save/reload, six themes and the outgoing-PvP wait correction |
 | [rules/warehouse.md](rules/warehouse.md) | **Rule book: the Unit Warehouse.** Admission, off-map population, slot pages, deployment checks, bought capacity, storing and selling |
-| [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 83 rules |
+| [rules/temple.md](rules/temple.md) | **Rule book: Supreme temple.** Freely selected offerings, sacrifices, saved waits, the Heart, free claim/reset and the admin-only wait shortcut |
+| [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 84 rules |
 
 The index, by area:
 
@@ -32,16 +33,16 @@ The index, by area:
 | [index/core.md](index/core.md): the game's core (loading, the save, the start) | 42 | 19 | 12 | 7 |
 | [index/engine.md](index/engine.md): the map engine, units, attacks, magic | 183 | 107 | 65 | 2 |
 | [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 125 | 215 | 6 |
-| [index/windows.md](index/windows.md): the windows | 136 | 68 | 11 | 29 |
-| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 36 | 16 | 17 |
+| [index/windows.md](index/windows.md): the windows | 136 | 70 | 11 | 27 |
+| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 36 | 17 | 16 |
 | [index/quests.md](index/quests.md): quests and battles | 99 | 66 | 10 | 15 |
 | [index/art-and-libraries.md](index/art-and-libraries.md): picture holders, others' libraries | 597 | 2 | 0 | 0 |
-| **All** | **1,505** | **423** | **329** | **76** |
+| **All** | **1,505** | **425** | **330** | **73** |
 
 The rest are picture holders (508), other people's libraries (79), parts
 we don't need (89: Facebook, the iPhone app, payments, adverts, Social
 Point's tools) and one handled by the server alone. So of the 829
-classes that hold the game's own behaviour, about 50% are built in the
+classes that hold the game's own behaviour, about 51% are built in the
 new client, 40% partly and 10% not yet. "Partly" is mostly the special
 buildings and units, whose plain fighting works but whose own moves
 often don't yet.
