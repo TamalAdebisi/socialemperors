@@ -276,6 +276,8 @@ with sqlite3.connect(path, timeout=15) as connection:
     } catch (error) {
       results.push({ name, ok: false });
       console.log(`FAILED (${Math.round((Date.now() - started) / 1000)} s)\n${error.stack ?? error}\n`);
+      const problems = players.flatMap((player) => [player, ...player.companions]).flatMap((player) => player.problems);
+      if (problems.length) console.log(`Page errors:\n  ${problems.join("\n  ")}\n`);
       await Promise.all(players.map((player) => player.shot("failure").catch(() => {})));
     } finally {
       await Promise.all(players.map((player) => player.close().catch(() => {})));

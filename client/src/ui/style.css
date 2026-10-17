@@ -5042,7 +5042,7 @@ button.world-piece:hover img {
 .shop-items > li { display: flex; flex-direction: column; min-width: 0; }
 .shop-items > li > .shop-card { height: auto; flex: 1; }
 .shop-limited { font-size: 10px; color: #8a331b; }
-.shop-details-button { flex: none; display: block; width: 100%; margin: 4px 0; font-size: 11px; }
+.button.shop-details-button { flex: none; display: block; width: 100%; min-width: 0; padding-inline: 6px; margin: 4px 0; white-space: normal; overflow-wrap: anywhere; }
 .shop-details { position: fixed; z-index: 4; width: 300px; max-height: min(70vh,600px); overflow: auto; padding: 12px; border: 2px solid var(--wood); border-radius: 12px; background: white; color: var(--ink); box-shadow: 0 6px 20px #0005; }
 .shop-details[hidden] { display: none; }
 .shop-details h3 { margin: 6px 0; }

@@ -27,10 +27,13 @@ used unless the limited-edition tab takes precedence. Limited days round
 up from the local-calendar expiry and never fall below zero; the badge
 changes no sale eligibility. Early cash unlocking stays disabled.
 
-Built in rules/shopDetails.ts, ui/shopDetails.ts and ui/shop.ts. Hover
-shows the white bubble on wide screens; the phone layout uses Details so
-a preview cannot cover a purchase target. Details pins it by tap or keyboard, including for
-locked items. Purchasing remains its separate existing action. Original
+Built in rules/shopDetails.ts, ui/shopDetails.ts and ui/shop.ts. At the
+owner's request on 17 October 2026, the white bubble opens only through
+an explicit Details click, tap or keyboard activation at every width.
+Hovering or focusing a card or button leaves it closed, including in
+Storage and for locked items. The visible button says Details so long
+item names cannot overflow it; its accessible name retains the item name.
+Purchasing remains its separate existing action. Original
 resource/stat icons and training animations are reused. Tall bubbles use
 their measured height to stay inside the viewport. Each card and its
 Details action share a grid-row wrapper, so a full-height card cannot

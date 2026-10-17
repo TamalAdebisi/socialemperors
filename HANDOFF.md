@@ -37,6 +37,23 @@ next agent knows where to start.
   focus remain evidence for their exact earlier revisions, not this merge.
   No special-building merge or deployment is claimed.
 
+- **Shop/Storage details follow-up in
+  [#113](https://github.com/TamalAdebisi/socialemperors/pull/113):** details
+  open only by click, tap or keyboard activation at every width. Buttons
+  say Details, with full item names kept for accessibility. Eight widths
+  from 320 to 1280 pixels check text containment and actual opening/closing.
+  The resize checks also exposed a first-frame preview clock crash; clamp
+  negative elapsed time to zero, retaining the original animation order.
+  Full Chromium passed **89/89 in 2h 3m 48.08s** at `e333f8c9`.
+  Main #114 was integrated at `5e080221`; game/library/case files stayed
+  identical. The merged art-setting runner passed **5/5 in 6m 37.80s**;
+  its missing-setting guard returns the expected exit 2 before a browser.
+  After integration, types, all 437 client tests and server 449 run
+  (440 passed, nine existing skips) passed. All 527 full-run and 26
+  integration captures were reviewed; complete server logs are clean. See
+  [the verification record](docs/verification-click-details.md) for runner
+  checks, screenshots, logs and retained initial failures. Other chats'
+  combat/click controls and special buildings retain their ownership.
 - **Menus/progression delivered in
   [#99](https://github.com/TamalAdebisi/socialemperors/pull/99) and
   [#105–109](https://github.com/TamalAdebisi/socialemperors/pull/109):**
@@ -45,15 +62,16 @@ next agent knows where to start.
   payments count once toward their mission. Main #98's combat controls are
   retained; kill-drop triggers remain combat-owned. Other special-building work
   and all standing holds remain with their owners.
-- **Menus verification:** server 449 run (440 passed, nine existing PostgreSQL
+- **Initial menus delivery verification:** server 449 run (440 passed, nine existing PostgreSQL
   skips), client types and all 436 tests passed. Full Chromium **88/89 in 1h 59m
   26.250s** on `76b1663f`; `villagers` tried to select its worker behind the new
   expected missing-hall warning. Test-only `6fcf0646` clicks OK before
   continuing and passes **1/1 in 1m 24.643s**, retaining every queue/glow/save
   assertion. All 89 have passing results across runs, not a single final-head
   89/89 run. All 516 full-run PNGs and both final captures were reviewed;
-  browser server logs are clean. The merged game/art/tests match `6fcf0646`;
-  only verification documentation differs. [The delivery
+  browser server logs are clean. At that delivery's closure, the merged
+  game/art/tests matched `6fcf0646`; only verification documentation
+  differed. [The delivery
   record](docs/verification-menus.md) retains exact revisions, every initial
   failure and visual limits. The owner’s manual Beta 1 run-through remains on
   hold.
@@ -652,9 +670,12 @@ info panel. It is verified and delivered in #87.
 
 Completed in [#108](https://github.com/TamalAdebisi/socialemperors/pull/108),
 with the combined verification recorded above. Original per-kind facts,
-hover/pinned tap details, category art, New/limited badges and training
-animation are built. The historical research below remains; early cash
-unlocking stays disabled. Beta 1's run-through remains on hold.
+explicit click/tap/keyboard details, category art, New/limited badges and
+training animation are built. The owner's 17 October follow-up makes
+Details explicit at every width: hover and focus leave it closed. Buttons
+show the short Details label with the item name retained for screen readers.
+The historical research below remains; early cash unlocking stays disabled.
+Beta 1's run-through remains on hold.
 
 PARITY.md, "Windows and messages", Shop: what each thing gives or houses
 (a unit's numbers), on hover or tap; the tabs' own pictures; "new" badges.
