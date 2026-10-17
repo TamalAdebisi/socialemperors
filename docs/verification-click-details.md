@@ -103,8 +103,9 @@ regression was found.
 The merged-runner archive has 26 fresh captures, reviewed separately from
 the full run. Its complete server log also has no Python tracebacks, HTTP
 5xx or unhandled commands. An independent final source/documentation review
-found no actionable issue; GitHub's Cubic check passed, with no review
-comments or required check bypassed.
+found no actionable issue. Fresh automated review was unavailable: Cubic
+reported its monthly line limit with a neutral check, and Qodo reported its
+expired trial. No source review finding or required check was bypassed.
 
 The full review's Black Dragon ground seams and camera crop also occur
 in the earlier menus baseline; that whole capture is byte-identical.
