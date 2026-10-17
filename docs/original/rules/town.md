@@ -33,7 +33,7 @@ going in, harvesting, repairing; its fighting and special moves not read),
 timer), `managers/PopupManager` (the start-up checks), `GUI/GiftWindow`
 (how cards are grouped) and `GUI/GuiManager` (the tool buttons only).
 **Not read:** the shop window (`GUI/BuildingWindow`), the social-building,
-recruitment, market and unit-warehouse windows, `MissionsManager` and
+recruitment and market windows, `MissionsManager` and
 `NeighbourManager`. The warehouse follow-up is read end to end in [warehouse.md](warehouse.md). The building delegates were taken from
 `docs/original/index/delegates.md`: they are all about fighting. Numbers
 from the config come from `config/game_config_20120826.json`. On our side:
