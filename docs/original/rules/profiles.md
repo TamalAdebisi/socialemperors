@@ -34,4 +34,6 @@ when queued; free throws, full-set exchanges and prizes do not. Social
 costs retain their separate callback so none is counted twice.
 Tests: profile.test.ts, goals.test.ts, e2e/tests/profiles.mjs,
 e2e/tests/basic-notices.mjs, e2e/tests/menu-progress.mjs and the existing
-world-map browser scenario.
+world-map browser scenario. The menu-progress browser case also claims
+the recruitment and allied-market rewards through their windows and checks
+that goals 104 and 115 stay rewarded after reload.
