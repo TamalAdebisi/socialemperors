@@ -84,16 +84,32 @@ local ignored evidence under `work/`; they are not published game source.
 | Strengthened focus 2, `09dcb608` | 0/1 in 92 s; initial 60-second approach cap expired while actor moved normally. | `work/rider-focus-attempt-2/` |
 | Early calibrated retry | Interrupted to release the shared browser slot after 13 s. Runner reported its closed page, shell exited 143. No completed feature result. Calibration was reverted before reviewed replacement. | `work/rider-focus-attempt-3-interrupted/` |
 | Strengthened focus 4, `d590401d` | 0/1 in 212 s. Actual normal-input first victory within 600 frames; zero-delay mouse click did not dispatch the original End Game handler, so the required recovery never appeared within 30 s. | `work/rider-focus-attempt-4/` |
+| Strengthened focus 5, `df2effdc` | 0/1 in 220 s. Again won normally within 600 frames; separate real mouse phases still did not dispatch the original callback. | `work/rider-focus-attempt-5/` |
+| Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
+| Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
+| Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
+| Mouse diagnostic 4 | 40 s. Asserted/captured actual standard renderer advice, clicked its X, verified dismissal and then observed genuine original stage down/up/click. | `work/rider-mouse-probe-attempt-4/` |
 
-Focus 4's failure image still shows the original victory screen and the
-correct button highlighted. Local source inspection establishes that its
-click handler always leaves that screen, including when its parent
-callback fails. This isolates a missing native click dispatch rather than
-a successful click with an ignored callback. The fixture now moves,
-presses and releases the actual mouse over separate observed movie
-updates, each bounded by 30-second liveness. It also records the genuine
-callback's arguments before forwarding them unchanged. The existing
-30-second recovery/save requirements remain.
+The failed native-win images still show the original victory screen and
+the correct button highlighted. Local source inspection establishes that
+its click handler always leaves that screen, including when its parent
+callback fails. Instrumentation in our own loader and real browser event
+paths then established the exact reason: the pinned Ruffle runtime opens
+its standard hardware-acceleration advice on the first mouseover of each
+CPU-rendered player. The intended game click instead dismisses that
+modal; by the failure screenshot, the advice is already gone. The modal
+was visible and fully opaque, with its normal text and X. There was no
+invisible-modal product bug and no need to change focus or the loader's
+parent hierarchy.
+
+The fixture now asserts the actual advice and acknowledges its ordinary
+X once per new player before gameplay, including the phone instance.
+The product warning and all renderer settings remain unchanged. The
+fixture retains native mouse phases over observed movie updates and
+records genuine callback arguments before forwarding them unchanged.
+The existing 30-second recovery/save requirements remain. Temporary
+mouse instrumentation was removed and the original authored loader
+artifact restored before the next focused run.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.
