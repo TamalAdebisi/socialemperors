@@ -31,6 +31,14 @@ them can be found and reversed. The big, agreed decisions are in
   reserved after collection and across towns, preventing new work from
   colliding with another building's original `bq`. No
   combat behaviour or later progression goal is added.
+- **Parse saved integer text exactly, before conversion.** Floating-point
+  conversion can turn fractional exponent text into zero or round a
+  fractional amount into one. Require 1–16 ASCII digits within the safe
+  integer range for text; numeric values must also be finite, nonnegative
+  safe integers. Explicit numeric/text zero stays collectable. Signs,
+  spaces, decimal points and exponents do not identify valid saved work.
+  The independent Time Machine parser follows the same rule so it cannot
+  make malformed queue text valid while advancing time.
 
 ## 17 October 2026: preserve real visibility in background-play fixtures
 

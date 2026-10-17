@@ -74,8 +74,12 @@ export function readMixer(saved: unknown): MixerState {
 }
 
 function wireInteger(value: unknown): boolean {
-  return (typeof value === "number" || (typeof value === "string" && value.trim() !== ""))
-    && Number.isSafeInteger(Number(value)) && Number(value) >= 0;
+  // Converting decimal/exponent strings first can round malformed work to ready zero.
+  if (typeof value === "string") {
+    if (value.length < 1 || value.length > 16 || /[^0-9]/.test(value)) return false;
+    value = Number(value);
+  }
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
 export function mixingChoices(town: Town, rules: MixerRules): PlacedItem[] {

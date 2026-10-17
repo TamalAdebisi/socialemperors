@@ -116,13 +116,16 @@ def _waiting(save, queue_id):
 
 
 def _wire_integer(value):
-    if isinstance(value, bool) or not isinstance(value, (int, float, str)) or isinstance(value, str) and not value.strip():
+    # Parse text exactly before any float conversion can round it to ready zero.
+    if isinstance(value, str):
+        if not 1 <= len(value) <= 16 or not value.isascii() or not value.isdecimal():
+            return None
+        value = int(value)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError, OverflowError):
+    if isinstance(value, float) and (not math.isfinite(value) or not value.is_integer()):
         return None
-    return int(numeric) if math.isfinite(numeric) and numeric.is_integer() and 0 <= numeric <= 2 ** 53 - 1 else None
+    return int(value) if 0 <= value <= 2 ** 53 - 1 else None
 
 
 def speed_up(save, queue_id):

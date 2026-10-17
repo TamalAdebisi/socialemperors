@@ -116,6 +116,24 @@ test("queue restore preserves absolute clocks and rejects malformed saved work",
   assert.equal(mixRemaining({ ts: 0, unit: 503, amount: 1 }, { ...units[3]!, soulMixingTime: 0 }, 200), 0);
 });
 
+test("saved queue fields cannot round fractional text into readable work", () => {
+  for (const ts of ["1e-400", "-1e-400", "1.000000000000000001", "9007199254740991.1", "1700000000.000000001",
+    "9007199254740992", "9".repeat(10_000), "00000000000000000", "1.0", "1e0", "+0", " 0", "0 ", "0\n", "0x0", "0_0", "０", "٠",
+    0.5, Number.MIN_VALUE, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(readMixer({ 1: { ts, unit: 503, amount: 1 } }).queues.size, 0, `timestamp ${String(ts).slice(0, 40)}`);
+  }
+  for (const bad of [{ ts: 0, unit: "503.000000000000000001", amount: 1 }, { ts: 0, unit: 503, amount: "1.000000000000000001" }]) {
+    assert.equal(readMixer({ 1: bad }).queues.size, 0, "other queue fields obey the same exact integer contract");
+  }
+  for (const ts of [0, 100, Number.MAX_SAFE_INTEGER, "0", "100", "9007199254740991"]) {
+    assert.equal(readMixer({ 1: { ts, unit: "503", amount: "1" } }).queues.get("1")!.ts, Number(ts));
+  }
+  const { town, building } = fixture();
+  building.queueId = "1";
+  const state = readMixer({ 1: { ts: "0", unit: "503", amount: "1" } });
+  assert.equal(typeof claimMix(town, building, state, items, 100), "object", "explicit text zero still collects known legacy work");
+});
+
 test("a claimed queue in another town reserves its global id for later mixes", () => {
   const { town, building } = fixture();
   const state = readMixer({ 1: { ts: 0, unit: 503, amount: 0 } });

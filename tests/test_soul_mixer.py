@@ -141,6 +141,33 @@ class SoulMixerTest(unittest.TestCase):
         self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], 533)
 
+    def test_fractional_wire_text_never_rounds_into_a_collectable_legacy_queue(self):
+        self.map["items"][0][7]["bq"] = "1"
+        self.assertFalse(soul_mixer.available(), "this exercises the real missing-content legacy path")
+        timestamps = ["1e-400", "-1e-400", "1.000000000000000001", "9007199254740991.1", "1700000000.000000001",
+                      "9007199254740992", "9" * 10_000, "00000000000000000", "1.0", "1e0", "+0", " 0", "0 ", "0\n",
+                      "0x0", "0_0", "０", "٠", 0.5, 5e-324, 2 ** 53, 10 ** 1000]
+        bad_queues = [{"ts": timestamp, "amount": 1, "unit": 533} for timestamp in timestamps]
+        bad_queues += [{"ts": 0, "amount": "1.000000000000000001", "unit": 533},
+                       {"ts": 0, "amount": 1, "unit": "533.000000000000000001"}]
+        for queue in bad_queues:
+            with self.subTest(queue=str(queue)[:100]):
+                self.save["privateState"]["barracksQueues"] = {"1": queue}
+                before = copy.deepcopy(self.save)
+                self.send("pop_queue_unit", 1, 56, 56, 1529)
+                self.assertEqual(self.save, before)
+        # Restored durations must not make rounded positive timestamp text valid either.
+        with self.content(), patch("soul_mixer.timestamp_now", return_value=2 ** 53 - 1):
+            for timestamp in ["1.000000000000000001", "1700000000.000000001", "9007199254740991.1"]:
+                self.save["privateState"]["barracksQueues"] = {"1": {"ts": timestamp, "amount": 1, "unit": 533}}
+                self.send("pop_queue_unit", 1, 56, 56, 1529)
+                self.assertEqual(len(self.map["items"]), 1, timestamp)
+        for timestamp in [0, 0.0, "0"]:
+            self.save["privateState"]["barracksQueues"] = {"1": {"ts": timestamp, "amount": "1", "unit": "533"}}
+            before = len(self.map["items"])
+            self.send("pop_queue_unit", 1, 56, 56, 1529)
+            self.assertEqual(len(self.map["items"]), before + 1, "explicit numeric or text zero still collects")
+
     def test_active_queue_rejects_late_edit_commands_but_still_allows_turning(self):
         self.map["items"][0][7]["bq"] = "1"
         self.save["privateState"]["barracksQueues"] = {"1": {"ts": 100, "amount": 1, "unit": 533}}
