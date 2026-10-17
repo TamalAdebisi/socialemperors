@@ -50,7 +50,7 @@ export default async function socialFriends({newPlayer}) {
   await asker.shot("phone-wonder-next-step");await page.keyboard.press("Escape");
   await open(ROUND,"Round Table");
   await ask(helpers.slice(0,1));
-  save=await read();assert.equal(Object.keys(save.map.items.find((p)=>p[0]===389)[7].sif).length,1,"one-at-a-time invitation recorded");
+  save=await read();assert.deepEqual(Object.keys(save.map.items.find((p)=>p[0]===389)[7].sif),[`u${helpers[0].player.settings.userId}`],"invitation records the original empire id, not the account id");
   await asker.send(Array.from({length:7},()=>({cmd:"buy_si_help",args:[...ROUND,0,389,1]})));
   await asker.reload();if((await asker.bar())?.includes("your"))await asker.press("OK");
   await open(ROUND,"Round Table");

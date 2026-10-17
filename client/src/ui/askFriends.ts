@@ -26,7 +26,7 @@ interface Reply {
   full?: string;
   ok?: string;
   error?: string;
-  friends?: { id: number; username: string; state: string }[];
+  friends?: { id: number; username: string; state: string; pid?: string | null }[];
   answered?: string[];
 }
 
@@ -86,8 +86,9 @@ export class AskFriends {
         tick.type = options?.single ? "radio" : "checkbox";
         if (options?.single) tick.name = "social-seat";
         tick.value = String(friend.id);
+        if(friend.pid)tick.dataset.pid=friend.pid;
         tick.checked = false;  // choose recipients explicitly from the community
-        tick.disabled = friend.state !== "can";
+        tick.disabled = friend.state !== "can" || Boolean(options?.single&&!friend.pid);
         const name = document.createElement("b");
         name.textContent = friend.username;
         label.append(tick, name);
@@ -111,21 +112,24 @@ export class AskFriends {
       const problem = options?.before() ?? "";
       if (problem) { status.textContent = problem; ask.disabled = true; return; }
       const ids = picked();
+      const seats=[...list.querySelectorAll<HTMLInputElement>("input:checked")].map((input)=>input.dataset.pid??"");
+      if(options?.single&&(!seats[0]||seats.length!==1)){status.textContent="Choose a player with an empire.";return;}
       ask.disabled = true;
-      void this.call("POST", asked, ids).then((reply) => {
-        if (reply.ok) options?.asked(ids);
+      void this.call("POST", asked, ids,options?.single?seats[0]:undefined).then((reply) => {
+        if (reply.ok) options?.asked(options.single?seats:ids);
         draw(reply, reply.ok ?? reply.error ?? "");
       });
     });
     void this.call("GET", asked, []).then((reply) => draw(reply, reply.error ?? ""));
   }
 
-  private async call(method: "GET" | "POST", asked: Asked, friends: string[]): Promise<Reply> {
+  private async call(method: "GET" | "POST", asked: Asked, friends: string[], seat?: string): Promise<Reply> {
     const query = new URLSearchParams({ empire: this.parts.empire });
     const params = new URLSearchParams(Object.entries(asked).map(([k, v]) => [k, String(v)]));
     if (method === "POST") {
       params.append("csrf", this.parts.csrf);
-      for (const friend of friends) {
+      if(seat)params.append("seat",seat);
+      else for (const friend of friends) {
         params.append("friend", friend);
       }
     }
