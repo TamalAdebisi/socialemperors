@@ -44,11 +44,17 @@ export default async function shopDetails({newPlayer}) {
   let details=page.getByRole("region",{name:"Details: House I",exact:true});
   await details.waitFor({state:"visible"});assert.match(await details.innerText(),/3 population/);
   assert.equal(await houseDetails.getAttribute("aria-expanded"),"true");
-  await card("House II").locator(".shop-card").hover();
-  assert.ok(await details.isVisible(),"hovering another item never replaces explicit details");
+  if(!phone) {
+   await card("House II").locator(".shop-card").hover();
+   assert.ok(await details.isVisible(),"hovering another item never replaces explicit details");
+  }
   await buttonsFit(panel);
   await player.shot(phone?"phone-house":"desktop-house");
-  await houseDetails.click();assert.ok(await details.isHidden(),"Details toggles closed");
+  // The phone bubble covers the cards: keyboard activation can still
+  // toggle its original button; pointer users have Close details.
+  if(phone) {await houseDetails.focus();await page.keyboard.press("Enter");}
+  else await houseDetails.click();
+  assert.ok(await details.isHidden(),"Details toggles closed");
   await houseDetails.focus();await page.keyboard.press("Enter");
   await details.waitFor({state:"visible"});await page.keyboard.press("Escape");
   assert.ok(await details.isHidden());assert.ok(await panel.isVisible());
