@@ -162,6 +162,7 @@ export default async function riderTraining({ newPlayer }) {
   // then reach the end and press the actual in-movie End Game button.
   await beginJourney("first adventure victory");
   await approach();
+  let lastBolt = -Infinity;
   for (let turn = 0; turn < 30; turn++) {
     const state = budget(await progress());
     assert.notEqual(state.state, "lost", "the rider survived the first adventure");
@@ -169,7 +170,10 @@ export default async function riderTraining({ newPlayer }) {
     if (Math.abs(state.distanceToEnemy) > 105) await approach();
     await faceEnemy();
     const attacking = budget(await progress());
-    await page.keyboard.press("1");
+    const attack = attacking.frames - lastBolt > 150 ? "3" : "1";
+    console.log("Rider normal attack", { key: attack, frames: attacking.frames, distanceToEnemy: attacking.distanceToEnemy, facing: attacking.facing });
+    await page.keyboard.press(attack);
+    if (attack === "3") lastBolt = (await progress()).frames;
     await page.waitForFunction((before) => {
       const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
       return state.frames >= before + 28 || state.state !== "playing";
