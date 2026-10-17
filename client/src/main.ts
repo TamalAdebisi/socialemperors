@@ -52,6 +52,8 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { DartsGame, type DartsRound } from "./rules/darts.ts";
+import { DartsWindow } from "./ui/darts.ts";
 import { unitPreview } from "./view/unitPreview.ts";
 import { UnitBook, type UnitCategory } from "./rules/unitBook.ts";
 import { UnitsBookWindow } from "./ui/unitBook.ts";
@@ -491,7 +493,15 @@ async function start(): Promise<void> {
       changed: () => { hud.update(town); shop.refresh(); },
       tell: (text) => editor.tell(text),
     });
+    const dartsGame = new DartsGame((config.darts_items ?? []) as DartsRound[], attackState, Number(config.globals?.DART_COST_CASH) || 20);
+    const darts = new DartsWindow({
+      game: dartsGame, town, items, clock, words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (sent) => { sent.forEach((c) => commands.add(c.cmd, ...c.args)); if (sent.length) void commands.flush(); },
+      changed: () => { hud.update(town); shop.refresh(); },
+    });
     const army = new ArmyWindow({
+      darts: () => darts.open(),
       unitsBook: () => unitsBook.open(),
       collections: () => { doings.collectionsOpened = true; collections.open(); },
       units: () => unitsInTown(town),
@@ -733,6 +743,9 @@ async function start(): Promise<void> {
       };
       const welcomeFinished = () => {
         tournamentWelcomePending = false;
+        const openingDarts = dartsGame.opening(clock(), Math.floor(performance.now()));
+        openingDarts.forEach((c) => commands.add(c.cmd, ...c.args));
+        if (openingDarts.length) darts.offer();
         reopenTournament();
       };
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.

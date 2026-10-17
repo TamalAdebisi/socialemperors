@@ -1618,6 +1618,28 @@ themselves. `rules/unitBook.ts`, `ui/unitBook.ts` and `view/unitPreview.ts`
 implement it; `e2e/tests/units-book.mjs` checks desktop/phone, the preview,
 buying, category rewards and saved reloads.
 
+### Darts
+
+Army → Darts follows the game's original dated prize pools. The shipped
+schedule ends with an empty pool, so no round runs today: no free dart,
+reset or payout is invented. When a configured round is active, the
+25-balloon board uses the classic saved-seed shuffle: two rare prizes,
+four of each uncommon, seven and eight of the common prizes. Each throw
+puts its prize in town Storage; discovering all six different prizes
+awards the extra once. A free dart renews on a new local calendar day,
+without stacking, while paid darts use the configured cash cost. A new
+configured round resets the board and grants a free dart. Startup offers
+that free dart after the ordinary welcome windows; Later keeps it.
+
+`rules/darts.ts` implements dates, shuffle and command batches;
+`ui/darts.ts` draws the original balloon art, help, discovered prizes and
+extra reward. Prize text remains until the next Play so it can be read.
+Choosing Play arms a throw; closing before choosing a balloon spends
+nothing. Charges and storage commands accompany the actual throw.
+`e2e/tests/darts.mjs` checks the real inactive schedule and a local active
+fixture on desktop/phone, including free/paid throws, the bonus and reloads.
+No live schedule is changed by the fixture.
+
 ### The building card
 
 The card for the thing selected is the Flash client's info panel

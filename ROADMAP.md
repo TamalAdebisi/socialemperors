@@ -454,6 +454,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] Units book: original categories, acquired/missing units, cash buying,
         animated details and saved category rewards, desktop/phone
         ([CLIENT.md](CLIENT.md#the-units-book))
+  - [x] Darts panel and original scheduled-round rules: seeded board,
+        daily free dart, cash throws, Storage and the all-six bonus.
+        The shipped empty ending remains inactive; local active fixtures
+        cover the full flow ([CLIENT.md](CLIENT.md#darts)).
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

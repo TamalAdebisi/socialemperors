@@ -4995,3 +4995,15 @@ button.world-piece:hover img {
 .unit-book .shop-tabs { justify-content: space-between; align-items: center; }
 
 .unit-book-preview { display: block; width: 140px; height: 100px; max-width: 100%; margin: 6px auto; }
+
+.darts-board { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; margin: 12px 0; }
+.darts-balloon { position: relative; min-width: 0; min-height: 62px; padding: 2px; border: 0; background: none; color: #40250d; cursor: pointer; }
+.darts-balloon img { width: 42px; height: 46px; object-fit: contain; display: block; margin: auto; }
+.darts-balloon:disabled { cursor: default; opacity: 1; }
+.darts-board.armed .darts-balloon:not(:disabled):hover { background: #f5d776; border-radius: 8px; }
+.darts-balloon.popped { opacity: .55; }
+.darts-balloon .darts-target { display: none; position: absolute; height: 34px; width: 12px; right: 2px; bottom: 0; }
+.darts-balloon:hover .darts-target, .darts-balloon:focus-visible .darts-target { display: block; }
+.darts-prizes { list-style: none; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; padding: 0; font-size: 12px; }
+.darts-prizes .collection-reward { width: 40px; height: 40px; }
+.darts-result:empty { display: none; }
