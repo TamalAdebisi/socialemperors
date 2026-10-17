@@ -19,6 +19,15 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Unit Warehouse implementation:** its window, walking admission,
+  deployment, bought room and storage/reset follow the original rules.
+  Client types and 412 client tests pass; the existing warehouse/time
+  server suite passes 8/8. Focused Chromium passes 1/1 in 106 seconds at
+  `76a20d73`, including phone saving and reload. All four captures and the
+  clean server log were reviewed. [The verification record](docs/verification-warehouse.md)
+  retains the earlier failures and the final admission trace; integrated
+  delivery checks and merge remain the coordinating task.
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven

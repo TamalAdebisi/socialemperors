@@ -970,6 +970,9 @@ DECISIONS.md. Test: `e2e/tests/warehouse.mjs`, desktop and phone, including
 the server's saved box, map, cash, capacity and ordinary storage.
 There is no warehouse-specific goal among the 227 mission entries, so
 this slice does not change the remaining-goal count.
+Focused Chromium passes desktop and phone saving; the
+[verification record](docs/verification-warehouse.md) retains the earlier
+fixture failures, final trace and screenshot review.
 
 ### The living map
 
