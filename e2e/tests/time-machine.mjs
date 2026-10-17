@@ -69,6 +69,12 @@ export default async function timeMachine({ newPlayer }) {
   const used = await info(player);
   assert.deepEqual(used.privateState.countTimePacket, [1, 0, 0, 0, 0, 0]);
   assert.equal(itemAt(used.map, MINE, MINE_AT)[4], itemAt(before.map, MINE, MINE_AT)[4] - 3600);
+  // Advancing an hour also makes the normal ten-minute camp due. Its
+  // chapter notice is real game behavior and must be acknowledged before
+  // tapping the machine behind it, as a player would.
+  await player.page.locator(".notice").waitFor();
+  assert.match(await player.page.locator(".notice h2").textContent(), /CHAPTER 4/);
+  await player.shot("travel-camp");
   await open(player);
   assert.equal(await panel.locator(".machine-help").isVisible(), false, "the help is remembered after travel");
   await player.press("Time Machine Help");
@@ -118,7 +124,15 @@ export default async function timeMachine({ newPlayer }) {
   assert.match(await sheet.locator('[data-packet="0"] .machine-owned').textContent(), /Available: 1/);
 
 }
-async function open(player) { await player.select(AT, "Time Machine"); await player.press("Open"); }
+async function open(player) {
+  const notice = player.page.locator(".notice");
+  if (await notice.isVisible()) {
+    assert.match(await notice.locator("h2").textContent(), /CHAPTER 4/, "the camp made due by time travel");
+    await notice.getByRole("button", { name: "OK", exact: true }).click();
+  }
+  await player.select(AT, "Time Machine");
+  await player.press("Open");
+}
 async function info(player) {
   const response = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`, { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
   return response.json();

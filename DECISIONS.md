@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: acknowledge the camp made due by time travel in its browser fixture
+
+- **Keep the automatic camp and continue through its dialog.** The first
+  machine browser run passed the purchase, panel-switch, cash/stock and
+  saved timer assertions, then could not reselect the machine. Its failure
+  screenshot shows the normal chapter-four camp notice covering the town;
+  the server log confirms the time jump made that wait due and spawned the
+  camp. The fixture now checks and acknowledges that notice before tapping
+  the machine, including fresh phone contexts. All machine assertions and
+  deadlines remain; no camp rule, timer or runtime code changes.
+
 ## 17 October 2026: include generic training queues in time travel
 
 - **Treat a queued unit's start as the same kind of wait as a building's.**
