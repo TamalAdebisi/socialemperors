@@ -40,7 +40,7 @@ provides default values. Recovery checked every historical config payload,
 including July/August 2012 PHP responses, `4399_config.json`,
 `game_config_4399.json`, `main.json`, patches and mods. None has the data.
 A read-only check of the preservation project's
-[original config directory](https://github.com/AcidCaos/socialemperors/tree/master/config)
+[original config directory](https://github.com/AcidCaos/socialemperors/tree/main/config)
 found the same earlier files and temporary patch. Exact-key public searches
 found no later dump. Community combination lists do not provide the full
 ordering and wait tables and are not used as replacement content.
@@ -79,6 +79,10 @@ ordering and wait tables and are not used as replacement content.
 - Building `attrs.bq` points into `privateState.barracksQueues`, whose
   entry has `ts`, `amount`, `unit`. The two parents remain in the building's
   contained-unit list. The result's `sm_training_time` is the duration.
+- Queue identifiers remain reserved globally after collection and when
+  their building belongs to another town. New buildings allocate above
+  all saved identifiers, including completed entries, preserving the
+  original `bq` identity instead of reusing another building's queue.
 - Queues restore on opening town before any window opens. Unlike later
   ordinary barracks, completed mixer work waits for Get unit. A zero
   timestamp means speed-up finished it. A positive timestamp without its
@@ -102,9 +106,9 @@ ordering and wait tables and are not used as replacement content.
 
 ## Verification
 
-Fifteen focused client tests cover ranking, tier ordering, restrictions, limits,
+Sixteen focused client tests cover ranking, tier ordering, restrictions, limits,
 command arguments, save restore, waiting, speed-up, population, surviving
-parents, passive grants and stale editor callbacks. Nine server tests
+parents, passive grants, global queue reservations and stale editor callbacks. Ten server tests
 replay the queue protocol, missing/partial-data refusal, elapsed work,
 retries, malformed timestamps, late edit commands and safe collection. Their
 synthetic tables are confined to tests and never shipped.

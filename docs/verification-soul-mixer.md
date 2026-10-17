@@ -11,15 +11,25 @@ be collected without spending; missing or malformed time is never guessed.
 
 ## Completed local checks
 
-- Server: **458 run, 449 passed, 9 existing PostgreSQL skips**, 42.263s.
-- Client types passed; **419/419 client tests passed**, 16.289s.
-- Soul-specific coverage: 12 rule tests, three execution-time stale editor
-  callback tests and nine server protocol tests. Synthetic content stays
+- Server: **459 run, 450 passed, 9 existing PostgreSQL skips**, 40.591s.
+- Client types passed; **420/420 client tests passed**, 11.413s.
+- Soul-specific coverage: 13 rule tests, three execution-time stale editor
+  callback tests and ten server protocol tests. Synthetic content stays
   in tests and is never shipped as original config.
 - An independent read-only source review found partial-data entry/spending,
   stale edit/preview/window and malformed timestamp issues. They were
   corrected, with regression checks. Re-review found no unresolved material
   source issue. Turning remains allowed as in the original.
+- Root review found that claimed queues in another town still reserve
+  their original identifier. Restoring only active work could reuse that
+  identifier and make the server reject a new building's start. The
+  client now reserves all valid global saved IDs separately from active
+  work. Client and real server regressions preserve the other town's bq.
+- The earlier stabilized `f0c88b2b` passed 458 server tests (nine existing
+  skips) and all 419 client tests. The results above include the later
+  queue-reservation correction. The browser fixture now places its knight
+  clear of the town hall and flushes initial commands before its baseline,
+  retaining every cash/unit/queue assertion.
 
 ## Browser verification
 

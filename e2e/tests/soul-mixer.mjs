@@ -8,10 +8,11 @@ export default async function soulMixer({ newPlayer }) {
   const player = await newPlayer();
   await player.send([
     { cmd: "buy", args: [BUILDING, ...AT, 0, 0, 1, 1, "b"] },
-    { cmd: "buy", args: [514, 51, 51, 0, 0, 1, 1, "u"] },
+    { cmd: "buy", args: [514, 58, 56, 0, 0, 1, 1, "u"] },
   ]);
   await player.reload();
   const { page } = player;
+  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true, "fixture setup is saved before comparing the unavailable window");
   const read = async () => {
     const response = await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
       { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });

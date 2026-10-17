@@ -14,7 +14,7 @@ export const LEGACY_SOULS = new Set([2048, 2037, 777, 758]);
 export interface Powerup { cash: number; increment: number }
 export interface MixerRules { units: ItemInfo[]; powerups: Powerup[]; missing: string[]; minLevel: number | null }
 export interface MixQueue { ts: number; unit: number; amount: number }
-export interface MixerState { queues: Map<string, MixQueue> }
+export interface MixerState { queues: Map<string, MixQueue>; reserved: Set<string> }
 export interface MixPreview { unit: ItemInfo; excluded: Set<number>; upgrades: number; parents: number[] }
 
 export function mixerRules(config: GameConfig, items: Map<number, ItemInfo>): MixerRules {
@@ -54,18 +54,23 @@ export function givenMixer(town: Town, rules: MixerRules, items: Map<number, Ite
 /** Only known, well-formed original queues are restored; never silently mark malformed work ready. */
 export function readMixer(saved: unknown): MixerState {
   const queues = new Map<string, MixQueue>();
+  const reserved = new Set<string>();
   if (saved && typeof saved === "object" && !Array.isArray(saved)) {
     for (const [key, value] of Object.entries(saved)) {
+      const validKey = /^[1-9]\d*$/.test(key) && Number.isSafeInteger(Number(key));
+      // Claimed queues and queues in another town still own their original
+      // identifier; malformed payloads must not make that identifier reusable.
+      if (validKey) reserved.add(key);
       if (!value || typeof value !== "object") continue;
       const row = value as Record<string, unknown>;
       const ts = Number(row.ts), unit = Number(row.unit), amount = Number(row.amount);
-      if (/^[1-9]\d*$/.test(key) && [row.ts, row.unit, row.amount].every(wireInteger)
+      if (validKey && [row.ts, row.unit, row.amount].every(wireInteger)
         && [ts, unit, amount].every(Number.isSafeInteger) && ts >= 0 && unit > 0 && amount === 1) {
         queues.set(key, { ts, unit, amount });
       }
     }
   }
-  return { queues };
+  return { queues, reserved };
 }
 
 function wireInteger(value: unknown): boolean {
@@ -140,7 +145,8 @@ export function startMix(town: Town, building: PlacedItem, rules: MixerRules, st
   if (warning) return warning;
   if (preview.unit.unitsLimit > 0 && countOf(town, preview.unit.id) >= preview.unit.unitsLimit) return "You already have the maximum number of this unit.";
   const commands: Command[] = Array.from({ length: preview.upgrades }, (_, level) => ({ cmd: "buy_powerups", args: [Math.min(level, rules.powerups.length - 1)] }));
-  if (!building.queueId) building.queueId = String(Math.max(0, ...[...state.queues.keys()].map(Number), ...town.items.map((item) => Number(item.queueId) || 0)) + 1);
+  if (!building.queueId) building.queueId = String(Math.max(0, ...[...state.reserved].map(Number), ...town.items.map((item) => Number(item.queueId) || 0)) + 1);
+  state.reserved.add(building.queueId);
   state.queues.set(building.queueId, { unit: preview.unit.id, ts: Math.floor(now), amount: 1 });
   commands.push({ cmd: "push_queue_unit", args: [building.tx, building.ty, SOUL_MIXER, preview.unit.id, Number(building.queueId), 0] });
   return commands;

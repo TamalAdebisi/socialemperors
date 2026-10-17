@@ -27,7 +27,9 @@ them can be found and reversed. The big, agreed decisions are in
   discard its building or parents. Execution-time guards cover captured
   card/confirmation callbacks as well as their displayed button state;
   window actions recheck live building and current parents. Turning
-  remains available as in the original. No
+  remains available as in the original. Queue identifiers remain globally
+  reserved after collection and across towns, preventing new work from
+  colliding with another building's original `bq`. No
   combat behaviour or later progression goal is added.
 
 ## 17 October 2026: preserve the original rider adventures
