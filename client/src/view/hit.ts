@@ -12,6 +12,28 @@ const MIN_ALPHA = 32;
 
 type Rect = { x: number; y: number; width: number; height: number };
 
+/** The current picture's trimmed box on screen, without its empty export canvas. */
+export function visualScreenBox(picture: Container): Rect {
+  if (!(picture instanceof Sprite)) {
+    return picture.getBounds();
+  }
+  // Sprite.getBounds() includes texture.orig, even when most of that canvas
+  // was trimmed away. Bull Gladiator's canvas is 1060px wide; its idle
+  // picture is about 250–390px. Padding mustn't become a selectable margin.
+  const { minX, maxX, minY, maxY } = picture.visualBounds;
+  const { a, b, c, d, tx, ty } = picture.getGlobalTransform();
+  const width = maxX - minX, height = maxY - minY;
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const halfWidth = (Math.abs(a) * width + Math.abs(c) * height) / 2;
+  const halfHeight = (Math.abs(b) * width + Math.abs(d) * height) / 2;
+  return {
+    x: a * cx + c * cy + tx - halfWidth,
+    y: b * cx + d * cy + ty - halfHeight,
+    width: halfWidth * 2,
+    height: halfHeight * 2,
+  };
+}
+
 /** Units get an eight-pixel margin and at least a 44px target at every zoom. */
 export function unitHitDistance(box: Rect, screen: Point): number {
   if (box.width <= 0 || box.height <= 0) return Infinity;

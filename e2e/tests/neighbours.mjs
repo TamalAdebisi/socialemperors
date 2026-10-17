@@ -47,7 +47,12 @@ export default async function neighbours({ newPlayer }) {
   await helper.shot("helping-rays");
 
   // Home: the help goes on the way out.
-  await page.getByRole("link", { name: "Back home" }).click();
+  // Back home flushes help before navigating. Wait for the new document,
+  // so loaded() cannot mistake the departing visitor's status for home.
+  await Promise.all([
+    page.waitForURL(`${helper.base}/client.html`, { waitUntil: "commit" }),
+    page.getByRole("link", { name: "Back home" }).click(),
+  ]);
   await helper.loaded();
   const helperSaved = await info(helper);
   assert.equal(helperSaved.map.coins, goldBefore + 10, "the helper is paid");
