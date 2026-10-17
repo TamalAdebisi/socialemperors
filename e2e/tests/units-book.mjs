@@ -27,6 +27,26 @@ export default async function unitsBook({ newPlayer }) {
       return pixels.some((value,index) => index % 4 === 3 && value > 0);
     }, null, { timeout: 30_000 });
     await player.shot(phone ? "phone-missing" : "desktop-missing");
+    // Large values from the served book must fit narrow cards too. This
+    // local layout fixture changes no server item or purchase statistics.
+    const ordinary=await page.evaluate(()=>{
+      const item=window.seHome.parts.items.get(510);
+      const old={life:item.life,attack:item.attack,attackInterval:item.attackInterval};
+      Object.assign(item,{life:10000,attack:500,attackInterval:175});return old;
+    });
+    await page.keyboard.press("Escape");await player.menu("Army");await player.press("Units book");
+    await first.locator('[data-unit="510"] summary').click();
+    const layout=await first.locator('[data-unit="510"]').evaluate((cell)=>{
+      const bounds=cell.getBoundingClientRect(),numbers=[...cell.querySelectorAll("dd")];
+      return {values:numbers.map((n)=>Number(n.textContent)),fits:numbers.every((n)=>{
+        const box=n.getBoundingClientRect();return box.left>=bounds.left && box.right<=bounds.right;
+      })};
+    });
+    assert.deepEqual(layout.values.slice(0,3),[10000,500,175]);
+    assert.ok(layout.fits,"all six large values stay inside their unit card");
+    await player.shot(phone?"phone-large-stats-layout-fixture":"desktop-large-stats-layout-fixture");
+    await page.evaluate((old)=>Object.assign(window.seHome.parts.items.get(510),old),ordinary);
+    await page.keyboard.press("Escape");await player.menu("Army");await player.press("Units book");
     for (const id of [510, 511, 539, 608]) {
       const cell = first.locator(`[data-unit="${id}"]`);
       if ((await cell.locator("details").getAttribute("open")) === null) await cell.locator("summary").click();
