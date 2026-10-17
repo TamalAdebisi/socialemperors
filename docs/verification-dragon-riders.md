@@ -269,3 +269,47 @@ Linux WebKit needs the locally extracted library recipe in
 skips only Playwright's package-presence validator, not browser errors or
 game assertions. Linux software WebKit verification does not establish
 behavior on the owner's Mac GPU or installed Safari.
+
+## Complete Linux WebKit follow-up
+
+The coordinator repeated the complete rider case with the scoped focus
+correction at exact clean `db5d614dff4ba271466718c8bd5df2e40935e6e6`.
+The local WebKit command selected `warehouse rider-training --keep` with
+the library environment documented above. Both cases passed, runner
+exit 0, in **488.296 seconds**; rider training took **419 seconds** and
+warehouse took 65 seconds. This completes the previously pending full
+rider WebKit rerun; the earlier 422-second failure remains retained.
+
+The unchanged fixture again observed genuine original callbacks
+`won,1` (session 2) and `lost,8` (session 1), recovery and ordered free
+claim/reset, exact
+rider-first pair admission and loss preserving both inputs. Its actual
+phone attack reset the original cooldown, and the existing assertion
+that no touch-control button held focus now passed. The separate phone success adapter then
+saved the mounted output, consumed both inputs and spent no extra cash.
+The 600-frame gameplay budgets, 28-frame attack observation and 30-second
+liveness/save/callback limits remained unchanged.
+
+All **11 fresh rider PNGs** in the coordinator's
+`work/checks/integrated-webkit-followup/evidence/rider-training/` were
+inspected: picker, first adventure/victory, recovery/ready, taming pair,
+eighth adventure/loss and phone pair/adventure/picker. The original movie
+and actual result screens render correctly. The previously missing phone
+adventure now shows the original stage and all touch keys within the
+screen; its screenshot catches a resting pose after the separately
+asserted attack. The phone picker shows all three portraits, buttons and
+readable unlock labels without overlap. No material visual issue was
+found. The phone pair uses the existing scrollable sheet; the captures do
+not claim every scrolled region at once.
+
+The final shared server log has no traceback, exception or HTTP 5xx.
+The complete focused output has no captured runtime error, and its two
+native callback records and passing summary were checked. Evidence is
+retained beside the coordinator's exact revision/run receipt; the
+throwaway save is `/tmp/se-e2e-dZoW9L`.
+
+This verifies Linux software WebKit on the corrected integrated code.
+The phone victory remains an adapter check, and no genuine eighth win,
+complete eight-adventure playthrough or Mac GPU/Safari result is claimed.
+The final combined Chromium suite, including the coordinator's latest
+main integration, remains required and is recorded by the coordinator.
