@@ -2482,7 +2482,9 @@ stopped after five passes and no observed failure for two further fixes:
 room/player validation and reopening during a pending refresh. Those
 corrections at `97fb6e79` passed lists but hit a delayed-response test-helper
 fault in rooms and a downstream results fixture failure: focus 1/3 in
-2m 51.30s. The test-only correction needs fresh focused/full checks.
+2m 51.30s. The test-only correction at `60eba9ff` then passed all three
+focused cases in 8m 22.94s, with runtime unchanged from 97. Required full
+checks remain pending.
 A profile reply belongs to its window,
 room and latest selection; rendering another view or closing the profile
 invalidates it. See

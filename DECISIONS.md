@@ -19,9 +19,10 @@ them can be found and reversed. The big, agreed decisions are in
   171.2956s; its concurrent-entry case passed. The separate instrumented
   replay intentionally failed in 25.5596s, and temporary tracing was
   removed. The corrected test also detects the old 95 reopen bug at the
-  original deadline (47s scenario, 53.6751s total). Fresh candidate focus
-  and full checks are still pending;
-  neither the old successful focus nor the diagnostic is a candidate pass.
+  original deadline (47s scenario, 53.6751s total). The corrected
+  `60eba9ff` focus then passed all three cases in 502.9371s, with runtime
+  unchanged from 97. Required full checks remain pending; neither the
+  earlier failures nor the diagnostics are relabelled as passes.
 
 ## 17 October 2026: finish response validation and allow refresh recovery
 
@@ -39,7 +40,8 @@ them can be found and reversed. The big, agreed decisions are in
   browser regression. Against unchanged 95 runtime, the new test failed
   exactly at reopening: the room remained hidden until the original
   30-second deadline (48s scenario, 55.1332s total). This intended negative
-  diagnostic proves the old bug; the corrected candidate needs fresh checks.
+  diagnostic proves the old bug; the corrected candidate passed the 60
+  focus and still requires full checks.
 - **Recover the actual enrollment after an uncertain entry.** Another
   tab may have entered a different type or team. Display the authoritative
   room and balances without repeating the request or crediting the
@@ -54,8 +56,8 @@ them can be found and reversed. The big, agreed decisions are in
   Exact `95e098f3` passed rooms/results/list 3/3 in 7m 50.29s, with all
   30 images reviewed, and server/types/client checks passed. The full
   attempt stopped deliberately after five passes and no observed failure
-  for the two runtime fixes above. Fresh verification remains due for
-  the next candidate; the 47 baseline's quest failure stays recorded.
+  for the two runtime fixes above. The later 60 focus passed;
+  required full checks remain due; the 47 baseline's quest failure stays recorded.
 
 ## 17 October 2026: acknowledge the displayed room and reject stale reads
 

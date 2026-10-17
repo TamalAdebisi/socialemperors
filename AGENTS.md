@@ -84,19 +84,23 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament implementation is complete; the latest test fixture needs verification.**
+- **Tournament implementation and correction focus are complete; full checks are pending.**
+  Exact `60eba9ffc910a06b2375aa0afe54c1c641510ac0` passed
+  rooms/results/list **3/3 in 8m 22.94s**. The local server log is clean;
+  All 31 archived screenshots were reviewed with no visible defects. Runtime is unchanged from `97fb6e79`; the
+  intervening changes are tests/docs. All 22 review threads are addressed
+  and resolved; the next re-review and required full checks remain due.
   The corrected runtime at `97fb6e79` completed rooms/results/list
   **1/3 in 2m 51.30s**: lists passed, rooms hit a delayed-response fixture
   bug and its leftover public seat caused the results room-id failure.
   Diagnostic tracing identified the fixture release; the test-only
-  correction and fresh focused/full checks remain pending.
+  correction passed the 60 focus above.
   Exact `95e098f386b2feaea7d911de03e2ad2556ef025e` passed the focused
   rooms/results/list checks **3/3 in 7m 50.29s**, with all 30 screenshots
   reviewed. Server **449 run (440 passed, 9 existing skips)**, types and
   client **390/390** passed. The full attempt was intentionally stopped
   after five passes and no observed failure for room/player validation
-  and close-during-refresh fixes; `tournaments` was incomplete. Fresh
-  focused and full checks remain due for the next candidate. The completed
+  and close-during-refresh fixes; `tournaments` was incomplete. The completed
   pre-review baseline at exact clean
   `47db7f4446e957ab8d65ef8892799649abedf9a6`, including latest
   main `8f8c57ab` (#97), ran all 78 browser cases: **77 passed, 1 failed

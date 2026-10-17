@@ -10,7 +10,36 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Latest review corrections: test-fixture correction pending
+## Completed correction focus at 60eba9ff; full checks pending
+
+Exact tested code: `60eba9ffc910a06b2375aa0afe54c1c641510ac0`.
+Rooms/results/list passed **3/3 in 8m 22.94s** (502.937054269s):
+
+| Scenario | Result | Scenario time |
+| --- | --- | --- |
+| `tournament-rooms` | Passed, including reopen and obsolete-response guards | 224s |
+| `tournament-results` | Passed, including stale Done protecting a newer finished room | 151s |
+| `tournaments` | Passed, including concurrent entry with a different type/team | 122s |
+
+The archive `tournament-evidence-review-focus-60eba9ff` contains 31 PNGs.
+All 31 screenshots were reviewed with no visible defects: seven rooms,
+13 results and 11 lists. Phone controls below the captured scroll position
+are covered by browser assertions; static captures alone do not prove
+fee/reward idempotence or saved-state recovery. The local server log has no Python
+tracebacks, HTTP 5xx responses or unhandled commands. Runtime is identical
+from `97fb6e79` through `60eba9ff`; that intervening commit changes only
+the rooms test and documentation. The 97 failures and both intended
+old-runtime negative proofs remain recorded below.
+
+A fresh fetch still places main at
+`8f8c57abe132c5b0ff805159e276e668403fb5ef`, already merged. PR #96 remains
+a draft at `0185b420`, not merged. All 22 review threads on #92 have been
+addressed and resolved; the next automated re-review is pending. The
+required full server/types/client/browser checks will run on the next
+documentation commit. Its exact SHA and results are not yet known. This
+focused pass is not a full-suite result or a merge/deployment claim.
+
+## Review corrections verified by the 60 focus
 
 The review during the `95e098f3` full run found two further runtime
 issues: incomplete room/player validation and a pending refresh that
@@ -28,9 +57,9 @@ Closing invalidates the pending refresh's view and busy state; late
 completion cannot clear a newer operation. These corrections were
 committed at `97fb6e79a437e287b69a55a950629cc6ffe8f7e2`. Its first focused
 run failed because the delayed-response fixture released a newer request
-unexpectedly, as recorded below. The test-helper correction needs its
-own checks, followed by the required full suite. The completed 95 and 47
-evidence does not verify these later changes.
+unexpectedly, as recorded below. The test-helper correction subsequently
+passed the 60 focus above; required full checks remain pending. The
+completed 95 and 47 evidence does not verify these later changes.
 
 The new delayed-refresh/reopen regression was deliberately run against
 unchanged `95e098f386b2feaea7d911de03e2ad2556ef025e` in a separate detached
@@ -102,8 +131,9 @@ elapsed time was 53.675071714s, exit 1. The corrected test's SHA-256 is
 Evidence is in `tournament-review3-red-corrected-status.json` and
 `tournament-review3-red-corrected-95e098f3.log`. This completed negative
 proof confirms the corrected fixture still detects the old runtime bug;
-it is not a candidate failure. Focused candidate checks and the full
-suite remain pending. No successful correction result is claimed yet.
+it is not a candidate failure. The corrected candidate subsequently
+passed all three focused checks at `60eba9ff`; the full suite remains
+pending.
 
 ## Completed focus and interrupted full run at 95e098f3
 
@@ -181,8 +211,8 @@ Three findings require no runtime change:
   tournaments, nests and mandatory lessons built. Git history confirms
   that sequence, so no parity-status correction is needed.
 
-Main remains `8f8c57ab`. The next corrected candidate and its fresh
-checks are pending. All tournament parts are implemented; no further
+Main remains `8f8c57ab`. The later 60 correction focus passed; required
+full checks remain pending. All tournament parts are implemented; no further
 feature slice remains. The completed 47 baseline and its unresolved
 quest follow-up remain intact below.
 

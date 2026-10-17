@@ -315,9 +315,10 @@ the `95e098f3` focused checks 3/3. Its full run stopped intentionally after
 five passes and no observed failure for further room/player validation
 and refresh/reopen fixes. The corrected `97fb6e79` focus was 1/3: lists
 passed, rooms hit a delayed-response fixture problem and results failed
-on its leftover public seat. The test-only repair needs fresh focused/full
-checks before merge. Tournament implementation is complete; earlier
-results are retained.
+on its leftover public seat. The test-only repair at `60eba9ff` passed
+all three focused cases in 8m 22.94s with unchanged runtime. Required full
+checks remain pending before merge. Tournament implementation is complete;
+earlier results are retained.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
