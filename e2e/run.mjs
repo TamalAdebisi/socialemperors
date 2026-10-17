@@ -22,7 +22,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { DISCORD, newPlayer } from "./lib.mjs";
+import { DISCORD, newPlayer, Player } from "./lib.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TESTS = join(ROOT, "e2e", "tests");
@@ -110,10 +110,42 @@ if (!existsSync(join(ROOT, "art", "sheets")) && !env.SE_ASSETS_URL) {
 const log = join(OUT, "server.log");
 const logStream = createWriteStream(log);
 await new Promise((resolve) => logStream.once("open", resolve));
-const server = spawn(process.env.PYTHON || "python3", ["server.py"], { cwd: ROOT, env, stdio: ["ignore", logStream, logStream] });
+const launchServer = () => spawn(process.env.PYTHON || "python3", ["server.py"], { cwd: ROOT, env, stdio: ["ignore", logStream, logStream] });
+let server = launchServer();
+
+/** Await the owned child's final normal flush before any offline edit or deletion. */
+async function stopServer(child) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    if (child.exitCode !== 0 || child.signalCode !== null) throw new Error(`Server already exited uncleanly: ${child.exitCode}/${child.signalCode}.`);
+    return;
+  }
+  const exited = new Promise((resolve) => child.once("exit", (code, signal) => resolve({ code, signal })));
+  let deadline;
+  const bounded = (milliseconds) => Promise.race([
+    exited,
+    new Promise((_, reject) => { deadline = setTimeout(() => reject(new Error("Owned server did not exit before its deadline.")), milliseconds); }),
+  ]);
+  let result;
+  try {
+    if (!child.kill("SIGTERM")) throw new Error("Could not signal the owned server.");
+    result = await bounded(30_000);
+  } catch (error) {
+    clearTimeout(deadline);
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill("SIGKILL");
+      try { await bounded(5_000); } finally { clearTimeout(deadline); }
+    }
+    throw error; // A forced stop is a failed verification, never a clean flush.
+  } finally {
+    clearTimeout(deadline);
+  }
+  if (result.code !== 0 || result.signal !== null) throw new Error(`Server exited uncleanly: ${result.code}/${result.signal}.`);
+}
+
 
 const results = [];
 let browser;
+let shutdownError = null;
 try {
   await waitForServer(base, server, log);
   console.log(`Server on ${base}, data in ${data}${env.SE_ASSETS_URL ? `, art from ${env.SE_ASSETS_URL}` : ""}`);
@@ -135,6 +167,93 @@ try {
         return player;
       },
     };
+    // Historical legacy work cannot be created through new-work commands while
+    // the original content is missing. This optional test-harness callback owns
+    // a stop/edit/restart of this runner's isolated SQLite server only.
+    if (name === "soul-mixer") {
+      let offlineBusy = false;
+      context.offlineVillage = async (player, edit) => {
+        const index = players.indexOf(player);
+        if (offlineBusy || index < 0 || player.base !== base || typeof edit !== "function") {
+          throw new Error("Offline fixture must target this case's own player, one at a time.");
+        }
+        offlineBusy = true;
+        const playerContext = player.page.context();
+        try {
+          const instances = [];
+          const visit = (one) => { instances.push(one); one.companions.forEach(visit); };
+          players.forEach(visit);
+          const pages = [...new Set(instances.flatMap((one) => one.page.context().pages()))];
+          for (const page of pages) {
+            if (page.isClosed()) continue;
+            await page.evaluate(async () => {
+              const sender = window.seHome?.parts.commands;
+              if (!sender) return;
+              if (!await sender.flush()) throw new Error("Cannot stop with unsaved fixture commands.");
+              sender.stop();
+            });
+          }
+          // Contexts retain the existing cookies; closing every page stops all
+          // polling/beacons before the final server flush and offline edit.
+          await Promise.all(pages.map((page) => page.close()));
+          const owned = server;
+          try {
+            await stopServer(owned);
+            const database = join(data, "socialempires.db");
+            if (!existsSync(database)) throw new Error("The isolated fixture SQLite database is missing.");
+            // No game modules, external database settings or shared save paths:
+            // only one existing row in this runner-created mkdtemp database.
+            const script = `
+import json, sqlite3, sys
+path, pid, mode = sys.argv[1:]
+with sqlite3.connect(path, timeout=15) as connection:
+    row = connection.execute("SELECT data FROM villages WHERE pid = ?", (pid,)).fetchone()
+    if row is None:
+        raise RuntimeError("The fixture player does not exist")
+    if mode == "read":
+        print(row[0])
+    elif mode == "write":
+        save = json.load(sys.stdin)
+        if str(save.get("playerInfo", {}).get("pid")) != pid:
+            raise RuntimeError("Cannot change fixture player identity")
+        connection.execute("UPDATE villages SET data = ? WHERE pid = ?", (json.dumps(save), pid))
+    else:
+        raise RuntimeError("Unknown offline fixture operation")
+`;
+            const transfer = (mode, input) => {
+              const result = spawnSync(process.env.PYTHON || "python3", ["-B", "-c", script, database, String(player.settings.userId), mode],
+                { cwd: ROOT, input, encoding: "utf8", timeout: 20_000, maxBuffer: 8 * 1024 * 1024 });
+              if (result.error || result.status !== 0) throw new Error(`Offline fixture ${mode} failed: ${result.error?.message ?? result.stderr}`);
+              return result.stdout;
+            };
+            const save = JSON.parse(transfer("read"));
+            const pid = save.playerInfo.pid;
+            await edit(save);
+            if (save.playerInfo.pid !== pid) throw new Error("Offline fixture cannot change the player identity.");
+            transfer("write", JSON.stringify(save));
+          } finally {
+            // Always recover the runner after an offline validation failure.
+            // Assignment happens before readiness checks, so final cleanup owns
+            // the replacement child too. Reuse the open log fd: append only.
+            if (owned.exitCode !== null || owned.signalCode !== null) {
+              server = launchServer();
+              await waitForServer(base, server, log);
+            }
+          }
+          const resumed = new Player(await playerContext.newPage(), player.base, player.out, player.viewport);
+          resumed.name = player.name;
+          resumed.settings = player.settings;
+          resumed.problems = player.problems;
+          resumed.companions = player.companions;
+          players[index] = resumed;
+          await resumed.open();
+          return resumed;
+        } finally {
+          offlineBusy = false;
+        }
+      };
+    }
+
     const started = Date.now();
     process.stdout.write(`${name} ... `);
     try {
@@ -153,15 +272,19 @@ try {
     }
   }
 } finally {
-  await browser?.close();
-  server.kill();
-  if (flags.has("--keep")) {
-    console.log(`Kept the data folder: ${data}`);
-  } else {
-    rmSync(data, { recursive: true, force: true });
+  try {
+    await browser?.close();
+  } finally {
+    try { await stopServer(server); }
+    catch (error) { shutdownError = error; console.error(`Server shutdown failed: ${error.message}`); }
+    if (flags.has("--keep") || shutdownError || (server.exitCode === null && server.signalCode === null)) {
+      console.log(`Kept the data folder: ${data}`);
+    } else {
+      rmSync(data, { recursive: true, force: true });
+    }
   }
 }
 
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} of ${results.length} passed${failed.length ? `; failed: ${failed.map((r) => r.name).join(", ")}` : ""}. Screenshots: ${output}/`);
-process.exit(failed.length ? 1 : 0);
+process.exit(failed.length || shutdownError ? 1 : 0);

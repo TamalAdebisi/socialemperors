@@ -8,8 +8,8 @@ building branches, retaining each branch's history and pull request:
 [dragon riders #103](https://github.com/TamalAdebisi/socialemperors/pull/103)
 and [Soul Mixer #104](https://github.com/TamalAdebisi/socialemperors/pull/104).
 The integration branch contains their shared editor and save contracts.
-It is the release candidate for the full required local checks; this
-record does not yet claim a merge, deployment or complete browser pass.
+It retains the full required local checks below. Final delivery awaits
+the stronger legacy browser follow-up; no merge or deployment is claimed.
 
 ## Scope and original-data limit
 
@@ -185,8 +185,71 @@ passes all checks again:
 
 Receipts: `work/checks/integrated-server-main98/` and
 `integrated-client-main98/`. Subsequent slice-record merges change only
-documentation. The full integrated **86-case Chromium** run, its fresh
-screenshot/log review and delivery remain pending.
+documentation. The full integrated **86-case Chromium** run is recorded
+below; final delivery awaits the legacy browser follow-up.
+
+## Complete integrated Chromium run
+
+Exact clean start/end `56d1bdbeb895b9eaed1b1a1804bea19a8a2cca78`, including
+main #98, passes **86/86 cases in 8305.262s (2h 18m 25.262s)**, including a
+fresh client build. The command ran from 09:57:42.862 to 12:16:08.123 UTC.
+Its server/client source and browser fixtures match unit-tested
+`b6ed5175`; only Markdown records changed between those revisions.
+
+| New case | Full-run result | Case time |
+| --- | --- | --- |
+| Rider training/taming | Passed | 516s |
+| Soul Mixer unavailable state/help | Passed | 61s |
+| Supreme temple | Passed | 176s |
+| Time Machine | Passed | 134s |
+| Unit Warehouse | Passed | 115s |
+| Weather Machine | Passed | 101s |
+
+The complete output, all **507 fresh PNGs** (including 199 isolated
+structure facings and four ordinary structure captures), SHA256 manifest,
+exact clean receipt and final server log are archived in
+`work/checks/integrated-chromium-full-initial/`. The retained local save is
+`/tmp/se-e2e-GBZul8`. Per-image reviews use
+`work/review-full-batch-*.json`; final coverage is recorded with the audit.
+The final server log has no traceback, HTTP 5xx, unhandled command or
+server/command exception. Memory-limit events remained 61985 before/after
+this full run; OOM and OOM-kill stayed zero. The historical first WebKit
+increase above remains separate. The cgroup permits two CPUs and 8 GiB;
+Node 24.19.0, Python 3.13.5 and Playwright 1.56.1 are recorded in the receipt.
+
+Static captures do not establish animation, native cursor behavior, saved
+outcomes or every phone scroll position; the separate assertions cover
+those actions. Existing notifications/camera crops and the classic
+renderer/unmute overlays remain documented. The Golem summon still shows
+its point/mana change without a recognizable body; the immediate fighter
+assertion does not prove sprite readiness. One earlier tournament prize
+portrait is absent but visible in later phone captures; its fixture waits
+for rows, not decoded images. A world-prize capture also has blank portrait
+positions without an image-ready wait; its cause remains unconfirmed.
+Those capture-readiness questions remain with the coordinating stream.
+
+## Stronger legacy Soul Mixer browser follow-up
+
+The full run above verifies the unavailable/help window, not legacy
+collection in a browser. Real command/client tests already cover known
+completed work and malformed output. A test-only extension now prepares
+an explicit-ready historical save, then exercises the real desktop/phone
+window, claim commands, returned parents, zero spending/XP, reload/retry
+and malformed-building refusal. Its focused browser results remain pending.
+
+Ordinary new-work commands correctly refuse while all four genuine tables
+are missing, so they cannot manufacture this historical fixture. The
+optional Soul test callback flushes/closes its pages, awaits the owned
+temporary server's normal exit, updates one existing player row in that
+isolated SQLite database, then restarts with the same directory/port and
+authentication. Actual collection still uses the normal server handlers.
+The runner also awaits final shutdown before deleting temporary data;
+unclean shutdown fails verification and retains the data. No production
+server hook, game source or configuration changes. Fixture queues describe
+saved protocol shapes, not recovered breeding combinations. Independent
+source review found and corrected shutdown/image-readiness issues; static
+syntax and diff checks pass. Both focused engines and fresh evidence
+review remain required.
 
 All testing uses local temporary empires. Browser art requests read the
 public art bucket; no production game account or saved game is tested.

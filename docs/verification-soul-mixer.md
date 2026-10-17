@@ -123,3 +123,24 @@ The original-data blocker persists: genuine later ranks, mixing times,
 power-up levels and passive-grant level are still missing. These checks
 verify supported rules and the safe unavailable state; they do not claim
 playable new mixing.
+
+## Historical-save browser follow-up
+
+The complete combined Chromium run at clean `56d1bdbe` passes 86/86 in
+8305.262 seconds. Its Soul case passes in 61 seconds and verifies only
+the unavailable/help state. The game source matches unit-tested
+`b6ed5175`: 467 server tests run (458 passed, nine existing skips), types
+and all 451 client tests passed. The full archive contains 507 fresh PNGs.
+
+A stronger test-only extension now restores an explicit-ready historical
+queue in the isolated runner's SQLite save while its server is stopped,
+then restarts normally and uses the real window/commands. It checks phone
+collection, both surviving parents, zero cash/XP, the retained claimed
+marker, reload/retry and malformed building-output refusal. The existing
+unavailable/help/phone assertions remain. All four original tables stay
+absent; the fixture is protocol coverage, not a recovered combination.
+The optional test harness also awaits clean shutdown before editing or
+deleting temporary data. No game source or production hook changes.
+Independent review and static syntax checks pass; focused Chromium,
+WebKit and fresh capture/log review remain pending. Exact results belong
+in [the integration record](verification-special-buildings.md).
