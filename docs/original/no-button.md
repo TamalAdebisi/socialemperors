@@ -482,3 +482,13 @@ the original never shows it).
 17. **Attacks received while away** (rule 14) and the attack and spying
     counters (rules 7, 45): with attacks on players, at the switch.
     (checked twice)
+
+## Time/weather follow-up, 17 October 2026
+
+The machine slice reread the selected-building entry points and all
+window/help/reload paths. First opening the Time Machine automatically
+shows help and saves `timeMachineHelp` with `set_help_map`; repeat openings
+use the saved flag. A time jump reloads the current town and rereads its
+waits. Choosing a locked weather look also applies it immediately and
+reloads. Built in `ui/machines.ts`; [the complete source notes](rules/machines.md)
+record preserved calendar boundaries and the omitted travel-animation delay.

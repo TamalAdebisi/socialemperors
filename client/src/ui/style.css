@@ -4970,3 +4970,21 @@ button.world-piece:hover img {
 @media (prefers-reduced-motion: reduce) {
   .lesson-arrow img, .lesson-marker { animation: none; }
 }
+
+/* Time and weather machines: the same panel becomes the phone's sheet. */
+.machine-window .machine-help p { white-space: pre-line; }
+.machine-window .machine-status:empty { display: none; }
+.machine-window .row-text { min-width: 0; }
+.machine-window .machine-packet,
+.machine-window .machine-look { gap: 8px; }
+.machine-window .machine-packet .button,
+.machine-window .machine-look .button { flex-shrink: 0; }
+.machine-hourglass { width: 64px; height: 50px; object-fit: contain; }
+.machine-window .machine-look { flex-wrap: wrap; }
+.machine-theme { width: 92px; height: 72px; object-fit: cover; border-radius: 4px; }
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  .machine-hourglass { width: 44px; height: 34px; }
+  .machine-window .machine-packet { gap: 5px; }
+  .machine-window .machine-packet .button { padding: 6px 8px; }
+  .machine-theme { width: 72px; height: 58px; }
+}

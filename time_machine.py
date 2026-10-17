@@ -23,7 +23,7 @@ from village import STARTED, take
 
 # Waits kept for the whole player, and in each town.
 PLAYER_WAITS = ("timestampLastBonus", "timeStampTakeCare", "timeStampTakeCareMonster",
-                "riderTimeStamp", "timeStampTemple", "timeStampDartsNewFree")
+                "riderTimeStamp", "timeStampTemple", "timeStampDartsNewFree", "tsAttacksReset")
 TOWN_WAITS = ("timestampLastTreasure",)
 
 
@@ -70,6 +70,11 @@ def jump(save: dict, jump: int) -> str:
     for key in PLAYER_WAITS:
         if key in pState:
             pState[key] = _earlier(pState[key], seconds)
+    # The original help explicitly includes PvP: the next attack allowance is
+    # calculated from the attacks the player sent, not received history.
+    for attack in pState.get("attacksSent", []) or []:
+        if isinstance(attack, dict) and "time" in attack:
+            attack["time"] = _earlier(attack["time"], seconds)
     if isinstance(pState.get("survivalVidaTimeStamp"), list):  # survival lives come back sooner
         pState["survivalVidaTimeStamp"] = [_earlier(t, seconds) for t in pState["survivalVidaTimeStamp"]]
 

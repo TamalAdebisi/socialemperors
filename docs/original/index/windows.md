@@ -58,11 +58,11 @@ The plain boxes the rest of the game opens.
 | `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
 | `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | built: `rules/market.ts`; `market.py` uses the same sums |
 | `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | not yet; `social.py` |
-| `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | not yet; `shop.py` |
+| `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | built: `ui/machines.ts`, `rules/machines.ts`; `shop.py` |
 | `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | not yet; `warehouse.py` |
 | `popups/tournament/UnitWarehouseCard.as` | 55 | A card in the unit warehouse: the unit's picture, its name on hover. | not yet (with the warehouse) |
-| `popups/PopupSelectTime.as` | 241 | The time machine: buy time packs (30 min to 1 day, 2 to 75 cash; `buy_time_packet`) and use one (`time_ff`), which reloads the town moved forward. Shows its help by itself the first time. | not yet; `time_machine.py` |
-| `popups/PopupHelpTimeMachine.as` | 74 | The time machine's help page, recording it as seen with `set_help_map`. | not yet |
+| `popups/PopupSelectTime.as` | 241 | The time machine: buy time packs (30 min to 1 day, 2 to 75 cash; `buy_time_packet`) and use one (`time_ff`), which reloads the town moved forward. Shows its help by itself the first time. | built: `ui/machines.ts`, `rules/machines.ts`; `time_machine.py` |
+| `popups/PopupHelpTimeMachine.as` | 74 | The time machine's help page, recording it as seen with `set_help_map`. | built: `ui/machines.ts`, first-open and ? help |
 | `popups/PopupExpand.as` | 126 | "Congratulations" after buying land, to share on Facebook. | not needed: Facebook share; the land itself is built (`rules/land.ts`) |
 | `popups/PopupBuilding.as` | 128 | "Congratulations" for a building: half the time a building is bought for the first time (always for a unit), and when a social building opens. Only offers a Facebook share. | not needed: Facebook share |
 

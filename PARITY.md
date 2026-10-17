@@ -357,8 +357,23 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
-Survival, tournaments, the nests and the mandatory tutorial are now built;
+Survival, tournaments, the nests, the mandatory tutorial and the time/weather machines are now built;
 ROADMAP.md tracks the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.
+
+### Time and weather machines
+
+- [x] Original card actions and pictures; six time packets with config
+      prices, saved counts, separate buy/use and first-opening help.
+- [x] Successful-save-before-reload travel, with the original travelling
+      words and duration; recovery after a failed save. The original
+      three-second travel animation delay is omitted (DECISIONS.md).
+- [x] Outgoing PvP attack allowance advances with time travel; existing
+      calendar-event dates and received history stay unchanged.
+- [x] Six weather themes, IDs 0/1/2/4/5/6, original previews/words,
+      immediate unlock-and-apply, free grass and retained paid ownership.
+
+Source notes: [machines](docs/original/rules/machines.md). Desktop/phone
+browser checks read the saved cash, counts, help, working timer and skin.

@@ -516,7 +516,7 @@ of the original's searches measure from.
   (`add_unit_warehouse`) and has its own window. *Missing.*
 - **Buildings with their own window** (the spell academy, weather and
   time machines, graveyards, the altar of heroes, nests, markets): opened
-  from the panel. *Not checked (other books).*
+  from the panel. *Machines built in `ui/machines.ts`; their complete rules are in [machines.md](machines.md). Other windows: see their own books.*
 
 ## The town hall
 

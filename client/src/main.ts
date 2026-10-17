@@ -55,6 +55,7 @@ import { NeighboursWindow } from "./ui/neighbours.ts";
 import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
+import { Machines } from "./ui/machines.ts";
 import { MarketWindow } from "./ui/market.ts";
 import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
@@ -513,6 +514,17 @@ async function start(): Promise<void> {
       arrived: (placed, lines) => editor.arrived(placed, lines),
       changed: () => hud.update(town),
     });
+    const machines = new Machines({
+      town, config, saved,
+      words: (id) => ((config.localization_strings as { id: number; text: string }[]).find((line) => Number(line.id) === id)?.text ?? ""),
+      picture: (name) => {
+        const folder = (config.images as Record<string, string> | undefined)?.[name];
+        return `${settings.assetsUrl}/images_new/${folder ? `${folder}/` : ""}${name}`;
+      },
+      send: (cmd, ...args) => { commands.add(cmd, ...args); return commands.flush(); },
+      changed: () => hud.update(town),
+      travel: (message) => { showStatus(message); location.reload(); },
+    });
     let learning = firstLesson !== null;
     const laterLevels: Parameters<LevelUpWindows["show"]>[0] = [];
     const lines = new Map(((config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
@@ -637,7 +649,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return market.buttonFor(placed) ?? graves.windowOf(placed);
+        return machines.windowOf(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();

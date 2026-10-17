@@ -4,6 +4,29 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: finish the time and weather machines
+
+- **Preserve buying separately from using.** Time packets keep the config's
+  six sizes/prices and saved counts; missing stock gives the original
+  warning. First-open help uses the original `timeMachineHelp` key. Weather
+  unlock immediately applies and reloads; grass and already-owned looks
+  stay free, with the original gap at theme 3.
+- **Save before travelling.** Wait for acknowledged commands instead of
+  the original fixed half-second timeout. On failure, stop further writes
+  on the uncertain balance and offer Reload saved town. Keep the original
+  travelling words/duration but omit its extra three-second animation
+  delay, following the existing panel/loading presentation.
+- **Fill the advertised outgoing-PvP wait.** The original help explicitly
+  says time travel speeds PvP. Our server already moved the other supported
+  waits but omitted sent attack times; move those and their reset threshold
+  together. Received attack history, spy visits and calendar-event dates
+  retain their existing behavior. The original server is unavailable; this
+  is a narrow judgment based on the shipped help and existing attack-counter
+  calculation, covered by server tests.
+- **Preserve ownership boundaries.** The weather build goal already works;
+  no goal hooks, progression runtime, combat, menus or click controls change.
+  Local source reading is summarized in `docs/original/rules/machines.md`.
+
 ## 17 October 2026: preserve real visibility in background-play fixtures
 
 - **Simulate hidden tabs without overriding actual page unloading.** A local

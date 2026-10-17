@@ -94,6 +94,8 @@ export const ICONS = {
   "open-graveyard": new URL("./art/open-graveyard.webp", import.meta.url).href,
   "open-harbour": new URL("./art/open-harbour.webp", import.meta.url).href,
   "open-zeppelin": new URL("./art/open-zeppelin.webp", import.meta.url).href,
+  "open-time-machine": new URL("./art/open-time-machine.webp", import.meta.url).href,
+  "open-weather-machine": new URL("./art/open-weather-machine.webp", import.meta.url).href,
   // Arthur's lessons, and the free draggy at their end.
   "tutor-arthur": new URL("./art/tutor-arthur.webp", import.meta.url).href,
   "tutor-arrow": new URL("./art/tutor-arrow.webp", import.meta.url).href,
