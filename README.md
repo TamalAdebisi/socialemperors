@@ -1,19 +1,24 @@
 ![Social Empires](templates/img/logo.png "Social Empires logo")
 
 **Social Empires**, Social Point's strategy game from Facebook, playable
-again at **[socialemperors.me](https://socialemperors.me)**: free, online,
-your empire saved on the server, with neighbours to visit and the original
-art, music and quests.
+again: a server that stands in for the game's old one, with your empire
+saved on it, neighbours to visit and the original art, music and quests.
 
 This is a non-commercial fan project. Nothing is for sale, and the game's
 art and music still belong to their owners ([Copyright](ROADMAP.md#copyright)).
 
 ## Play
 
-Make an account at [socialemperors.me](https://socialemperors.me), choose
-an empire and press **Play**. The new client runs on phones and computers.
-Arthur's tutorial starts automatically, saves your progress and ends with
-your first draggy. **Menu** opens Friends, Empires and Log out.
+Fork this repository or download it (**Code** → **Download ZIP**), and run
+it yourself: see [Run it on your computer](#run-it-on-your-computer) below,
+or [DEPLOY.md](DEPLOY.md) to put it online for friends. Then open it in
+your browser, make an account, choose an empire and press **Play**.
+
+The game's client runs on phones and computers. It needs its art made
+first: `tools/export_art.sh` draws it from the game's own files (it takes
+hours; the script says how to share the work between computers). Arthur's
+tutorial starts automatically, saves your progress and ends with your
+first draggy. **Menu** opens Friends, Empires and Log out.
 
 Town building, battles and quests are playable; development continues on
 the remaining features. [CLIENT.md](CLIENT.md) describes what is built,
@@ -93,6 +98,6 @@ GNU General Public License, version 3 ([LICENSE](LICENSE)).
 ```
 Social Empires preservation project.
 Copyright (C) 2022  The Social Emperors team
-Changed since 2026 for socialemperors.me.
+Changed since 2026 in this fork.
 See the GNU General Public License <https://www.gnu.org/licenses/>.
 ```

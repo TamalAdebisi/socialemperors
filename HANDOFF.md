@@ -19,6 +19,14 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **The repository no longer names the live game (17 October).** It
+  stays public (GitHub won't make a public fork private), so its docs use
+  "the live site" or `example.com`; don't write the real addresses back
+  (CLAUDE.md, "Never"). The browser tests now take the art bucket's
+  address from `SE_E2E_LIVE_ASSETS`. If it isn't set and there's no
+  `art/sheets/`, `e2e/run.mjs` stops at once and says so: ask the owner
+  to add it to the environment (AGENTS.md, Setting up).
+
 - **Latest-main integration; verification pending:** the special-building
   candidate now merges main `a0f3ab19` (#99, #105–109 and their delivery
   records) with `a75d1e05`. Both streams' runtime, original-art and test
@@ -295,7 +303,7 @@ next agent knows where to start.
   skips), client types and all 348 unit tests passed. The integrated
   browser suite ran all 67 tests: 67 passed, 0 failed. Details and the
   separate art follow-up are below.
-- **The live game,** socialemperors.me, has been on Supabase since 15
+- **The live game** has been on Supabase since 15
   October 2026, as a fresh start. It deploys by itself when `main` changes.
   Code work uses local servers and needs no live database access. The
   separate art repair below has verified the public files and the final
@@ -493,7 +501,7 @@ purging exactly [these 20 URLs](docs/team-art-cache-purge.txt) in the
 Cloudflare dashboard. No further export, bucket deletion or purge was
 performed. On **16 October, 11:24:20–11:24:40 UTC**, each ordinary image
 was compared with its `?repair=38885093455` version both without Origin
-and with `Origin: https://socialemperors.me`. **All 40 comparisons passed:**
+and with the live site's `Origin`. **All 40 comparisons passed:**
 SHA-256 bytes and actual WebP dimensions agree, dimensions match the JSON,
 and all files match the verified fresh export. Plain ordinary requests
 were `HIT` (Age 369–400 seconds); Origin ordinary requests were `MISS`

@@ -24,9 +24,13 @@ A short copy, so they can't be missed. CLAUDE.md has them all, with the why.
   requests, comments and messages to the owner too.
 - **No passwords, API keys or tokens** in chat or in the repository. You
   don't need any (below).
-- **Test on this computer only:** never on socialemperors.me, never with
-  the owner's account, never make accounts on the live site. The browser
-  tests start a server of their own.
+- **Test on this computer only:** never on the live site, never with
+  the owner's account, never make accounts there. The browser tests start
+  a server of their own.
+- **Don't name the live game's addresses** (its domain, its art's,
+  staging's or Supabase's) in the repository, pull requests or comments.
+  The repository is public; write "the live site", or `example.com` in
+  instructions.
 - **The original art and the original rules.** Pictures and sounds come
   from the game's own files; the new client sends the same commands as the
   Flash client and does what it did. When unsure, read the decompiled client.
@@ -56,8 +60,9 @@ environment:
 | Package versions | Python 3.13, Node 22 (22.18 or newer), Java 21 if offered | What the live server runs; Node 22.18 runs the client's TypeScript tests as they are; Java builds the decompiler |
 | Setup script | `bash tools/setup.sh` | Runs with the internet, before you start |
 | Maintenance script | `bash tools/setup.sh` | Runs when a saved container is reused: picks up packages that changed since |
-| Agent internet access | On, allowlist *None* plus the domain `assets.socialemperors.me`, methods GET, HEAD and OPTIONS | The browser tests take the game's pictures from the live art bucket. Reading only: nothing else is needed |
-| Environment variables, secrets | None | Nothing in the work needs a key |
+| Agent internet access | On, allowlist *None* plus the live art bucket's domain, methods GET, HEAD and OPTIONS | The browser tests take the game's pictures from the live art bucket. Reading only: nothing else is needed |
+| Environment variables | `SE_E2E_LIVE_ASSETS` = the live art bucket's address (the owner has it: Railway's `SE_ASSETS_URL`) | Where the browser tests find the art. Not a secret, but the repository is public and doesn't name it |
+| Secrets | None | Nothing in the work needs a key |
 
 If `javac` is missing after setup, the script says so and skips the
 decompiling. Then the setup script needs a JDK first, for example
@@ -73,7 +78,9 @@ doesn't carry over to your commands, so always name the project's Python:
 Run `tools/setup.sh` once in the repository. It needs Python 3.13, Node
 22.18 or newer, the internet, and a Java JDK 11 or newer for the
 decompiling. The browser tests start a local server and a browser, so let
-those commands run outside the sandbox when asked.
+those commands run outside the sandbox when asked. They take their art
+from the live bucket, so set `SE_E2E_LIVE_ASSETS` to its address (the
+owner has it).
 
 ## Testing
 
