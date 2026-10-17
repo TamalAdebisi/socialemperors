@@ -210,7 +210,7 @@ export class DragonRidersWindow {
     this.apply(next.state, next.commands);
   }
 
-  private spawn(item: ItemInfo, consumed: number[] = []): boolean {
+  private spawn(item: ItemInfo, consumed: number[] = [], after: Command[] = []): boolean {
     if (!this.usable()) return false;
     const building = this.building!;
     const tile = freeTileNear(this.parts.town, building);
@@ -220,6 +220,7 @@ export class DragonRidersWindow {
     const placed: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
     this.parts.town.items.push(placed);
     commands.push({ cmd: "buy", args: [item.id, tile.x, tile.y, 0, this.parts.town.id, 1, 1, "u"] });
+    commands.push(...after);
     this.parts.send(commands);
     this.parts.arrived(placed);
     this.parts.changed();
@@ -229,8 +230,9 @@ export class DragonRidersWindow {
   private claim(kind: RiderKind): void {
     const state = riderState(this.parts.saved);
     if (state.number !== kind.number || state.step < kind.steps || recoveryLeft(state, this.parts.clock()) > 0) return;
-    if (!this.spawn(this.parts.items.get(kind.item)!)) return;
-    this.apply({ number: 0, step: 0, since: -1 }, [{ cmd: "rider_select", args: ["0"] }]);
+    // Reward and reset share the same batch, including retries or page exit.
+    if (!this.spawn(this.parts.items.get(kind.item)!, [], [{ cmd: "rider_select", args: ["0"] }])) return;
+    saveRider(this.parts.saved, { number: 0, step: 0, since: -1 });
     this.panel.close();
   }
 

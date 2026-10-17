@@ -16,10 +16,29 @@ them can be found and reversed. The big, agreed decisions are in
   `tamed_id`; the old window expects `tamedId`. Normalize both when reading
   the config so those intended pairings have their configured output.
   Pair eligibility, recovery prices and command formats do not change.
-- **Bound the verification claim.** Browser checks load the real adventure
-  and use real input, then inject deterministic success/failure adapter
-  events to check save effects. They do not claim a complete eight-adventure
-  platformer playthrough. The original asset itself is unchanged.
+- **Use a renderer that supports the original collision checks.** The
+  legacy Ruffle WebGL renderer drew the stage but failed its bitmap-reading
+  operation, leaving the actor still while the wrapper clock advanced.
+  Select Ruffle's bitmap-capable `wgpu-webgl` backend. Actual position and
+  ordinary input, plus the runtime's error logger, are checked. Keep the
+  shipped asset, game speed, drawing quality and frame rate unchanged.
+- **Calibrate the new native-play fixture against its game clock.** Its
+  initial, unmeasured 60-second journey limit failed on local software
+  drawing measured around three frames per second. Replace that new limit
+  with at most 600 original movie frames per adventure and 30-second wall
+  liveness for each segment of at most 30 frames. Require actual gameplay
+  progress beyond the wrapper clock, and retain all screen/save assertions.
+  No established test is relaxed. The failed runs and interrupted retry
+  remain in [the verification record](docs/verification-dragon-riders.md).
+- **Bound the verification claim.** The focused fixture requires the real
+  first-adventure win and eighth-adventure loss through ordinary input and
+  the original end-screen buttons. Its phone success adapter checks the
+  final transformation separately. Those checks do not claim a complete
+  eight-adventure playthrough. Completion is recorded only after the run.
+- **Keep rider reward and reset in one command batch.** The original
+  queues its free unit and training reset together. Preserve that order
+  in one retryable request, so leaving after a reward cannot strand a
+  separate unsent reset. Reopening shows the picker and cannot claim twice.
 
 ## 17 October 2026: preserve real visibility in background-play fixtures
 

@@ -8,6 +8,12 @@ const ACADEMY = [56, 52], TAMING = [48, 58];
 export default async function riderTraining({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
+  const commandBatches = [];
+  page.on("request", (request) => {
+    if (!request.url().endsWith("/command.php")) return;
+    const data = new URLSearchParams(request.postData() ?? "").get("data") ?? "";
+    commandBatches.push(JSON.parse(data.slice(data.indexOf(";") + 1)).commands);
+  });
   // Ruffle's Rust logger prints AVM2 failures as formatted console.log.
   const runtimeErrors = (message) => { if (/%cERROR%c/.test(message.text())) player.problems.push(message.text()); };
   page.on("console", runtimeErrors);
@@ -157,6 +163,16 @@ export default async function riderTraining({ newPlayer }) {
   assert.equal(Number(saved.playerInfo.cash), Number(initial.playerInfo.cash) - 75);
   const rider = saved.map.items.find((item) => item[0] === 822);
   assert.equal(Number(saved.map.coins), Number(initial.map.coins), "the rider is placed free");
+  const claimBatch = commandBatches.find((batch) => batch.some((command) => command.cmd === "buy" && Number(command.args[0]) === 822));
+  assert.ok(claimBatch, "claim was sent through the real CommandSender");
+  const rewardIndex = claimBatch.findIndex((command) => command.cmd === "buy" && Number(command.args[0]) === 822);
+  assert.equal(claimBatch[rewardIndex + 1]?.cmd, "rider_select", "reward and reset share one ordered retryable batch");
+  assert.equal(Number(claimBatch[rewardIndex + 1].args[0]), 0);
+  await player.select(ACADEMY, "Rider Academy");
+  await player.press("Open");
+  await panel.locator(".rider-choices").waitFor();
+  await page.keyboard.press("Escape");
+  assert.equal((await info()).map.items.filter((item) => item[0] === 822).length, 1, "reopening the academy cannot claim again");
 
   // Send the trained rider and a compatible dragon through the ordinary
   // map interaction. This checks entry, the screen and the saved pair.

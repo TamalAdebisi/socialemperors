@@ -23,7 +23,7 @@ published. Combat delegates remain a separate task.
   and reopening the window, and resets when the page reloads.
 - Once all steps and the last recovery are complete, **Get rider** places
   the configured rider free on a nearby free tile, then resets training
-  with `rider_select ["0"]`. No population or ordinary training purchase
+  with `rider_select ["0"]` in the same ordered command batch. No population or ordinary training purchase
   check applies to this free reward. No room means no reset.
 - Dragon Riding admits riders 822–824 and untamed dragons named in
   `DRAGONS`. It accepts one of each in either order. Two dragons or two
@@ -54,6 +54,9 @@ existing data mismatch without changing pair eligibility or rewards.
 `ui/riderAdventure.ts`, the configured dragon entry metadata and
 `rules/work.ts`. `tools/art/export_riders.py` exports only original art;
 `tools/art/build_minigame_bridge.sh` compiles only our loader source.
-Browser coverage verifies real adventure loading/input plus deterministic
-success/failure adapter events and saved training/transformation state;
-it does not claim a full playthrough of all eight platformer adventures.
+The focused fixture requires genuine first-adventure success and eighth-
+adventure loss via their original end-screen callbacks, and uses a phone
+success adapter separately for the saved transformation. See
+[the verification record](../../verification-dragon-riders.md) for actual
+run status, renderer evidence and failed attempts. It does not claim a
+full playthrough of all eight platformer adventures.
