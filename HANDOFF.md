@@ -19,6 +19,15 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Special-building integration:** the five scoped branches/PRs are
+  combined on `codex/special-building-verification` for their full local
+  release checks. Exact `97b12e13` passes 462 server tests (453 passed,
+  nine existing skips), client types and all 445 client tests. Subsequent
+  machine recovery stacking and rider verification observations still
+  require the final combined checks. [The integration record](docs/verification-special-buildings.md)
+  retains exact scope and results; no full browser pass or merge is
+  claimed yet. Soul Mixer remains explicitly blocked on original data.
+
 - **Time/weather machine slice:** implemented in `ui/machines.ts` and
   `rules/machines.ts`, with original art and local-source notes in
   `docs/original/rules/machines.md`. Browser focus and combined pre-merge
