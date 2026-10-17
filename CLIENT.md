@@ -1609,6 +1609,23 @@ Before asking for either warning, it waits for the earlier messages to
 finish: goal rewards share the queue, and a full queue drops new messages.
 The wait has a 30-second limit; the warning and save checks stay the same.
 
+### The Soul Mixer
+
+The building opens its original-art window and help. Its later original
+rules and queue commands are implemented with tests, but **mixing remains
+unavailable with the archived config**: original unit ranks, mixing times,
+power-up prices and minimum level were not preserved. The window says so
+and blocks new selection/mixing and all cash spending. No replacement
+rules are invented. Known completed legacy queues remain collectable
+without spending; unknown waits remain unknown.
+
+Files: `rules/soulMixer.ts`, `ui/soulMixer.ts`, `soul_mixer.py` and their
+tests; browser check `e2e/tests/soul-mixer.mjs`. The exact source contract,
+passive grant and recovery search are in
+[the original-rule notes](docs/original/rules/soul-mixer.md). No later
+Soul Mixer goal exists in the 227 shipped missions; the unfinished-goal
+count is unchanged.
+
 ### The troll town
 
 The player's second town, as the Flash client offers it (`rules/towns.ts`,

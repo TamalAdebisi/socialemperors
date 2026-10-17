@@ -67,6 +67,10 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, no
     return unit.isUnit && warehouseCount(town) < warehouseCapacity(town);
   }
   if (building.unitsInside >= target.capacity) return false;
+
+  if (target.id === 1529) {
+    return town.soulMixerReady === true && !building.soulMixing && (unit.breedingOrder ?? 0) > 0;
+  }
   if (target.subcategory === SUBCAT.refuge) {
     return true;
   }

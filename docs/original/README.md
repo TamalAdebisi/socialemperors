@@ -25,6 +25,7 @@ update its status here.
 | [rules/warehouse.md](rules/warehouse.md) | **Rule book: the Unit Warehouse.** Admission, off-map population, slot pages, deployment checks, bought capacity, storing and selling |
 | [rules/temple.md](rules/temple.md) | **Rule book: Supreme temple.** Freely selected offerings, sacrifices, saved waits, the Heart, free claim/reset and the admin-only wait shortcut |
 | [rules/dragon-riders.md](rules/dragon-riders.md) | **Rule book: dragon riders and taming.** Picker, recovery/shortcut, building entry, transformation and the unchanged shipped adventures |
+| [rules/soul-mixer.md](rules/soul-mixer.md) | **Later-version rule book: Soul Mixer.** Ranking, power-ups, queue, surviving parents and passive grant; exact missing original tables keep new mixing unavailable |
 | [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 84 rules |
 
 The index, by area:

@@ -468,6 +468,12 @@ merging the two wait fixes with that separate failure documented.
         adventures in the pinned Ruffle runtime
         ([CLIENT.md](CLIENT.md#dragon-riders-and-taming)).
 
+The Soul Mixer has its original-art window, generic later rules and queue
+protocol. **Play remains blocked by missing original content**:
+`breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` and
+`SOUL_MIXER_MIN_LEVEL` are absent from preserved config/history/upstream.
+No substitute tables ship. See [research and limits](docs/original/rules/soul-mixer.md).
+
 ## How we add a missing feature
 
 1. **Find it.** The bug radar or a player report names a command the server ignores.

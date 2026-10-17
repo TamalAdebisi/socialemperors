@@ -35,6 +35,7 @@ import tournaments
 import towns
 import tutorial
 import worlds
+import soul_mixer
 
 
 def get_strategy_type(id):
@@ -137,6 +138,9 @@ def do_command(USERID, cmd, args, previous=None):
         frame = args[5]
         town_id = args[6]
         reason = args[7] # "Unitat", "moveTo", "colisio", "MouseUsed"
+        if (newx != ix or newy != iy) and soul_mixer.locked_at(save, town_id, id, ix, iy):
+            print("Soul Mixer: collect the mixed unit before moving the building.")
+            return
         print("Move", str(get_name_from_item_id(id)), "from", f"({ix},{iy})", "to", f"({newx},{newy})")
         map = save["maps"][town_id]
         for item in map["items"]:
@@ -173,6 +177,9 @@ def do_command(USERID, cmd, args, previous=None):
         town_id = args[3]
         bool_dont_modify_resources = args[4]
         reason = args[5]
+        if soul_mixer.locked_at(save, town_id, id, x, y):
+            print("Soul Mixer: collect the mixed unit before selling the building.")
+            return
         print("Remove", str(get_name_from_item_id(id)), "from", f"({x},{y}). Reason: {reason}")
         map = save["maps"][town_id]
         for item in map["items"]:
@@ -225,6 +232,12 @@ def do_command(USERID, cmd, args, previous=None):
         town_id = args[5]
         print("Push", str(get_name_from_item_id(unit_id)), "to", f"({b_x},{b_y}).")
         map = save["maps"][town_id]
+        mixer = next((item for item in map["items"] if item[0] == soul_mixer.BUILDING and item[1] == b_x and item[2] == b_y), None)
+        if mixer is not None:
+            warning = soul_mixer.entry_warning(save, town_id, mixer, unit_id, unit_x, unit_y)
+            if warning:
+                print(warning)
+                return
         # Unit into building
         for item in map["items"]:
             if item[1] == b_x and item[2] == b_y:
@@ -239,6 +252,18 @@ def do_command(USERID, cmd, args, previous=None):
             if item[0] == unit_id and item[1] == unit_x and item[2] == unit_y:
                 map["items"].remove(item)
                 break
+
+    elif cmd == "buy_powerups":
+        print(soul_mixer.buy_powerup(save, args[0]))
+
+    elif cmd == "push_queue_unit":
+        print(soul_mixer.push(save, *args))
+
+    elif cmd == "speed_up_queue":
+        print(soul_mixer.speed_up(save, args[0]))
+
+    elif cmd == "pop_queue_unit":
+        print(soul_mixer.pop(save, *args))
     
     elif cmd == Constant.CMD_POP_UNIT:
         b_x = args[0]
@@ -255,6 +280,9 @@ def do_command(USERID, cmd, args, previous=None):
         # Remove unit from building
         for item in map["items"]:
             if item[1] == b_x and item[2] == b_y:
+                if soul_mixer.locked_at(save, town_id, item[0], b_x, b_y):
+                    print("Soul Mixer: collect the mixed unit before removing its parents.")
+                    return
                 if len(item) < 7:
                     break
                 if unit_id in item[6]: # one the server didn't know was inside still comes out
@@ -322,6 +350,9 @@ def do_command(USERID, cmd, args, previous=None):
         y = args[1]
         town_id = int(args[2])
         item_id = args[3]
+        if soul_mixer.locked_at(save, town_id, item_id, x, y):
+            print("Soul Mixer: collect the mixed unit before storing the building.")
+            return
         print("Store", str(get_name_from_item_id(item_id)), "from", f"({x},{y})", end=": ")
         print(inventory.put_away(save, x, y, town_id, item_id))
 

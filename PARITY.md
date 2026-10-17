@@ -382,6 +382,15 @@ DECISIONS.md and `docs/original/rules/warehouse.md`.
   the responsive panel; the cosmetic four-second playback is omitted.
   [Rules](docs/original/rules/temple.md), [verification](docs/verification-temple.md).
 
+## Soul Mixer
+
+- [x] Later original window/art, generic ranking and power-up rules,
+  original queue protocol, saved work, explicit collection and safe parents.
+- [x] Safe missing-data window and desktop/phone saved-state coverage.
+- [ ] Restore genuine later original ranks, waits, power-up table and
+  passive-grant level before enabling playable mixing. The 0926 classic
+  predates it. See [exact missing data](docs/original/rules/soul-mixer.md).
+
 ## Not for Beta 1
 
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,

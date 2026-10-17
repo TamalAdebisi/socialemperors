@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve the Soul Mixer without inventing missing content
+
+- **Require the later original data before enabling new mixes.** The 0926
+  classic predates it. Local 1.4.07 research recovered behaviour, but all
+  preserved/historical configs and the preservation upstream lack ranks,
+  waits, power-up levels and the passive-grant level. Build original-art
+  help/window, generic rules and queue commands with a safe unavailable
+  state. No cash or units move and no replacement tables ship. This is
+  an explicit content blocker, not completed playable mixing. Full
+  validation gates ordinary map entry as well as the window and every
+  cash-spending action, even with partially restored ranks/times. Known
+  completed legacy work remains collectable without spending.
+- **Refuse a power-up beyond the final eligible result before charging.**
+  The later original could run past its list. Preserve weighted ranks,
+  random ranges and current-price/next-increment ordering while bounding
+  that terminal case. Synthetic content stays confined to tests.
+- **Protect saved work and both surviving parents.** Use original
+  `attrs.bq`/`barracksQueues` and queue commands. Finished work waits for
+  Get unit; unknown waits remain unknown. Repeated output collection is
+  ignored, malformed timestamps never become zero, and active work cannot
+  discard its building or parents. Execution-time guards cover captured
+  card/confirmation callbacks as well as their displayed button state;
+  window actions recheck live building and current parents. Turning
+  remains available as in the original. No
+  combat behaviour or later progression goal is added.
+
 ## 17 October 2026: preserve the original rider adventures
 
 - **Play the shipped mini-game unchanged.** Rider training and taming

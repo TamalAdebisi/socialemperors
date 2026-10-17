@@ -59,6 +59,9 @@ import { Machines } from "./ui/machines.ts";
 import { MarketWindow } from "./ui/market.ts";
 import { WarehouseWindow } from "./ui/warehouse.ts";
 import { warehouseRules } from "./rules/warehouse.ts";
+
+import { SoulMixerWindow } from "./ui/soulMixer.ts";
+import { givenMixer, mixerRules, readMixer } from "./rules/soulMixer.ts";
 import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
@@ -619,6 +622,24 @@ async function start(): Promise<void> {
         menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
       },
     });
+
+    const soulRules = mixerRules(config, items);
+    const soulMixer = new SoulMixerWindow({
+      town, items, rules: soulRules, state: readMixer(saved.barracksQueues), clock, assets: settings.assetsUrl, line,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => { commands.add(command.cmd, ...command.args); void commands.flush(); },
+      enter: (unit, building) => editor.putInsideFromWindow(unit, building),
+      arrived: (unit) => editor.arrived(unit, []),
+      changed: () => { hud.update(town); editor.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
+    const giveMixer = () => {
+      const given = givenMixer(town, soulRules, items);
+      if (given) {
+        given.commands.forEach((command) => commands.add(command.cmd, ...command.args));
+        editor.arrived(given.placed, []);
+      }
+    };
     const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
     const warehouse = new WarehouseWindow({
       town, items, rules: warehouseRules(config),
@@ -687,9 +708,10 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
+        return soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
+        giveMixer();
         bonuses?.levelled();
         if (level === GOALS_END_LEVEL) {
           // Level 35, as the Flash client marks it: the goals stop, and a Wizardry Academy is given.
@@ -702,6 +724,7 @@ async function start(): Promise<void> {
           }
         }
       } });
+    giveMixer();
     hud.offerCollectAll(() => editor.collectAll());
     hud.offerSquareTool(() => editor.takeSquareTool());
     // Naming the empire, from the top bar as in the Flash client: `name_map` (town, name).

@@ -73,6 +73,9 @@ export interface ConfigItem {
   groups?: string;
   /** Buildings: what Upgrade turns it into (its id, 0 none). */
   upgrades_to?: string;
+  /** Later original Soul Mixer content. Absent from the archived 2012 config. */
+  breeding_order?: string;
+  sm_training_time?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -171,6 +174,8 @@ export interface ItemInfo {
   dragonRider?: number;
   /** Buildings: the item Upgrade turns it into, or 0. */
   upgradesTo: number;
+  breedingOrder?: number;
+  soulMixingTime?: number;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -216,6 +221,8 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     elevation: item.elevation === undefined ? 1 : Number(item.elevation),
     groups: item.groups ?? "",
     upgradesTo: Number(item.upgrades_to) || 0,
+    breedingOrder: Number(item.breeding_order) || 0,
+    soulMixingTime: Number(item.sm_training_time) || 0,
   };
 }
 

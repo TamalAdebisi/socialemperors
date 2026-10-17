@@ -1,0 +1,14 @@
+.soul-mixer .panel-body { position: relative; }
+.soul-mixer-scene { width: 100%; height: auto; border-radius: 8px; }
+.soul-mixer-content { padding: 10px; text-align: center; }
+.soul-mixer-content > .button { display: block; margin: 8px auto; }
+.soul-mixer-parents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.soul-mixer-parents img { width: 90px; height: 90px; object-fit: contain; }
+.soul-mixer-parents p { overflow-wrap: anywhere; }
+.soul-mixer-parents .button { width: 100%; margin: 3px 0; white-space: normal; }
+.soul-mixer-result { display: block; width: 150px; height: 150px; object-fit: contain; margin: 12px auto; }
+.soul-mixer-result.silhouette { filter: brightness(0); }
+.soul-mixer-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.soul-mixer-choices .button { white-space: normal; overflow-wrap: anywhere; }
+.soul-mixer-help img { display: block; max-width: 100%; margin: 12px auto; }
+.soul-mixer-unavailable { line-height: 1.5; }

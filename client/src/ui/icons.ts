@@ -128,6 +128,7 @@ export const ICONS = {
   "click-here": new URL("./art/click-here.webp", import.meta.url).href,
   // The market (ui/market.ts): its card's button, a trade's card and its button.
   "open-market": new URL("./art/open-market.webp", import.meta.url).href,
+  "open-soul-mixer": new URL("./art/open-soul-mixer.webp", import.meta.url).href,
   "market-card": new URL("./art/market-card.webp", import.meta.url).href,
   "market-button": new URL("./art/market-button.webp", import.meta.url).href,
   "open-warehouse": new URL("./art/open-warehouse.webp", import.meta.url).href,

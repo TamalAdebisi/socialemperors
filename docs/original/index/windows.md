@@ -28,6 +28,17 @@ of a command is named when it's in its own file. A few rows say "not yet"
 though the classic game on our server doesn't show the window either (the
 potion offer, buying a place on the player-attack world); the row says why.
 
+## Later preserved client: Soul Mixer (1.4.07)
+
+These classes are absent from the 0926 inventory counted above. Researched
+locally on 17 October; [rules and missing data](../rules/soul-mixer.md).
+
+| Class | What it does | Status |
+| --- | --- | --- |
+| `popups/PopupSoulMixer.as` (including `SoulMixerItem`, `SoulMixerPoweredUnit`) | Two surviving souls, random ranked preview, power-ups, timed queue, Get unit | built generic rules/window/protocol; playable mixing blocked by missing original tables |
+| `popups/params/SoulMixerParams.as` | Names its building | built: `ui/soulMixer.ts` |
+| `popups/PopupGenericUnitSelector.as`, `popups/params/GenericUnitSelectorParams.as` | Eligible owned units on the map | built: `mixingChoices` and window selector; no fabricated eligible units |
+
 ## Messages, confirmations and help
 
 The plain boxes the rest of the game opens.
