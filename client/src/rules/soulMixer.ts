@@ -181,7 +181,7 @@ export function claimMix(town: Town, building: PlacedItem, state: MixerState, it
   if (building.item.id !== SOUL_MIXER || !town.items.includes(building)) return "The Soul Mixer is no longer in your town.";
   const queue = state.queues.get(building.queueId ?? "");
   const item = queue ? items.get(queue.unit) : undefined;
-  if (!queue || !item || mixRemaining(queue, item, now) !== 0) return "Your unit is not ready yet.";
+  if (!queue || !item?.isUnit || mixRemaining(queue, item, now) !== 0) return "Your unit is not ready yet.";
   const people = population(town, items);
   if (people.current + item.population > people.max) return "No room for more people: build houses.";
   const tile = freeTileNear(town, building);

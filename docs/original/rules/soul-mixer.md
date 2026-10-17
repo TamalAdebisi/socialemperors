@@ -92,6 +92,9 @@ ordering and wait tables and are not used as replacement content.
   exponent, signed and whitespace text is refused before conversion,
   preventing underflow or rounding from creating apparently completed
   work. Explicit numeric or text zero remains a known legacy completion.
+- A completed legacy result must resolve to an actual unit (`type: "u"`),
+  not merely a known item id. Malformed building outputs leave work,
+  cash and both parents unchanged.
 - `speed_up_queue` costs one cash per started hour left. Get unit checks
   population/free space, sends `pop_queue_unit`, then ordinary `pop_unit`
   commands return both parents. Our server ignores repeated collection.
@@ -111,9 +114,9 @@ ordering and wait tables and are not used as replacement content.
 
 ## Verification
 
-Seventeen focused client tests cover ranking, tier ordering, restrictions, limits,
+Eighteen focused client tests cover ranking, tier ordering, restrictions, limits,
 command arguments, save restore, waiting, speed-up, population, surviving
-parents, passive grants, global queue reservations and stale editor callbacks. Eleven server tests
+parents, passive grants, global queue reservations and stale editor callbacks. Twelve server tests
 replay the queue protocol, missing/partial-data refusal, elapsed work,
 retries, malformed timestamps, late edit commands and safe collection. Their
 synthetic tables are confined to tests and never shipped.
@@ -124,5 +127,7 @@ all three fresh captures and the clean local server log were reviewed.
 Server459 (nine existing skips), types and client 420/420 also passed there.
 A later exact-integer parser correction passed types and all 17 focused
 client/11 server tests; that source-only correction did not change the art.
+A subsequent malformed-output guard passed types and all 18 focused client/
+12 server tests, refusing building metadata while retaining valid legacy units.
 The [delivery record](../../verification-soul-mixer.md) preserves scope
 and the original-data blocker. No playable new mixing is claimed.

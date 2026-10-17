@@ -134,6 +134,19 @@ test("saved queue fields cannot round fractional text into readable work", () =>
   assert.equal(typeof claimMix(town, building, state, items, 100), "object", "explicit text zero still collects known legacy work");
 });
 
+test("a completed legacy queue cannot grant building metadata as a unit", () => {
+  const { town, building } = fixture();
+  building.queueId = "1";
+  const state = readMixer({ 1: { ts: 0, unit: 1345, amount: 1 } });
+  const outputItems = new Map(items).set(1345, { ...house, id: 1345 });
+  const before = structuredClone(town);
+  assert.equal(typeof claimMix(town, building, state, outputItems, 100), "string");
+  assert.deepEqual(town, before, "refusal preserves cash, map items and both parents");
+  assert.deepEqual(state.queues.get("1"), { ts: 0, unit: 1345, amount: 1 });
+  state.queues.set("1", { ts: 0, unit: 503, amount: 1 });
+  assert.equal(typeof claimMix(town, building, state, outputItems, 100), "object", "known legacy unit output remains collectable");
+});
+
 test("a claimed queue in another town reserves its global id for later mixes", () => {
   const { town, building } = fixture();
   const state = readMixer({ 1: { ts: 0, unit: 503, amount: 0 } });

@@ -106,7 +106,7 @@ def _waiting(save, queue_id):
     if unit_id is None or unit_id <= 0 or started is None:
         return None
     unit = get_item_from_id(unit_id)
-    if not unit:
+    if not unit or unit.get("type") != "u":
         return None
     seconds = number(unit["id"], "sm_training_time")
     if started > 0 and seconds <= 0:

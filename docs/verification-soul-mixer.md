@@ -53,6 +53,17 @@ its cross-feature collection regression and combined verification.
 No browser was rerun for this source-only parser change; the original
 artwork and window behaviour below are unchanged.
 
+## Legacy output type correction
+
+Final source review also reproduced a malformed completed queue granting
+item 1345, whose original config type is a building. Both collection paths
+now require actual unit metadata. The new real-command regression failed
+before the guard, then passed with the entire save unchanged on refusal;
+cash and parents stay intact, and valid legacy unit 533 still collects.
+Types, **18/18 focused client tests** and **12/12 Soul Mixer server tests**
+passed after this narrow guard. Artwork and window behaviour are unchanged;
+no browser rerun was needed for this collection validation.
+
 ## Browser verification
 
 Exact clean source `c944e853927ee4e0e13ce4320107cc565718d58f` passed the
