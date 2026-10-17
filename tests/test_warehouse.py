@@ -117,6 +117,32 @@ class TimeMachineTest(unittest.TestCase):
         self.assertEqual(self.pState["survivalVidaTimeStamp"], [hour_ago])
         self.assertEqual(self.pState["timeStampDartsReset"], now)  # the season is a date
 
+    def test_a_jump_brings_the_pvp_allowance_nearer_without_changing_other_history(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], tsAttacksReset=now - 100,
+                           attacksSent=[{"time": now, "victim_id": "42", "description": {"win": 1}}],
+                           attacksReceived=[{"time": now, "attacker_id": "24"}],
+                           spyings=[{"time": now, "victim_id": "84"}])
+        self.send("time_ff", 1)
+        self.assertEqual(self.pState["attacksSent"], [{"time": now - 3600, "victim_id": "42", "description": {"win": 1}}])
+        self.assertEqual(self.pState["tsAttacksReset"], now - 3700)
+        self.assertEqual(self.pState["attacksReceived"], [{"time": now, "attacker_id": "24"}])
+        self.assertEqual(self.pState["spyings"], [{"time": now, "victim_id": "84"}])
+
+    def test_a_jump_preserves_calendar_events_and_reaches_every_town(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[1, 0, 0, 0, 0, 0], timeStampMondayBonus=now,
+                           timeStampDartsReset=now, timeStampDartsNewFree=now,
+                           riderTimeStamp=now, timeStampTemple=now, timeStampTakeCareMonster=now)
+        self.save["maps"].append({"items": [[SWORDSMAN, X, Y, 0, now, 0]], "questTimes": {"1": now}})
+        self.send("time_ff", 0)
+        self.assertEqual(self.save["maps"][1]["items"][0][4], now - 1800)
+        self.assertEqual(self.save["maps"][1]["questTimes"], {"1": now - 1800})
+        for key in ("timeStampDartsNewFree", "riderTimeStamp", "timeStampTemple", "timeStampTakeCareMonster"):
+            self.assertEqual(self.pState[key], now - 1800, key)
+        self.assertEqual(self.pState["timeStampMondayBonus"], now)
+        self.assertEqual(self.pState["timeStampDartsReset"], now)
+
     def test_no_jump_left(self):
         now = timestamp_now()
         self.map["timestampLastTreasure"] = now

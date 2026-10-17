@@ -449,6 +449,11 @@ merging the two wait fixes with that separate failure documented.
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
 
+  - [x] The time and weather machines: original building buttons, time
+        packets and first-use help, saved time travel, six terrain looks,
+        paid unlock-and-apply and free reuse, on desktop and phone
+        ([CLIENT.md](CLIENT.md#the-time-and-weather-machines)).
+
 ## How we add a missing feature
 
 1. **Find it.** The bug radar or a player report names a command the server ignores.

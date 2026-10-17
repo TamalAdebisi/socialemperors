@@ -19,6 +19,17 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Time/weather machine slice:** implemented in `ui/machines.ts` and
+  `rules/machines.ts`, with original art and local-source notes in
+  `docs/original/rules/machines.md`. Browser focus and combined pre-merge
+  checks are coordinated by the special-buildings chat; do not infer a
+  merge or full-suite pass from this implementation note. Unit/type and
+  focused server checks pass; exact browser results follow verification.
+  Machine goal 220 already has the ordinary build hook, so there is no
+  progression-runtime edit and the unfinished-goal count stays unchanged.
+  The narrow server fix advances sent PvP attacks/reset with time travel;
+  other existing wait and calendar behavior is preserved.
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven
@@ -848,8 +859,8 @@ together:
 - [ ] The units book: every unit by kind, grey until owned, buying a
       missing one for cash.
 - [ ] The unit warehouse (`warehouse.py`).
-- [ ] The time machine (`time_machine.py`) and its help page.
-- [ ] The weather machine: the island's looks (`unlock_skin`, `set_skin`).
+- [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
+- [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
 - [ ] Darts (`darts.py`).
 - [ ] The social buildings: the Summit, the allied markets and their choice
       of resource, the recruitment camp, the wonder of people, the Round

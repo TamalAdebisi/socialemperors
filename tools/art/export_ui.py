@@ -168,6 +168,10 @@ PICTURES = {
     "survival-life": ("PopupSurvivalMC/life1", 0, 120),
     "survival-life-used": ("PopupSurvivalMC/life1", 1, 120),
     "survival-lock": ("SurvivalMapMC/mcLock", 0, 200),
+    # The time/weather cards and the six hourglasses (one original frame each).
+    "open-time-machine": ("EP_TimeMachine_MC/btnAbrir", 0),
+    "open-weather-machine": ("EP_Weather_MC/btnAbrir", 0),
+    **{f"time-packet-{n}": ("ButtonTimeMC/bgd_mc", n) for n in range(6)},
     # The wall gate's card: open it (units pass), close it.
     "open-gate": ("EP_Wall_MC/btnAbrir", 0),
     "close-gate": ("EP_Wall_MC/btnAbrir", 1),

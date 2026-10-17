@@ -132,7 +132,7 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `utils/FontsLoader.as` | 214 | Loads the game's fonts at start, by language. | built: the page's fonts come by CSS (`ui/style.css`) |
 | `fonts/IRuntimeLoadedFont.as` | 15 | What a loaded font must offer. | built: as above |
 | `utils/TextFieldUtil.as` | 121 | Puts text in a field, shrinking it to fit. | built: our windows are HTML |
-| `utils/StageBlocker.as` | 204 | The "loading" cover that stops clicks while waiting for the server, and the time machine's "travelling" screen. | partly: the loading message (`ui/hud.ts`); no time-machine screen |
+| `utils/StageBlocker.as` | 204 | The "loading" cover that stops clicks while waiting for the server, and the time machine's "travelling" screen. | partly: loading/travelling text (`ui/hud.ts`, `ui/machines.ts`); the original extra travel-animation delay is omitted |
 | `btns/Buttonize.as` | 358 | Makes a picture act as a button: grows on hover, fades when off. | built: the buttons' styles in `ui/style.css` |
 | `utils/ExpandSprite.as` | 173 | A frame that stretches without blurring its corners, for tooltips. | art |
 | `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | not yet: those windows aren't built |

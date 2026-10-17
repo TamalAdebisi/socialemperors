@@ -1496,6 +1496,34 @@ reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
 the dragon got, the friends' list and the monster nest opened, with checks
 on the server's save.
 
+### The time and weather machines
+
+The Time Machine's **Open** and Weather Machine's **Set weather** buttons
+use their original pictures. Both windows use the shared panel and phone
+sheet (`ui/machines.ts`; configuration and save readers in
+`rules/machines.ts`). The time window has the six original hourglasses,
+prices from `TIME_MACHINE`, owned counts, separate Buy and Use buttons and
+the original first-opening help, remembered with `timeMachineHelp`.
+Buying sends `buy_time_packet`; using sends `time_ff` and reloads the saved
+town. The existing server also advances outgoing PvP's wait now, as the
+original help promises, while calendar events retain their dates.
+
+The weather window shows the six original terrain previews, names and
+unlock price. IDs skip 3. Grass is free; unlocking a look immediately
+applies it with `unlock_skin` then `set_skin`, as the original does. Owned
+looks remain free and the current one is marked Selected. Terrain belongs
+to a town and unlocked looks belong to the player.
+
+Both machines wait for the server to save before reloading. A failed save
+gives a Reload saved town button and prevents another purchase on an
+uncertain balance. The original travelling words replace its extra
+three-second animation delay. Source notes and the narrow server judgment
+are in [the machine rule book](docs/original/rules/machines.md).
+Tests: `e2e/tests/time-machine.mjs`, `e2e/tests/weather-machine.mjs`, including
+desktop/phone screens and saved cash, timers, help, stock and terrain.
+Goal 220 already uses the ordinary weather-building requirement; no
+progression code or unfinished-goal count changes here.
+
 ### The market
 
 Built with Beta 1's parity list. A market (the first, second or third,
