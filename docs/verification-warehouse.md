@@ -1,5 +1,7 @@
 # Unit Warehouse verification, 17 October 2026
 
+Delivered in [#101](https://github.com/TamalAdebisi/socialemperors/pull/101) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
+
 The implementation is on `codex/unit-warehouse`. Research and the original
 rules are in [the rule book](original/rules/warehouse.md). Judgment calls
 are in DECISIONS.md. Testing uses local throwaway empires and read-only

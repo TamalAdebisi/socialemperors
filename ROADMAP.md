@@ -1,5 +1,7 @@
 # Roadmap
 
+**Special buildings delivered in [#110](https://github.com/TamalAdebisi/socialemperors/pull/110):** machines, Unit Warehouse, rider training/taming and the Supreme temple are merged, together with Soul Mixer help and safe legacy collection. New mixing still needs four missing original configuration fields. [The delivery record](docs/verification-special-buildings.md) retains exact local checks and limits.
+
 **Combat controls in [#98](https://github.com/TamalAdebisi/socialemperors/pull/98),
 17 October:** Bull Gladiator and other units use their visible animation
 bounds for click margins, keeping original art sizes.

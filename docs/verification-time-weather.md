@@ -1,5 +1,7 @@
 # Time/weather machine verification, 17 October 2026
 
+Delivered in [#100](https://github.com/TamalAdebisi/socialemperors/pull/100) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
+
 This slice uses local throwaway empires and read-only original art. No live
 account or production game-state action was used. Initial slice results below
 precede the final combined checks recorded at the end. Merge and deployment
