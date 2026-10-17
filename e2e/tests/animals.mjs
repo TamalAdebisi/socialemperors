@@ -30,7 +30,14 @@ export default async function animals({ newPlayer }) {
   for (let tries = 0; tries < 6; tries++) {
     saved = await player.saved();
     if ((itemAt(saved, SHEEP_RANCH, RANCH_AT)?.[6] ?? []).length > 0) break;
-    if (tries === 0) await player.shot("caught");
+    if (tries === 0) {
+      await player.shot("caught");
+      // Software rendering can stretch the walk. Wait for actual arrival
+      // before reading the ordinary three-second save batch again.
+      await player.page.waitForFunction(([ranch, x, y, sheep]) =>
+        window.seHome.parts.town.items.some((p) => p.item.id === ranch && p.tx === x && p.ty === y
+          && p.units?.includes(sheep)), [SHEEP_RANCH, ...RANCH_AT, SHEEP], { timeout: 30_000, polling: 100 });
+    }
   }
   assert.deepEqual(itemAt(saved, SHEEP_RANCH, RANCH_AT)?.[6], [SHEEP], "the sheep is in the ranch");
   assert.ok(!saved.items.some((i) => i[0] === SHEEP && i[1] > 30 && i[1] < 60 && i[2] > 40 && i[2] < 60), "and no longer on the map");
