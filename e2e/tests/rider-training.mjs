@@ -33,6 +33,19 @@ export default async function riderTraining({ newPlayer }) {
   const inside = (save) => save.map.items.find((item) => item[0] === 1346)?.[6] ?? [];
   const initial = await info();
   const progress = () => activePage.evaluate(() => document.querySelector(".rider-adventure ruffle-player")?.ruffle().callExternalInterface("riderProgress"));
+  const gameUntil = async (check, maxFrames = 600) => {
+    const first = (await progress()).frames;
+    for (;;) {
+      const state = await progress();
+      if (check(state)) return state;
+      assert.ok(state.frames - first < maxFrames, `the adventure reached its expected state in ${maxFrames} game frames: ${JSON.stringify(state)}`);
+      // Bitmap collision readback is slow without a graphics card. Bound
+      // each observed game-clock segment instead of guessing a whole walk's
+      // wall time; the simulation-frame cap still detects stuck gameplay.
+      await activePage.waitForFunction((frame) => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").frames >= frame + 30,
+        state.frames, { timeout: 30_000 });
+    }
+  };
   const endGame = async () => {
     const bounds = await activePage.locator(".rider-adventure-stage").boundingBox();
     assert.ok(bounds);
@@ -70,10 +83,7 @@ export default async function riderTraining({ newPlayer }) {
   // Walk to the first opponent, fight with the game's ordinary attack keys,
   // then reach the end and press the actual in-movie End Game button.
   await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => {
-    const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
-    return state.distanceToEnemy <= 90 || state.state !== "playing";
-  }, null, { timeout: 60_000 });
+  await gameUntil((state) => state.distanceToEnemy <= 90 || state.state !== "playing");
   await page.keyboard.up("ArrowRight");
   for (let turn = 0; turn < 30; turn++) {
     const state = await progress();
@@ -81,7 +91,7 @@ export default async function riderTraining({ newPlayer }) {
     if (state.enemies === 0 || state.state === "won") break;
     if (state.distanceToEnemy > 105) {
       await page.keyboard.down("ArrowRight");
-      await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").distanceToEnemy <= 90, null, { timeout: 30_000 });
+      await gameUntil((state) => state.distanceToEnemy <= 90);
       await page.keyboard.up("ArrowRight");
     }
     await page.keyboard.press("1");
@@ -92,7 +102,7 @@ export default async function riderTraining({ newPlayer }) {
   }
   assert.equal((await progress()).enemies, 0, "the first opponent was defeated through normal input");
   await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").state === "won", null, { timeout: 60_000 });
+  await gameUntil((state) => state.state === "won");
   await page.keyboard.up("ArrowRight");
   await player.shot("adventure-one-won");
   await endGame();
@@ -144,12 +154,9 @@ export default async function riderTraining({ newPlayer }) {
   assert.equal(await adventure.getAttribute("data-level"), "8");
   await player.shot("taming-adventure");
   await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").distanceToEnemy <= 90, null, { timeout: 60_000 });
+  await gameUntil((state) => state.distanceToEnemy <= 90);
   await page.keyboard.up("ArrowRight");
-  await page.waitForFunction(() => {
-    const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
-    return state.state === "lost" && state.menuReady;
-  }, null, { timeout: 120_000 });
+  await gameUntil((state) => state.state === "lost" && state.menuReady, 1800);
   await player.shot("taming-adventure-lost");
   await endGame();
   await adventure.waitFor({ state: "hidden" });
