@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 71 built, 11 partly, 26 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 70 built, 11 partly, 26 not yet, 24 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -49,7 +49,7 @@ The plain boxes the rest of the game opens.
 |---|---|---|---|
 | `popups/PopupCollect.as` | 177 | Choosing a mill's or mine's working time: four cards (5 min, 1 h, 4 h, 8 h) paying half, one, two and three times the harvest; sends `activate` with the choice (0 resets it). Which buildings ask is `COLLECT_VARIABLE_IDS`. | built: `rules/production.ts` (`WORK_TIMES`), `editor.ts` |
 | `popups/PopupHurryup.as` | 115 | Finish a building's work now for 2 cash (`COST_HURRY_UP`), or ask friends; shows the time left, ticking. | built, on the card: hurry and Ask friends in `ui/actions.ts` (DECISIONS.md) |
-| `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | built: `rules/shop.ts` |
+| `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | not needed: original opener is unwired; early unlock remains disabled (legacy command/save support retained) |
 | `popups/MaxBuildingTypePopup.as` | 96 | "You already have the most of these": one of each mill and mine level, one of each special building, one market and one eagle, three nurseries. | built: `rules/shop.ts` (`atLimit`) |
 | `popups/PopupNeighbors.as` | 90 | "You need more neighbours" when land paid in gold needs more neighbours than the player has, with a button to invite friends. | built: `rules/land.ts` says why; the invite was Facebook's |
 | `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | not yet: ours says nothing when the town hall is missing |
