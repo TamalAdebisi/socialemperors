@@ -18,8 +18,11 @@ contract stays intact. Coordination is recorded on PR #98 in comments
   focus: 2/2; scenarios took 69s and 31s respectively.
 - Complete Chromium run: **80/80 passed in 1h 50m 17.994s**, including
   the build, on the same runtime and fixtures at `b1adddcd`.
-- Delivery merge is pending the combined menu/progression verification,
-  so its spending-mission follow-up ships with the other menu slices.
+- Delivered in #99 (`4356029d`), followed by #105–109 through
+  `a6f24580`. Combined verification is recorded in
+  `docs/verification-menus.md`: full 88/89 plus the corrected villager
+  focus 1/1, with unchanged game code. All 89 have passing results
+  across runs; this is not a single final-head 89/89 claim.
 
 The first focus was 1/2: the collection-book fixture tried to spend cash
 it did not have; the unchanged harvest case passed (34s). Normal level

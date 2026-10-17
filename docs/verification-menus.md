@@ -1,8 +1,8 @@
 # Menus and progression delivery record
 
-This record covers the six feature slices in #99 and #105–109. Required verification is complete. Merges are still pending; this is not
-yet a release claim.
-The collections-only record is `docs/verification-99.md` in #99.
+This record covers the six feature slices in #99 and #105–109. Required
+verification and all six feature merges are complete. The collections-only
+record is `docs/verification-99.md` in #99.
 
 ## Scope
 
@@ -289,3 +289,40 @@ separate checks. No required GitHub check may be bypassed for delivery.
 | walk | passed | 44 |
 | work | passed | 52 |
 | world | passed | 125 |
+
+## Delivery
+
+All six feature PRs are merged, in order:
+
+| Slice | PR | Main merge |
+| --- | --- | --- |
+| Collections | #99 | `4356029d` |
+| Units book | #105 | `fefb3b55` |
+| Darts | #106 | `859282d6` |
+| Social buildings | #107 | `281b3ff4` |
+| Shop details | #108 | `7d3a5893` |
+| Profiles/notices/progression | #109 | `a6f24580` |
+
+Each later branch merged the preceding main without changing its file
+tree. Final main `a6f24580` differs from corrected focus `6fcf0646` only
+in this verification Markdown file; game code, artwork and all tests are
+identical. The handoff closure changes documentation only, so no second
+complete browser run is inferred or claimed. No source/test assertion or
+required check was disabled or weakened, and merges used ordinary GitHub
+checks without an administrative bypass.
+
+Cubic reported a pass on #99 and SKIPPED checks on the later tree-unchanged
+delivery merge commits. Qodo reported its expired trial. No fresh automated
+source re-review is claimed from those statuses; no billing or review
+settings were changed. There were no submitted source-review findings to
+resolve. The local full/focused evidence remains the verification record.
+
+Standing holds remain: manual Beta 1 playthrough, offers/mystery packs,
+Daily News, in-game chat, auto-collect and classic retirement. Classic
+choices stay hidden while routes and shared saves remain. Other special
+buildings and combat kill-drop triggers stay with the other chats.
+
+The final stable drop-interface handoff was posted to the combat thread in
+[#98 comment 6233641865](https://github.com/TamalAdebisi/socialemperors/pull/98#issuecomment-6233641865)
+after all six feature merges. It preserves single-increment bookkeeping;
+no reply or completed combat kill-drop implementation is claimed.

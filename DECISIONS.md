@@ -4,6 +4,16 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: acknowledge the warning in the no-hall fixture
+
+The new original missing-hall notice is expected when the villager test
+removes its hall. Click its OK button before selecting the covered worker;
+retain every queue, glow, saved-tree and upgraded-villager assertion. This
+is a test flow correction, with no gameplay or combat-control change.
+Report the full 88/89 and corrected focus 1/1 separately; do not call them
+one final-head 89/89 run. The merged game/art/tests match the corrected
+focus, and the delivery closure changes documentation only.
+
 ## 17 October 2026 — count menu spending once
 
 Record actual menu payments so buying and immediately claiming a cash
