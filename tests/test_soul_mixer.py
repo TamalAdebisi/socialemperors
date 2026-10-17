@@ -153,6 +153,20 @@ class SoulMixerTest(unittest.TestCase):
         self.send("move", 55, 55, 1529, 55, 55, 1, 0, "MouseUsed")
         self.assertEqual(self.map["items"][0][3], 1)
 
+    def test_claimed_other_town_keeps_its_original_queue_identity(self):
+        other = copy.deepcopy(self.map)
+        other["items"] = [[1529, 40, 40, 0, 0, 0, [], {"bq": "1"}]]
+        self.save["maps"].append(other)
+        self.save["privateState"]["barracksQueues"] = {"1": {"ts": 0, "amount": 0, "unit": 533}}
+        with self.content():
+            self.send("push_queue_unit", 55, 55, 1529, 533, 1, 0)
+            self.assertNotIn("bq", self.map["items"][0][7])
+            self.send("push_queue_unit", 55, 55, 1529, 533, 2, 0)
+        self.assertEqual(self.map["items"][0][7]["bq"], "2")
+        self.assertEqual(other["items"][0][7]["bq"], "1")
+        self.assertEqual(self.save["privateState"]["barracksQueues"]["1"]["amount"], 0)
+        self.assertEqual(self.save["privateState"]["barracksQueues"]["2"]["amount"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

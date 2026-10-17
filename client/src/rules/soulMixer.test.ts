@@ -106,6 +106,7 @@ test("start sends original power-up and queue commands once, preserves parents, 
 test("queue restore preserves absolute clocks and rejects malformed saved work", () => {
   const restored = readMixer({ 1: { ts: "100", unit: "503", amount: 1 }, 2: { ts: "bad", unit: 503, amount: 1 }, 3: { ts: 0, unit: 503, amount: 0 } });
   assert.equal(restored.queues.size, 1);
+  assert.deepEqual([...restored.reserved], ["1", "2", "3"], "completed and unreadable entries still reserve their identifiers");
   for (const ts of [null, "", " ", false, true, -1, undefined, NaN, Infinity]) {
     assert.equal(readMixer({ 1: { ts, unit: 503, amount: 1 } }).queues.size, 0, `invalid timestamp ${String(ts)} never means finished`);
   }
@@ -113,6 +114,18 @@ test("queue restore preserves absolute clocks and rejects malformed saved work",
   assert.equal(mixRemaining(restored.queues.get("1")!, units[3]!, 200), 7101);
   assert.equal(mixRemaining({ ts: 100, unit: 503, amount: 1 }, { ...units[3]!, soulMixingTime: 0 }, 200), null);
   assert.equal(mixRemaining({ ts: 0, unit: 503, amount: 1 }, { ...units[3]!, soulMixingTime: 0 }, 200), 0);
+});
+
+test("a claimed queue in another town reserves its global id for later mixes", () => {
+  const { town, building } = fixture();
+  const state = readMixer({ 1: { ts: 0, unit: 503, amount: 0 } });
+  assert.equal(state.queues.size, 0, "the old result has already been claimed");
+  const preview = previewMix(rules, building.units!, () => 0)!;
+  const commands = startMix(town, building, rules, state, preview, 100);
+  assert.equal(building.queueId, "2", "a new current-town building does not reuse the other town's original bq1");
+  assert.deepEqual([...state.reserved], ["1", "2"]);
+  assert.equal(typeof commands, "object");
+  if (typeof commands !== "string") assert.equal(commands.at(-1)!.args[4], 2);
 });
 
 test("speed-up costs one cash per started hour, marks ready, and refuses an extra charge", () => {
