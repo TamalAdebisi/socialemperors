@@ -84,6 +84,15 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
+- **Latest combat-controls verification (#98):** server 449 run (440 passed,
+  nine existing PostgreSQL skips), client types and all 408 tests passed.
+  Complete Chromium attempted all 80 cases in two isolated 40-case shards
+  at `5b544c2b`: 70 passed and ten failed. Final isolated follow-ups passed
+  **10/10 in 15m 19.58s** at `daa2d2c7`; all 80 have passing results across
+  runs, not one final-head 80/80 run. Linux WebKit combat controls passed
+  **1/1 in 89s**. All full/focused captures and complete server logs were
+  reviewed. [The controls record](docs/verification-combat-controls.md)
+  retains every failure, fixture correction, exact revision and visual limit.
 - **Latest structure verification (#96):** server 449 run (440 passed,
   nine existing skips), client types and all 404 tests passed. Complete
   combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege

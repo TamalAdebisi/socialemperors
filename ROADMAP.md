@@ -1,7 +1,8 @@
 # Roadmap
 
-**Combat controls, 17 October:** Bull Gladiator and other units use their
-visible animation bounds for click margins, keeping original art sizes.
+**Combat controls in [#98](https://github.com/TamalAdebisi/socialemperors/pull/98),
+17 October:** Bull Gladiator and other units use their visible animation
+bounds for click margins, keeping original art sizes.
 Selected armies show the original sword over an attack target in every
 battle mode. Local verification and delivery are recorded in
 [the controls record](docs/verification-combat-controls.md).
