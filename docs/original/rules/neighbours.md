@@ -494,7 +494,8 @@ Most serious first.
    start-up window and the carts are on the map at once (decided).
    (checked twice)
 6. **No start-up sequence** in ours: the daily bonus waits on its button
-   (decided); darts and the potion offer don't exist yet. The original
+   (decided); darts follows its original dated schedule now (the shipped
+   pool is inactive); the potion offer remains unavailable. The original
    opens the harbour and zeppelin before the server's message; ours puts
    the message up first and their line a moment later. (checked twice)
 7. **Neighbours list**: not sorted by experience, no experience shown, no
