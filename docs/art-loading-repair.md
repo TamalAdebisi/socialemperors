@@ -5,6 +5,10 @@ the separate failure recorded under HANDOFF.md, task 1, not a regression
 from #87 or the tournament work. The original source art, game code and
 test assertions stay unchanged by this art repair.
 
+The live addresses are written here, in the purge list and in the audit
+as `example.com` (the game) and `assets.example.com` (its art): the
+repository is public and doesn't name them.
+
 **The repair required nine targeted exports.** The earlier proposal to
 refresh only `2075_elemental_red_god` does not cover the oversized art
 loaded by the island before the team picker appears.
@@ -23,7 +27,7 @@ All 20 public images pass both request modes. The owner confirmed
 purging exactly the listed URLs in Cloudflare's dashboard. On 16 October
 at **11:24:20–11:24:40 UTC**, each ordinary image URL was compared with
 its `?repair=38885093455` version, first without Origin and then with
-`Origin: https://socialemperors.me` on both requests. All **40 comparisons
+`Origin: https://example.com` on both requests. All **40 comparisons
 passed**: SHA-256 bytes and actual WebP dimensions agree, dimensions match
 the freshly fetched JSON, and all files match the verified published
 export. After merging #87, the cache was refreshed again: `team` passed
@@ -58,7 +62,7 @@ Cloudflare's cached copy of an existing image URL.
 
 The workflow sets a 24-hour cache lifetime. The owner purged only the
 **20 exact URLs in [team-art-cache-purge.txt](team-art-cache-purge.txt)**,
-using **socialemperors.me → Caching → Configuration → Custom Purge**.
+using **example.com → Caching → Configuration → Custom Purge**.
 No bucket objects were deleted. Dashboard URL purges can leave a distinct
 cache entry for requests with an Origin header, so a plain request alone
 is insufficient to close this repair.
@@ -83,7 +87,7 @@ browsers may still need a reload that refreshes their own cached images.
 
 To repeat the check, GET each listed URL and the same URL with
 `?repair=38885093455`, saving response headers and bodies. Repeat both
-GETs with `Origin: https://socialemperors.me`. Fetch the corresponding
+GETs with `Origin: https://example.com`. Fetch the corresponding
 `.json` in each mode. Compare SHA-256 hashes, read the WebP's actual
 width and height, and compare those with `meta.size`; all checks must
 pass. The query identifies this export. If another export has replaced
@@ -324,7 +328,7 @@ passed**; the browser runner's client build passed too.
 ## Findings
 
 At the initial investigation, an ordinary GET of
-`https://assets.socialemperors.me/art/2075_elemental_red_god.json` still
+`https://assets.example.com/art/2075_elemental_red_god.json` still
 returned the old export: 76 pages, `meta.scale: "1"`, no `meta.step`,
 1,340 distinct pictures and 55 animation sequences. Reading all 76 JSON
 files gives **4,074,714,156 bytes (3.79 GiB)** of decoded RGBA pixels.
@@ -437,7 +441,7 @@ other missing items; its input is a targeted redo, not an exclusive filter.
    intervening caches can retain old files for a day. A cache-busting URL
    alone does not prove the URLs used by the game have refreshed. Compare
    ordinary/query hashes and actual dimensions both without Origin and
-   with `Origin: https://socialemperors.me`, recording cache headers as
+   with `Origin: https://example.com`, recording cache headers as
    in the audit above.
 3. In each test checkout, move only these items' old disk-cache files out
    of the active cache (keep them as evidence):

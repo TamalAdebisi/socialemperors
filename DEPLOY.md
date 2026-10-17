@@ -1,8 +1,15 @@
 # Putting Social Empires online, step by step
 
 This guide takes the server from "runs on my computer" to "anyone can play at
-**https://socialemperors.me**". No programming needed: it's all clicking in
+**https://example.com**". No programming needed: it's all clicking in
 websites and copy-pasting. Each step says *what* to do and *why*.
+
+**Put your own addresses in.** This repository is public, so it doesn't
+name the live game's addresses. Throughout, `example.com` stands for your
+domain and `assets.example.com` for its art; `STAGING.up.railway.app` is
+the address Railway gives the staging service, and `PROJECT-ID` is your
+Supabase project's ID. The live game's real ones are in its Railway and
+Cloudflare settings.
 
 Plan on about an hour, most of it waiting for things to finish.
 
@@ -10,11 +17,11 @@ Plan on about an hour, most of it waiting for things to finish.
 
 ```
                       ┌──────────────────────────────────────────────┐   ┌──────────────────┐
-  Player's browser ──►│ socialemperors.me          (Railway)         │──►│ Supabase         │
+  Player's browser ──►│ example.com                (Railway)         │──►│ Supabase         │
    (Ruffle plays      │   the game server: this repository's code    │   │  the database:   │
     the Flash game)   └──────────────────────────────────────────────┘   │  accounts, saves │
           │           ┌──────────────────────────────────────────────┐   └──────────────────┘
-          └──────────►│ assets.socialemperors.me   (Cloudflare R2)   │  1.3 GB of art,
+          └──────────►│ assets.example.com         (Cloudflare R2)   │  1.3 GB of art,
                       │   the assets/ folder, served by Cloudflare   │  sounds and SWFs
                       └──────────────────────────────────────────────┘
 ```
@@ -124,7 +131,7 @@ screenshot. It's almost always a mistyped secret.
 ### 2.5 Put the bucket on your domain
 
 1. In R2, open the `socialempires-assets` bucket → **Settings**.
-2. Under **Custom Domains** click **Add** → type `assets.socialemperors.me` →
+2. Under **Custom Domains** click **Add** → type `assets.example.com` →
    **Continue** → **Connect domain**. Cloudflare creates the DNS record for
    you. Wait until the status says **Active** (a few minutes).
 3. Leave the **r2.dev** "Public Development URL" **disabled**. It's
@@ -133,8 +140,8 @@ screenshot. It's almost always a mistyped secret.
 ### 2.6 Allow the game to read the files (CORS)
 
 Browsers have a safety rule called **CORS**: a web page from one address
-(`socialemperors.me`) may only read files from another address
-(`assets.socialemperors.me`) if that other address says it's allowed.
+(`example.com`) may only read files from another address
+(`assets.example.com`) if that other address says it's allowed.
 Ruffle loads every game file this way, so R2 has to say yes.
 
 **Do this before anyone plays.** Cloudflare caches files together with their
@@ -147,7 +154,7 @@ cache is cleared.
    ```json
    [
      {
-       "AllowedOrigins": ["https://socialemperors.me"],
+       "AllowedOrigins": ["https://example.com"],
        "AllowedMethods": ["GET", "HEAD"],
        "AllowedHeaders": ["*"],
        "MaxAgeSeconds": 86400
@@ -156,13 +163,13 @@ cache is cleared.
    ```
 
    With the staging server (Part 5) the first line lists both addresses:
-   `"AllowedOrigins": ["https://socialemperors.me", "https://game-server-staging-production.up.railway.app"],`
+   `"AllowedOrigins": ["https://example.com", "https://STAGING.up.railway.app"],`
 
 2. Click **Save**.
 
 ### 2.7 Check it
 
-Open <https://assets.socialemperors.me/crossdomain.xml> in your browser. You
+Open <https://assets.example.com/crossdomain.xml> in your browser. You
 should see a short XML file. That means the bucket, the files and the domain
 all work.
 
@@ -201,8 +208,8 @@ These tell the server where it lives. Click the service → **Variables** →
 **Raw Editor**, paste this, and click **Update Variables**:
 
 ```
-SE_PUBLIC_URL=https://socialemperors.me
-SE_ASSETS_URL=https://assets.socialemperors.me
+SE_PUBLIC_URL=https://example.com
+SE_ASSETS_URL=https://assets.example.com
 SE_CLIENT_IP_HEADER=X-Real-IP
 PORT=8080
 RAILWAY_DEPLOYMENT_DRAINING_SECONDS=30
@@ -244,14 +251,14 @@ Click the service → **Settings**:
    automatically. Each update means about 30 seconds of downtime; progress
    is saved first.
 
-### 3.5 Connect socialemperors.me
+### 3.5 Connect example.com
 
 1. Service → **Settings** → **Networking** → **Custom Domain** → type
-   `socialemperors.me` → port **8080** → **Add Domain**.
+   `example.com` → port **8080** → **Add Domain**.
 2. Railway shows two DNS records to create: a **CNAME** (name `@`, value like
    `xxxx.up.railway.app`) and a **TXT** (name like `_railway-verify`). Keep
    that page open.
-3. In Cloudflare: **socialemperors.me** → **DNS** → **Records** → **Add
+3. In Cloudflare: **example.com** → **DNS** → **Records** → **Add
    record**, once for each:
    * **CNAME**: Name `@`, Target = Railway's value, **Proxy status: DNS
      only** (click the orange cloud so it turns grey).
@@ -266,12 +273,12 @@ HTTPS itself. It's the simplest setup that works; we can turn on Cloudflare's
 proxy later for DDoS protection if needed.
 
 *Why not use the `...up.railway.app` address?* Always test on
-`socialemperors.me`. The CORS rule in step 2.6 only allows that address, so
+`example.com`. The CORS rule in step 2.6 only allows that address, so
 on the Railway address the game files would be blocked.
 
 ## Part 4: Play-test
 
-1. Open <https://socialemperors.me> → **Sign up** → create an empire → pick
+1. Open <https://example.com> → **Sign up** → create an empire → pick
    the **Ruffle** player → **Play**.
 2. If the game doesn't load, press **F12** (or right-click → *Inspect*) →
    **Console** tab, take a screenshot of the red lines, and send it to me
@@ -286,7 +293,7 @@ on the Railway address the game files would be blocked.
 * **Trying changes first:** the `game-server-staging` service is a second,
   separate copy of the server with its own empty database. It deploys the
   branch being worked on, at
-  <https://game-server-staging-production.up.railway.app>, and sleeps when
+  <https://STAGING.up.railway.app>, and sleeps when
   nobody uses it (the first visit after a while takes a few seconds). Its
   address must be in the R2 bucket's CORS list (Part 2.6) for the game to load.
   See [ROADMAP.md](ROADMAP.md) for how changes go from staging to live.
@@ -419,7 +426,7 @@ backup is kept for 6 days).
    trust what Supabase shows):
 
    ```
-   postgresql://postgres.mosoygwxatxkhndasqfp:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+   postgresql://postgres.PROJECT-ID:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    ```
 
    *Why the session pooler?* Railway can only reach addresses of the older
@@ -435,7 +442,7 @@ backup is kept for 6 days).
    brackets). Keep the part after `@` exactly as Supabase gave it:
 
    ```
-   SE_DATABASE_URL=postgresql://se_staging.mosoygwxatxkhndasqfp:SECOND-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_DATABASE_URL=postgresql://se_staging.PROJECT-ID:SECOND-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    SE_DATABASE_SCHEMA=staging
    ```
 
@@ -450,13 +457,13 @@ backup is kept for 6 days).
    is the default), and `SE_COPY_SQLITE=0` for the fresh start:
 
    ```
-   SE_DATABASE_URL=postgresql://se_game.mosoygwxatxkhndasqfp:FIRST-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SE_DATABASE_URL=postgresql://se_game.PROJECT-ID:FIRST-PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    SE_COPY_SQLITE=0
    ```
 
 6. Check the logs for `Storage: Postgres, schema game`, then
    `Postgres starts empty (SE_COPY_SQLITE=0)`. Sign up on
-   <https://socialemperors.me> first, with the username in `SE_ADMINS`, so
+   <https://example.com> first, with the username in `SE_ADMINS`, so
    the admin page is yours from the start. In Supabase → **Table Editor**
    → schema **game**, you can see your account. The old SQLite file stays
    on the volume, untouched, should you ever want the old empires back
@@ -495,8 +502,8 @@ Two addresses come up below:
 
 | | |
 | --- | --- |
-| Supabase's **callback**, where Discord and Google send players back to Supabase | `https://mosoygwxatxkhndasqfp.supabase.co/auth/v1/callback` |
-| Our **callback**, where Supabase sends them back to the game | `https://socialemperors.me/auth/callback` (staging: `https://game-server-staging-production.up.railway.app/auth/callback`) |
+| Supabase's **callback**, where Discord and Google send players back to Supabase | `https://PROJECT-ID.supabase.co/auth/v1/callback` |
+| Our **callback**, where Supabase sends them back to the game | `https://example.com/auth/callback` (staging: `https://STAGING.up.railway.app/auth/callback`) |
 
 ### 7.1 Tell Supabase where players may come back to
 
@@ -504,10 +511,10 @@ Supabase only sends players back to addresses on its list, so nobody can use
 your project to send them to a site of their own.
 
 1. Supabase → **Authentication** → **URL Configuration**.
-2. **Site URL**: `https://socialemperors.me` → **Save**.
+2. **Site URL**: `https://example.com` → **Save**.
 3. **Redirect URLs** → **Add URL**, once for each:
-   * `https://socialemperors.me/auth/callback`
-   * `https://game-server-staging-production.up.railway.app/auth/callback`
+   * `https://example.com/auth/callback`
+   * `https://STAGING.up.railway.app/auth/callback`
    * `http://127.0.0.1:5050/auth/callback` (for playing on your own computer)
 4. **Authentication** → **Sign In / Providers** → **Email**: switch it **off**.
    The game doesn't use Supabase's email sign-in, and nothing should be on
@@ -538,8 +545,8 @@ your project to send them to a site of their own.
    `.../auth/userinfo.email` and `.../auth/userinfo.profile` → **Update** →
    **Save**. Only these three: anything more makes Google review the app.
 4. **Clients** → **Create client** → **Web application**:
-   * **Authorized JavaScript origins**: `https://socialemperors.me` and
-     `https://game-server-staging-production.up.railway.app`.
+   * **Authorized JavaScript origins**: `https://example.com` and
+     `https://STAGING.up.railway.app`.
    * **Authorized redirect URIs**: Supabase's callback (above).
    * **Create**, and copy the **Client ID** and **Client secret**.
 5. **Audience** → **Publish app** → **Confirm**. Until then only test users
@@ -547,9 +554,9 @@ your project to send them to a site of their own.
 6. Supabase → **Authentication** → **Sign In / Providers** → **Google** →
    switch it on, paste the Client ID and the Client Secret → **Save**.
 
-Google's screen names `mosoygwxatxkhndasqfp.supabase.co` as the site asking.
+Google's screen names `PROJECT-ID.supabase.co` as the site asking.
 That's Supabase's address for the project; a custom domain (a paid Supabase
-add-on) would show `socialemperors.me` instead. Adding the logo under
+add-on) would show `example.com` instead. Adding the logo under
 **Branding** (Google checks it within a few days) also helps players trust it.
 
 ### 7.4 The game servers
@@ -558,7 +565,7 @@ Railway → each service (**game-server-staging** first, then **game-server**)
 → **Variables** → **Raw Editor**, add, and **Update Variables**:
 
 ```
-SE_SUPABASE_URL=https://mosoygwxatxkhndasqfp.supabase.co
+SE_SUPABASE_URL=https://PROJECT-ID.supabase.co
 SE_SUPABASE_KEY=sb_publishable_5tbgh9ASDSFDhGR-_uUoEw_11fYQaCq
 ```
 
@@ -574,12 +581,12 @@ staging: sign up as someone new, then link the other one under **Settings**.
 | Railway deploy fails at *Healthcheck* | Server crashed on start | Open **View logs**, send me the last 30 lines |
 | Site shows *"Application failed to respond"* | Domain's port isn't 8080 | Networking → edit domain → port 8080 |
 | Login page loads, game area stays empty / green | Asset domain or CORS | Check 2.5 is *Active*, 2.6 is saved, and 2.7 works |
-| Console shows `blocked by CORS policy` | CORS added after files were cached | Cloudflare → socialemperors.me → **Caching** → **Purge Everything** |
+| Console shows `blocked by CORS policy` | CORS added after files were cached | Cloudflare → example.com → **Caching** → **Purge Everything** |
 | Everyone's accounts vanished after an update | Volume not mounted at `/data` | Check 3.2 (the data from before is lost, sorry) |
 | `Too many failed attempts` for everyone | `SE_CLIENT_IP_HEADER` missing | Check it's `X-Real-IP` |
 | Startup lines like `Listening at:` shown in red as *error* | Normal: gunicorn writes its status messages to the error stream | Nothing to fix |
 | Logs: `password authentication failed` | The password in `SE_DATABASE_URL` isn't the one set in 6.2 | Set it again in the SQL editor, and paste it into the variable again |
-| Logs: `Tenant or user not found` | The name before the `:` in `SE_DATABASE_URL` is wrong | It's `se_game.` (or `se_staging.`) then the project ID: `se_game.mosoygwxatxkhndasqfp` |
+| Logs: `Tenant or user not found` | The name before the `:` in `SE_DATABASE_URL` is wrong | It's `se_game.` (or `se_staging.`) then the project ID: `se_game.PROJECT-ID` |
 | Logs: `transaction pooler (port 6543)` | The *Transaction pooler* string was copied | Use the *Session pooler* one, port 5432 (6.4) |
 | Logs: `permission denied for schema` | The two servers' settings are swapped | Staging is `se_staging` with `SE_DATABASE_SCHEMA=staging`; live is `se_game` and no schema setting |
 | No Discord or Google buttons | Not switched on in Supabase, or `SE_SUPABASE_URL`/`SE_SUPABASE_KEY` missing | 7.2-7.4. The server asks Supabase every 5 minutes |

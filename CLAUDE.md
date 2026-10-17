@@ -8,11 +8,10 @@
 > merging into `main` is authorized. Explicit feature decisions and holds
 > still apply; routine implementation and merge decisions are yours.
 
-Social Empires, the Facebook game, playable again at
-[socialemperors.me](https://socialemperors.me). A Python server plays the
-part of Social Point's old one; players use the original Flash client (in
-Ruffle or a Flash browser) or our new client in `client/`, which is being
-built to replace it. Start with [README.md](README.md), then
+Social Empires, the Facebook game, playable again online. A Python server
+plays the part of Social Point's old one; players use the original Flash
+client (in Ruffle or a Flash browser) or our new client in `client/`, which
+is being built to replace it. Start with [README.md](README.md), then
 [ROADMAP.md](ROADMAP.md) and [CLIENT.md](CLIENT.md).
 
 ## The owner's ground rules
@@ -22,7 +21,7 @@ The owner set these in October 2026. They hold for every task.
 1. **Test everything yourself.** Unit tests, the server's tests and the
    browser tests (below), plus looking at the screenshots. The owner doesn't
    test: they play when a beta is ready. Test on this computer only, never
-   on socialemperors.me and never with the owner's account.
+   on the live site and never with the owner's account.
 2. **Light on spoilers.** The owner wants to relive the game. Reports say
    what works, what changed and what you decided, without walkthroughs or
    pictures of things they haven't reached. Show pictures only when they
@@ -50,6 +49,10 @@ The owner set these in October 2026. They hold for every task.
   into `decompiled/`, which git ignores). Write notes in our own words.
 - Put passwords, API keys or tokens in chat or in the repository. They live
   only in GitHub Secrets and Railway variables.
+- Name the live game's addresses in the repository, pull requests or
+  comments: its domain, its art's, staging's or Supabase's. The repository
+  is public and the owner keeps the live game out of view. Write "the live
+  site", or `example.com` in instructions.
 - Make accounts on the live site. `e2e/run.mjs` starts a server of its own.
 
 ## Order of work
@@ -85,10 +88,11 @@ starts the server on a free port with a throwaway data folder, and plays
 each test in `e2e/tests/`. Each test player is a new account with a new
 town; a header tells the test server they're different visitors, so the
 limit of five new accounts an hour doesn't get in the way. Art comes from
-`art/sheets/` when it has been made here, otherwise from the live bucket.
-Screenshots and the server's log go to `e2e/out/`: look at them. Each new
-feature gets a browser test, with checks on the screen and on the server's
-save. Set `PYTHON` to a Python that has `requirements.txt` installed.
+`art/sheets/` when it has been made here, otherwise from the live bucket,
+whose address the environment gives in `SE_E2E_LIVE_ASSETS`. Screenshots
+and the server's log go to `e2e/out/`: look at them. Each new feature gets
+a browser test, with checks on the screen and on the server's save. Set
+`PYTHON` to a Python that has `requirements.txt` installed.
 
 ## Where things are
 

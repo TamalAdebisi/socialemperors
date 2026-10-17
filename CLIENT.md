@@ -284,8 +284,8 @@ is insufficient. With subsequent owner authorization, Codex ran the
 targeted **Export art to R2** workflow for all nine. Cloudflare initially
 served old cached WebP images alongside the new manifests. After the
 owner purged the 20 image URLs, all images verified against the fresh
-export at 11:24 UTC, both without Origin and with
-`Origin: https://socialemperors.me`; their dimensions match the JSON.
+export at 11:24 UTC, both without Origin and with the live site's
+`Origin`; their dimensions match the JSON.
 The refreshed-cache `team` check now passes alone and in the full suite;
 the art follow-up is closed in #91. No further export or purge is pending
 for these items. The workflow

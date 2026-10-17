@@ -12,8 +12,9 @@ not for everyday browsing.
 
 [FlashBrowser](https://github.com/radubirsan/FlashBrowser/releases/latest)
 is a small browser with Flash Player built in, so there's nothing else to
-install. Open [socialemperors.me](https://socialemperors.me) in it, choose
-*A Flash browser*, and play.
+install. Open the game's address in it (`http://127.0.0.1:5050` when it
+runs on your computer; README.md says how), choose *A Flash browser*, and
+play.
 
 ## The manual way: an old browser and Flash Player
 
