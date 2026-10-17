@@ -161,7 +161,9 @@ class TimeMachineTest(unittest.TestCase):
 
     def test_time_travel_preserves_malformed_generic_queue_starts_without_normalizing_them(self):
         malformed = [False, True, None, "", " ", "not a timestamp", 1.5, "1.5", -1, "-1",
-                     float("nan"), float("inf"), [], {}, 2 ** 53, "9007199254740990.5", "1.0000000000000001"]
+                     float("nan"), float("inf"), [], {}, 2 ** 53, "9007199254740990.5", "1.0000000000000001",
+                     "1.0", "1e0", "1e-400", "1e309", "0.0", "0e0", "1__0", "1_0", "١", "１",
+                     " 1", "1 ", "+1", "-0", "00000000000000000", "9007199254740992"]
         for value in malformed:
             with self.subTest(value=repr(value)):
                 self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
@@ -178,15 +180,14 @@ class TimeMachineTest(unittest.TestCase):
             "1": {"ts": now, "amount": 1, "unit": 533},
             "2": {"ts": str(now), "amount": 1, "unit": 534},
             "3": {"ts": float(now), "amount": 1, "unit": 535},
-            "4": {"ts": f"{now}.0", "amount": 1, "unit": 550},
-            "5": {"ts": f"{now}e0", "amount": 1, "unit": 554},
+            "4": {"ts": str(now).rjust(16, "0"), "amount": 1, "unit": 550},
             "6": {"ts": 0, "amount": 1, "unit": 555},
             "7": {"ts": "0", "amount": 1, "unit": 556},
             "8": {"ts": 0.0, "amount": 1, "unit": 557},
         })
         self.send("time_ff", 1)
         queues = self.pState["barracksQueues"]
-        for key in ("1", "2", "3", "4", "5"):
+        for key in ("1", "2", "3", "4"):
             self.assertEqual(queues[key]["ts"], now - 3600, key)
         for key, value in (("6", 0), ("7", "0"), ("8", 0.0)):
             self.assertEqual(queues[key]["ts"], value, key)
