@@ -80,3 +80,32 @@ walking admission and its saved tile, box
 counts, ordinary occupants remaining empty, 18-slot pages and empty final
 pages, one-unit deployment, no deployment experience, bought capacity,
 cash, phone layout, storing/resetting, retained capacity and reload.
+
+## WebKit follow-up with loaded Storage portraits
+
+The stronger warehouse fixture passed **1/1 in 65 seconds** in Linux
+WebKit at exact clean integrated
+`db5d614dff4ba271466718c8bd5df2e40935e6e6`. This is the warehouse case's
+result in `work/checks/integrated-webkit-followup/output.log`, not a claim
+that the whole combined browser run passed. Its new checks require the
+three named Storage cards, their exact counts, and complete images with
+positive natural dimensions at the intended original JPG URLs.
+
+All **four fresh screenshots** were inspected. The final reloaded Storage
+capture now visibly shows all three original portraits, with eighteen
+Light Knights, one Spearman and one Unit Warehouse, total 20. This resolves
+the earlier blank-portrait capture limit. Desktop occupied/final pages and
+the phone warehouse remain readable, without generic capacity or zero
+combat statistics on the warehouse card. No material visual issue was
+found. The phone warehouse PNG still captures the upper part of page one;
+its lower paging controls are outside that screenshot. Hashes, dimensions
+and review notes remain in the ignored
+`work/review-webkit-warehouse-followup.json` on the integration worktree.
+
+The same integrated `db5d614d` passed **467 server tests: 458 passed and
+nine existing PostgreSQL skips**, in 34.338 seconds of unittest time
+(34.938 seconds command duration). Client types and **447/447 tests
+passed**, with 13.265896 seconds of test time (16.711 seconds combined
+command duration). These are combined-branch results, not standalone
+warehouse-leaf checks. The complete 85-case browser run remains pending;
+no full-suite pass, merge or deployment is claimed here.
