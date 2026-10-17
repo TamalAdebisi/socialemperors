@@ -100,7 +100,18 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   **1/1 in 89s**. All full/focused captures and complete server logs were
   reviewed. [The controls record](docs/verification-combat-controls.md)
   retains every failure, fixture correction, exact revision and visual limit.
-- **Latest menus/progression verification (#99, #105–109):** server 449
+- **Click-only details verification (#113):** client types and all 437
+  tests passed; server 449 run (440 passed, nine existing PostgreSQL
+  skips). Full Chromium passed **89/89 in 2h 3m 48.08s** at `e333f8c9`.
+  Main #114 was integrated at `5e080221` without changing the game,
+  browser library or case fixtures. Its art-setting runner passed **5/5
+  in 6m 37.80s**, plus the expected missing-setting exit. The already
+  loaded full runner stays attributed to `e333f8c9`. Both unit suites
+  passed again after the merge. All 527 full-run and 26 integration
+  captures were reviewed; complete server logs are clean. See
+  [the details record](docs/verification-click-details.md) for the
+  configured-runner result, retained initial failures and visual limits.
+- **Initial menus/progression delivery (#99, #105–109):** server 449
   run (440 passed, nine existing PostgreSQL skips), client types and all
   436 tests passed. Full combined Chromium: 88/89 in 1h 59m 26.250s at
   `76b1663f`, including main #98. The no-hall villager fixture needed to
@@ -108,8 +119,9 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   Test-only `6fcf0646` retains all assertions and passes 1/1 in 1m 24.643s.
   All 89 cases have passing results across runs, not one final-head 89/89
   run. All 516 full-run screenshots and both focus captures were reviewed;
-  complete browser logs are clean. Merged runtime/art/tests are identical
-  to `6fcf0646`. [The delivery record](docs/verification-menus.md) retains
+  complete browser logs are clean. At that delivery's closure, merged
+  runtime/art/tests were identical to `6fcf0646`.
+  [The delivery record](docs/verification-menus.md) retains
   exact timings, initial failures and screenshot limits. All six slices
   are merged; the owner's manual run-through and other feature holds stay.
 - **Latest structure verification (#96):** server 449 run (440 passed,

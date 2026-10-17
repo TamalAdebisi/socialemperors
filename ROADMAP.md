@@ -350,7 +350,9 @@ merging the two wait fixes with that separate failure documented.
       tap or keyboard action at every width; hover and focus leave them
       closed. The short button label fits narrow cards. Original category
       pictures and New badges are retained; early unlocking remains disabled
-      ([CLIENT.md](CLIENT.md#shop-details)).
+      ([CLIENT.md](CLIENT.md#shop-details)). The click-only follow-up's
+      [verification record](docs/verification-click-details.md) retains
+      eight-width checks, the full Chromium result and integration limits.
       **#87 verified and delivered:** the building card, Upgrade and the
       site's Menu; [all integrated checks](docs/verification-87.md) pass.
       The final Beta 1 comparison remains on hold (HANDOFF.md, task 6).
