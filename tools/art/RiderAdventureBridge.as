@@ -67,6 +67,10 @@ package {
                 distance:screen != null ? screen.x0 : 0,
                 x:hero != null ? hero.x : 0,
                 y:hero != null ? hero.y : 0,
+                health:screen != null ? screen.getChildByName("heroHealth").health : 0,
+                cooldown:hero != null ? hero.cooldown : 0,
+                facing:hero != null ? hero.side : "right",
+                menuFrame:adventure.game_over_screen != null ? adventure.game_over_screen.currentFrame : 0,
                 enemies:screen != null ? screen._enemiesArray.length : 0,
                 distanceToEnemy:screen != null && screen._enemiesArray.length > 0 && hero != null ? screen._enemiesArray[0].x - hero.x : 0,
                 frames:frames

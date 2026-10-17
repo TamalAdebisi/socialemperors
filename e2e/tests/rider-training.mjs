@@ -33,6 +33,50 @@ export default async function riderTraining({ newPlayer }) {
   const inside = (save) => save.map.items.find((item) => item[0] === 1346)?.[6] ?? [];
   const initial = await info();
   const progress = () => activePage.evaluate(() => document.querySelector(".rider-adventure ruffle-player")?.ruffle().callExternalInterface("riderProgress"));
+  let journey;
+  const beginJourney = async (name) => { journey = { name, first: (await progress()).frames, at: Date.now() }; };
+  const budget = (state) => {
+    assert.ok(state.frames - journey.first <= 600, `${journey.name} reached its result within 600 movie frames: ${JSON.stringify(state)}`);
+    return state;
+  };
+  const goalReached = (state, goal) => goal === "enemy" ? Math.abs(state.distanceToEnemy) <= 90 || state.state !== "playing"
+    : goal === "won" ? state.state === "won" : state.state === "lost" && state.menuReady;
+  const gameUntil = async (goal) => {
+    for (;;) {
+      const before = budget(await progress());
+      console.log("Rider game", { phase: journey.name, wallMs: Date.now() - journey.at, ...before });
+      if (goalReached(before, goal)) return before;
+      // Software collision readback measures about 3 FPS here. Keep a hard
+      // simulation cap and 30-second liveness for each 30-frame segment.
+      await activePage.waitForFunction(({ frame, priorState, goal }) => {
+        const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
+        const reached = goal === "enemy" ? Math.abs(state.distanceToEnemy) <= 90 || state.state !== "playing"
+          : goal === "won" ? state.state === "won" : state.state === "lost" && state.menuReady;
+        return reached || state.frames >= frame + 30 || state.state !== priorState;
+      }, { frame: before.frames, priorState: before.state, goal }, { timeout: 30_000, polling: 250 });
+      const after = budget(await progress());
+      if (goalReached(after, goal)) return after;
+      const moved = Math.abs(after.distance + after.x - before.distance - before.x) > .01 || Math.abs(after.y - before.y) > .01;
+      const changed = after.health !== before.health || after.enemies !== before.enemies || after.distanceToEnemy !== before.distanceToEnemy
+        || after.cooldown !== before.cooldown || after.menuFrame !== before.menuFrame || after.state !== before.state;
+      assert.ok(moved || (goal === "lost" && changed), `the original simulation advanced, beyond the wrapper clock: ${JSON.stringify({ before, after })}`);
+    }
+  };
+  const approach = async () => {
+    const direction = (await progress()).distanceToEnemy >= 0 ? "ArrowRight" : "ArrowLeft";
+    await activePage.keyboard.down(direction);
+    await gameUntil("enemy");
+    await activePage.keyboard.up(direction);
+    const state = await progress();
+    const facing = state.distanceToEnemy >= 0 ? "right" : "left";
+    if (state.facing !== facing) {
+      const turn = facing === "right" ? "ArrowRight" : "ArrowLeft";
+      await activePage.keyboard.down(turn);
+      await activePage.waitForFunction((facing) => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").facing === facing,
+        facing, { timeout: 30_000, polling: 250 });
+      await activePage.keyboard.up(turn);
+    }
+  };
   const endGame = async () => {
     const bounds = await activePage.locator(".rider-adventure-stage").boundingBox();
     assert.ok(bounds);
@@ -69,30 +113,22 @@ export default async function riderTraining({ newPlayer }) {
   assert.equal(Number((await info()).privateState.riderStepNumber), 0);
   // Walk to the first opponent, fight with the game's ordinary attack keys,
   // then reach the end and press the actual in-movie End Game button.
-  await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => {
-    const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
-    return state.distanceToEnemy <= 90 || state.state !== "playing";
-  }, null, { timeout: 60_000 });
-  await page.keyboard.up("ArrowRight");
+  await beginJourney("first adventure victory");
+  await approach();
   for (let turn = 0; turn < 30; turn++) {
-    const state = await progress();
+    const state = budget(await progress());
     assert.notEqual(state.state, "lost", "the rider survived the first adventure");
     if (state.enemies === 0 || state.state === "won") break;
-    if (state.distanceToEnemy > 105) {
-      await page.keyboard.down("ArrowRight");
-      await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").distanceToEnemy <= 90, null, { timeout: 30_000 });
-      await page.keyboard.up("ArrowRight");
-    }
+    if (Math.abs(state.distanceToEnemy) > 105) await approach();
     await page.keyboard.press("1");
     await page.waitForFunction((before) => {
       const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
       return state.frames >= before + 28 || state.state !== "playing";
-    }, state.frames, { timeout: 30_000 });
+    }, state.frames, { timeout: 30_000, polling: 250 });
   }
   assert.equal((await progress()).enemies, 0, "the first opponent was defeated through normal input");
   await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").state === "won", null, { timeout: 60_000 });
+  await gameUntil("won");
   await page.keyboard.up("ArrowRight");
   await player.shot("adventure-one-won");
   await endGame();
@@ -143,13 +179,9 @@ export default async function riderTraining({ newPlayer }) {
   await page.waitForFunction(() => document.querySelector(".rider-adventure")?.getAttribute("data-ready") === "true", null, { timeout: 60_000 });
   assert.equal(await adventure.getAttribute("data-level"), "8");
   await player.shot("taming-adventure");
-  await page.keyboard.down("ArrowRight");
-  await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").distanceToEnemy <= 90, null, { timeout: 60_000 });
-  await page.keyboard.up("ArrowRight");
-  await page.waitForFunction(() => {
-    const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
-    return state.state === "lost" && state.menuReady;
-  }, null, { timeout: 120_000 });
+  await beginJourney("taming adventure loss");
+  await approach();
+  await gameUntil("lost");
   await player.shot("taming-adventure-lost");
   await endGame();
   await adventure.waitFor({ state: "hidden" });
