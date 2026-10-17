@@ -43,6 +43,7 @@ import { applyVillagers, lineUp, nextInLine, villagers } from "./rules/villagers
 import { caught, homeFor } from "./rules/animals.ts";
 import { SUBCAT, canGoInside, canHarvest, freeTileNear, goInside, goldMultiplier, harvestSeconds, harvested, isResource, letAllOut, letOut, nextResources, regrow, standingTile } from "./rules/work.ts";
 import { UNIT_WAREHOUSE, resetWarehouse } from "./rules/warehouse.ts";
+import { DRAGON_TAMING } from "./rules/dragonRiders.ts";
 
 /** How long a message stays at the top of the screen, and how many may wait to show. */
 const SAY_MS = 2500;
@@ -1599,8 +1600,9 @@ export class TownEditor {
         this.unitStopped(unit);
         return;
       }
-      if (building.item.id === UNIT_WAREHOUSE && (building.tx !== destination.x || building.ty !== destination.y)) {
-        // A warehouse can move while the unit walks. Its old doorway
+      if ((building.item.id === UNIT_WAREHOUSE || building.item.id === DRAGON_TAMING)
+        && (building.tx !== destination.x || building.ty !== destination.y)) {
+        // These buildings can move while the unit walks. Their old doorway
         // cannot admit a unit into the building's new position.
         this.unitStopped(unit);
         if (tries > 1) this.goInto(unit, building, tries - 1);
