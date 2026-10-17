@@ -21,6 +21,7 @@ update its status here.
 | [rules/progress.md](rules/progress.md) | **Rule book: levels, goals, bonuses and the shop.** Experience, level ups, how every kind of goal is counted and paid, the three bonuses, the shop and its prices, the market, the second town. 113 rules |
 | [rules/neighbours.md](rules/neighbours.md) | **Rule book: neighbours and messages.** The neighbours bar, visiting, helping, the carts, asking friends, gifts, social buildings, Arthur, and the windows that open as the game starts. 76 rules |
 | [rules/tournaments.md](rules/tournaments.md) | **Rule book: tournaments.** Lists and teams, entry/fees, rooms, copied-army battles, scoring, results/prizes and friends' creation/invitation policy |
+| [rules/warehouse.md](rules/warehouse.md) | **Rule book: the Unit Warehouse.** Admission, off-map population, slot pages, deployment checks, bought capacity, storing and selling |
 | [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 83 rules |
 
 The index, by area:
@@ -30,11 +31,11 @@ The index, by area:
 | [index/core.md](index/core.md): the game's core (loading, the save, the start) | 42 | 19 | 12 | 7 |
 | [index/engine.md](index/engine.md): the map engine, units, attacks, magic | 183 | 107 | 65 | 2 |
 | [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 125 | 215 | 6 |
-| [index/windows.md](index/windows.md): the windows | 136 | 63 | 11 | 34 |
+| [index/windows.md](index/windows.md): the windows | 136 | 65 | 11 | 32 |
 | [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 36 | 16 | 17 |
 | [index/quests.md](index/quests.md): quests and battles | 99 | 66 | 10 | 15 |
 | [index/art-and-libraries.md](index/art-and-libraries.md): picture holders, others' libraries | 597 | 2 | 0 | 0 |
-| **All** | **1,505** | **418** | **329** | **81** |
+| **All** | **1,505** | **420** | **329** | **79** |
 
 The rest are picture holders (508), other people's libraries (79), parts
 we don't need (89: Facebook, the iPhone app, payments, adverts, Social

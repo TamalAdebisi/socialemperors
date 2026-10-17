@@ -25,6 +25,10 @@ export interface SaveMap {
   items: SaveItem[];
   /** What this town put away: { "<item id>": count } (older saves: a list indexed by id). */
   store?: Box;
+  /** Units kept off the map in this town's Unit Warehouse. */
+  warehousedUnits?: Box;
+  /** The original save's spelling: its total room, including bought slots. */
+  warehouseAditionalCapacitySingle?: number;
   /** The Great Church's steps done: each adds room for people. */
   increasedPopulation?: number;
   /** The troll camps (rules/camps.ts): which comes next, and when the last chest was opened (seconds). */
@@ -143,6 +147,9 @@ export interface Town {
   /** Storage, by item id: gifts and prizes (shared by the player's towns), and what this town put away. */
   gifts: Map<number, number>;
   store: Map<number, number>;
+  /** Warehouse units take no population until called back onto the map. */
+  warehouse?: Map<number, number>;
+  warehouseCapacity?: number;
   items: PlacedItem[];
   /** Item ids the config doesn't know (drawn as nothing, reported once). */
   unknown: number[];
@@ -188,6 +195,8 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
     gifts: readBox(info.privateState?.gifts),
     store: readBox(map.store),
+    warehouse: readBox(map.warehousedUnits),
+    warehouseCapacity: Number(map.warehouseAditionalCapacitySingle) || 50,
     items: placed,
     unknown,
     increasedPopulation: Number(map.increasedPopulation) || 0,

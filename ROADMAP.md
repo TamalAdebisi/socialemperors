@@ -448,6 +448,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] The dragon and monster nests' window: raising them step by step,
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
+  - [x] The Unit Warehouse: walking units in, eighteen-slot pages, calling
+        units back, buying room and storing the building with its contents
+        ([CLIENT.md](CLIENT.md#the-unit-warehouse)). Its commands and save
+        fields match the original; desktop/phone coverage checks saving.
 
 ## How we add a missing feature
 

@@ -91,8 +91,9 @@ another.
    a Monday unless taken that day, a preview on a Sunday). *Built:
    `client/src/rules/bonuses.ts`, `client/src/bonuses.ts`
    ([progress.md](rules/progress.md)).*
-9. **The Unit Warehouse's contents and room** are read. *Not yet (no
-   warehouse in the new client).*
+9. **The Unit Warehouse's contents and room** are read. *Built:
+   `rules/town.ts`, `rules/warehouse.ts`; automatic collision storage also
+   resets its contents into town storage (`rules/cleanup.ts`).*
 10. **Lost things are not saved:** whatever lost things, wild animals'
     ownership or raiders were on the map last time are not in the save;
     they are made afresh below. *Built, the same.*

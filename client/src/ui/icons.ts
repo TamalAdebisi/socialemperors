@@ -125,6 +125,10 @@ export const ICONS = {
   "open-market": new URL("./art/open-market.webp", import.meta.url).href,
   "market-card": new URL("./art/market-card.webp", import.meta.url).href,
   "market-button": new URL("./art/market-button.webp", import.meta.url).href,
+  "open-warehouse": new URL("./art/open-warehouse.webp", import.meta.url).href,
+  "warehouse-card": new URL("./art/warehouse-card.webp", import.meta.url).href,
+  "warehouse-empty": new URL("./art/warehouse-empty.webp", import.meta.url).href,
+  "warehouse-use": new URL("./art/warehouse-use.webp", import.meta.url).href,
   // The nests' window (ui/nest.ts).
   "nest-button": new URL("./art/nest-button.webp", import.meta.url).href,
   "nest-marker": new URL("./art/nest-marker.webp", import.meta.url).href,

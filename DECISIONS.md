@@ -4,6 +4,25 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: finish the Unit Warehouse in the shared panel
+
+- **Keep eighteen slots on a page, arranged for the panel.** The original
+  six columns do not fit its narrow desktop panel or a phone sheet. Use
+  three columns with the same slot count, original slot/button pictures,
+  original thumbnail art and visible names for touch. Static portraits
+  replace the original eighteen animated portraits; their units and rules
+  are unchanged. The stale help text's old 200-slot claim is not shown;
+  purchases follow the current config's 1,000 maximum.
+- **Refuse a full warehouse before a unit walks there.** The original
+  walks the unit over and rejects it on arrival. Our ordinary admission
+  check knows the separate box's current room and refuses the trip at
+  once; arrival rechecks room for simultaneous units.
+- **Follow the distinct storage and selling paths.** Locally reading all
+  warehouse references showed `reset_warehouse` when the building goes
+  into storage, including the collision tidy-up. Moving and ordinary
+  selling do not send it. Preserve that behavior and retain bought room;
+  correcting the old server comment needs no server runtime change.
+
 ## 17 October 2026: preserve real visibility in background-play fixtures
 
 - **Simulate hidden tabs without overriding actual page unloading.** A local

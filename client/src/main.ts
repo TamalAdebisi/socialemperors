@@ -56,6 +56,8 @@ import { ShopWindow } from "./ui/shop.ts";
 import { SpellsWindow, magicParts } from "./ui/spells.ts";
 import { Graveyards } from "./ui/graveyard.ts";
 import { MarketWindow } from "./ui/market.ts";
+import { WarehouseWindow } from "./ui/warehouse.ts";
+import { warehouseRules } from "./rules/warehouse.ts";
 import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
 import { bury, readDead } from "./rules/graveyard.ts";
@@ -581,6 +583,14 @@ async function start(): Promise<void> {
       },
     });
     const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
+    const warehouse = new WarehouseWindow({
+      town, items, rules: warehouseRules(config),
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => commands.add(command.cmd, ...command.args),
+      arrived: (unit) => editor.arrived(unit, []),
+      changed: () => hud.update(town),
+      spent: (cash) => doings.spend("c", cash),
+    });
     const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
     const levelWindows = new LevelUpWindows(
       { title: line(467, "LEVEL #0#!"), rank: line(468, "You've reached #0# rank"), canBuy: line(469, "You can now buy:"), reward: line(470, "Level reward:") },
@@ -637,7 +647,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return market.buttonFor(placed) ?? graves.windowOf(placed);
+        return warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();
