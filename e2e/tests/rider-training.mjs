@@ -8,6 +8,9 @@ const ACADEMY = [56, 52], TAMING = [48, 58];
 export default async function riderTraining({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
+  // Ruffle's Rust logger prints AVM2 failures as formatted console.log.
+  const runtimeErrors = (message) => { if (/%cERROR%c/.test(message.text())) player.problems.push(message.text()); };
+  page.on("console", runtimeErrors);
   await player.send([
     { cmd: "rt_level_up", args: [35] },
     { cmd: "buy", args: [1345, ...ACADEMY, 0, 0, 1, 1, "b"] },
@@ -156,6 +159,7 @@ export default async function riderTraining({ newPlayer }) {
   // original eighth adventure. Success consumes both and adds its result.
   await page.keyboard.press("Escape");
   const phone = await player.onPhone();
+  phone.page.on("console", runtimeErrors);
   activePage = phone.page;
   await page.close();
   await phone.select(TAMING, "Dragon Riding");

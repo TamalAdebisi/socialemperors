@@ -102,7 +102,7 @@ export class RiderAdventure {
       stage.append(player);
       overlay.dataset.loading = "true";
       try {
-        await player.load({ url: BRIDGE, autoplay: "on", allowScriptAccess: true, preferredRenderer: "webgl",
+        await player.load({ url: BRIDGE, autoplay: "on", allowScriptAccess: true, preferredRenderer: "wgpu-webgl",
           backgroundColor: "#29201a", parameters: { level: String(level), rider: String(rider), session, game: `${this.assets}/swf/minigames/SagaOTDC.swf` } });
       } finally {
         overlay.dataset.loading = "false";
