@@ -33,13 +33,26 @@ be collected without spending; missing or malformed time is never guessed.
 
 ## Browser verification
 
-`e2e/tests/soul-mixer.mjs` is ready for the coordinated shared-machine
-browser slot. At this source stabilization commit it has **not run yet**;
-no screenshot pass is claimed. It checks original art/help, desktop/phone
-layout, reload and unchanged ordinary saved units, cash and queues for
-the current unavailable state. Browser results and screenshot/log review
-will follow in this branch before delivery. The root integration's full
-browser-suite result is recorded separately.
+Exact clean source `c944e853927ee4e0e13ce4320107cc565718d58f` passed the
+focused Chromium case **1/1 in 67 seconds** with:
+
+`PYTHON=.venv/bin/python node e2e/run.mjs soul-mixer --keep`
+
+All three fresh captures were reviewed: desktop unavailable state, the
+four original help images and the phone sheet. The original art, disabled
+actions and layout are correct; the phone body scrolls within its sheet.
+The case checks ordinary saved cash, the mixer, the knight and queue data
+before/after help, reload and opening on the phone. They remain unchanged.
+The full local server log has no Python traceback, HTTP 5xx response or
+unhandled command. Evidence is archived locally in
+`work/verification-soul-mixer-c944e853/`; the throwaway data is retained at
+`/tmp/se-e2e-MBsqiL`.
+
+This verifies the current unavailable state, not playable new mixing.
+Recovered generic behaviour is covered separately by the synthetic rule
+and server tests above. Only delivery documentation follows this tested
+source in the slice. The root integration's complete browser-suite result
+is recorded separately; no combined full-suite pass is claimed here.
 
 No live game account or production game-state traffic was used. Research
 made read-only requests to the preservation upstream and public search;

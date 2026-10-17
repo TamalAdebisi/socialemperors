@@ -357,6 +357,8 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 - [x] Later original window/art, generic ranking and power-up rules,
   original queue protocol, saved work, explicit collection and safe parents.
 - [x] Safe missing-data window and desktop/phone saved-state coverage.
+  Exact `c944e853` passed focused Chromium 1/1 (67s), with all three captures
+  reviewed; [evidence and limits](docs/verification-soul-mixer.md).
 - [ ] Restore genuine later original ranks, waits, power-up table and
   passive-grant level before enabling playable mixing. The 0926 classic
   predates it. See [exact missing data](docs/original/rules/soul-mixer.md).
