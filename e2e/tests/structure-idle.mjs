@@ -123,7 +123,6 @@ export default async function structureIdle({ newPlayer }) {
         captures.push(await renderer.extract.base64({ target: slot, format: "png", clearColor: 0x5b9f30 }));
         faces.push({ facing, frames: frames.length, unique: new Set(frames).size, valid, synchronized,
           visible, image: picture.texture.source.label, imageType: picture.texture.source.resource?.constructor.name,
-          mipmaps: picture.texture.source.autoGenerateMipmaps, mipLevels: picture.texture.source.mipLevelCount,
           blank: frames.some((texture) => texture.frame.width <= 1 && texture.frame.height <= 1),
           first: picture.texture === original[0] });
       }
@@ -133,10 +132,7 @@ export default async function structureIdle({ newPlayer }) {
       assert.ok(face.valid && face.synchronized, `${name}/${face.facing} has a matching outline on every frame`);
       assert.ok(face.first, `${name}/${face.facing} starts in its idle state`);
       assert.ok(face.visible > 10, `${name}/${face.facing} actually renders visible pixels`);
-      if (webkit) {
-        assert.equal(face.imageType, "HTMLImageElement", `${name}/${face.facing} avoids Safari's ImageBitmap path`);
-        assert.ok(!face.mipmaps && face.mipLevels === 1, `${name}/${face.facing} avoids Safari's mipmap generation path`);
-      }
+      if (webkit) assert.equal(face.imageType, "HTMLImageElement", `${name}/${face.facing} avoids Safari's ImageBitmap path`);
       writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }
     delete result.captures;

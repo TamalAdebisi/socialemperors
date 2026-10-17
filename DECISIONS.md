@@ -34,15 +34,11 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 17 October 2026: Safari texture decoding
 
-- **Use linear texture sampling in Safari.** Its ordinary-image path still
-  reproduced a corrupt town before selection. The grass image, its GPU
-  pixels and its smaller mipmap copies were intact; re-uploading the ground
-  texture restored drawing. Disabling automatic mipmap generation passed
-  the unchanged overlay and farm scene checks in a fresh build. Keep that
-  Safari-only compatibility setting and verify every gallery facing uses
-  one texture level. Distant textures can shimmer more when zoomed out;
-  original art, sizes and animation timing remain unchanged. Other engines
-  retain mipmaps. This does not establish the owner's exact Mac GPU fault.
+- **Withdraw the mipmap-disable experiment.** An isolated fresh-build
+  comparison passed overlay and farm checks, but the wider run still
+  reproduced corrupt terrain. It does not justify reduced zoom quality;
+  retain mipmaps while diagnosing the rendering fault. The failed wider
+  run and its successful gallery are retained in the verification record.
 - **Load only the images used by the deliberately fixed pose.** That one
   incomplete export has 100 image pages, over 4 GB decoded. Loading all of
   them after the Safari decode repair exhausted the 8 GB test machine.
