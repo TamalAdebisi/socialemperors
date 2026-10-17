@@ -1,5 +1,13 @@
 # The interface, managers and small modules
 
+**Later Soul Mixer supplement (1.4.07, outside the 0926 inventory):**
+`GUI/extendedPortraits/EP_SelfSoulMixer`, `managers/BuildingQueueManager`
+and `managers/BuildingQueue/BuildingQueueData` are researched through for
+the Soul Mixer. Its card, generic queue/save contract and explicit output
+collection are built; missing original tables block new mixing.
+`managers/goals/GoalSoulMixerGet` has no matching shipped mission and adds
+no progression goal. See [rules and source coverage](../rules/soul-mixer.md).
+
 This part of the original Flash client is what sits around the map: the
 top bar and the menus at the bottom, the card for the thing selected, the
 shop and storage, the friends strip, and the managers that keep the

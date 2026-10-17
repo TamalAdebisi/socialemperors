@@ -29,6 +29,9 @@ SCALE = 3
 # Shown at most about 56 px wide, on screens with up to three pixels to the point.
 LONGEST = 160
 
+# Later windows externalized their original art as images, outside the 2012 SWF.
+EXTERNAL_IMAGES = {"open-soul-mixer": "externalized/RecuadroInfo/soulmixer.png"}
+
 # Our name: (the picture in the game's file, which frame[, its longest side
 # if not LONGEST[, "top": only what's above its first empty row]]). A
 # picture is a class, or a part of one by the names the game's code gives
@@ -329,9 +332,19 @@ def main():
             print(f"{name}: {picture.width}x{picture.height}")
         export_map_pictures(folder)
         export_scaffolds(folder)
+        export_external_images()
     finally:
         shutil.rmtree(folder, ignore_errors=True)
     return 0
+
+
+def export_external_images():
+    for name, source in EXTERNAL_IMAGES.items():
+        with Image.open(os.path.join(ROOT, "assets", source)) as image:
+            picture = trimmed(image.convert("RGBA"))
+        picture.thumbnail((LONGEST, LONGEST), Image.LANCZOS)
+        picture.save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, alpha_quality=100, method=6)
+        print(f"{name}: {picture.width}x{picture.height}")
 
 
 def export_map_pictures(folder):

@@ -119,6 +119,9 @@ export function choices(town: Town, placed: PlacedItem, now = Date.now()): { mov
   if (item.subcategory === SUBCAT.townHall) {
     return { ...none, move: true, turn: item.facings > 1, why: "" };
   }
+  if (placed.soulMixing) {
+    return { ...none, turn: item.facings > 1, why: "Collect the mixed unit before moving, storing or selling this building." };
+  }
   if (NO_BUTTONS.has(item.subcategory) || item.category === TERRAIN) {
     return { ...none, sell: item.category !== TERRAIN, why: "" };
   }

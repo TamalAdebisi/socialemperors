@@ -117,6 +117,10 @@ export interface PlacedItem {
   helpers?: string[];
   /** A scripted camp's chest that fills up as the camp goes (homeScripted.ts): how many steps show. Not saved. */
   steps?: number;
+  /** Later original building queue identifier (the save's attrs.bq). */
+  queueId?: string;
+  /** The Soul Mixer's parents stay inside until its queued output is collected. */
+  soulMixing?: boolean;
   /** A scripted camp's piece that is nobody's whatever the border says (its festival, its pen's walls). Not saved. */
   nobodys?: boolean;
   /** A scripted camp's boss's own rules in a fight (rules/battle.ts): it gets away, can't be hurt yet, is drawn bigger. Not saved. */
@@ -124,6 +128,8 @@ export interface PlacedItem {
 }
 
 export interface Town {
+  /** Full original Soul Mixer content has been validated for this loaded town. Never saved. */
+  soulMixerReady?: boolean;
   /** Which of the player's towns this is (the server's town number, 0 or 1). */
   id: number;
   name: string;
@@ -168,6 +174,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       startedAt: Number.isFinite(started) ? Number(started) : null,
       workTime: Number(attributes?.cp) || 0,
       ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length } : {}),
+      ...(attributes?.bq !== undefined ? { queueId: String(attributes.bq) } : {}),
       ...(readHelpers(attributes?.hc).length > 0 ? { helpers: readHelpers(attributes?.hc) } : {}),
     });
   }

@@ -19,6 +19,17 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
+  recovered its window, generic rules and queue commands; 0926 predates it.
+  Archived/historical config and preservation upstream have no
+  `breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` or
+  `SOUL_MIXER_MIN_LEVEL`. Its original-art window/help are built, but new
+  mixing safely stays unavailable; all entry and cash spending are blocked.
+  Known completed legacy work can be collected without spending, never by
+  treating an unknown or malformed timestamp as finished.
+  Recover genuine later config to enable it; never infer those tables
+  from unit strength or community guesses. [Research and coverage](docs/original/rules/soul-mixer.md).
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven
@@ -848,6 +859,8 @@ together:
 - [ ] The units book: every unit by kind, grey until owned, buying a
       missing one for cash.
 - [ ] The unit warehouse (`warehouse.py`).
+- [ ] Soul Mixer: window/generic queue support built; playable mixing
+      waits for missing original content described above.
 - [ ] The time machine (`time_machine.py`) and its help page.
 - [ ] The weather machine: the island's looks (`unlock_skin`, `set_skin`).
 - [ ] Darts (`darts.py`).

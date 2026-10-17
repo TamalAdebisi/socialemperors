@@ -1,5 +1,13 @@
 # Rules with no button
 
+**Later Soul Mixer supplement (1.4.07):** original map-initialization and
+level-up listeners can grant its free building at
+`SOUL_MIXER_MIN_LEVEL`, checking placed/stored copies. Queues restore before
+opening the window; finished mixer output waits for Get unit. Generic
+support is built, but the archived config lacks that minimum level and
+the original rank/time/power-up tables, so new mixing/grants remain safely
+unavailable. See [source coverage and blocker](rules/soul-mixer.md).
+
 Everything the original Flash client does by itself, with nobody pressing
 anything: what happens between loading the save and the player being able
 to play, what runs on a clock while they play, what follows from an event

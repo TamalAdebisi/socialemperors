@@ -61,6 +61,9 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, no
   if (target.race !== town.race && target.race !== "a") {
     return false;
   }
+  if (target.id === 1529) {
+    return town.soulMixerReady === true && !building.soulMixing && (unit.breedingOrder ?? 0) > 0;
+  }
   if (target.subcategory === SUBCAT.refuge) {
     return true;
   }

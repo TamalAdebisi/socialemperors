@@ -1256,6 +1256,28 @@ export class TownEditor {
     this.refresh();
   }
 
+  /** The Soul Mixer's selector puts an owned unit straight inside, as the original window does. */
+  putInsideFromWindow(unit: PlacedItem, building: PlacedItem): boolean {
+    if (this.paused || !this.town.items.includes(unit) || !this.town.items.includes(building)
+      || building.item.id !== 1529 || this.town.soulMixerReady !== true || !unit.item.isUnit || (unit.item.breedingOrder ?? 0) <= 0
+      || inConstruction(building, Date.now()) || building.ruined || building.soulMixing
+      || (building.units?.length ?? 0) >= 2 || unit.wild || !isTheirs(this.town, unit.item)) return false;
+    this.stopWorking(unit);
+    this.stopRepair(unit);
+    this.clearLine(unit);
+    this.headingTo.delete(unit);
+    const from = this.savedAt.get(unit) ?? { x: unit.tx, y: unit.ty };
+    this.savedAt.delete(unit);
+    this.send([goInside(this.town, unit, building, from, this.clock())]);
+    this.emit({ kind: "inside", unit: unit.item, building: building.item });
+    this.doings.pushedInto(unit.item, building.item);
+    this.view.remove(unit);
+    this.select(building);
+    this.hud.update(this.town);
+    this.refresh();
+    return true;
+  }
+
   /** Who hears what the player does: Arthur's lessons (lessons.ts). */
   readonly listeners: ((event: LessonEvent) => void)[] = [];
 
@@ -1583,6 +1605,10 @@ export class TownEditor {
 
   /** Let one unit out of the selected building, beside it: the one tapped on the card. */
   private letOne(building: PlacedItem, index = -1): void {
+    if (building.soulMixing) {
+      this.say("Collect the mixed unit before taking its parents out.");
+      return;
+    }
     const out = letOut(this.town, building, this.items, index);
     if (!out) {
       this.say(`There's no room around ${building.item.name}.`);
@@ -1850,6 +1876,7 @@ export class TownEditor {
    * and that stays so if the move is cancelled.
    */
   private startMove(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.light(null);
     this.emptyOut(placed);
     this.refresh();
@@ -1924,6 +1951,7 @@ export class TownEditor {
   }
 
   private sell(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.letGo(placed);
     // What comes back rises from it, as in the Flash client.
     const back = refund(placed.item);
@@ -1938,6 +1966,7 @@ export class TownEditor {
   }
 
   private store(placed: PlacedItem): void {
+    if (this.mixerLocked(placed)) return;
     this.letGo(placed);
     this.emptyOut(placed);
     this.send([store(this.town, placed)]);
@@ -1945,6 +1974,13 @@ export class TownEditor {
     this.view.remove(placed);
     this.select(null);
     this.say(`${placed.item.name} is in your storage.`);
+  }
+
+  /** Recheck when a captured card/confirmation callback runs; a mix may have started since it was drawn. */
+  private mixerLocked(placed: PlacedItem): boolean {
+    if (placed.item.id !== 1529 || !placed.soulMixing) return false;
+    this.say("Collect the mixed unit before moving, storing or selling this building.");
+    return true;
   }
 
   private send(commands: Command[]): void {
