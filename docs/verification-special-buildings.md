@@ -46,13 +46,33 @@ commands, timings and full output in `work/checks/integrated-*-initial/`.
 Later machine recovery stacking and the rider fixture/bridge observations
 require final combined checks; they are not covered by the initial receipt.
 
+Independent integration review reproduced a malformed queue being refused
+by Soul Mixer, then converted to a claimable zero by time travel. A new
+real-command regression first failed on booleans/fractions and an infinite
+timestamp, then passed all 11 Soul command tests at clean `dc2ca014` after
+the time-machine correction. The old failure receipts and exact test
+snapshot remain in `work/checks/integration-queue-before*/`; the corrected
+receipt is `work/checks/integration-queue-after/`. Both readers also reject
+rounded decimal/exponent text before conversion, preserving the distinction
+between an explicit completed marker and unreadable saved work.
+
+The same review checked shared mana, walking/removal bookkeeping,
+containment and command flush/reload. No other material cross-feature issue
+was found. The tracked-file audit found no decompiled original source,
+temporary probes, logs or generated source dumps. Our authored adventure
+loader and its intentional read-only game-state observation are retained.
+
 Focused Chromium evidence is retained in the individual records:
 [machines](verification-time-weather.md),
 [warehouse](verification-warehouse.md),
 [temple](verification-temple.md),
 [Soul Mixer](verification-soul-mixer.md).
+Warehouse focus passes **1/1 in 106s** at `76a20d73`; all four captures
+were reviewed. Soul Mixer focus passes **1/1 in 67s** at `c944e853`; all
+three desktop/help/phone captures were reviewed. Both server logs are clean.
 Every failed or interrupted attempt remains separate from passing results.
-The expanded native rider journey, final combined browser suite,
+See also the [rider record](verification-dragon-riders.md). The expanded
+native rider journey, final combined browser suite,
 cross-engine checks and screenshot/server-log review are pending.
 
 All testing uses local temporary empires. Browser art requests read the
