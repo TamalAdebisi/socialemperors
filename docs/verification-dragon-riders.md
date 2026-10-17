@@ -83,6 +83,17 @@ local ignored evidence under `work/`; they are not published game source.
 | Renderer diagnostic 3 | 62 s; real keyboard/touch motion and actual world progression, no AVM2 errors. No end-screen callback assertion. | `work/rider-probe-attempt-3/` |
 | Strengthened focus 2, `09dcb608` | 0/1 in 92 s; initial 60-second approach cap expired while actor moved normally. | `work/rider-focus-attempt-2/` |
 | Early calibrated retry | Interrupted to release the shared browser slot after 13 s. Runner reported its closed page, shell exited 143. No completed feature result. Calibration was reverted before reviewed replacement. | `work/rider-focus-attempt-3-interrupted/` |
+| Strengthened focus 4, `d590401d` | 0/1 in 212 s. Actual normal-input first victory within 600 frames; zero-delay mouse click did not dispatch the original End Game handler, so the required recovery never appeared within 30 s. | `work/rider-focus-attempt-4/` |
+
+Focus 4's failure image still shows the original victory screen and the
+correct button highlighted. Local source inspection establishes that its
+click handler always leaves that screen, including when its parent
+callback fails. This isolates a missing native click dispatch rather than
+a successful click with an ignored callback. The fixture now moves,
+presses and releases the actual mouse over separate observed movie
+updates, each bounded by 30-second liveness. It also records the genuine
+callback's arguments before forwarding them unchanged. The existing
+30-second recovery/save requirements remain.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.

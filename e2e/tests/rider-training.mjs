@@ -83,11 +83,30 @@ export default async function riderTraining({ newPlayer }) {
       await activePage.keyboard.up(turn);
     }
   };
-  const endGame = async () => {
+  const endGame = async (expected) => {
     const bounds = await activePage.locator(".rider-adventure-stage").boundingBox();
     assert.ok(bounds);
+    await activePage.evaluate(() => {
+      const callback = window.seRiderAdventure;
+      window.riderEndEvents = [];
+      window.seRiderAdventure = (...args) => { window.riderEndEvents.push(args); callback(...args); };
+    });
+    const nextFrame = async () => {
+      const before = budget(await progress());
+      await activePage.waitForFunction((frame) => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").frames > frame,
+        before.frames, { timeout: 30_000, polling: 250 });
+    };
     // The original's End Game button, measured from its shipped artwork.
-    await activePage.mouse.click(bounds.x + bounds.width * 325 / 650, bounds.y + bounds.height * 220 / 500);
+    // Let hover and press each reach the slow software-rendered movie.
+    await activePage.mouse.move(bounds.x + bounds.width * 325 / 650, bounds.y + bounds.height * 220 / 500);
+    await nextFrame();
+    await activePage.mouse.down();
+    await nextFrame();
+    await activePage.mouse.up();
+    await activePage.waitForFunction((expected) => window.riderEndEvents.some(([event]) => event === expected), expected, { timeout: 30_000, polling: 250 });
+    const events = await activePage.evaluate(() => window.riderEndEvents);
+    console.log("Rider original end-screen callback", events);
+    assert.equal(events[0][0], expected);
   };
   await player.select(ACADEMY, "Rider Academy");
   await player.press("Open");
@@ -138,7 +157,7 @@ export default async function riderTraining({ newPlayer }) {
   await gameUntil("won");
   await page.keyboard.up("ArrowRight");
   await player.shot("adventure-one-won");
-  await endGame();
+  await endGame("won");
   await panel.locator(".rider-recovery").waitFor();
   saved = await savedWhen((save) => save.privateState.riderStepNumber === 1);
   assert.equal(saved.privateState.riderStepNumber, 1);
@@ -200,7 +219,7 @@ export default async function riderTraining({ newPlayer }) {
   await approach();
   await gameUntil("lost");
   await player.shot("taming-adventure-lost");
-  await endGame();
+  await endGame("lost");
   await adventure.waitFor({ state: "hidden" });
   assert.equal(inside(await info()).length, 2, "a lost adventure keeps both units");
 
