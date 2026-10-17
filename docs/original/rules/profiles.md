@@ -31,7 +31,9 @@ waits for notices to finish too.
 New menu cash commands also retain the ordinary spending mission credit:
 collection cash completion, missing-unit purchases and paid darts count
 when queued; free throws, full-set exchanges and prizes do not. Social
-costs retain their separate callback so none is counted twice.
+costs retain their separate callback. The existing cash-balance poll only
+adds the unrecorded part of a decrease; it cannot count an explicit
+payment again, and a matching reward cannot erase the payment event.
 Tests: profile.test.ts, goals.test.ts, e2e/tests/profiles.mjs,
 e2e/tests/basic-notices.mjs, e2e/tests/menu-progress.mjs and the existing
 world-map browser scenario. The menu-progress browser case also claims

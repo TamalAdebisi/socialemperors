@@ -487,3 +487,8 @@ export function menuCashSpent(command: Command, dartCost: number): number {
   else if(command.cmd==="darts_shoot_balloon"&&Number(command.args[1])===1)amount=dartCost;
   return Number.isFinite(amount)&&amount>0?amount:0;
 }
+
+/** The balance poll is a fallback for costs without an explicit event. */
+export function unrecordedCashSpent(previous: number, current: number, recorded: number): number {
+  return Math.max(0, previous - current - Math.max(0, recorded));
+}

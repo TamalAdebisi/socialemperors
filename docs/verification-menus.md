@@ -21,7 +21,9 @@ integration is claimed. Other special buildings belong to the other chat.
 
 - Collections runtime/fixture: `b1adddcd`, based on main `dcd72818`.
   Server: 449 run, 440 passed, nine existing PostgreSQL skips (35.980s).
-  Types and 407 client tests passed. Corrected browser focus: 2/2,
+  Types and 407 client tests passed. Full Chromium **80/80 in
+  1h 50m 17.994s**; all 468 captures reviewed at contact scale.
+  Corrected browser focus: 2/2,
   collection-book 69s and harvest collections 31s; all seven images reviewed.
 - Combined menus at `95e1007c`: types and 431 client tests passed
   (23.490s); server 449 run, 440 passed, nine existing skips (52.542s).
@@ -85,3 +87,40 @@ Facebook messaging is added. A missing-hall notice does not buy a hall.
 
 Offer/mystery packs, the owner's manual Beta 1 run-through, Daily News,
 classic-client retirement and all standing feature holds remain unchanged.
+
+## Initial combined browser check and review corrections
+
+Exact `746476373826f3df43fb9c17a7b77d4ffe8c7d5d` ran 12 cases:
+**7/12 passed in 13m 40.338s**. Units book (73s), darts (105s), missing-hall
+notices (70s), menus (119s), world (133s), friends-help (60s) and shop (50s)
+passed. All 38 PNGs, including failed-case captures, were reviewed at contact
+scale; social and shop failures were additionally viewed at native size.
+Archive: `work/menu-focus-initial/`; original log and timing remain local.
+
+- Both social cases placed their first building across the town hall.
+  Cleanup correctly sent it to Storage. Fixtures now use disjoint lots,
+  assert saved placements, and leave cleanup and selection unchanged.
+- Shop Details failed at a real click: full-height cards covered the next
+  row's Details button. Card/action wrappers now reserve the button's
+  space. The original click assertions remain. Tall bubbles also use their
+  actual height to remain in the viewport; automatic previews stay wide-only.
+- Profiles matched the primary badge and 15 hidden rank-list badges in a
+  single-element selector. The selector now targets the primary badge;
+  loaded profile checks and stale/retry scenarios remain required.
+- Menu progression used an async `waitForFunction` predicate. Inspection
+  of installed Playwright 1.56.1 shows that its poller treats the Promise
+  as truthy and adopts its first result without polling again. Node now
+  polls the actual saved completion **and** reward flags, with the original
+  30-second bound and all persistence assertions retained.
+
+Review also found that the existing cash-balance poll would count explicit
+payment events again. It now fills only the unrecorded balance decrease;
+a model test covers duplicate events, partial fallback and a payment with
+a matching cash reward. The browser asserts exactly five cash recorded
+for its five-cash purchase. Types and all 432 rule tests pass on the corrected
+candidate; fresh browser results are still pending. No failed check is
+relabelled as a pass by these corrections.
+
+Large unit values use two stat pairs per row, with a local layout fixture
+checking all six numbers remain inside the card. That fixture restores
+ordinary stats before purchases and never alters server item data.

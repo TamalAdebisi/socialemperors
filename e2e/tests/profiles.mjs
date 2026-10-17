@@ -9,7 +9,7 @@ export default async function profiles({newPlayer}) {
   const panel=page.locator(".profile-window:not([hidden])");
   await self();await panel.getByRole("heading",{name:player.name,exact:true}).waitFor();
   assert.match(await panel.innerText(),/Level 20/);assert.match(await panel.innerText(),/Profile Empire/);assert.match(await panel.innerText(),/Honour: 0/);assert.match(await panel.innerText(),/Peasant with Spear/);
-  await panel.locator(".profile-badge").evaluate((image)=>image.decode());
+  await panel.locator(".profile-content > .profile-badge").evaluate((image)=>image.decode());
   await player.shot(phone?"phone-self":"desktop-self");
   await panel.getByRole("link",{name:"Honour ranks",exact:true}).click();assert.ok(await panel.locator(".profile-ranks:not([hidden]) li").count()>1);
   await player.shot(phone?"phone-ranks":"desktop-ranks");

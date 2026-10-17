@@ -1,5 +1,12 @@
 # Judgment calls
 
+## 17 October 2026 — count menu spending once
+
+Record actual menu payments so buying and immediately claiming a cash
+reward still counts as spending. The existing balance poll fills only
+unrecorded decreases, rather than counting those same payments again.
+Rewards remain rewards; no prices, payouts or cash supply change.
+
 ## 17 October 2026 — narrow shop previews use Details
 
 Automatic hover/focus previews apply to the wide layout. A narrow layout
