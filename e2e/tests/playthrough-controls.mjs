@@ -11,6 +11,12 @@ export default async function playthroughControls({ newPlayer }) {
   // Reproduce browsers withholding animation frames in a hidden tab.
   // The independent timer must do the work, without a test-only game speed.
   await player.page.addInitScript(() => {
+    window.visiblePictureBox = (picture) => {
+      const b = picture.visualBounds;
+      const points = [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }].map((p) => picture.toGlobal(p));
+      return { x: Math.min(points[0].x, points[1].x), y: Math.min(points[0].y, points[1].y),
+        width: Math.abs(points[1].x - points[0].x), height: Math.abs(points[1].y - points[0].y) };
+    };
     window.testHidden = false;
     // Simulated tab hiding must still respect real hiding on navigation:
     // claiming an unloading page is visible starts invalid background polls.
@@ -43,7 +49,7 @@ export default async function playthroughControls({ newPlayer }) {
     const { town, view } = window.seHome.parts;
     const unit = town.items.find((p) => p.item.id === 500 && p.tx === tx && p.ty === ty);
     const picture = view.slots.get(unit).children.find((p) => !["selected", "life", "hover-life", "outline", "progress"].includes(p.label));
-    const box = picture.getBounds();
+    const box = window.visiblePictureBox(picture);
     return { x: box.x - 5, y: box.y + box.height / 2 };
   }, SECOND);
   assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, near), "CANVAS");
@@ -101,13 +107,21 @@ export default async function playthroughControls({ newPlayer }) {
     const { town, view } = window.seHome.parts;
     const unit = town.items.find((p) => p.item.id === 500 && p.tx === tx && p.ty === ty);
     const picture = view.slots.get(unit).children.find((p) => !["selected", "life", "hover-life", "outline", "progress"].includes(p.label));
-    const box = picture.getBounds();
+    const box = window.visiblePictureBox(picture);
     const at = { x: box.x + box.width / 2 - 21, y: box.y + box.height / 2 };
     return { at, hit: view.itemAt(at) === unit };
   }, SECOND);
   assert.ok(small.hit, "the zoomed-out unit has at least a 44px target");
 
   const phone = await player.onPhone();
+  await phone.page.evaluate(() => {
+    window.visiblePictureBox = (picture) => {
+      const b = picture.visualBounds;
+      const points = [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }].map((p) => picture.toGlobal(p));
+      return { x: Math.min(points[0].x, points[1].x), y: Math.min(points[0].y, points[1].y),
+        width: Math.abs(points[1].x - points[0].x), height: Math.abs(points[1].y - points[0].y) };
+    };
+  });
   await page.close();
   const target = await phone.page.evaluate(async ([tx, ty]) => {
     const { town, view, camera } = window.seHome.parts;
@@ -115,7 +129,7 @@ export default async function playthroughControls({ newPlayer }) {
     camera.lookAt({ x: 54 * (tx - ty), y: 27 * (tx + ty) - 81 });
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const picture = view.slots.get(unit).children.find((p) => !["selected", "life", "hover-life", "outline", "progress"].includes(p.label));
-    const b = picture.getBounds();
+    const b = window.visiblePictureBox(picture);
     return { x: b.x - 5, y: b.y + b.height / 2 };
   }, SECOND);
   assert.equal(await phone.page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, target), "CANVAS");
