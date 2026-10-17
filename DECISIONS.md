@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve unreadable training timestamps during time travel
+
+- **A time jump cannot make malformed work valid.** Final integration
+  review reproduced a false/boolean queue timestamp being refused by the
+  Soul Mixer, then converted by the time machine into zero, the ready
+  marker. Restrict only generic-queue shifting to finite, safe,
+  nonnegative wire integers and shift only positive starts. Keep explicit
+  zero and unreadable values exactly as saved; never repair them into
+  claimable output. Parse numeric text exactly before testing integrality,
+  so fractional text cannot round into a valid start. Existing building,
+  PvP and other timer handling is unchanged. Focused server regressions
+  retain malformed values, valid whole wire formats and zero markers;
+  the combined integration also checks the real time-jump/claim sequence.
+
 ## 17 October 2026: acknowledge the camp made due by time travel in its browser fixture
 
 - **Keep the automatic camp and continue through its dialog.** The first

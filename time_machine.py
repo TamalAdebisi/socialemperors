@@ -18,6 +18,8 @@ that much earlier. Dates on the calendar (events, Mondays, the darts game's
 season) are not waits and stay as they are.
 """
 
+from decimal import Decimal, InvalidOperation
+
 from get_game_config import get_game_config
 from village import STARTED, take
 
@@ -49,6 +51,24 @@ def _earlier(when, seconds: int):
     return max(when - seconds, 1) if when > 0 else when
 
 
+def _queue_start(value):
+    """A readable wire timestamp, never a coerced ready marker.
+
+    Like the Soul Mixer reader, only finite safe nonnegative whole numbers
+    and numeric text are valid. Parse text exactly so a fractional value
+    cannot round into an integer before this check.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return None
+    try:
+        number = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
+    if not number.is_finite() or number != number.to_integral_value() or not 0 <= number <= 2 ** 53 - 1:
+        return None
+    return int(number)
+
+
 def buy(save: dict, jump: int) -> str:
     if not 0 <= jump < len(_jumps()):
         return f"There is no time jump {jump}."
@@ -78,10 +98,12 @@ def jump(save: dict, jump: int) -> str:
     queues = pState.get("barracksQueues")
     if isinstance(queues, dict):
         for queue in queues.values():
-            if isinstance(queue, dict) and "ts" in queue:
+            started = _queue_start(queue.get("ts")) if isinstance(queue, dict) else None
+            if started is not None and started > 0:
                 # Generic queues keep the work's start here instead of on
-                # the building; zero means a speed-up already finished it.
-                queue["ts"] = _earlier(queue["ts"], seconds)
+                # the building. Never turn malformed data into ready work;
+                # an explicit zero is the existing speed-up completion mark.
+                queue["ts"] = _earlier(started, seconds)
     if isinstance(pState.get("survivalVidaTimeStamp"), list):  # survival lives come back sooner
         pState["survivalVidaTimeStamp"] = [_earlier(t, seconds) for t in pState["survivalVidaTimeStamp"]]
 

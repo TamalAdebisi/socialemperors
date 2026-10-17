@@ -159,6 +159,39 @@ class TimeMachineTest(unittest.TestCase):
             "4": {"ts": 1, "amount": 1, "unit": 550},
         })
 
+    def test_time_travel_preserves_malformed_generic_queue_starts_without_normalizing_them(self):
+        malformed = [False, True, None, "", " ", "not a timestamp", 1.5, "1.5", -1, "-1",
+                     float("nan"), float("inf"), [], {}, 2 ** 53, "9007199254740990.5", "1.0000000000000001"]
+        for value in malformed:
+            with self.subTest(value=repr(value)):
+                self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+                    "1": {"ts": value, "amount": 1, "unit": 533},
+                })
+                self.send("time_ff", 1)
+                queue = self.pState["barracksQueues"]["1"]
+                self.assertIs(queue["ts"], value, "an unreadable start must remain unreadable, never become ready")
+                self.assertEqual((queue["amount"], queue["unit"]), (1, 533))
+
+    def test_time_travel_accepts_whole_wire_starts_and_preserves_explicit_zero_markers(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+            "1": {"ts": now, "amount": 1, "unit": 533},
+            "2": {"ts": str(now), "amount": 1, "unit": 534},
+            "3": {"ts": float(now), "amount": 1, "unit": 535},
+            "4": {"ts": f"{now}.0", "amount": 1, "unit": 550},
+            "5": {"ts": f"{now}e0", "amount": 1, "unit": 554},
+            "6": {"ts": 0, "amount": 1, "unit": 555},
+            "7": {"ts": "0", "amount": 1, "unit": 556},
+            "8": {"ts": 0.0, "amount": 1, "unit": 557},
+        })
+        self.send("time_ff", 1)
+        queues = self.pState["barracksQueues"]
+        for key in ("1", "2", "3", "4", "5"):
+            self.assertEqual(queues[key]["ts"], now - 3600, key)
+        for key, value in (("6", 0), ("7", "0"), ("8", 0.0)):
+            self.assertEqual(queues[key]["ts"], value, key)
+            self.assertIs(type(queues[key]["ts"]), type(value), "zero markers retain their wire type")
+
     def test_no_jump_left(self):
         now = timestamp_now()
         self.map["timestampLastTreasure"] = now

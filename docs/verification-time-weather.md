@@ -61,3 +61,25 @@ presentation and unavailable original server behavior are in
 `docs/original/rules/machines.md` and DECISIONS.md. No progression hook or
 unfinished-goal count changed; weather goal 220 already uses the ordinary
 build requirement.
+
+## Generic-queue validation correction
+
+Final integration review reproduced a malformed boolean queue start becoming
+an explicit ready marker during time travel. The correction validates only
+generic-queue timestamps before shifting and preserves unreadable payloads;
+other timers retain their existing behavior. All **25 focused warehouse,
+time and pastimes server tests passed**, including malformed payloads,
+whole numeric/text starts and exact zero markers.
+
+A separate process imported the real combined server/Soul handlers from
+`4874ffb6` and injected this branch's candidate time-machine module, without
+editing that integration worktree. Its actual `pop_queue_unit` → `time_ff`
+→ `pop_queue_unit` checks passed for 14 malformed starts; five valid whole
+wire formats advanced normally and an explicit zero still claimed through
+the real handler. Repeating the identical check with the pre-correction time
+module failed on `False`: the first claim was refused and the second granted
+a unit after the jump. The expected failing and candidate traces are kept
+locally in `work/integrated-queue-old-*` and
+`work/integrated-queue-validation.log`. The combined delivery keeps its
+permanent cross-command regression in the Soul Mixer tests; this leaf
+branch's tests remain independently runnable.
