@@ -15,7 +15,9 @@ export default async function riderTraining({ newPlayer }) {
     commandBatches.push(JSON.parse(data.slice(data.indexOf(";") + 1)).commands);
   });
   // Ruffle's Rust logger prints AVM2 failures as formatted console.log.
-  const runtimeErrors = (message) => { if (/%cERROR%c/.test(message.text())) player.problems.push(message.text()); };
+  const runtimeErrors = (message) => {
+    if (/%cERROR%c/.test(message.text())) { player.problems.push(message.text()); console.error("Rider runtime error", message.text()); }
+  };
   page.on("console", runtimeErrors);
   await player.send([
     { cmd: "rt_level_up", args: [35] },
@@ -24,6 +26,21 @@ export default async function riderTraining({ newPlayer }) {
   ]);
   await player.reload();
   let activePage = page;
+  let activePlayer = player, rendererNotices = 0;
+  const rendererNotice = async () => {
+    const bounds = await activePage.locator(".rider-adventure-stage").boundingBox();
+    assert.ok(bounds);
+    // The pinned runtime shows its standard CPU-renderer advice on the
+    // first mouseover of each new player, intercepting the next click.
+    await activePage.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    const notice = activePage.locator("ruffle-player #hardware-acceleration-modal");
+    if (await notice.isVisible()) {
+      assert.match(await notice.textContent(), /hardware acceleration/i);
+      await activePlayer.shot(`renderer-notice-${++rendererNotices}`);
+      await notice.locator(".close-modal").click();
+      await notice.waitFor({ state: "hidden" });
+    }
+  };
   const info = async () => (await activePage.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
   const savedWhen = async (check) => {
@@ -124,6 +141,7 @@ export default async function riderTraining({ newPlayer }) {
   const adventure = page.locator(".rider-adventure");
   await adventure.waitFor();
   await page.waitForFunction(() => document.querySelector(".rider-adventure")?.getAttribute("data-ready") === "true", null, { timeout: 60_000 });
+  await rendererNotice();
   await player.shot("adventure-one");
   const oldSession = await adventure.getAttribute("data-session");
   await page.keyboard.press("ArrowRight");
@@ -133,6 +151,7 @@ export default async function riderTraining({ newPlayer }) {
   assert.equal(saved.privateState.riderStepNumber, 0, "closing an adventure does not advance training");
   await panel.locator(".rider-action").click();
   await page.waitForFunction(() => document.querySelector(".rider-adventure")?.getAttribute("data-ready") === "true", null, { timeout: 60_000 });
+  await rendererNotice();
   await page.evaluate((session) => window.seRiderAdventure("won", 1, session), oldSession);
   assert.equal(await adventure.isVisible(), true, "a late callback from the previous instance cannot complete the reopened adventure");
   assert.equal(Number((await info()).privateState.riderStepNumber), 0);
@@ -213,6 +232,7 @@ export default async function riderTraining({ newPlayer }) {
   await player.shot("taming-pair");
   await panel.locator(".rider-tame").click();
   await page.waitForFunction(() => document.querySelector(".rider-adventure")?.getAttribute("data-ready") === "true", null, { timeout: 60_000 });
+  await rendererNotice();
   assert.equal(await adventure.getAttribute("data-level"), "8");
   await player.shot("taming-adventure");
   await beginJourney("taming adventure loss");
@@ -229,6 +249,7 @@ export default async function riderTraining({ newPlayer }) {
   const phone = await player.onPhone();
   phone.page.on("console", runtimeErrors);
   activePage = phone.page;
+  activePlayer = phone;
   await page.close();
   await phone.select(TAMING, "Dragon Riding");
   await phone.press("Open");
@@ -239,8 +260,16 @@ export default async function riderTraining({ newPlayer }) {
   await phone.shot("phone-taming");
   await sheet.locator(".rider-tame").click();
   await phone.page.waitForFunction(() => document.querySelector(".rider-adventure")?.getAttribute("data-ready") === "true", null, { timeout: 60_000 });
+  await rendererNotice();
   const key = phone.page.getByRole("button", { name: "Adventure key →", exact: true });
   await key.tap();
+  await phone.page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").cooldown >= 30,
+    null, { timeout: 30_000, polling: 250 });
+  const beforeTouch = await progress();
+  await phone.page.getByRole("button", { name: "Adventure key 1", exact: true }).tap();
+  await phone.page.waitForFunction((before) => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").cooldown < before,
+    beforeTouch.cooldown, { timeout: 30_000, polling: 250 });
+  assert.equal(await phone.page.locator(".rider-adventure-controls button:focus").count(), 0, "touch controls preserve the adventure's focus");
   await phone.shot("phone-adventure");
   await phone.page.evaluate(() => window.seRiderAdventure("won", 8, document.querySelector(".rider-adventure").dataset.session));
   saved = await savedWhen((save) => inside(save).length === 0 && save.map.items.some((item) => item[0] === 833));
