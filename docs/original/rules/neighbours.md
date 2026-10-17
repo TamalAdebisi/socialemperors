@@ -504,7 +504,8 @@ Most serious first.
    start-up window and the carts are on the map at once (decided).
    (checked twice)
 6. **No start-up sequence** in ours: the daily bonus waits on its button
-   (decided); darts and the potion offer don't exist yet. The original
+   (decided); darts follows its original dated schedule now (the shipped
+   pool is inactive); the potion offer remains unavailable. The original
    opens the harbour and zeppelin before the server's message; ours puts
    the message up first and their line a moment later. (checked twice)
 7. **Neighbours list**: not sorted by experience, no experience shown, no
@@ -528,7 +529,9 @@ Most serious first.
 14. **Social buildings' windows**: staff places, cash helpers, the Summit's
     allies, the Allied Markets, the recruitment camp, the Great Church's
     rounds, the Round Table. (checked twice; the windows' numbers were
-    checked, their drawing only skimmed)
+    checked, their drawing only skimmed) *Fixed for the six repeatable
+    buildings by `rules/socialMenus.ts` and `ui/social.ts`; ordinary
+    buildings retain server auto-opening.*
 15. **Friends' hurry help**: Ask friends, and their pictures over a
     building taking an hour off (`hc`, `accept_collect_help`). (checked
     twice) *Fixed since "Friends' help at a building".*
