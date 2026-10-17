@@ -69,6 +69,12 @@ jumps, so this one structure uses its original first idle picture. That
 is an explicit visual compromise: a smoothly moving, held-state export
 would be needed to restore its nested motion. We do not upload new public
 sheets as part of this client repair.
+Its export has 100 image pages, totalling 4.255 GiB as decoded RGBA. Loading
+all of them for this fixed pose exhausted the test machine after the Safari
+decode repair. Its loader now reads the indexes but decodes only the two
+pages containing the first frame of each facing, preserving their original
+bounds and pixels. The browser test checks both visible facings and the
+actual image requests; no unused animation pages are downloaded for it.
 
 The distinction between the first display child and the first movie clip
 matters: a building with a static shape first can have later animated
@@ -97,6 +103,30 @@ Seven loops end in a fully transparent picture of the entire structure:
 retaining all preceding motion. The correction is limited to these names
 and lengths, so an already corrected future export is left alone.
 
+## Safari texture loading
+
+The WebKit gallery exposed an empty worker-produced bitmap for one atlas,
+despite 42,784 nontransparent pixels in the corresponding source frame.
+Its decoded CPU pixels and GPU output were empty; re-uploading did not help.
+Decoding the same file on the page restored those pixels.
+
+Moving all Safari decoding onto the page, including through ordinary HTML
+images, reproduced separate scene corruption. Disabling mipmaps, preferring
+WebGL 1, and uploading raw grass pixels did not resolve it. Those attempts
+are withdrawn. Previous main, and the new animation fixes with the original
+worker loading restored, pass the same strict terrain checks.
+
+The final repair keeps workers. Before parsing each Safari atlas, `art.ts`
+checks a small alpha sample of its bitmap. Only an empty result is decoded
+again on the page; the second replaces the first only if it contains visible
+pixels. Genuinely empty atlases are preserved. The original images, mipmaps,
+sizes and timing remain unchanged. Other engines do not perform the check.
+The gallery keeps its strict visible-pixel checks and verifies that loading
+the previously blank atlas leaves every sampled ground pixel unchanged.
+No renderer reset, forced re-upload, raw pixel upload or WebGL downgrade is
+part of the delivered change. [The full record](verification-96.md) retains
+all failed comparisons, exact runtimes, image review and engine limits.
+
 ## Reproduce the visual metadata
 
 Use the normal local Python/Java setup. This reads visual timeline data
@@ -124,8 +154,9 @@ The generator reports each unavailable source on stderr and the totals:
 All 69 corresponding public manifests also return 404. This is an
 existing art inventory limit, not a new failure caused by this change;
 there is no source here from which to repair those 69 sheets. The existing
-missing-art fallback remains. Verification results are recorded alongside
-the delivery notes after the complete suites finish.
+missing-art fallback remains. [The verification record](verification-96.md)
+retains the complete and focused runs, failures, screenshot review and
+browser-engine limits.
 
 ## Unavailable inventory
 

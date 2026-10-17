@@ -1,4 +1,4 @@
-# Handoff: where the work stands, 16 October 2026
+# Handoff: where the work stands, 17 October 2026
 
 > **Standing owner authorization: build and merge autonomously.** Agents
 > should finish agreed work, test it, update the docs, and merge ready
@@ -19,16 +19,35 @@ next agent knows where to start.
 
 ## Where things stand
 
-- **Structure idle pass in progress:** `codex/structure-idle-animation`
-  fixes ordinary buildings cycling through construction/action states,
-  synchronizes hover outlines, and removes seven measured blank loop
-  endings. All 1,010 configured entries were inventoried: 900 readable
-  art files cover 941 entries; 69 names have unavailable sources and public
-  sheets. See [the audit](docs/structure-idle-audit.md). Client types and
-  368 tests pass; server 436 run (427 passed, 9 existing skips), after
-  integrating main #95. Its Shift selection and the input-timestamp repair
-  are preserved separately. The 98-file/199-facing Chromium gallery passed;
-  the complete combined browser suite and WebKit checks are in progress.
+- **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
+  completed buildings retain their idle state, nested motion stays animated,
+  and outlines follow the current picture, including walking units. Seven
+  fully blank loop endings are removed. Safari keeps worker loading and
+  decodes only an empty bitmap again, replacing it only when the second
+  decode has visible pixels. Broad page-decoding and rendering workarounds
+  caused scene regressions and are withdrawn; original mipmaps remain.
+  The gallery checks that recovery preserves every sampled ground pixel.
+  One incomplete legacy animation holds its original first pose; only its
+  two required image pages load, avoiding 100 pages / 4.255 GiB decoded.
+  Click duration uses native input timestamps so slow handlers do not lose
+  short clicks. Main #95's separate Shift selection is preserved.
+  All 1,010 configured entries were inventoried: 900 readable art files
+  cover 941 entries; 69 unavailable names are listed in
+  [the audit](docs/structure-idle-audit.md). No new public art is required.
+- **#96 verification:** server 442 run (433 passed, nine existing skips),
+  client types and all 368 tests passed. Complete integrated Chromium was
+  72/74; affected/follow-up runs give passing results for all 75 current
+  cases, not a single final-head 75/75 run. Final runtime `947c30a2` passed
+  WebKit 8/8 in 388.40s, including the full 98-file/199-facing gallery and
+  the exact 2,800-pixel ground guard. A focused Chromium one-atlas check of
+  that new guard, retaining mill/walking/tower/save checks, passed in 95.88s.
+  Earlier Chromium full-gallery, construction, overlay and controls checks
+  passed 4/4 in 1199.83s. The unchanged ten-second WebKit construction test
+  retains a timing failure, with an earlier old-main timing failure recorded
+  separately. [The delivery record](docs/verification-96.md) keeps exact
+  runtimes, all failures, visual review and engine limits. Final logs are
+  clean and no new memory-limit/OOM events occurred. Linux WebKit does not
+  test the owner's Mac GPU. No tests or errors were disabled.
 
 - **Getting in touch:** `SE_DISCORD_URL` (DEPLOY.md) puts a Discord link
   on the pages around the game, the classic bar, the new client's Menu and

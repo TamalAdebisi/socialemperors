@@ -78,13 +78,25 @@ those commands run outside the sandbox when asked.
 ## Testing
 
 ```
-.venv/bin/python -m unittest discover tests          # the server: 436 tests, about a minute
+.venv/bin/python -m unittest discover tests          # the server: 442 tests, about a minute
 (cd client && npm run check && npm test)             # the client's types and rules: 368 tests
-PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 74 tests
+PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in Chromium: 75 tests
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest playthrough verification (#95):** server 436 run (427 passed,
+- **Latest structure verification (#96):** server 442 run (433 passed,
+  nine existing skips), client types and all 368 tests passed. Complete
+  integrated Chromium: 72/74 in 2h 21m 22.24s; affected/follow-up checks give
+  passing results for all 75 current cases across runs. Final runtime
+  `947c30a2`: WebKit 8/8 in 388.40s, including all 98 files / 199 facings;
+  Chromium's focused new ground-pixel guard passed in 95.88s, with its
+  one-atlas scope stated explicitly. Earlier Chromium full-gallery,
+  construction, overlay and controls checks passed 4/4 in 1199.83s.
+  The original WebKit construction test retains a timing failure; an earlier
+  timing assertion also fails on old main. [The delivery record](docs/verification-96.md)
+  attributes results to their actual runtimes, retains failed/diagnostic
+  runs, and records screenshot review and the Linux WebKit/Mac GPU limit.
+- **Previous playthrough verification (#95):** server 436 run (427 passed,
   9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
   #94. WebKit selection, recurring raids, cards and Everybody passed

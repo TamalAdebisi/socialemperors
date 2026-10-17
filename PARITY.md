@@ -3,7 +3,8 @@
 Structure idle repair: original state selection replaces scaffold/action
 cycling, nested effects keep moving, hover follows the actual frame, and
 seven blank loop endings are removed. Farm work, animal counts and explicit
-quest states retain priority. See [coverage and limits](docs/structure-idle-audit.md).
+quest states retain priority. Safari keeps worker decoding and recovers only
+blank bitmaps, preserving original art and mipmaps. See [coverage and limits](docs/structure-idle-audit.md).
 Click timing uses browser input timestamps, so a short click delayed by
 rendering is still recognized; long presses keep their existing limit.
 

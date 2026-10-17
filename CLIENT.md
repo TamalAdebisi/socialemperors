@@ -1306,11 +1306,23 @@ cycling through scaffolding or action states. `buildingAnimation.ts`
 selects the matching samples without shortening nested animation loops.
 One incomplete, very sparsely sampled loop uses a stable original idle
 picture; the audit records that visual compromise.
+Its loader reads the atlas indexes and loads only the two image pages
+containing those displayed poses, avoiding 100 decoded pages for a still image.
 Farms retain their working/ready pictures, ranches retain their animal
 counts (including the nested Training Stables animation), and explicit
 tree skins and quest steps take precedence. Oil/water towers change state
 when a battle target appears or disappears. Seven measured, fully blank
 loop endings are omitted without changing the preceding motion.
+
+Safari keeps Pixi's normal worker decoding. A worker can return an entirely
+transparent ImageBitmap for valid art, so `art.ts` checks a small alpha
+sample before parsing an atlas. Only an empty result is decoded again on
+the page, and it replaces the first bitmap only when the second has visible
+pixels. Truly empty art remains empty. This avoids the scene corruption
+reproduced when all Safari images were decoded on the page. Original art,
+mipmaps and normal loading remain unchanged; other engines skip the check.
+The gallery also compares every sampled ground pixel before and after
+loading the previously blank atlas.
 
 `e2e/tests/structure-idle.mjs` renders every stateful or repaired loop in
 each facing, with genuine-motion controls, every-frame hover checks,
