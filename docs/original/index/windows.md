@@ -102,9 +102,9 @@ The plain boxes the rest of the game opens.
 | `popups/PopupDragons.as` | 643 | The dragon nest: six dragons in turn, ten steps each (care and feed), one step every 6 hours, the wait skipped for 3 or 15 cash; friends' help counts as steps (`finish_dragon_help`). Sends `next_step`, `buy_step_cash`, `next_dragon`; after the sixth the nest goes back to sleep (`desactivate_dragon`). | built: `client/src/ui/nest.ts`, rules in `client/src/rules/nest.ts` |
 | `popups/PopupHireFriendsGeneric.as` | 120 | The friends who helped at the nest, shown inside the nest's window. | partly: a "Congratulations!!" with OK takes the steps, without the friends' pictures (`client/src/ui/nest.ts`) |
 | `popups/PopupMonstersNest.as` | 500 | The monster nest: four monsters, ten steps each, 6 hours apart, 7 cash to skip; no friends' help. | built: `client/src/ui/nest.ts` |
-| `popups/PopupDragonRiders.as` | 317 | Choose one of three dragon riders (from levels 35, 40 and 45); hovering shows the dragons each can ride and what riding adds (attack +15/20/25, life +100/150/200). Sends `rider_select`. | not yet |
-| `popups/PopupDragonRiderTraining.as` | 342 | Training the rider: 5 to 7 steps, each a mini-game, 15 hours apart, 15 cash to skip; then the rider comes out (`rider_next_step`, `rider_buy_step_cash`). After one paid skip a "Fast train" button lets every later step skip the mini-game. | not yet |
-| `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | not yet |
+| `popups/PopupDragonRiders.as` | 317 | Choose one of three dragon riders (from levels 35, 40 and 45); hovering shows the dragons each can ride and what riding adds (attack +15/20/25, life +100/150/200). Sends `rider_select`. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
+| `popups/PopupDragonRiderTraining.as` | 342 | Training the rider: 5 to 7 steps, each a mini-game, 15 hours apart, 15 cash to skip; then the rider comes out (`rider_next_step`, `rider_buy_step_cash`). After one paid skip a "Fast train" button lets every later step skip the mini-game. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
+| `popups/PopupDragonTaming.as` | 375 | Dragon taming: put a rider and a dragon of the same rider type inside, win a mini-game, and they become one tamed dragon. | built: native `ui/dragonRiders.ts`, rules in `rules/dragonRiders.ts`; original adventures through `ui/riderAdventure.ts` |
 | `popups/PopupBahamutSupremeInvocationTemple.as` | 816 | The Supreme Bahamut temple: 12 offerings (100,000 each of gold, stone, wood and food; 50 mana; 50 cash; five big dragons sacrificed; one finished collection), one every 48 hours, the wait skipped for 5 cash; then the final dragon is placed free and the temple starts over. Sends `next_temple_step`, `buy_temple_step_cash`, `reset_temple`. | not yet; `temple.py` |
 | `popups/invocationtemple/InvocationStep.as` | 227 | One offering on the temple's strip: its picture or prices, a tick when done. | not yet |
 | `popups/SelectYourDragonPopup.as` | 169 | After the tutorial (`POPUP_CHOOSE_YOUR_DRAGON` is on): pick one of three baby dragons, placed free. | built: `client/src/ui/draggy.ts`, `client/src/lessons.ts`; mandatory, retry-safe saved reward |
@@ -283,7 +283,7 @@ and the neighbour's arrival request are in `core.md`.)
 10. **A shortcut left in the dragon riders' training.** After paying once to
     skip a wait, a "Fast train" button (in English, not from the language
     file) appears and skips the mini-game for every later step of the
-    session.
+    session. Built in `ui/dragonRiders.ts`; the flag resets on page reload.
 11. **Survival picks the army itself**: the 30 strongest units by attack.
     A window to pick them by hand exists but nothing opens it. Only the
     first two of the five maps can be played; the other three say "coming

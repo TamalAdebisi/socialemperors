@@ -448,6 +448,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] The dragon and monster nests' window: raising them step by step,
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
+  - [x] Dragon riders: picker, training/recovery and free claim; dragon
+        taming with compatibility, take out and the unchanged original
+        adventures in the pinned Ruffle runtime
+        ([CLIENT.md](CLIENT.md#dragon-riders-and-taming)).
 
 ## How we add a missing feature
 

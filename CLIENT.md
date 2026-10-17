@@ -1051,8 +1051,8 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
   (unit, tile, 0, town).
 
 **Not yet:** hurrying a training with cash isn't in the Flash client
-either; the dragon nest's riders, the hatchery and other special training
-windows are in the classic game for now.
+either; the hatchery and other special training windows are in the classic
+game for now. Dragon riders have their own completed flow below.
 
 ### Land and cash
 
@@ -1495,6 +1495,33 @@ changes its copy as the server does, so the window is right without a
 reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
 the dragon got, the friends' list and the monster nest opened, with checks
 on the server's save.
+
+### Dragon riders and taming
+
+The Rider Academy and Dragon Riding open native windows from their building
+cards (`ui/dragonRiders.ts`; `rules/dragonRiders.ts`). The picker retains
+the three configured unlock levels, compatible dragon previews, original
+portraits and gain text. Training retains the five-to-seven adventures,
+15-hour recoveries, cash recovery, session-only **Fast train**, and the
+free rider claim after the final wait. Progress maps come from the original
+labelled illustrations, exported by `tools/art/export_riders.py`.
+
+Taming accepts one configured untamed dragon and one rider. Its window
+shows compatibility, the mounted result and its stats, help and **Take out**.
+Only winning the original eighth adventure transforms the pair; failure,
+closing or lack of free space preserves them. The ordinary Flash command
+sequence keeps both clients' saves compatible.
+
+The original action adventures remain the untouched shipped
+`SagaOTDC.swf`, played by the already pinned Ruffle runtime, loaded only
+when needed. Our 2 KB loader starts the selected adventure and connects
+its original parent callbacks (`ui/riderAdventure.ts`;
+`tools/art/build_minigame_bridge.sh`). The town pauses during play. Touch
+keys supplement its original keyboard controls. Later config rows' two
+output-key spellings are normalized, as recorded in DECISIONS.md.
+See [the rule book](docs/original/rules/dragon-riders.md) and
+`e2e/tests/rider-training.mjs` for coverage and its platformer-playthrough
+limit.
 
 ### The market
 

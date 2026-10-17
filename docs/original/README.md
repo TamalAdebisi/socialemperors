@@ -21,6 +21,7 @@ update its status here.
 | [rules/progress.md](rules/progress.md) | **Rule book: levels, goals, bonuses and the shop.** Experience, level ups, how every kind of goal is counted and paid, the three bonuses, the shop and its prices, the market, the second town. 113 rules |
 | [rules/neighbours.md](rules/neighbours.md) | **Rule book: neighbours and messages.** The neighbours bar, visiting, helping, the carts, asking friends, gifts, social buildings, Arthur, and the windows that open as the game starts. 76 rules |
 | [rules/tournaments.md](rules/tournaments.md) | **Rule book: tournaments.** Lists and teams, entry/fees, rooms, copied-army battles, scoring, results/prizes and friends' creation/invitation policy |
+| [rules/dragon-riders.md](rules/dragon-riders.md) | **Rule book: dragon riders and taming.** Picker, recovery/shortcut, building entry, transformation and the unchanged shipped adventures |
 | [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 83 rules |
 
 The index, by area:

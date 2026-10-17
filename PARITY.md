@@ -357,8 +357,14 @@ does not change the quest picker. See `docs/original/rules/tournaments.md`.
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
 warehouse, darts, survival, tournaments, the tutorial.
-Survival, tournaments, the nests and the mandatory tutorial are now built;
+Survival, tournaments, the nests, dragon rider training/taming and the mandatory tutorial are now built;
 ROADMAP.md tracks the remaining work.
+
+Rider windows use the original unlocks, steps, recovery/shortcut, pair
+matching and free rewards. The shipped action adventures run unchanged
+through the existing pinned runtime; the surrounding windows are native.
+Touch keys and normalization of the config's two mounted-output key
+spellings are recorded calls. See [the rules and verification limit](docs/original/rules/dragon-riders.md).
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.

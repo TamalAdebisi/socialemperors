@@ -8,6 +8,7 @@
 import type { Command } from "../net/commands.ts";
 import { canLiveIn, isAnimal } from "./animals.ts";
 import type { ItemInfo } from "./config.ts";
+import { DRAGON_TAMING, RIDER_IDS } from "./dragonRiders.ts";
 import { inConstruction } from "./construction.ts";
 import { takenTiles } from "./editing.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
@@ -63,6 +64,14 @@ export function canGoInside(town: Town, unit: ItemInfo, building: PlacedItem, no
   }
   if (target.subcategory === SUBCAT.refuge) {
     return true;
+  }
+  if (target.id === DRAGON_TAMING) {
+    const rider = RIDER_IDS.some((id) => id === unit.id);
+    if (!rider && !unit.dragonRider) return false;
+    // A dragon and a rider, in either order. A wrong rider type can enter;
+    // the original explains that mismatch inside the taming window.
+    const inside = building.units ?? [];
+    return inside.length === 0 || (inside.length === 1 && RIDER_IDS.some((id) => id === inside[0]) !== rider);
   }
   if (isAnimal(unit)) {
     return canLiveIn(unit, target, building.units ?? []);
