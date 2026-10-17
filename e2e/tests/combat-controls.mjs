@@ -127,19 +127,24 @@ async function bodyPoint(page, fighting, id, side = 1) {
   await page.waitForFunction(({ fighting, id, side }) => {
     const home = window.seHome;
     const view = fighting ? home.fighting.view : home.parts.view;
-    const unit = fighting ? home.fighting.battle.fighters.find((f) => !f.dead && f.isUnit && f.side === side && (id === null || f.item.id === id))
-      : home.parts.town.items.find((p) => p.item.id === id);
-    const picture = fighting ? view.drawn.get(unit)?.slot.children[0] : view.slots.get(unit)?.children[0];
-    if (!picture?.texture) return false;
-    const b = window.combatVisibleBox(picture);
-    // A raider can be partly behind the harbour. Use a visible pixel of
-    // its body, keeping the same real click and target assertions.
-    for (const fy of [0.5, 0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9]) for (const fx of [0.5, 0.25, 0.75]) {
-      const at = { x: b.x + b.width * fx, y: b.y + b.height * fy };
-      const picked = fighting ? view.fighterAt(at) : view.itemAt(at);
-      if (picked === unit && document.elementFromPoint(at.x, at.y)?.tagName === "CANVAS") {
-        window.combatPoint = { ...at, key: unit.key };
-        return true;
+    const units = fighting ? home.fighting.battle.fighters.filter((f) => !f.dead && f.isUnit && f.side === side && (id === null || f.item.id === id))
+      : home.parts.town.items.filter((p) => p.item.id === id);
+    // A raider may be wholly behind the harbour while another is visible.
+    // Find a visible pixel of any eligible target; the real click must
+    // still give that exact fighter the attack order.
+    for (const unit of units) {
+      const picture = fighting ? view.drawn.get(unit)?.slot.children[0] : view.slots.get(unit)?.children[0];
+      if (!picture?.texture) continue;
+      const b = window.combatVisibleBox(picture);
+      const samples = [0.5, ...Array.from({ length: 19 }, (_, i) => (i + 1) / 20)];
+      for (const fy of samples) for (const fx of samples) {
+        const at = { x: b.x + b.width * fx, y: b.y + b.height * fy };
+        if (document.elementFromPoint(at.x, at.y)?.tagName !== "CANVAS") continue;
+        const picked = fighting ? view.fighterAt(at) : view.itemAt(at);
+        if (picked === unit) {
+          window.combatPoint = { ...at, key: unit.key };
+          return true;
+        }
       }
     }
     return false;
