@@ -228,3 +228,15 @@ test("social goals count the staff at the most recent completion while listening
   doings.listen([]);doings.socialCompleted(market,8);
   assert.deepEqual(progress(town(),goal,doings,0,ITEMS),{done:1,of:3});
 });
+
+test("new menu cash commands credit spending once; rewards and social commands are not counted twice", async () => {
+  const {menuCashSpent}=await import("./goals.ts");
+  assert.equal(menuCashSpent({cmd:"finish_collection",args:[1,1,4]},20),4);
+  assert.equal(menuCashSpent({cmd:"finish_collection",args:[1]},20),0);
+  assert.equal(menuCashSpent({cmd:"buy_stored_item_cash",args:[0,509,3]},20),3);
+  assert.equal(menuCashSpent({cmd:"darts_shoot_balloon",args:[0,0,1]},20),0);
+  assert.equal(menuCashSpent({cmd:"darts_shoot_balloon",args:[0,1,1]},25),25);
+  assert.equal(menuCashSpent({cmd:"buy_si_help",args:[50,50,0,234]},20),0);
+  assert.equal(menuCashSpent({cmd:"unit_collections_completed",args:[1]},20),0);
+  assert.equal(menuCashSpent({cmd:"buy_stored_item_cash",args:[0,509,NaN]},20),0);
+});

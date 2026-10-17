@@ -4,6 +4,25 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: profiles, basic notices and menu progression
+
+- Put My profile in Army and Profile on each neighbour; reuse the same
+  public fields/ranks inside the world map's existing menu. Keep the
+  original honour badges and thresholds. Use initials for unavailable
+  Facebook photos and leave unavailable country data blank.
+- Show last seen as an accurate local date/time, rather than reproducing
+  the original hours/seconds formatting bug. Do not collect new data or
+  add Facebook messaging.
+- Closed or replaced profile reads are ignored. Keep world profiles
+  scrollable and let failed own/neighbour reads retry.
+- Add only the own-town missing-hall notice here. It changes no save and
+  resumes the existing welcome flow after OK; assault handling remains
+  combat-owned. Pending tournament reopening waits for notices too.
+- Credit original cash-spending progression when collection, units-book
+  or paid-dart commands are queued. Free darts, exchanges and prizes
+  never count as spending; social panels retain their existing separate
+  cost callback, avoiding double counting.
+
 ## 17 October 2026: shop details without changing buying
 
 - Preserve direct buying/placing. A separate Details button pins the

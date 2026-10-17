@@ -383,3 +383,8 @@ Social Point's admin tools used.
       market deliveries, selected recruits, cumulative population steps,
       Round Table timing/prizes, and the two corresponding goals. Ordinary
       buildings retain the server's automatic opening.
+
+- [x] Full public profiles and honour ranks, with original badges, retry
+      and stale-reply protection; the own-town missing-hall notice. New
+      menu cash purchases count toward the existing spending mission.
+      Assault behavior remains with combat.

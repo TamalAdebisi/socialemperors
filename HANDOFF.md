@@ -870,8 +870,12 @@ together:
       server-opened buildings retain their existing behavior.
 - [ ] Dragon riders, their training and taming dragons.
 - [ ] The Supreme Bahamut temple (`temple.py`).
-- [ ] A player's profile (honour, rank, wins and losses).
-- [ ] "You have no town hall".
+- [ ] Profiles implemented on `codex/profile-notices`; verification/merge
+      pending. Own/neighbour/world profiles, original honour badges and
+      ranks, retry and stale-read protection.
+- [ ] Own-town missing-hall notice implemented on `codex/profile-notices`;
+      verification/merge pending. No replacement or save change; assault
+      handling stays with combat. New menu costs credit the spending goal.
 - [ ] Offer packs and mystery boxes are for cash. Cash is earned by
       playing here and nothing is sold (ROADMAP.md, "Cash"): check
       `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before
