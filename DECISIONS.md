@@ -4,6 +4,25 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: hold each delayed test reply until its own release
+
+- **Correct the request fixture, keep the runtime guard.** The first
+  `97fb6e79` focus passed only lists: rooms failed the new busy-state
+  assertion, then results found the public seat left by that failure.
+  A traced replay showed Playwright continued the newer held request when
+  the older one-use route handler finished. The application ignored the
+  obsolete generation and correctly completed the actual newer reply.
+  Keep each named test handler registered until its own release, retaining
+  the pending-state assertion. Preserve runtime code, deadlines and every
+  existing assertion for this fixture repair.
+- **Preserve both failures and verify the repair.** The focus was 1/3 in
+  171.2956s; its concurrent-entry case passed. The separate instrumented
+  replay intentionally failed in 25.5596s, and temporary tracing was
+  removed. The corrected test also detects the old 95 reopen bug at the
+  original deadline (47s scenario, 53.6751s total). Fresh candidate focus
+  and full checks are still pending;
+  neither the old successful focus nor the diagnostic is a candidate pass.
+
 ## 17 October 2026: finish response validation and allow refresh recovery
 
 - **Check the data the views consume.** Review of `95e098f3` found room
@@ -12,8 +31,8 @@ them can be found and reversed. The big, agreed decisions are in
   required room/player/match fields, optional winner/ranking fields and
   each weekly/reward entry before accepting typed state. Preserve the
   supported wire formats and weekly eligibility exception. Nine focused
-  network tests and types pass; corrected browser verification remains
-  pending. No original command or fee rule changes.
+  network tests and types pass; the first corrected browser focus had
+  the fixture failures recorded above. No original command or fee rule changes.
 - **Closing a pending refresh must permit reopening.** Invalidate that
   operation's busy state as well as its view generation, and keep a late
   completion from clearing a newer operation. Add a real delayed-response
@@ -24,8 +43,8 @@ them can be found and reversed. The big, agreed decisions are in
 - **Recover the actual enrollment after an uncertain entry.** Another
   tab may have entered a different type or team. Display the authoritative
   room and balances without repeating the request or crediting the
-  unconfirmed attempt as a confirmed fee spend. Keep this behavior and
-  add the missing concurrent-entry regression.
+  unconfirmed attempt as a confirmed fee spend. Keep this behavior; the
+  added concurrent-entry regression passed in the 97 list scenario.
 - **State retention and goals accurately.** Done remains an explicit
   acknowledgement, but the server can also remove a finished room after
   its existing 30-day retention. No tournament-specific goal exists in

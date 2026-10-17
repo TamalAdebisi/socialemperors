@@ -10,7 +10,7 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Latest review corrections: fresh browser verification pending
+## Latest review corrections: test-fixture correction pending
 
 The review during the `95e098f3` full run found two further runtime
 issues: incomplete room/player validation and a pending refresh that
@@ -25,10 +25,12 @@ the bad ranking-key case also reproduced separately. The 95 candidate
 checked weekly/reward top-level records only, not their nested contents.
 
 Closing invalidates the pending refresh's view and busy state; late
-completion cannot clear a newer operation. The corrected runtime and new
-browser regressions require a fresh committed candidate, focused checks
-and the full suite before merge. The completed 95 and 47 evidence below
-does not verify these later changes.
+completion cannot clear a newer operation. These corrections were
+committed at `97fb6e79a437e287b69a55a950629cc6ffe8f7e2`. Its first focused
+run failed because the delayed-response fixture released a newer request
+unexpectedly, as recorded below. The test-helper correction needs its
+own checks, followed by the required full suite. The completed 95 and 47
+evidence does not verify these later changes.
 
 The new delayed-refresh/reopen regression was deliberately run against
 unchanged `95e098f386b2feaea7d911de03e2ad2556ef025e` in a separate detached
@@ -46,15 +48,62 @@ next candidate.
 Recovery after an ambiguous entry reply deliberately restores the real
 current enrollment, including one entered in another tab with a different
 type or team. It neither repeats the mutation nor credits the attempted
-fee as a confirmed spend. The new, not-yet-run browser regression holds
+fee as a confirmed spend. The new browser regression holds
 a desktop Advanced entry while the phone enters Newbies with a different
 team, then loses the desktop's real refusal reply. It checks the actual
 room/team, unchanged saved preference, one attempted mutation, no cash
-spending callback and the saved/HUD fee and normal leave refund. The
-runtime reconciliation rule is unchanged. The earlier
+spending callback and the saved/HUD fee and normal leave refund. It passed
+in the 97 list scenario (108s); runtime reconciliation is unchanged. The earlier
 goals note is corrected: no dedicated tournament goal exists in the
 shipped 227 missions. Result retention also remains bounded by the
 server's existing 30-day finished-room expiry, as well as Done.
+
+## Focused verification at 97fb6e79: 1/3
+
+Exact candidate: `97fb6e79a437e287b69a55a950629cc6ffe8f7e2`.
+Rooms/results/list completed **1/3 in 2m 51.30s**
+(171.295583827s), exit 1:
+
+| Scenario | Result | Scenario time |
+| --- | --- | --- |
+| `tournament-rooms` | Failed at line 96: the old refresh cannot unlock the newer one | 18s |
+| `tournament-results` | Failed at line 24: entrants received different public room ids | 35s |
+| `tournaments` | Passed, including different-type/team concurrent-entry reconciliation | 108s |
+
+The first failure left a public seat in the shared local test server,
+causing the downstream results fixture's room-id mismatch. Both failures
+remain recorded. Evidence is archived in
+`tournament-evidence-review-focus-97fb6e79`, with
+`tournament-review-focus-97fb6e79-status.json` and its matching log.
+
+A separate diagnostic reproduced the rooms assertion in 19s
+(25.559556115s total, exit 1). Before the old reply was released, the
+new refresh was pending with controls disabled. Releasing request 4
+then delivered both responses 4 and 6, although request 6's test gate
+had not been released. Playwright's one-use route handlers had already
+expired; completion of the older handler removed the page interceptor
+and automatically continued the newer held request. The application
+ignored the old generation 1 completion while current generation 3
+correctly completed its own response. This proves a fixture-release
+problem rather than an obsolete application callback clearing new state.
+The temporary application/test tracing was restored to exact 97 code;
+it is not a shipped runtime change. The diagnostic log is
+`tournament-review3-debug-97fb6e79.log`.
+
+The test-only correction keeps a named route handler registered until
+its own release and retains the assertion that the newer refresh is
+still pending before releasing the older one. No runtime, deadline or
+assertion is weakened. Its negative rerun against unchanged
+`95e098f386b2feaea7d911de03e2ad2556ef025e` completed with the expected
+reopen failure at new test line 100: the room stayed hidden on 64 checks
+until the original 30-second deadline. The scenario took 47s; total
+elapsed time was 53.675071714s, exit 1. The corrected test's SHA-256 is
+`1fe2ffa4705ae9f2be3c87149c36419460b477c96a03fe2fcd989f41687cdbe1`.
+Evidence is in `tournament-review3-red-corrected-status.json` and
+`tournament-review3-red-corrected-95e098f3.log`. This completed negative
+proof confirms the corrected fixture still detects the old runtime bug;
+it is not a candidate failure. Focused candidate checks and the full
+suite remain pending. No successful correction result is claimed yet.
 
 ## Completed focus and interrupted full run at 95e098f3
 

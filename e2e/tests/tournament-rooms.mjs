@@ -21,10 +21,16 @@ export default async function tournamentRooms({ newPlayer }) {
   const enter = () => page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
   const holdResponse = async (path, action, loseReply = false) => {
     let release, received, failed;
+    let claimed = false;
     const held = new Promise((resolve) => { release = resolve; });
     const fetched = new Promise((resolve, reject) => { received = resolve; failed = reject; });
     const requested = page.waitForRequest(path);
-    await page.route(path, async (route) => {
+    // Keep each held route registered until its reply is released. Expiring
+    // one-shot handlers can make Playwright continue another paused request
+    // when the older handler completes and removes the page interceptor.
+    const handler = async (route) => {
+      if (claimed) return route.fallback();
+      claimed = true;
       try {
         const response = await route.fetch({ timeout: 30_000 });
         received();
@@ -34,7 +40,8 @@ export default async function tournamentRooms({ newPlayer }) {
         failed(error);
         throw error;
       }
-    }, { times: 1 });
+    };
+    await page.route(path, handler);
     await action();
     const request = await requested;
     await fetched;
@@ -42,6 +49,7 @@ export default async function tournamentRooms({ newPlayer }) {
       const answered = page.waitForResponse((response) => response.request() === request);
       release();
       await (await answered).finished();
+      await page.unroute(path, handler);
       await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     };
   };
@@ -92,6 +100,7 @@ export default async function tournamentRooms({ newPlayer }) {
     await open(host);
     assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, firstRoom.tournament_id);
     const newRefresh = await holdResponse(tournamentPath("get_tournament_info"), () => host.button("Refresh").click());
+    assert.ok(await host.button("Refresh").isDisabled(), "the newer refresh is pending before the older reply is released");
     await oldRefresh();
     assert.ok(await host.button("Refresh").isDisabled(), "the old refresh cannot unlock the newer one");
     assert.ok(await host.button("Leave tournament").isDisabled());

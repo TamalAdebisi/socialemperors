@@ -84,7 +84,12 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament implementation is complete; further review fixes need checks.**
+- **Tournament implementation is complete; the latest test fixture needs verification.**
+  The corrected runtime at `97fb6e79` completed rooms/results/list
+  **1/3 in 2m 51.30s**: lists passed, rooms hit a delayed-response fixture
+  bug and its leftover public seat caused the results room-id failure.
+  Diagnostic tracing identified the fixture release; the test-only
+  correction and fresh focused/full checks remain pending.
   Exact `95e098f386b2feaea7d911de03e2ad2556ef025e` passed the focused
   rooms/results/list checks **3/3 in 7m 50.29s**, with all 30 screenshots
   reviewed. Server **449 run (440 passed, 9 existing skips)**, types and

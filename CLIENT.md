@@ -2479,8 +2479,11 @@ are implemented. Done, profile reply ordering and top-level weekly/reward
 record corrections passed the `95e098f3` focused checks 3/3 in 7m 50.29s,
 along with server/types and 390 client tests. Its full run was intentionally
 stopped after five passes and no observed failure for two further fixes:
-room/player validation and reopening during a pending refresh. The next
-candidate needs fresh verification. A profile reply belongs to its window,
+room/player validation and reopening during a pending refresh. Those
+corrections at `97fb6e79` passed lists but hit a delayed-response test-helper
+fault in rooms and a downstream results fixture failure: focus 1/3 in
+2m 51.30s. The test-only correction needs fresh focused/full checks.
+A profile reply belongs to its window,
 room and latest selection; rendering another view or closing the profile
 invalidates it. See
 [the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in

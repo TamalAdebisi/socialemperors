@@ -84,7 +84,10 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); further review fixes need verification.**
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest test-fixture verification is pending.**
+  The `97fb6e79` focus completed **1/3 in 2m 51.30s**: lists passed,
+  rooms hit a delayed-response fixture problem and results failed on the
+  leftover public seat. The diagnosed test-only repair needs fresh checks.
   Following #89's lists, help and team box, this adds rooms, copied-army
   battles, results/prizes and friends' tournaments. Done, profile and
   top-level record corrections passed the `95e098f3` focused checks
@@ -552,6 +555,22 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
+**Latest correction focus at `97fb6e79`: 1/3.** Exact
+`97fb6e79a437e287b69a55a950629cc6ffe8f7e2` completed rooms/results/list
+in **171.295583827s**. Rooms failed in 18s at the new old-refresh assertion;
+its leftover public seat caused the results room-id failure in 35s.
+Lists passed in 108s, including different-type/team concurrent-entry
+reconciliation. Diagnostic tracing reproduced the fixture failure in
+19s (25.559556115s total): completing an older expired one-use route
+handler made Playwright continue the newer held response. The runtime
+ignored the old generation and correctly completed the new reply.
+Temporary tracing was removed. The test-only repair keeps each named
+handler until its own release, retaining assertions and deadlines.
+Its corrected old-runtime negative rerun detected the original reopen
+bug again (47s scenario, 53.6751s total); fresh candidate focus/full checks
+are pending. [The delivery record](docs/verification-92.md) keeps both failures
+and the distinct diagnostic evidence.
+
 **Completed correction focus at `95e098f3`:** Done captures the displayed
 room id, with atomic stale-id cleanup protection and legacy omitted-id compatibility.
 Profiles check their window/room/request and invalidate stale replies;
@@ -761,8 +780,9 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 
 All five parts are implemented and their baseline checks passed at
 `47db7f44`. The `95e098f3` correction focus passed 3/3; its full attempt
-was interrupted for further fixes that need fresh verification before
-merge. The separate quest reload follow-up remains recorded above.
+was interrupted for further fixes. The later 97 focus was 1/3 because of
+the test-fixture problem described above; the repair needs fresh checks
+before merge. The separate quest reload follow-up remains recorded above.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.
 

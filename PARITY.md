@@ -313,9 +313,11 @@ existing save/read weakness, not the exact full-run cause; the quest issue
 remains a follow-up. Done, profile and top-level record corrections passed
 the `95e098f3` focused checks 3/3. Its full run stopped intentionally after
 five passes and no observed failure for further room/player validation
-and refresh/reopen fixes. The next candidate needs fresh verification
-before merge. Tournament implementation is complete; earlier results
-are retained.
+and refresh/reopen fixes. The corrected `97fb6e79` focus was 1/3: lists
+passed, rooms hit a delayed-response fixture problem and results failed
+on its leftover public seat. The test-only repair needs fresh focused/full
+checks before merge. Tournament implementation is complete; earlier
+results are retained.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
