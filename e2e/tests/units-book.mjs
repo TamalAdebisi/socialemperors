@@ -40,8 +40,8 @@ export default async function unitsBook({ newPlayer }) {
     const save = await (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
       { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
     assert.equal(save.playerInfo.cash, before - 4 + 1);
-    assert.equal(stored(save.map.store, 510), 1);
-    assert.equal(stored(save.privateState.gifts, 510), 1, "existing unplaced gift is separate");
+    assert.equal(stored(save.map.store, 510), 2, "the pre-existing stored unit and the book purchase");
+    assert.equal(stored(save.privateState.gifts, 510), 0, "book purchases use town storage");
     assert.equal(stored(save.privateState.gifts, 608), 1);
     assert.ok(save.privateState.unitCollectionsCompleted.includes(1));
     for (const id of [510,511,539,608]) assert.ok(save.privateState.boughtUnits.includes(id));
