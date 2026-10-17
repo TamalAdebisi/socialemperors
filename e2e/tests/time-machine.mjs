@@ -63,12 +63,19 @@ export default async function timeMachine({ newPlayer }) {
   assert.equal(bought.playerInfo.cash, before.playerInfo.cash - 6);
   assert.deepEqual(bought.privateState.countTimePacket, [1, 1, 0, 0, 0, 0]);
   assert.ok(bought.privateState.helpMap.includes("timeMachineHelp"));
+  assert.ok(await panel.locator(".machine-packet .row-text strong").evaluateAll((labels) => labels.every((label) => label.scrollWidth <= label.clientWidth + 1)), "full packet names wrap instead of clipping");
   await player.shot("packets");
   await Promise.all([player.page.waitForEvent("domcontentloaded"), player.press("Use 1 hour")]);
   await player.loaded();
   const used = await info(player);
   assert.deepEqual(used.privateState.countTimePacket, [1, 0, 0, 0, 0, 0]);
   assert.equal(itemAt(used.map, MINE, MINE_AT)[4], itemAt(before.map, MINE, MINE_AT)[4] - 3600);
+  // Advancing an hour also makes the normal ten-minute camp due. Its
+  // chapter notice is real game behavior and must be acknowledged before
+  // tapping the machine behind it, as a player would.
+  await player.page.locator(".notice").waitFor();
+  assert.match(await player.page.locator(".notice h2").textContent(), /CHAPTER 4/);
+  await player.shot("travel-camp");
   await open(player);
   assert.equal(await panel.locator(".machine-help").isVisible(), false, "the help is remembered after travel");
   await player.press("Time Machine Help");
@@ -83,6 +90,7 @@ export default async function timeMachine({ newPlayer }) {
   await phone.page.waitForFunction(() => !document.querySelector('.time-machine [data-packet="0"] .button').disabled);
   const boxes = await sheet.locator(".machine-packet").evaluateAll((rows) => rows.map((row) => ({ left: row.getBoundingClientRect().left, right: row.getBoundingClientRect().right, scroll: row.scrollWidth, width: row.clientWidth })));
   assert.ok(boxes.every((b) => b.left >= 0 && b.right <= 390 && b.scroll <= b.width + 1), "packets fit the phone");
+  assert.ok(await sheet.locator(".machine-packet .row-text strong").evaluateAll((labels) => labels.every((label) => label.scrollWidth <= label.clientWidth + 1)), "full packet names fit the phone");
   await phone.shot("phone");
   await Promise.all([phone.page.waitForEvent("domcontentloaded"), phone.press("Use 30 mins")]);
   await phone.loaded();
@@ -118,7 +126,15 @@ export default async function timeMachine({ newPlayer }) {
   assert.match(await sheet.locator('[data-packet="0"] .machine-owned').textContent(), /Available: 1/);
 
 }
-async function open(player) { await player.select(AT, "Time Machine"); await player.press("Open"); }
+async function open(player) {
+  const notice = player.page.locator(".notice");
+  if (await notice.isVisible()) {
+    assert.match(await notice.locator("h2").textContent(), /CHAPTER 4/, "the camp made due by time travel");
+    await notice.getByRole("button", { name: "OK", exact: true }).click();
+  }
+  await player.select(AT, "Time Machine");
+  await player.press("Open");
+}
 async function info(player) {
   const response = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`, { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
   return response.json();

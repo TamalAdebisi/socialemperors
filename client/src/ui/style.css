@@ -4975,6 +4975,7 @@ button.world-piece:hover img {
 .machine-window .machine-help p { white-space: pre-line; }
 .machine-window .machine-status:empty { display: none; }
 .machine-window .row-text { min-width: 0; }
+.machine-window .row-text strong { white-space: normal; }
 .machine-window .machine-packet,
 .machine-window .machine-look { gap: 8px; }
 .machine-window .machine-packet .button,
