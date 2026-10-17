@@ -18,7 +18,7 @@ import { useHelp } from "./rules/friendsHelp.ts";
 import { addPiece, harvestLoot, pieceFrame, pieceLines, type Piece } from "./rules/collections.ts";
 import { CAPACITY, STAT_WORDS, cardFacts, fill, type Words } from "./rules/card.ts";
 import { cantUpgrade, upgrade, upgradeOf, upgradePrice } from "./rules/upgrade.ts";
-import type { PlacedItem, Town } from "./rules/town.ts";
+import { savedTile, type PlacedItem, type Town } from "./rules/town.ts";
 import type { ActionBar, ActionChoices } from "./ui/actions.ts";
 import { duration } from "./ui/format.ts";
 import { showMessage, type Hud, type Tool } from "./ui/hud.ts";
@@ -1254,6 +1254,20 @@ export class TownEditor {
     this.levelUp();
     this.hud.update(this.town);
     this.refresh();
+  }
+
+  /** A temple sacrifice removes a walking unit where the server last had it. */
+  prepareUnitRemoval(unit: PlacedItem): Point {
+    const at = this.savedAt.get(unit) ?? savedTile(unit);
+    this.letGo(unit);
+    this.stopRepair(unit);
+    this.savedAt.delete(unit);
+    this.group = this.group.filter((chosen) => chosen !== unit);
+    if (this.selected === unit) this.select(null);
+    if (this.lastTap?.placed === unit) this.lastTap = null;
+    // The caller removes the view immediately afterwards, cancelling its
+    // walker without firing the arrival callback or queueing a late move.
+    return { ...at };
   }
 
   /** Who hears what the player does: Arthur's lessons (lessons.ts). */

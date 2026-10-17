@@ -4,6 +4,27 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve the Supreme temple's ordinary wait
+
+- **Keep the cash shortcut private.** The full local source reading found
+  the 5-cash wait function bound only in Social Point's admin panel. Earlier
+  index notes described it as a normal temple button. The modern temple
+  preserves the ordinary 48-hour wait, including offering twelve, without
+  exposing that admin control. Existing server command support remains.
+- **Use the responsive panel with original artwork and words.** All
+  twelve offerings remain freely selectable, with original information,
+  help, confirmation, marks, illustration and controls. A phone uses the
+  project's scrolling sheet. The original four-second cosmetic ritual
+  playback is replaced by its still illustration and immediate saved
+  progress; payment, command order and the 48-hour deadline stay the same.
+- **Keep the original Heart timing and free reward.** The Heart is checked
+  in the combined gift/store list at offering, retained until claim and
+  consumed only if still present. The current town's store is used before
+  shared gifts, matching the existing command. The free dragon has no
+  extra population/limit gate or XP.
+  Temple actions pause during a home fight so temporary or converted
+  battle units cannot become sacrifices through the town panel.
+
 ## 17 October 2026: preserve real visibility in background-play fixtures
 
 - **Simulate hidden tabs without overriding actual page unloading.** A local

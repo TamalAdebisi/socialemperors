@@ -448,6 +448,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] The dragon and monster nests' window: raising them step by step,
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
+  - [x] The Supreme Bahamut temple: twelve offerings in any order, saved
+        waits, sacrifice confirmation, the Heart and free claim/reset
+        ([CLIENT.md](CLIENT.md#the-supreme-temple)). The ordinary window
+        retains its wait; the original 5-cash shortcut is admin-only.
 
 ## How we add a missing feature
 

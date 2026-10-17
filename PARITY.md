@@ -352,6 +352,21 @@ and shared save support remain.
 The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
+## The Supreme temple
+
+- [x] Building-card entry, original art/text/help, twelve offerings in
+      any order, availability and completed marks.
+- [x] Exact resource payments with shared mana; map-only sacrifices,
+      confirmation, last saved coordinates and no death/sale rewards.
+- [x] Combined gift/store Heart check, retention until claim, all twelve 48-hour
+      waits and saved progress/deadline across reloads.
+- [x] Free dragon beside the temple, optional Heart consumption at claim,
+      original command order and reset.
+- The 5-cash skip is bound only in the original admin panel and stays
+  hidden. The original illustration is retained as a still image inside
+  the responsive panel; the cosmetic four-second playback is omitted.
+  [Rules](docs/original/rules/temple.md), [verification](docs/verification-temple.md).
+
 ## Not for Beta 1
 
 **Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,

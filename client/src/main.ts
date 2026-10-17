@@ -68,6 +68,8 @@ import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
+import { SUPREME_TEMPLE } from "./rules/temple.ts";
+import { TempleWindow } from "./ui/temple.ts";
 import { AskFriends } from "./ui/askFriends.ts";
 import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
@@ -491,11 +493,12 @@ async function start(): Promise<void> {
       { key: "neighbours", label: "Neighbours", icon: ICONS.neighbours, run: () => neighbours.toggle(), shortcut: "n" },
     ]);
     // The Wizardry Academy's spells (ui/spells.ts): learnt and mana bought at home, cast in battle.
-    const spells = new SpellsWindow(magicParts(config, info.privateState as Record<string, unknown> | undefined, town,
+    const academyMagic = magicParts(config, (info.privateState ??= {}) as Record<string, unknown>, town,
       settings.assetsUrl, (cmd, ...args) => {
         commands.add(cmd, ...args);
         void commands.flush();  // as the Flash client: at once
-      }, () => hud.update(town)));
+      }, () => hud.update(town));
+    const spells = new SpellsWindow(academyMagic);
     // The graveyards and the Altar of Heroes (ui/graveyard.ts): the fallen as the save keeps them, and the potions.
     const saved = (info.privateState ?? {}) as Record<string, unknown>;
     const dead = readDead(saved.deadHeroes);
@@ -580,6 +583,26 @@ async function start(): Promise<void> {
         void bank.open();
       },
     });
+    const temple = new TempleWindow({
+      town, items, privateState: saved, magic: academyMagic.state,
+      syncMana: () => { academyMagic.level(); },
+      line: (id) => lines.get(id) ?? "",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      clock, available: () => !fighting(),
+      send: async (sent) => {
+        sent.forEach((command) => commands.add(command.cmd, ...command.args));
+        return commands.flush();
+      },
+      removed: (unit) => view.remove(unit),
+      prepareRemoval: (unit) => editor.prepareUnitRemoval(unit),
+      arrived: (unit) => editor.arrived(unit, []),
+      spent: (resource, amount) => doings.spend(resource, amount),
+      changed: () => {
+        hud.update(town);
+        editor.refresh();
+        menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
+      },
+    });
     const manaFrom = Number(config.globals?.START_LEVEL_MANA_REWARD) || 36;
     const manaPerLevel = Number(config.globals?.MANA_REWARD_PER_LEVEL) || 2;
     const levelWindows = new LevelUpWindows(
@@ -633,6 +656,9 @@ async function start(): Promise<void> {
           return { label: "Enter Survival", icon: "open-survival", run: () => survivalWindow.open() };
         }
         // The dragon nest and the monster nest (ui/nest.ts): the original's Open button.
+        if (placed.item.id === SUPREME_TEMPLE) {
+          return { label: "Open", icon: "open-nest", run: () => temple.open(placed) };
+        }
         const kind = NESTS.find((n) => n.building === placed.item.id);
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };

@@ -19,6 +19,15 @@ next agent knows where to start.
 
 ## Where things stand
 
+- **Supreme temple special-building slice:** implemented on
+  `codex/supreme-temple`; no merge claimed yet. Original rules and complete
+  entry/window/step/helper reading are in `docs/original/rules/temple.md`.
+  The ordinary 48-hour wait is preserved: its cash skip is admin-only in
+  the original. All 410 client checks and types pass; existing temple
+  server replay passes 7/7. Browser verification is pending the shared
+  machine slot; `docs/verification-temple.md` records exact scope and limits.
+  The root coordinating chat owns integration, full checks and delivery.
+
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven

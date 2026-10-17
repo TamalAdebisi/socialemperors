@@ -135,8 +135,8 @@ a battle. "Free" in a command means the "don't change resources" flag
 | `utils/StageBlocker.as` | 204 | The "loading" cover that stops clicks while waiting for the server, and the time machine's "travelling" screen. | partly: the loading message (`ui/hud.ts`); no time-machine screen |
 | `btns/Buttonize.as` | 358 | Makes a picture act as a button: grows on hover, fades when off. | built: the buttons' styles in `ui/style.css` |
 | `utils/ExpandSprite.as` | 173 | A frame that stretches without blurring its corners, for tooltips. | art |
-| `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | not yet: those windows aren't built |
-| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | partly: tournament refresh, availability and deadline clocks; darts/temple later and heavy siege off |
+| `utils/TooltipMultiline.as` | 100 | A tooltip of several lines that follows the mouse (dragon nest, Bahamut temple). | partly: temple information and native tooltips; cursor-following tooltip not reproduced |
+| `utils/CountDown.as` | 151 | A flip-clock countdown (darts, tournaments, the heavy siege, the Bahamut temple). | partly: tournament refresh, availability/deadline and temple offering clocks; darts later and heavy siege off |
 | `utils/countdown/DigitCountDown.as` | 66 | One flipping digit of that clock. | art |
 | `utils/paginator/Paginator.as` | 246 | Pages through a list of things. | not needed: only the iPhone gifts window uses it |
 | `utils/paginator/PaginatorConfig.as` | 228 | The paginator's settings. | not needed: as above |

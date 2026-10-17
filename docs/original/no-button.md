@@ -428,6 +428,16 @@ window to close before the next is looked at.
     practice on our pages. *Not needed.*
 83. **Dead code:** the special units' 24-hour expiry and the daily
     upgrade count are kept but never acted on. *Not needed.*
+84. **The Supreme temple's wait shortcut is admin-only.** The ordinary
+    offering window runs its saved 48-hour timer, including offering
+    twelve, before selecting the next unfinished offering or enabling
+    the free final dragon. Its 5-cash skip function is bound only by
+    Social Point's admin panel. The Heart remains stored after its
+    offering and is consumed only at claim, if still present. The helper
+    checks the combined shared-gift/current-town store list.
+    *Built: `client/src/rules/temple.ts`, `ui/temple.ts`;
+    [complete rules](rules/temple.md). Earlier window-index notes about
+    a public skip and gifts-only Heart eligibility are corrected.*
 
 ## What the new client lacks
 

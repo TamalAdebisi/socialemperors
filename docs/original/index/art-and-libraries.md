@@ -293,7 +293,7 @@ The panel at the bottom that shows what is selected (CLIENT.md, "The menus: rail
 | `PopupAssaultHistoryMC.as` | 56 | The attack history window: seven attacks. | art |
 | `PopupAssistMC.as` | 26 | The window asking a friend for help. | art |
 | `PopupAttackFinishedMC.as` | 72 | The end of an attack: alive, dead, XP, results. | art |
-| `PopupBahamutSupremeInvocationTempleMC.as` | 46 | The Bahamut temple's invocation window. | art |
+| `PopupBahamutSupremeInvocationTempleMC.as` | 46 | The Bahamut temple's invocation window. | art; temple controls and illustration exported by `tools/art/export_temple.py` |
 | `PopUpBattleOptionsMC.as` | 34 | The battle options window: army and strategy tabs. | art |
 | `PopupBuildingMC.as` | 28 | A yes/no window about a building. | art |
 | `PopUpBuyAssaultMC.as` | 30 | The window to buy an attack, with its price. | art |
