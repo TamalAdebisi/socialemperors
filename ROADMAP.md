@@ -33,18 +33,18 @@ reward. Classic-client choices are hidden at the owner's request; its
 routes remain available. See CLIENT.md and DECISIONS.md.
 
 
-**Goal:** make Social Empires a complete, playable, free online game at
-[socialemperors.me](https://socialemperors.me). We keep all the original art,
-music and content, finish the features that never got a server, and over time
-modernise it into a full-screen game with room for new content.
+**Goal:** make Social Empires a complete, playable, free online game. We
+keep all the original art, music and content, finish the features that
+never got a server, and over time modernise it into a full-screen game with
+room for new content.
 
 This is a non-commercial fan project. See [Copyright](#copyright) below.
 
 ## How changes reach players
 
 1. Work happens on a branch and is opened as a **draft pull request** on GitHub.
-2. Every push to that branch is deployed to **staging** automatically:
-   <https://game-server-staging-production.up.railway.app>. Staging has its own
+2. Every push to that branch is deployed to **staging** automatically,
+   at the address Railway gives the staging service. Staging has its own
    empty database, so testing there never touches real players' empires.
 3. The live game changes **only when a pull request is merged** into `main`:
    **all agents have standing owner authorization to merge ready pull
@@ -63,8 +63,8 @@ GitHub Secrets or Railway variables.
 | Live game server | Railway project `socialemperors`, service `game-server`, deploys `main`, in Singapore (moved 14 October 2026). Its data is in Supabase (schema `game`) since 15 October 2026, a fresh start; the old SQLite file stays on its volume as a backup ([DEPLOY.md](DEPLOY.md#64-connect-the-servers-to-supabase)) |
 | Live game data | Supabase project `socialemperors` (Singapore), schema `game`, login `se_game` ([DEPLOY.md](DEPLOY.md#part-6-supabase-the-database)). Railway volume `game-data` at `/data`: the secret key, and the SQLite database from before the move |
 | Staging server | Same Railway project, service `game-server-staging`, deploys the working branch, volume `staging-data`, sleeps when idle; its data in the same Supabase project, schema `staging`, login `se_staging` |
-| Art, sounds, SWFs | Cloudflare R2 bucket `socialempires-assets` at `assets.socialemperors.me`, uploaded by the *Upload assets to R2* GitHub Action |
-| Domain | `socialemperors.me`, registered at Namecheap, DNS on Cloudflare |
+| Art, sounds, SWFs | Cloudflare R2 bucket `socialempires-assets`, at the address in Railway's `SE_ASSETS_URL`, uploaded by the *Upload assets to R2* GitHub Action |
+| Domain | Registered at Namecheap, DNS on Cloudflare; Railway's `SE_PUBLIC_URL` holds it. The repository is public, so it doesn't name the live game's addresses |
 
 Setup details: [DEPLOY.md](DEPLOY.md). Server settings: [MULTIPLAYER.md](MULTIPLAYER.md).
 

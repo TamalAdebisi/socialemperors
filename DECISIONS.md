@@ -4,6 +4,24 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: the repository no longer names the live game
+
+The owner asked to keep the live game out of view: GitHub won't make a
+public fork private, so the repository stays public but stops naming its
+addresses. The README now says to fork or download the game and run it.
+How-to steps (DEPLOY.md) use `example.com`, `assets.example.com`,
+`STAGING.up.railway.app` and `PROJECT-ID` as stand-ins; the records of
+the art repair use the same stand-ins, and other docs say "the live
+site". The staging and Supabase addresses went too, since they lead to
+the same game. Names that are no use without logging in (the Railway
+project and services, the R2 bucket) stay, because the workflows need
+them. The browser tests read the live art bucket's address from
+`SE_E2E_LIVE_ASSETS`, which each agent's environment sets; without it, and
+without `art/sheets/`, they stop at once and say why. CLAUDE.md and
+AGENTS.md now say not to write the addresses back. Git history and old
+pull requests still have them: only rewriting history, or detaching the
+fork and making it private, would remove those.
+
 ## 17 October 2026: acknowledge the warning in the no-hall fixture
 
 The new original missing-hall notice is expected when the villager test
@@ -891,7 +909,7 @@ Tap and keyboard Details access remain available in both layouts.
   are identified separately. No Cloudflare access is available here; the
   owner confirmed purging only those 20 URLs. At 11:24 UTC, all 20
   ordinary images byte-matched their `?repair=38885093455` versions both
-  without Origin and with `Origin: https://socialemperors.me`; actual
+  without Origin and with the live site's `Origin`; actual
   dimensions match the new JSON. Per-response hashes and cache headers
   are recorded in the linked repair notes. No additional export, bucket
   deletion or purge is needed. Refresh the nine-item local test cache,
@@ -2035,7 +2053,7 @@ And where it wasn't a bug, the original stands:
   import of single-player saves.
 - **`bundle.py` is now `paths.py`:** it only says where the server's
   folders are, now that there's no bundle.
-- **README:** rewritten for socialemperors.me. The original project's
+- **README:** rewritten for the live site. The original project's
   download and Discord badges went (they point at its releases and its
   community, not ours); it's credited instead, with the GPL's note that
   the code has been changed.
