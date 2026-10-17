@@ -25,6 +25,7 @@ export interface ArmyParts {
   collections?: () => void;
   unitsBook?: () => void;
   darts?: () => void;
+  profile?: () => void;
   /** The town's units now, by kind. */
   units: () => { item: ItemInfo; count: number }[];
   /** The item's picture in the Flash client's windows. */
@@ -111,6 +112,11 @@ export class ArmyWindow {
       const button = document.createElement("button"); button.type = "button";
       button.className = "shop-toggle"; button.textContent = "Darts";
       button.addEventListener("click", this.parts.darts); tabs.append(button);
+    }
+    if (this.parts.profile) {
+      const button = document.createElement("button"); button.type = "button";
+      button.className = "shop-toggle"; button.textContent = "My profile";
+      button.addEventListener("click", this.parts.profile); tabs.append(button);
     }
     if (this.tab === "plan") {
       this.renderPlans(tabs);

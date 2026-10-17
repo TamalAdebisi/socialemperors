@@ -478,3 +478,17 @@ export function payGoal(town: Town, goal: Goal): Command {
   town.gold += goal.reward;
   return { cmd: "reward_mission", args: [town.id, goal.id] };
 }
+
+/** Cash adjustments from new menu commands, credited once when queued. */
+export function menuCashSpent(command: Command, dartCost: number): number {
+  let amount=0;
+  if(command.cmd==="finish_collection"&&Number(command.args[1])===1)amount=Number(command.args[2]);
+  else if(command.cmd==="buy_stored_item_cash")amount=Number(command.args[2]);
+  else if(command.cmd==="darts_shoot_balloon"&&Number(command.args[1])===1)amount=dartCost;
+  return Number.isFinite(amount)&&amount>0?amount:0;
+}
+
+/** The balance poll is a fallback for costs without an explicit event. */
+export function unrecordedCashSpent(previous: number, current: number, recorded: number): number {
+  return Math.max(0, previous - current - Math.max(0, recorded));
+}

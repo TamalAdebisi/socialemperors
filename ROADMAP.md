@@ -465,6 +465,9 @@ merging the two wait fixes with that separate failure documented.
         wonder and Round Table, with help through Everybody and goals
         104/115 ([CLIENT.md](CLIENT.md#social-buildings)). Ordinary
         automatic-opening buildings retain their existing behavior.
+  - [x] Profiles and honour ranks, own-town missing-hall notice, and
+        spending-mission credit for the new menu purchases
+        ([CLIENT.md](CLIENT.md#profiles-and-basic-notices)).
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

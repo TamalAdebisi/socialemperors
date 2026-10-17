@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 70 built, 11 partly, 26 not yet, 24 not needed, 5 art (136 classes).
+**Count:** 71 built, 12 partly, 24 not yet, 24 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -52,7 +52,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupUnlockBuilding.as` | 81 | Open a building before its level for a third of that level in cash, rounded up; sends `unlock_building`. | not needed: original opener is unwired; early unlock remains disabled (legacy command/save support retained) |
 | `popups/MaxBuildingTypePopup.as` | 96 | "You already have the most of these": one of each mill and mine level, one of each special building, one market and one eagle, three nurseries. | built: `rules/shop.ts` (`atLimit`) |
 | `popups/PopupNeighbors.as` | 90 | "You need more neighbours" when land paid in gold needs more neighbours than the player has, with a button to invite friends. | built: `rules/land.ts` says why; the invite was Facebook's |
-| `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | not yet: ours says nothing when the town hall is missing |
+| `popups/PopupNoTownhall.as` | 63 | At start, "you have no town hall"; in an attack, the enemy has none and the attacker wins at once. | partly: original own-town notice in main.ts; no save change. Assault handling remains combat-owned |
 | `popups/EnterNamePopUp.as` | 229 | Renaming the town (three letters at least, Enter saves); sends `name_map` and shows the name in the top bar. | built: `ui/rename.ts`, from the level at the top |
 | `popups/PopUpLost.as` | 154 | A lost thing found on the map (cow, sheep, knight, crate, barrel...): the story, then the thing is taken off the map. Its only other effects are a call to `register_found_item.php` and a Facebook post; it pays nothing and saves nothing. | not yet: no lost things on our map |
 | `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
@@ -149,7 +149,7 @@ Player battles are for the last stop ("The switch"); the World window sends play
 | `popups/popupLoadingAssault.as` | 249 | Before an attack or a spy visit: loading, a help page, Start. A switch lets the attacker pick a start corner. | partly: the start corner in `attackPlay.ts` (a 5 x 5 map to pick from), and the spy visit's start with its words; no help page |
 | `popups/PopupAttackFinished.as` | 609 | After an attack: both sides' units alive and dead, gold, XP and honour won, what was lost; Revenge for the defender. Pauses the game. | partly: the attacker's results in `attackPlay.ts` (gold, XP, honour, units lost); from the history, both sides' reports and Take Revenge!! in `ui/attackHistory.ts`; no sharing |
 | `popups/PopupAssaultHistory.as` | 175 | The last ten attacks made and received, with gold and result; More info replays the report. On opening the town with an attack received and not yet seen, it opens by itself, sends `clean_attacks`, and shows the town hall and up to five buildings at half life. | built: `ui/attackHistory.ts`, `burnOnReturn` in `rules/pvp.ts` |
-| `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | not yet |
+| `popups/PopupPlayerProfile.as` | 228 | A player's profile: level, honour and rank, wins and losses, last seen, country; the honour ranks. | built: `rules/profile.ts`, `ui/profile.ts`; own/neighbour/world profiles, original honour badges and ranks, retry and stale-reply guards |
 | `popups/PopupNextIslandAttack.as` | 182 | The player-attack world's progress prizes (cash and items, `apply_rewards_ranking`), or a unit collection's reward. | partly: the world's prize window in `ui/worldMap.ts`; unit collection prizes use `ui/unitBook.ts` |
 | `popups/PopupBuyTerritoryPvp.as` | 101 | Buy a place on the player-attack world for 5 cash (`buy_pvp_territory`). | not yet: our server doesn't handle `buy_pvp_territory` either |
 | `popups/PopUpBuyAssault.as` | 100 | Out of attacks or spy visits: wait, or buy 50 for 30 or 15 cash. | not needed: nothing opens it |

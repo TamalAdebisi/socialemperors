@@ -228,3 +228,27 @@ test("social goals count the staff at the most recent completion while listening
   doings.listen([]);doings.socialCompleted(market,8);
   assert.deepEqual(progress(town(),goal,doings,0,ITEMS),{done:1,of:3});
 });
+
+test("new menu cash commands credit spending once; rewards and social commands are not counted twice", async () => {
+  const {menuCashSpent}=await import("./goals.ts");
+  assert.equal(menuCashSpent({cmd:"finish_collection",args:[1,1,4]},20),4);
+  assert.equal(menuCashSpent({cmd:"finish_collection",args:[1]},20),0);
+  assert.equal(menuCashSpent({cmd:"buy_stored_item_cash",args:[0,509,3]},20),3);
+  assert.equal(menuCashSpent({cmd:"darts_shoot_balloon",args:[0,0,1]},20),0);
+  assert.equal(menuCashSpent({cmd:"darts_shoot_balloon",args:[0,1,1]},25),25);
+  assert.equal(menuCashSpent({cmd:"buy_si_help",args:[50,50,0,234]},20),0);
+  assert.equal(menuCashSpent({cmd:"unit_collections_completed",args:[1]},20),0);
+  assert.equal(menuCashSpent({cmd:"buy_stored_item_cash",args:[0,509,NaN]},20),0);
+});
+
+test("cash balance polling counts only unrecorded costs and keeps spend followed by a reward", async () => {
+  const {unrecordedCashSpent}=await import("./goals.ts");
+  const ordinary=new Doings();ordinary.spend("c",5);
+  ordinary.spend("c",unrecordedCashSpent(20,15,5));
+  assert.equal(ordinary.spent.get("c"),5,"one explicit payment is not counted again by the poll");
+  const rewarded=new Doings();rewarded.spend("c",1);
+  rewarded.spend("c",unrecordedCashSpent(20,20,1));
+  assert.equal(rewarded.spent.get("c"),1,"a matching cash reward does not erase the real payment");
+  assert.equal(unrecordedCashSpent(20,15,2),3,"unreported costs still count");
+  assert.equal(unrecordedCashSpent(20,25,0),0,"cash earned is not spending");
+});

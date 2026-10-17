@@ -43,6 +43,7 @@ export interface PlayerProfile {
 }
 
 export interface WorldMapParts {
+  profileDetails?: (profile: PlayerProfile) => HTMLElement;
   /** The player's id. */
   me: string;
   /** The server's answer for the town's continent, or another to look at. */
@@ -117,7 +118,8 @@ function button(className: string, label: string, content: string | HTMLElement,
 }
 
 export class WorldMapWindow {
-  private readonly panel = new Panel("world-map", "World Map", { className: "world-window" });
+  private readonly panel = new Panel("world-map", "World Map", { className: "world-window",onClose:()=>{this.profileRequest++;} });
+  private profileRequest=0;
   private readonly parts: WorldMapParts;
   private readonly bar = document.createElement("div");
   private readonly map = document.createElement("div");
@@ -149,6 +151,7 @@ export class WorldMapWindow {
     this.map.addEventListener("click", (e) => {
       if (e.target === this.map) {
         this.menu.hidden = true;
+        this.profileRequest++;
       }
     });
     this.panel.body.append(this.bar, this.map, this.footer);
@@ -180,6 +183,7 @@ export class WorldMapWindow {
       return;
     }
     this.loading = true;
+    this.profileRequest++;
     this.menu.hidden = true;
     this.map.classList.add("loading");
     this.map.dataset.loading = this.word(WORDS.loading);
@@ -340,6 +344,8 @@ export class WorldMapWindow {
 
   /** The menu over an island: its owner and level, Profile, and Attack or why not. */
   private islandMenu(island: Island, anchor: HTMLElement): void {
+    this.profileRequest++;
+    this.menu.classList.remove("showing-profile");
     const name = island.name ?? "Emperor";
     const title = document.createElement("strong");
     title.textContent = name;
@@ -387,7 +393,9 @@ export class WorldMapWindow {
   }
 
   private async profile(island: Island): Promise<void> {
+    const request=++this.profileRequest;
     const shown = await this.parts.profile(island.user_id);
+    if(request!==this.profileRequest||!this.panel.isOpen)return;
     const box = document.createElement("div");
     box.className = "world-profile";
     const title = document.createElement("strong");
@@ -398,14 +406,15 @@ export class WorldMapWindow {
       `Attacks won: ${shown.attacks_won ?? 0} · lost: ${shown.attacks_lost ?? 0}`,
       ...(shown.last_logged_in ? [`Last seen: ${new Date(shown.last_logged_in * 1000).toLocaleDateString()}`] : []),
     ] : ["No profile for this empire."];
-    box.append(title, ...lines.map((text) => {
-      const p = document.createElement("p");
-      p.textContent = text;
-      return p;
-    }));
+    if(shown&&this.parts.profileDetails)box.append(this.parts.profileDetails(shown));
+    else {
+      box.append(title);
+      for(const text of lines){const p=document.createElement("p");p.textContent=text;box.append(p);}
+    }
     box.append(button("button small plain", "Close the profile", "OK", () => {
       this.menu.hidden = true;
     }));
+    this.menu.classList.add("showing-profile");
     this.menu.replaceChildren(box);
   }
 

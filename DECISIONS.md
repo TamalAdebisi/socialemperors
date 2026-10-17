@@ -1,15 +1,22 @@
 # Judgment calls
 
+Calls made on the owner's behalf while building, newest first, so any of
+them can be found and reversed. The big, agreed decisions are in
+[ROADMAP.md](ROADMAP.md#decisions-so-far).
+
+## 17 October 2026 — count menu spending once
+
+Record actual menu payments so buying and immediately claiming a cash
+reward still counts as spending. The existing balance poll fills only
+unrecorded decreases, rather than counting those same payments again.
+Rewards remain rewards; no prices, payouts or cash supply change.
+
 ## 17 October 2026 — narrow shop previews use Details
 
 Automatic hover/focus previews apply to the wide layout. A narrow layout
 uses the explicit Details button, including when driven by a mouse, so a
 preview cannot cover a purchase target as the pointer enters the card.
 Tap and keyboard Details access remain available in both layouts.
-
-Calls made on the owner's behalf while building, newest first, so any of
-them can be found and reversed. The big, agreed decisions are in
-[ROADMAP.md](ROADMAP.md#decisions-so-far).
 
 ## 17 October 2026: Bull Gladiator clicks and the attack pointer
 
@@ -26,6 +33,25 @@ them can be found and reversed. The big, agreed decisions are in
   camera move, clears when selection ends or the mouse leaves, and yields
   to spell aiming and the existing repair bucket. This changes feedback,
   not attack rules or the saved army.
+
+## 17 October 2026: profiles, basic notices and menu progression
+
+- Put My profile in Army and Profile on each neighbour; reuse the same
+  public fields/ranks inside the world map's existing menu. Keep the
+  original honour badges and thresholds. Use initials for unavailable
+  Facebook photos and leave unavailable country data blank.
+- Show last seen as an accurate local date/time, rather than reproducing
+  the original hours/seconds formatting bug. Do not collect new data or
+  add Facebook messaging.
+- Closed or replaced profile reads are ignored. Keep world profiles
+  scrollable and let failed own/neighbour reads retry.
+- Add only the own-town missing-hall notice here. It changes no save and
+  resumes the existing welcome flow after OK; assault handling remains
+  combat-owned. Pending tournament reopening waits for notices too.
+- Credit original cash-spending progression when collection, units-book
+  or paid-dart commands are queued. Free darts, exchanges and prizes
+  never count as spending; social panels retain their existing separate
+  cost callback, avoiding double counting.
 
 ## 17 October 2026: shop details without changing buying
 

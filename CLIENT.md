@@ -1689,6 +1689,33 @@ sold. Early cash unlocking stays disabled, as in the original.
 Browser coverage: `e2e/tests/shop-details.mjs` for desktop/phone, locked
 facts, training animation, badges, dismissal and unchanged saved purchases.
 
+### Profiles and basic notices
+
+Army → My profile and each neighbour's Profile button show the public
+profile: the home-town level/name, honour and configured rank, wins/losses,
+last seen, and country when supplied. The rank's original badge and the
+honour-threshold list use the game's own pictures and configuration.
+The world map uses the same content inside its existing profile menu,
+with scrolling on narrow screens. Missing country data stays blank; no
+Facebook photos, messages or new personal data collection are added.
+Last seen uses the browser's accurate local date/time. Loading failures
+have Retry; late replies cannot replace a newer or closed profile.
+`rules/profile.ts` and `ui/profile.ts` implement this; browser coverage is
+`e2e/tests/profiles.mjs`, plus the existing world-map regression.
+
+On opening an own town without a town hall, the original missing-hall
+notice appears and resumes the ordinary welcome flow when acknowledged.
+It does not buy a replacement or change the save. Assault missing-hall
+behavior remains in the combat work's scope. Notice dialogs also hold
+pending tournament reopening until dismissed. Test:
+`e2e/tests/basic-notices.mjs` on desktop/phone.
+
+New collection, units-book and darts cash commands now credit the cash
+spending mission once when queued, through `menuCashSpent` in rules/goals.ts.
+The social panels already report their own costs. No reward or free throw
+counts as spending. `e2e/tests/menu-progress.mjs` checks saved rewards for
+the spending and collection-opening missions after a menu purchase.
+
 ### The building card
 
 The card for the thing selected is the Flash client's info panel
