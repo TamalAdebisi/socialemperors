@@ -27,15 +27,19 @@ next agent knows where to start.
   `art/sheets/`, `e2e/run.mjs` stops at once and says so: ask the owner
   to add it to the environment (AGENTS.md, Setting up).
 
-- **Latest-main integration; verification pending:** the special-building
-  candidate now merges main `a0f3ab19` (#99, #105–109 and their delivery
-  records) with `a75d1e05`. Both streams' runtime, original-art and test
-  histories are retained. Exact clean `2f7eb080` passes 467 server tests
-  run (458 passed, nine existing PostgreSQL skips), client types and all
-  479 client tests. The complete 95-case browser run remains pending.
-  The earlier 86/86 at `56d1bdbe` and menus' 88/89 plus corrected
-  focus remain evidence for their exact earlier revisions, not this merge.
-  No special-building merge or deployment is claimed.
+- **Special-building release checks complete:** latest main `f88ea31f`
+  (#113, including privacy/art-setting #114) is integrated at clean
+  `dc920d60`. Client types and **480/480 tests** pass; server **467 run,
+  458 passed, nine existing PostgreSQL skips**. Final affected Chromium
+  passes **9/9 in 1780.184s (29m 40.184s)**, including all six building scenarios,
+  Shop Details, Storage and the units book. All 74 fresh captures and
+  the 10,029-line server log were reviewed and hash-checked. The earlier
+  full attempt remains **94/95**, followed by unchanged Shop **1/1** at
+  `f3c55854`; all 95 pass across those runs, not one final-head 95/95.
+  Earlier preview failures and their incoming menus fix remain recorded in
+  [the integration record](docs/verification-special-buildings.md).
+  New Soul mixing still requires four genuine original configuration fields. Merge
+  remains the delivery step; all standing owner holds remain.
 
 - **Shop/Storage details follow-up in
   [#113](https://github.com/TamalAdebisi/socialemperors/pull/113):** details
@@ -106,12 +110,13 @@ next agent knows where to start.
   All six new cases have passing WebKit results across runs. The full
   earlier 86-case Chromium run passed at exact `56d1bdbe` in 8305.262s;
   all 507 captures and the 78,774-line server log were reviewed. The later
-  `a75d1e05` legacy Soul fixture passed focused Chromium/WebKit separately;
-  the latest-main combined 95-case verification is still pending.
-  [The integration record](docs/verification-special-buildings.md)
-  retains exact scope and results. The prior full pass does not verify
-  this latest-main merge. Soul Mixer remains blocked on genuine original
-  data; no special-building merge is claimed.
+  `a75d1e05` legacy Soul fixture passed focused Chromium/WebKit separately.
+  The complete `f3c55854` 94/95 attempt and unchanged 1/1 `shop-details`
+  repeat are recorded separately in
+  [the integration record](docs/verification-special-buildings.md#latest-main-integration-and-current-release-checks).
+  The earlier full pass does not verify this newer merge or erase its
+  111s phone-preview failure. Soul Mixer remains blocked on all four
+  genuine original fields/tables; no special-building merge is claimed.
 
 - **Time/weather machine slice:** implemented in `ui/machines.ts` and
   `rules/machines.ts`, with original art and local-source notes in

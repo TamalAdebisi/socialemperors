@@ -105,7 +105,37 @@ follow-up and remaining delivery checks belong to
 queue stays unticked until its delivery is merged; no deployment or
 Mac/iPhone GPU result is claimed.
 
-Latest main `a0f3ab19` was then integrated at `2f7eb080`. The new
-95-case browser verification remains pending in
-[the integration record](verification-special-buildings.md); prior runs
-stay attributed to their earlier revisions.
+Menus/progression main `a0f3ab19` was then integrated at `2f7eb080`, which passes
+467 server tests run (458 passed, nine existing PostgreSQL skips), client
+types and 479 client tests. The complete Chromium attempt at clean
+`f3c55854` was **94/95 in 9197.418s**; `shop-details` failed on the phone
+preview after 111s. Its unchanged complete repeat passed **1/1**, 113s
+scenario / 119.515s command, at the same clean revision. All 95 have passing
+results across these runs, not a single 95/95. All **561 + eight fresh PNGs**
+and the complete **90,317 + 875 server-log lines** were reviewed; exact
+capture/log/resource results belong to
+[the combined integration record](verification-special-buildings.md#latest-main-integration-and-current-release-checks),
+not a separate full run of this leaf. The failed attempt stays retained;
+the repeat does not establish its cause. Prior results keep their exact
+revisions; no merge or deployment is claimed.
+
+Latest privacy/art-setting main `f9946077` was integrated at clean
+`3d60b898`. Server **467 run, 458 passed, nine existing PostgreSQL skips**
+passed (34.317s tests; 34.947s command); client types and **479 tests**
+passed (13.41462159s tests; 16.53s command). The missing-art-setting guard
+returned its expected **exit 2 in 0.078s**, before build/server/browser.
+The configured positive Shop focus then **failed 0/1** on the desktop
+preview (51s scenario; 66.807s command), and its read-only diagnostic also
+**failed 0/1** (57s scenario; 68.667s command). These exact-revision failures
+are retained separately from the unchanged passing `f3c55854` repeat.
+Incoming main `f88ea31f` (#113) owns the preview-clock correction and
+click-only Details/short labels. Exact clean `dc920d60` passes server **467 run, 458 passed, nine existing
+PostgreSQL skips** (34.438s tests; 35.004s command), client types and
+**480/480 client tests** (14.191369192s tests; 17.54s command). The final affected Chromium check passes **9/9 in 1780.184s (29m 40.184s)** at
+clean `dc920d60`, including this slice and the changed Shop/Storage/preview
+paths. All 74 fresh captures and the complete 10,029-line server log
+were reviewed and hash-checked. This is a combined affected check, not a
+new full 95-case run or a separate full leaf run. Exact case timings,
+resource receipts, archive/audit hashes and visual limits are in
+[the integration record](verification-special-buildings.md).
+No merge/deployment is claimed.

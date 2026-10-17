@@ -91,14 +91,20 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest combined integration is not yet verified:** special-building
-  `a75d1e05` and latest main `a0f3ab19` are merged locally; the combined
-  tree contains 95 browser cases. Previous special-building 86/86 and
-  menus' 88/89 plus corrected focus remain attributed to their own exact
-  revisions. Exact clean `2f7eb080` passes 467 server tests run (458 passed,
-  nine existing PostgreSQL skips), client types and all 479 client tests.
-  The complete 95-case browser run remains required; no special-building
-  merge/deployment is claimed.
+- **Special-building release checks complete:** latest main `f88ea31f`
+  (#113, including privacy/art-setting #114) is integrated at clean
+  `dc920d60`. Client types and **480/480 tests** pass; server **467 run,
+  458 passed, nine existing PostgreSQL skips**. Final affected Chromium
+  passes **9/9 in 1780.184s (29m 40.184s)**, including all six building scenarios,
+  Shop Details, Storage and the units book. All 74 fresh captures and
+  the 10,029-line server log were reviewed and hash-checked. The earlier
+  full attempt remains **94/95**, followed by unchanged Shop **1/1** at
+  `f3c55854`; all 95 pass across those runs, not one final-head 95/95.
+  Earlier preview failures and their incoming menus fix remain recorded in
+  [the integration record](docs/verification-special-buildings.md).
+  New Soul mixing still requires four genuine original configuration fields. Merge
+  remains the delivery step; all standing owner holds remain.
+
 - **Latest combat-controls verification (#98):** server 449 run (440 passed,
   nine existing PostgreSQL skips), client types and all 408 tests passed.
   Complete Chromium attempted all 80 cases in two isolated 40-case shards
@@ -128,8 +134,7 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   All 89 cases have passing results across runs, not one final-head 89/89
   run. All 516 full-run screenshots and both focus captures were reviewed;
   complete browser logs are clean. At that delivery's closure, merged
-  runtime/art/tests were identical to `6fcf0646`.
-  [The delivery record](docs/verification-menus.md) retains
+  runtime/art/tests were identical to `6fcf0646`. [The delivery record](docs/verification-menus.md) retains
   exact timings, initial failures and screenshot limits. All six slices
   are merged; the owner's manual run-through and other feature holds stay.
 - **Latest structure verification (#96):** server 449 run (440 passed,

@@ -9,8 +9,12 @@ building branches, retaining each branch's history and pull request:
 and [Soul Mixer #104](https://github.com/TamalAdebisi/socialemperors/pull/104).
 The integration branch contains their shared editor and save contracts.
 It retains the earlier complete 86-case run and legacy browser follow-up
-below. Latest main adds nine cases; its combined 95-case run remains
-pending. No special-building merge or deployment is claimed.
+below. The menus integration adds nine cases; its complete 94/95 attempt
+and unchanged 1/1 follow-up are recorded in the latest-main section.
+Privacy/art-setting main `f9946077` was checked at `3d60b898`; incoming
+main `f88ea31f` (#113) is locally integrated at `dc920d60`, with its own
+combined affected checks recorded below.
+No special-building merge or deployment is claimed.
 
 ## Scope and original-data limit
 
@@ -289,9 +293,181 @@ Exact clean start/end `2f7eb080` passes all complete unit/type checks:
   command 17.592s.
 
 Receipts: `work/checks/integrated-server-main112/` and
-`integrated-client-main112/`. The complete **95-case Chromium** release
-run remains pending. Earlier 86/86 and focused results retain their exact
-revisions; they do not claim a complete browser pass on this newer merge.
+`integrated-client-main112/`. The subsequent `f3c55854` changes only these
+verification Markdown records; its product source and fixtures match the
+unit-tested `2f7eb080` merge.
+
+The complete **95-case Chromium attempt**, at exact clean start
+`f3c55854f8c01e91412b4b8f2303eec3e60d7b0a`: **94/95 passed in 9197.418s (2h 33m 17.418s), exit 1**; only `shop-details` failed, at the phone Barracks I preview after 111s.
+Exact command, start/end revision and tree state, UTC interval, exit status
+and elapsed time: `env PYTHON=.venv/bin/python node e2e/run.mjs --keep`, clean start/end `f3c55854f8c01e91412b4b8f2303eec3e60d7b0a`, 2026-10-17 12:46:54.061827–15:20:11.479928 UTC, exit 1, 9197.418s including build. The six special-case
+results and timings: all six passed: rider training 522s, Soul Mixer 336s, Supreme temple 177s, Time Machine 136s, Unit Warehouse 117s and Weather Machine 100s. Earlier 86/86 and
+focused results keep their exact revisions and do not establish a browser
+pass for this newer merge.
+
+**Retained failure:** `shop-details` failed after **111s** at its unchanged
+30-second nonblank-canvas wait (`e2e/tests/shop-details.mjs:27`). Its four
+desktop captures and phone House I capture preceded the timeout, placing
+it at phone Barracks I. The failure image shows readable stats and a static
+Spearman thumbnail but a blank animated-preview area. Its exact cause
+was **unproven in that run**; the global canvas lookup alone is not evidence that
+the fixture inspected another node. The details window, shop-details
+renderer, unit-preview module and fixture are byte-identical to incoming
+main `a0f3ab19`. This evidence does not identify a special-building regression. The preserved snapshot is
+`work/checks/integrated-chromium-main112/shop-details-failure-snapshot/`;
+bounded read-only analysis is in
+`work/main112-shop-details-failure-analysis.md`. Retained logs do not capture
+art-loader warnings or Playwright-routed atlas responses, so they cannot
+establish successful phone atlas loading/decoding.
+
+The complete, unchanged `shop-details` follow-up, retaining both viewport
+branches, every assertion and the original timeout:
+**1/1 passed unchanged at the same clean `f3c55854`**, 113s for the complete desktop/phone scenario and 119.515s for the command; all 95 cases therefore have passing results across these two runs, not one 95/95 run. Exact command/revision/tree/UTC/exit/elapsed
+metadata: `env PYTHON=.venv/bin/python node e2e/run.mjs shop-details --keep`, clean start/end `f3c55854f8c01e91412b4b8f2303eec3e60d7b0a`, 2026-10-17 15:21:22.884778–15:23:22.400083 UTC, exit 0, 119.515s including build. This passing repeat keeps its own receipt and does not turn the original
+attempt into a single 95/95 run. It changes no product code, assertion or
+timeout and does not itself establish the earlier failure's cause.
+
+Fresh capture coverage and complete browser-run output and server-log review:
+**561 full-run PNGs plus eight repeat PNGs (569 total)** were individually reviewed and matched their archived source paths and SHA256; the full 90,317-line and repeat 875-line server logs have zero recorded traceback, HTTP 5xx, unhandled-command or command-exception signatures. The full audit retains the actual failed case; the separate cross-run audit verifies the passing union without erasing that failure. Archive directory, exact source filename
+and SHA256 coverage, review/audit receipts and retained save:
+full archive `work/checks/integrated-chromium-main112/evidence/` contains 564 files including 561 PNGs; its `evidence-manifest.json`, `release-audit.json` and `cross-run-audit.json` retain exact hashes and results. The unchanged repeat is separately archived in `work/checks/integrated-shop-details-repeat/evidence/` (nine files including eight PNGs), with its own manifest and audit. The full review directory is `work/reviews-main112/`; repeat reviews remain separate. All 39 full review batches, 21 auxiliary contact sheets and five zero-PNG cases are accounted for. Local throwaway saves are retained at `/tmp/se-e2e-bVryzj` (full) and `/tmp/se-e2e-j9hltL` (repeat). Resource-counter start/end and event deltas:
+full-run `memory.events max` 61,985→67,125 (+5,140), with OOM and OOM-kill both zero; repeat 67,125→67,125 with OOM/OOM-kill zero. Both use the recorded 2-CPU quota and 8-GiB memory limit (three CPUs visible). The full after-sample was taken at 15:20:58 UTC, after review/archive work; the retained cgroup peak predates the run, so no new run-specific peak is claimed. The interim `memory.events max` count rose
+from 61985 at run start to 63146 at 14:48:08 UTC, with OOM/OOM-kill zero;
+it was still 61985 at 14:39:27, after the shop failure. That later increase
+does not establish the failure's cause. The earlier 86-case no-increment
+result remains historical and is not reused for this run. Static capture,
+phone-fold, native-adventure and Linux WebKit/Apple GPU limits above still
+apply. No completed merge or deployment is claimed by these checks.
 
 All testing uses local temporary empires. Browser art requests read the
 public art bucket; no production game account or saved game is tested.
+
+## Evidence-schema normalization
+
+The full-run review records received alias-only schema normalization:
+25 `source_commit` aliases and 120 path aliases. Existing fields, notes,
+image order and all source PNG bytes/hashes were unchanged. Independent
+review rehashed all 561 full PNGs and verified the aliases. The 21 auxiliary
+contact sheets are review derivatives, not additional source captures.
+The first schema-gap audit remains retained; final full and cross-run
+receipts do not erase the original failed browser result. See
+`work/main112-review-schema-normalization-review.json` and the separate
+full/repeat audit records.
+
+## Privacy/art-setting integration and retained Shop diagnostics
+
+Latest privacy/art-setting main `f9946077` was integrated at clean
+`3d60b898`. Server **467 run, 458 passed, nine existing PostgreSQL skips**
+passed (34.317s tests; 34.947s command); client types and **479 tests**
+passed (13.41462159s tests; 16.53s command). The missing-art-setting guard
+returned its expected **exit 2 in 0.078s**, before build/server/browser.
+The configured positive Shop focus then **failed 0/1** on the desktop
+preview (51s scenario; 66.807s command), and its read-only diagnostic also
+**failed 0/1** (57s scenario; 68.667s command). These exact-revision failures
+are retained separately from the unchanged passing `f3c55854` repeat.
+Incoming main `f88ea31f` (#113) owns the preview-clock correction and
+click-only Details/short labels. Exact clean `dc920d60` passes server **467 run, 458 passed, nine existing
+PostgreSQL skips** (34.438s tests; 35.004s command), client types and
+**480/480 client tests** (14.191369192s tests; 17.54s command). The final affected-browser result is recorded below.
+No merge/deployment is claimed.
+
+The `f3c55854`→`3d60b898` integration of main `f9946077` changes privacy documentation and
+14 runner environment-setup lines; all other 5,425 tracked entries,
+including game/config/art and case fixtures, match `f3c55854`. It does not
+upgrade the older full run into a new-harness full pass. Browser art is
+configured privately; no actual game/art/staging/database address or raw
+private startup output is copied into these records.
+
+The exact clean `3d60b89876762b607c9c6c581ecdb22c0d3ced14` server/client
+receipts are `work/checks/integrated-server-main114/` and
+`integrated-client-main114/`. The guard receipt is
+`integrated-harness-no-art-main114/`. The positive configured focus ran
+2026-10-17 15:29:41.387494–15:30:48.194580 UTC, exit 1, and is archived
+under `integrated-shop-details-main114/` (two PNGs plus server log).
+The 51s scenario timed out at the original 30-second nonblank-canvas
+predicate, now on desktop Barracks I.
+
+The unchanged fixture with a read-only diagnostic preload also failed,
+2026-10-17 15:38:29.840012–15:39:38.507374 UTC, exit 1, 68.667s command
+and 57s scenario. Its `integrated-shop-details-diagnostic-main114/` archive
+contains two fresh PNGs, server log and redacted diagnostic log. This is
+not substituted for an uninstrumented pass. The source atlas resolved to a
+valid 476×448 ImageBitmap with visible pixels, while the one connected
+140×100 preview canvas remained transparent. A page TypeError reading
+`length` occurred during the original wait and maps to the preview's
+animation-run selection. The first callback/start/elapsed timestamps were
+not captured: no numeric skew or cause of the older phone failure is
+claimed from this diagnostic alone. Full source and observations are
+preserved in `work/main112-shop-details-diagnostic-analysis.md`.
+
+Incoming upstream #113 independently owns the first-frame preview-clock
+correction and deterministic regression, plus the owner's explicit
+click/tap/keyboard Details controls and short labels. Its own recorded
+89/89 and configured 5/5 results keep their upstream revisions; they are
+not this combined candidate's tests. No local special-building preview fix
+is claimed. The current `dc920d60a505893a1e5fcbb69d7b843be982d527`
+integration retains those changes and still has 95 browser cases.
+Its server 467 run (458 passed, nine existing skips), client types and
+480 client tests have passed with the exact timings above; the final affected-browser result is recorded below.
+
+## Final affected checks after main #113
+
+Exact clean start/end `dc920d60a505893a1e5fcbb69d7b843be982d527`, including main
+`f88ea31f`, passes the final affected Chromium set **9/9 in 1780.184s (29m 40.184s)**,
+including build. Command: `node e2e/run.mjs shop-details units-book storage
+rider-training soul-mixer temple time-machine warehouse weather-machine --keep`,
+with the authorized art setting supplied privately and `PYTHON=.venv/bin/python`.
+UTC interval: 2026-10-17T15:44:35.813939+00:00 to 2026-10-17T16:14:15.998406+00:00; exit 0.
+Case times are runner-rounded: shop-details 216s, units-book 100s, storage 46s, rider-training 559s, soul-mixer 328s, temple 168s, time-machine 132s, warehouse 111s, weather-machine 97s.
+
+All **74 fresh PNGs** were individually reviewed against exact source
+paths and SHA256 hashes; the complete **10,029-line server log** has no
+traceback, HTTP 5xx, unhandled-command or command-exception signatures.
+The selected-only archive is `work/checks/integrated-main113-affected/evidence/`,
+with separate manifest and six review batches in `work/reviews-main113-affected/`.
+Strict `release-audit.json` reports complete scope, zero missing/changed/
+excluded images, no filename/hash gaps, no parse/integrity/server findings;
+its SHA256 is `656cce95420bebf2134faf7f187f464904bb7ff133f9362e1f97b5a54c7f37b5`. Before/after receipts are clean at the exact same
+revision. The separate `visual-review-summary.json` also rehashes all 76
+archive files, including the admission trace and server log, and verifies
+that the six owner receipts cover all 74 source PNGs exactly once. Its
+SHA256 is `7c6b5286a6d964ed560145875da6391e577328ccbb751492697892d8ca09d035`.
+
+Fresh affected captures show concise Details labels contained at all eight
+widths and populated desktop/phone animated previews. Six desktop New-tab
+portraits and four Unit Book reload portraits are blank in individual
+captures but visible in other fresh views; the cause remains unconfirmed.
+Short catalogue views show mainly controls, and tall phone stats/poses may
+continue below the fold. Warehouse's three final Storage portraits and
+short Details labels are visible. The original-adventure, saved-state and
+phone-scroll assertions remain distinct from what still images establish.
+The environment/resource receipts remain separate from older runs.
+Resource samples 2026-10-17T15:44:45.784058+00:00 and 2026-10-17T16:14:51.031127+00:00: memory-limit events 67,125→73,132 (+6,007); OOM 0→0, OOM-kill 0→0. The samples retain the 2-CPU quota and 8-GiB limit. The cgroup peak predates this run; no new run-specific peak or event-to-case cause is claimed.
+
+Independent source review confirms the merge changes exactly the 17 incoming
+paths; all other 5,423 tracked entries retain their prior modes/blobs.
+Shop, preview, its real-renderer regression and the strengthened Shop fixture
+are identical to incoming main. The CSS keeps the incoming Details rule and
+all building rules. The runner preserves the Soul offline-stop/edit/restart
+contract and adds only incoming error-stack reporting. Review receipt:
+`work/main113-independent-source-review.json`.
+
+This final check exercises the changed shared menus/preview paths and all six
+building scenarios after the complete 95-case attempt. The earlier full run
+and passing repeat keep their exact revisions; this is **not** a new full
+95-case run at `dc920d60`. Incoming #113's own 89/89 and configured 5/5 stay
+attributed to their upstream revisions. No test or deadline was relaxed.
+
+
+No merge/deployment is claimed. Existing source/fixture limits remain:
+Soul new mixing still requires four genuine original fields/tables;
+legacy protocol claims are not recovered breeding content; native rider
+coverage is first-adventure victory/eighth-adventure loss, with a phone
+success adapter; selected Linux WebKit coverage is across runs, not one
+final-head 6/6 or native Apple GPU proof. Fresh full-run visual limits
+include initial Darts art absent then later loaded; blank Shop/New and
+Unit Book card art with cause unconfirmed; long Details labels clipped and early
+social headers before the upstream follow-up; Golem mana/point without an
+identifiable full body; transient HUD/toast and panel-fold occlusion.
+Current tournament/world prize portraits are loaded: the older 86-run
+blank portrait observation is not carried into this newer run.
