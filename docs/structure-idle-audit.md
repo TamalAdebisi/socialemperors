@@ -117,10 +117,17 @@ are withdrawn. Previous main, and the new animation fixes with the original
 worker loading restored, pass the same strict terrain checks.
 
 The final repair keeps workers. Before parsing each Safari atlas, `art.ts`
-checks a small alpha sample of its bitmap. Only an empty result is decoded
+checks a small alpha sample of its bitmap. An empty result is decoded
 again on the page; the second replaces the first only if it contains visible
 pixels. Genuinely empty atlases are preserved. The original images, mipmaps,
 sizes and timing remain unchanged. Other engines do not perform the check.
+The `1479_chained_levelup-1.webp` atlas also reproduced partial corruption:
+its worker bitmap contained 42,356 visible pixels in the first frame,
+with a duplicated/displaced silhouette; a page decode restored the original
+42,784 pixels on both CPU and GPU. This one atlas always receives the
+second decode in Safari. The regression compares its full alpha grid with
+an independently measured fingerprint of the original WebP, detecting
+partial corruption that the earlier nonempty check missed.
 The gallery keeps its strict visible-pixel checks and verifies that loading
 the previously blank atlas leaves every sampled ground pixel unchanged.
 No renderer reset, forced re-upload, raw pixel upload or WebGL downgrade is

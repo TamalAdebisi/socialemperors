@@ -196,7 +196,7 @@ async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
     // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
     data: { autoGenerateMipmaps: true },
   });
-  await repairBlankBitmap(texture, image);
+  await repairSafariBitmap(texture, image);
   const sheet = new Spritesheet(texture, data);
   await sheet.parse();
   return sheet;
@@ -204,8 +204,8 @@ async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
 
 const checkedBitmaps = new WeakMap<object, Promise<void>>();
 
-/** Keep Safari's normal worker path; decode again only when it returned no pixels. */
-function repairBlankBitmap(texture: Texture, image: string): Promise<void> {
+/** Keep Safari's worker path, recovering empty bitmaps and one corrupt atlas. */
+function repairSafariBitmap(texture: Texture, image: string): Promise<void> {
   const source = texture.source;
   const bitmap = source.resource;
   if (!isSafari() || typeof ImageBitmap === "undefined" || !(bitmap instanceof ImageBitmap)) {
@@ -222,10 +222,14 @@ function repairBlankBitmap(texture: Texture, image: string): Promise<void> {
         context.drawImage(picture, 0, 0, 64, 64);
         return context.getImageData(0, 0, 64, 64).data.some((value, i) => i % 4 === 3 && value > 0);
       };
-      if (visible(bitmap)) return;
+      // This atlas can also arrive partially scrambled, with visible pixels.
+      // A captured worker bitmap differed from the source on the CPU and GPU;
+      // decoding the same file on the page restored its exact silhouette.
+      const corruptAtlas = /(?:^|\/)1479_chained_levelup-1\.webp(?:[?#]|$)/.test(image);
+      if (!corruptAtlas && visible(bitmap)) return;
       // Some large atlases arrive from WebKit's worker as transparent pixels.
       // The same file decoded on the page restores them. Do not replace a
-      // genuinely empty atlas or change the path of already visible textures.
+      // genuinely empty atlas or change other already visible textures.
       const response = await fetch(image);
       if (!response.ok) throw new Error(`${image}: ${response.status}`);
       const replacement = await createImageBitmap(await response.blob());

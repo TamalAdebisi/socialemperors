@@ -4,6 +4,26 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: recover a partially damaged Safari atlas
+
+- **Extend the narrow recovery only where the failure was reproduced.**
+  `1479_chained_levelup-1.webp` sometimes decoded in a WebKit worker with
+  visible but misplaced pixels, so the blank-bitmap check missed it. A
+  repeated probe captured the same damaged shape on CPU and GPU; decoding
+  the identical file on the page restored both. Always perform that second
+  decode for this atlas in Safari. Other visible atlases retain workers,
+  and all original images and mipmaps remain. No global loader preference
+  or new public-art upload is introduced.
+- **Check correctness as well as visibility.** Keep the original gallery
+  assertions and add an exact alpha-grid fingerprint for the affected frame,
+  independently measured from its source WebP. Retain the malformed capture
+  and the earlier passing assertion result; a nonempty image was not enough.
+- **Inspect a short production cycle before unrelated UI work.** Move the
+  collection test's working-farm/ranch inspection ahead of mine setup and
+  screenshots. Keep all assertions, production durations, collection times
+  and saved-state checks. This is a fixture-order correction, with no game
+  rule change. Preserve the failed full run and the siege timeout separately.
+
 ## 17 October 2026: deliver against the exact completed verification
 
 - **Keep each result attached to its code.** Exact `f798788b` passed all

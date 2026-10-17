@@ -77,7 +77,12 @@ setup and teardown.
 
 | Run | Result | Elapsed |
 | --- | --- | --- |
-| Final server, including main #97 | 442 run: 433 passed, 9 existing skips | 47.173s |
+| Combined main #92 server at `46f61c94` | 449 run: 440 passed, 9 existing skips | 40.942s |
+| Combined main #92 client | Types passed; 404/404 tests passed | 15.212s |
+| Combined main #92 build | Passed | 1.03s |
+| Complete combined Chromium, all 79 cases | 77/79; collect and siege follow-ups below | 8551.78s |
+| Combined WebKit, six affected cases | 5/6; tournament console warnings and one gallery visual mismatch below | 545.66s |
+| Pre-#92 server, including main #97 | 442 run: 433 passed, 9 existing skips | 47.173s |
 | Client after main #97 | Types passed; 368/368 tests passed | 20.035s |
 | Build after main #97 | Passed | 1.01s |
 | Client after Safari decoding repair | Types passed; 368/368 tests passed | 10.275s |
@@ -105,7 +110,7 @@ setup and teardown.
 | WebKit after bounded fixed-pose loading, `bbfffdc5` | 6/7 | 359.02s |
 | Chromium on `bbfffdc5` | 4/4 | 1199.83s |
 
-All 75 current Chromium cases have passing results across the complete,
+Before #92, all 75 then-current Chromium cases had passing results across the complete,
 affected-path and follow-up runs. This is not a single 75/75 run on the
 last commit. Main #97 changes optional contact links and menu/header layout,
 not drawing, game rules or saves. Its ten affected Chromium checks passed
@@ -509,7 +514,7 @@ PR #92 requested to finish its own verification and merge first. While
 that run continued, the completed idle repair at `f9ed9060` was combined
 locally with its exact candidate `f798788b6529388f918098989b8f4997eab553c8`.
 The integration commit is `46f61c94b0770e2a3af80db8d47ddd319d47bfbb`.
-It is not published or merged ahead of #92. The only merge conflicts were
+It was not published or merged ahead of #92. The only merge conflicts were
 in AGENTS.md and DECISIONS.md; both sets of guidance/results were preserved.
 No structure, art-loading, input-camera or idle-gallery runtime was changed
 by that integration. The tournament branch changes shared battle controls,
@@ -517,29 +522,77 @@ healing rules, spell windows and town entry, and adds four browser cases.
 
 The combined type check passed, all **404/404 client tests passed in
 15.212s**, the build passed (1.03s bundling), and the server ran **449 tests:
-440 passed, nine existing skips, in 40.942s**. The full **79-case Chromium
-run** and subsequent affected WebKit checks are in progress on this exact
-combined build. Their results will be recorded before final delivery; no
-pending case is counted as a pass. The latest main and #92's final runtime
-must be compared before this local integration is published.
+440 passed, nine existing skips, in 40.942s**. The complete Chromium run
+finished **77/79 in 8,551.78s (2h 22m 31.78s)** on this exact combined build.
+Only `collect` and `siege` failed; their evidence and follow-ups are below.
+The full structure gallery passed in 862s, all five tournament cases passed,
+and construction, shared battle controls, delayed unit selection, background
+play, phone controls and the ground-click indicator passed. The affected
+six-case WebKit run finished 5/6 in 545.66s; its additional visual finding
+and console-error failure are recorded below.
 
 PR #92 subsequently merged as `4c7f4eb559d1dac462a78c946fa1890fb4f7c9cd`.
 Its final head is `cee1b96b`; comparison with the tested candidate `f798788b`
 contains exactly seven Markdown files. Its own full suite passed 78/78.
-The actual main merge is now integrated, preserving both documentation
-sets. Runtime, tools, configuration and tests remain identical to the
-combined `46f61c94` build already running here; that run is not restarted.
+The actual main merge is integrated at `485f172c`, preserving both
+documentation sets. Runtime, tools, configuration and tests stayed identical
+to the combined `46f61c94` build throughout both integration runs. The build
+SHA-256 is recorded with the exact revision and all 79 case names.
 
-The in-progress integrated run retains a `collect` failure at 38s: the
+The integrated run retains a `collect` failure at 38s: the
 working-farm selection at line 37 found an empty action bar. Its screenshot
-shows the level-up empire-name prompt, and the server log records that
-click collecting 15 food and one experience from the farm at (42,53).
+shows the empire-name dialog, and the server log records the first farm
+click collecting 15 food and one experience at (42,53). The selection
+helper then probes progressively higher: its final point (164,38) reaches
+the HUD rename button. This is a later probe opening the name dialog,
+not a level-up prompt.
 The unchanged fixture starts its short farm production interval before
 reloading, taking screenshots and selecting/starting the mine. By the time
 it tries to inspect a working farm, the farm is ready and the click correctly
 collects instead. A fixture-order correction and focused verification remain
 due after the active suites finish. No old-main reproduction is claimed from
 this source/trace diagnosis, and the failed run will remain a failure.
+
+`siege` failed in 58s at its unchanged 30-second wait for 1,800 game frames.
+The screenshot shows the army still lined up with its captain's speech.
+The timeout did not capture the actual game-clock value, so this result
+alone does not prove the cause. The source test is unchanged from main.
+A focused clock observation with the original speed, deadline and assertions
+passed in 48s. During the wait the battle advanced from frame 182 to 1,800
+in 27.2435s, at speed four, with the page visible and 317 then 316 fighters.
+All five surviving engines selected a building at the stage transition.
+This demonstrates normal progress close to the original 30-second limit
+on the software renderer; it does not prove the precise clock state during
+the full-run failure. No timeout is increased or hidden. The normal-runner
+follow-up remains due.
+
+All **461 fresh Chromium PNGs** are covered by visual review. The 199 facing
+images match the previously reviewed full gallery in dimensions and every
+RGBA byte; the other 262 include every intermediate and final screenshot,
+including both failures. Archive hashes match the reviewed files. The early
+`menus/shop` capture precedes asynchronous picture loading; the later shop
+captures show the loaded art. Classic retains its software-graphics warning
+and start overlay. These are not described as warning-free, fully loaded
+intermediate captures. No new structure artifact was found.
+The archived server log has no HTTP 5xx, Python traceback or unhandled
+command. Memory-limit/OOM counters did not increase during the full run.
+
+The integrated WebKit run passed overlays (29s), gallery assertions (181s),
+battle selection (30s), playthrough controls (30s) and keys (30s).
+`tournament-battle` completed its gameplay assertions but failed the error
+monitor after 239s on two `/friends/news` access-control warnings. Its server
+requests returned 200. This is retained as a failure; earlier navigation
+warnings in other tests do not establish the cause of these exact warnings.
+
+All 26 non-gallery WebKit PNGs were reviewed. Comparing the 199 gallery
+captures with the prior recovery run found 198 exact RGBA matches and one
+malformed image: `1479_chained_levelup`, facing zero, had a duplicated and
+displaced silhouette. The visible-pixel/frame assertions passed, so that
+automated pass is not treated as a clean visual result. A first 14-file
+CPU/GPU probe passed in 61s and did not reproduce the malformed capture:
+the repaired bitmap and a new decode had identical pixels, with 42,784
+visible source pixels. This repeat does not establish a fix. Further
+investigation is in progress before delivery.
 
 ## Earlier runs retained
 

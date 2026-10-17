@@ -3,7 +3,7 @@
 **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
 idle/action states stay separate, hover outlines follow the current frame,
 and seven blank loop endings are removed. Safari retains worker loading,
-recovering only bitmaps that decoded as blank; broad loader/rendering
+recovering blank bitmaps and one atlas with reproduced partial corruption; broad loader/rendering
 workarounds were withdrawn after scene regressions.
 One incomplete animation holds its original pose and loads only its two
 used image pages. All configured structures were

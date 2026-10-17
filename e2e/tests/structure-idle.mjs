@@ -125,8 +125,23 @@ export default async function structureIdle({ newPlayer }) {
         let visible = 0;
         for (let i = 3; i < pixels.pixels.length; i += 4) if (pixels.pixels[i] > 0) visible++;
         captures.push(await renderer.extract.base64({ target: slot, format: "png", clearColor: 0x5b9f30 }));
+        let sourceAlpha;
+        if (name === "1479_chained_levelup" && facing === 0) {
+          // A nonempty bitmap can still be scrambled. Compare the entire
+          // first frame's alpha grid with the original public WebP, whose
+          // fingerprint was independently measured with Pillow.
+          const { source, frame } = picture.texture;
+          const canvas = document.createElement("canvas");
+          canvas.width = frame.width; canvas.height = frame.height;
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          context.drawImage(source.resource, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
+          const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
+          const alpha = Uint8Array.from({ length: rgba.length / 4 }, (_, i) => rgba[i * 4 + 3]);
+          sourceAlpha = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", alpha)))
+            .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+        }
         faces.push({ facing, frames: frames.length, unique: new Set(frames).size, valid, synchronized,
-          visible, image: picture.texture.source.label, imageType: picture.texture.source.resource?.constructor.name,
+          visible, sourceAlpha, image: picture.texture.source.label, imageType: picture.texture.source.resource?.constructor.name,
           blank: frames.some((texture) => texture.frame.width <= 1 && texture.frame.height <= 1),
           first: picture.texture === original[0] });
       }
@@ -136,6 +151,9 @@ export default async function structureIdle({ newPlayer }) {
       assert.ok(face.valid && face.synchronized, `${name}/${face.facing} has a matching outline on every frame`);
       assert.ok(face.first, `${name}/${face.facing} starts in its idle state`);
       assert.ok(face.visible > 10, `${name}/${face.facing} actually renders visible pixels`);
+      if (name === "1479_chained_levelup" && face.facing === 0) assert.equal(face.sourceAlpha,
+        "69afb90c6933d8dd7c1d2a1bc5e1a6e6ebfde3bbf8a8c9f78e753179e465db62",
+        "the decoded statue retains every original alpha pixel, not just some visible pixels");
       if (webkit) assert.equal(face.imageType, "ImageBitmap", `${name}/${face.facing} retains bitmap loading with blank-atlas recovery`);
       writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }

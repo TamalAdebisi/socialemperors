@@ -23,8 +23,8 @@ next agent knows where to start.
   completed buildings retain their idle state, nested motion stays animated,
   and outlines follow the current picture, including walking units. Seven
   fully blank loop endings are removed. Safari keeps worker loading and
-  decodes only an empty bitmap again, replacing it only when the second
-  decode has visible pixels. Broad page-decoding and rendering workarounds
+  decodes empty bitmaps again, plus one atlas with reproduced partial
+  corruption. The second decode must have visible pixels. Broad page-decoding and rendering workarounds
   caused scene regressions and are withdrawn; original mipmaps remain.
   The gallery checks that recovery preserves every sampled ground pixel.
   One incomplete legacy animation holds its original first pose; only its

@@ -1317,9 +1317,12 @@ loop endings are omitted without changing the preceding motion.
 
 Safari keeps Pixi's normal worker decoding. A worker can return an entirely
 transparent ImageBitmap for valid art, so `art.ts` checks a small alpha
-sample before parsing an atlas. Only an empty result is decoded again on
+sample before parsing an atlas. An empty result is decoded again on
 the page, and it replaces the first bitmap only when the second has visible
-pixels. Truly empty art remains empty. This avoids the scene corruption
+pixels. One atlas, `1479_chained_levelup-1.webp`, also arrived partially
+scrambled, so it always gets that second decode in Safari. Its regression
+checks every source alpha pixel against the original WebP fingerprint.
+Truly empty art remains empty. This avoids the scene corruption
 reproduced when all Safari images were decoded on the page. Original art,
 mipmaps and normal loading remain unchanged; other engines skip the check.
 The gallery also compares every sampled ground pixel before and after

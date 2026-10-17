@@ -22,6 +22,13 @@ export default async function collect({ newPlayer }) {
   const setUpAt = Date.now();
   const before = await player.saved({ waitForBatch: false });
   await player.reload();
+
+  // Inspect the short farm cycle before the mine picker and screenshots
+  // consume its working time. A ready farm collects instead of selecting.
+  const farm = await player.select(FARM.slice(1), "Farm Land");
+  await player.press("Close");
+  await player.select(RANCH.slice(1), "Sheep Ranch I");
+  await player.press("Close");
   await player.shot("start");
 
   // The mine's villager waits for a working time; tapping the mine asks how long.
@@ -31,12 +38,6 @@ export default async function collect({ newPlayer }) {
   await player.click(mine.point);
   const mineWorking = await player.bar();
   assert.ok(mineWorking.startsWith("Gold Mine I") && !mineWorking.includes("How long"), `the mine works: "${mineWorking}"`);
-  await player.press("Close");
-
-  // The farm and the ranch are working: selecting one shows how long is left.
-  const farm = await player.select(FARM.slice(1), "Farm Land");
-  await player.press("Close");
-  await player.select(RANCH.slice(1), "Sheep Ranch I");
   await player.press("Close");
 
   // The farm is ready 32.4 s after its villager walked in: one tap collects,
