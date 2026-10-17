@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PHONE } from "../lib.mjs";
-const SUMMIT=[54,50],MARKET=[56,55];
+const SUMMIT=[57,50],MARKET=[56,56];
 export default async function socialMarket({newPlayer}) {
   for(const phone of [false,true]) {
     const player=await newPlayer(phone?{phone:true,viewport:PHONE}:{}),{page}=player;
@@ -12,7 +12,12 @@ export default async function socialMarket({newPlayer}) {
     ]);
     await player.reload();
     const read=async()=>(await(await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,{form:{USERID:player.settings.userId,user_key:player.settings.userKey}})).json());
-    const before=await read();
+    await player.saved();const before=await read();
+    for(const [id,at] of [[234,SUMMIT],[266,MARKET]]) {
+      const placed=before.map.items.find((p)=>p[0]===id);
+      assert.ok(placed,`fixture building ${id} survives ordinary overlap cleanup`);
+      assert.deepEqual(placed.slice(1,3),at);
+    }
     await player.select(SUMMIT,"Allies Building");await player.press("Open");
     const panel=page.locator(".social-window:not([hidden])");
     for(let i=0;i<9;i++) await panel.getByRole("button",{name:"Hire helper for 3 cash",exact:true}).click();
