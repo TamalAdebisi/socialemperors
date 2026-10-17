@@ -39,7 +39,7 @@ import { readBonusConfig } from "./rules/bonuses.ts";
 import goalNeeds from "./rules/goals.json" with { type: "json" };
 import { GoalKeeper } from "./goals.ts";
 import { BonusDesk } from "./bonuses.ts";
-import { readTown, type Box, type Town } from "./rules/town.ts";
+import { readBox, readTown, type Box, type Town } from "./rules/town.ts";
 import { population } from "./rules/training.ts";
 import { ActionBar } from "./ui/actions.ts";
 import { ArmyWindow } from "./ui/army.ts";
@@ -69,7 +69,7 @@ import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
 import { AskFriends } from "./ui/askFriends.ts";
-import { Panel } from "./ui/panel.ts";
+import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
@@ -94,6 +94,14 @@ const ARTHUR_PICTURE = new URL("./ui/art/arthur.jpg", import.meta.url).href;
 async function start(): Promise<void> {
   const settings = readPageSettings();
   const server = new GameServer(settings);
+
+  const tournamentQuery = new URLSearchParams(location.search);
+  const tournament = tournamentQuery.get("tournament");
+  if (tournament) {
+    const { playTournament } = await import("./tournamentPlay.ts");
+    await playTournament(settings, server, tournament, tournamentQuery.get("victim") ?? "");
+    return;
+  }
 
   // ?quest=<id>: a quest island, played here (questPlay.ts).
   const quest = new URLSearchParams(location.search).get("quest");
@@ -186,6 +194,7 @@ async function start(): Promise<void> {
   let openIslands = () => {};
   let openAttacked = () => {};
   let openWorld = (_continent?: number) => {};
+  let openTournaments = () => {};
   if (visit === undefined) {
     const commands = new CommandSender(settings, { clock, onFailure: (reason) => showStatus(reason) });
     commands.start();
@@ -335,18 +344,59 @@ async function start(): Promise<void> {
         return;
       }
       survivalWindow.open();
-    }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => {
-      if (!tournamentConfig.enabled) {
-        editor.tell("Tournaments are not available right now.");
-      } else if (town.level < MIN_LEVEL_TOURNAMENT) {
-        editor.tell(`Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.`);
-      } else void tournamentWindow.open();
-    });
+    }, showsTowns(town, races.length) ? () => towns.toggle() : null, () => openTournaments());
     const tournamentConfig = tournamentRules(config);
+    let tournamentAfterWelcome = false;
+    let tournamentWelcomePending = true;
+    let tournamentTown = town;
+    let tournamentWarehouse = (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
+    let tournamentFriends = (info.neighbors ?? []).map((neighbor) => String(neighbor.pid));
+    const tournamentRefreshGuard = () => JSON.stringify([town.cash, town.gold, town.level, [...town.gifts], attackState.teams,
+      tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig)]);
     const tournamentWindow = new TournamentWindow({
       rules: tournamentConfig, items,
+      me: settings.userId,
+      level: () => tournamentTown.level,
+      balance: (resource) => resource === "c" ? town.cash : town.gold,
+      refreshTown: async () => {
+        // The town remains playable beside the panel. Do not overwrite a
+        // collection, purchase or gift placement made while this read waited.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (!await commands.flush()) throw new Error("Your changes couldn't be saved.");
+          const before = tournamentRefreshGuard();
+          const fresh = await server.playerInfo({ town: town.id });
+          if (commands.pending || before !== tournamentRefreshGuard()) continue;
+          town.cash = Number(fresh.playerInfo.cash);
+          town.gold = Number(fresh.map.coins);
+          town.gifts = readBox(fresh.privateState?.gifts);
+          const savedTeams = (fresh.privateState as Record<string, unknown> | undefined)?.teams;
+          if (savedTeams && typeof savedTeams === "object") attackState.teams = savedTeams;
+          // Ownership and saved selection must come from the same read. A
+          // second tab may have acquired units since this town was drawn.
+          tournamentTown = readTown(fresh, items);
+          tournamentWarehouse = (fresh.map as unknown as { warehousedUnits?: Box }).warehousedUnits;
+          tournamentFriends = (fresh.neighbors ?? []).map((neighbor) => String(neighbor.pid));
+          menus.count("storage", [...town.gifts.values()].reduce((sum, n) => sum + n, 0));
+          hud.update(town);
+          return;
+        }
+        throw new Error("Your town changed while refreshing. Please refresh again.");
+      },
+      command: (name, ...args) => commands.add(name, ...args),
+      spent: (resource, amount) => doings.spend(resource, amount),
+      now: clock,
+      join: (type, category, team, room) => server.joinTournament(type, category, team, room),
+      create: (type, team) => server.createTournament(type, team, tournamentFriends),
+      leave: (room) => server.leaveTournament(room),
+      cancel: (room) => server.cancelTournament(room),
+      clean: (room) => server.cleanTournament(room),
+      fetchProfile: async (pid) => await server.publicProfile(pid) as PlayerProfile | null,
+      play: async (room, victim) => {
+        if (!await commands.flush()) throw new Error("Your changes couldn't be saved. Reload before playing.");
+        location.assign(`/client.html?tournament=${encodeURIComponent(room)}&victim=${encodeURIComponent(victim)}`);
+      },
       info: () => server.tournamentInfo(),
-      choices: () => tournamentChoices(town, (info.map as unknown as { warehousedUnits?: Box }).warehousedUnits, items, tournamentConfig),
+      choices: () => tournamentChoices(tournamentTown, tournamentWarehouse, items, tournamentConfig),
       savedTeam: () => (attackState.teams as Record<string, unknown> | undefined)?.tournament,
       saveTeam: async (team) => {
         // Keep the queued choice locally too: closing/reopening while the
@@ -364,9 +414,20 @@ async function start(): Promise<void> {
         attackState.helpMap = [...(Array.isArray(attackState.helpMap) ? attackState.helpMap as string[] : []), TOURNAMENT_HELP];
         commands.add("set_help_map", TOURNAMENT_HELP);
       },
-      classicUrl: settings.classicUrl,
       flush: () => commands.flush(),
     });
+    openTournaments = () => {
+      if (learning || tournamentWelcomePending) {
+        tournamentAfterWelcome = true;
+        // A manual choice from Battle/World must not leave its launcher
+        // blocking the deferred panel after the welcome read completes.
+        if (!learning) closePanel();
+        return;
+      }
+      tournamentAfterWelcome = false;
+      if (tournamentConfig.enabled && town.level >= MIN_LEVEL_TOURNAMENT) void tournamentWindow.open();
+      else editor.tell(tournamentConfig.enabled ? `Tournaments open at level ${MIN_LEVEL_TOURNAMENT}.` : "Tournaments are not available right now.");
+    };
     const survivalWindow = new SurvivalWindow({
       words: (id) => lines.get(id) ?? "",
       pictureUrl: (name) => `${settings.assetsUrl}/images_new/${name}.jpg`,
@@ -632,15 +693,24 @@ async function start(): Promise<void> {
     };
     afterDrawing = () => {
       defend();
+      const reopenTournament = () => {
+        if (!tournamentAfterWelcome || learning || tournamentWelcomePending) return;
+        // Both ordinary returns and interrupted lessons wait for welcome
+        // dialogs. Opening a panel early would let a late gift read close it.
+        if (levelWindows.showing || document.querySelector(".panel:not([hidden]), .draggy-window")) {
+          requestAnimationFrame(reopenTournament);
+        } else openTournaments();
+      };
+      const welcomeFinished = () => {
+        tournamentWelcomePending = false;
+        reopenTournament();
+      };
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
       const welcome = () => {
         editor.welcomeCarts(carts(info.map.receivedAssists), (pid) => names.get(pid) ?? "A neighbour");
         // Gifts waiting on the site: their window, as the classic page opens it when the town is up.
-        void gifts?.waiting().then((waiting) => {
-          if (waiting > 0) {
-            void gifts.open();
-          }
-        });
+        const welcomed = gifts?.waiting().then((waiting) => waiting > 0 ? gifts.open() : undefined);
+        void Promise.resolve(welcomed).then(welcomeFinished, welcomeFinished);
       };
       const startLessons = (from: number) => {
         learning = true;
@@ -841,7 +911,9 @@ async function start(): Promise<void> {
   }
   afterDrawing();
   // Back from an island: the island window again, as the Flash client opens it.
-  if (new URLSearchParams(location.search).has("islands")) {
+  if (new URLSearchParams(location.search).has("tournaments")) {
+    openTournaments();
+  } else if (new URLSearchParams(location.search).has("islands")) {
     openIslands();
   } else if (new URLSearchParams(location.search).has("world")) {
     // Back from spying: the world map again, at the continent spied on, as the Flash client comes back.

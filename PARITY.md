@@ -310,7 +310,23 @@ lent units are counted rightly, nothing counts after an island is decided,
 units on the border walk home rather than being sold, a walled-off order
 frees its unit.
 
-## Tournaments: first slice
+## Tournaments
+
+All five parts are built in #89 and #92. The
+[delivery record](docs/verification-92.md) records all five tournament
+checks passing at `47db7f44`, including #97: the complete suite was
+77/78 in 90m 46.59s. The sole quest reload failure did not recur in ordinary
+main or tested-code repeats. A forced baseline diagnostic establishes an
+existing save/read weakness, not the exact full-run cause; the quest issue
+remains a follow-up. Done, profile and top-level record corrections passed
+the `95e098f3` focused checks 3/3. Its full run stopped intentionally after
+five passes and no observed failure for further room/player validation
+and refresh/reopen fixes. The corrected `97fb6e79` focus was 1/3: lists
+passed, rooms hit a delayed-response fixture problem and results failed
+on its leftover public seat. The test-only repair at `60eba9ff` passed
+all three focused cases in 8m 22.94s with unchanged runtime. Required full
+checks remain pending before merge. Tournament implementation is complete;
+earlier results are retained.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
@@ -319,18 +335,36 @@ frees its unit.
       and the warehouse as well as standing in town; banned units,
       per-unit limits, strongest-first choices and the shared editor's
       combined dragon/god/colossus limit. Separate tournament team save.
-- [ ] Waiting rooms, battle execution, results/ranking/prizes and
-      creating/inviting friends' tournaments: still being built; classic choices are hidden.
+- [x] Entry warnings and the original weekly saved-team exception;
+      five level brackets; original services with one server-owned fee.
+- [x] Four-seat waiting rooms, original minute-to-refresh countdown,
+      public/friends bot filling, close/reopen, leave and refunds.
+- [x] Three independent battles against enrolled armies: original
+      placement, defender formation/targeting, damage score, spell
+      exclusions, surrender and no home casualties. Unfinished attempts
+      restart with the saved teams; failed result saves can be retried.
+- [x] Matches and Results, tournament deadline, four-player score board,
+      weekly top ten and own rank; original score order including
+      departed entrants, separate authoritative winner, server-paid
+      prizes in Storage and explicit Done acknowledgement, with the
+      server's existing 30-day finished-room retention.
+- [x] Friends' creation, minimum-neighbour check, waiting host's
+      cancellation with refunds, and the community-page Invite notice
+      (Everybody following #95). The old Facebook invitation delivery is not needed.
 
-The last islands' team-source gap above remains separate; this slice
+Classic choices stay hidden at the owner's request; the original routes
+and shared save support remain.
+
+The last islands' team-source gap above remains separate; this feature
 does not change the quest picker. See `docs/original/rules/tournaments.md`.
 
 ## Not for Beta 1
 
-**Later:** collections, the units book, offer packs, markets for allies,
+**Originally deferred beyond Beta 1:** collections, the units book, offer packs, markets for allies,
 social buildings, dragons, the weather and time machines, the unit
-warehouse, darts and the remaining tournament stages. Survival, the nests
-and the mandatory tutorial are already built; see CLIENT.md.
+warehouse, darts, survival, tournaments, the tutorial.
+Survival, tournaments, the nests and the mandatory tutorial are now built;
+ROADMAP.md tracks the remaining work.
 
 **Not needed:** what only Facebook, the iPhone app, other games' adverts or
 Social Point's admin tools used.

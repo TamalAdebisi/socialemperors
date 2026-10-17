@@ -3,8 +3,8 @@
 // screen Quests and Battle are separate rail buttons; on a phone World holds
 // them all. Quests are played here (ui/islands.ts, questPlay.ts), and attacks
 // on players from the world map (ui/worldMap.ts, attackPlay.ts), and
-// survival (ui/survival.ts, survivalPlay.ts). Tournaments open their list
-// and team box here; later stages show their availability.
+// survival (ui/survival.ts, survivalPlay.ts). Tournaments open their lists,
+// team selection, rooms and results here, with battles in tournamentPlay.ts.
 
 import { ICONS } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -97,9 +97,6 @@ function window_(key: string, title: string, modes: Mode[], _classicUrl: string)
     row.append(icon, text, play);
     list.append(row);
   }
-  const note = document.createElement("p");
-  note.className = "rows-note";
-  note.textContent = "More tournament features are coming soon.";
-  panel.body.append(list, note);
+  panel.body.append(list);
   return panel;
 }

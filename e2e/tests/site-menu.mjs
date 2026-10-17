@@ -2,9 +2,26 @@
 // dock"): a Menu by Full screen, as the classic page's bar. A friend's
 // request waits on the Everybody page, so the Menu and its Everybody carry a
 // red 1; Everybody opens the site's page in a new tab, Empires the front page;
-// on a phone the Menu sits by Classic game; Log out signs the player out.
+// on a phone the Menu sits by Full screen; Log out signs the player out.
 
 import assert from "node:assert/strict";
+import { DISCORD } from "../lib.mjs";
+
+async function assertMenuTargets(list, screen) {
+  const targets = await list.getByRole("menuitem").evaluateAll((items) => items.map((item) => {
+    const box = item.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    return {
+      name: item.textContent.trim(),
+      reachable: item.contains(hit),
+      hit: hit?.className || hit?.tagName || "nothing",
+    };
+  }));
+  assert.equal(targets.length, 4, `${screen} Menu has all four destinations, including configured Discord`);
+  for (const target of targets) {
+    assert.ok(target.reachable, `${screen} Menu item ${target.name} receives clicks; hit ${target.hit}`);
+  }
+}
 
 export default async function siteMenu({ newPlayer }) {
   const player = await newPlayer();
@@ -53,6 +70,9 @@ export default async function siteMenu({ newPlayer }) {
 
   const menu = page.getByRole("button", { name: /^Menu/ });
   assert.equal(await menu.getAttribute("aria-label"), "Menu, 1 waiting on the Everybody page");
+  const countdown = page.locator(".home-threats");
+  await countdown.waitFor({ state: "visible" });
+  assert.match(await countdown.textContent(), /^Next camp .*Next raid /, "the active countdown exercises the overlapping area");
   await menu.click();
   const list = page.locator(".site-menu");
   assert.ok(await list.isVisible(), "the Menu opens");
@@ -60,14 +80,27 @@ export default async function siteMenu({ newPlayer }) {
   assert.equal(await friends.getAttribute("href"), "/friends");
   assert.equal(await friends.getAttribute("target"), "_blank", "a new tab: the game plays on");
   assert.equal(await list.getByRole("menuitem", { name: "Empires" }).getAttribute("href"), "/");
+  const discord = list.getByRole("menuitem", { name: "Discord" });
+  assert.equal(await discord.getAttribute("href"), DISCORD);
+  assert.equal(await discord.getAttribute("target"), "_blank");
   await player.shot("menu");
+  await assertMenuTargets(list, "Desktop");
   await page.keyboard.press("Escape");
   assert.ok(await list.isHidden(), "Escape puts it away");
+  assert.ok(await countdown.isVisible(), "the countdown remains available after closing Menu");
 
   const phone = await player.onPhone();
+  const phoneCountdown = phone.page.locator(".home-threats");
+  await phoneCountdown.waitFor({ state: "visible" });
+  assert.match(await phoneCountdown.textContent(), /^Next camp .*Next raid /);
   await phone.page.getByRole("button", { name: /^Menu/ }).click();
-  assert.ok(await phone.page.locator(".site-menu").isVisible());
+  const phoneList = phone.page.locator(".site-menu");
+  assert.ok(await phoneList.isVisible());
   await phone.shot("phone");
+  await assertMenuTargets(phoneList, "Phone");
+  await phone.page.keyboard.press("Escape");
+  assert.ok(await phoneList.isHidden(), "Escape also closes the phone Menu");
+  assert.ok(await phoneCountdown.isVisible(), "the phone countdown remains available after closing Menu");
 
   // Log out: the site's front page, and the game is the signed-in player's no more.
   await menu.click();

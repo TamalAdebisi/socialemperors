@@ -20,7 +20,7 @@ update its status here.
 | [rules/town.md](rules/town.md) | **Rule book: running a town.** The map, land, placing and moving, construction, upgrading, production, houses, training, villagers, walking, wild animals, what grows back, tidying, special buildings, storage, the troll town. 127 rules |
 | [rules/progress.md](rules/progress.md) | **Rule book: levels, goals, bonuses and the shop.** Experience, level ups, how every kind of goal is counted and paid, the three bonuses, the shop and its prices, the market, the second town. 113 rules |
 | [rules/neighbours.md](rules/neighbours.md) | **Rule book: neighbours and messages.** The neighbours bar, visiting, helping, the carts, asking friends, gifts, social buildings, Arthur, and the windows that open as the game starts. 76 rules |
-| [rules/tournaments.md](rules/tournaments.md) | **Rule book: tournament list and team.** Ownership sources, limits, help, list state and the entry boundary for later slices |
+| [rules/tournaments.md](rules/tournaments.md) | **Rule book: tournaments.** Lists and teams, entry/fees, rooms, copied-army battles, scoring, results/prizes and friends' creation/invitation policy |
 | [no-button.md](no-button.md) | **Rules with no button.** Everything the client does by itself: the start, in order; timers; what happens on a level up or a new day; what's switched off. 83 rules |
 
 The index, by area:
@@ -30,17 +30,17 @@ The index, by area:
 | [index/core.md](index/core.md): the game's core (loading, the save, the start) | 42 | 19 | 12 | 7 |
 | [index/engine.md](index/engine.md): the map engine, units, attacks, magic | 183 | 107 | 65 | 2 |
 | [index/delegates.md](index/delegates.md): what special buildings and units do | 350 | 125 | 215 | 6 |
-| [index/windows.md](index/windows.md): the windows | 136 | 42 | 15 | 51 |
-| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 32 | 18 | 19 |
-| [index/quests.md](index/quests.md): quests and battles | 99 | 65 | 10 | 16 |
+| [index/windows.md](index/windows.md): the windows | 136 | 63 | 11 | 34 |
+| [index/interface.md](index/interface.md): bars, menus, managers, small modules | 98 | 36 | 16 | 17 |
+| [index/quests.md](index/quests.md): quests and battles | 99 | 66 | 10 | 15 |
 | [index/art-and-libraries.md](index/art-and-libraries.md): picture holders, others' libraries | 597 | 2 | 0 | 0 |
-| **All** | **1,505** | **392** | **335** | **101** |
+| **All** | **1,505** | **418** | **329** | **81** |
 
 The rest are picture holders (508), other people's libraries (79), parts
 we don't need (89: Facebook, the iPhone app, payments, adverts, Social
 Point's tools) and one handled by the server alone. So of the 829
-classes that hold the game's own behaviour, about 47% are built in the
-new client, 40% partly and 12% not yet. "Partly" is mostly the special
+classes that hold the game's own behaviour, about 50% are built in the
+new client, 40% partly and 10% not yet. "Partly" is mostly the special
 buildings and units, whose plain fighting works but whose own moves
 often don't yet.
 

@@ -114,10 +114,36 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **The first tournament slice is complete in #89:** everyday, weekly
-  and friends' lists, help and the saved team box. The owner's later
-  playthrough request hides classic choices while later stages are built.
-  Task 7 below records its checks and the next slice.
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); correction focus passed, full checks pending.**
+  Exact `60eba9ff` passed rooms/results/list **3/3 in 8m 22.94s**.
+  Runtime is unchanged from 97; only the test fixture and docs changed.
+  The log is clean, with all 31 archived images reviewed and no visible defects. All 22 review threads are addressed
+  and resolved; re-review and required full checks remain pending.
+  The `97fb6e79` focus completed **1/3 in 2m 51.30s**: lists passed,
+  rooms hit a delayed-response fixture problem and results failed on the
+  leftover public seat. The diagnosed test-only repair passed the 60 focus.
+  Following #89's lists, help and team box, this adds rooms, copied-army
+  battles, results/prizes and friends' tournaments. Done, profile and
+  top-level record corrections passed the `95e098f3` focused checks
+  **3/3 in 7m 50.29s**, with all 30 screenshots reviewed. Server **449 run
+  (440 passed, 9 existing skips)**, types and client **390/390** passed.
+  Its full run stopped intentionally after five passes and no observed
+  failure for room/player validation and close-during-refresh fixes;
+  `tournaments` was incomplete. Fresh full checks remain due.
+  The completed baseline at exact integrated code
+  `47db7f4446e957ab8d65ef8892799649abedf9a6`, including main #97,
+  completed **77/78 browser cases in 90m 46.59s**. All five tournament
+  cases, shared spells and team passed. The sole mummy-gem quest reload
+  failure did not recur in ordinary main/tested-code repeats. A forced
+  baseline diagnostic proves an existing save/read weakness, not that
+  full-run cause; the quest issue remains a separate follow-up.
+  Server **448 run: 439
+  passed, 9 existing skips**; types and **388 client tests passed**.
+  Tournament creation retains three real player neighbours
+  and its fees, now using Everybody's community list. The
+  [delivery record](docs/verification-92.md) preserves each completed
+  baseline and earlier check. No further tournament slice remains.
+  Classic choices stay hidden; routes and shared saves remain supported.
 - **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
@@ -145,13 +171,15 @@ next agent knows where to start.
     special units' rarer moves, a short list of battle rules (PARITY.md,
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
-    Arthur's lessons and the nests are built. Left: later tournament stages,
-    the long tail of windows, and making the new client the default.
+    Arthur's lessons, the nests and all tournament stages are built;
+    tournaments await latest review-correction checks before merge, with
+    the quest reload follow-up recorded below. Left: the long tail of
+    windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  47% are built in the new client, 40% partly (mostly special buildings
+  50% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  12% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  10% not yet (mostly windows). 50 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
@@ -249,7 +277,12 @@ between simultaneous runs.
 These focused checks help locate failures; the complete suite still
 needs coverage on the final code. Server tests and the client's type/unit
 checks can run alongside browser checks. Task 4 (shop details) can now
-build on the delivered card; task 7's next slice is the waiting room.
+build on the delivered card. Task 7's implementation is in #92; its
+pre-#95 75/75 pass and later interrupted runs are recorded, alongside
+the merged 77/78 result after #97 in
+[the delivery record](docs/verification-92.md). All tournament checks
+passed; the sole quest failure did not recur in ordinary repeats. Its
+save/read diagnostic and separate follow-up remain recorded.
 
 Sizes as in PARITY.md: **S** a few hours, **M** about a day, **L** more.
 Items marked *owner* wait on a decision from the owner (next section):
@@ -432,8 +465,8 @@ in 10m 28.77s**, **14:30:36–14:41:05 UTC** (190s, 239s, 96s and 97s).
 All **20 screenshots** and the clean server log were reviewed. Peak
 anonymous/shared/kernel memory was **1.30 GiB** (5.62 GiB including file
 cache); no memory events occurred. All 40 repaired hashes still match.
-Current server checks: **435 run, 426 passed, 9 existing skips**, 34.6s
-with startup; client types and **350 tests passed**, 13.1s together.
+Server checks for that art verification: **435 run, 426 passed,
+9 existing skips**, 34.6s with startup; client types and **350 tests passed**, 13.1s together.
 These **5/5 focused checks** verify the documentation merge alongside
 #93's full-suite record. **The art follow-up is closed. No further
 export, bucket operation, purge or owner-operated step remains.**
@@ -541,19 +574,215 @@ the original, play a town from the start in both clients on this computer
 and tell the owner it's ready to play. They test by playing, at that
 point, not before.
 
-### 7. The switch: tournaments in the new client (L, in slices) - [ ]
+### 7. The switch: tournaments in the new client (L, in slices) - [x]
+
+**Implementation complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest review verification pending.**
+The completion mark records the implemented scope and completed baseline;
+the later corrections still require checks. Merge and automatic deployment
+are not yet claimed in this handoff.
+The owner expanded the task to finish all remaining tournament parts.
+The separate `codex/tournament-complete` checkout implements waiting rooms,
+entry/fees, copied-army battles and recovery, results/rankings/prizes, and
+friends' creation/invitation/cancellation. See [CLIENT.md](CLIENT.md#tournaments)
+and the expanded original rule notes. It preserves the original commands,
+keeps the original routes and shared saves while preserving #93's hidden
+classic choices. It includes the other chats' delivered #87 and #93 work;
+the other chat completed the separate public-art audit in #91.
+
+**Latest correction focus at `60eba9ff`: 3/3.** Exact
+`60eba9ffc910a06b2375aa0afe54c1c641510ac0` passed rooms (224s), results
+(151s) and lists (122s) in **502.937054269s**, or **8m 22.94s**.
+Runtime matches 97; only the rooms test and documentation changed.
+All 31 archived images were reviewed with no visible defects: seven rooms,
+13 results and 11 lists. The server log
+has no tracebacks, HTTP 5xx or unhandled commands. All 22 review threads
+are addressed and resolved; the next re-review is pending. Fresh main
+remains `8f8c57ab`, already merged; #96 is still draft, at `0185b420`.
+Required full checks will use the next documentation commit, whose exact
+SHA/results are not yet known. No full-suite pass or merge is claimed.
+
+**Earlier correction focus at `97fb6e79`: 1/3.** Exact
+`97fb6e79a437e287b69a55a950629cc6ffe8f7e2` completed rooms/results/list
+in **171.295583827s**. Rooms failed in 18s at the new old-refresh assertion;
+its leftover public seat caused the results room-id failure in 35s.
+Lists passed in 108s, including different-type/team concurrent-entry
+reconciliation. Diagnostic tracing reproduced the fixture failure in
+19s (25.559556115s total): completing an older expired one-use route
+handler made Playwright continue the newer held response. The runtime
+ignored the old generation and correctly completed the new reply.
+Temporary tracing was removed. The test-only repair keeps each named
+handler until its own release, retaining assertions and deadlines.
+Its corrected old-runtime negative rerun detected the original reopen
+bug again (47s scenario, 53.6751s total); the 60 candidate focus passed,
+with full checks still pending. [The delivery record](docs/verification-92.md) keeps both failures
+and the distinct diagnostic evidence.
+
+**Completed correction focus at `95e098f3`:** Done captures the displayed
+room id, with atomic stale-id cleanup protection and legacy omitted-id compatibility.
+Profiles check their window/room/request and invalidate stale replies;
+weekly and reward top-level records reject arrays. The new browser
+regressions cover stale Done after a newer room finishes and three delayed real
+profile replies. Exact clean/pushed
+`95e098f386b2feaea7d911de03e2ad2556ef025e` passed the focused
+rooms/results/list run **3/3 in 7m 50.29s**. All 30 focus screenshots
+were reviewed with no visible defects. The stale-Done fixture refreshes
+the desktop immediately before phone acknowledgement to reset its
+ordinary minute clock; no runtime interval or assertion changed.
+Server **449 run: 440 passed, 9 existing skips** (30.4079s), types
+(1.8429s) and client **390/390** (7.2047s) passed.
+
+The full attempt stopped intentionally at **00:32:21 UTC on 17 October**
+after five passes and no observed failure: Menu, contact, recurring raids,
+weekly tournaments and rooms. `tournaments` was incomplete; 35 fresh
+partial-run screenshots in six folders were archived separately from the
+focus. Review covered 27 images from completed cases with no visible
+defects; eight incomplete-list images are not counted as reviewed
+evidence. The server log has no tracebacks, HTTP 5xx or unhandled commands.
+Further review found incomplete room/player validation and a pending refresh
+blocking reopen after close. The candidate validates nested room, player,
+match, ranking, weekly and reward data while preserving supported wire
+formats; its nine focused network tests and types passed. The window
+invalidates a closed refresh's busy state and ignores late completion.
+The 60 focus now verifies these corrections; full required checks remain
+pending for the next documentation commit.
+Source-supported healer retargeting, external Leave and recovery of the
+actual current enrollment after an ambiguous entry remain unchanged.
+PARITY's historical list already marks built features. No dedicated
+tournament goal exists among the shipped missions. Finished results
+remain until Done or the server's existing 30-day retention expires.
+
+**Completed pre-review verification after #97: 77/78.** Main
+`8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged at
+`36f618710ba9b4efceb9bd81b70d22bb5867fc09`. Preserve its contact links
+and Menu stacking, alongside #95's recurring raids, shared inspection
+and Everybody. The now-redundant countdown-hiding rule is removed; the
+real hit-target regression covers all four configured Menu destinations.
+Exact clean, pushed `47db7f4446e957ab8d65ef8892799649abedf9a6` ran
+all 78 cases: **77 passed, one failed in 90m 46.59s**. All five tournament
+checks, shared spells and team passed. Server **448 run: 439 passed,
+9 existing skips** (30.81s), types (1.97s) and client **388/388** (7.49s)
+passed. Menu/contact/raid focus passed **3/3 in 3m 30.75s** first.
+The archive has 256 screenshots in 73 populated folders; 79 images were
+reviewed, separate from the 14 integration-focus and four quest-focus
+images reviewed afterward. The complete local
+server log has no tracebacks, HTTP 5xx or unhandled commands.
+
+The sole failure is `scripted-bosses`: the immediate mummy-gem reload
+expected two and found three. Ordinary unchanged main passed 1/1
+(148s scenario, 153.1088s total), followed by two passing natural traces.
+Ordinary tested code at 47 also passed 1/1 (147s scenario, 152.2461s
+total), with runtime/art/tests unchanged and only docs dirty. The first
+baseline attempt was interrupted by an execution-service disconnect,
+with no completed-case result. The exact failure has not been naturally
+reproduced. Fourteen relevant source/test blobs are identical; traces show
+an aborted request can still reach the server before a retry. A corrected
+gate held all attempts until the reload read old progress and forced the
+assertion on unchanged main. Late commands reached the server, unlike
+the full-run failure. This establishes an existing save/read weakness,
+not a natural reproduction or the exact full-run cause. Do not infer
+lost saving from abort alone or report 78/78. No tournament regression
+was identified in that quest investigation. Documentation commit
+`e9765901d3bde23dc7764f2b50b629dd87d914b0` changed eight Markdown files
+only, leaving runtime, art and tests identical to exact tested `47db7f44`.
+That identity ends there; the later review corrections require new checks.
+
+**Separate quest follow-up:** investigate the intermittent immediate-reload
+save/read boundary. Capture the accepted tap, request/retry delivery,
+reload snapshot and final saved gem/activator state before choosing a
+repair. Keep the existing immediate-reload assertion and original quest
+rules. No runtime quest fix or diagnostic gate is shipped in #92.
+
+**Interrupted pre-#97 checks:** exact `cc218b7e9c046d83d915d5bd43a5048168356450`
+passed server **442 run: 433 passed, 9 existing skips** (31.05s), types
+(2.31s) and client **388/388** (8.06s). Menu/recurring-raids focus passed
+**2/2 in 1m 35.91s**, but the subsequent full attempt stopped after
+**19 passes and one real recurring-raids failure**, with classic incomplete.
+All five tournament checks passed. The archive has 101 screenshots in
+20 populated folders, 68 reviewed; the pre-interruption server log has
+no tracebacks, HTTP 5xx or unhandled commands. The runner's 77 precreated
+directories are not evidence of 77 completed cases.
+
+An exact saved-map replay reproduces the trapped raid on unchanged main
+`a3328da6`: the fixture's packed resources enclose the spawn. Moving one
+stone through the normal command opens an exit, retaining all 24 stone
+and 24 gold resources. The fixture now pins its first scheduled wave to
+that edge and checks the saved move; later waves stay random. All
+movement/recovery/reward assertions and the 15-second deadline remain.
+This test-only correction passed focus and the full-run raid case at 47.
+The
+[delivery record](docs/verification-92.md) preserves the replay evidence,
+Menu/dialog regressions and fixes, all partial timings and visual limits.
+
+**Completed pre-#95 verification:** exact code
+`5d220abfa562877ca346b205455f9554e15d497e`, including #94, passed
+**75/75 in 92m 46.83s**. Server **440 run: 431 passed, 9 existing skips**
+(32.22s); types passed (1.94s), client **385/385** (7.53s). The prior
+battle/background-controls check passed **2/2 in 5m 14.79s**. All 243
+screenshots across 75 scenario folders were archived. The full local log
+has no Python tracebacks, HTTP 5xx replies or unhandled commands; owners
+reviewed 47 tournament/spell and 14 building/control/Menu captures.
+[The delivery record](docs/verification-92.md) retains all 75 timings and
+visual limits. This run preceded #95 and does not verify its integration.
+
+**Completed pre-#94 verification:** exact code
+`67d2e02a563d6a2e4f06376cd5af960a1238fd23` passed **73/73 in 92m 32.50s**,
+including all five tournament checks and spells. Server **440 run: 431
+passed, 9 existing skips** (29.66s); types passed (1.87s), client **381/381**
+(7.18s). All 231 screenshots were archived; the full local server log has
+no Python tracebacks, HTTP 5xx replies or unhandled commands. Owners
+reviewed all 47 tournament/spell screenshots and 11 card/dock/Menu images.
+The review fixes preserve weekly saved-team eligibility, original score
+ordering and attempted-healing LIMIT, as explained in DECISIONS.md.
+
+Two earlier fixture failures remain recorded: the stopped `d3c8d64d`
+full attempt lacked funds for its separate welcome room; `a1f06b48` then
+passed 2/3 focused checks because that room occupied a shared public seat.
+Normal funding and leave/refund cleanup kept every return/fee assertion.
+The `77c31ed0` follow-up passed **3/3 in 5m 19.56s**; after waiting for
+team art before capture, `67d2e02a` passed results **1/1 in 2m 42.26s**
+before its full run. [The delivery record](docs/verification-92.md) retains
+these exact outcomes and every full-run timing.
+
+**Pre-review integrated verification:** exact tested code
+`49b5685e368efd6efeecdc348a2202a710715b2f` includes main `73998ffc`
+and its #93 tutorial, with #87's building card and Menu preserved. The
+server ran **440 tests: 431 passed, 9 existing skips** (31.48s); client
+types passed (2.33s), followed by **373/373 rule tests** (7.43s). The full
+browser suite passed **73/73 in 93m 28.38s**, including all five tournament
+checks and shared spells. Checks used local throwaway accounts and
+read-only public art; no production game state was changed. Main
+`d4bc1a72` brought #91's completed art-repair documentation, merged at
+`8dccab0d` without runtime, test or source-art changes from the tested
+code. Subsequent review fixes are outside that identity claim. See
+[the delivery record](docs/verification-92.md) for this run's timings,
+screenshot and log review, and the latest-main result and quest investigation.
+
+**Pre-#93 integration checks:** at
+`47471ff44126cad5707a601365beb904d70d23ad`, the server ran **434 tests:
+425 passed, 9 existing skips**; client types and **371 tests passed**.
+The complete browser run took **91m 52.03s**: **70 of 71 passed**,
+including all five tournament checks; `team` passed in **42 seconds**.
+Only `keys` failed, at its movement assertion after a fixed 400ms wait.
+This historical result preceded #93. The unchanged keyboard check also
+failed twice in three repeated runs on main `6c2fa146`, after an initial
+pass. It now waits for the intended camera movement, with a 30-second
+bound, retaining the click and saved-rotation assertions and adding
+no-zoom/no-vertical-movement checks. Three focused repeats passed in 38s,
+41s and 39s. The saved tournament return through #93's mandatory tutorial
+also passed its focused check in 109s. The pre-review 73-test run above
+includes both fixes and all of #93's tutorial work.
 
 **First slice completed in [#89](https://github.com/TamalAdebisi/socialemperors/pull/89):** the list, first-time help and saved team
-editor, with desktop/phone coverage (`CLIENT.md`, "Tournaments: list and
-team"). The owner's later playthrough request hides classic choices;
-unfinished stages say they are coming soon. Do not restore those links.
+editor, with desktop/phone coverage. At that first slice, entry and all
+later stages retained explicit classic links.
+The owner's later playthrough request hides those classic choices;
+#92 preserves that decision while completing the remaining stages.
 `docs/original/rules/tournaments.md` records the local source reading,
 including the different complex-unit checks in editing and weekly entry.
-Next slice: the four-seat waiting room and countdown; only then connect
-entry fees and joining from the new list. Keep `tournaments.py`'s existing
-command/service formats. This work does not own #87 or the art repair.
+The subsequent implementation follows the same `tournaments.py` command
+and service formats. This work does not own #87 or the art repair.
 
-**Verification, 16 October:** the full browser run at
+**First-slice verification, 16 October:** the full browser run at
 `ff7000597777d1b9437870cc7dce99a9e62440c0` took **76 minutes 41 seconds**:
 **61 of 65 passed**, including `tournaments`, `menus` and `team`.
 `construction` exceeded its nine-second interaction deadline;
@@ -583,18 +812,26 @@ The last box in ROADMAP.md's switch list. The server side is done
 (`tournaments.py`, with tests; ROADMAP.md, Phase 2, says how it works:
 public rooms of four filled by bots after 30 minutes, the weekly
 tournament against three bots, friends' tournaments, prizes). The Battle
-window's Tournament row now opens the new list (`client/src/ui/world.ts`),
-with unfinished entry and later stages marked as coming soon. The Flash
-windows are listed in
+window's Tournament row opens the integrated panel (`client/src/ui/world.ts`).
+The Flash windows are listed in
 `docs/original/index/windows.md` under `popups/tournament/` (about twenty
-classes). Suggested slices:
+classes). Scope covered by #89 and the complete #92 follow-up:
 
 1. The tournament list (everyday, weekly, your own), its help and the team box — built.
-2. The waiting room: four seats, the countdown, bots filling in.
+2. The waiting room: four seats, the countdown, bots filling in — built.
 3. The match: a battle against the other player's army, as the attack on a
-   player is played now (`attackPlay.ts`); no units are lost.
-4. Results, the ranking and prizes.
-5. Friends' tournaments: create, invite, call off.
+   player is played now (`attackPlay.ts`); no units are lost — built.
+4. Results, the ranking and prizes — built.
+5. Friends' tournaments: create, invite, call off — built.
+
+All five parts are implemented and their baseline checks passed at
+`47db7f44`. The `95e098f3` correction focus passed 3/3; its full attempt
+was interrupted for further fixes. The later 97 focus was 1/3 because of
+the test-fixture problem described above; the repair passed all three
+focused cases at 60. Required full checks remain due before merge. The
+separate quest reload follow-up remains recorded above.
+No further tournament slice remains. After delivery, the next queued work
+is task 4, the shop details. Task 6 remains on hold.
 
 ### 8. The switch: the long tail of windows (S to M each) - [ ]
 
@@ -709,7 +946,8 @@ If a task needs one of these, stop and say what's needed and why.
 - **Windows that open by themselves** (level ups, "New Mission!", gifts
   waiting) can cover what a test wants to press. The tests go on past a
   level-up window as a player would; copy how they do it.
-- **Phones:** the dock layout takes over below 720 pixels wide, or on a
+- **Phones:** the dock layout takes over at 720 pixels wide or narrower,
+  or on a
   screen held upright up to 1000 wide. Test new windows at a phone's size
   too (`newPlayer(..., { phone: true })`); things have overlapped the
   tools there before.

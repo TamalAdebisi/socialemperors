@@ -409,8 +409,9 @@ merging the two wait fixes with that separate failure documented.
   - [ ] Checked side by side against the Flash game, and played by the
         owner
 - [ ] **The switch** (steps 5 and 6): battles against players, the long
-      tail, the tutorial and polish. The new client becomes the default, with
-      the Flash game one tap away for a while.
+      tail, the tutorial and polish. Play now opens the new client and
+      classic choices are hidden at the owner's request. The old routes
+      and shared saves remain; full retirement is a later owner decision.
   - [x] Attacking players, the server: the report checked against what
         was killed, honour worked out, the attacker's losses by level, the
         count of attacks ([CLIENT.md](CLIENT.md#attacking-players))
@@ -431,11 +432,15 @@ merging the two wait fixes with that separate failure documented.
   - [x] Survival in the new client: the window with its lives and arenas,
         the army of 30, the waves and bosses round the relic, the results
         ([CLIENT.md](CLIENT.md#survival))
-  - [ ] Tournaments in the new client: list, first-time help and team
-        selection built ([CLIENT.md](CLIENT.md#tournaments-list-and-team));
-        waiting rooms, matches, results/prizes and friends' creation later.
-        Classic choices are hidden at the owner's request; unfinished stages
-        say they are coming soon.
+  - [x] Tournaments in the new client: list, first-time help, team
+        selection, entry and waiting rooms; three independent matches
+        with copied armies; results, weekly rankings and server-paid
+        prizes; friends' creation, invitation notice and cancellation
+        ([CLIENT.md](CLIENT.md#tournaments); implemented in #89 and #92,
+        [60 focus 3/3; required full checks pending](docs/verification-92.md)).
+        Existing rooms and unfinished
+        matches reopen from the server save. Classic choices stay hidden at
+        the owner's request; their routes and shared saves remain.
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

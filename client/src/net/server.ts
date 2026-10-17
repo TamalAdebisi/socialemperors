@@ -5,7 +5,7 @@
 import type { GameConfig } from "../rules/config.ts";
 import type { PlayerInfo } from "../rules/town.ts";
 import type { Continent } from "../rules/world.ts";
-import type { TournamentInfo } from "../rules/tournaments.ts";
+import type { TournamentEntryReply, TournamentInfo, TournamentMutationReply } from "../rules/tournaments.ts";
 
 /** What the game page (templates/client.html) tells the client. */
 export interface PageSettings {
@@ -51,15 +51,68 @@ export class GameServer {
     return this.post("get_game_config.php", {});
   }
 
-  /** The same service envelope as Flash's ServiceManager; list only. */
+  /** The same service envelope as Flash's ServiceManager. */
   async tournamentInfo(): Promise<TournamentInfo> {
-    const reply = await this.post<{ data: TournamentInfo }>("tournaments/get_tournament_info.php", {
-      data: "0".repeat(64) + ";" + JSON.stringify({ user_id: this.settings.userId }),
-    });
-    if (!reply.data || !reply.data.tournament_weekly || !reply.data.tournament_reward_id || !Array.isArray(reply.data.tournament_friends)) {
-      throw new Error("The tournament list was not returned.");
+    const data = await this.tournamentService("get_tournament_info");
+    assertTournamentInfo(data);
+    return data;
+  }
+
+  joinTournament(type: string, category: number, team: number[], roomId = ""): Promise<TournamentEntryReply> {
+    return this.tournamentEntry("join_tournament", { tournament_type_id: type, category, team,
+      tournament_id: roomId, flashSubResources: 1 });
+  }
+
+  createTournament(type: string, team: number[], friendIds: string[]): Promise<TournamentEntryReply> {
+    return this.tournamentEntry("create_tournament", { tournament_type_id: type, team,
+      usersFriends: friendIds, flashSubResources: 1 });
+  }
+
+  leaveTournament(roomId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("leave_tournament", { tournament_id: roomId });
+  }
+
+  cancelTournament(roomId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("cancel_tournament", { tournament_id: roomId });
+  }
+
+  startTournamentMatch(roomId: string, victimId: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("start_tournament_match", { victim_id: victimId, tournament_id: roomId });
+  }
+
+  finishTournamentMatch(roomId: string, victimId: string, won: boolean, points: number): Promise<TournamentMutationReply> {
+    if (!Number.isFinite(points)) throw new Error("The tournament score is not a number.");
+    return this.tournamentMutation("finish_tournament_match", { victim_id: victimId, attacker_won: won,
+      attacker_points: points.toFixed(2), victim_points: 0, tournament_id: roomId });
+  }
+
+  cleanTournament(roomId?: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("clean_tournament", roomId === undefined ? {} : { tournament_id: roomId });
+  }
+
+  private async tournamentEntry(service: string, params: Record<string, unknown>): Promise<TournamentEntryReply> {
+    const data = await this.tournamentService(service, params);
+    if (data.result === "OK") assertTournamentInfo(data);
+    else if (!["NOK", "NOTEAM", "NOFRIENDS"].includes(String(data.result))) {
+      throw new Error("The tournament entry reply was not returned.");
     }
-    return reply.data;
+    return data as unknown as TournamentEntryReply;
+  }
+
+  private async tournamentMutation(service: string, params: Record<string, unknown> = {}): Promise<TournamentMutationReply> {
+    const data = await this.tournamentService(service, params);
+    if (data.result !== "OK") throw new Error("The tournament action was not confirmed.");
+    return data as unknown as TournamentMutationReply;
+  }
+
+  private async tournamentService(service: string, params: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    const reply = await this.post<{ data?: unknown }>(`tournaments/${service}.php`, {
+      data: "0".repeat(64) + ";" + JSON.stringify({ user_id: this.settings.userId, ...params }),
+    });
+    if (!reply.data || typeof reply.data !== "object" || Array.isArray(reply.data)) {
+      throw new Error("The tournament reply was not returned.");
+    }
+    return reply.data as Record<string, unknown>;
   }
 
   /**
@@ -119,4 +172,84 @@ export class GameServer {
     }
     return (await response.json()) as T;
   }
+}
+
+/** Do not turn a malformed response into an empty list or a departed room. */
+function assertTournamentInfo(data: Record<string, unknown>): asserts data is Record<string, unknown> & TournamentInfo {
+  if (!isRecord(data.tournament_weekly) || !Object.values(data.tournament_weekly).every((state) =>
+    isRecord(state) && isFlag(state.open) && isFlag(state.full) && isNumeric(state.timeLeft)) ||
+    !isRecord(data.tournament_reward_id) || !Object.values(data.tournament_reward_id).every(isIndex) ||
+    !Array.isArray(data.tournament_friends) || !data.tournament_friends.every((card) =>
+      isRecord(card) && isId(card.tournament_id) && isId(card.tournament_type_id) && typeof card.owner === "string" &&
+      (card.owner_id === undefined || typeof card.owner_id === "string") && isIndex(card.reward_id)) ||
+    (data.tournament !== null && !isTournamentRoom(data.tournament))) {
+    throw new Error("The tournament list was not returned.");
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isCount(value: unknown): value is number {
+  return isNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+/** Only these original wire fields allow numbers encoded as strings. */
+function isNumeric(value: unknown): value is number | string {
+  return isNumber(value) || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)));
+}
+
+function isIndex(value: unknown): boolean {
+  return isNumeric(value) && Number.isInteger(Number(value)) && Number(value) >= 0;
+}
+
+function isFlag(value: unknown): boolean {
+  return isNumeric(value) && (Number(value) === 0 || Number(value) === 1);
+}
+
+function isDate(value: unknown): boolean {
+  return value === null || isCount(value);
+}
+
+function isTournamentRoom(room: unknown): boolean {
+  return isRecord(room) && isId(room.tournament_id) && isId(room.tournament_type_id) && isIndex(room.reward_id) &&
+    isFlag(room.private) && typeof room.owner_id === "string" && typeof room.owner === "string" &&
+    isCount(room.point_type) && isDate(room.date_ready) && isDate(room.date_finished) && typeof room.match_playing === "boolean" &&
+    Array.isArray(room.players) && room.players.every(isTournamentPlayer) &&
+    (room.winner_id === undefined || room.winner_id === null || isId(room.winner_id)) &&
+    (room.ranking === undefined || isTournamentRanking(room.ranking));
+}
+
+function isTournamentPlayer(player: unknown): boolean {
+  return isRecord(player) && isId(player.user_id) && typeof player.user_name === "string" && isCount(player.level) &&
+    typeof player.country === "string" && isNumber(player.abandonned) && isFlag(player.abandonned) &&
+    Array.isArray(player.team) && player.team.every(isCount) &&
+    Array.isArray(player.matches) && player.matches.every(isTournamentMatch);
+}
+
+function isTournamentMatch(match: unknown): boolean {
+  return isRecord(match) && isId(match.attacker_id) && isId(match.victim_id) && typeof match.finished === "boolean" &&
+    typeof match.attacker_won === "boolean" && isNumber(match.attacker_points) && match.attacker_points >= 0 &&
+    isDate(match.date_started) && isDate(match.date_finished);
+}
+
+function isTournamentRanking(ranking: unknown): boolean {
+  return isRecord(ranking) && isCount(ranking.total_user) && isRecord(ranking.top) &&
+    Object.entries(ranking.top).every(([rank, row]) => isIndex(rank) && Number(rank) > 0 && isTournamentRankRow(row)) &&
+    isTournamentRankRow(ranking.user) &&
+    isRecord(ranking.user) && isCount(ranking.user.rank) && ranking.user.rank > 0;
+}
+
+function isTournamentRankRow(row: unknown): boolean {
+  return isRecord(row) && isId(row.user_id) && typeof row.user_name === "string" &&
+    isNumber(row.points) && row.points >= 0 && isCount(row.time) && isCount(row.matches);
 }

@@ -654,7 +654,8 @@ real town; a monitor on the left, a phone on the right):
 
 - The rail and the dock are one row of buttons; the style sheet stands it
   up or lays it down, and shows Quests and Battle on the rail, World in
-  the dock. The phone arrangement takes over below 720 pixels wide, or on
+  the dock. The phone arrangement takes over at 720 pixels wide or
+  narrower, or on
   any screen held upright up to 1000 wide (so a tablet held upright gets
   the dock); `NARROW` in `ui/panel.ts` and the last rule of `style.css`
   say the same. On a short screen (a phone held sideways) the rail's
@@ -1939,8 +1940,9 @@ few kinds with its numbers; our notes in words are in
   including what is still missing, are `beats` in `rules/specials.json`
   (`rules/specials-beats.test.ts` plays every one).
 - **LIMIT:** the gods, colossi, titans and the upgraded dragons fill a bar
-  from the damage they deal (healers from the healing they do), at most
-  once a second, doubled beside a Limit Wizard of their side; full at
+  from the damage they deal (healers from attempted healing, including
+  a whole patient), at most once a second, doubled beside a Limit Wizard
+  of their side; full at
   2,000 (500 for the Dragon Hunters). Full, the LIMIT button lights up:
   50 lightning bolts at random enemies in reach, 50 healing beams on
   their side's hurt, or a smash that hits and throws every enemy around,
@@ -2383,18 +2385,26 @@ seconds, with a 30-second limit. Game time can run behind real time when
 Chromium draws without a graphics card; the saved stand must still be at
 least three seconds long.
 
-### Tournaments: list and team
+### Tournaments
 
-The first tournament slice opens from Battle (World on a phone), from
-level 15 and while `TOURNAMENT_ACTIVATED` is on. `rules/tournaments.ts`
-keeps the list and selection rules; `ui/tournaments.ts` draws the panel
-and phone sheet, and `main.ts` connects the town, saves and server.
+Tournaments open from Battle (World on a phone), from level 15 and while
+`TOURNAMENT_ACTIVATED` is on. The list, team editor, waiting room, three
+matches, results and friends' rooms all work in the new client. Classic
+choices are hidden at the owner's request; the original routes and
+compatibility with the same saved rooms and teams remain.
+
+`rules/tournaments.ts` keeps selection, entry and result rules;
+`ui/tournaments.ts` owns the panel and phone sheet, with
+`ui/tournamentResults.ts` for matches, rankings and prizes. `main.ts`
+connects the town and command queue; `net/server.ts` uses the existing
+`tournaments/<service>.php` request envelope.
 
 - **Everyday, Weekly and Your own** show the game's tournament pictures,
   entry costs, the server's chosen everyday/friends' prizes, weekly
   availability/countdown and friends' rooms. Already-entered weekly
   tournaments are hidden, as in Flash. Refresh asks the server again;
-  a failed request offers Retry and the classic link.
+  a failed request preserves the last room and offers another attempt.
+  Weekly prize information lists the ten places before entry.
 - **Help** uses the original words and current banned-unit names. It
   opens the first time, recorded as `set_help_map ["tournamentHelp"]`.
 - **Your Team** has twenty places. The editor offers owned units from
@@ -2404,27 +2414,133 @@ and phone sheet, and `main.ts` connects the town, saves and server.
   Reset clears the selection. Save checks current ownership and the
   configured dragon/god/colossus cap. The shared editor keeps that cap
   even for a player planning to enter the weekly tournament, as Flash
-  did; the weekly entry exception remains in the classic entry flow.
+  did. Weekly entry skips the public card's ownership/complex-unit
+  recheck. Opening the list restores eligible copies then; the original
+  weekly exception still applies if ownership changes before entry.
 - **Same save and commands:** opening the list prunes unavailable saved
   units and silently saves the remaining team, as the original does.
   Editing saves `set_attack_team ["tournament", JSON-string-of-20-ids]`,
   with zeros for empty places. It never changes `teams.quest` or removes
-  owned units. Help and teams use the command queue; the list uses the
-  original `tournaments/get_tournament_info.php` service envelope.
-- **Later slices remain playable in classic:** entry, waiting rooms,
-  matches, results/ranking/prize collection, and creating/inviting
-  friends. A current tournament opens a status and Continue link without
-  editing its team, leaving it or clearing its results. Classic links
-  flush pending commands before navigating. There are no fee or room
-  mutations in this slice, and the classic-only goal count is unchanged.
+  owned units. An enrolled room displays its frozen team. Closing a
+  panel leaves enrollment and results intact; opening it rereads the
+  saved state. Ownership and the saved selection refresh together, so
+  units acquired in another tab are not pruned using an old town view.
+  Editing and saving use fresh ownership; entry refreshes balances and
+  choices, then applies its public or weekly rules. Navigation to a match
+  flushes pending commands first. Returning waits for lessons, any pending
+  gifts read and welcome dialogs before reopening the room once.
+- **Entry and waiting:** empty teams are refused, short teams ask first;
+  a full weekly team entering in the last ten minutes also gets a
+  warning. Public rooms match five level brackets. The service takes
+  the fee once; `tournament_substract_resources` and
+  `tournament_refund_resources` retain their original bookkeeping
+  formats. Authoritative money is reloaded after a service changes it.
+  Four seats show the entrants, with the original bot portraits and
+  empty-place artwork. The minute countdown refreshes the room; it is
+  not a bot-arrival timer. Public rooms fill empty seats after thirty
+  minutes, friends' rooms after a day, when the server next checks them.
+  Start opens the matches when all seats are ready. Leaving before
+  readiness refunds the fee; leaving afterward abandons the room
+  without a refund. Stale leave/cancel requests cannot affect a newer
+  enrollment.
+- **Friends' rooms:** Your own offers the seven public types for
+  creation. The server requires three real player neighbours from the
+  community list. Following #95, those are other registered accounts'
+  eligible empires in Everybody, without accepted friend requests or
+  the former neighbour cap. The waiting host can cancel, refunding every
+  entrant, or open Invite. Invite explains where neighbours find the
+  room and links to Everybody at `/friends`, following the classic page's
+  existing notice adaptation. No Facebook message or separate invitation
+  record is created. After readiness, the host can leave but cannot cancel the
+  other players' matches.
 
-`e2e/tests/tournaments.mjs` checks desktop and phone, the real saved help
-and teams, counts from storage/warehouse/buildings, caps and exclusions,
-retry, the classic link, an existing server room and weekly reuse. Rule
-and protocol tests sit beside their modules. `tests/test_tournaments.py`
-also checks that browsing and saving never charge or enter a room.
-The originals were read locally; behavioral notes are in
-`docs/original/rules/tournaments.md`.
+`tournamentPlay.ts` loads the configured arena and two copies of the
+enrolled armies. `rules/tournamentBattle.ts` places them, controls the
+opponent and computes the original score over the existing battle and
+special-move engine. Each entrant fights the other three armies
+independently; the other player need not be online. Home units, storage,
+the graveyard and the saved team do not suffer battle losses. As in
+#94's other battles, the shared `GameLoop` advances simulation while a tab
+is hidden; explicit Pause still stops it. This changes no tournament
+army, scoring, spell or command rule.
+
+- **The match:** the original loading/start step, two army life bars,
+  unit counts, normal orders, selection, speed and special moves. The
+  defender forms up at its slowest member's speed; weekly defenders
+  charge after ten seconds. Public defenders have no timed charge,
+  but their normal defensive behavior can react to an approaching foe.
+  Marching speeds return to normal on the first hit. The four collective
+  healers initially follow a nonhealer but can switch to an injured
+  friendly healer after damage; Engineers instead use their ordinary
+  friendly siege-repair behavior. Healers on both sides retain whole
+  patients; attempted healing still builds LIMIT, without a `+0` popup
+  when no health is restored. The armies stay in the
+  middle of the arena. Crack and Black Hole remain visible but unavailable;
+  other learnt spells use normal mana and `use_magic`. Battle controls
+  use the shared HUD's phone layout at 720 pixels wide or narrower, or
+  on portrait screens up to 1000 pixels wide.
+- **The score:** current rooms use accumulated damage, including damage
+  healed later and overkill, to the original armies. Summoned units do
+  not enter their life totals or completion checks. Older point-type
+  zero uses the original slot-array lengths. The result waits three
+  seconds, sends the original `finish_tournament_match` fields and
+  displays the original victory/defeat picture. Surrender asks first
+  and records a zero-point loss. There is no `end_attack`, casualty
+  report or battle-gold payment.
+- **Coming back:** an unfinished match restarts from the enrolled armies,
+  as the original did; health and positions are not saved. The server's
+  one-hour unfinished-match timeout still applies. Once queued spell
+  and battle commands are saved, a completed result awaiting confirmation
+  stays available for Retry, including a reload in the same tab. If
+  those commands fail, the client requires a reload from saved state
+  without submitting the local result. The server's recorded result always wins. The client
+  does not announce a saved result until it has read that result back.
+
+Matches and Results remain available until Done or the server's existing
+30-day finished-room retention expires. Public/friends' results
+show all four players' scores and times, including departed entrants in
+score/time order. A departed high scorer can appear first but cannot win;
+the departure label and server's `winner_id` distinguish these cases.
+Weekly results show the top ten and the player's own rank. The server
+also resolves exact public ties through `winner_id`, because its returned
+player list is viewer-first.
+Weekly prizes follow the frozen rank at that player's completion, even
+if the live table changes later. The server has already paid any prize:
+gold/cash update the balances and unit prizes appear in Storage. Done
+only sends `clean_tournament` with the displayed room id and refreshes
+home data. A supplied stale id cannot acknowledge a newer room; original
+calls without an id remain valid. Repeated refresh,
+result submission or acknowledgement cannot award the prize twice.
+
+Browser coverage is split across `e2e/tests/tournaments.mjs` and the
+`tournament-*` tests, using local throwaway accounts and checking screens
+against saved rooms, matches and resources. Rule and protocol tests sit
+beside their modules; `tests/test_tournaments.py` covers the server's
+fees, state transitions, prizes and idempotency. The pre-#95 suite,
+including #94 and all five tournament checks, passed all 75 cases.
+Exact integrated `47db7f44`, including #97, ran all 78 browser cases:
+77 passed, including all five tournament checks and shared spells.
+The sole mummy-gem quest reload failure did not recur on ordinary main
+or tested-code repeats. A controlled baseline diagnostic exposes an
+existing save/read ordering weakness but does not establish the exact
+full-run cause. That quest issue remains a separate follow-up; tournaments
+are implemented. Done, profile reply ordering and top-level weekly/reward
+record corrections passed the `95e098f3` focused checks 3/3 in 7m 50.29s,
+along with server/types and 390 client tests. Its full run was intentionally
+stopped after five passes and no observed failure for two further fixes:
+room/player validation and reopening during a pending refresh. Those
+corrections at `97fb6e79` passed lists but hit a delayed-response test-helper
+fault in rooms and a downstream results fixture failure: focus 1/3 in
+2m 51.30s. The test-only correction at `60eba9ff` then passed all three
+focused cases in 8m 22.94s, with runtime unchanged from 97. Required full
+checks remain pending.
+A profile reply belongs to its window,
+room and latest selection; rendering another view or closing the profile
+invalidates it. See
+[the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in
+`docs/original/rules/tournaments.md`. No dedicated tournament goal exists
+in the shipped missions, so the count of unfinished goals does not change;
+ordinary resource-spending progress still receives successful entry fees.
 
 ### Making the art look better
 

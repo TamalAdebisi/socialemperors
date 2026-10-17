@@ -168,6 +168,64 @@ test("a healer heals the most hurt of its side in reach", () => {
   assert.ok(hurt.life > 10);
 });
 
+test("healing beats reject hostile targets before the next mind update", () => {
+  for (const id of [502, 570, 590, 866, 886]) {
+    for (const side of [SELF, ENEMY] as const) {
+      const b = battle();
+      const healer = b.add(item({ id, subcategory: 72, attack: 25, attackRange: 5, attackInterval: 15 }), 50, 50, side,
+        { offset: 0 });
+      const opponent = b.add(item({ subcategory: 81, attack: 0, velocity: 0 }), 51, 50, side === SELF ? ENEMY : SELF);
+      opponent.life = 10;
+      b.attackWith([healer], opponent);
+      run(b, 15);  // An attack beat arrives before the ordinary 61-frame mind check.
+      assert.equal(opponent.life, 10, `healer ${id} cannot heal the other side`);
+      assert.equal(healer.target, null);
+      assert.equal(b.takeEvents().some((event) => event.kind === "hit" && event.heal), false);
+    }
+  }
+});
+
+test("an engineer rejects a friendly soldier and repairs only an injured friendly siege engine", () => {
+  const b = battle();
+  const engineer = b.add(item({ id: 570, subcategory: 72, attack: 25, attackRange: 5, attackInterval: 15 }), 50, 50, SELF,
+    { offset: 0 });
+  const soldier = b.add(item({ attack: 0, velocity: 0 }), 51, 50, SELF);
+  const siege = b.add(item({ subcategory: 81, attack: 0, velocity: 0 }), 52, 50, SELF);
+  soldier.life = 5;
+  siege.life = 20;
+  engineer.target = soldier;
+  engineer.attacking = true;
+  run(b, 15);
+  assert.equal(soldier.life, 5);
+  assert.equal(engineer.target, null);
+  run(b, 60);
+  assert.equal(siege.life, siege.maxLife, "the ordinary mind finds and repairs its siege patient");
+  assert.equal(soldier.life, 5, "the more injured ordinary soldier is not a repair target");
+});
+
+test("healing caps health and visible events, but LIMIT callbacks count attempted healing", () => {
+  const b = battle();
+  const healer = b.add(HEALER, 50, 50, SELF);
+  const patient = b.add(SWORDSMAN, 51, 50, SELF);
+  const attempted: number[] = [];
+  b.onDealt = (by, amount, healing) => {
+    assert.equal(by, healer);
+    assert.equal(healing, true);
+    attempted.push(amount);
+  };
+  patient.life -= 10;
+  b.heal(patient, 0, healer);
+  b.heal(patient, -5, healer);
+  b.heal(patient, 0.1, healer); // A fractional amount that rounds to no healing.
+  b.heal(patient, 25, healer);
+  b.heal(patient, 25, healer); // The retained patient is already whole.
+  assert.equal(patient.life, patient.maxLife);
+  assert.deepEqual(attempted, [25, 25], "overhealing retains the original attempted amount for LIMIT");
+  const events = b.takeEvents();
+  assert.equal(events.length, 1);
+  assert.ok(events[0].kind === "hit" && events[0].heal && events[0].amount === 10);
+});
+
 test("a destroyed building frees its ground and is gone at once; a dead unit lies 5 seconds", () => {
   const b = battle();
   const house = b.add(HOUSE, 50, 50, ENEMY);

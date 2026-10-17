@@ -1,0 +1,65 @@
+.tournament-battle-hud {
+  gap: 12px;
+  align-items: center;
+}
+.tournament-battle-armies {
+  display: flex;
+  flex: 1 1 440px;
+  gap: 10px;
+  max-width: 600px;
+  min-width: 0;
+}
+.tournament-battle-army {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 10px;
+  border: 1px solid #b8a480;
+  border-radius: 6px;
+  background: #f4e6c7;
+  color: #302213;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.tournament-battle-army strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tournament-battle-army > span { font-size: 12px; }
+.tournament-battle-life {
+  display: block;
+  overflow: hidden;
+  height: 7px;
+  border: 1px solid #6b5038;
+  border-radius: 4px;
+  background: #503e32;
+}
+.tournament-battle-life > span {
+  display: block;
+  height: 100%;
+  background: #d32a24;
+  transition: width .2s;
+}
+.tournament-battle-army.enemy .tournament-battle-life > span { background: #3453da; }
+.tournament-battle-clock { padding: 6px 9px; }
+.tournament-match-result > img { width: min(100%, 300px); display: block; margin: 0 auto; border-radius: 8px; }
+.tournament-match-result [role="status"] { min-height: 2em; }
+.spell-button:disabled { opacity: .45; cursor: not-allowed; }
+.tournament-battle-cover { position: fixed; inset: 0; z-index: 4; background: #0005; }
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1000px) {
+  .tournament-battle-hud { flex-direction: column; gap: 5px; padding: 6px; }
+  .tournament-battle-armies { flex-basis: auto; width: 100%; max-width: none; gap: 6px; }
+  /* Town controls use display:contents on phones. A battle needs one compact
+     controls row below the two life bars, not each control on its own row. */
+  .tournament-battle-hud .hud-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; width: 100%; }
+  .tournament-battle-army { padding: 4px 8px; line-height: 1.15; }
+  .tournament-battle-army strong { font-size: 13px; }
+  .tournament-battle-hud .button.small { min-height: 44px; }
+  .tournament-battle-hud .hud-sound { min-width: 44px; min-height: 44px; }
+  .tournament-match-result > img { max-height: 25vh; object-fit: contain; }
+}
