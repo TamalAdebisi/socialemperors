@@ -503,6 +503,37 @@ exact image comparison and memory deltas are under ignored `work/idle/`.
 The final runtime is `947c30a22ec45e0990520fff84ad8b99170ba756`; only delivery
 documentation follows these checks before any later integration.
 
+## Integration with tournament PR #92
+
+PR #92 requested to finish its own verification and merge first. While
+that run continued, the completed idle repair at `f9ed9060` was combined
+locally with its exact candidate `f798788b6529388f918098989b8f4997eab553c8`.
+The integration commit is `46f61c94b0770e2a3af80db8d47ddd319d47bfbb`.
+It is not published or merged ahead of #92. The only merge conflicts were
+in AGENTS.md and DECISIONS.md; both sets of guidance/results were preserved.
+No structure, art-loading, input-camera or idle-gallery runtime was changed
+by that integration. The tournament branch changes shared battle controls,
+healing rules, spell windows and town entry, and adds four browser cases.
+
+The combined type check passed, all **404/404 client tests passed in
+15.212s**, the build passed (1.03s bundling), and the server ran **449 tests:
+440 passed, nine existing skips, in 40.942s**. The full **79-case Chromium
+run** and subsequent affected WebKit checks are in progress on this exact
+combined build. Their results will be recorded before final delivery; no
+pending case is counted as a pass. The latest main and #92's final runtime
+must be compared before this local integration is published.
+
+The in-progress integrated run retains a `collect` failure at 38s: the
+working-farm selection at line 37 found an empty action bar. Its screenshot
+shows the level-up empire-name prompt, and the server log records that
+click collecting 15 food and one experience from the farm at (42,53).
+The unchanged fixture starts its short farm production interval before
+reloading, taking screenshots and selecting/starting the mine. By the time
+it tries to inspect a working farm, the farm is ready and the click correctly
+collects instead. A fixture-order correction and focused verification remain
+due after the active suites finish. No old-main reproduction is claimed from
+this source/trace diagnosis, and the failed run will remain a failure.
+
 ## Earlier runs retained
 
 - Initial focused Chromium: 4/5. The gallery's final control incorrectly
