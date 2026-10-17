@@ -18,7 +18,7 @@ The browser fixture uses the original admin wait command between
 independent stages, avoiding a two-day real-time test. It asserts that
 the ordinary window exposes no wait shortcut. Remaining historical
 progress is prepared through existing commands; the screen/save checks
-cover mana, one walking sacrifice, the Heart in both storage boxes, the
+cover mana, one walking sacrifice, a phone Heart action with both storage boxes, the
 final wait, and claim/reset.
 The unit test pays all twelve offerings in reverse order and verifies
 every sacrificed dragon and exact payment.
