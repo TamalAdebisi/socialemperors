@@ -37,8 +37,10 @@ next agent knows where to start.
   entry/window/step/helper reading are in `docs/original/rules/temple.md`.
   The ordinary 48-hour wait is preserved: its cash skip is admin-only in
   the original. All 410 client checks and types pass; existing temple
-  server replay passes 7/7. Browser verification is pending the shared
-  machine slot; `docs/verification-temple.md` records exact scope and limits.
+  server replay passes 7/7. Exact clean `9bfa2581` passes the focused
+  Chromium desktop/phone screen/save check 1/1 in 199 seconds. All ten
+  fresh screenshots were reviewed and the server log is clean.
+  `docs/verification-temple.md` records exact scope, archive and limits.
   The root coordinating chat owns integration, full checks and delivery.
 
 - **Dragon riders and taming implemented, merge pending:** native picker,
