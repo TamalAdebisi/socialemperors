@@ -30,6 +30,18 @@ export default async function shopDetails({newPlayer}) {
   },null,{timeout:30000});
   await player.shot(phone?"phone-training":"desktop-training");
   await details.getByRole("button",{name:"Close details",exact:true}).click();
+  await panel.locator(".shop-categories").getByRole("button",{name:"Defense",exact:true}).click();
+  await card("Castle I").getByRole("button",{name:"Details: Castle I",exact:true}).click();
+  details=page.getByRole("region",{name:"Details: Castle I",exact:true});
+  assert.equal(await details.locator("[data-stat]").count(),10,"castle and trained-unit stats are both readable");
+  await page.waitForFunction(()=>{
+   const canvas=document.querySelector(".shop-details canvas");
+   return canvas?.width && canvas.getContext("2d").getImageData(0,0,canvas.width,canvas.height).data.some((v,i)=>i%4===3&&v>0);
+  },null,{timeout:30000});
+  const bounds=await details.boundingBox(),viewport=page.viewportSize();
+  assert.ok(bounds.y>=12 && bounds.y+bounds.height<=viewport.height-12,`tall details stay inside the viewport: ${JSON.stringify(bounds)}`);
+  await player.shot(phone?"phone-castle":"desktop-castle");
+  await details.getByRole("button",{name:"Close details",exact:true}).click();
   await panel.locator(".shop-categories").getByRole("button",{name:"New",exact:true}).click();
   assert.ok(await panel.locator(".shop-new").count()>0,"original New badges are present");
   await player.shot(phone?"phone-new":"desktop-new");

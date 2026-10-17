@@ -350,7 +350,7 @@ export class ShopWindow {
     this.detail.replaceChildren(close,content);
     const rect=card.getBoundingClientRect();
     this.detail.style.left=`${Math.max(12,rect.left-312)}px`;
-    this.detail.style.top=`${Math.max(12,Math.min(rect.top,innerHeight-380))}px`;
+    this.detail.style.top=`${Math.max(12,Math.min(rect.top,innerHeight-this.detail.offsetHeight-12))}px`;
     for(const button of this.list.querySelectorAll<HTMLElement>(".shop-details-button"))button.setAttribute("aria-expanded",String(pinned&&Number(button.dataset.item)===item.id));
   }
   private leaveDetails():void {
