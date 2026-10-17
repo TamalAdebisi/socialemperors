@@ -1,8 +1,8 @@
 # Menus and progression delivery record
 
-This record covers the six feature slices in #99 and #105–109. Required verification and all six feature merges are complete. The
-collections-only record remains separate below.
-The collections-only record is `docs/verification-99.md` in #99.
+This record covers the six feature slices in #99 and #105–109. Required
+verification and all six feature merges are complete. The collections-only
+record is `docs/verification-99.md` in #99.
 
 ## Scope
 
@@ -321,3 +321,8 @@ Standing holds remain: manual Beta 1 playthrough, offers/mystery packs,
 Daily News, in-game chat, auto-collect and classic retirement. Classic
 choices stay hidden while routes and shared saves remain. Other special
 buildings and combat kill-drop triggers stay with the other chats.
+
+The final stable drop-interface handoff was posted to the combat thread in
+[#98 comment 6233641865](https://github.com/TamalAdebisi/socialemperors/pull/98#issuecomment-6233641865)
+after all six feature merges. It preserves single-increment bookkeeping;
+no reply or completed combat kill-drop implementation is claimed.
