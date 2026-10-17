@@ -679,7 +679,10 @@ so.
 Read through GUI/InfoButtonOver, GUI/ItemButtonLarge, GUI/Tab,
 GuiManager.setMenu, GUI/SubCategory and the corresponding interface
 symbols. `rules/shopDetails.ts` and `ui/shopDetails.ts` now implement the
-per-kind facts; `ui/shop.ts` exposes hover and pinned tap/keyboard details.
+per-kind facts; `ui/shop.ts` opens details only through the explicit Details
+button's click, tap or keyboard activation, at every width. Hover and focus
+leave details closed. The short visible label fits narrow cards while its
+accessible name retains the item name, including in Storage.
 Original category symbols use GuiManager's category-to-tab mapping,
 without the embedded placeholder caption. New/limited badges use original
 art and local-calendar expiry, preserving item availability. Early cash

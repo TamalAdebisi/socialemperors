@@ -143,10 +143,12 @@ The card's look is the owner's pick: mockup A, the original's panel
       gift is waiting") are shown once, then cleared. Ours ignored them,
       so they piled up for the classic game. S
 - [x] **Shop:** each item's production, capacity, trained-unit numbers,
-      original category pictures and New/limited badges. Hover or use
-      Details by tap/keyboard, including locked cards. Early cash
-      unlocking stays disabled, matching the original; no confirmation
-      for that inactive action is added.
+      original category pictures and New/limited badges. Click, tap or
+      activate Details by keyboard at every width, including locked cards
+      and Storage; hover and focus leave it closed. The short visible
+      label fits narrow cards, with the item named for screen readers.
+      Early cash unlocking stays disabled, matching the original; no
+      confirmation for that inactive action is added.
 - [x] **Goals:** a window per goal with its picture, text and a help arrow;
       "New mission!" notices. M
 - [x] **Gifts:** the gifts window (taking gifts in, giving from storage,

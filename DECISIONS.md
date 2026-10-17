@@ -22,6 +22,24 @@ AGENTS.md now say not to write the addresses back. Git history and old
 pull requests still have them: only rewriting history, or detaching the
 fork and making it private, would remove those.
 
+## 17 October 2026: open shop and storage details explicitly
+
+The owner asked to stop item details opening as the pointer crosses the
+shop or Storage. Details now opens only through its button's click, tap
+or keyboard activation, at every screen width; hover and focus leave it
+closed. This supersedes the earlier wide-hover and narrow-only Details
+choices below, whose entries remain as history.
+
+Show the short label Details on each button so long item names do not
+overflow narrow cards. Keep the full item name in its accessible label
+so keyboard and screen-reader users can distinguish the buttons. The
+existing buying, placing and selling actions and saved rules stay intact.
+
+The resize checks exposed a unit-preview clock error. Clamp a delayed first
+frame's earlier timestamp to zero elapsed time; retain the original pictures,
+frame rate and animation order. A deterministic renderer test reproduces
+the old crash and checks that the corrected preview advances and stops.
+
 ## 17 October 2026: acknowledge the warning in the no-hall fixture
 
 The new original missing-hall notice is expected when the villager test
