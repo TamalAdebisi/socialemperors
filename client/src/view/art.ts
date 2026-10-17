@@ -7,9 +7,9 @@ import { Assets, Spritesheet, Texture, isSafari, type SpritesheetData } from "pi
 import type { Bounds } from "../rules/geometry.ts";
 import { STEADY_BUILDING } from "./buildingAnimation.ts";
 
-// WebKit can receive transparent pixels in large worker-created ImageBitmaps.
-// Decode on the page there: still asynchronous, without the worker transfer.
-if (isSafari()) Assets.setPreferences({ preferWorkers: false });
+// Safari's ImageBitmap path can blank atlases or corrupt the rendered scene.
+// Load ordinary images there instead; fetching and loading stay asynchronous.
+if (isSafari()) Assets.setPreferences({ preferWorkers: false, preferCreateImageBitmap: false });
 
 interface SheetMeta {
   image: string;

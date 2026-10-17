@@ -19,6 +19,8 @@ them can be found and reversed. The big, agreed decisions are in
   Keep the original pixel thresholds, saved-tree checks and native near-miss tap.
   Retain visible-pixel checks for every gallery facing; no retry hides a
   blank picture. The apparent capture failure was traced to decoded art.
+  For ground comparisons, require the textured ground to render before
+  taking the baseline; all 2,800 before/after pixels still match exactly.
 - Retain failed runs and unrelated old-main WebKit failures in
   [the verification record](docs/verification-96.md). Linux WebKit verifies
   the engine here, not the owner's Mac graphics driver.
@@ -33,15 +35,18 @@ them can be found and reversed. The big, agreed decisions are in
   displayed pose and needs no new public art. Other structures retain their
   full animations. The browser regression checks the actual image requests
   against the pages used by both rendered facings.
-- **Keep image decoding on the page in Safari.** A large atlas transferred
-  from Pixi's worker contained transparent pixels despite the source file
-  having visible artwork. Re-uploading that bitmap did not help. Decoding
-  the same file on the page restored all 42,784 visible pixels in the tested
-  frame, while the old worker bitmap stayed empty. Use Pixi's existing
-  Safari check and its supported `preferWorkers: false` setting. Fetching
-  and bitmap decoding remain asynchronous, with the original image and
-  mipmaps; other engines keep their existing loading path. This shared fix
-  covers any affected atlas, without a list of special building names.
+- **Use ordinary image elements in Safari.** A worker-created ImageBitmap
+  could contain transparent pixels despite valid source art. Page-created
+  ImageBitmaps restored those pixels but reproduced a separate whole-scene
+  rendering regression after a worker left a farm. Viewport/state resets
+  did not fix it. A fresh build using HTML image elements passed the new
+  full-scene pixel check and rendered the correct town. Use Pixi's supported
+  `preferCreateImageBitmap: false` and `preferWorkers: false` preferences
+  with its existing Safari detection. Loading remains asynchronous, with
+  original images and mipmaps; other engines keep their existing path.
+  The gallery checks the actual source type as well as visible pixels.
+  Cached-code injection attempts did not apply the preference and are
+  excluded from the comparison; the built variant verified its source type.
 
 ## 16 October 2026: getting in touch, and who can join
 
