@@ -87,6 +87,11 @@ ordering and wait tables and are not used as replacement content.
   ordinary barracks, completed mixer work waits for Get unit. A zero
   timestamp means speed-up finished it. A positive timestamp without its
   duration is unreadable; ours never assumes it finished.
+- Saved `ts`, `unit` and `amount` must be nonnegative safe integers. Text
+  must contain 1–16 ASCII decimal digits and fit the same range. Decimal,
+  exponent, signed and whitespace text is refused before conversion,
+  preventing underflow or rounding from creating apparently completed
+  work. Explicit numeric or text zero remains a known legacy completion.
 - `speed_up_queue` costs one cash per started hour left. Get unit checks
   population/free space, sends `pop_queue_unit`, then ordinary `pop_unit`
   commands return both parents. Our server ignores repeated collection.
@@ -106,9 +111,9 @@ ordering and wait tables and are not used as replacement content.
 
 ## Verification
 
-Sixteen focused client tests cover ranking, tier ordering, restrictions, limits,
+Seventeen focused client tests cover ranking, tier ordering, restrictions, limits,
 command arguments, save restore, waiting, speed-up, population, surviving
-parents, passive grants, global queue reservations and stale editor callbacks. Ten server tests
+parents, passive grants, global queue reservations and stale editor callbacks. Eleven server tests
 replay the queue protocol, missing/partial-data refusal, elapsed work,
 retries, malformed timestamps, late edit commands and safe collection. Their
 synthetic tables are confined to tests and never shipped.
@@ -116,6 +121,8 @@ synthetic tables are confined to tests and never shipped.
 reload and unchanged saved units, cash and queues in the current
 unavailable state. Exact clean `c944e853` passed focused Chromium 1/1 in 67s;
 all three fresh captures and the clean local server log were reviewed.
-Server459 (nine existing skips), types and client 420/420 also passed.
+Server459 (nine existing skips), types and client 420/420 also passed there.
+A later exact-integer parser correction passed types and all 17 focused
+client/11 server tests; that source-only correction did not change the art.
 The [delivery record](../../verification-soul-mixer.md) preserves scope
 and the original-data blocker. No playable new mixing is claimed.

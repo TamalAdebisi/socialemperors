@@ -11,6 +11,9 @@ be collected without spending; missing or malformed time is never guessed.
 
 ## Completed local checks
 
+These full-suite results apply to `c944e853`, before the final parser
+correction below.
+
 - Server: **459 run, 450 passed, 9 existing PostgreSQL skips**, 40.591s.
 - Client types passed; **420/420 client tests passed**, 11.413s.
 - Soul-specific coverage: 13 rule tests, three execution-time stale editor
@@ -31,6 +34,25 @@ be collected without spending; missing or malformed time is never guessed.
   clear of the town hall and flushes initial commands before its baseline,
   retaining every cash/unit/queue assertion.
 
+## Exact saved-integer correction
+
+Final review reproduced legacy collection with timestamp `"1e-400"`:
+floating-point conversion reduced malformed fractional text to zero.
+Other fractional strings could round into apparently integral fields.
+Both readers now require 1–16 ASCII decimal digits within the safe integer
+range for text and finite nonnegative safe integers for numeric values.
+No signs, trimming, decimal points, exponents or non-ASCII digits are
+accepted. Explicit numeric/text zero still permits known legacy collection.
+
+Types, **17/17 focused client tests** and **11/11 Soul Mixer server tests**
+passed after this correction. The regressions exercise actual collection
+commands with missing original content, restored durations, malformed
+timestamp/amount/unit fields and excessive text, alongside valid zero.
+The independent Time Machine parser follows the same grammar; root owns
+its cross-feature collection regression and combined verification.
+No browser was rerun for this source-only parser change; the original
+artwork and window behaviour below are unchanged.
+
 ## Browser verification
 
 Exact clean source `c944e853927ee4e0e13ce4320107cc565718d58f` passed the
@@ -50,9 +72,10 @@ unhandled command. Evidence is archived locally in
 
 This verifies the current unavailable state, not playable new mixing.
 Recovered generic behaviour is covered separately by the synthetic rule
-and server tests above. Only delivery documentation follows this tested
-source in the slice. The root integration's complete browser-suite result
-is recorded separately; no combined full-suite pass is claimed here.
+and server tests above. The exact saved-integer correction follows this
+tested source with the focused checks recorded above. The root integration's
+complete browser-suite result is recorded separately; no combined full-suite
+pass is claimed here.
 
 No live game account or production game-state traffic was used. Research
 made read-only requests to the preservation upstream and public search;
