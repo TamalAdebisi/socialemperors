@@ -523,6 +523,13 @@ combined build. Their results will be recorded before final delivery; no
 pending case is counted as a pass. The latest main and #92's final runtime
 must be compared before this local integration is published.
 
+PR #92 subsequently merged as `4c7f4eb559d1dac462a78c946fa1890fb4f7c9cd`.
+Its final head is `cee1b96b`; comparison with the tested candidate `f798788b`
+contains exactly seven Markdown files. Its own full suite passed 78/78.
+The actual main merge is now integrated, preserving both documentation
+sets. Runtime, tools, configuration and tests remain identical to the
+combined `46f61c94` build already running here; that run is not restarted.
+
 The in-progress integrated run retains a `collect` failure at 38s: the
 working-farm selection at line 37 found an empty action bar. Its screenshot
 shows the level-up empire-name prompt, and the server log records that

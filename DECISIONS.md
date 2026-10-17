@@ -4,6 +4,23 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: deliver against the exact completed verification
+
+- **Keep each result attached to its code.** Exact `f798788b` passed all
+  required checks: 449 server tests (440 passed, nine existing skips),
+  types, 393 client tests and 78/78 browser cases in 92m 33.33s. Final
+  delivery edits are documentation only; the tested runtime, artwork and
+  tests remain unchanged. PR #92 records the eventual delivery metadata.
+- **A later pass does not erase an unexplained failure.** Scripted bosses
+  passed in 144s, but the earlier 47 mummy-gem reload failure remains
+  genuine history. Its forced baseline diagnostic established an ordering
+  weakness, not the exact cause. No quest rule, assertion or deadline was
+  changed; keep the separate save/read-boundary follow-up.
+- **Describe the review limit accurately.** All 22 review threads were
+  addressed/resolved and independent final source reviews found no new
+  issue. Cubic returned NEUTRAL after exhausting its monthly line quota;
+  Qodo's trial was paused. Neither performed a fresh automated re-review.
+  No billing/settings change or required-check bypass was made.
 ## 17 October 2026: idle-pass verification fixtures
 
 - Read screenshot pixels outside the game page, using the Pillow package
@@ -75,7 +92,7 @@ them can be found and reversed. The big, agreed decisions are in
   removed. The corrected test also detects the old 95 reopen bug at the
   original deadline (47s scenario, 53.6751s total). The corrected
   `60eba9ff` focus then passed all three cases in 502.9371s, with runtime
-  unchanged from 97. Required full checks remain pending; neither the
+  unchanged from 97. Final full checks later passed at f798; neither the
   earlier failures nor the diagnostics are relabelled as passes.
 
 ## 17 October 2026: finish response validation and allow refresh recovery
@@ -95,7 +112,7 @@ them can be found and reversed. The big, agreed decisions are in
   exactly at reopening: the room remained hidden until the original
   30-second deadline (48s scenario, 55.1332s total). This intended negative
   diagnostic proves the old bug; the corrected candidate passed the 60
-  focus and still requires full checks.
+  focus and the final f798 full checks.
 - **Recover the actual enrollment after an uncertain entry.** Another
   tab may have entered a different type or team. Display the authoritative
   room and balances without repeating the request or crediting the
@@ -111,7 +128,7 @@ them can be found and reversed. The big, agreed decisions are in
   30 images reviewed, and server/types/client checks passed. The full
   attempt stopped deliberately after five passes and no observed failure
   for the two runtime fixes above. The later 60 focus passed;
-  required full checks remain due; the 47 baseline's quest failure stays recorded.
+  final full checks passed at f798; the 47 baseline's quest failure stays recorded.
 
 ## 17 October 2026: acknowledge the displayed room and reject stale reads
 
@@ -162,8 +179,8 @@ them can be found and reversed. The big, agreed decisions are in
   repository. No tournament regression was identified. Keep the quest
   save/read boundary as an explicit follow-up rather than invent a fix
   from incomplete evidence. Tournament implementation and verification
-  were complete at that baseline. The later review corrections require
-  the fresh checks recorded above before merge.
+  were complete at that baseline. The later review corrections passed
+  the final f798 checks recorded above.
   [The record](docs/verification-92.md) keeps the exact
   unit, browser, screenshot and log evidence alongside earlier histories.
 
@@ -188,7 +205,7 @@ them can be found and reversed. The big, agreed decisions are in
   passed, but no full 77-case pass occurred. The merged contact case
   brought the suite to 78. The later `47db7f44` focus passed 3/3 in
   3m 30.75s; Menu, contact and raids also passed in its full 77/78 run.
-  The separate quest failure and pending delivery remain recorded above.
+  The separate quest failure and final f798 result remain recorded above.
 
 ## 16 October 2026: getting in touch, and who can join
 
@@ -278,7 +295,7 @@ them can be found and reversed. The big, agreed decisions are in
   unchanged. The unchanged assertion and shared selection passed a
   two-case focused rerun at `3b5da9e9` in 5m 31.79s. Final integration
   verification at `47db7f44` passed the tournament cases within the
-  completed 77/78 suite after #97; delivery remains pending.
+  completed 77/78 suite after #97; the later f798 full suite passed 78/78.
 
 ## 16 October 2026: tournaments join Everybody
 
@@ -292,7 +309,7 @@ them can be found and reversed. The big, agreed decisions are in
   `5d220abf` is a completed pre-#95 baseline, alongside the earlier 67 and
   49 records. #95 changed runtime and added two cases; its later partial
   runs remain recorded. #97 added another case; all 78 ran at `47db7f44`,
-  with the sole quest failure and pending delivery recorded above.
+  with the sole quest failure retained alongside the final f798 result above.
 
 ## 16 October 2026: playthrough feedback — active defense and everybody
 

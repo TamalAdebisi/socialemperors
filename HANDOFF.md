@@ -114,36 +114,21 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); correction focus passed, full checks pending.**
-  Exact `60eba9ff` passed rooms/results/list **3/3 in 8m 22.94s**.
-  Runtime is unchanged from 97; only the test fixture and docs changed.
-  The log is clean, with all 31 archived images reviewed and no visible defects. All 22 review threads are addressed
-  and resolved; re-review and required full checks remain pending.
-  The `97fb6e79` focus completed **1/3 in 2m 51.30s**: lists passed,
-  rooms hit a delayed-response fixture problem and results failed on the
-  leftover public seat. The diagnosed test-only repair passed the 60 focus.
-  Following #89's lists, help and team box, this adds rooms, copied-army
-  battles, results/prizes and friends' tournaments. Done, profile and
-  top-level record corrections passed the `95e098f3` focused checks
-  **3/3 in 7m 50.29s**, with all 30 screenshots reviewed. Server **449 run
-  (440 passed, 9 existing skips)**, types and client **390/390** passed.
-  Its full run stopped intentionally after five passes and no observed
-  failure for room/player validation and close-during-refresh fixes;
-  `tournaments` was incomplete. Fresh full checks remain due.
-  The completed baseline at exact integrated code
-  `47db7f4446e957ab8d65ef8892799649abedf9a6`, including main #97,
-  completed **77/78 browser cases in 90m 46.59s**. All five tournament
-  cases, shared spells and team passed. The sole mummy-gem quest reload
-  failure did not recur in ordinary main/tested-code repeats. A forced
-  baseline diagnostic proves an existing save/read weakness, not that
-  full-run cause; the quest issue remains a separate follow-up.
-  Server **448 run: 439
-  passed, 9 existing skips**; types and **388 client tests passed**.
-  Tournament creation retains three real player neighbours
-  and its fees, now using Everybody's community list. The
-  [delivery record](docs/verification-92.md) preserves each completed
-  baseline and earlier check. No further tournament slice remains.
-  Classic choices stay hidden; routes and shared saves remain supported.
+- **All tournament stages and required verification are complete in
+  [#92](https://github.com/TamalAdebisi/socialemperors/pull/92).** Exact
+  `f798788b6529388f918098989b8f4997eab553c8`, including main #97,
+  passed **78/78 browser cases in 92m 33.33s**. Server **449 run:
+  440 passed, 9 existing skips**, types and **393 client tests passed**.
+  All five tournament cases, spells, team and scripted bosses passed;
+  the server log is clean and all 260 fresh archived screenshots were reviewed.
+  All 22 review threads are resolved; independent source reviews found no
+  new issue. Automated re-review was unavailable because of Cubic's quota
+  and Qodo's paused trial. The [delivery record](docs/verification-92.md)
+  retains the earlier failures and their limits, including the historical
+  quest reload follow-up. No tournament slice remains. Shop details are
+  next; task 6 remains on hold. PR #92 holds release metadata; these checks
+  do not themselves claim merge or deployment. Classic choices stay hidden,
+  with routes and shared saves supported.
 - **Tasks 1, 2, 3 and 5 are complete:** #86 delivered the timing fixes;
   #87 delivered the building card, upgrades and site Menu, with both
   agents' work and the later #89 tournament merge preserved. Next is
@@ -172,7 +157,7 @@ next agent knows where to start.
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
     Arthur's lessons, the nests and all tournament stages are built;
-    tournaments await latest review-correction checks before merge, with
+    tournaments passed all required checks, with
     the quest reload follow-up recorded below. Left: the long tail of
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
@@ -576,10 +561,10 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [x]
 
-**Implementation complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest review verification pending.**
-The completion mark records the implemented scope and completed baseline;
-the later corrections still require checks. Merge and automatic deployment
-are not yet claimed in this handoff.
+**Implementation and required verification complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92).**
+The completion mark records all five implemented parts and their final
+checks. See the PR for release metadata; merge and automatic deployment
+are not claimed by this handoff's test results.
 The owner expanded the task to finish all remaining tournament parts.
 The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
@@ -589,17 +574,34 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Latest correction focus at `60eba9ff`: 3/3.** Exact
+**Final required verification: 78/78.** Exact clean tested
+`f798788b6529388f918098989b8f4997eab553c8` includes unchanged latest main
+`8f8c57ab`; #96 remained draft at `f9ed9060`. Server **449 run: 440 passed,
+9 existing PostgreSQL skips** (29.763578436s wrapper, 29.297s unittest),
+types (2.120334289s) and client **393/393** (7.087552535s) passed.
+The full Chromium suite passed **78/78 in 92m 33.33s**: every tournament
+case, shared spells, team (36s), scripted bosses (144s) and world (115s).
+The archive has 260 fresh screenshots in 73 image folders, with no stale
+files. All 260 were reviewed and matched by path/hash, with no coverage
+gaps; the complete server log has zero tracebacks, HTTP 5xx or unhandled
+commands. Concrete screenshot findings and limits are recorded in the
+[delivery record](docs/verification-92.md), alongside all earlier runs.
+All 22 review threads are resolved and independent source reviews found
+no new issue. Cubic's exhausted quota returned NEUTRAL without re-review;
+Qodo's trial was paused. No fresh automated pass or required-check bypass
+is claimed. This final documentation update leaves runtime, tests and
+artwork identical to f798; PR #92 will identify the delivery commit.
+
+**Historical correction focus at `60eba9ff`: 3/3.** Exact
 `60eba9ffc910a06b2375aa0afe54c1c641510ac0` passed rooms (224s), results
 (151s) and lists (122s) in **502.937054269s**, or **8m 22.94s**.
 Runtime matches 97; only the rooms test and documentation changed.
 All 31 archived images were reviewed with no visible defects: seven rooms,
 13 results and 11 lists. The server log
 has no tracebacks, HTTP 5xx or unhandled commands. All 22 review threads
-are addressed and resolved; the next re-review is pending. Fresh main
-remains `8f8c57ab`, already merged; #96 is still draft, at `0185b420`.
-Required full checks will use the next documentation commit, whose exact
-SHA/results are not yet known. No full-suite pass or merge is claimed.
+had been addressed and resolved. At that time, main was `8f8c57ab` and
+#96 remained draft at `0185b420`. The then-pending full checks completed
+at f798 above; the automated re-review limitation is also recorded there.
 
 **Earlier correction focus at `97fb6e79`: 1/3.** Exact
 `97fb6e79a437e287b69a55a950629cc6ffe8f7e2` completed rooms/results/list
@@ -613,8 +615,8 @@ ignored the old generation and correctly completed the new reply.
 Temporary tracing was removed. The test-only repair keeps each named
 handler until its own release, retaining assertions and deadlines.
 Its corrected old-runtime negative rerun detected the original reopen
-bug again (47s scenario, 53.6751s total); the 60 candidate focus passed,
-with full checks still pending. [The delivery record](docs/verification-92.md) keeps both failures
+bug again (47s scenario, 53.6751s total); the 60 candidate focus and final
+f798 full checks passed. [The delivery record](docs/verification-92.md) keeps both failures
 and the distinct diagnostic evidence.
 
 **Completed correction focus at `95e098f3`:** Done captures the displayed
@@ -643,8 +645,7 @@ blocking reopen after close. The candidate validates nested room, player,
 match, ranking, weekly and reward data while preserving supported wire
 formats; its nine focused network tests and types passed. The window
 invalidates a closed refresh's busy state and ignores late completion.
-The 60 focus now verifies these corrections; full required checks remain
-pending for the next documentation commit.
+The later 60 focus and final f798 full suite verify these corrections.
 Source-supported healer retargeting, external Leave and recovery of the
 actual current enrollment after an ambiguous entry remain unchanged.
 PARITY's historical list already marks built features. No dedicated
@@ -828,7 +829,7 @@ All five parts are implemented and their baseline checks passed at
 `47db7f44`. The `95e098f3` correction focus passed 3/3; its full attempt
 was interrupted for further fixes. The later 97 focus was 1/3 because of
 the test-fixture problem described above; the repair passed all three
-focused cases at 60. Required full checks remain due before merge. The
+focused cases at 60. Final required checks passed 78/78 at f798. The
 separate quest reload follow-up remains recorded above.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.

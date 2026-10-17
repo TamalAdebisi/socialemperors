@@ -312,21 +312,14 @@ frees its unit.
 
 ## Tournaments
 
-All five parts are built in #89 and #92. The
-[delivery record](docs/verification-92.md) records all five tournament
-checks passing at `47db7f44`, including #97: the complete suite was
-77/78 in 90m 46.59s. The sole quest reload failure did not recur in ordinary
-main or tested-code repeats. A forced baseline diagnostic establishes an
-existing save/read weakness, not the exact full-run cause; the quest issue
-remains a follow-up. Done, profile and top-level record corrections passed
-the `95e098f3` focused checks 3/3. Its full run stopped intentionally after
-five passes and no observed failure for further room/player validation
-and refresh/reopen fixes. The corrected `97fb6e79` focus was 1/3: lists
-passed, rooms hit a delayed-response fixture problem and results failed
-on its leftover public seat. The test-only repair at `60eba9ff` passed
-all three focused cases in 8m 22.94s with unchanged runtime. Required full
-checks remain pending before merge. Tournament implementation is complete;
-earlier results are retained.
+All five parts are built in #89 and #92. Exact integrated
+`f798788b6529388f918098989b8f4997eab553c8` passed all **78 browser cases
+in 92m 33.33s**, including every tournament case and review correction.
+Server **449 run (440 passed, 9 existing skips)**, types and **393 client
+checks** also passed. The [delivery record](docs/verification-92.md)
+retains earlier failures and diagnostics. The historical 47 quest reload
+failure did not recur here, but the current pass does not establish or
+fix its cause; that follow-up remains separate. No tournament slice remains.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.

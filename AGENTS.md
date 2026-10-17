@@ -96,37 +96,21 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   timing assertion also fails on old main. [The delivery record](docs/verification-96.md)
   attributes results to their actual runtimes, retains failed/diagnostic
   runs, and records screenshot review and the Linux WebKit/Mac GPU limit.
-- **Tournament implementation and correction focus are complete; full checks are pending.**
-  Exact `60eba9ffc910a06b2375aa0afe54c1c641510ac0` passed
-  rooms/results/list **3/3 in 8m 22.94s**. The local server log is clean;
-  All 31 archived screenshots were reviewed with no visible defects. Runtime is unchanged from `97fb6e79`; the
-  intervening changes are tests/docs. All 22 review threads are addressed
-  and resolved; the next re-review and required full checks remain due.
-  The corrected runtime at `97fb6e79` completed rooms/results/list
-  **1/3 in 2m 51.30s**: lists passed, rooms hit a delayed-response fixture
-  bug and its leftover public seat caused the results room-id failure.
-  Diagnostic tracing identified the fixture release; the test-only
-  correction passed the 60 focus above.
-  Exact `95e098f386b2feaea7d911de03e2ad2556ef025e` passed the focused
-  rooms/results/list checks **3/3 in 7m 50.29s**, with all 30 screenshots
-  reviewed. Server **449 run (440 passed, 9 existing skips)**, types and
-  client **390/390** passed. The full attempt was intentionally stopped
-  after five passes and no observed failure for room/player validation
-  and close-during-refresh fixes; `tournaments` was incomplete. The completed
-  pre-review baseline at exact clean
-  `47db7f4446e957ab8d65ef8892799649abedf9a6`, including latest
-  main `8f8c57ab` (#97), ran all 78 browser cases: **77 passed, 1 failed
-  in 90m 46.59s**. All five tournament cases, shared spells and `team`
-  passed. The sole `scripted-bosses` mummy-gem reload failure did not
-  recur in ordinary main or tested-code repeats. A forced baseline
-  diagnostic shows an existing save/read weakness, but the exact full-run
-  cause remains unproven and is retained as a separate quest follow-up.
-  Server: **448 run (439 passed, 9 existing
-  skips)**; types and **388 client tests passed**. Screenshot review
-  covered 79 full-run images plus 14 integration-focus and four quest-focus
-  images; 256 full-run images were archived and the full server log is clean.
-  [The delivery record](docs/verification-92.md) preserves exact evidence,
-  the earlier 75/75 and 73/73 baselines, interrupted runs and fixes.
+- **Tournament implementation and required verification are complete.**
+  Exact clean `f798788b6529388f918098989b8f4997eab553c8`, including
+  main `8f8c57ab`, passed **78/78 browser cases in 92m 33.33s**.
+  Server: **449 run (440 passed, 9 existing PostgreSQL skips)**;
+  types and **393 client tests passed**. All tournament cases, shared
+  spells, team and scripted bosses passed. The server log is clean;
+  all 260 fresh archived screenshots were reviewed, with concrete visual
+  limits retained in the record. All 22 review threads are resolved
+  and independent final source reviews found no new issue. Cubic's quota
+  and Qodo's paused trial prevented fresh automated re-review; no required
+  check was reported or bypassed. [The delivery record](docs/verification-92.md)
+  preserves screenshot coverage, exact timings and prior failures, including
+  the unresolved cause of the historical 47 quest reload failure. The
+  current pass does not claim to fix it. PR #92 records release metadata;
+  no merge or deployment is claimed by these test results.
 - **Previous playthrough verification (#95):** server 436 run (427 passed,
   9 existing skips), client types and all 357 passed after review. Complete integrated
   Chromium: **73/73 in 1h 23m 18.88s** on game code `10507be4`, including
