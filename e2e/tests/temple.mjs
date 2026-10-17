@@ -33,8 +33,8 @@ export default async function temple({ newPlayer }) {
     await window.waitFor();
     return window;
   };
-  const savedAction = async () => {
-    await page.waitForFunction(() => {
+  const savedAction = async (who = player) => {
+    await who.page.waitForFunction(() => {
       const status = document.querySelector(".temple-notice");
       return status && status.textContent === "";
     }, null, { timeout: 30000 });
@@ -144,20 +144,23 @@ export default async function temple({ newPlayer }) {
     { cmd: "store_add_items", args: [JSON.stringify([HEART])] },
   ]);
   await player.reload();
-  window = await open();
-  await window.locator('[data-step="11"]').click();
-  assert.ok(await window.locator(".temple-offer").isEnabled());
-  await window.locator(".temple-offer").click();
-  await window.locator(".temple-countdown").waitFor();
-  const heartOffered = await savedAction();
+  const heartPhone = await player.onPhone();
+  const heartWindow = await open(heartPhone);
+  await heartWindow.locator('[data-step="11"]').click();
+  assert.ok(await heartWindow.locator(".temple-offer").isEnabled());
+  await heartPhone.shot("heart-phone-ready");
+  await heartWindow.locator(".temple-offer").click();
+  await heartWindow.locator(".temple-countdown").waitFor();
+  const heartOffered = await savedAction(heartPhone);
   assert.deepEqual(heartOffered.privateState.templeStep, [4, 6, 11]);
   assert.equal(heartOffered.privateState.gifts[HEART], 1);
   assert.equal(heartOffered.map.store[HEART], 1, "the offering retains both stored Hearts");
-  await player.shot("heart-offered");
+  await heartPhone.shot("heart-offered-phone");
+  await heartPhone.page.close();
+  await page.bringToFront();
 
   // Prepare the remaining historic progress with the original wire
   // commands. The final normal-window claim still waits for step twelve.
-  await page.keyboard.press("Escape");
   const remaining = [0, 1, 2, 3, 5, 7, 8, 9, 10];
   const data = [{ g: 100000 }, { s: 100000 }, { w: 100000 }, { f: 100000 }, { m: 50 }, { c: 50 },
     { u: 649 }, { u: 684 }, { u: 695 }, { u: 853 }, { u: 875 }, { collection: 23 }];
