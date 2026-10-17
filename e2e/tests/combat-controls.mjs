@@ -14,6 +14,7 @@ export default async function combatControls({ newPlayer }) {
   ]);
   await player.reload();
   const { page } = player;
+  await page.waitForFunction(() => window.seHome);
   await page.evaluate(() => {
     window.combatVisibleBox = (picture) => {
       const b = picture.visualBounds;
