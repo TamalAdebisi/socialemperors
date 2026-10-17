@@ -143,6 +143,22 @@ class TimeMachineTest(unittest.TestCase):
         self.assertEqual(self.pState["timeStampMondayBonus"], now)
         self.assertEqual(self.pState["timeStampDartsReset"], now)
 
+    def test_a_jump_advances_generic_training_queues_without_unfinishing_ready_work(self):
+        now = timestamp_now()
+        self.pState.update(countTimePacket=[0, 1, 0, 0, 0, 0], barracksQueues={
+            "1": {"ts": now, "amount": 1, "unit": 533},
+            "2": {"ts": 0, "amount": 1, "unit": 534},
+            "3": {"ts": 0, "amount": 0, "unit": 535},
+            "4": {"ts": 100, "amount": 1, "unit": 550},
+        })
+        self.send("time_ff", 1)
+        self.assertEqual(self.pState["barracksQueues"], {
+            "1": {"ts": now - 3600, "amount": 1, "unit": 533},
+            "2": {"ts": 0, "amount": 1, "unit": 534},
+            "3": {"ts": 0, "amount": 0, "unit": 535},
+            "4": {"ts": 1, "amount": 1, "unit": 550},
+        })
+
     def test_no_jump_left(self):
         now = timestamp_now()
         self.map["timestampLastTreasure"] = now

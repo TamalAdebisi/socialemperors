@@ -75,6 +75,13 @@ def jump(save: dict, jump: int) -> str:
     for attack in pState.get("attacksSent", []) or []:
         if isinstance(attack, dict) and "time" in attack:
             attack["time"] = _earlier(attack["time"], seconds)
+    queues = pState.get("barracksQueues")
+    if isinstance(queues, dict):
+        for queue in queues.values():
+            if isinstance(queue, dict) and "ts" in queue:
+                # Generic queues keep the work's start here instead of on
+                # the building; zero means a speed-up already finished it.
+                queue["ts"] = _earlier(queue["ts"], seconds)
     if isinstance(pState.get("survivalVidaTimeStamp"), list):  # survival lives come back sooner
         pState["survivalVidaTimeStamp"] = [_earlier(t, seconds) for t in pState["survivalVidaTimeStamp"]]
 
