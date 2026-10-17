@@ -87,6 +87,7 @@ local ignored evidence under `work/`; they are not published game source.
 | Strengthened focus 5, `df2effdc` | 0/1 in 220 s. Again won normally within 600 frames; separate real mouse phases still did not dispatch the original callback. | `work/rider-focus-attempt-5/` |
 | Strengthened focus 6, `fa300650` | 0/1 in 261 s. Genuine original win callback `won,1`, recovery saves, every paid recovery/shortcut and ordered free-claim/reset passed. Later map-selection probing accidentally admitted the wide dragon first; selecting it again then failed. | `work/rider-focus-attempt-6/` |
 | Permanent focus 7, `dca56ac4` | 0/1 in 494 s. Both gameplay outcomes, including the ready loss menu, met the 600-frame budget. A redundant post-screenshot mouse-phase check then counted idle finished-screen frames against that gameplay budget. | `work/rider-focus-attempt-7/` |
+| Permanent focus 8, `ecf4b6d2` | 0/1 in 236 s. Normal basic attacks defeated the opponent, but blocked/missed swings exhausted the 600-frame budget before reaching the last screen edge. No runtime error; the budget was retained. | `work/rider-focus-attempt-8/` |
 | Mouse diagnostic 1 | 28 s. Native browser down/up/click arrived, but no original stage event. Diagnostic only. | `work/rider-mouse-probe-attempt-1/` |
 | Mouse diagnostic 2 | 40 s. First click intercepted; second native click reached the original attack button. Focus alone was only a hypothesis. | `work/rider-mouse-probe-attempt-2/` |
 | Mouse diagnostic 3 | Failed in 31 s. Fresh-instance explicit focus did not fix the first click. Its exact composed path identified Ruffle's hardware-acceleration modal. | `work/rider-mouse-probe-attempt-3/` |
@@ -167,6 +168,12 @@ The unchanged 28-frame basic-attack wait was checked against the original
 ready condition: the attack starts its general cooldown at 10; combat
 locks input only below 25, and the separate attack cooldown is one update.
 There is no source requirement to wait 30 updates for that attack.
+The first-adventure input strategy now also uses its available original
+third skill, respecting its 150-update cooldown, alongside basic attacks.
+The stronger original skill and its knockback reduce reliance on repeated
+blocked melee swings. This changes only ordinary input choices; the
+600-frame result budget, 28-frame attack observation, original game,
+health, enemies and all save/callback assertions remain unchanged.
 
 The temporary diagnostics are excluded from the permanent browser test
 discovery. Their assertion summaries are not counted as feature passes.
