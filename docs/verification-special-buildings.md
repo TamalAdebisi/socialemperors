@@ -97,9 +97,57 @@ Warehouse focus passes **1/1 in 106s** at `76a20d73`; all four captures
 were reviewed. Soul Mixer focus passes **1/1 in 67s** at `c944e853`; all
 three desktop/help/phone captures were reviewed. Both server logs are clean.
 Every failed or interrupted attempt remains separate from passing results.
-See also the [rider record](verification-dragon-riders.md). The expanded
-native rider journey, final combined browser suite,
-cross-engine checks and screenshot/server-log review are pending.
+Complete focused Chromium rider training passes **1/1 in 540s** at exact
+`54a1ad0a`: the original first-adventure success and eighth-adventure loss
+callbacks, ordered reward/reset, ordinary pair admission and phone input/save.
+All 15 captures and final logs were reviewed. The phone victory uses the
+documented success adapter; this is not an all-eight-adventure playthrough.
+The [rider record](verification-dragon-riders.md) retains every earlier
+failure and the source-supported fixture corrections.
+
+## First combined WebKit run and follow-ups
+
+Exact clean start/end `22f5fd02bc900ba9ca674da7a591a9c79b0197c4` ran all six
+new scenarios in Linux WebKit: **5/6 passed in 858.722s**, including build.
+
+| Case | Result | Case time |
+| --- | --- | --- |
+| Rider training/taming | Failed: phone button retained focus after a real attack | 422s |
+| Time Machine | Passed, including final recovery stacking/hit checks | 123s |
+| Weather Machine | Passed | 46s |
+| Unit Warehouse | Passed; final Storage portrait capture needed a readiness wait | 73s |
+| Supreme temple | Passed | 160s |
+| Soul Mixer unavailable state/help | Passed | 30s |
+
+Both original rider end-screen callbacks passed before its final phone
+focus assertion failed. An exact-listener probe in both engines reproduced
+WebKit emitting a compatibility mousedown after the cancelled pointerdown.
+The narrow fix cancels that mouse default on adventure controls; Tab,
+Enter and pointer release remain intact. No gameplay, timing limit,
+assertion or error check changes. The complete rider case needs a repeat.
+
+All **36 fresh PNGs** were reviewed. The machine recovery control now
+remains fully visible above the generic warning. Warehouse Storage's three
+ordinary thumbnails were still loading in its final capture: the fixture
+now scrolls each card normally into view and checks all three exact
+original images before capture. No shared Storage behavior changed; this
+stronger fixture also needs a repeat. Phone screenshots cover the visible
+fold; they do not alone prove scrolling or off-screen controls.
+
+The complete first output, all captures, SHA256 manifest, exact clean
+receipt and server log are retained under
+`work/checks/integrated-webkit-six-initial/`. The server log has no
+traceback, exception, HTTP 5xx or unhandled command. The throwaway save is
+`/tmp/se-e2e-7sERsL`. Memory-limit event counts increased during this run;
+OOM and OOM-kill counters remained zero. No memory-success claim is inferred
+from the host's larger reported RAM.
+
+WebKit 2215 uses locally extracted Debian libraries, as recorded in the
+ignored browser-dependency recipe. Only its host-package validator is
+bypassed because it cannot see those extracted libraries; browser errors
+and tests stay enabled. Linux WebKit does not establish Mac/iPhone GPU
+behavior. The repeat and full integrated **85-case Chromium** run remain
+pending, as do their final screenshot/log review and delivery.
 
 All testing uses local temporary empires. Browser art requests read the
 public art bucket; no production game account or saved game is tested.

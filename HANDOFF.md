@@ -24,7 +24,10 @@ next agent knows where to start.
   release checks. After final queue-parsing, machine recovery stacking
   and ordered rider-claim corrections plus the legacy output-type guard,
   exact `f3529ef2` passes 467 server tests (458 passed, nine existing skips),
-  client types and all 447 client tests. Complete browser checks remain
+  client types and all 447 client tests. The complete rider Chromium focus
+  passes 1/1 in 540s. Initial combined WebKit passes 5/6; a narrow adventure
+  touch-focus fix and a stronger Storage-picture capture need their repeats.
+  Complete checks after that fix and the full 85-case Chromium run remain
   in progress.
   [The integration record](docs/verification-special-buildings.md)
   retains exact scope and results; no full browser pass or merge is
@@ -37,7 +40,8 @@ next agent knows where to start.
   merge or full-suite pass from this implementation note. Unit/type and
   focused server checks pass. Exact `4a81d5ae` passed both desktop/phone
   browser cases (136s time, 99s weather); all ten captures were reviewed.
-  The later recovery-warning stacking fix needs combined verification;
+  The later recovery-warning stacking fix passes in combined WebKit at
+  `22f5fd02` (123s time, 46s weather); all ten fresh captures were reviewed.
   [the slice record](docs/verification-time-weather.md) retains the initial
   camp-notice failure and each exact revision.
   Machine goal 220 already has the ordinary build hook, so there is no
