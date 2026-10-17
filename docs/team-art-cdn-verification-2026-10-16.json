@@ -3,16 +3,16 @@
   "completed_at_utc": "2026-10-16T11:24:40+00:00",
   "source_urls": "docs/team-art-cache-purge.txt",
   "query": "repair=38885093455",
-  "note": "Read-only GETs. Null cache headers were absent. SHA-256 hashes are of response bodies; dimensions are read from the actual WebP.",
+  "note": "Read-only GETs. Null cache headers were absent. SHA-256 hashes are of response bodies; dimensions are read from the actual WebP. example.com stands for the live game and assets.example.com for its art: the repository is public and does not name them.",
   "comparisons": 40,
   "passed": 40,
   "results": [
     {
-      "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp",
+      "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.json",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.json",
         "checked_at_utc": "2026-10-16T11:24:21+00:00",
         "sha256": "1b0f4160a8f2ebd74089a5c0d623629bbca1db62e58ae3e6bff42f764005c91b",
         "http_status": "HTTP/2 200 ",
@@ -26,7 +26,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp",
         "checked_at_utc": "2026-10-16T11:24:22+00:00",
         "sha256": "b3aaf1f2fc97fe0ed002f31ed2a496d2676f322c25d8706eb9535299de3c12a9",
         "http_status": "HTTP/2 200 ",
@@ -41,7 +41,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "b3aaf1f2fc97fe0ed002f31ed2a496d2676f322c25d8706eb9535299de3c12a9",
         "http_status": "HTTP/2 200 ",
@@ -60,11 +60,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp",
+      "url": "https://assets.example.com/art/2042_vulcano_golem.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.json",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.json",
         "checked_at_utc": "2026-10-16T11:24:21+00:00",
         "sha256": "1e333034eaae1ed13f6ec148cf56ad4e9e03ab93a3f832c3880ebe061d4d0f09",
         "http_status": "HTTP/2 200 ",
@@ -78,7 +78,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.webp",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "350539cb4bb9af6f7b4decd9f755523848573bad0c297819dd4f10ddc4ee015f",
         "http_status": "HTTP/2 200 ",
@@ -93,7 +93,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "350539cb4bb9af6f7b4decd9f755523848573bad0c297819dd4f10ddc4ee015f",
         "http_status": "HTTP/2 200 ",
@@ -112,11 +112,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.json",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.json",
         "checked_at_utc": "2026-10-16T11:24:21+00:00",
         "sha256": "c11b03049557d2d08f849050ac57b59f942b14411bb20f73c05b001fa027f13a",
         "http_status": "HTTP/2 200 ",
@@ -130,7 +130,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.webp",
         "checked_at_utc": "2026-10-16T11:24:22+00:00",
         "sha256": "d15ac91fab9112054606dff16237b3b970d386bfd0a969fe9b72dcd9e3d8b327",
         "http_status": "HTTP/2 200 ",
@@ -145,7 +145,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "d15ac91fab9112054606dff16237b3b970d386bfd0a969fe9b72dcd9e3d8b327",
         "http_status": "HTTP/2 200 ",
@@ -164,11 +164,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater-2.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.json",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.json",
         "checked_at_utc": "2026-10-16T11:24:21+00:00",
         "sha256": "89402f19d87f3443ddd9834951bedc3b1bab63e7d1fb97b92bdca915ca260799",
         "http_status": "HTTP/2 200 ",
@@ -182,7 +182,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.webp",
         "checked_at_utc": "2026-10-16T11:24:22+00:00",
         "sha256": "6ef2f7420c0d92ab4b6e494c216c073fff12c82c8343b8bd137dfa524d03cff8",
         "http_status": "HTTP/2 200 ",
@@ -197,7 +197,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "6ef2f7420c0d92ab4b6e494c216c073fff12c82c8343b8bd137dfa524d03cff8",
         "http_status": "HTTP/2 200 ",
@@ -216,11 +216,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.json",
+        "url": "https://assets.example.com/art/2055_soul_eater.json",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "2b601a8f9f08c4e4e734c213175767cf005045e93a3e682e7cb50997e790adb4",
         "http_status": "HTTP/2 200 ",
@@ -234,7 +234,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater.webp",
         "checked_at_utc": "2026-10-16T11:24:24+00:00",
         "sha256": "51ca90db261af1eacb09a501d4e1adee1ad4fa522ada3b8509d5348da03bfdc5",
         "http_status": "HTTP/2 200 ",
@@ -249,7 +249,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "51ca90db261af1eacb09a501d4e1adee1ad4fa522ada3b8509d5348da03bfdc5",
         "http_status": "HTTP/2 200 ",
@@ -268,11 +268,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp",
+      "url": "https://assets.example.com/art/2060_slasher_orc-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.json",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.json",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "7ba043659ea92883f0cc90c2643df4241343a7765d0c2c93c22c410bd0becfd2",
         "http_status": "HTTP/2 200 ",
@@ -286,7 +286,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.webp",
         "checked_at_utc": "2026-10-16T11:24:24+00:00",
         "sha256": "41d9d2d29e8afcc55b80be911533f44d95d0c1d9f5a209ea20f78d59e27c4087",
         "http_status": "HTTP/2 200 ",
@@ -301,7 +301,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:24+00:00",
         "sha256": "41d9d2d29e8afcc55b80be911533f44d95d0c1d9f5a209ea20f78d59e27c4087",
         "http_status": "HTTP/2 200 ",
@@ -320,11 +320,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp",
+      "url": "https://assets.example.com/art/2060_slasher_orc.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.json",
+        "url": "https://assets.example.com/art/2060_slasher_orc.json",
         "checked_at_utc": "2026-10-16T11:24:23+00:00",
         "sha256": "f35670acb6017749b4b554e14f22a149dfcac943ea546a2dcfb8847707baec90",
         "http_status": "HTTP/2 200 ",
@@ -338,7 +338,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp",
+        "url": "https://assets.example.com/art/2060_slasher_orc.webp",
         "checked_at_utc": "2026-10-16T11:24:24+00:00",
         "sha256": "7491ad97ed67ad20143ef1d23eb175b513517bb1cb9d3086bb9117dee6023f2d",
         "http_status": "HTTP/2 200 ",
@@ -353,7 +353,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2060_slasher_orc.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "7491ad97ed67ad20143ef1d23eb175b513517bb1cb9d3086bb9117dee6023f2d",
         "http_status": "HTTP/2 200 ",
@@ -372,11 +372,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp",
+      "url": "https://assets.example.com/art/2072_evil_demon-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.json",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.json",
         "checked_at_utc": "2026-10-16T11:24:24+00:00",
         "sha256": "c293ff8be90cbff6137c5decd7ffffd83a9aa2a98d3f496bb848a908acdff632",
         "http_status": "HTTP/2 200 ",
@@ -390,7 +390,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "7b34a41e65a18a268cf3b3fa1c5800bd08078cfeb07f629aa5d63be05308c3d3",
         "http_status": "HTTP/2 200 ",
@@ -405,7 +405,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "7b34a41e65a18a268cf3b3fa1c5800bd08078cfeb07f629aa5d63be05308c3d3",
         "http_status": "HTTP/2 200 ",
@@ -424,11 +424,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp",
+      "url": "https://assets.example.com/art/2072_evil_demon.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.json",
+        "url": "https://assets.example.com/art/2072_evil_demon.json",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "4a6db804e9c0d2ee1729acb5407df4d4257f2f92f561c2e16ff6f71b6e44370a",
         "http_status": "HTTP/2 200 ",
@@ -442,7 +442,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp",
+        "url": "https://assets.example.com/art/2072_evil_demon.webp",
         "checked_at_utc": "2026-10-16T11:24:26+00:00",
         "sha256": "d0eb7c693d04a0be44fe53d91b8bad89895930529548689e51528bf264cbef2c",
         "http_status": "HTTP/2 200 ",
@@ -457,7 +457,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2072_evil_demon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:26+00:00",
         "sha256": "d0eb7c693d04a0be44fe53d91b8bad89895930529548689e51528bf264cbef2c",
         "http_status": "HTTP/2 200 ",
@@ -476,11 +476,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp",
+      "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.json",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.json",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "bddcd10860b2a206b07f753444cc04520b18abcd757ef5f9b0e493ff89c39441",
         "http_status": "HTTP/2 200 ",
@@ -494,7 +494,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "c6240a8ca4459f9b938dab6e3e6c99df71e7c24af70b2245554ffc8864938289",
         "http_status": "HTTP/2 200 ",
@@ -509,7 +509,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "c6240a8ca4459f9b938dab6e3e6c99df71e7c24af70b2245554ffc8864938289",
         "http_status": "HTTP/2 200 ",
@@ -528,11 +528,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp",
+      "url": "https://assets.example.com/art/2075_elemental_red_god.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.json",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.json",
         "checked_at_utc": "2026-10-16T11:24:25+00:00",
         "sha256": "c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c",
         "http_status": "HTTP/2 200 ",
@@ -546,7 +546,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.webp",
         "checked_at_utc": "2026-10-16T11:24:26+00:00",
         "sha256": "f25937925c275ce8a2d90f1b6b663bf03624535a46310ad94e5502fd96ea5f63",
         "http_status": "HTTP/2 200 ",
@@ -561,7 +561,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "f25937925c275ce8a2d90f1b6b663bf03624535a46310ad94e5502fd96ea5f63",
         "http_status": "HTTP/2 200 ",
@@ -580,11 +580,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp",
+      "url": "https://assets.example.com/art/758_infernaldragon-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.json",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.json",
         "checked_at_utc": "2026-10-16T11:24:26+00:00",
         "sha256": "78e19372d0c43d4019e7281fde5ca37e6f303b9aeab6d558d9ed192233b2589f",
         "http_status": "HTTP/2 200 ",
@@ -598,7 +598,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:26+00:00",
         "sha256": "7f95991ed0080324cbeeab261d727d889ee200e73f72ff6220665594c5b478eb",
         "http_status": "HTTP/2 200 ",
@@ -613,7 +613,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "7f95991ed0080324cbeeab261d727d889ee200e73f72ff6220665594c5b478eb",
         "http_status": "HTTP/2 200 ",
@@ -632,11 +632,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp",
+      "url": "https://assets.example.com/art/758_infernaldragon.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.json",
+        "url": "https://assets.example.com/art/758_infernaldragon.json",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "425c37bcb7d6a13be9e5fb80b41ccce9f636c78cf104016470d4cdb37bc2e10a",
         "http_status": "HTTP/2 200 ",
@@ -650,7 +650,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp",
+        "url": "https://assets.example.com/art/758_infernaldragon.webp",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "1dc5da76cbfc60280c317aa55024ced626f81e7deb5db09c6ba12d667fc1690f",
         "http_status": "HTTP/2 200 ",
@@ -665,7 +665,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/758_infernaldragon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "1dc5da76cbfc60280c317aa55024ced626f81e7deb5db09c6ba12d667fc1690f",
         "http_status": "HTTP/2 200 ",
@@ -684,11 +684,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp",
+      "url": "https://assets.example.com/art/785_bull_png-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.json",
+        "url": "https://assets.example.com/art/785_bull_png-1.json",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "97639e3c92b77f686e91331959106588387d7b8c0d754d250958611565c51273",
         "http_status": "HTTP/2 200 ",
@@ -702,7 +702,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp",
+        "url": "https://assets.example.com/art/785_bull_png-1.webp",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "916fcbe7be1b6acd0a4072af818eed2d006c31c888e92a207648b31928481de9",
         "http_status": "HTTP/2 200 ",
@@ -717,7 +717,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/785_bull_png-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "916fcbe7be1b6acd0a4072af818eed2d006c31c888e92a207648b31928481de9",
         "http_status": "HTTP/2 200 ",
@@ -736,11 +736,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/785_bull_png.webp",
+      "url": "https://assets.example.com/art/785_bull_png.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.json",
+        "url": "https://assets.example.com/art/785_bull_png.json",
         "checked_at_utc": "2026-10-16T11:24:27+00:00",
         "sha256": "60742192fdb89e5be224c57b95af4adf47d08a3b7ba3145ddbbecaa4cdfb3c0b",
         "http_status": "HTTP/2 200 ",
@@ -754,7 +754,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.webp",
+        "url": "https://assets.example.com/art/785_bull_png.webp",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "67eb7c8cf9be779a38ed5d6241123fa5f22caf902582e6ab22dc25e0522211f3",
         "http_status": "HTTP/2 200 ",
@@ -769,7 +769,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/785_bull_png.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "67eb7c8cf9be779a38ed5d6241123fa5f22caf902582e6ab22dc25e0522211f3",
         "http_status": "HTTP/2 200 ",
@@ -788,11 +788,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.json",
         "checked_at_utc": "2026-10-16T11:24:28+00:00",
         "sha256": "13d05aa6f3e941a174523501e2202b6ec155198095315ad148f6e5e7faca022d",
         "http_status": "HTTP/2 200 ",
@@ -806,7 +806,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "f59b0f0afc47bd97f956a73fd92954e9081e7f617bbed78e22cc08eb9281978d",
         "http_status": "HTTP/2 200 ",
@@ -821,7 +821,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "f59b0f0afc47bd97f956a73fd92954e9081e7f617bbed78e22cc08eb9281978d",
         "http_status": "HTTP/2 200 ",
@@ -840,11 +840,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.json",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "35383481c9401fa1645a5450e9c8aff58b1c06bc102bfeb397dc9abf6d90f181",
         "http_status": "HTTP/2 200 ",
@@ -858,7 +858,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "73ed0e9cf2f76207503362fc838975ba0e537938f93e671a6ccc6d51e1bb0122",
         "http_status": "HTTP/2 200 ",
@@ -873,7 +873,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "73ed0e9cf2f76207503362fc838975ba0e537938f93e671a6ccc6d51e1bb0122",
         "http_status": "HTTP/2 200 ",
@@ -892,11 +892,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.json",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "521aa11d2cf9aff8267a53061a6ce04f552008d0188fed0e79d5885265f87c84",
         "http_status": "HTTP/2 200 ",
@@ -910,7 +910,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "1c09b3dcb87b12fd0e9c652ec9ce9d7a29d68f42738c03ddc88e78e3a20e9e5e",
         "http_status": "HTTP/2 200 ",
@@ -925,7 +925,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "1c09b3dcb87b12fd0e9c652ec9ce9d7a29d68f42738c03ddc88e78e3a20e9e5e",
         "http_status": "HTTP/2 200 ",
@@ -944,11 +944,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp",
+      "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.json",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.json",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "87bbb296d3ee4c34d9c9e142fd52fcf014f08743d610c30ee6588a92637c0aa1",
         "http_status": "HTTP/2 200 ",
@@ -962,7 +962,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "fc62fd162bdb5fb9ec0e60741c64e00f47e01c7e680722dd772014d5b309ceb9",
         "http_status": "HTTP/2 200 ",
@@ -977,7 +977,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "fc62fd162bdb5fb9ec0e60741c64e00f47e01c7e680722dd772014d5b309ceb9",
         "http_status": "HTTP/2 200 ",
@@ -996,11 +996,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp",
+      "url": "https://assets.example.com/art/847_vulcano_dragon.webp",
       "request_variant": "plain",
       "request_origin": null,
       "json": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.json",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.json",
         "checked_at_utc": "2026-10-16T11:24:29+00:00",
         "sha256": "8e0d312262cc17320fe7f941ddacef22a8261541e0b05ffdf21a23baa5e4904d",
         "http_status": "HTTP/2 200 ",
@@ -1014,7 +1014,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.webp",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "c0431b7f16818c4fb8c8d81790b5a26a16020676798f316e0b53bbe1be340815",
         "http_status": "HTTP/2 200 ",
@@ -1029,7 +1029,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "c0431b7f16818c4fb8c8d81790b5a26a16020676798f316e0b53bbe1be340815",
         "http_status": "HTTP/2 200 ",
@@ -1048,11 +1048,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp",
+      "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.json",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.json",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "1b0f4160a8f2ebd74089a5c0d623629bbca1db62e58ae3e6bff42f764005c91b",
         "http_status": "HTTP/2 200 ",
@@ -1066,7 +1066,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "b3aaf1f2fc97fe0ed002f31ed2a496d2676f322c25d8706eb9535299de3c12a9",
         "http_status": "HTTP/2 200 ",
@@ -1081,7 +1081,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2042_vulcano_golem-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "b3aaf1f2fc97fe0ed002f31ed2a496d2676f322c25d8706eb9535299de3c12a9",
         "http_status": "HTTP/2 200 ",
@@ -1100,11 +1100,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp",
+      "url": "https://assets.example.com/art/2042_vulcano_golem.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.json",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.json",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "1e333034eaae1ed13f6ec148cf56ad4e9e03ab93a3f832c3880ebe061d4d0f09",
         "http_status": "HTTP/2 200 ",
@@ -1118,7 +1118,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.webp",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "350539cb4bb9af6f7b4decd9f755523848573bad0c297819dd4f10ddc4ee015f",
         "http_status": "HTTP/2 200 ",
@@ -1133,7 +1133,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2042_vulcano_golem.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2042_vulcano_golem.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:32+00:00",
         "sha256": "350539cb4bb9af6f7b4decd9f755523848573bad0c297819dd4f10ddc4ee015f",
         "http_status": "HTTP/2 200 ",
@@ -1152,11 +1152,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.json",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.json",
         "checked_at_utc": "2026-10-16T11:24:30+00:00",
         "sha256": "c11b03049557d2d08f849050ac57b59f942b14411bb20f73c05b001fa027f13a",
         "http_status": "HTTP/2 200 ",
@@ -1170,7 +1170,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.webp",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "d15ac91fab9112054606dff16237b3b970d386bfd0a969fe9b72dcd9e3d8b327",
         "http_status": "HTTP/2 200 ",
@@ -1185,7 +1185,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "d15ac91fab9112054606dff16237b3b970d386bfd0a969fe9b72dcd9e3d8b327",
         "http_status": "HTTP/2 200 ",
@@ -1204,11 +1204,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater-2.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.json",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.json",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "89402f19d87f3443ddd9834951bedc3b1bab63e7d1fb97b92bdca915ca260799",
         "http_status": "HTTP/2 200 ",
@@ -1222,7 +1222,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.webp",
         "checked_at_utc": "2026-10-16T11:24:32+00:00",
         "sha256": "6ef2f7420c0d92ab4b6e494c216c073fff12c82c8343b8bd137dfa524d03cff8",
         "http_status": "HTTP/2 200 ",
@@ -1237,7 +1237,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater-2.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater-2.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:32+00:00",
         "sha256": "6ef2f7420c0d92ab4b6e494c216c073fff12c82c8343b8bd137dfa524d03cff8",
         "http_status": "HTTP/2 200 ",
@@ -1256,11 +1256,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp",
+      "url": "https://assets.example.com/art/2055_soul_eater.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.json",
+        "url": "https://assets.example.com/art/2055_soul_eater.json",
         "checked_at_utc": "2026-10-16T11:24:31+00:00",
         "sha256": "2b601a8f9f08c4e4e734c213175767cf005045e93a3e682e7cb50997e790adb4",
         "http_status": "HTTP/2 200 ",
@@ -1274,7 +1274,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp",
+        "url": "https://assets.example.com/art/2055_soul_eater.webp",
         "checked_at_utc": "2026-10-16T11:24:32+00:00",
         "sha256": "51ca90db261af1eacb09a501d4e1adee1ad4fa522ada3b8509d5348da03bfdc5",
         "http_status": "HTTP/2 200 ",
@@ -1289,7 +1289,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2055_soul_eater.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2055_soul_eater.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "51ca90db261af1eacb09a501d4e1adee1ad4fa522ada3b8509d5348da03bfdc5",
         "http_status": "HTTP/2 200 ",
@@ -1308,11 +1308,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp",
+      "url": "https://assets.example.com/art/2060_slasher_orc-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.json",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.json",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "7ba043659ea92883f0cc90c2643df4241343a7765d0c2c93c22c410bd0becfd2",
         "http_status": "HTTP/2 200 ",
@@ -1326,7 +1326,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.webp",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "41d9d2d29e8afcc55b80be911533f44d95d0c1d9f5a209ea20f78d59e27c4087",
         "http_status": "HTTP/2 200 ",
@@ -1341,7 +1341,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2060_slasher_orc-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "41d9d2d29e8afcc55b80be911533f44d95d0c1d9f5a209ea20f78d59e27c4087",
         "http_status": "HTTP/2 200 ",
@@ -1360,11 +1360,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp",
+      "url": "https://assets.example.com/art/2060_slasher_orc.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.json",
+        "url": "https://assets.example.com/art/2060_slasher_orc.json",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "f35670acb6017749b4b554e14f22a149dfcac943ea546a2dcfb8847707baec90",
         "http_status": "HTTP/2 200 ",
@@ -1378,7 +1378,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp",
+        "url": "https://assets.example.com/art/2060_slasher_orc.webp",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "7491ad97ed67ad20143ef1d23eb175b513517bb1cb9d3086bb9117dee6023f2d",
         "http_status": "HTTP/2 200 ",
@@ -1393,7 +1393,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2060_slasher_orc.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2060_slasher_orc.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:35+00:00",
         "sha256": "7491ad97ed67ad20143ef1d23eb175b513517bb1cb9d3086bb9117dee6023f2d",
         "http_status": "HTTP/2 200 ",
@@ -1412,11 +1412,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp",
+      "url": "https://assets.example.com/art/2072_evil_demon-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.json",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.json",
         "checked_at_utc": "2026-10-16T11:24:33+00:00",
         "sha256": "c293ff8be90cbff6137c5decd7ffffd83a9aa2a98d3f496bb848a908acdff632",
         "http_status": "HTTP/2 200 ",
@@ -1430,7 +1430,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "7b34a41e65a18a268cf3b3fa1c5800bd08078cfeb07f629aa5d63be05308c3d3",
         "http_status": "HTTP/2 200 ",
@@ -1445,7 +1445,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2072_evil_demon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "7b34a41e65a18a268cf3b3fa1c5800bd08078cfeb07f629aa5d63be05308c3d3",
         "http_status": "HTTP/2 200 ",
@@ -1464,11 +1464,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp",
+      "url": "https://assets.example.com/art/2072_evil_demon.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.json",
+        "url": "https://assets.example.com/art/2072_evil_demon.json",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "4a6db804e9c0d2ee1729acb5407df4d4257f2f92f561c2e16ff6f71b6e44370a",
         "http_status": "HTTP/2 200 ",
@@ -1482,7 +1482,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp",
+        "url": "https://assets.example.com/art/2072_evil_demon.webp",
         "checked_at_utc": "2026-10-16T11:24:35+00:00",
         "sha256": "d0eb7c693d04a0be44fe53d91b8bad89895930529548689e51528bf264cbef2c",
         "http_status": "HTTP/2 200 ",
@@ -1497,7 +1497,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2072_evil_demon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2072_evil_demon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:36+00:00",
         "sha256": "d0eb7c693d04a0be44fe53d91b8bad89895930529548689e51528bf264cbef2c",
         "http_status": "HTTP/2 200 ",
@@ -1516,11 +1516,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp",
+      "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.json",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.json",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "bddcd10860b2a206b07f753444cc04520b18abcd757ef5f9b0e493ff89c39441",
         "http_status": "HTTP/2 200 ",
@@ -1534,7 +1534,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp",
         "checked_at_utc": "2026-10-16T11:24:35+00:00",
         "sha256": "c6240a8ca4459f9b938dab6e3e6c99df71e7c24af70b2245554ffc8864938289",
         "http_status": "HTTP/2 200 ",
@@ -1549,7 +1549,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2075_elemental_red_god-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "c6240a8ca4459f9b938dab6e3e6c99df71e7c24af70b2245554ffc8864938289",
         "http_status": "HTTP/2 200 ",
@@ -1568,11 +1568,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp",
+      "url": "https://assets.example.com/art/2075_elemental_red_god.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.json",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.json",
         "checked_at_utc": "2026-10-16T11:24:34+00:00",
         "sha256": "c458f0dfdf33870dbf49f04f33891024e1fab14c061bf57c9dda8ae799fad28c",
         "http_status": "HTTP/2 200 ",
@@ -1586,7 +1586,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.webp",
         "checked_at_utc": "2026-10-16T11:24:35+00:00",
         "sha256": "f25937925c275ce8a2d90f1b6b663bf03624535a46310ad94e5502fd96ea5f63",
         "http_status": "HTTP/2 200 ",
@@ -1601,7 +1601,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/2075_elemental_red_god.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/2075_elemental_red_god.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "f25937925c275ce8a2d90f1b6b663bf03624535a46310ad94e5502fd96ea5f63",
         "http_status": "HTTP/2 200 ",
@@ -1620,11 +1620,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp",
+      "url": "https://assets.example.com/art/758_infernaldragon-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.json",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.json",
         "checked_at_utc": "2026-10-16T11:24:35+00:00",
         "sha256": "78e19372d0c43d4019e7281fde5ca37e6f303b9aeab6d558d9ed192233b2589f",
         "http_status": "HTTP/2 200 ",
@@ -1638,7 +1638,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:36+00:00",
         "sha256": "7f95991ed0080324cbeeab261d727d889ee200e73f72ff6220665594c5b478eb",
         "http_status": "HTTP/2 200 ",
@@ -1653,7 +1653,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/758_infernaldragon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:36+00:00",
         "sha256": "7f95991ed0080324cbeeab261d727d889ee200e73f72ff6220665594c5b478eb",
         "http_status": "HTTP/2 200 ",
@@ -1672,11 +1672,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp",
+      "url": "https://assets.example.com/art/758_infernaldragon.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.json",
+        "url": "https://assets.example.com/art/758_infernaldragon.json",
         "checked_at_utc": "2026-10-16T11:24:36+00:00",
         "sha256": "425c37bcb7d6a13be9e5fb80b41ccce9f636c78cf104016470d4cdb37bc2e10a",
         "http_status": "HTTP/2 200 ",
@@ -1690,7 +1690,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp",
+        "url": "https://assets.example.com/art/758_infernaldragon.webp",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "1dc5da76cbfc60280c317aa55024ced626f81e7deb5db09c6ba12d667fc1690f",
         "http_status": "HTTP/2 200 ",
@@ -1705,7 +1705,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/758_infernaldragon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/758_infernaldragon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "1dc5da76cbfc60280c317aa55024ced626f81e7deb5db09c6ba12d667fc1690f",
         "http_status": "HTTP/2 200 ",
@@ -1724,11 +1724,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp",
+      "url": "https://assets.example.com/art/785_bull_png-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.json",
+        "url": "https://assets.example.com/art/785_bull_png-1.json",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "97639e3c92b77f686e91331959106588387d7b8c0d754d250958611565c51273",
         "http_status": "HTTP/2 200 ",
@@ -1742,7 +1742,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp",
+        "url": "https://assets.example.com/art/785_bull_png-1.webp",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "916fcbe7be1b6acd0a4072af818eed2d006c31c888e92a207648b31928481de9",
         "http_status": "HTTP/2 200 ",
@@ -1757,7 +1757,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/785_bull_png-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "916fcbe7be1b6acd0a4072af818eed2d006c31c888e92a207648b31928481de9",
         "http_status": "HTTP/2 200 ",
@@ -1776,11 +1776,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/785_bull_png.webp",
+      "url": "https://assets.example.com/art/785_bull_png.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.json",
+        "url": "https://assets.example.com/art/785_bull_png.json",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "60742192fdb89e5be224c57b95af4adf47d08a3b7ba3145ddbbecaa4cdfb3c0b",
         "http_status": "HTTP/2 200 ",
@@ -1794,7 +1794,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.webp",
+        "url": "https://assets.example.com/art/785_bull_png.webp",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "67eb7c8cf9be779a38ed5d6241123fa5f22caf902582e6ab22dc25e0522211f3",
         "http_status": "HTTP/2 200 ",
@@ -1809,7 +1809,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/785_bull_png.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/785_bull_png.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "67eb7c8cf9be779a38ed5d6241123fa5f22caf902582e6ab22dc25e0522211f3",
         "http_status": "HTTP/2 200 ",
@@ -1828,11 +1828,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.json",
         "checked_at_utc": "2026-10-16T11:24:37+00:00",
         "sha256": "13d05aa6f3e941a174523501e2202b6ec155198095315ad148f6e5e7faca022d",
         "http_status": "HTTP/2 200 ",
@@ -1846,7 +1846,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "f59b0f0afc47bd97f956a73fd92954e9081e7f617bbed78e22cc08eb9281978d",
         "http_status": "HTTP/2 200 ",
@@ -1861,7 +1861,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "f59b0f0afc47bd97f956a73fd92954e9081e7f617bbed78e22cc08eb9281978d",
         "http_status": "HTTP/2 200 ",
@@ -1880,11 +1880,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.json",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "35383481c9401fa1645a5450e9c8aff58b1c06bc102bfeb397dc9abf6d90f181",
         "http_status": "HTTP/2 200 ",
@@ -1898,7 +1898,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp",
         "checked_at_utc": "2026-10-16T11:24:38+00:00",
         "sha256": "73ed0e9cf2f76207503362fc838975ba0e537938f93e671a6ccc6d51e1bb0122",
         "http_status": "HTTP/2 200 ",
@@ -1913,7 +1913,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete-2.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete-2.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "73ed0e9cf2f76207503362fc838975ba0e537938f93e671a6ccc6d51e1bb0122",
         "http_status": "HTTP/2 200 ",
@@ -1932,11 +1932,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp",
+      "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.json",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.json",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "521aa11d2cf9aff8267a53061a6ce04f552008d0188fed0e79d5885265f87c84",
         "http_status": "HTTP/2 200 ",
@@ -1950,7 +1950,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "1c09b3dcb87b12fd0e9c652ec9ce9d7a29d68f42738c03ddc88e78e3a20e9e5e",
         "http_status": "HTTP/2 200 ",
@@ -1965,7 +1965,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/845_necro_dragon_jinete.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/845_necro_dragon_jinete.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:40+00:00",
         "sha256": "1c09b3dcb87b12fd0e9c652ec9ce9d7a29d68f42738c03ddc88e78e3a20e9e5e",
         "http_status": "HTTP/2 200 ",
@@ -1984,11 +1984,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp",
+      "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.json",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.json",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "87bbb296d3ee4c34d9c9e142fd52fcf014f08743d610c30ee6588a92637c0aa1",
         "http_status": "HTTP/2 200 ",
@@ -2002,7 +2002,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp",
         "checked_at_utc": "2026-10-16T11:24:40+00:00",
         "sha256": "fc62fd162bdb5fb9ec0e60741c64e00f47e01c7e680722dd772014d5b309ceb9",
         "http_status": "HTTP/2 200 ",
@@ -2017,7 +2017,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon-1.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/847_vulcano_dragon-1.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:40+00:00",
         "sha256": "fc62fd162bdb5fb9ec0e60741c64e00f47e01c7e680722dd772014d5b309ceb9",
         "http_status": "HTTP/2 200 ",
@@ -2036,11 +2036,11 @@
       "passed": true
     },
     {
-      "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp",
+      "url": "https://assets.example.com/art/847_vulcano_dragon.webp",
       "request_variant": "origin",
-      "request_origin": "https://socialemperors.me",
+      "request_origin": "https://example.com",
       "json": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.json",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.json",
         "checked_at_utc": "2026-10-16T11:24:39+00:00",
         "sha256": "8e0d312262cc17320fe7f941ddacef22a8261541e0b05ffdf21a23baa5e4904d",
         "http_status": "HTTP/2 200 ",
@@ -2054,7 +2054,7 @@
       ],
       "json_matches_verified_export": true,
       "ordinary": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.webp",
         "checked_at_utc": "2026-10-16T11:24:40+00:00",
         "sha256": "c0431b7f16818c4fb8c8d81790b5a26a16020676798f316e0b53bbe1be340815",
         "http_status": "HTTP/2 200 ",
@@ -2069,7 +2069,7 @@
         "matches_verified_export": true
       },
       "repair": {
-        "url": "https://assets.socialemperors.me/art/847_vulcano_dragon.webp?repair=38885093455",
+        "url": "https://assets.example.com/art/847_vulcano_dragon.webp?repair=38885093455",
         "checked_at_utc": "2026-10-16T11:24:40+00:00",
         "sha256": "c0431b7f16818c4fb8c8d81790b5a26a16020676798f316e0b53bbe1be340815",
         "http_status": "HTTP/2 200 ",

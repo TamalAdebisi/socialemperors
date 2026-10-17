@@ -14,6 +14,9 @@
 // and the server's log go to e2e/out/. It makes accounts, so it only ever
 // runs against its own server, never the live site.
 // For --webkit, also install that engine: npx playwright install webkit.
+// The art: art/sheets/ when tools/export_art.sh has made it here, or else the
+// live art bucket, whose address goes in SE_E2E_LIVE_ASSETS. The repository is
+// public, so it doesn't name the bucket: set that in your environment.
 
 import { execSync, spawn, spawnSync } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -27,7 +30,8 @@ import { DISCORD, newPlayer } from "./lib.mjs";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TESTS = join(ROOT, "e2e", "tests");
 // The art sheets: made on this computer by tools/export_art.sh, or else the live ones.
-const LIVE_ASSETS = "https://assets.socialemperors.me";
+const LIVE_ASSETS = (process.env.SE_E2E_LIVE_ASSETS || "").replace(/\/+$/, "");
+const borrowArt = !existsSync(join(ROOT, "art", "sheets")) && !process.env.SE_ASSETS_URL;
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((arg) => arg.startsWith("--")));
@@ -41,6 +45,10 @@ for (const name of chosen) {
     console.error(`No test called ${name}. There are: ${all.join(", ")}`);
     process.exit(2);
   }
+}
+if (borrowArt && !LIVE_ASSETS) {
+  console.error("No art to test with: make art/sheets with tools/export_art.sh, or set SE_E2E_LIVE_ASSETS to the live art bucket's address.");
+  process.exit(2);
 }
 
 /** Playwright from this folder's packages, or else the one installed for everyone. */
@@ -103,9 +111,11 @@ const env = { ...process.env, SE_DATA_DIR: data, SE_PORT: String(port), SE_BIND_
 for (const name of ["SE_DATABASE_URL", "SE_SUPABASE_URL", "SE_SUPABASE_KEY", "SE_SECRET_KEY", "SE_PUBLIC_URL", "SE_INVITE_CODE"]) {
   delete env[name];
 }
-if (!existsSync(join(ROOT, "art", "sheets")) && !env.SE_ASSETS_URL) {
+if (borrowArt) {
   env.SE_ASSETS_URL = LIVE_ASSETS;
   process.env.SE_E2E_LIVE_ASSETS = LIVE_ASSETS;  // lib.mjs fetches it for the page
+} else {
+  delete process.env.SE_E2E_LIVE_ASSETS;  // the server has art of its own
 }
 const log = join(OUT, "server.log");
 const logStream = createWriteStream(log);
