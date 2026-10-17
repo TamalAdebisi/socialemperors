@@ -126,6 +126,7 @@ export class Doings {
   attacksWon = 0;
   /** The Battle Results window opened. */
   historyOpened = false;
+  collectionsOpened = false;
   /**
    * The goal kinds listened for: the open goals' (GoalKeeper sets them before
    * each check), or null for all. As in the Flash client, most doings count
@@ -356,6 +357,8 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.attacksHigherLevel, n(0));
     case "attack-neighbour":
       return of(doings.neighboursAttacked.size ? 1 : 0, 1);
+    case "collections-opened":
+      return of(doings.collectionsOpened ? 1 : 0, 1);
     case "history-opened":
       return of(doings.historyOpened ? 1 : 0, 1);
     case "defence-plan":

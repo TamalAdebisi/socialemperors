@@ -448,6 +448,9 @@ merging the two wait fixes with that separate failure documented.
         Existing rooms and unfinished
         matches reopen from the server save. Classic choices stay hidden at
         the owner's request; their routes and shared saves remain.
+  - [x] Collections window: saved pieces, set exchanges and cash completion,
+        original reward restrictions, desktop/phone, Storage and goal 54
+        ([CLIENT.md](CLIENT.md#collection-pieces))
   - [x] Arthur's mandatory lessons in the new client: eight clearer chapters,
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy

@@ -4,8 +4,8 @@
 // piece of one of the game's 23 collections of 5. Out of 100 harvests, on
 // average, half a piece is one of the rarest kind, 2 a rare one and 1.5 an
 // uncommon one: 4 in all. The piece is the player's at once, and the server
-// hears `add_collectable` (collection, piece). The collections' window, to
-// trade a full set for its prize, is for later. No drawing here.
+// hears `add_collectable` (collection, piece). The collections window exchanges these saved counts
+// through collectionBook.ts. No drawing here.
 
 import type { Command } from "../net/commands.ts";
 

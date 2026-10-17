@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 63 built, 11 partly, 34 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 64 built, 11 partly, 33 not yet, 23 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -204,7 +204,7 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | `popups/PopupMistery.as` | 103 | A mystery pack: one prize from four (rare to common) for cash. | not yet |
 | `popups/PopupSuperMistery.as` | 447 | A super mystery box: one, two or four random prizes for three prices in cash; its XP on closing. | not yet |
 | `popups/PopupNews.as` | 613 | The news: ten items turning every 6 seconds, offer packs, links to the shop and the lore. | not yet: left out by the owner's call (PARITY.md) |
-| `popups/popupCollections.as` | 330 | Collections: pieces found, three collections a page; trade a full one for its reward or finish it for cash (`finish_collection`). | not yet; `game_collections.py` |
+| `popups/popupCollections.as` | 330 | Collections: pieces found, three collections a page; trade a full one for its reward or finish it for cash (`finish_collection`). | built: `ui/collections.ts`, `rules/collectionBook.ts`; original pieces, exchange and cash rules, Storage and goal 54 |
 | `popups/PopUpCollectionComplete.as` | 101 | "Collection complete", to share. | not needed: Facebook share |
 | `popups/kompu/PopupKompuGacha.as` | 393 | A timed potion offer: three wizards (free, gold, cash) try to brew; enough potions win prizes, then a big unique one. | not yet: our server sends no offer and doesn't serve `kompu_try.php`, so neither game shows it |
 | `popups/kompu/PopupKompuResult.as` | 204 | A brewing try: working, then success or failure. | not yet |
