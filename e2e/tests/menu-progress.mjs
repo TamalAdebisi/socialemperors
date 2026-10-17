@@ -38,9 +38,9 @@ export default async function menuProgress({newPlayer}){
   assert.ok(placed,"the social fixture survives ordinary overlap cleanup");assert.deepEqual(placed.slice(1,3),at);
  };
  const rewarded=async(id)=>{await untilRewarded([id]);};
- await reach(53,103,387,[57,50],3);
+ await reach(53,103,387,[56,50],3);
  await page.locator(".goal-cards",{hasText:"Get recruitment prize"}).waitFor();
- await player.select([57,50],"Recruitment Prize");await player.press("Open");
+ await player.select([56,50],"Recruitment Prize");await player.press("Open");
  const social=page.locator(".social-window:not([hidden])");
  await social.getByRole("button",{name:"Claim reward",exact:true}).click();
  await rewarded(104);await player.shot("recruitment-goal-saved");
