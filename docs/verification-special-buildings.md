@@ -57,6 +57,21 @@ corrections, passes the complete server and client checks:
 Exact clean start/end receipts and full output are retained in
 `work/checks/integrated-server-final/` and `integrated-client-final/`.
 
+Final review also reproduced a completed legacy queue describing a building
+instead of a unit. Both claim readers now refuse that metadata before any
+mutation, while ordinary completed unit collection still works. The real
+server regression first failed, then passed; independent review found no
+remaining issue. Exact clean `f3529ef24120bec807dd207083529fcf4ad99800`,
+including this correction, passes all complete checks again:
+
+- Server: **467 run, 458 passed, nine existing PostgreSQL skips**;
+  unittest time 34.760s, command duration 35.337s.
+- Client types and **447/447 tests passed**; test time 13.130s,
+  combined command duration 16.202s.
+
+Receipts and output: `work/checks/integrated-server-release/` and
+`integrated-client-release/`.
+
 Independent integration review reproduced a malformed queue being refused
 by Soul Mixer, then converted to a claimable zero by time travel. A new
 real-command regression first failed on booleans/fractions and an infinite
