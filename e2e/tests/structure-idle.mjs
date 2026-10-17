@@ -72,6 +72,10 @@ export default async function structureIdle({ newPlayer }) {
     // offers. Only one page/renderer is alive at a time.
     if (index > 0 && index % 6 === 0) await player.reload();
     const name = names[index];
+    const groundPatch = { x: 800, y: 580, width: 80, height: 35 };
+    const groundBefore = name === "1479_chained_levelup" ? await player.pixels(groundPatch) : null;
+    if (groundBefore) assert.ok(new Set(groundBefore.map((pixel) => pixel.join(","))).size > 1,
+      "the town has textured ground before loading the atlas that needs recovery");
     const result = await page.evaluate(async ({ name, states }) => {
       const { view, items } = window.seHome.parts;
       // Keep the gallery separate from nearby town art. Capture its actual
@@ -132,7 +136,7 @@ export default async function structureIdle({ newPlayer }) {
       assert.ok(face.valid && face.synchronized, `${name}/${face.facing} has a matching outline on every frame`);
       assert.ok(face.first, `${name}/${face.facing} starts in its idle state`);
       assert.ok(face.visible > 10, `${name}/${face.facing} actually renders visible pixels`);
-      if (webkit) assert.equal(face.imageType, "HTMLImageElement", `${name}/${face.facing} avoids Safari's ImageBitmap path`);
+      if (webkit) assert.equal(face.imageType, "ImageBitmap", `${name}/${face.facing} retains bitmap loading with blank-atlas recovery`);
       writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }
     delete result.captures;
@@ -191,6 +195,12 @@ export default async function structureIdle({ newPlayer }) {
     report.push(result);
     writeFileSync(join(player.out, "structure-idle-audit.json"), JSON.stringify(report, null, 2));
     await page.evaluate(() => window.seHome.parts.view.showGhost(null));
+    if (groundBefore) {
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.deepEqual(await player.pixels(groundPatch), groundBefore,
+        "recovering a blank atlas must preserve every ground pixel in the existing town");
+      await player.shot("after-bitmap-recovery");
+    }
   }
   assert.ok(has(await player.saved(), 77, [55, 56]), "the selected mill remains in the server save");
 

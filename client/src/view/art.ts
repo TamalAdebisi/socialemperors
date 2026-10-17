@@ -7,10 +7,6 @@ import { Assets, Spritesheet, Texture, isSafari, type SpritesheetData } from "pi
 import type { Bounds } from "../rules/geometry.ts";
 import { STEADY_BUILDING } from "./buildingAnimation.ts";
 
-// Safari's ImageBitmap path can blank atlases or corrupt the rendered scene.
-// Load ordinary images there instead; fetching and loading stay asynchronous.
-if (isSafari()) Assets.setPreferences({ preferWorkers: false, preferCreateImageBitmap: false });
-
 interface SheetMeta {
   image: string;
   fps?: number;
@@ -200,9 +196,50 @@ async function sheetOf(data: SheetJson, image: string): Promise<Spritesheet> {
     // Smaller copies for when the map is zoomed out, so the art doesn't shimmer.
     data: { autoGenerateMipmaps: true },
   });
+  await repairBlankBitmap(texture, image);
   const sheet = new Spritesheet(texture, data);
   await sheet.parse();
   return sheet;
+}
+
+const checkedBitmaps = new WeakMap<object, Promise<void>>();
+
+/** Keep Safari's normal worker path; decode again only when it returned no pixels. */
+function repairBlankBitmap(texture: Texture, image: string): Promise<void> {
+  const source = texture.source;
+  const bitmap = source.resource;
+  if (!isSafari() || typeof ImageBitmap === "undefined" || !(bitmap instanceof ImageBitmap)) {
+    return Promise.resolve();
+  }
+  let checked = checkedBitmaps.get(source);
+  if (!checked) {
+    checked = (async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 64;
+      const context = canvas.getContext("2d", { willReadFrequently: true })!;
+      const visible = (picture: ImageBitmap): boolean => {
+        context.clearRect(0, 0, 64, 64);
+        context.drawImage(picture, 0, 0, 64, 64);
+        return context.getImageData(0, 0, 64, 64).data.some((value, i) => i % 4 === 3 && value > 0);
+      };
+      if (visible(bitmap)) return;
+      // Some large atlases arrive from WebKit's worker as transparent pixels.
+      // The same file decoded on the page restores them. Do not replace a
+      // genuinely empty atlas or change the path of already visible textures.
+      const response = await fetch(image);
+      if (!response.ok) throw new Error(`${image}: ${response.status}`);
+      const replacement = await createImageBitmap(await response.blob());
+      if (visible(replacement)) {
+        source.resource = replacement;
+        source.update();
+        bitmap.close();
+      } else {
+        replacement.close();
+      }
+    })();
+    checkedBitmaps.set(source, checked);
+  }
+  return checked;
 }
 
 function itemArt(name: string, data: SheetJson, sheets: Spritesheet[]): ItemArt {

@@ -32,13 +32,23 @@ them can be found and reversed. The big, agreed decisions are in
   [the verification record](docs/verification-96.md). Linux WebKit verifies
   the engine here, not the owner's Mac graphics driver.
 
-## 17 October 2026: Safari texture decoding
+## 17 October 2026: Safari texture recovery
 
-- **Withdraw the mipmap-disable experiment.** An isolated fresh-build
-  comparison passed overlay and farm checks, but the wider run still
-  reproduced corrupt terrain. It does not justify reduced zoom quality;
-  retain mipmaps while diagnosing the rendering fault. The failed wider
-  run and its successful gallery are retained in the verification record.
+- **Keep the ordinary worker path and recover only blank bitmaps.** A
+  worker-created ImageBitmap could be entirely transparent despite valid
+  source art. Sample its alpha before parsing the atlas. If it is empty,
+  decode the same file on the page and replace the original only when that
+  second decode contains pixels. Truly empty art stays empty. This preserves
+  the original files, mipmaps and normal loading path, with a small check
+  per Safari atlas. Other engines do not perform that check.
+- **Withdraw global decoding and rendering workarounds.** Moving all Safari
+  decoding onto the page, including through HTML images, reproduced corrupt
+  town draws. Previous main and the new animation fixes using the original
+  worker path pass the same strict scene checks. Disabling mipmaps, using
+  WebGL 1, and uploading explicit grass pixels did not resolve the fault.
+  None of those settings is retained. Viewport resets and forced re-uploads
+  remain diagnostics only. Linux WebKit does not establish the owner's
+  exact Mac graphics-driver behavior.
 - **Load only the images used by the deliberately fixed pose.** That one
   incomplete export has 100 image pages, over 4 GB decoded. Loading all of
   them after the Safari decode repair exhausted the 8 GB test machine.
@@ -47,18 +57,6 @@ them can be found and reversed. The big, agreed decisions are in
   displayed pose and needs no new public art. Other structures retain their
   full animations. The browser regression checks the actual image requests
   against the pages used by both rendered facings.
-- **Use ordinary image elements in Safari.** A worker-created ImageBitmap
-  could contain transparent pixels despite valid source art. Page-created
-  ImageBitmaps restored those pixels but reproduced a separate whole-scene
-  rendering regression after a worker left a farm. Viewport/state resets
-  did not fix it. A fresh build using HTML image elements passed the new
-  full-scene pixel check and rendered the correct town. Use Pixi's supported
-  `preferCreateImageBitmap: false` and `preferWorkers: false` preferences
-  with its existing Safari detection. Loading remains asynchronous, with
-  original images; other engines keep their existing path.
-  The gallery checks the actual source type as well as visible pixels.
-  Cached-code injection attempts did not apply the preference and are
-  excluded from the comparison; the built variant verified its source type.
 
 ## 16 October 2026: getting in touch, and who can join
 
