@@ -346,6 +346,9 @@ merging the two wait fixes with that separate failure documented.
       the new client opens in the classic game, and Arthur's lessons are
       offered there). Players can use the new client for everything but
       battles, which open in the classic game.
+      Shop details now show per-kind facts by hover/tap, original category
+      pictures and New badges; early unlocking remains disabled
+      ([CLIENT.md](CLIENT.md#shop-details)).
       **#87 verified and delivered:** the building card, Upgrade and the
       site's Menu; [all integrated checks](docs/verification-87.md) pass.
       The final Beta 1 comparison remains on hold (HANDOFF.md, task 6).

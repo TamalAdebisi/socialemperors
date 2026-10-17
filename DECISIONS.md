@@ -1,5 +1,12 @@
 # Judgment calls
 
+## 17 October 2026 — narrow shop previews use Details
+
+Automatic hover/focus previews apply to the wide layout. A narrow layout
+uses the explicit Details button, including when driven by a mouse, so a
+preview cannot cover a purchase target as the pointer enters the card.
+Tap and keyboard Details access remain available in both layouts.
+
 Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
@@ -19,6 +26,19 @@ them can be found and reversed. The big, agreed decisions are in
   camera move, clears when selection ends or the mouse leaves, and yields
   to spell aiming and the existing repair bucket. This changes feedback,
   not attack rules or the saved army.
+
+## 17 October 2026: shop details without changing buying
+
+- Preserve direct buying/placing. A separate Details button pins the
+  original per-kind facts on phones and keyboards; desktop hover opens
+  the same white bubble. Locked and unaffordable cards remain readable.
+  Escape dismisses details before the shop.
+- Reuse the original category icons with their actual category mapping,
+  omitting the Flash placeholder caption. Retain the original New badge
+  and date-based limited badge, including zero days after expiry.
+- Keep base shop numbers distinct from current workers or map progress.
+  Scout life is the eagle's configured tier value, not the building's HP.
+  Early cash unlocking remains inactive; no new offers or boxes are shown.
 
 ## 17 October 2026: social-building windows and local friends
 

@@ -509,6 +509,12 @@ info panel. It is verified and delivered in #87.
 
 ### 4. Beta 1: the shop's details (M) - [ ]
 
+Implemented on `codex/shop-details`; browser verification and merge are
+pending. Original per-kind facts, hover/pinned tap details, category art,
+New/limited badges and training animation are built. The historical
+research below remains; early cash unlocking stays disabled. Beta 1's
+run-through remains on hold.
+
 PARITY.md, "Windows and messages", Shop: what each thing gives or houses
 (a unit's numbers), on hover or tap; the tabs' own pictures; "new" badges.
 The same line asks for a confirmation before opening a building early for

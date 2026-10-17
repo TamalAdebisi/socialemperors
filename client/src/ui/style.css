@@ -5013,3 +5013,25 @@ button.world-piece:hover img {
 .social-resources { display: flex; flex-wrap: wrap; gap: 8px; }
 .social-window .shop-tabs { margin: 12px 0; }
 .social-clock { font-weight: bold; }
+
+.shop-category-icon { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; margin-right: 4px; }
+.shop-new { position: absolute; top: 5px; left: 5px; width: 38px; height: auto; }
+.shop-card { position: relative; }
+/* A Details action belongs below its card, inside the same grid row. */
+.shop-items > li { display: flex; flex-direction: column; min-width: 0; }
+.shop-items > li > .shop-card { height: auto; flex: 1; }
+.shop-limited { font-size: 10px; color: #8a331b; }
+.shop-details-button { flex: none; display: block; width: 100%; margin: 4px 0; font-size: 11px; }
+.shop-details { position: fixed; z-index: 4; width: 300px; max-height: min(70vh,600px); overflow: auto; padding: 12px; border: 2px solid var(--wood); border-radius: 12px; background: white; color: var(--ink); box-shadow: 0 6px 20px #0005; }
+.shop-details[hidden] { display: none; }
+.shop-details h3 { margin: 6px 0; }
+.shop-details p { margin: 8px 0; white-space: pre-line; }
+.shop-details > button { float: right; }
+.shop-detail-stats { display: grid; grid-template-columns: repeat(3,auto auto); align-items: center; gap: 8px; clear: both; }
+.shop-detail-stats img { width: 22px; height: 22px; object-fit: contain; }
+.shop-detail-stats dd, .shop-detail-values dd { margin: 0; }
+.shop-detail-values { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+.shop-detail-values .icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 4px; }
+@media (max-width:720px),(orientation:portrait) and (max-width:1000px) {
+  .shop-details { left: 12px !important; right: 12px; top: auto !important; bottom: calc(var(--dock-h) + 12px); width: auto; max-height: 48vh; }
+}
