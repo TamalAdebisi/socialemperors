@@ -87,14 +87,23 @@ picker's separate ownership-source gap remains in PARITY.md.
 - Requests retain the `data` field's 64-character prefix, semicolon and
   JSON, with `user_id` and ordinary authenticated form fields. This
   unsigned client uses 64 zeros, as for the original list service.
-  Failed reads must not be mistaken for an empty room. Weekly-state and
-  reward-index fields are records, not arrays; malformed shapes are
-  rejected rather than interpreted as empty data.
+  Failed reads must not be mistaken for an empty room. The client checks
+  required room/player/match fields and optional winner/ranking fields
+  before using the response. Ranking keys must be positive integer ranks;
+  each top row and the own-rank row must have valid numeric data. Weekly
+  maps contain records with 0/1 open/full flags and finite remaining time;
+  reward-map entries are nonnegative integer indexes. Supported
+  number-or-string wire fields, nullable dates, empty metadata/maps and
+  weekly bots without outgoing matches remain valid. These response
+  checks add no ownership or complex-unit cap to the original entry rules.
 - A successful join/create returns the full room/list state. Refusals
   distinguish invalid team, too few friends and other unavailability.
   After an ambiguous entry reply, read the existing room rather than
-  blindly sending another entry. Refresh authoritative balances after
-  services; they may also have advanced another room or paid a prize.
+  blindly sending another entry. Another tab may have entered a different
+  type or team: display that actual enrollment and its saved balances,
+  without crediting the unconfirmed attempt as a confirmed fee spend.
+  Refresh authoritative balances after services; they may also have
+  advanced another room or paid a prize.
 
 *Built:* original formats in `net/server.ts`, entry checks in
 `rules/tournaments.ts`, serialized actions in `ui/tournaments.ts`, and
@@ -261,8 +270,10 @@ completion and surrender; browser checks cover real saved matches.
   client's Storage, not the separate social Gifts panel. Public prizes
   use the room's saved reward index, not today's list index.
 - Flash acknowledged a delayed finished popup and cleaned the room.
-  Here the panel retains results until Done sends `clean_tournament`.
-  This only marks them seen and permits another enrollment; it pays
+  Here the panel retains results until Done sends `clean_tournament`,
+  or the server removes the room after its existing 30-day
+  `KEEP_FINISHED` retention, measured from `date_finished`.
+  Done only marks them seen and permits another enrollment; it pays
   nothing. Home balances and stored prizes are refreshed. Repeated
   finish, info and clean requests do not pay again. Weekly rooms retain
   their week's entered/ranking state after acknowledgement.

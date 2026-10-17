@@ -78,6 +78,7 @@ export class TournamentWindow {
     this.parts = parts;
     this.panel = new Panel("battle", "Tournaments", { className: "list-window tournament-window", onClose: () => {
       this.generation++;
+      this.setBusy(false);
       if (this.timer !== null) clearInterval(this.timer);
       this.timer = null;
       this.results?.destroy();
@@ -98,6 +99,7 @@ export class TournamentWindow {
     this.panel.title = "Tournaments";
     this.panel.body.replaceChildren(text("p", "Loading tournaments…"));
     this.panel.open();
+    this.setBusy(true);
     try {
       const info = await this.parts.info();
       if (generation !== this.generation) return;
@@ -124,6 +126,8 @@ export class TournamentWindow {
       if (generation !== this.generation) return;
       this.panel.body.replaceChildren(text("p", "Couldn't load or save your tournament details. Please try again.", "tournament-error"),
         button("Try again", () => void this.open()));
+    } finally {
+      this.setBusy(false, generation);
     }
   }
 
@@ -278,7 +282,7 @@ export class TournamentWindow {
     } catch {
       if (generation === this.generation) this.error("Couldn't refresh your available units. Please try again before creating a tournament.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 
@@ -295,7 +299,7 @@ export class TournamentWindow {
     } catch {
       if (generation === this.generation) this.error("Couldn't refresh your available units. Please try opening the team box again.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 
@@ -333,6 +337,7 @@ export class TournamentWindow {
           : await this.parts.join(String(kind.id), tournamentCategory(this.parts.level()), [...this.team], this.tab === "own" ? card.key : "");
         confirmedEntry = reply.result === "OK";
       } catch {
+        if (generation !== this.generation) return;
         // An entry may have succeeded before its answer was lost. Read the
         // saved room instead of repeating the fee or assuming it failed.
         const current = await this.parts.info();
@@ -345,6 +350,7 @@ export class TournamentWindow {
       // A reconciled room might have been joined in another tab. Only the
       // service's own success confirms this particular entry fee was paid.
       if (confirmedEntry) this.parts.spent(kind.resource_type, Number(kind.cost));
+      if (generation !== this.generation) return;
       let balanceFailed = false;
       try { await this.parts.refreshTown(); } catch { balanceFailed = true; }
       if (generation !== this.generation) return;
@@ -355,8 +361,9 @@ export class TournamentWindow {
         this.fetchedAt = Date.now();
         this.render(true);
       } else {
-        this.info = await this.parts.info();
+        const next = await this.parts.info();
         if (generation !== this.generation) return;
+        this.info = next;
         this.fetchedAt = Date.now();
         this.creating = false;
         this.render(true);
@@ -367,7 +374,7 @@ export class TournamentWindow {
     } catch (error) {
       if (generation === this.generation) this.error(error instanceof Error ? error.message : "Entry couldn't be confirmed. Please refresh.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 
@@ -431,6 +438,7 @@ export class TournamentWindow {
     this.setBusy(true);
     try {
       const next = await this.parts.info();
+      if (generation !== this.generation) return;
       await this.parts.refreshTown();
       if (generation !== this.generation) return;
       const changedRoom = this.info?.tournament?.tournament_id !== next.tournament?.tournament_id;
@@ -447,11 +455,12 @@ export class TournamentWindow {
       if (this.results && next.tournament && !changedRoom) this.results.update(next.tournament);
       else this.render();
     } catch {
+      if (generation !== this.generation) return;
       this.refreshFailed = true;
-      if (generation === this.generation) this.error("Couldn't refresh your tournament. Your last saved room is still shown; try Refresh again.");
+      this.error("Couldn't refresh your tournament. Your last saved room is still shown; try Refresh again.");
       throw new Error("Couldn't refresh your tournament. Please try again.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 
@@ -463,10 +472,13 @@ export class TournamentWindow {
     this.setBusy(true);
     try {
       if (!await this.parts.flush()) throw new Error("Save failed. Reload before leaving.");
+      if (generation !== this.generation) return;
       const reply = clean ? await this.parts.clean(room.tournament_id) : cancel ? await this.parts.cancel(room.tournament_id) : await this.parts.leave(room.tournament_id);
       const kind = this.parts.rules.kinds.find((k) => String(k.id) === room.tournament_type_id);
       if (reply.resources?.refund && kind) this.parts.command("tournament_refund_resources", kind.resource_type, Number(kind.cost));
+      if (generation !== this.generation) return;
       const next = await this.parts.info();
+      if (generation !== this.generation) return;
       await this.parts.refreshTown();
       if (generation !== this.generation) return;
       this.info = next;
@@ -477,11 +489,12 @@ export class TournamentWindow {
       this.fetchedAt = Date.now();
       this.render(true);
     } catch {
+      if (generation !== this.generation) return;
       // Leave, cancel and clean are safe to repeat for this saved room. Keep
       // it visible on failure so the user can reconcile with Refresh.
       throw new Error("Couldn't confirm the change. Refresh your tournament before trying again.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 
@@ -530,11 +543,18 @@ export class TournamentWindow {
     box.scrollIntoView({ block: "nearest" });
   }
 
-  private setBusy(busy: boolean): void {
+  private setBusy(busy: boolean, generation = this.generation): void {
+    // Closing releases this window immediately. An older operation may still
+    // finish its service bookkeeping, but cannot unlock the reopened view.
+    if (generation !== this.generation) return;
     this.busy = busy;
+    this.panel.body.setAttribute("aria-busy", String(busy));
     // Preserve every control's own disabled rule across a pending request.
     for (const control of this.panel.body.querySelectorAll("button")) {
-      if (busy) { control.dataset.wasDisabled = String(control.disabled); control.disabled = true; }
+      if (busy) {
+        if (control.dataset.wasDisabled === undefined) control.dataset.wasDisabled = String(control.disabled);
+        control.disabled = true;
+      }
       else if (control.dataset.wasDisabled !== undefined) {
         control.disabled = control.dataset.wasDisabled === "true";
         delete control.dataset.wasDisabled;
@@ -612,7 +632,7 @@ export class TournamentWindow {
     } catch {
       if (generation === this.generation) this.error("Your available units or team couldn't be saved. Reload and try again.");
     } finally {
-      this.setBusy(false);
+      this.setBusy(false, generation);
     }
   }
 

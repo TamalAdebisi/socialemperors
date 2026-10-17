@@ -10,10 +10,57 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Latest review corrections: verification pending
+## Latest review corrections: fresh browser verification pending
 
-The next review found three actionable issues, now corrected in the
-candidate working tree:
+The review during the `95e098f3` full run found two further runtime
+issues: incomplete room/player validation and a pending refresh that
+blocked reopening after the window closed. The candidate now validates
+required room/player/match fields, optional ranking/winner fields, weekly
+flags/time and reward-map indexes. Accepted number-or-string wire fields,
+nullable dates, empty metadata/maps and weekly bots remain supported;
+this adds no ownership or complex-unit restriction. Nine focused network
+tests and types passed. Before the correction, valid fixtures passed but
+a missing room reward index and a null weekly entry were wrongly accepted;
+the bad ranking-key case also reproduced separately. The 95 candidate
+checked weekly/reward top-level records only, not their nested contents.
+
+Closing invalidates the pending refresh's view and busy state; late
+completion cannot clear a newer operation. The corrected runtime and new
+browser regressions require a fresh committed candidate, focused checks
+and the full suite before merge. The completed 95 and 47 evidence below
+does not verify these later changes.
+
+The new delayed-refresh/reopen regression was deliberately run against
+unchanged `95e098f386b2feaea7d911de03e2ad2556ef025e` in a separate detached
+checkout, with only the rooms test replaced. It failed at the intended
+reopen step: the ordinary open helper found the room hidden on 64 checks
+and reached its unchanged 30-second deadline (test line 92). The scenario
+took 48s; the complete diagnostic took 55.133205467s and exited 1.
+The test's SHA-256 was
+`506ce0967b4e86fa2c5553e967b6572eff88bc04d981404f2e9c029e4281cd2b`.
+Local evidence is in `tournament-review3-red-95e098f3.log` and
+`tournament-review3-red-status.json`. This is intended before-fix failure
+proof, separate from the interrupted full attempt and from checks of the
+next candidate.
+
+Recovery after an ambiguous entry reply deliberately restores the real
+current enrollment, including one entered in another tab with a different
+type or team. It neither repeats the mutation nor credits the attempted
+fee as a confirmed spend. The new, not-yet-run browser regression holds
+a desktop Advanced entry while the phone enters Newbies with a different
+team, then loses the desktop's real refusal reply. It checks the actual
+room/team, unchanged saved preference, one attempted mutation, no cash
+spending callback and the saved/HUD fee and normal leave refund. The
+runtime reconciliation rule is unchanged. The earlier
+goals note is corrected: no dedicated tournament goal exists in the
+shipped 227 missions. Result retention also remains bounded by the
+server's existing 30-day finished-room expiry, as well as Done.
+
+## Completed focus and interrupted full run at 95e098f3
+
+Exact tested code: `95e098f386b2feaea7d911de03e2ad2556ef025e`, clean and
+pushed before checks, with main `8f8c57ab` merged. This candidate corrected
+three earlier review findings:
 
 - Done sends the captured room id. Cleanup atomically ignores a supplied
   id that no longer matches the current enrollment, protecting a newer
@@ -22,8 +69,8 @@ candidate working tree:
 - Profile replies must belong to the same window, room and latest request.
   Rendering another view or closing the profile invalidates older reads,
   so they cannot reopen a dismissed profile or replace a later selection.
-- Weekly-state and reward-index fields must be records, not arrays.
-  Malformed replies now fail instead of appearing to be empty state.
+- Weekly-state and reward-index fields must be top-level records, not
+  arrays. This check did not yet validate their nested entries.
 
 Targeted preparation checks passed: 42 tournament server tests, six
 network tests and 20 tournament-battle tests, plus client types. The
@@ -33,7 +80,42 @@ stale-Done regression by removing the newer room. An initial scratch
 attempt installed that replay before setup reloaded the module, so it
 was reset and provides no failure proof. The browser now checks a newer
 public room finished through real services and three delayed real profile
-replies. These new browser assertions have not yet been verified here.
+replies. These assertions passed in the focused run below.
+
+| Check | Result | Elapsed, including startup/build |
+| --- | --- | --- |
+| Server unit tests | 449 run: 440 passed, 9 existing PostgreSQL skips | 30.4079 seconds |
+| Client types | Passed | 1.8429 seconds |
+| Client rules | 390/390 passed | 7.2047 seconds |
+| Focused rooms/results/list browser checks | 3/3 passed | 7m 50.29s (470.287795s) |
+| Full 78-case browser attempt | Intentionally stopped after five passes, no observed failure | Interrupted at 00:32:21 UTC, 17 October |
+
+The focused scenarios took 202s, 154s and 108s respectively. All 30
+desktop/phone screenshots were reviewed with no visible defects. In
+the stale-Done fixture, the desktop refreshes immediately before the
+phone acknowledges the old weekly room, resetting its ordinary minute
+refresh clock. Four existing local players then create and finish a
+new public room through real services. The stale request names the old
+weekly id; assertions preserve the entire newer room and already-paid
+resources before its correct acknowledgement. The runtime refresh
+interval, deadlines and assertions were not changed for this setup.
+
+The full run stopped intentionally for the two later review fixes. Its
+completed scenarios were `site-menu` (55s), `contact` (104s),
+`recurring-raids` (25s), `tournament-weekly` (125s) and
+`tournament-rooms` (205s). `tournaments` was incomplete. It is neither a
+completed full pass nor an assertion failure. The separate interrupted
+archive contains 35 fresh screenshots across six populated folders.
+Screenshot review covered 27 from completed cases: 14 Menu/contact/raid,
+six weekly and seven room images, with no visible defects. Eight images
+from the incomplete list case are not counted as completed-case or
+reviewed visual evidence. These are distinct from the 30 reviewed focus
+images. The interrupted run's server log has no Python tracebacks,
+HTTP 5xx responses or unhandled commands.
+Evidence is archived locally under
+`tournament-evidence-review-focus-95e098f3` and
+`tournament-evidence-interrupted-95e098f3`; the exact interrupted status is
+`tournament-final-check-status-95e098f3-interrupted.json`.
 
 Three findings require no runtime change:
 
@@ -50,12 +132,10 @@ Three findings require no runtime change:
   tournaments, nests and mandatory lessons built. Git history confirms
   that sequence, so no parity-status correction is needed.
 
-Main remains `8f8c57ab`. Root will commit the stable candidate, then run
-focused rooms/results/list checks and the required full 78-case suite.
-No new exact tested commit, overall unit totals or full-run result is
-claimed yet. Implementation is complete; verification of these review
-corrections is pending before merge. The completed 47 baseline and its
-unresolved quest follow-up remain intact below.
+Main remains `8f8c57ab`. The next corrected candidate and its fresh
+checks are pending. All tournament parts are implemented; no further
+feature slice remains. The completed 47 baseline and its unresolved
+quest follow-up remain intact below.
 
 ## Completed pre-review baseline at 47db7f44
 

@@ -19,17 +19,25 @@ export default async function tournamentRooms({ newPlayer }) {
     }
   });
   const enter = () => page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
-  const holdProfile = async (action) => {
-    let release;
+  const holdResponse = async (path, action, loseReply = false) => {
+    let release, received, failed;
     const held = new Promise((resolve) => { release = resolve; });
-    const requested = page.waitForRequest("**/get_public_player_info.php?**");
-    await page.route("**/get_public_player_info.php?**", async (route) => {
-      const response = await route.fetch();
-      await held;
-      await route.fulfill({ response });
+    const fetched = new Promise((resolve, reject) => { received = resolve; failed = reject; });
+    const requested = page.waitForRequest(path);
+    await page.route(path, async (route) => {
+      try {
+        const response = await route.fetch({ timeout: 30_000 });
+        received();
+        await held;
+        await route.fulfill(loseReply ? { response, body: "" } : { response });
+      } catch (error) {
+        failed(error);
+        throw error;
+      }
     }, { times: 1 });
     await action();
     const request = await requested;
+    await fetched;
     return async () => {
       const answered = page.waitForResponse((response) => response.request() === request);
       release();
@@ -37,6 +45,7 @@ export default async function tournamentRooms({ newPlayer }) {
       await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     };
   };
+  const holdProfile = (action) => holdResponse("**/get_public_player_info.php?**", action);
 
   await open(host);
   await confirm(host, enter, false);
@@ -74,6 +83,27 @@ export default async function tournamentRooms({ newPlayer }) {
   assert.equal(await page.locator(".tournament-profile").count(), 0, "a late profile answer cannot reopen a dismissed profile");
   assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, firstRoom.tournament_id);
 
+  // Closing a busy window permits immediate reopening. An old success or
+  // failure cannot unlock a newer refresh or mark its room as failed.
+  for (const loseReply of [false, true]) {
+    const oldRefresh = await holdResponse(tournamentPath("get_tournament_info"), () => host.button("Refresh").click(), loseReply);
+    assert.ok(await host.button("Refresh").isDisabled());
+    await page.keyboard.press("Escape");
+    await open(host);
+    assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, firstRoom.tournament_id);
+    const newRefresh = await holdResponse(tournamentPath("get_tournament_info"), () => host.button("Refresh").click());
+    await oldRefresh();
+    assert.ok(await host.button("Refresh").isDisabled(), "the old refresh cannot unlock the newer one");
+    assert.ok(await host.button("Leave tournament").isDisabled());
+    assert.equal(await page.locator(".tournament-error").count(), 0);
+    const previous = await page.locator(".tournament-room-refresh").textContent();
+    await page.waitForFunction((text) => document.querySelector(".tournament-room-refresh")?.textContent !== text, previous);
+    assert.match(await page.locator(".tournament-room-refresh").textContent(), /^Refresh in \d+s$/, "an obsolete failure cannot stop the new countdown");
+    await newRefresh();
+    await page.waitForFunction(() => [...document.querySelectorAll(".tournament-room button")].some((button) => button.textContent === "Refresh" && !button.disabled));
+    assert.ok(await host.button("Start tournament").isDisabled(), "request completion preserves the waiting-room start rule");
+  }
+
   // A later saved preference cannot rewrite an already enrolled army, even
   // after the client is reloaded. Closing the window never leaves the room.
   await page.keyboard.press("Escape");
@@ -109,6 +139,42 @@ export default async function tournamentRooms({ newPlayer }) {
   await gold(phone, before.map.coins);
   await phone.page.context().close();
   await host.button("Refresh").click();
+  await page.waitForSelector(".tournament-cards");
+  await gold(host, before.map.coins);
+
+  // Accepted entry/leave requests can also finish after this window closes.
+  // Reopening reads the real saved seat/refund immediately, and the old
+  // continuation must not unlock the next request or display a stale error.
+  const pendingEntry = await holdResponse(tournamentPath("join_tournament"), enter);
+  const pendingRoom = (await service(host, "get_tournament_info")).tournament;
+  assert.ok(pendingRoom);
+  await page.keyboard.press("Escape");
+  await open(host);
+  await gold(host, before.map.coins - 500);
+  const afterEntryRefresh = await holdResponse(tournamentPath("get_tournament_info"), () => host.button("Refresh").click());
+  await pendingEntry();
+  assert.ok(await host.button("Refresh").isDisabled(), "old entry completion cannot unlock a new refresh");
+  assert.equal(await page.locator(".tournament-error").count(), 0);
+  await afterEntryRefresh();
+  await page.waitForFunction(() => [...document.querySelectorAll(".tournament-room button")].some((button) => button.textContent === "Refresh" && !button.disabled));
+  assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, pendingRoom.tournament_id);
+
+  const pendingLeave = await holdResponse(tournamentPath("leave_tournament"), () => confirm(host, () => host.button("Leave tournament").click()), true);
+  assert.equal((await service(host, "get_tournament_info")).tournament, null);
+  await page.keyboard.press("Escape");
+  await open(host);
+  await gold(host, before.map.coins);
+  const nextEntry = await holdResponse(tournamentPath("join_tournament"), enter);
+  await pendingLeave();
+  assert.equal(await page.locator(".tournament-cards").count(), 1);
+  assert.ok(await page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).isDisabled(),
+    "old leave failure cannot unlock the new entry");
+  assert.equal(await page.locator(".tournament-error").count(), 0, "old leave failure cannot add an error to the reopened window");
+  await nextEntry();
+  await page.waitForSelector(".tournament-room");
+  assert.notEqual((await service(host, "get_tournament_info")).tournament.tournament_id, pendingRoom.tournament_id);
+  await gold(host, before.map.coins - 500);
+  await confirm(host, () => host.button("Leave tournament").click());
   await page.waitForSelector(".tournament-cards");
   await gold(host, before.map.coins);
 

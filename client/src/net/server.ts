@@ -176,21 +176,80 @@ export class GameServer {
 
 /** Do not turn a malformed response into an empty list or a departed room. */
 function assertTournamentInfo(data: Record<string, unknown>): asserts data is Record<string, unknown> & TournamentInfo {
-  const room = data.tournament as TournamentInfo["tournament"] | undefined;
-  if (!data.tournament_weekly || typeof data.tournament_weekly !== "object" || Array.isArray(data.tournament_weekly) ||
-    !data.tournament_reward_id || typeof data.tournament_reward_id !== "object" || Array.isArray(data.tournament_reward_id) ||
-    !Array.isArray(data.tournament_friends) || data.tournament_friends.some((friend: unknown) => {
-      if (!friend || typeof friend !== "object" || Array.isArray(friend)) return true;
-      const card = friend as Record<string, unknown>;
-      return typeof card.tournament_id !== "string" || !card.tournament_id ||
-        typeof card.tournament_type_id !== "string" || !card.tournament_type_id || typeof card.owner !== "string" ||
-        (card.owner_id !== undefined && typeof card.owner_id !== "string") ||
-        (typeof card.reward_id !== "number" && typeof card.reward_id !== "string") || card.reward_id === "" ||
-        !Number.isInteger(Number(card.reward_id)) || Number(card.reward_id) < 0;
-    }) || room === undefined || (room !== null &&
-      (typeof room.tournament_id !== "string" || typeof room.tournament_type_id !== "string" ||
-        !Array.isArray(room.players) || room.players.some((player) =>
-          typeof player.user_id !== "string" || !Array.isArray(player.team) || !Array.isArray(player.matches))))) {
+  if (!isRecord(data.tournament_weekly) || !Object.values(data.tournament_weekly).every((state) =>
+    isRecord(state) && isFlag(state.open) && isFlag(state.full) && isNumeric(state.timeLeft)) ||
+    !isRecord(data.tournament_reward_id) || !Object.values(data.tournament_reward_id).every(isIndex) ||
+    !Array.isArray(data.tournament_friends) || !data.tournament_friends.every((card) =>
+      isRecord(card) && isId(card.tournament_id) && isId(card.tournament_type_id) && typeof card.owner === "string" &&
+      (card.owner_id === undefined || typeof card.owner_id === "string") && isIndex(card.reward_id)) ||
+    (data.tournament !== null && !isTournamentRoom(data.tournament))) {
     throw new Error("The tournament list was not returned.");
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isCount(value: unknown): value is number {
+  return isNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+/** Only these original wire fields allow numbers encoded as strings. */
+function isNumeric(value: unknown): value is number | string {
+  return isNumber(value) || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)));
+}
+
+function isIndex(value: unknown): boolean {
+  return isNumeric(value) && Number.isInteger(Number(value)) && Number(value) >= 0;
+}
+
+function isFlag(value: unknown): boolean {
+  return isNumeric(value) && (Number(value) === 0 || Number(value) === 1);
+}
+
+function isDate(value: unknown): boolean {
+  return value === null || isCount(value);
+}
+
+function isTournamentRoom(room: unknown): boolean {
+  return isRecord(room) && isId(room.tournament_id) && isId(room.tournament_type_id) && isIndex(room.reward_id) &&
+    isFlag(room.private) && typeof room.owner_id === "string" && typeof room.owner === "string" &&
+    isCount(room.point_type) && isDate(room.date_ready) && isDate(room.date_finished) && typeof room.match_playing === "boolean" &&
+    Array.isArray(room.players) && room.players.every(isTournamentPlayer) &&
+    (room.winner_id === undefined || room.winner_id === null || isId(room.winner_id)) &&
+    (room.ranking === undefined || isTournamentRanking(room.ranking));
+}
+
+function isTournamentPlayer(player: unknown): boolean {
+  return isRecord(player) && isId(player.user_id) && typeof player.user_name === "string" && isCount(player.level) &&
+    typeof player.country === "string" && isNumber(player.abandonned) && isFlag(player.abandonned) &&
+    Array.isArray(player.team) && player.team.every(isCount) &&
+    Array.isArray(player.matches) && player.matches.every(isTournamentMatch);
+}
+
+function isTournamentMatch(match: unknown): boolean {
+  return isRecord(match) && isId(match.attacker_id) && isId(match.victim_id) && typeof match.finished === "boolean" &&
+    typeof match.attacker_won === "boolean" && isNumber(match.attacker_points) && match.attacker_points >= 0 &&
+    isDate(match.date_started) && isDate(match.date_finished);
+}
+
+function isTournamentRanking(ranking: unknown): boolean {
+  return isRecord(ranking) && isCount(ranking.total_user) && isRecord(ranking.top) &&
+    Object.entries(ranking.top).every(([rank, row]) => isIndex(rank) && Number(rank) > 0 && isTournamentRankRow(row)) &&
+    isTournamentRankRow(ranking.user) &&
+    isRecord(ranking.user) && isCount(ranking.user.rank) && ranking.user.rank > 0;
+}
+
+function isTournamentRankRow(row: unknown): boolean {
+  return isRecord(row) && isId(row.user_id) && typeof row.user_name === "string" &&
+    isNumber(row.points) && row.points >= 0 && isCount(row.time) && isCount(row.matches);
 }

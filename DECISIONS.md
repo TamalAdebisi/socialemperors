@@ -4,6 +4,40 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: finish response validation and allow refresh recovery
+
+- **Check the data the views consume.** Review of `95e098f3` found room
+  and player validation incomplete; top-level weekly/reward record checks
+  also do not establish that their nested entries are valid. Check the
+  required room/player/match fields, optional winner/ranking fields and
+  each weekly/reward entry before accepting typed state. Preserve the
+  supported wire formats and weekly eligibility exception. Nine focused
+  network tests and types pass; corrected browser verification remains
+  pending. No original command or fee rule changes.
+- **Closing a pending refresh must permit reopening.** Invalidate that
+  operation's busy state as well as its view generation, and keep a late
+  completion from clearing a newer operation. Add a real delayed-response
+  browser regression. Against unchanged 95 runtime, the new test failed
+  exactly at reopening: the room remained hidden until the original
+  30-second deadline (48s scenario, 55.1332s total). This intended negative
+  diagnostic proves the old bug; the corrected candidate needs fresh checks.
+- **Recover the actual enrollment after an uncertain entry.** Another
+  tab may have entered a different type or team. Display the authoritative
+  room and balances without repeating the request or crediting the
+  unconfirmed attempt as a confirmed fee spend. Keep this behavior and
+  add the missing concurrent-entry regression.
+- **State retention and goals accurately.** Done remains an explicit
+  acknowledgement, but the server can also remove a finished room after
+  its existing 30-day retention. No tournament-specific goal exists in
+  the shipped 227 missions; correct the older first-slice assumption
+  directly rather than leave contradictory guidance.
+- **Keep the successful focus separate from the interrupted full run.**
+  Exact `95e098f3` passed rooms/results/list 3/3 in 7m 50.29s, with all
+  30 images reviewed, and server/types/client checks passed. The full
+  attempt stopped deliberately after five passes and no observed failure
+  for the two runtime fixes above. Fresh verification remains due for
+  the next candidate; the 47 baseline's quest failure stays recorded.
+
 ## 17 October 2026: acknowledge the displayed room and reject stale reads
 
 - **Done acknowledges the room the player saw.** Add its captured room id
@@ -26,9 +60,10 @@ them can be found and reversed. The big, agreed decisions are in
   features are built; no status change is needed.
 - **Retest the changed code.** The 47 run remains a completed 77/78
   baseline, with its quest reload follow-up. Its documentation-only
-  identity ends at `e9765901`. The new browser regressions and full
-  78-case verification are pending; do not attach the old result to these
-  corrections or weaken any assertion.
+  identity ends at `e9765901`. The new browser regressions subsequently
+  passed the `95e098f3` focus 3/3; its full attempt was interrupted for
+  further review fixes, as recorded above. Do not attach the old result
+  to changed code or weaken any assertion.
 
 ## 16 October 2026: retain the exact full-run result
 
@@ -424,10 +459,11 @@ them can be found and reversed. The big, agreed decisions are in
   position save. A finished result whose reply failed remains available
   for Retry and survives a reload in the same tab; a recorded server
   outcome takes precedence.
-- **Keep finished results until Done.** This replaces Flash's delayed
-  popup/OK with an explicit acknowledgement in the panel, so a player
+- **Keep finished results until Done or retention expiry.** This replaces
+  Flash's delayed popup/OK with an explicit acknowledgement in the panel, so a player
   can still inspect matches and rankings. The server has already paid
-  the prize; Done only cleans the viewed room. Unit prizes still appear
+  the prize; Done only cleans the viewed room. The server's existing
+  30-day finished-room retention still applies. Unit prizes still appear
   in Storage. The weekly table may change after a prize is paid, so the
   panel explains that its awarded rank was fixed at completion.
 - **Ask the server who won an exact tie.** Its existing seat-order rule
@@ -446,9 +482,9 @@ them can be found and reversed. The big, agreed decisions are in
   direct messages or new invitation ledger is added.
 - **No tournament-specific mission count changes.** The complete local
   source/config review found no dedicated tournament goal among the
-  227 missions. This corrects the first-slice note below, which assumed
-  such goals remained in classic. Successful fees still count toward
-  applicable ordinary resource-spending goals.
+  227 missions. The first-slice note below is corrected to match this
+  finding. Successful fees still count toward applicable ordinary
+  resource-spending goals.
 
 ## 16 October 2026: verifying the building card and Menu
 
@@ -519,8 +555,10 @@ them can be found and reversed. The big, agreed decisions are in
   limit (currently ten). Restoring a saved team does not trim that limit;
   weekly entry exempts it in the original card and on the server. Entry
   remains in classic, including its empty/short-team warnings.
-- **No tournament goals change yet.** This slice does not play or win
-  tournaments; those goals keep their classic-game guidance.
+- **No dedicated tournament goals ship with the game.** Corrected after
+  the complete local source/config review: none of the 227 missions has
+  a tournament-specific goal. This slice changes no mission counts;
+  applicable ordinary spending goals still receive successful entry fees.
 - **Keep unrelated browser repairs outside this slice.** The full run's
   four failures (`construction`, `scripted-bosses`, `siege`, `walk`) all
   reproduce on unchanged main. Record those results and preserve every

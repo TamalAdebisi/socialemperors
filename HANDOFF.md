@@ -84,11 +84,15 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest review-correction checks are pending.**
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); further review fixes need verification.**
   Following #89's lists, help and team box, this adds rooms, copied-army
-  battles, results/prizes and friends' tournaments. Done now guards the
-  captured room, profiles reject stale replies, and weekly/reward maps
-  reject arrays. These corrections need fresh focused and full checks.
+  battles, results/prizes and friends' tournaments. Done, profile and
+  top-level record corrections passed the `95e098f3` focused checks
+  **3/3 in 7m 50.29s**, with all 30 screenshots reviewed. Server **449 run
+  (440 passed, 9 existing skips)**, types and client **390/390** passed.
+  Its full run stopped intentionally after five passes and no observed
+  failure for room/player validation and close-during-refresh fixes;
+  `tournaments` was incomplete. The next candidate needs fresh checks.
   The completed baseline at exact integrated code
   `47db7f4446e957ab8d65ef8892799649abedf9a6`, including main #97,
   completed **77/78 browser cases in 90m 46.59s**. All five tournament
@@ -548,15 +552,39 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Latest review corrections:** Done captures the displayed room id, with
-atomic stale-id cleanup protection and legacy omitted-id compatibility.
+**Completed correction focus at `95e098f3`:** Done captures the displayed
+room id, with atomic stale-id cleanup protection and legacy omitted-id compatibility.
 Profiles check their window/room/request and invalidate stale replies;
-weekly and reward records reject arrays. The new browser regressions
-cover stale Done after a newer room finishes and three delayed real
-profile replies. Targeted rule/protocol checks passed, but the new exact
-candidate, focused rooms/results/list run and full 78-case checks are
-pending. Source-supported healer retargeting and external-Leave behavior
-remain unchanged; PARITY's historical list already marks built features.
+weekly and reward top-level records reject arrays. The new browser
+regressions cover stale Done after a newer room finishes and three delayed real
+profile replies. Exact clean/pushed
+`95e098f386b2feaea7d911de03e2ad2556ef025e` passed the focused
+rooms/results/list run **3/3 in 7m 50.29s**. All 30 focus screenshots
+were reviewed with no visible defects. The stale-Done fixture refreshes
+the desktop immediately before phone acknowledgement to reset its
+ordinary minute clock; no runtime interval or assertion changed.
+Server **449 run: 440 passed, 9 existing skips** (30.4079s), types
+(1.8429s) and client **390/390** (7.2047s) passed.
+
+The full attempt stopped intentionally at **00:32:21 UTC on 17 October**
+after five passes and no observed failure: Menu, contact, recurring raids,
+weekly tournaments and rooms. `tournaments` was incomplete; 35 fresh
+partial-run screenshots in six folders were archived separately from the
+focus. Review covered 27 images from completed cases with no visible
+defects; eight incomplete-list images are not counted as reviewed
+evidence. The server log has no tracebacks, HTTP 5xx or unhandled commands.
+Further review found incomplete room/player validation and a pending refresh
+blocking reopen after close. The candidate validates nested room, player,
+match, ranking, weekly and reward data while preserving supported wire
+formats; its nine focused network tests and types passed. The window
+invalidates a closed refresh's busy state and ignores late completion.
+Fresh focused/full browser checks remain pending; no prior run verifies
+the next candidate.
+Source-supported healer retargeting, external Leave and recovery of the
+actual current enrollment after an ambiguous entry remain unchanged.
+PARITY's historical list already marks built features. No dedicated
+tournament goal exists among the shipped missions. Finished results
+remain until Done or the server's existing 30-day retention expires.
 
 **Completed pre-review verification after #97: 77/78.** Main
 `8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged at
@@ -732,8 +760,9 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 5. Friends' tournaments: create, invite, call off — built.
 
 All five parts are implemented and their baseline checks passed at
-`47db7f44`; latest review corrections still need fresh verification before
-merge, with the separate quest reload follow-up recorded above.
+`47db7f44`. The `95e098f3` correction focus passed 3/3; its full attempt
+was interrupted for further fixes that need fresh verification before
+merge. The separate quest reload follow-up remains recorded above.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.
 

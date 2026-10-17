@@ -2447,7 +2447,8 @@ army, scoring, spell or command rule.
   without submitting the local result. The server's recorded result always wins. The client
   does not announce a saved result until it has read that result back.
 
-Matches and Results remain available until Done. Public/friends' results
+Matches and Results remain available until Done or the server's existing
+30-day finished-room retention expires. Public/friends' results
 show all four players' scores and times, including departed entrants in
 score/time order. A departed high scorer can appear first but cannot win;
 the departure label and server's `winner_id` distinguish these cases.
@@ -2474,10 +2475,14 @@ The sole mummy-gem quest reload failure did not recur on ordinary main
 or tested-code repeats. A controlled baseline diagnostic exposes an
 existing save/read ordering weakness but does not establish the exact
 full-run cause. That quest issue remains a separate follow-up; tournaments
-are implemented. Later review corrections to Done, profile reply ordering
-and malformed weekly/reward records require fresh verification before
-merge. A profile reply belongs to its window, room and latest selection;
-rendering another view or closing the profile invalidates it. See
+are implemented. Done, profile reply ordering and top-level weekly/reward
+record corrections passed the `95e098f3` focused checks 3/3 in 7m 50.29s,
+along with server/types and 390 client tests. Its full run was intentionally
+stopped after five passes and no observed failure for two further fixes:
+room/player validation and reopening during a pending refresh. The next
+candidate needs fresh verification. A profile reply belongs to its window,
+room and latest selection; rendering another view or closing the profile
+invalidates it. See
 [the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in
 `docs/original/rules/tournaments.md`. No dedicated tournament goal exists
 in the shipped missions, so the count of unfinished goals does not change;

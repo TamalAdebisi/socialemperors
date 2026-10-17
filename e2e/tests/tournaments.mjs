@@ -3,6 +3,7 @@
 // and friends-list replies exercise states the local clock cannot schedule.
 import assert from "node:assert/strict";
 import { PHONE } from "../lib.mjs";
+import { requestData, service as tournamentService } from "../tournament-lib.mjs";
 
 const KNIGHT = 514, SWORD = 511, BANNED = 762, LIMITED = 602;
 const padded = (...ids) => [...ids, ...Array(20 - ids.length).fill(0)];
@@ -322,4 +323,108 @@ export default async function tournaments({ newPlayer }) {
   assert.equal(returnLeft.result, "OK");
   assert.equal((await service("get_tournament_info")).tournament, null, "the welcome fixture leaves no active room");
   assert.equal((await getInfo()).map.coins, returnBalance + returnFee, "leaving the waiting room refunds exactly its entry fee");
+
+  // This desktop attempts a cash room with twenty units while the phone
+  // enters a different gold room with one. Lose the desktop's real refusal:
+  // recovery must show the actual enrollment without attributing its fee or
+  // army to the rejected request, or attempting another entry.
+  const requestedType = "2", actualType = "1";
+  const requestedKind = config.tournament_type[requestedType];
+  const actualKind = config.tournament_type[actualType];
+  const requestedTeam = Array(20).fill(SWORD), actualTeam = padded(SWORD);
+  assert.equal(requestedKind.resource_type, "c");
+  assert.equal(actualKind.resource_type, "g");
+  await page.keyboard.press("Escape");
+  await player.send([{ cmd: "set_attack_team", args: ["tournament", JSON.stringify(requestedTeam)] }]);
+  await open();
+  await page.waitForSelector(".tournament-team-box");
+  await player.press("Everyday");
+  assert.equal(await page.locator(".tournament-team-box .tournament-team img").count(), 20);
+  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  const beforeConcurrentEntry = await getInfo();
+  assert.ok(beforeConcurrentEntry.playerInfo.cash >= Number(requestedKind.cost));
+  assert.ok(beforeConcurrentEntry.map.coins >= Number(actualKind.cost));
+  // Observe the real spending callback without changing its behavior. Goal
+  // listeners need not be active for an incorrectly attributed fee to count
+  // as a regression in this scenario.
+  await page.evaluate(() => {
+    const doings = window.seHome.parts.editor.doings;
+    const spend = doings.spend;
+    window.tournamentObservedSpends = [];
+    doings.spend = function (...args) {
+      window.tournamentObservedSpends.push(args);
+      return spend.apply(this, args);
+    };
+    window.restoreTournamentSpend = () => { doings.spend = spend; };
+  });
+  const entryRequests = [], bookkeeping = [];
+  const recordEntry = (request) => {
+    if (/\/tournaments\/(join|create)_tournament\.php$/.test(request.url())) entryRequests.push(requestData(request));
+    if (request.url().endsWith("/command.php")) bookkeeping.push(...requestData(request).commands);
+  };
+  page.on("request", recordEntry);
+  let releaseEntry, rejectedEntry;
+  const entryHeld = new Promise((resolve) => { releaseEntry = resolve; });
+  const joinPath = "**/tournaments/join_tournament.php";
+  await page.route(joinPath, async (route) => {
+    await entryHeld;
+    const response = await route.fetch();
+    rejectedEntry = (await response.json()).data;
+    await route.fulfill({ response, body: "" });
+  }, { times: 1 });
+  try {
+    const entryStarted = page.waitForRequest(joinPath, { timeout: 15_000 });
+    await page.locator(`[data-tournament="${requestedType}"]`).getByRole("button", { name: "Enter tournament", exact: true }).click();
+    await entryStarted;
+    const otherEntry = await tournamentService(phone, "join_tournament", { tournament_type_id: actualType,
+      category: 1, tournament_id: "", team: actualTeam, flashSubResources: 1 });
+    assert.equal(otherEntry.result, "OK");
+    assert.equal(otherEntry.tournament.date_ready, null);
+    releaseEntry();
+    await page.waitForSelector(".tournament-room", { timeout: 30_000 });
+    assert.equal(rejectedEntry.result, "NOK", "the requested cash entry was actually refused by the server");
+    assert.deepEqual(entryRequests, [{ user_id: player.settings.userId, tournament_type_id: requestedType,
+      category: 1, team: requestedTeam, tournament_id: "", flashSubResources: 1 }],
+    "reconciliation does not retry or replace the requested mutation");
+    assert.deepEqual(bookkeeping.filter((command) => command.cmd === "tournament_substract_resources").map((command) => command.args),
+      [["c", Number(requestedKind.cost), requestedType, 0]], "only the original no-op bookkeeping precedes the refused request");
+    const current = (await service("get_tournament_info")).tournament;
+    assert.equal(current.tournament_id, otherEntry.tournament.tournament_id);
+    assert.equal(current.tournament_type_id, actualType);
+    assert.deepEqual(current.players.find((seat) => seat.user_id === player.settings.userId).team, actualTeam);
+    assert.equal(await page.locator(".tournament-window .panel-head h2").textContent(), actualKind.name);
+    assert.notEqual(actualKind.name, requestedKind.name);
+    assert.equal(await page.locator(".tournament-room .tournament-team img").count(), 1,
+      "the displayed army belongs to the actual enrollment, not the twenty-unit request");
+    assert.equal(await page.locator(".tournament-room .tournament-team img").getAttribute("alt"), item(SWORD).name);
+    assert.deepEqual(await page.evaluate(() => window.tournamentObservedSpends.filter(([resource]) => resource === "c")), [],
+      "an ambiguous response never reports the rejected cash fee as confirmed spending");
+    const reconciled = await getInfo();
+    assert.equal(reconciled.playerInfo.cash, beforeConcurrentEntry.playerInfo.cash);
+    assert.equal(reconciled.map.coins, beforeConcurrentEntry.map.coins - Number(actualKind.cost));
+    assert.deepEqual(reconciled.privateState.teams.tournament, requestedTeam, "the saved preference is not overwritten by reconciliation");
+    assert.equal(Number((await page.locator('[data-n="gold"]').textContent()).replace(/,/g, "")), reconciled.map.coins);
+    assert.equal(Number((await page.locator('[data-n="cash"]').textContent()).replace(/,/g, "")), reconciled.playerInfo.cash);
+    await page.locator(".tournament-room .tournament-team img").evaluate((image) => image.decode());
+    await player.shot("reconciled-enrollment-desktop");
+    const leavePrompt = page.waitForEvent("dialog");
+    const leaving = player.button("Leave tournament").click();
+    await (await leavePrompt).accept();
+    await leaving;
+    await page.waitForSelector(".tournament-cards");
+    assert.equal((await service("get_tournament_info")).tournament, null);
+    const afterConcurrentLeave = await getInfo();
+    assert.equal(afterConcurrentLeave.map.coins, beforeConcurrentEntry.map.coins, "leaving refunds the actual gold fee exactly once");
+    assert.equal(afterConcurrentLeave.playerInfo.cash, beforeConcurrentEntry.playerInfo.cash, "no cash fee or refund was invented");
+    assert.equal(entryRequests.length, 1);
+  } finally {
+    releaseEntry();
+    page.off("request", recordEntry);
+    await page.unroute(joinPath);
+    await page.evaluate(() => {
+      window.restoreTournamentSpend();
+      delete window.restoreTournamentSpend;
+      delete window.tournamentObservedSpends;
+    });
+  }
 }
