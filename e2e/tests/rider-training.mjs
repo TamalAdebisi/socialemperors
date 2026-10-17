@@ -3,7 +3,7 @@
 // eighth adventure's real loss callback preserves both inputs. A phone
 // adapter victory checks the final transformation, not a full boss victory.
 import assert from "node:assert/strict";
-const ACADEMY = [56, 52], TAMING = [48, 58];
+const ACADEMY = [56, 52], TAMING = [48, 58], DRAGON = [51, 56];
 
 export default async function riderTraining({ newPlayer }) {
   const player = await newPlayer();
@@ -62,34 +62,30 @@ export default async function riderTraining({ newPlayer }) {
     assert.ok(state.frames - journey.first <= 600, `${journey.name} reached its result within 600 movie frames: ${JSON.stringify(state)}`);
     return state;
   };
-  const goalReached = (state, goal) => goal === "enemy" ? Math.abs(state.distanceToEnemy) <= 90 || state.state !== "playing"
+  const goalReached = (state, goal, stopAt = 90) => goal === "enemy" ? Math.abs(state.distanceToEnemy) <= stopAt || state.state !== "playing"
     : goal === "won" ? state.state === "won" : state.state === "lost" && state.menuReady;
-  const gameUntil = async (goal) => {
+  const gameUntil = async (goal, stopAt = 90) => {
     for (;;) {
       const before = budget(await progress());
       console.log("Rider game", { phase: journey.name, wallMs: Date.now() - journey.at, ...before });
-      if (goalReached(before, goal)) return before;
+      if (goalReached(before, goal, stopAt)) return before;
       // Software collision readback measures about 3 FPS here. Keep a hard
       // simulation cap and 30-second liveness for each 30-frame segment.
-      await activePage.waitForFunction(({ frame, priorState, goal }) => {
+      await activePage.waitForFunction(({ frame, priorState, goal, stopAt }) => {
         const state = document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress");
-        const reached = goal === "enemy" ? Math.abs(state.distanceToEnemy) <= 90 || state.state !== "playing"
+        const reached = goal === "enemy" ? Math.abs(state.distanceToEnemy) <= stopAt || state.state !== "playing"
           : goal === "won" ? state.state === "won" : state.state === "lost" && state.menuReady;
         return reached || state.frames >= frame + 30 || state.state !== priorState;
-      }, { frame: before.frames, priorState: before.state, goal }, { timeout: 30_000, polling: 250 });
+      }, { frame: before.frames, priorState: before.state, goal, stopAt }, { timeout: 30_000, polling: 250 });
       const after = budget(await progress());
-      if (goalReached(after, goal)) return after;
+      if (goalReached(after, goal, stopAt)) return after;
       const moved = Math.abs(after.distance + after.x - before.distance - before.x) > .01 || Math.abs(after.y - before.y) > .01;
       const changed = after.health !== before.health || after.enemies !== before.enemies || after.distanceToEnemy !== before.distanceToEnemy
         || after.cooldown !== before.cooldown || after.menuFrame !== before.menuFrame || after.state !== before.state;
       assert.ok(moved || (goal === "lost" && changed), `the original simulation advanced, beyond the wrapper clock: ${JSON.stringify({ before, after })}`);
     }
   };
-  const approach = async () => {
-    const direction = (await progress()).distanceToEnemy >= 0 ? "ArrowRight" : "ArrowLeft";
-    await activePage.keyboard.down(direction);
-    await gameUntil("enemy");
-    await activePage.keyboard.up(direction);
+  const faceEnemy = async () => {
     const state = await progress();
     const facing = state.distanceToEnemy >= 0 ? "right" : "left";
     if (state.facing !== facing) {
@@ -99,6 +95,13 @@ export default async function riderTraining({ newPlayer }) {
         facing, { timeout: 30_000, polling: 250 });
       await activePage.keyboard.up(turn);
     }
+  };
+  const approach = async (stopAt = 90) => {
+    const direction = (await progress()).distanceToEnemy >= 0 ? "ArrowRight" : "ArrowLeft";
+    await activePage.keyboard.down(direction);
+    await gameUntil("enemy", stopAt);
+    await activePage.keyboard.up(direction);
+    await faceEnemy();
   };
   const endGame = async (expected) => {
     const bounds = await activePage.locator(".rider-adventure-stage").boundingBox();
@@ -164,6 +167,7 @@ export default async function riderTraining({ newPlayer }) {
     assert.notEqual(state.state, "lost", "the rider survived the first adventure");
     if (state.enemies === 0 || state.state === "won") break;
     if (Math.abs(state.distanceToEnemy) > 105) await approach();
+    await faceEnemy();
     const attacking = budget(await progress());
     await page.keyboard.press("1");
     await page.waitForFunction((before) => {
@@ -215,14 +219,23 @@ export default async function riderTraining({ newPlayer }) {
 
   // Send the trained rider and a compatible dragon through the ordinary
   // map interaction. This checks entry, the screen and the saved pair.
-  await player.send([{ cmd: "buy", args: [684, 51, 60, 0, 0, 1, 1, "u"] }]);
+  await player.send([{ cmd: "buy", args: [684, ...DRAGON, 0, 0, 1, 1, "u"] }]);
   await player.reload();
-  const { point: tamingPoint } = await player.select(TAMING, "Dragon Riding");
+  // A searching click sequence can hit the dragon's wide footprint first
+  // and then legitimately send it inside. Check one visible building-body
+  // pixel before issuing the single ordinary selection click.
+  const tamingPoint = player.screenOf(...TAMING, 100);
+  await page.waitForFunction((point) => window.seHome.parts.view.itemAt(point)?.item.id === 1346,
+    tamingPoint, { timeout: 30_000, polling: 250 });
+  await player.click(tamingPoint);
+  assert.match(await player.bar(), /^Dragon Riding/);
   await player.press("Close");
+  assert.deepEqual(inside(await info()), [], "finding the building did not admit the nearby dragon");
   await player.select([rider[1], rider[2]], "Dragon Rider I");
   await player.click(tamingPoint);
-  await savedWhen((save) => inside(save).includes(822));
-  await player.select([51, 60], "Stormy Dragon");
+  saved = await savedWhen((save) => inside(save).includes(822));
+  assert.deepEqual(inside(saved), [822], "the rider entered first");
+  await player.select(DRAGON, "Stormy Dragon");
   await player.click(tamingPoint);
   await savedWhen((save) => inside(save).length === 2);
   await player.select(TAMING, "Dragon Riding");
@@ -236,7 +249,13 @@ export default async function riderTraining({ newPlayer }) {
   assert.equal(await adventure.getAttribute("data-level"), "8");
   await player.shot("taming-adventure");
   await beginJourney("taming adventure loss");
-  await approach();
+  // Release before coasting through the boss and turn away. The original
+  // left-facing body then overlaps its attacks, producing an ordinary loss.
+  await approach(220);
+  await page.keyboard.down("ArrowLeft");
+  await page.waitForFunction(() => document.querySelector(".rider-adventure ruffle-player").ruffle().callExternalInterface("riderProgress").facing === "left",
+    null, { timeout: 30_000, polling: 250 });
+  await page.keyboard.up("ArrowLeft");
   await gameUntil("lost");
   await player.shot("taming-adventure-lost");
   await endGame("lost");
