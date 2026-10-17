@@ -66,11 +66,22 @@ next agent knows where to start.
   config-output spelling repair are recorded in DECISIONS.md. The early
   36-second adapter smoke did not prove physics: a later real-input check
   caught an unsupported bitmap operation in Ruffle's legacy renderer.
-  The bitmap-capable renderer now proves actual movement. Genuine native
-  end-screen callbacks, phone/save focus and Linux WebKit verification
-  remain pending. [The verification record](docs/verification-dragon-riders.md)
-  preserves failed/interrupted attempts and the measured new-fixture
-  calibration; shared integration checks remain before merge.
+  The bitmap-capable renderer now proves actual movement. Complete focused
+  Chromium passed 1/1 in 540 seconds at `54a1ad0a`: real first-adventure win
+  and eighth-adventure loss through their original buttons, recovery/claim,
+  ordinary pair admission and phone input/save. All 15 fresh captures and
+  final logs were reviewed. The phone victory uses the success adapter;
+  no complete eight-adventure playthrough is claimed. Shared integration
+  at `f3529ef2` passed types, all 447 client tests and 467 server tests
+  (458 passed, nine existing skips). First combined Linux WebKit passed
+  five of six cases; rider native callbacks passed, but its phone control
+  retained DOM focus after the touch attack. An exact-listener two-engine
+  probe proved WebKit's compatibility mousedown bypasses the cancelled
+  pointerdown. A scoped mousedown cancellation preserves focus and native
+  Tab/Enter defaults; the full rider case must be repeated. That repeat
+  and the complete combined browser run remain with the coordinator.
+  [The verification record](docs/verification-dragon-riders.md) preserves
+  every failed/interrupted attempt and the measured new-fixture calibration.
 
 - **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
   recovered its window, generic rules and queue commands; 0926 predates it.

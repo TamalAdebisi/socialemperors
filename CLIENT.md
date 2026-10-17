@@ -1570,7 +1570,9 @@ The original action adventures remain the untouched shipped
 when needed. Our small loader starts the selected adventure and connects
 its original parent callbacks (`ui/riderAdventure.ts`;
 `tools/art/build_minigame_bridge.sh`). The town pauses during play. Touch
-keys supplement its original keyboard controls. Later config rows' two
+keys supplement its original keyboard controls. Pointer presses preserve
+the existing keyboard focus, while ordinary Tab access remains available.
+Later config rows' two
 output-key spellings are normalized, as recorded in DECISIONS.md. Ruffle's
 bitmap-capable renderer preserves the original pixel-based collision checks;
 the legacy renderer could draw the stage without advancing its physics.
