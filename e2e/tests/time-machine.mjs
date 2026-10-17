@@ -63,6 +63,7 @@ export default async function timeMachine({ newPlayer }) {
   assert.equal(bought.playerInfo.cash, before.playerInfo.cash - 6);
   assert.deepEqual(bought.privateState.countTimePacket, [1, 1, 0, 0, 0, 0]);
   assert.ok(bought.privateState.helpMap.includes("timeMachineHelp"));
+  assert.ok(await panel.locator(".machine-packet .row-text strong").evaluateAll((labels) => labels.every((label) => label.scrollWidth <= label.clientWidth + 1)), "full packet names wrap instead of clipping");
   await player.shot("packets");
   await Promise.all([player.page.waitForEvent("domcontentloaded"), player.press("Use 1 hour")]);
   await player.loaded();
@@ -89,6 +90,7 @@ export default async function timeMachine({ newPlayer }) {
   await phone.page.waitForFunction(() => !document.querySelector('.time-machine [data-packet="0"] .button').disabled);
   const boxes = await sheet.locator(".machine-packet").evaluateAll((rows) => rows.map((row) => ({ left: row.getBoundingClientRect().left, right: row.getBoundingClientRect().right, scroll: row.scrollWidth, width: row.clientWidth })));
   assert.ok(boxes.every((b) => b.left >= 0 && b.right <= 390 && b.scroll <= b.width + 1), "packets fit the phone");
+  assert.ok(await sheet.locator(".machine-packet .row-text strong").evaluateAll((labels) => labels.every((label) => label.scrollWidth <= label.clientWidth + 1)), "full packet names fit the phone");
   await phone.shot("phone");
   await Promise.all([phone.page.waitForEvent("domcontentloaded"), phone.press("Use 30 mins")]);
   await phone.loaded();

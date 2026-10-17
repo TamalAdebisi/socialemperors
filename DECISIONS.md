@@ -14,6 +14,10 @@ them can be found and reversed. The big, agreed decisions are in
   camp. The fixture now checks and acknowledges that notice before tapping
   the machine, including fresh phone contexts. All machine assertions and
   deadlines remain; no camp rule, timer or runtime code changes.
+- **Wrap the full packet name.** The same screenshots showed the twelve-hour
+  label truncated by the ordinary list-row style. Allow wrapping only in
+  machine rows and check its full width on desktop and phone; prices and
+  buttons remain alongside it.
 
 ## 17 October 2026: include generic training queues in time travel
 
