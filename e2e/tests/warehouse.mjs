@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 
 const WAREHOUSE = 1284, KNIGHT = 512, SPEARMAN = 509;
-const AT = [58, 58], UNIT_AT = [59, 58];
+const AT = [58, 58], UNIT_AT = [59, 58], WALKER_AT = [48, 58];
 
 export default async function warehouse({ newPlayer }) {
   const player = await newPlayer();
@@ -18,7 +18,9 @@ export default async function warehouse({ newPlayer }) {
       { cmd: "buy", args: [KNIGHT, ...UNIT_AT, 0, 0, 1, 1, "u"] },
       { cmd: "add_unit_warehouse", args: [...UNIT_AT, 0, KNIGHT] },
     ]).flat(),
-    { cmd: "buy", args: [SPEARMAN, ...UNIT_AT, 0, 0, 1, 1, "u"] },
+    // Start the walking unit in clear view, beyond the warehouse's large
+    // foreground artwork; it then approaches through ordinary map controls.
+    { cmd: "buy", args: [SPEARMAN, ...WALKER_AT, 0, 0, 1, 1, "u"] },
   ]);
   await player.reload();
   const { page } = player;
@@ -32,7 +34,7 @@ export default async function warehouse({ newPlayer }) {
   const warehouseSpot = await player.select(AT, "Unit Warehouse");
   assert.doesNotMatch(warehouseSpot.text, /CAPACITY/, "the card does not advertise ordinary building occupants");
   await player.press("Close");
-  await player.select(UNIT_AT, "Spearman");
+  await player.select(WALKER_AT, "Spearman");
   await player.click(warehouseSpot.point);
   await page.waitForFunction(() => window.seHome.parts.town.warehouse.get(509) === 1, null, { timeout: 30_000 });
   await flush();
