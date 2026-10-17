@@ -61,9 +61,14 @@ next agent knows where to start.
   original action adventures remain unchanged in their shipped asset,
   loaded only on demand with the pinned Ruffle runtime and our own bridge.
   See CLIENT.md and `docs/original/rules/dragon-riders.md`; touch keys and
-  config-output spelling repair are recorded in DECISIONS.md. Focused
-  bridge smoke passed 1/1 in 36 seconds. Complete focused verification
-  and shared integration checks remain before merge.
+  config-output spelling repair are recorded in DECISIONS.md. The early
+  36-second adapter smoke did not prove physics: a later real-input check
+  caught an unsupported bitmap operation in Ruffle's legacy renderer.
+  The bitmap-capable renderer now proves actual movement. Genuine native
+  end-screen callbacks, phone/save focus and Linux WebKit verification
+  remain pending. [The verification record](docs/verification-dragon-riders.md)
+  preserves failed/interrupted attempts and the measured new-fixture
+  calibration; shared integration checks remain before merge.
 
 - **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
   recovered its window, generic rules and queue commands; 0926 predates it.

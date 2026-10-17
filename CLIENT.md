@@ -1567,14 +1567,16 @@ sequence keeps both clients' saves compatible.
 
 The original action adventures remain the untouched shipped
 `SagaOTDC.swf`, played by the already pinned Ruffle runtime, loaded only
-when needed. Our 2 KB loader starts the selected adventure and connects
+when needed. Our small loader starts the selected adventure and connects
 its original parent callbacks (`ui/riderAdventure.ts`;
 `tools/art/build_minigame_bridge.sh`). The town pauses during play. Touch
 keys supplement its original keyboard controls. Later config rows' two
-output-key spellings are normalized, as recorded in DECISIONS.md.
+output-key spellings are normalized, as recorded in DECISIONS.md. Ruffle's
+bitmap-capable renderer preserves the original pixel-based collision checks;
+the legacy renderer could draw the stage without advancing its physics.
 See [the rule book](docs/original/rules/dragon-riders.md) and
-`e2e/tests/rider-training.mjs` for coverage and its platformer-playthrough
-limit.
+[the verification record](docs/verification-dragon-riders.md) for coverage,
+failed attempts and the platformer-playthrough limit.
 
 ### The market
 
