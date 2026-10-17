@@ -213,9 +213,9 @@ next agent knows where to start.
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
-  50% are built in the new client, 40% partly (mostly special buildings
+  52% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  10% not yet (mostly windows). 50 of the 227 goals still need unfinished
+  8% not yet (mostly windows). 50 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
