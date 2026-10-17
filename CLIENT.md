@@ -1585,7 +1585,11 @@ keeps the original separate behavior. No Facebook sharing is added.
 Goal 54 now counts opening it. Browser coverage:
 `e2e/tests/collection-book.mjs`, checking desktop/phone, exchanges, cash,
 Storage, page bounds and reloads. Battle drop triggers belong to the
-separate combat work.
+separate combat work. Collections-only verification passed 80/80 browser
+cases, plus the desktop/phone and harvest focus 2/2. All 468 full-run
+screenshots were reviewed at contact scale; `docs/verification-99.md`
+records the exact revision, timings and visual limits. Combined menus
+verification and delivery remain pending.
 
 ### The units book
 
