@@ -33,7 +33,7 @@ python3 -c 'import sys; sys.version_info[:2] == (3, 13) or print(f"Note: the liv
 
 # 1. The server's packages, in a Python of its own (.venv, ignored by git).
 # Apart from the system's: on some computers pip can't replace a package the
-# system put there (blinker, on Debian). Pillow is for tools/art/export_ui.py.
+# system put there (blinker, on Debian). Pillow also reads browser-test screenshots.
 echo "1/4 Python packages into .venv"
 [ -x .venv/bin/python ] || python3 -m venv .venv
 .venv/bin/pip install --quiet --disable-pip-version-check -r requirements.txt Pillow

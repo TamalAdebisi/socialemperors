@@ -6,6 +6,13 @@ them can be found and reversed. The big, agreed decisions are in
 
 ## 17 October 2026: idle-pass verification fixtures
 
+- Read screenshot pixels outside the game page, using the Pillow package
+  already installed by setup and the same Python as the local test server.
+  The WebKit overlay check showed corrupted terrain while its helper decoded
+  screenshots back inside the game page. Reading the same PNGs externally
+  passed every unchanged before/after pixel comparison and preview check.
+  Keep those comparisons exact; the helper no longer adds image uploads
+  to the graphics context being measured. This changes tests, not game code.
 - Close completed test towns, after flushing their saves, before the next
   scripted scenario. They otherwise keep competing for software drawing.
   Keep the same gameplay assertions, simulation speeds and deadlines.

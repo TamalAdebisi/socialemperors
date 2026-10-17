@@ -2,6 +2,7 @@
 // the new client, and the ways to tap, read and check it.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -297,21 +298,17 @@ export class Player {
 
   /**
    * The screen's colours in a box ({ x, y, width, height }), as [r, g, b]
-   * for each pixel: a screenshot, read back by the page (no picture library here).
+   * for each pixel. Decode outside the game page: measuring the screen must
+   * not add image uploads to the graphics context under test. Setup already
+   * installs Pillow in the Python used by the local test server.
    */
   async pixels(box) {
     const png = await this.page.screenshot({ clip: box });
-    const data = await this.page.evaluate(async (base64) => {
-      const image = new Image();
-      image.src = `data:image/png;base64,${base64}`;
-      await image.decode();
-      const canvas = new OffscreenCanvas(image.width, image.height);
-      const context = canvas.getContext("2d");
-      context.drawImage(image, 0, 0);
-      return Array.from(context.getImageData(0, 0, image.width, image.height).data);
-    }, png.toString("base64"));
+    const data = execFileSync(process.env.PYTHON || "python3", ["-c",
+      'import io, sys; from PIL import Image; sys.stdout.buffer.write(Image.open(io.BytesIO(sys.stdin.buffer.read())).convert("RGB").tobytes())',
+    ], { input: png, maxBuffer: 64 * 1024 * 1024 });
     const pixels = [];
-    for (let i = 0; i < data.length; i += 4) pixels.push([data[i], data[i + 1], data[i + 2]]);
+    for (let i = 0; i < data.length; i += 3) pixels.push([data[i], data[i + 1], data[i + 2]]);
     return pixels;
   }
 
