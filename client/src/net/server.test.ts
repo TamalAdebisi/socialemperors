@@ -25,6 +25,26 @@ test("failed or malformed tournament replies cannot masquerade as an empty list"
   await assert.rejects(server.tournamentInfo(), /not returned/);
 });
 
+test("tournament availability and reward maps reject arrays in reads and successful entries", async (t) => {
+  const server = new GameServer({ dynamicUrl: "/game", userId: "player" } as PageSettings);
+  const info = { tournament: null, tournament_reward_id: { "1": 3, "2": "2" },
+    tournament_weekly: { "8": { open: "1", full: "0", timeLeft: 600 } }, tournament_friends: [] };
+  let data: Record<string, unknown> = info;
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data })));
+  assert.deepEqual(await server.tournamentInfo(), info, "keyed maps retain their original numeric and string values");
+  for (const field of ["tournament_weekly", "tournament_reward_id"] as const) {
+    for (const invalid of [[], Object.values(info[field])]) {
+      data = { ...info, [field]: invalid };
+      await assert.rejects(server.tournamentInfo(), /not returned/, `${field} must not become an empty list or missing prize`);
+      data.result = "OK";
+      await assert.rejects(server.joinTournament("1", 1, [511]), /not returned/, `${field} also validates after joining`);
+      await assert.rejects(server.createTournament("1", [511], []), /not returned/, `${field} also validates after creation`);
+    }
+  }
+  data = { ...info, tournament_weekly: {}, tournament_reward_id: {} };
+  assert.deepEqual(await server.tournamentInfo(), data, "empty object maps remain a valid server response");
+});
+
 test("friends' cards validate before either a list or successful entry reaches the window", async (t) => {
   const server = new GameServer({ dynamicUrl: "/game", userId: "player" } as PageSettings);
   const friend = { tournament_id: "friend-room", tournament_type_id: "1", reward_id: 2, owner: "<Friend>" };
@@ -68,6 +88,7 @@ test("entry and room mutations preserve original service names and payloads", as
   await server.startTournamentMatch("room", "opponent");
   await server.finishTournamentMatch("room", "opponent", true, 98.123);
   await server.cleanTournament();
+  await server.cleanTournament("room");
   const who = { user_id: "player" };
   assert.deepEqual(calls, [
     { service: "join_tournament", payload: { ...who, tournament_type_id: "1", category: 3, team, tournament_id: "", flashSubResources: 1 } },
@@ -78,6 +99,7 @@ test("entry and room mutations preserve original service names and payloads", as
     { service: "start_tournament_match", payload: { ...who, victim_id: "opponent", tournament_id: "room" } },
     { service: "finish_tournament_match", payload: { ...who, victim_id: "opponent", attacker_won: true, attacker_points: "98.12", victim_points: 0, tournament_id: "room" } },
     { service: "clean_tournament", payload: who },
+    { service: "clean_tournament", payload: { ...who, tournament_id: "room" } },
   ]);
 });
 

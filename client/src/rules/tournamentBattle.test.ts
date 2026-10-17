@@ -128,6 +128,35 @@ test("enemy healers keep a whole patient and switch to a more badly hurt defende
   assert.equal(theirs[2].target, theirs[1]);
 });
 
+test("collective healers initially follow a non-healer but can switch to an injured healer", () => {
+  const ids = [502, 590, 866, 886];
+  for (const injuredIndex of ids.keys()) {
+    const healers = ids.map((id) => unit({ id, subcategory: 72, attackRange: 10, attackInterval: 15 }));
+    const { battle, match, mine, theirs, step } = arena(true, [unit({ attack: 0 })], [...healers, unit({ attack: 0 })]);
+    match.start();
+    for (let i = 0; i < 2000 && match.state === "forming"; i++) step(1);
+    assert.equal(match.state, "waiting");
+    step(10 * FPS);
+    assert.equal(match.state, "fighting");
+    assert.ok(theirs.slice(0, 4).every((healer) => healer.target === theirs[4]),
+      "the initial patient skips all four healers even when they come first in the army");
+
+    const injured = theirs[injuredIndex];
+    const helpers = theirs.slice(0, 4).filter((healer) => healer !== injured);
+    battle.takeEvents();
+    battle.hurt(injured, 50, mine[0]);
+    assert.equal(injured.life, 50);
+    assert.ok(helpers.every((healer) => healer.target === injured),
+      `the other healers switch to injured healer ${injured.item.id}`);
+    step(2 * FPS);
+    assert.equal(injured.life, injured.maxLife, "normal healing beats restore the wounded healer");
+    assert.ok(helpers.every((healer) => healer.target === injured), "the recovered patient remains assigned");
+    const restored = battle.takeEvents().reduce((sum, event) =>
+      sum + (event.kind === "hit" && event.heal && event.fighter === injured ? event.amount : 0), 0);
+    assert.equal(restored, 50, "the retargeting produces real healing, not just a changed target");
+  }
+});
+
 test("the tournament collective leaves engineers to repair friendly siege through ordinary healing beats", () => {
   const engineer = unit({ id: 570, subcategory: 72, attack: 25, attackRange: 5, attackInterval: 15 });
   const siege = unit({ id: 521, subcategory: 81, attack: 0 });

@@ -87,7 +87,9 @@ picker's separate ownership-source gap remains in PARITY.md.
 - Requests retain the `data` field's 64-character prefix, semicolon and
   JSON, with `user_id` and ordinary authenticated form fields. This
   unsigned client uses 64 zeros, as for the original list service.
-  Failed reads must not be mistaken for an empty room.
+  Failed reads must not be mistaken for an empty room. Weekly-state and
+  reward-index fields are records, not arrays; malformed shapes are
+  rejected rather than interpreted as empty data.
 - A successful join/create returns the full room/list state. Refusals
   distinguish invalid team, too few friends and other unavailability.
   After an ambiguous entry reply, read the existing room rather than
@@ -146,6 +148,8 @@ in the shipped 227 missions; tournament wins are not player-attack wins.
 
 *Built:* `ui/tournaments.ts`, with manual Refresh as a convenience,
 timers stopped on close and failed refreshes retaining the last room.
+Profile replies are tied to the current window, room and latest request;
+rendering another view or closing the profile invalidates older reads.
 The server's additive stale-id guard is covered in
 `tests/test_tournaments.py`.
 
@@ -179,8 +183,10 @@ The server's additive stale-id guard is covered in
   target is retained. This is not a continuous weakest-health sort.
 - Healers on both sides can retain a whole patient in tournaments.
   The four original defender healers (502, 590, 866, 886) follow a friendly
-  nonhealer; a hurt unit with lower absolute health can become their
-  target. Engineer 570 is deliberately outside that collective group:
+  nonhealer initially. The separate damage-triggered choice may switch
+  them to a hurt friendly unit with lower absolute health, including
+  another healer; the initial fallback's exclusion does not apply there.
+  Engineer 570 is deliberately outside that collective group:
   inherited healer behavior repairs injured friendly siege units and
   clears hostile targets. The new client's repeated collective orders
   must not overwrite this separate repair target between ordinary AI
@@ -260,6 +266,12 @@ completion and surrender; browser checks cover real saved matches.
   nothing. Home balances and stored prizes are refreshed. Repeated
   finish, info and clean requests do not pay again. Weekly rooms retain
   their week's entered/ranking state after acknowledgement.
+- Original cleanup supplies only the user id. The new client's Done
+  also supplies the displayed `tournament_id`: an intentional optional
+  safety extension. Under the same atomic service operation, a supplied
+  mismatching id is ignored so a delayed old acknowledgement cannot
+  hide a newer finished room. Omitting the id retains original behavior;
+  the service name/envelope and all fee/prize rules are unchanged.
 
 *Built:* `ui/tournamentResults.ts`, result helpers in
 `rules/tournaments.ts` and server tie metadata in `tournaments.py`.

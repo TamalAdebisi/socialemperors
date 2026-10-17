@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: acknowledge the displayed room and reject stale reads
+
+- **Done acknowledges the room the player saw.** Add its captured room id
+  to cleanup and atomically ignore a supplied mismatch, as for Leave and
+  Cancel. This is an intentional backward-compatible safety extension:
+  the original user-id-only request still works, and the service envelope,
+  fee and prize rules stay unchanged. A repeated old Done cannot hide a
+  newer finished room or affect its rewards.
+- **Keep profile replies with their view.** Check window, room and request
+  identity; invalidate pending reads on rendering another view or closing
+  the profile. A slow answer cannot reopen a closed profile or overwrite
+  the next player selected. Reject array-shaped weekly/reward records as
+  malformed replies instead of treating them as empty data.
+- **Preserve source-supported behavior and accurate history.** Collective
+  healers' initial nonhealer fallback is distinct from their damage-driven
+  retargeting, which can help an injured healer. Keep the runtime and add
+  actual-healing coverage. External Leave excludes that entrant from
+  current-room lookup, so the existing closed-room browser branch is
+  valid. PARITY's explicitly historical deferral list already says the
+  features are built; no status change is needed.
+- **Retest the changed code.** The 47 run remains a completed 77/78
+  baseline, with its quest reload follow-up. Its documentation-only
+  identity ends at `e9765901`. The new browser regressions and full
+  78-case verification are pending; do not attach the old result to these
+  corrections or weaken any assertion.
+
 ## 16 October 2026: retain the exact full-run result
 
 - **Record 77/78 accurately.** Exact integrated `47db7f44` completed all
@@ -26,7 +52,8 @@ them can be found and reversed. The big, agreed decisions are in
   repository. No tournament regression was identified. Keep the quest
   save/read boundary as an explicit follow-up rather than invent a fix
   from incomplete evidence. Tournament implementation and verification
-  are complete, ready for review and merge with the documented failure.
+  were complete at that baseline. The later review corrections require
+  the fresh checks recorded above before merge.
   [The record](docs/verification-92.md) keeps the exact
   unit, browser, screenshot and log evidence alongside earlier histories.
 

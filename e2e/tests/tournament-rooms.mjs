@@ -19,6 +19,24 @@ export default async function tournamentRooms({ newPlayer }) {
     }
   });
   const enter = () => page.locator('[data-tournament="1"]').getByRole("button", { name: "Enter tournament", exact: true }).click();
+  const holdProfile = async (action) => {
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    const requested = page.waitForRequest("**/get_public_player_info.php?**");
+    await page.route("**/get_public_player_info.php?**", async (route) => {
+      const response = await route.fetch();
+      await held;
+      await route.fulfill({ response });
+    }, { times: 1 });
+    await action();
+    const request = await requested;
+    return async () => {
+      const answered = page.waitForResponse((response) => response.request() === request);
+      release();
+      await (await answered).finished();
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    };
+  };
 
   await open(host);
   await confirm(host, enter, false);
@@ -48,7 +66,12 @@ export default async function tournamentRooms({ newPlayer }) {
   await page.locator(".tournament-seat").getByRole("button", { name: host.name, exact: true }).click();
   await page.waitForSelector(".tournament-profile");
   assert.match(await page.locator(".tournament-profile").textContent(), /Level 15.*Honour:/s);
+  // Closing the shown profile must also dismiss a newer read still in flight.
+  const closedProfile = await holdProfile(() => page.locator(".tournament-seat")
+    .getByRole("button", { name: host.name, exact: true }).click());
   await host.button("Close profile").click();
+  await closedProfile();
+  assert.equal(await page.locator(".tournament-profile").count(), 0, "a late profile answer cannot reopen a dismissed profile");
   assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, firstRoom.tournament_id);
 
   // A later saved preference cannot rewrite an already enrolled army, even
@@ -133,6 +156,20 @@ export default async function tournamentRooms({ newPlayer }) {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
   assert.equal(await page.locator(".tournament-room").count(), 1);
   assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, newer.tournament_id);
+  // Another tab can replace the saved enrollment while a profile is loading.
+  // Refresh changes the room in this open window, so its window generation
+  // alone cannot decide whether the old profile answer still belongs here.
+  const oldProfile = await holdProfile(() => page.locator(".tournament-seat")
+    .getByRole("button", { name: host.name, exact: true }).click());
+  assert.equal((await service(host, "leave_tournament", { tournament_id: newer.tournament_id })).result, "OK");
+  const replacement = await join(host, "1", "", padded(SWORD));
+  assert.notEqual(replacement.tournament_id, newer.tournament_id);
+  await host.button("Refresh").click();
+  await page.waitForFunction(() => document.querySelectorAll(".tournament-room .tournament-team img").length === 1);
+  await oldProfile();
+  assert.equal(await page.locator(".tournament-profile").count(), 0, "a profile from the old room cannot appear in its replacement");
+  assert.equal((await service(host, "get_tournament_info")).tournament.tournament_id, replacement.tournament_id);
+  await gold(host, before.map.coins - 500);
   await confirm(host, () => host.button("Leave tournament").click());
   await page.waitForSelector(".tournament-cards");
   await gold(host, before.map.coins);
@@ -228,6 +265,15 @@ export default async function tournamentRooms({ newPlayer }) {
   await host.button("Refresh").click();
   await page.waitForFunction(() => document.querySelectorAll(".tournament-empty-seat").length === 2);
   await host.shot("friends-room-desktop");
+
+  // A slower first selection must not overwrite the profile chosen afterward.
+  const earlierProfile = await holdProfile(() => page.locator(".tournament-seat")
+    .getByRole("button", { name: host.name, exact: true }).click());
+  await page.locator(".tournament-seat").getByRole("button", { name: guest.name, exact: true }).click();
+  await page.waitForFunction((name) => document.querySelector(".tournament-profile h3")?.textContent === name, guest.name);
+  await earlierProfile();
+  assert.equal(await page.locator(".tournament-profile h3").textContent(), guest.name, "the latest profile selection wins");
+  await host.button("Close profile").click();
 
   await confirm(host, () => host.button("Cancel tournament").click(), false);
   assert.equal((await service(guest, "get_tournament_info")).tournament.players.length, 2);

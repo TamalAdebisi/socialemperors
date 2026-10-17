@@ -389,7 +389,7 @@ async function start(): Promise<void> {
       create: (type, team) => server.createTournament(type, team, tournamentFriends),
       leave: (room) => server.leaveTournament(room),
       cancel: (room) => server.cancelTournament(room),
-      clean: () => server.cleanTournament(),
+      clean: (room) => server.cleanTournament(room),
       fetchProfile: async (pid) => await server.publicProfile(pid) as PlayerProfile | null,
       play: async (room, victim) => {
         if (!await commands.flush()) throw new Error("Your changes couldn't be saved. Reload before playing.");

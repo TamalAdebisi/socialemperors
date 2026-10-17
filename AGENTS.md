@@ -84,7 +84,11 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Tournament implementation and verification are complete; #92 is ready for review and merge.** Exact
+- **Tournament implementation is complete; latest review checks are pending.**
+  Done now guards its captured room id, stale profile replies are discarded
+  and array-shaped weekly/reward records are rejected. Run fresh focused
+  and full checks before merging #92. The completed pre-review baseline at
+  exact
   clean `47db7f4446e957ab8d65ef8892799649abedf9a6`, including latest
   main `8f8c57ab` (#97), ran all 78 browser cases: **77 passed, 1 failed
   in 90m 46.59s**. All five tournament cases, shared spells and `team`

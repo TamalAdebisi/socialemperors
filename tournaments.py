@@ -43,7 +43,7 @@ How the client asks: POST tournaments/<service>.php, answered by service().
     cancel_tournament        {tournament_id}            the owner, before it starts
     start_tournament_match   {victim_id, tournament_id}
     finish_tournament_match  {victim_id, attacker_won, attacker_points, tournament_id}
-    clean_tournament         {}                         done looking at a finished one
+    clean_tournament         {tournament_id?}           done looking at a finished one; old clients omit the id
 
 Fees: the client takes the fee on screen and sends "tournament_substract_
 resources", and gives it back on screen when a reply says "refund", sending
@@ -687,6 +687,9 @@ def _finish_match(USERID: str, params: dict, now: int) -> dict:
 
 def _clean(USERID: str, params: dict, now: int) -> dict:
     room = _current(USERID)
+    if room is not None and params.get("tournament_id") and str(params["tournament_id"]) != room["id"]:
+        # A delayed Done from an older room must not acknowledge a newer one.
+        return {"result": "OK"}
     if room is not None and room["date_finished"] is not None:
         _seat(room, USERID)["cleaned"] = 1
         _touch(room)

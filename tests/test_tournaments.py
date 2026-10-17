@@ -306,6 +306,39 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(vars(tournaments)["__tournaments"], {})
         self.assertEqual(self.join()["result"], "OK")  # free for the next one
 
+    def test_delayed_done_cannot_acknowledge_a_newer_finished_room(self):
+        tournaments.BOT_WIN_CHANCE = 0
+        older = self.join()["tournament"]["tournament_id"]
+        self.now += HOUR
+        for bot in BOTS:
+            self.play(bot)
+        self.assertEqual(self.ask("clean_tournament", tournament_id=older), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+
+        current = self.join()["tournament"]["tournament_id"]
+        self.assertNotEqual(current, older)
+        # Even the correct room cannot be acknowledged before it finishes.
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertEqual(self.tournament()["tournament_id"], current)
+        self.now += HOUR
+        for bot in BOTS:
+            self.play(bot)
+        finished = self.tournament()
+        self.assertIsNotNone(finished["date_finished"])
+        saved_rewards = (self.gold(), self.cash(), inventory.gifts(sessions.session(self.me)).copy())
+
+        # Another tab already acknowledged the old room and entered this one.
+        # Retrying its stale Done must leave the newer results available.
+        for _ in range(2):
+            self.assertEqual(self.ask("clean_tournament", tournament_id=older), {"result": "OK"})
+            self.assertEqual(self.tournament(), finished)
+            self.assertEqual((self.gold(), self.cash(), inventory.gifts(sessions.session(self.me))), saved_rewards)
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+        self.assertEqual(self.ask("clean_tournament", tournament_id=current), {"result": "OK"})
+        self.assertIsNone(self.tournament())
+        self.assertEqual((self.gold(), self.cash(), inventory.gifts(sessions.session(self.me))), saved_rewards)
+
     # Entering
 
     def test_teams_the_game_does_not_allow(self):

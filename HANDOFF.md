@@ -84,9 +84,12 @@ next agent knows where to start.
   Automated review findings were addressed or explained in the PR and
   DECISIONS.md; the original trusted-client command contract is retained.
 
-- **All tournament stages are implemented and verified in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92), ready for review and merge.**
+- **All tournament stages are implemented in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest review-correction checks are pending.**
   Following #89's lists, help and team box, this adds rooms, copied-army
-  battles, results/prizes and friends' tournaments. Exact integrated code
+  battles, results/prizes and friends' tournaments. Done now guards the
+  captured room, profiles reject stale replies, and weekly/reward maps
+  reject arrays. These corrections need fresh focused and full checks.
+  The completed baseline at exact integrated code
   `47db7f4446e957ab8d65ef8892799649abedf9a6`, including main #97,
   completed **77/78 browser cases in 90m 46.59s**. All five tournament
   cases, shared spells and team passed. The sole mummy-gem quest reload
@@ -128,8 +131,8 @@ next agent knows where to start.
     "Still to do"), and the owner playing it.
   - **The switch:** attacking players, the world map, spying, survival,
     Arthur's lessons, the nests and all tournament stages are built;
-    tournaments are ready for review and merge, with the quest reload
-    follow-up recorded below. Left: the long tail of
+    tournaments await latest review-correction checks before merge, with
+    the quest reload follow-up recorded below. Left: the long tail of
     windows and the later decision about retiring the classic client.
 - **How far, in numbers** ([docs/original/](docs/original/README.md)): of
   the Flash client's 829 classes that hold the game's own behaviour, about
@@ -532,9 +535,10 @@ point, not before.
 
 ### 7. The switch: tournaments in the new client (L, in slices) - [x]
 
-**Implementation and verification complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); ready for review and merge.**
-The completion mark records the implemented and verified task; merge and
-automatic deployment are not yet claimed in this handoff.
+**Implementation complete in [#92](https://github.com/TamalAdebisi/socialemperors/pull/92); latest review verification pending.**
+The completion mark records the implemented scope and completed baseline;
+the later corrections still require checks. Merge and automatic deployment
+are not yet claimed in this handoff.
 The owner expanded the task to finish all remaining tournament parts.
 The separate `codex/tournament-complete` checkout implements waiting rooms,
 entry/fees, copied-army battles and recovery, results/rankings/prizes, and
@@ -544,7 +548,17 @@ keeps the original routes and shared saves while preserving #93's hidden
 classic choices. It includes the other chats' delivered #87 and #93 work;
 the other chat completed the separate public-art audit in #91.
 
-**Integrated verification after #97: 77/78.** Main
+**Latest review corrections:** Done captures the displayed room id, with
+atomic stale-id cleanup protection and legacy omitted-id compatibility.
+Profiles check their window/room/request and invalidate stale replies;
+weekly and reward records reject arrays. The new browser regressions
+cover stale Done after a newer room finishes and three delayed real
+profile replies. Targeted rule/protocol checks passed, but the new exact
+candidate, focused rooms/results/list run and full 78-case checks are
+pending. Source-supported healer retargeting and external-Leave behavior
+remain unchanged; PARITY's historical list already marks built features.
+
+**Completed pre-review verification after #97: 77/78.** Main
 `8f8c57abe132c5b0ff805159e276e668403fb5ef` was merged at
 `36f618710ba9b4efceb9bd81b70d22bb5867fc09`. Preserve its contact links
 and Menu stacking, alongside #95's recurring raids, shared inspection
@@ -574,9 +588,10 @@ assertion on unchanged main. Late commands reached the server, unlike
 the full-run failure. This establishes an existing save/read weakness,
 not a natural reproduction or the exact full-run cause. Do not infer
 lost saving from abort alone or report 78/78. No tournament regression
-was identified; #92 is ready for review and merge with that failure
-documented. The final eight-file documentation update leaves runtime,
-art and tests identical to exact tested `47db7f44`.
+was identified in that quest investigation. Documentation commit
+`e9765901d3bde23dc7764f2b50b629dd87d914b0` changed eight Markdown files
+only, leaving runtime, art and tests identical to exact tested `47db7f44`.
+That identity ends there; the later review corrections require new checks.
 
 **Separate quest follow-up:** investigate the intermittent immediate-reload
 save/read boundary. Capture the accepted tap, request/retry delivery,
@@ -716,9 +731,9 @@ classes). Scope covered by #89 and the complete #92 follow-up:
 4. Results, the ranking and prizes — built.
 5. Friends' tournaments: create, invite, call off — built.
 
-All five parts are implemented and their checks passed at `47db7f44`;
-the task is complete and ready for review and merge, with the separate
-quest reload follow-up recorded above.
+All five parts are implemented and their baseline checks passed at
+`47db7f44`; latest review corrections still need fresh verification before
+merge, with the separate quest reload follow-up recorded above.
 No further tournament slice remains. After delivery, the next queued work
 is task 4, the shop details. Task 6 remains on hold.
 

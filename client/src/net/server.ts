@@ -86,8 +86,8 @@ export class GameServer {
       attacker_points: points.toFixed(2), victim_points: 0, tournament_id: roomId });
   }
 
-  cleanTournament(): Promise<TournamentMutationReply> {
-    return this.tournamentMutation("clean_tournament");
+  cleanTournament(roomId?: string): Promise<TournamentMutationReply> {
+    return this.tournamentMutation("clean_tournament", roomId === undefined ? {} : { tournament_id: roomId });
   }
 
   private async tournamentEntry(service: string, params: Record<string, unknown>): Promise<TournamentEntryReply> {
@@ -177,8 +177,8 @@ export class GameServer {
 /** Do not turn a malformed response into an empty list or a departed room. */
 function assertTournamentInfo(data: Record<string, unknown>): asserts data is Record<string, unknown> & TournamentInfo {
   const room = data.tournament as TournamentInfo["tournament"] | undefined;
-  if (!data.tournament_weekly || typeof data.tournament_weekly !== "object" ||
-    !data.tournament_reward_id || typeof data.tournament_reward_id !== "object" ||
+  if (!data.tournament_weekly || typeof data.tournament_weekly !== "object" || Array.isArray(data.tournament_weekly) ||
+    !data.tournament_reward_id || typeof data.tournament_reward_id !== "object" || Array.isArray(data.tournament_reward_id) ||
     !Array.isArray(data.tournament_friends) || data.tournament_friends.some((friend: unknown) => {
       if (!friend || typeof friend !== "object" || Array.isArray(friend)) return true;
       const card = friend as Record<string, unknown>;

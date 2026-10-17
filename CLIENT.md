@@ -2421,7 +2421,8 @@ army, scoring, spell or command rule.
   charge after ten seconds. Public defenders have no timed charge,
   but their normal defensive behavior can react to an approaching foe.
   Marching speeds return to normal on the first hit. The four collective
-  healers follow friendly patients; Engineers instead use their ordinary
+  healers initially follow a nonhealer but can switch to an injured
+  friendly healer after damage; Engineers instead use their ordinary
   friendly siege-repair behavior. Healers on both sides retain whole
   patients; attempted healing still builds LIMIT, without a `+0` popup
   when no health is restored. The armies stay in the
@@ -2456,7 +2457,9 @@ player list is viewer-first.
 Weekly prizes follow the frozen rank at that player's completion, even
 if the live table changes later. The server has already paid any prize:
 gold/cash update the balances and unit prizes appear in Storage. Done
-only sends `clean_tournament` and refreshes home data. Repeated refresh,
+only sends `clean_tournament` with the displayed room id and refreshes
+home data. A supplied stale id cannot acknowledge a newer room; original
+calls without an id remain valid. Repeated refresh,
 result submission or acknowledgement cannot award the prize twice.
 
 Browser coverage is split across `e2e/tests/tournaments.mjs` and the
@@ -2471,7 +2474,10 @@ The sole mummy-gem quest reload failure did not recur on ordinary main
 or tested-code repeats. A controlled baseline diagnostic exposes an
 existing save/read ordering weakness but does not establish the exact
 full-run cause. That quest issue remains a separate follow-up; tournaments
-are implemented and verified, ready for review and merge. See
+are implemented. Later review corrections to Done, profile reply ordering
+and malformed weekly/reward records require fresh verification before
+merge. A profile reply belongs to its window, room and latest selection;
+rendering another view or closing the profile invalidates it. See
 [the delivery record](docs/verification-92.md) for exact code and results. Original-source notes are in
 `docs/original/rules/tournaments.md`. No dedicated tournament goal exists
 in the shipped missions, so the count of unfinished goals does not change;

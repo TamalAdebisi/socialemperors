@@ -34,7 +34,7 @@ export interface TournamentParts {
   create: (type: string, team: number[]) => Promise<TournamentEntryReply>;
   leave: (room: string) => Promise<TournamentMutationReply>;
   cancel: (room: string) => Promise<TournamentMutationReply>;
-  clean: () => Promise<TournamentMutationReply>;
+  clean: (room: string) => Promise<TournamentMutationReply>;
   play: (room: string, victim: string) => Promise<void>;
   fetchProfile: (player: string) => Promise<PlayerProfile | null>;
 }
@@ -65,6 +65,7 @@ export class TournamentWindow {
   private editing = false;
   private busy = false;
   private generation = 0;
+  private profileRequest = 0;
   private fetchedAt = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private creating = false;
@@ -131,6 +132,7 @@ export class TournamentWindow {
   }
 
   private render(resetScroll = false): void {
+    this.profileRequest++;
     this.results?.destroy();
     this.results = null;
     if (resetScroll) this.panel.body.scrollTop = 0;
@@ -461,7 +463,7 @@ export class TournamentWindow {
     this.setBusy(true);
     try {
       if (!await this.parts.flush()) throw new Error("Save failed. Reload before leaving.");
-      const reply = clean ? await this.parts.clean() : cancel ? await this.parts.cancel(room.tournament_id) : await this.parts.leave(room.tournament_id);
+      const reply = clean ? await this.parts.clean(room.tournament_id) : cancel ? await this.parts.cancel(room.tournament_id) : await this.parts.leave(room.tournament_id);
       const kind = this.parts.rules.kinds.find((k) => String(k.id) === room.tournament_type_id);
       if (reply.resources?.refund && kind) this.parts.command("tournament_refund_resources", kind.resource_type, Number(kind.cost));
       const next = await this.parts.info();
@@ -501,14 +503,29 @@ export class TournamentWindow {
 
   private async profile(player: string): Promise<void> {
     const generation = this.generation;
-    const shown = await this.parts.fetchProfile(player);
-    if (generation !== this.generation) return;
+    const room = this.info?.tournament?.tournament_id;
+    const request = ++this.profileRequest;
+    const current = () => generation === this.generation && request === this.profileRequest
+      && room === this.info?.tournament?.tournament_id;
+    let shown: PlayerProfile | null;
+    try {
+      shown = await this.parts.fetchProfile(player);
+    } catch (error) {
+      if (current()) throw error;
+      return;
+    }
+    // A refresh can replace the room without closing this window. A later
+    // profile choice or closing the shown profile also supersedes this read.
+    if (!current()) return;
     this.panel.body.querySelector(".tournament-profile")?.remove();
     const box = text("section", "", "survival-help-box tournament-profile");
     box.append(text("h3", shown?.name ?? "Emperor"));
     const lines = shown ? [`Level ${shown.level ?? 1}`, `Honour: ${shown.honor_points ?? 0}`,
       `Attacks won: ${shown.attacks_won ?? 0} · lost: ${shown.attacks_lost ?? 0}`] : ["No profile for this empire."];
-    box.append(...lines.map((line) => text("p", line)), button("Close profile", () => box.remove()));
+    box.append(...lines.map((line) => text("p", line)), button("Close profile", () => {
+      this.profileRequest++;
+      box.remove();
+    }));
     this.panel.body.prepend(box);
     box.scrollIntoView({ block: "nearest" });
   }

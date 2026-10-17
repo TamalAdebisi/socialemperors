@@ -3,7 +3,7 @@
 // by tournament-battle. Nothing writes the server's storage files directly.
 import assert from "node:assert/strict";
 import { stored } from "../lib.mjs";
-import { FULL_TEAM, SWORD, padded, tournamentPath, playerInfo, service, prepare, confirm,
+import { FULL_TEAM, SWORD, padded, tournamentPath, requestData, playerInfo, service, prepare, confirm,
   open, gold, fitsPhone, gameConfig, join, finish } from "../tournament-lib.mjs";
 
 export default async function tournamentResults({ newPlayer }) {
@@ -278,6 +278,11 @@ export default async function tournamentResults({ newPlayer }) {
   await weeklyPhone.page.locator(".tournament-scoreboard").scrollIntoViewIfNeeded();
   await weeklyPhone.shot("weekly-ranking-rows-phone");
   assert.match(await weeklyPhone.page.locator(".tournament-outcome").textContent(), /rank when you finished/);
+  // Start the cross-tab acknowledgement sequence with the desktop's minute
+  // refresh clock reset, so it deliberately retains this exact result view.
+  await winner.button("Refresh").click();
+  await page.waitForFunction(() => [...document.querySelectorAll(".tournament-window button")]
+    .some((button) => button.textContent === "Done" && !button.disabled));
   await weeklyPhone.button("Done").click();
   await weeklyPhone.page.waitForSelector(".tournament-cards");
   await weeklyPhone.button("Weekly").click();
@@ -288,4 +293,42 @@ export default async function tournamentResults({ newPlayer }) {
   await gold(weeklyPhone, weeklyAwarded.map.coins);
   assert.deepEqual((await playerInfo(winner)).privateState.gifts, weeklyAwarded.privateState.gifts);
   await service(loser, "clean_tournament");
+
+  // The desktop still displays the finished weekly room that the phone
+  // acknowledged. Another completed enrollment must survive that stale Done.
+  const newer = await join(winner);
+  for (let index = 1; index < players.length; index++) {
+    assert.equal((await join(players[index], "1", "", padded(...Array(index).fill(SWORD)))).tournament_id,
+      newer.tournament_id);
+  }
+  for (const entrant of players) {
+    for (const opponent of players) {
+      if (entrant !== opponent) await finish(entrant, newer.tournament_id, opponent.settings.userId,
+        entrant === winner ? "80.00" : "10.00", entrant === winner);
+    }
+  }
+  const newerFinished = (await service(winner, "get_tournament_info")).tournament;
+  assert.ok(newerFinished.date_finished);
+  assert.notEqual(newerFinished.tournament_id, weekly.tournament_id);
+  const newerPaid = await playerInfo(winner);
+  const staleRequest = page.waitForRequest((request) => request.url().endsWith("/tournaments/clean_tournament.php"));
+  await winner.button("Done").click();
+  assert.equal(requestData(await staleRequest).tournament_id, weekly.tournament_id,
+    "Done names the room displayed in that tab, even after another enrollment finishes");
+  const preserved = (await service(winner, "get_tournament_info")).tournament;
+  assert.equal(preserved.tournament_id, newer.tournament_id, "stale Done cannot acknowledge the newer finished room");
+  assert.deepEqual(preserved, newerFinished, "the newer matches, prize and acknowledgement state stay unchanged");
+  await page.waitForFunction(() => document.querySelector(".tournament-outcome") &&
+    !document.querySelector(".tournament-your-rank"));
+  assert.equal(await page.locator(".tournament-your-rank").count(), 0, "refresh shows the newer public results");
+  await winner.shot("stale-done-newer-results");
+  await gold(winner, newerPaid.map.coins);
+  assert.deepEqual((await playerInfo(winner)).privateState.gifts, newerPaid.privateState.gifts);
+  await winner.button("Done").click();
+  await page.waitForSelector(".tournament-cards");
+  assert.equal((await service(winner, "get_tournament_info")).tournament, null);
+  const acknowledged = await playerInfo(winner);
+  assert.equal(acknowledged.map.coins, newerPaid.map.coins);
+  assert.equal(acknowledged.playerInfo.cash, newerPaid.playerInfo.cash);
+  assert.deepEqual(acknowledged.privateState.gifts, newerPaid.privateState.gifts);
 }

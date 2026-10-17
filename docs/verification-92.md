@@ -1,4 +1,4 @@
-# Verification and delivery of #92 — 16 October 2026
+# Verification and delivery of #92 — 16–17 October 2026
 
 The remaining tournament stages are implemented together: entry and
 waiting rooms, three independent battles, results/rankings/prizes, and
@@ -10,7 +10,54 @@ their work is preserved without rebasing.
 Classic choices remain hidden as the owner requested in #93, while the
 original routes and shared saves remain supported.
 
-## Full integrated verification at 47db7f44
+## Latest review corrections: verification pending
+
+The next review found three actionable issues, now corrected in the
+candidate working tree:
+
+- Done sends the captured room id. Cleanup atomically ignores a supplied
+  id that no longer matches the current enrollment, protecting a newer
+  finished room from a delayed acknowledgement. Original user-id-only
+  calls still work; the wire envelope, fees and prize behavior are unchanged.
+- Profile replies must belong to the same window, room and latest request.
+  Rendering another view or closing the profile invalidates older reads,
+  so they cannot reopen a dismissed profile or replace a later selection.
+- Weekly-state and reward-index fields must be records, not arrays.
+  Malformed replies now fail instead of appearing to be empty state.
+
+Targeted preparation checks passed: 42 tournament server tests, six
+network tests and 20 tournament-battle tests, plus client types. The
+malformed-record test failed before its correction. Replaying old cleanup
+after test setup, including its service dispatch entry, fails the new
+stale-Done regression by removing the newer room. An initial scratch
+attempt installed that replay before setup reloaded the module, so it
+was reset and provides no failure proof. The browser now checks a newer
+public room finished through real services and three delayed real profile
+replies. These new browser assertions have not yet been verified here.
+
+Three findings require no runtime change:
+
+- The four collective healers initially follow a nonhealer, but original
+  damage handling may retarget them to a more injured friendly healer.
+  A new rule test covers all four healer ids, actual healing and retained
+  recovered patients. The healer implementation is unchanged.
+- External Leave marks the entrant abandoned. Current-room lookup then
+  excludes that enrollment; finish becomes a no-op, and the fresh room
+  read displays Tournament closed with Back enabled. The existing
+  browser branch passed in the 47 battle scenario (268s); a surviving
+  room for other entrants does not keep the departed entrant enrolled.
+- PARITY's list is explicitly historical and immediately marks survival,
+  tournaments, nests and mandatory lessons built. Git history confirms
+  that sequence, so no parity-status correction is needed.
+
+Main remains `8f8c57ab`. Root will commit the stable candidate, then run
+focused rooms/results/list checks and the required full 78-case suite.
+No new exact tested commit, overall unit totals or full-run result is
+claimed yet. Implementation is complete; verification of these review
+corrections is pending before merge. The completed 47 baseline and its
+unresolved quest follow-up remain intact below.
+
+## Completed pre-review baseline at 47db7f44
 
 Exact tested code: `47db7f4446e957ab8d65ef8892799649abedf9a6`.
 The checkout was clean and pushed before checks. A fresh fetch confirmed
@@ -22,12 +69,14 @@ countdown-hiding rule is removed; the hit-target regression checks all
 four configured Menu links. Tournament rules and command formats remain
 as documented, with the owner's community policy preserved.
 
-The final documentation update changes only AGENTS.md, CLIENT.md,
+The subsequent documentation commit
+`e9765901d3bde23dc7764f2b50b629dd87d914b0` changed only AGENTS.md, CLIENT.md,
 DECISIONS.md, HANDOFF.md, PARITY.md, ROADMAP.md, this record and the
 Everybody wording in `docs/original/index/windows.md`: eight Markdown
-files relative to `47db7f44`. Client/server code, configuration, artwork, tools and tests
-remain identical to that tested commit. This identity covers the
-documentation update, not any unrecorded later change.
+files relative to `47db7f44`. Client/server code, configuration, artwork,
+tools and tests remained identical through that commit. This identity
+ends at `e9765901`; the latest review changes runtime and tests and needs
+its own checks above.
 
 | Check | Result | Elapsed, including startup/build |
 | --- | --- | --- |
@@ -41,9 +90,9 @@ Menu/contact/raid integrations and `team` passed; `team` took 41s. The
 sole failure was `scripted-bosses`, whose mummy-gem reload assertion
 found three remaining gems instead of two. Ordinary reruns passed; the
 controlled diagnostic and its limits are recorded below. The full result
-remains **77/78**. Implementation and verification are complete, with
-this unresolved quest issue retained as a follow-up; #92 is ready for
-review and merge, not yet recorded as merged or deployed.
+remains **77/78**. This completed baseline retains the unresolved quest
+issue as a follow-up. It does not verify the later review corrections or
+claim merge/deployment.
 
 The run started with site-menu, contact and recurring-raids, then the
 five tournament cases, shared spells, building-overlay,
@@ -989,8 +1038,9 @@ all tournament checks and 77/78 cases overall. The sole quest failure did
 not recur in ordinary main/tested-code repeats. A forced baseline
 diagnostic establishes an existing save/read weakness but does not prove
 the full-run cause; that quest issue remains a separate follow-up.
-Implementation and verification are complete, and #92 is ready for
-review and merge. This record does not yet claim merge or deployment.
+All tournament parts are implemented. The latest Done/profile/protocol
+corrections still need focused and full verification before #92 is ready
+to merge; this record does not claim merge or deployment.
 The earlier #94 integration passed all 75 cases at
 `5d220abf` and remains a separate historical result.
 The other chats' #87, #91, #93, #94, #95 and #97 work is preserved. Merging #92

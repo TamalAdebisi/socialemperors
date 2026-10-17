@@ -310,8 +310,9 @@ checks passing at `47db7f44`, including #97: the complete suite was
 77/78 in 90m 46.59s. The sole quest reload failure did not recur in ordinary
 main or tested-code repeats. A forced baseline diagnostic establishes an
 existing save/read weakness, not the exact full-run cause; the quest issue
-remains a follow-up. Tournament implementation and verification are
-complete, ready for review and merge. Earlier results are retained.
+remains a follow-up. This is a completed baseline: later Done, profile
+and protocol review corrections need fresh verification before merge.
+Tournament implementation is complete; earlier results are retained.
 
 - [x] Everyday, weekly and friends' tournament lists, server-selected
       advertised prizes, weekly availability and the level/config gate.
