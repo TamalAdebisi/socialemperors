@@ -126,7 +126,7 @@ export class Player {
     this.problems = [];
     /** The same player in other windows (onPhone). */
     this.companions = [];
-    page.on("pageerror", (error) => this.problems.push(error.message));
+    page.on("pageerror", (error) => this.problems.push(error.stack ?? error.message));
     page.on("console", (message) => {
       // A missing picture is the art's business (the shop draws its own then), not the client's.
       if (message.type() === "error" && !message.text().includes("404")) this.problems.push(message.text());
