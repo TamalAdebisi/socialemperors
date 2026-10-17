@@ -1,7 +1,7 @@
 # Menus and progression delivery record
 
-This record covers the six feature slices in #99 and #105–109. Full combined browser
-verification and merges are still pending; this is not a release claim.
+This record covers the six feature slices in #99 and #105–109. Required verification is complete. Merges are still pending; this is not
+yet a release claim.
 The collections-only record is `docs/verification-99.md` in #99.
 
 ## Scope
@@ -30,8 +30,13 @@ integration is claimed. Other special buildings belong to the other chat.
 - Narrow-layout preview correction: types passed on `863b03aa` (shop)
   and `9f03a31f` (combined branch). It changes automatic preview opening,
   not purchase, placement or saved economy rules.
-- Browser focus and a complete combined Chromium run: pending. Exact
-  revisions, timings, failures and review coverage will be added here.
+- Corrected focus: 9/9 at `248db71e` (11m 51.945s), recorded below.
+- Latest-main combined checks at `76b1663f`: types and 436 client tests
+  passed (22.091s together); server 449 run, 440 passed, nine existing
+  PostgreSQL skips (59.125s test time, 59.929s total).
+- Full Chromium: 88/89 in 1h 59m 26.250s at `76b1663f`; final corrected
+  villager fixture: 1/1 in 1m 24.643s at `6fcf0646`. All 89 have passing
+  results across runs, not one final-head 89/89 run.
 
 Checks use local throwaway accounts and server data, with read-only public
 art. Chromium draws in software on the two-CPU, 8 GiB environment. No live
@@ -63,8 +68,8 @@ Review corrected Round Table invitation keys to use empire IDs rather
 than account IDs (`144c021f`), and a dated darts rollover reopens the board
 instead of leaving an armed stale board (`e390e6b6`). Static review also
 restricted automatic shop previews to wide layouts; narrow layouts use
-Details so entering a card cannot cover its purchase target. Later browser
-results must verify these changes; their implementation alone is not a pass.
+Details so entering a card cannot cover its purchase target. The nine-case focus and full run below verify these changes; implementation
+alone was not counted as a pass.
 
 The served unit-book configuration includes patches: 120 categories,
 481 entries and 475 distinct units. The UI calculates from that served
@@ -118,8 +123,8 @@ payment events again. It now fills only the unrecorded balance decrease;
 a model test covers duplicate events, partial fallback and a payment with
 a matching cash reward. The browser asserts exactly five cash recorded
 for its five-cash purchase. Types and all 432 rule tests pass on the corrected
-candidate; fresh browser results are still pending. No failed check is
-relabelled as a pass by these corrections.
+candidate before the corrected focus. The later results are recorded
+separately; no failed check is relabelled as a pass by these corrections.
 
 Large unit values use two stat pairs per row, with a local layout fixture
 checking all six numbers remain inside the card. That fixture restores
@@ -142,3 +147,145 @@ Main `aee3b7b2` brings the separately owned combat controls from #98. It is
 merged through every slice, preserving both decision records and all game
 changes; final combined verification follows this integration. No combat
 kill-drop completion is inferred from the controls merge.
+
+## Complete combined verification
+
+Exact clean, pushed `76b1663f3928e44dfaf72bccbfc7a49ad192afdd` includes main
+`aee3b7b2` and every menu/progression slice. All 89 cases ran: **88 passed
+in 1h 59m 26.250s** (user 5m 42.588s, system 1m 14.620s). Every new menu
+case passed, as did the combat controls, complete building gallery and all
+five tournament cases. The full local server log has no Python tracebacks,
+HTTP 5xx or unhandled commands. All **516 full-run PNGs** were reviewed at
+contact scale, including all 203 gallery captures reviewed incrementally
+and hash-matched to the completed archive. The failed villager capture was
+also inspected at native size.
+
+`villagers` alone failed after 26s: its no-hall fixture tried to select a
+worker behind the new, expected Missing Townhall notice. A read-only local
+SQLite check confirmed the worker and all four test trees were present.
+The fixture now waits for that warning and clicks OK before continuing.
+Every original queue-limit, glow, tree-save and upgraded-villager assertion
+remains, with no deadline, game rule or input-control change.
+
+Exact clean, pushed `6fcf064658f2f4508d4201e0153457e774e0bb15` changes only
+that eight-line fixture acknowledgement from the full-run head. Its
+**villagers focus passed 1/1 in 1m 24.643s** (scenario 77s). Both fresh
+captures were reviewed; its complete server log is clean by the same scan.
+Game code, rules and artwork are identical to `76b1663f`. All 89 cases have
+passing results across these runs; **there is no claim of a single 89/89
+run on the final fixture commit**. This is a required user-flow adjustment
+to a test, not an unexplained gameplay failure or a hidden retry.
+
+Archives: `work/menus-full-evidence/` and `work/villagers-focus-final/`,
+with exact timings, results, image hashes, complete local logs and review
+ledgers. The full archive retains the failed result and saved-fixture
+diagnosis. The earlier 7/12 focus and every correction above remain
+historical evidence.
+
+Visual limits remain explicit: contact review does not inspect every
+animation frame or fine text. Classic retains the existing software-
+acceleration/mute overlay. Some shop/world thumbnails, one Bull card
+portrait and a desktop units-book reload were not loaded in their sampled
+captures; other corresponding views show loaded artwork. Large armies can
+extend beyond the sampled camera crop. These captures are not claimed as
+new art repairs or proof of readiness of every thumbnail. No new menu
+layout defect remains identified after the corrected focus and full run.
+
+This combined verification covers the six interacting slices together; it
+is not six independent complete runs at their individual branch heads.
+The collections-only 80/80 and corrected nine-case focus remain additional
+separate checks. No required GitHub check may be bypassed for delivery.
+
+### Full-run case timings
+
+| Case | Result | Seconds |
+| --- | --- | ---: |
+| animals | passed | 44 |
+| attack | passed | 149 |
+| basic-notices | passed | 67 |
+| battle-selection | passed | 50 |
+| bonus | passed | 33 |
+| bosses | passed | 41 |
+| bubble | passed | 63 |
+| building-overlay | passed | 84 |
+| camp | passed | 51 |
+| camp-again | passed | 25 |
+| card | passed | 110 |
+| cash | passed | 41 |
+| classic | passed | 53 |
+| collect | passed | 103 |
+| collection-book | passed | 73 |
+| collections | passed | 30 |
+| combat-controls | passed | 45 |
+| construction | passed | 56 |
+| contact | passed | 126 |
+| darts | passed | 99 |
+| defence | passed | 26 |
+| dock | passed | 49 |
+| dragons | passed | 92 |
+| edit | passed | 44 |
+| friends-help | passed | 63 |
+| gifts | passed | 44 |
+| goal-window | passed | 43 |
+| graveyard | passed | 28 |
+| group | passed | 94 |
+| heroes | passed | 41 |
+| hover | passed | 48 |
+| keys | passed | 39 |
+| lessons | passed | 184 |
+| lessons-phone | passed | 232 |
+| lessons-recovery | passed | 88 |
+| levelup | passed | 53 |
+| look | passed | 66 |
+| looks | passed | 119 |
+| market | passed | 66 |
+| menu-progress | passed | 53 |
+| menus | passed | 117 |
+| messages | passed | 20 |
+| monks | passed | 21 |
+| nature | passed | 24 |
+| neighbours | passed | 114 |
+| nests | passed | 62 |
+| phone-place | passed | 60 |
+| playthrough-controls | passed | 36 |
+| pointers | passed | 73 |
+| profiles | passed | 69 |
+| quest | passed | 134 |
+| raids | passed | 70 |
+| recurring-raids | passed | 29 |
+| rename | passed | 33 |
+| scripted | passed | 79 |
+| scripted-bosses | passed | 156 |
+| scripted-stories | passed | 101 |
+| selected | passed | 72 |
+| shop | passed | 51 |
+| shop-details | passed | 113 |
+| siege | passed | 41 |
+| site-menu | passed | 66 |
+| social-friends | passed | 133 |
+| social-market | passed | 119 |
+| sound | passed | 31 |
+| specials | passed | 25 |
+| speed | passed | 20 |
+| spells | passed | 52 |
+| spy | passed | 39 |
+| storage | passed | 37 |
+| structure-idle | passed | 605 |
+| stuck | passed | 47 |
+| survival | passed | 60 |
+| team | passed | 46 |
+| tidy | passed | 36 |
+| tools | passed | 74 |
+| tournament-battle | passed | 295 |
+| tournament-results | passed | 158 |
+| tournament-rooms | passed | 240 |
+| tournament-weekly | passed | 134 |
+| tournaments | passed | 129 |
+| town-rules | passed | 38 |
+| train | passed | 40 |
+| troll-town | passed | 38 |
+| units-book | passed | 89 |
+| villagers | failed; corrected focus above | 26 |
+| walk | passed | 44 |
+| work | passed | 52 |
+| world | passed | 125 |
