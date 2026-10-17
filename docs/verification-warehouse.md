@@ -22,6 +22,28 @@ saved contents. The server log has no tracebacks, HTTP 5xx replies or
 unhandled commands. This record does not claim a full suite pass, merge,
 or deployment.
 
+## Integrated WebKit capture review
+
+At clean `22f5fd02bc900ba9ca674da7a591a9c79b0197c4`, the integrated
+warehouse scenario passed **1/1 in 73 seconds** in Linux WebKit. All four
+fresh PNGs were inspected. The original warehouse portraits, slot/button
+art, desktop final-page controls and phone sheet render correctly. The
+building card has neither ordinary capacity nor zero combat statistics.
+Reloaded Storage shows the expected total of 20: eighteen Light Knights,
+one Spearman and the warehouse. The phone warehouse capture shows the
+upper part of its first page; it does not expose the lower paging controls.
+
+The final Storage capture has blank portrait areas on its three cards.
+Source inspection finds that Storage uses an IntersectionObserver to start
+loading portraits only as cards become visible; the old fixture captured
+immediately after opening it. This capture therefore does not establish
+loaded Storage art. All three intended original JPGs exist locally. The
+fixture now scrolls each card into view, checks the exact three names and
+counts, and waits at most 30 seconds for complete, nonempty images at the
+intended original URLs before capturing. It returns to the first card for
+the shot. No product or shared Storage code changes; the follow-up browser
+run and screenshot review remain pending.
+
 ## Browser attempts retained
 
 | Revision | Result | Finding |
