@@ -28,7 +28,9 @@ next agent knows where to start.
   Machine goal 220 already has the ordinary build hook, so there is no
   progression-runtime edit and the unfinished-goal count stays unchanged.
   The narrow server fix advances sent PvP attacks/reset with time travel;
-  other existing wait and calendar behavior is preserved.
+  generic training queues also advance their positive start timestamp,
+  preserving completed zero markers. Other existing calendar behavior is
+  preserved; Soul Mixer content remains gated by genuine original data.
 
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**
   completed buildings retain their idle state, nested motion stays animated,

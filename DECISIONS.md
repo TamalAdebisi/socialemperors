@@ -4,6 +4,19 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: include generic training queues in time travel
+
+- **Treat a queued unit's start as the same kind of wait as a building's.**
+  The later original Soul Mixer keeps its start timestamp in
+  `privateState.barracksQueues[id].ts`, with the unit and count alongside;
+  a speed-up sets that timestamp to zero. The time-machine help promises
+  building/training waits advance. Move positive generic-queue starts back
+  with the other waits, preserving zero as already finished and retaining
+  unit/count metadata. The original server is unavailable, so this is the
+  narrow integration judgment between its restored command formats. A
+  server regression covers waiting, ready, claimed and very early starts;
+  no missing Soul Mixer content is invented or enabled.
+
 ## 17 October 2026: finish the time and weather machines
 
 - **Preserve buying separately from using.** Time packets keep the config's

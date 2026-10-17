@@ -1505,8 +1505,9 @@ sheet (`ui/machines.ts`; configuration and save readers in
 prices from `TIME_MACHINE`, owned counts, separate Buy and Use buttons and
 the original first-opening help, remembered with `timeMachineHelp`.
 Buying sends `buy_time_packet`; using sends `time_ff` and reloads the saved
-town. The existing server also advances outgoing PvP's wait now, as the
-original help promises, while calendar events retain their dates.
+town. The existing server also advances outgoing PvP's wait and generic
+training-queue starts now, as the original help promises, while completed
+queue markers and calendar events retain their meaning.
 
 The weather window shows the six original terrain previews, names and
 unlock price. IDs skip 3. Grass is free; unlocking a look immediately

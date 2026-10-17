@@ -43,7 +43,9 @@ localized `images_new` files.
 
 *Built:* the client sends the existing commands. `time_machine.py` keeps
 all existing building, nest, rider, temple, daily bonus, darts-free-life,
-survival-life and quest waits; it now also moves outgoing PvP attack times
+survival-life and quest waits, plus generic training starts in
+`privateState.barracksQueues[id].ts` (positive starts move back; zero stays
+finished, and unit/count metadata stays intact); it now also moves outgoing PvP attack times
 and the corresponding reset threshold together. The original help
 explicitly promises PvP speedup; received history, spy visits, Monday's
 calendar bonus and the darts season date are left as before. The original
