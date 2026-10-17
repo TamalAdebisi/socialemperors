@@ -5007,3 +5007,9 @@ button.world-piece:hover img {
 .darts-prizes { list-style: none; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; padding: 0; font-size: 12px; }
 .darts-prizes .collection-reward { width: 40px; height: 40px; }
 .darts-result:empty { display: none; }
+
+.social-window .panel-body > .button { margin: 4px; }
+.social-staff { padding-left: 24px; line-height: 1.7; }
+.social-resources { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-window .shop-tabs { margin: 12px 0; }
+.social-clock { font-weight: bold; }

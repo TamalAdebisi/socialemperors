@@ -20,6 +20,28 @@ them can be found and reversed. The big, agreed decisions are in
   to spell aiming and the existing repair bucket. This changes feedback,
   not attack rules or the saved army.
 
+## 17 October 2026: social-building windows and local friends
+
+- Use the existing Open action and panel for the six repeatable social
+  buildings. Keep ordinary buildings' existing server-side automatic
+  opening; do not recreate their abandoned staff gates.
+- Use Everybody's explicit help requests. The Round Table asks one person
+  at a time and records its original invitation command/limit; answers
+  appear after reloading, as in the existing help flow. Helpers use names
+  or the existing Friend fallback rather than unavailable Facebook photos.
+- Keep the original reward placement: allied troops and chosen recruits
+  on the map, Round Table heroes in town Storage. The population wonder
+  retains earlier staff across its five steps.
+- Goals 104 and 115 follow the original latest completed staff count,
+  rather than counting claims. Ordinary automatic-opening staff goals
+  remain deferred. No combat controls or other special-building work is
+  included.
+
+- The help directory now includes each eligible account's empire ID.
+  Round Table requests use the existing seat endpoint and record that
+  empire ID in `assist_send_feed`, preserving classic shared-save keys.
+  Accounts without an empire retain their disabled state.
+
 ## 17 October 2026: preserve the darts schedule
 
 - The supplied schedule ends with an empty prize pool dated September

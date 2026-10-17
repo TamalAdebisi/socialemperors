@@ -185,9 +185,14 @@ def window(user: dict, USERID: str, save: dict, kind: str, town: int, x: int, y:
     except HelpError as e:
         reply["opens" if kind == "staff" and int(item) not in social.KEEP_STAFF else "gone"] = str(e)
     states = _states(save, USERID, kind, town, x, y, item)
-    reply["friends"] = [{"id": f["id"], "username": f["username"],
-                         "state": states.get(f["id"]) or ("can" if sessions.empires_of(f["id"]) else "no_empire")}
-                        for f in friends.everybody(user["id"])]
+    reply["friends"] = []
+    for friend in friends.everybody(user["id"]):
+        empires = sessions.empires_of(friend["id"])
+        reply["friends"].append({
+            "id": friend["id"], "username": friend["username"],
+            "pid": empires[0] if empires else None,
+            "state": states.get(friend["id"]) or ("can" if empires else "no_empire"),
+        })
     reply["answered"] = [did(row["kind"], row["item"], row["helper"], "your")
                          for row in _storage().help_asked_by(USERID, int(time.time()) - EXPIRE)
                          if row["answered_at"] is not None and row["answered_at"] >= loaded_at]

@@ -103,6 +103,8 @@ export interface PlacedItem {
   open?: boolean;
   /** A social building's helpers so far, when the save keeps its staff list (the item's `si`). */
   staff?: number;
+  staffIds?: string[];
+  staffAsked?: Set<string>;
   /**
    * Being built (rules/construction.ts): when its scaffolding comes down
    * (milliseconds, Date.now()). Not saved, as in the Flash client: opened
@@ -167,7 +169,8 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
       units: Array.isArray(units) ? units.map(Number) : [],
       startedAt: Number.isFinite(started) ? Number(started) : null,
       workTime: Number(attributes?.cp) || 0,
-      ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length } : {}),
+      ...(Array.isArray(attributes?.si) ? { staff: attributes.si.length, staffIds: attributes.si.map(String) } : {}),
+      ...(attributes?.sif && typeof attributes.sif === "object" ? { staffAsked: new Set(Object.keys(attributes.sif).map((id) => id.replace(/^u/, ""))) } : {}),
       ...(readHelpers(attributes?.hc).length > 0 ? { helpers: readHelpers(attributes?.hc) } : {}),
     });
   }

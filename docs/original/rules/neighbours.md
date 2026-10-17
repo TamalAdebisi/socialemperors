@@ -299,6 +299,19 @@ things only until the page is reloaded).
 
 ## Social buildings
 
+**Update, 17 October 2026:** the six repeatable buildings' windows are
+built in `rules/socialMenus.ts` and `ui/social.ts`, with original cash,
+resource, troop, recruitment, population and Round Table rules. Staff
+names are preserved when reading the save. Everybody handles explicit
+help requests; the Round Table asks one at a time and preserves its
+invitation limit/command. Goals 104 and 115 use the original latest staff
+count at completion. Earlier comparisons below describe the pre-window
+client; ordinary server-opened buildings remain deliberately open.
+Tests: `socialMenus.test.ts`, `social-market.mjs`, `social-friends.mjs`.
+The first social browser fixtures overlapped the town hall and were
+correctly sent to Storage by cleanup. Their disjoint placements now have
+explicit saved-position assertions; no cleanup or selection rule changed.
+
 - Which: every building in the config's `social_items` (31 of them:
   mills, mines, markets, churches, workshops, the harbours and zeppelins,
   the Summit 234, the Allied Markets 266 and 352, the recruitment camp
@@ -519,7 +532,9 @@ Most serious first.
 14. **Social buildings' windows**: staff places, cash helpers, the Summit's
     allies, the Allied Markets, the recruitment camp, the Great Church's
     rounds, the Round Table. (checked twice; the windows' numbers were
-    checked, their drawing only skimmed)
+    checked, their drawing only skimmed) *Fixed for the six repeatable
+    buildings by `rules/socialMenus.ts` and `ui/social.ts`; ordinary
+    buildings retain server auto-opening.*
 15. **Friends' hurry help**: Ask friends, and their pictures over a
     building taking an hour off (`hc`, `accept_collect_help`). (checked
     twice) *Fixed since "Friends' help at a building".*

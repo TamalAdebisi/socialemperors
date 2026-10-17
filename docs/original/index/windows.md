@@ -7,7 +7,7 @@ or two commands when the player picks something; a few hold rules of their
 own (prices, timers, what a prize is), and those are noted in the rows.
 They are opened through `managers/PopupManager.as`, another part of this map.
 
-**Count:** 66 built, 11 partly, 31 not yet, 23 not needed, 5 art (136 classes).
+**Count:** 71 built, 11 partly, 26 not yet, 23 not needed, 5 art (136 classes).
 
 **How deep this was read.** Every window was read, skipping the button
 wiring, tweens and text-field set-up. The bigger ones (market, goals,
@@ -57,7 +57,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopUpLost.as` | 154 | A lost thing found on the map (cow, sheep, knight, crate, barrel...): the story, then the thing is taken off the map. Its only other effects are a call to `register_found_item.php` and a Facebook post; it pays nothing and saves nothing. | not yet: no lost things on our map |
 | `popups/PopupMarket.as` | 104 | The market: buy or sell 100, 200 or 300 wood, stone or food (by the market's level) for gold; shows the trades left of 20. | built: `ui/market.ts`, in the panel; `market.py` on the server |
 | `popups/ButtonMarket.as` | 133 | One market button. Price: the base (food and wood 100, stone 150 gold per 100) plus 2% for each net purchase so far (from -25 to +200); selling pays three quarters. Sends `trade_resource_b`; counts toward the market goal. | built: `rules/market.ts`; `market.py` uses the same sums |
-| `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | not yet; `social.py` |
+| `popups/PopupSelectResource.as` | 94 | The allied market's choice of resource (wood, stone, food or gold, 125 per ally); sends `set_resource_allies` and starts its 24-hour clock. | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
 | `popups/PopupWeather.as` | 148 | The weather machine: six looks for the island; one is free, the others 20 cash each to unlock (`unlock_skin`), then `set_skin` and the town reloads. | not yet; `shop.py` |
 | `popups/PopupUnitWarehouse.as` | 259 | The unit warehouse: stored units in pages of 18, Use puts one back beside the building (`place_warehoused_item`) if there is room for people and under the unit's limit; one more slot for 2 cash (`buy_warehouse_capacity_single`), up to 1,000. | not yet; `warehouse.py` |
 | `popups/tournament/UnitWarehouseCard.as` | 55 | A card in the unit warehouse: the unit's picture, its name on hover. | not yet (with the warehouse) |
@@ -114,10 +114,10 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupSocialBuilding.as` | 459 | A building that needs a staff (the Summit, the allied markets, the Wonder...): friends fill places, or a place costs cash (`buy_si_help`); when full it opens (`finish_si`). The Summit then brings allied troops (it needs room for 9 people); the allied market shows its resource and clock. | not yet; `social.py` (the harbour and zeppelin get theirs free: `rules/dock.ts`) |
-| `popups/PopupRecruitment.as` | 482 | The recruitment camp: friends recruited fill places; when full it gives the reward units beside it (`finish_si`). | not yet |
-| `popups/PopupRecruitmentPopulation.as` | 360 | The wonder of people: every 4 friends hired adds 10 to the room for people, up to 5 times (`increase_population`). | not yet |
-| `popups/PopupSocialFeeds.as` | 385 | The Round Table: post to friends one by one (`assist_send_feed`, at most 60); when it is ready, 4 answers pay 1,000 gold, 6 add 100 XP, 8 an item (`finish_si`, then `collect_new`). | not yet; `helps.py` |
+| `popups/PopupSocialBuilding.as` | 459 | A building that needs a staff (the Summit, the allied markets, the Wonder...): friends fill places, or a place costs cash (`buy_si_help`); when full it opens (`finish_si`). The Summit then brings allied troops (it needs room for 9 people); the allied market shows its resource and clock. | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupRecruitment.as` | 482 | The recruitment camp: friends recruited fill places; when full it gives the reward units beside it (`finish_si`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupRecruitmentPopulation.as` | 360 | The wonder of people: every 4 friends hired adds 10 to the room for people, up to 5 times (`increase_population`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
+| `popups/PopupSocialFeeds.as` | 385 | The Round Table: post to friends one by one (`assist_send_feed`, at most 60); when it is ready, 4 answers pay 1,000 gold, 6 add 100 XP, 8 an item (`finish_si`, then `collect_new`). | built: `rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts`; repeatable buildings use existing staff/reward commands and Everybody help; ordinary server-opened buildings stay open |
 | `popups/PopOverVisit.as` | 84 | The little menu on a neighbour's picture: Visit, Attack (not for Arthur) and Send gift. | partly: Visit and Attack (from level 6) in `ui/neighbours.ts`; no Send gift |
 | `popups/AssistPopup.as` | 152 | On a visit to a neighbour not helped for 24 hours: a task picked at random from the config's `neighbor_assists`, OK, a short bar, then 10 gold and 3 XP (`assist_neighbor`). | not yet: `visit.ts` has the building helps but not this request (see `core.md`, surprise 2) |
 | `popups/infoFriendAssistPopup.as` | 101 | A neighbour's donkey cart: let it in to go round the buildings helped, or turn it away. | built: `editor.ts` (`welcomeCarts`), `rules/neighbours.ts` |
