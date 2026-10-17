@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 17 October 2026: preserve real visibility in background-play fixtures
+
+- **Simulate hidden tabs without overriding actual page unloading.** A local
+  WebKit probe kept native visibility for two reloads without errors, then
+  reproduced two Friends polling errors with the tournament fixture's
+  `document.hidden` override. At each error, native `visibilityState` was
+  `hidden` while the override incorrectly said false. Preserve native hiding
+  in both shared background-play fixtures, alongside their simulated flag.
+  All background-progress, explicit-Pause and return-time assertions remain,
+  with unchanged speeds and deadlines. This is a test-only correction;
+  no polling error is suppressed and no game behavior changes.
+
 ## 17 October 2026: recover a partially damaged Safari atlas
 
 - **Extend the narrow recovery only where the failure was reproduced.**

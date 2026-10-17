@@ -34,20 +34,23 @@ next agent knows where to start.
   All 1,010 configured entries were inventoried: 900 readable art files
   cover 941 entries; 69 unavailable names are listed in
   [the audit](docs/structure-idle-audit.md). No new public art is required.
-- **#96 verification:** server 442 run (433 passed, nine existing skips),
-  client types and all 368 tests passed. Complete integrated Chromium was
-  72/74; affected/follow-up runs give passing results for all 75 current
-  cases, not a single final-head 75/75 run. Final runtime `947c30a2` passed
-  WebKit 8/8 in 388.40s, including the full 98-file/199-facing gallery and
-  the exact 2,800-pixel ground guard. A focused Chromium one-atlas check of
-  that new guard, retaining mill/walking/tower/save checks, passed in 95.88s.
-  Earlier Chromium full-gallery, construction, overlay and controls checks
-  passed 4/4 in 1199.83s. The unchanged ten-second WebKit construction test
-  retains a timing failure, with an earlier old-main timing failure recorded
-  separately. [The delivery record](docs/verification-96.md) keeps exact
-  runtimes, all failures, visual review and engine limits. Final logs are
-  clean and no new memory-limit/OOM events occurred. Linux WebKit does not
-  test the owner's Mac GPU. No tests or errors were disabled.
+- **#96 verification:** server 449 run (440 passed,
+  nine existing skips), client types and all 404 tests passed. Complete
+  combined Chromium: 77/79 in 2h 22m 31.78s. Final `862d9893` collection,
+  unchanged siege and one-atlas alpha/ground follow-ups passed 3/3 in
+  255.75s; all 79 current cases have passing results across runs, not one
+  final-head 79/79 run. Final WebKit: 6/7 in 671.57s. All 98 files / 199
+  facings pass and match the reviewed reference exactly; the tournament
+  completed gameplay but failed its page-error gate on Friends polling
+  errors. A local probe traced these to the test overriding real visibility
+  during page unloading; the corrected-fixture follow-up and earlier
+  construction timing limit remain in
+  [the delivery record](docs/verification-96.md), with exact revisions,
+  failures, screenshot review and the Linux WebKit/Mac GPU limit.
+  Full Chromium review covers all 461 fresh PNGs. The final WebKit gallery
+  matches all 199 reference images; 31 other WebKit and 11 other Chromium
+  images were reviewed. Final server logs are clean and memory-limit/OOM
+  counters did not increase. No tests or errors were disabled.
 
 - **Getting in touch:** `SE_DISCORD_URL` (DEPLOY.md) puts a Discord link
   on the pages around the game, the classic bar, the new client's Menu and

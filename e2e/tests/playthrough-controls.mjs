@@ -12,7 +12,9 @@ export default async function playthroughControls({ newPlayer }) {
   // The independent timer must do the work, without a test-only game speed.
   await player.page.addInitScript(() => {
     window.testHidden = false;
-    Object.defineProperty(document, "hidden", { get: () => window.testHidden });
+    // Simulated tab hiding must still respect real hiding on navigation:
+    // claiming an unloading page is visible starts invalid background polls.
+    Object.defineProperty(document, "hidden", { get: () => window.testHidden || document.visibilityState === "hidden" });
     const request = window.requestAnimationFrame.bind(window);
     const pending = [];
     window.requestAnimationFrame = (run) => request((time) => {

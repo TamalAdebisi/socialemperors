@@ -84,18 +84,19 @@ PYTHON=.venv/bin/python node e2e/run.mjs             # the new client played in 
 PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
 ```
 
-- **Latest structure verification (#96):** server 442 run (433 passed,
-  nine existing skips), client types and all 368 tests passed. Complete
-  integrated Chromium: 72/74 in 2h 21m 22.24s; affected/follow-up checks give
-  passing results for all 75 current cases across runs. Final runtime
-  `947c30a2`: WebKit 8/8 in 388.40s, including all 98 files / 199 facings;
-  Chromium's focused new ground-pixel guard passed in 95.88s, with its
-  one-atlas scope stated explicitly. Earlier Chromium full-gallery,
-  construction, overlay and controls checks passed 4/4 in 1199.83s.
-  The original WebKit construction test retains a timing failure; an earlier
-  timing assertion also fails on old main. [The delivery record](docs/verification-96.md)
-  attributes results to their actual runtimes, retains failed/diagnostic
-  runs, and records screenshot review and the Linux WebKit/Mac GPU limit.
+- **Latest structure verification (#96):** server 449 run (440 passed,
+  nine existing skips), client types and all 404 tests passed. Complete
+  combined Chromium: 77/79 in 2h 22m 31.78s. Final `862d9893` collection,
+  unchanged siege and one-atlas alpha/ground follow-ups passed 3/3 in
+  255.75s; all 79 current cases have passing results across runs, not one
+  final-head 79/79 run. Final WebKit: 6/7 in 671.57s. All 98 files / 199
+  facings pass and match the reviewed reference exactly; the tournament
+  completed gameplay but failed its page-error gate on Friends polling
+  errors. A local probe traced these to the test overriding real visibility
+  during page unloading; the corrected-fixture follow-up and earlier
+  construction timing limit remain in
+  [the delivery record](docs/verification-96.md), with exact revisions,
+  failures, screenshot review and the Linux WebKit/Mac GPU limit.
 - **Tournament implementation and required verification are complete.**
   Exact clean `f798788b6529388f918098989b8f4997eab553c8`, including
   main `8f8c57ab`, passed **78/78 browser cases in 92m 33.33s**.

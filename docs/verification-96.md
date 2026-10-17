@@ -34,9 +34,11 @@ regression was reproduced with page-created ImageBitmaps. Runtime
 `d04c924e` tested disabling automatic mipmap generation; the wider run still
 reproduced the fault, so that setting is withdrawn. A WebGL 1 comparison
 also failed and is not retained. Other engines retain their existing
-loading and mipmap paths. Final runtime `947c30a2` restores normal workers
+loading and mipmap paths. Recovery runtime `947c30a2` restores normal workers
 and recovers only blank bitmaps; its exact ground-pixel guard verifies that
 the previously blank atlas does not damage the existing scene.
+Runtime `862d9893`, after main #92, also recovers one atlas that reproduced
+partial worker corruption and checks its original alpha grid exactly.
 PR: https://github.com/TamalAdebisi/socialemperors/pull/96.
 Main #95 keeps Shift as the third tap argument and input time as the fourth;
 the delayed-click unit regression asserts both values independently.
@@ -80,8 +82,11 @@ setup and teardown.
 | Combined main #92 server at `46f61c94` | 449 run: 440 passed, 9 existing skips | 40.942s |
 | Combined main #92 client | Types passed; 404/404 tests passed | 15.212s |
 | Combined main #92 build | Passed | 1.03s |
+| Partial-corruption repair at `862d9893` | Types and 404/404 client tests passed; build passed | Build 0.790s |
 | Complete combined Chromium, all 79 cases | 77/79; collect and siege follow-ups below | 8551.78s |
-| Combined WebKit, six affected cases | 5/6; tournament console warnings and one gallery visual mismatch below | 545.66s |
+| Combined WebKit, six affected cases | 5/6; tournament page errors and one gallery visual mismatch below | 545.66s |
+| Final repair WebKit at `862d9893`, seven cases | 6/7; full 199-facing gallery and collection passed; tournament polling warnings retained | 671.57s |
+| Final repair Chromium at `862d9893`, one-atlas focus / collect / siege | 3/3 | 255.75s |
 | Pre-#92 server, including main #97 | 442 run: 433 passed, 9 existing skips | 47.173s |
 | Client after main #97 | Types passed; 368/368 tests passed | 20.035s |
 | Build after main #97 | Passed | 1.01s |
@@ -197,7 +202,7 @@ The latest 20-case WebKit run retained eight failures:
   The complete case then passed in both engines, including saved-tree
   checks and the unchanged pixel threshold.
 - `lessons-recovery` completed its gameplay assertions but failed the error
-  gate on three image-fetch access-control warnings. Its tracing repeat
+  gate on three image-fetch access-control errors. Its tracing repeat
   passed without those warnings. That repeat does not establish their
   exact cause; the original failure remains recorded.
 - `neighbours` and `tidy` completed their gameplay assertions but failed on
@@ -529,7 +534,7 @@ The full structure gallery passed in 862s, all five tournament cases passed,
 and construction, shared battle controls, delayed unit selection, background
 play, phone controls and the ground-click indicator passed. The affected
 six-case WebKit run finished 5/6 in 545.66s; its additional visual finding
-and console-error failure are recorded below.
+and page-error failure are recorded below.
 
 PR #92 subsequently merged as `4c7f4eb559d1dac462a78c946fa1890fb4f7c9cd`.
 Its final head is `cee1b96b`; comparison with the tested candidate `f798788b`
@@ -549,9 +554,11 @@ not a level-up prompt.
 The unchanged fixture starts its short farm production interval before
 reloading, taking screenshots and selecting/starting the mine. By the time
 it tries to inspect a working farm, the farm is ready and the click correctly
-collects instead. A fixture-order correction and focused verification remain
-due after the active suites finish. No old-main reproduction is claimed from
-this source/trace diagnosis, and the failed run will remain a failure.
+collects instead. At `862d9893`, the working-farm/ranch inspection moves immediately after
+reload, before the mine and screenshots. All original assertions, production
+durations and collection deadlines remain. The final WebKit collection check
+passed in 102s; Chromium follow-up is recorded below. No old-main reproduction
+is claimed from this source/trace diagnosis, and the failed run remains a failure.
 
 `siege` failed in 58s at its unchanged 30-second wait for 1,800 game frames.
 The screenshot shows the army still lined up with its captain's speech.
@@ -563,8 +570,8 @@ in 27.2435s, at speed four, with the page visible and 317 then 316 fighters.
 All five surviving engines selected a building at the stage transition.
 This demonstrates normal progress close to the original 30-second limit
 on the software renderer; it does not prove the precise clock state during
-the full-run failure. No timeout is increased or hidden. The normal-runner
-follow-up remains due.
+the full-run failure. No timeout is increased or hidden. The unchanged
+normal-runner follow-up passed in 48s; both fresh siege captures were reviewed.
 
 All **461 fresh Chromium PNGs** are covered by visual review. The 199 facing
 images match the previously reviewed full gallery in dimensions and every
@@ -580,7 +587,7 @@ command. Memory-limit/OOM counters did not increase during the full run.
 The integrated WebKit run passed overlays (29s), gallery assertions (181s),
 battle selection (30s), playthrough controls (30s) and keys (30s).
 `tournament-battle` completed its gameplay assertions but failed the error
-monitor after 239s on two `/friends/news` access-control warnings. Its server
+monitor after 239s on two `/friends/news` access-control errors. Its server
 requests returned 200. This is retained as a failure; earlier navigation
 warnings in other tests do not establish the cause of these exact warnings.
 
@@ -591,8 +598,90 @@ displaced silhouette. The visible-pixel/frame assertions passed, so that
 automated pass is not treated as a clean visual result. A first 14-file
 CPU/GPU probe passed in 61s and did not reproduce the malformed capture:
 the repaired bitmap and a new decode had identical pixels, with 42,784
-visible source pixels. This repeat does not establish a fix. Further
-investigation is in progress before delivery.
+visible source pixels. That repeat did not establish a fix.
+
+The repeated diagnostic then passed three cases (61s, 57s, 51s) and caught
+the malformed frame on the fourth (36s), stopping with **3/4**. The damaged
+bitmap had not been decoded on the page: it came directly from the worker
+and contained visible pixels, so the empty-bitmap guard accepted it.
+Its CPU frame had 42,356 visible pixels and a different RGBA fingerprint;
+a fresh page decode of the identical file restored the original 42,784
+pixels and correct GPU rendering. This reproduces the same malformed
+silhouette as the integrated gallery, rather than relying on a later pass.
+
+At `862d9893`, Safari always performs the existing second decode for exactly
+`1479_chained_levelup-1.webp`. Other visible atlases retain the worker path,
+all mipmaps remain, and Chromium's runtime path is unchanged. The gallery
+also checks the affected frame's complete alpha grid: SHA-256
+`69afb90c6933d8dd7c1d2a1bc5e1a6e6ebfde3bbf8a8c9f78e753179e465db62`,
+independently measured from the original public WebP using Pillow. The
+captured bad bitmap's alpha hash is
+`4a15c044f48329042c791287bcfa94f56e8a59442169d9bad02c251517d41847`,
+so the new guard rejects the actual reproduced corruption. The source
+pixels, dimensions, timing and public art files are unchanged.
+Types and all 404 client tests passed; the build passed in 0.790s. Server
+code is unchanged from the 449-test integrated verification.
+
+## Final repair verification at `862d9893`
+
+WebKit passed **6/7 in 671.57s**: overlays 27s, full structure gallery 189s,
+battle selection 33s, playthrough controls 29s, keys 31s and collection 102s.
+The original tournament assertions completed, but its error gate again failed
+at 253s on two `/friends/news` access-control page messages. A passive
+trace attached after player setup saw three successful polls and no failure;
+that trace misses initial page creation and cannot establish their cause.
+A diagnostic with listeners attached before page creation is recorded below.
+No error is ignored or assertion disabled.
+
+All **199 gallery captures match the correct pre-integration WebKit reference
+in dimensions and every RGBA byte**. The new complete source-alpha guard and
+the exact 2,800-pixel ground comparison also pass. All **31 other fresh PNGs**
+were reviewed, including the tournament failure and every collection state.
+Selected mill/tower outlines and the moving-unit outline are aligned; the
+collection captures show the intended working, ready and collected states.
+No new memory-limit, OOM or killed-process event occurred in this run.
+
+Final Chromium passed **3/3 in 255.75s**: the one-atlas alpha/ground focus
+96s, collection 108s and unchanged siege 48s. This focus retains normal
+mill, walking, tower-state and saved-game checks; it is not a repeat of
+all 199 gallery facings. Its two facing captures exactly match the reviewed
+Chromium reference, and all 11 other fresh PNGs were reviewed. The earlier
+complete Chromium gallery passed in 862s and all 199 images matched the
+reviewed reference exactly. Both final server logs have zero HTTP 5xx,
+Python tracebacks or unhandled commands. No additional memory-limit, OOM
+or killed-process events occurred in either final run.
+
+All 79 current Chromium cases have passing results across the full run and
+follow-ups. The complete run remains **77/79 on `46f61c94`**, with subsequent
+Safari-only decoding recovery and test fixture/assertion changes verified
+at `862d9893`; this is not a single final-head 79/79 run.
+
+## Tournament visibility diagnostic and fixture correction
+
+A full passive navigation trace of the unchanged tournament repeated the
+failure: **0/1 in 281.51s**, test duration 274s, after gameplay assertions.
+Its ten fresh screenshots were reviewed and memory counters did not change.
+Both trace attempts observed successful HTTP 200 polls and no console or
+request-failure event. They had omitted the separate `pageerror` event;
+they did not establish that warnings occurred during initial page creation.
+
+A smaller diagnostic then recorded `pageerror`, page lifecycle events,
+`document.hidden` and native `document.visibilityState`. Ordinary reloads
+produced native hidden=true/state=hidden with no error. After installing
+the same synthetic hidden getter as the tournament test, two reloads
+reproduced the exact `/friends/news` access-control error. At both events,
+the override reported hidden=false while native visibilityState was hidden.
+The stack points to the existing HUD poll; its code and the original
+tournament test are unchanged from main. This reproduces a fixture causing
+polls during real page unloading. It is not a structure-rendering failure.
+The diagnostic retains **0/1 in 21.22s**, with both fresh PNGs reviewed.
+
+Both background-play fixtures now return simulated hidden **or** native
+visibilityState=hidden. They still withhold animation frames and check
+independent background progress, explicit Pause and no time replay on return.
+All assertions, speeds and deadlines remain; no error is filtered out.
+Game runtime and the `862d9893` production bundle are unchanged. Focused
+verification of the corrected fixtures follows below.
 
 ## Earlier runs retained
 
@@ -659,7 +748,7 @@ historical high-water mark reaches 8 GiB; do not call earlier runs free of
 memory pressure.
 Linux WebKit does not reproduce the owner's Mac GPU or installed Safari.
 
-## Complete Chromium run: individual results
+## Earlier Chromium run at `cab2d7dd`: individual results
 
 | Check | Seconds | Result |
 | --- | ---: | --- |
