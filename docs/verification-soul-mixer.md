@@ -91,3 +91,35 @@ pass is claimed here.
 No live game account or production game-state traffic was used. Research
 made read-only requests to the preservation upstream and public search;
 decompiled source was read only locally and is not in this slice.
+
+## Integrated WebKit and later combined checks
+
+The Soul Mixer case passed **1/1 in 30 seconds** in Linux WebKit at exact
+clean combined source `22f5fd02bc900ba9ca674da7a591a9c79b0197c4`.
+All **three fresh PNGs** were reviewed: desktop unavailable state,
+original help and phone unavailable state. The unavailable-data message
+is readable, all four original help images decode, desktop actions are
+visibly disabled and the phone sheet fits its width. No material visual
+issue was found. The phone capture shows only the visible fold: lower
+disabled actions extend below it, so that image alone does not demonstrate
+scrolling. Linux WebKit does not establish native Apple GPU behaviour.
+
+Evidence is retained under
+`work/checks/integrated-webkit-six-initial/evidence/soul-mixer/`, with
+hashes, dimensions and review notes in ignored `work/review-webkit-soul.json`.
+The initial combined run was **5/6**, with a separate rider phone-focus
+assertion failing after its actual adventure callbacks; the Soul pass
+does not turn that wider run into a full pass.
+
+At later combined `db5d614dff4ba271466718c8bd5df2e40935e6e6`, including
+the narrow focus follow-up, server checks ran **467 tests: 458 passed and
+nine existing PostgreSQL skips** (34.338s test time, 34.938s command time).
+Types passed and **447/447 client tests passed** (13.265896s test time,
+16.711s command time). These are combined integration results, not a new
+leaf-only run. The full **85-case Chromium** run and final integrated
+review remain pending in [the integration record](verification-special-buildings.md).
+
+The original-data blocker persists: genuine later ranks, mixing times,
+power-up levels and passive-grant level are still missing. These checks
+verify supported rules and the safe unavailable state; they do not claim
+playable new mixing.
