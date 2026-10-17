@@ -308,6 +308,9 @@ invitation limit/command. Goals 104 and 115 use the original latest staff
 count at completion. Earlier comparisons below describe the pre-window
 client; ordinary server-opened buildings remain deliberately open.
 Tests: `socialMenus.test.ts`, `social-market.mjs`, `social-friends.mjs`.
+The first social browser fixtures overlapped the town hall and were
+correctly sent to Storage by cleanup. Their disjoint placements now have
+explicit saved-position assertions; no cleanup or selection rule changed.
 
 - Which: every building in the config's `social_items` (31 of them:
   mills, mines, markets, churches, workshops, the harbours and zeppelins,
