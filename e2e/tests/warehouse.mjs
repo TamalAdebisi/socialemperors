@@ -76,6 +76,10 @@ export default async function warehouse({ newPlayer }) {
   assert.equal(Number(deployed.playerInfo.cash), Number(before.playerInfo.cash) - 2);
   assert.equal(deployed.map.xp, before.map.xp, "deployment grants no experience");
 
+  // The map selector searches visible pixels. Keep the unit whose saved
+  // deployment was just checked away from the phone's building target,
+  // so its selection does not issue a new order to enter the warehouse.
+  await player.send([{ cmd: "move", args: [unit[1], unit[2], KNIGHT, 49, 56, 0, 0, "fixture"] }]);
   const phone = await player.onPhone();
   await phone.select(AT, "Unit Warehouse");
   await phone.press("Open warehouse");
