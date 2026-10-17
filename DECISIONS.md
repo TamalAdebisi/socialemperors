@@ -12,8 +12,8 @@ them can be found and reversed. The big, agreed decisions are in
 - Expand details by tap or keyboard in the panel so phone users can read
   and buy without hover. Only one original-art animation plays at once;
   closing or paging stops it and ignores late loads.
-- Preserve the configured overall denominator, including its one repeated
-  unit; category counters and reward eligibility use each category's list.
+- Preserve the configured overall denominator, including repeated
+  entries in the served, patched configuration; category counters and reward eligibility use each category's list.
 
 ## 17 October 2026: collection window in the existing menus
 

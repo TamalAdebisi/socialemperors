@@ -20,8 +20,9 @@ is not written as a book purchase. A category completed through acquiring a
 map unit announces that a reward waits. A full category pays its configured
 reward into Gifts and one cash through unit_collections_completed. Each
 category pays once. The original overall denominator sums category entries,
-including one duplicated unit in the supplied configuration; retain that
-count. Individual category counters stay independent.
+including repeated entries. The served, patched configuration has 120
+categories, 481 entries and 475 distinct units; retain its entry total.
+Individual category counters stay independent.
 
 Built: rules/unitBook.ts, ui/unitBook.ts, view/unitPreview.ts. Army opens it
 on desktop and phone. Details expand on tap or keyboard and only one
