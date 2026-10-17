@@ -66,3 +66,16 @@ test("invalid, duplicate and unaffordable throws do not spend or grant anything"
   assert.equal(game.shoot(player,0,now),null); assert.equal(game.shoot(player,1,now),null);
   assert.equal(game.shot.length,1); assert.equal([...player.store.values()].reduce((a,b) => a+b),1);
 });
+
+
+test("a changed pool cannot mix the old board with new prizes; opening resets to the new pool", () => {
+  const next={id:2,start_date:"2026-10-18",items:[20,21,22,23,24,25],extra_item:100};
+  const saved: Record<string,unknown>={}, game=new DartsGame([rounds[0],next],saved,20), player=town();
+  game.opening(now,4242);game.shoot(player,0,now);
+  const tomorrow=roundStart("2026-10-18");
+  assert.equal(game.shoot(player,1,tomorrow),null);
+  assert.equal(game.shot.length,1);
+  assert.deepEqual(game.opening(tomorrow,7),[{cmd:"darts_reset",args:[7]}]);
+  assert.equal(game.shot.length,0);assert.equal(game.free,true);
+  assert.ok(game.shoot(player,0,tomorrow));assert.equal(player.cash,500);
+});

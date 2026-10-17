@@ -211,6 +211,13 @@ class HelpsTest(unittest.TestCase):
         table = self.build(alice, ROUND_TABLE, 35, 35)
         target = dict(kind="staff", town=0, x=35, y=35, item=ROUND_TABLE)
 
+        choices, status = self.window(alice, target)
+        self.assertEqual(status, 200, choices)
+        self.assertEqual(next(f for f in choices["friends"] if f["username"] == bob[1])["pid"], bob[3])
+        no_empire = self.player(empire=False)
+        choices, _ = self.window(alice, target)
+        self.assertIsNone(next(f for f in choices["friends"] if f["username"] == no_empire[1])["pid"])
+
         # Its own window picks neighbours by their empire, and tells the server
         state, status = self.window(alice, target, seat=bob[3])
         self.assertEqual(status, 200, state)

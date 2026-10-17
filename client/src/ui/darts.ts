@@ -74,7 +74,7 @@ export class DartsWindow {
       const popped = game.shot.includes(index);
       const button = this.button(popped ? "" : String(index+1), () => {
         const result = game.shoot(this.parts.town,index,clock());
-        if (!result) { this.armed = false; this.render(); return; }
+        if (!result) { this.open(); return; }
         this.parts.send(result.commands); this.parts.changed();
         this.last = result; this.armed = false; this.render();
       });
