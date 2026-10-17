@@ -18,6 +18,11 @@ them can be found and reversed. The big, agreed decisions are in
   label truncated by the ordinary list-row style. Allow wrapping only in
   machine rows and check its full width on desktop and phone; prices and
   buttons remain alongside it.
+- **Keep save recovery above the generic warning.** The successful focused
+  run still showed the sender's central error covering part of the phone
+  panel's local reload text. Raise only a machine panel with an active
+  recovery button; the generic warning remains available when it closes.
+  Check the button across its width, as well as performing the real reload.
 
 ## 17 October 2026: include generic training queues in time travel
 

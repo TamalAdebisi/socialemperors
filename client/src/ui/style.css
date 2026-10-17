@@ -4974,6 +4974,8 @@ button.world-piece:hover img {
 /* Time and weather machines: the same panel becomes the phone's sheet. */
 .machine-window .machine-help p { white-space: pre-line; }
 .machine-window .machine-status:empty { display: none; }
+/* Its local recovery stays readable above the sender's generic warning. */
+.machine-window:has(.machine-status .button) { z-index: 4; }
 .machine-window .row-text { min-width: 0; }
 .machine-window .row-text strong { white-space: normal; }
 .machine-window .machine-packet,
