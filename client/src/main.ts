@@ -52,6 +52,9 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { unitPreview } from "./view/unitPreview.ts";
+import { UnitBook, type UnitCategory } from "./rules/unitBook.ts";
+import { UnitsBookWindow } from "./ui/unitBook.ts";
 import { CollectionBook } from "./rules/collectionBook.ts";
 import { CollectionsWindow } from "./ui/collections.ts";
 import { ShopWindow } from "./ui/shop.ts";
@@ -479,7 +482,17 @@ async function start(): Promise<void> {
       changed: () => { hud.update(town); shop.refresh(); },
       tell: (text) => editor.tell(text),
     });
+    const unitBook = new UnitBook((config.units_collections_categories ?? {}) as Record<string, UnitCategory>, attackState, town);
+    const unitsBook = new UnitsBookWindow({
+      preview: (item, canvas, active) => unitPreview(art, item, canvas, active),
+      book: unitBook, town, items, words: (id, fallback) => lines.get(id) ?? fallback,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (command) => { commands.add(command.cmd, ...command.args); void commands.flush(); },
+      changed: () => { hud.update(town); shop.refresh(); },
+      tell: (text) => editor.tell(text),
+    });
     const army = new ArmyWindow({
+      unitsBook: () => unitsBook.open(),
       collections: () => { doings.collectionsOpened = true; collections.open(); },
       units: () => unitsInTown(town),
       people: () => population(town, items, increase),
@@ -626,7 +639,10 @@ async function start(): Promise<void> {
       },
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       land: { prices: readLandPrices(config.expansion_prices as never), neighbours: (info.neighbors ?? []).filter((n) => n.name !== "Best Empire").length },
-      waiting: (gifts) => menus.count("storage", gifts),
+      waiting: (gifts) => {
+        menus.count("storage", gifts);
+        for (const _category of unitBook.observe(town)) editor.tell("A unit collection is complete! Open the Units book in Army to claim its reward.");
+      },
       windowOf: (placed) => {
         if (placed.item.id === WIZARDRY_ACADEMY) {
           return { label: "Spells", run: () => spells.open() };

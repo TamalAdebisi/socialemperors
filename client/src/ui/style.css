@@ -4981,3 +4981,17 @@ button.world-piece:hover img {
 .collection-reward { width: 56px; height: 56px; object-fit: contain; vertical-align: middle; margin-right: 6px; }
 .collection-card .button { margin: 4px; }
 .collections .shop-tabs { align-items: center; justify-content: space-between; }
+
+.unit-category { padding: 12px 8px; border-bottom: 1px solid #b99a63; }
+.unit-category h3 { margin: 0; }
+.unit-book-items { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.unit-book-items li { min-width: 0; border: 1px solid #b99a63; border-radius: 6px; padding: 6px; }
+.unit-book-items summary { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.unit-book-items summary img { width: 64px; height: 64px; object-fit: contain; }
+.unit-book-items .missing { filter: grayscale(1); opacity: .65; }
+.unit-book-stats { display: grid; grid-template-columns: repeat(2, auto auto); align-items: center; gap: 4px; font-size: 12px; }
+.unit-book-stats img { width: 18px; height: 18px; object-fit: contain; }
+.unit-book-stats dd { margin: 0; }
+.unit-book .shop-tabs { justify-content: space-between; align-items: center; }
+
+.unit-book-preview { display: block; width: 140px; height: 100px; max-width: 100%; margin: 6px auto; }
