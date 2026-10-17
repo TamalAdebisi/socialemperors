@@ -1600,8 +1600,11 @@ Storage, page bounds and reloads. Battle drop triggers belong to the
 separate combat work. Collections-only verification passed 80/80 browser
 cases, plus the desktop/phone and harvest focus 2/2. All 468 full-run
 screenshots were reviewed at contact scale; `docs/verification-99.md`
-records the exact revision, timings and visual limits. Combined menus
-verification and delivery remain pending.
+records the collections-only revision, timings and visual limits. The
+combined menu slices are delivered in #99 and #105–109.
+`docs/verification-menus.md` records full Chromium 88/89 and the corrected
+villager focus 1/1, with unchanged game code; all 89 cases have passing
+results across runs, not one final-head 89/89 run.
 
 ### The units book
 

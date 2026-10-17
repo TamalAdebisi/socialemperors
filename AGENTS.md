@@ -93,6 +93,18 @@ PYTHON=.venv/bin/python node e2e/run.mjs shop edit   # just these
   **1/1 in 89s**. All full/focused captures and complete server logs were
   reviewed. [The controls record](docs/verification-combat-controls.md)
   retains every failure, fixture correction, exact revision and visual limit.
+- **Latest menus/progression verification (#99, #105–109):** server 449
+  run (440 passed, nine existing PostgreSQL skips), client types and all
+  436 tests passed. Full combined Chromium: 88/89 in 1h 59m 26.250s at
+  `76b1663f`, including main #98. The no-hall villager fixture needed to
+  acknowledge the new warning before selecting the worker underneath.
+  Test-only `6fcf0646` retains all assertions and passes 1/1 in 1m 24.643s.
+  All 89 cases have passing results across runs, not one final-head 89/89
+  run. All 516 full-run screenshots and both focus captures were reviewed;
+  complete browser logs are clean. Merged runtime/art/tests are identical
+  to `6fcf0646`. [The delivery record](docs/verification-menus.md) retains
+  exact timings, initial failures and screenshot limits. All six slices
+  are merged; the owner's manual run-through and other feature holds stay.
 - **Latest structure verification (#96):** server 449 run (440 passed,
   nine existing skips), client types and all 404 tests passed. Complete
   combined Chromium: 77/79 in 2h 22m 31.78s; final collection, unchanged siege
