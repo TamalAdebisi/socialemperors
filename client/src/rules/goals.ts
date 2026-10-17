@@ -127,6 +127,7 @@ export class Doings {
   /** The Battle Results window opened. */
   historyOpened = false;
   collectionsOpened = false;
+  socialIds = new Map<number, number>();
   /**
    * The goal kinds listened for: the open goals' (GoalKeeper sets them before
    * each check), or null for all. As in the Flash client, most doings count
@@ -245,6 +246,10 @@ export class Doings {
     }
   }
 
+  socialCompleted(item: ItemInfo, helpers: number): void {
+    if (this.hears("social-id")) this.socialIds.set(item.id, helpers);
+  }
+
   spend(letter: string, amount: number): void {
     if (amount > 0 && this.hears("spend")) {
       this.spent.set(letter, (this.spent.get(letter) ?? 0) + amount);
@@ -357,6 +362,8 @@ export function progress(town: Town, goal: Goal, doings: Doings, people: number,
       return of(doings.attacksHigherLevel, n(0));
     case "attack-neighbour":
       return of(doings.neighboursAttacked.size ? 1 : 0, 1);
+    case "social-id":
+      return of(doings.socialIds.get(n(0)) ?? 0, n(1));
     case "collections-opened":
       return of(doings.collectionsOpened ? 1 : 0, 1);
     case "history-opened":

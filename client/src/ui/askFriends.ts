@@ -40,7 +40,7 @@ export class AskFriends {
   }
 
   /** The friends to ask about `asked`, drawn into `box`; `back` returns to the window it came from. */
-  show(box: HTMLElement, asked: Asked, back: () => void): void {
+  show(box: HTMLElement, asked: Asked, back: () => void, options?: { single: boolean; before: () => string; asked: (ids: string[]) => void }): void {
     box.replaceChildren();
     const status = document.createElement("p");
     status.className = "ask-status";
@@ -67,7 +67,7 @@ export class AskFriends {
     const count = () => {
       const n = picked().length;
       ask.textContent = n > 1 ? `Ask ${n} friends` : "Ask";
-      ask.disabled = n === 0;
+      ask.disabled = n === 0 || Boolean(options?.single && n !== 1);
     };
     const draw = (reply: Reply, said = "") => {
       const problem = reply.gone || reply.opens || reply.full;
@@ -83,7 +83,8 @@ export class AskFriends {
         const row = document.createElement("li");
         const label = document.createElement("label");
         const tick = document.createElement("input");
-        tick.type = "checkbox";
+        tick.type = options?.single ? "radio" : "checkbox";
+        if (options?.single) tick.name = "social-seat";
         tick.value = String(friend.id);
         tick.checked = false;  // choose recipients explicitly from the community
         tick.disabled = friend.state !== "can";
@@ -107,8 +108,14 @@ export class AskFriends {
     };
     list.addEventListener("change", count);
     ask.addEventListener("click", () => {
+      const problem = options?.before() ?? "";
+      if (problem) { status.textContent = problem; ask.disabled = true; return; }
+      const ids = picked();
       ask.disabled = true;
-      void this.call("POST", asked, picked()).then((reply) => draw(reply, reply.ok ?? reply.error ?? ""));
+      void this.call("POST", asked, ids).then((reply) => {
+        if (reply.ok) options?.asked(ids);
+        draw(reply, reply.ok ?? reply.error ?? "");
+      });
     });
     void this.call("GET", asked, []).then((reply) => draw(reply, reply.error ?? ""));
   }

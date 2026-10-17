@@ -216,3 +216,15 @@ test("goal 54 counts the collections window opening", () => {
   doings.collectionsOpened = true;
   assert.deepEqual(progress(town(), goal, doings, 0, ITEMS), { done: 1, of: 1 });
 });
+
+test("social goals count the staff at the most recent completion while listening", () => {
+  const doings=new Doings();
+  const goal={id:115,title:"",description:"",reward:1,need:["social-id",266,3] as Need};
+  const market=item({id:266});
+  doings.listen(["social-id"]);doings.socialCompleted(market,4);
+  assert.deepEqual(progress(town(),goal,doings,0,ITEMS),{done:3,of:3});
+  doings.socialCompleted(market,1);
+  assert.deepEqual(progress(town(),goal,doings,0,ITEMS),{done:1,of:3});
+  doings.listen([]);doings.socialCompleted(market,8);
+  assert.deepEqual(progress(town(),goal,doings,0,ITEMS),{done:1,of:3});
+});

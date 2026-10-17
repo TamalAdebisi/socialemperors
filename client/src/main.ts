@@ -52,6 +52,8 @@ import { AttackHistoryWindow, attackedWhileAway } from "./ui/attackHistory.ts";
 import { ICONS } from "./ui/icons.ts";
 import { Menus } from "./ui/menus.ts";
 import { NeighboursWindow } from "./ui/neighbours.ts";
+import { SocialWindow } from "./ui/social.ts";
+import { socialRules } from "./rules/socialMenus.ts";
 import { DartsGame, type DartsRound } from "./rules/darts.ts";
 import { DartsWindow } from "./ui/darts.ts";
 import { unitPreview } from "./view/unitPreview.ts";
@@ -578,6 +580,18 @@ async function start(): Promise<void> {
     // whose answers wait over it as their pictures (rules/friendsHelp.ts).
     const asking = settings.csrf ? new AskFriends({ empire: settings.userId, csrf: settings.csrf }) : null;
     const askPanel = new Panel("ask", "Ask friends", { className: "list-window" });
+    const socialState = { resource: String((info.map as unknown as { resourceAlliesMarket?: unknown }).resourceAlliesMarket ?? "n") };
+    const social = new SocialWindow({
+      town, items, state: socialState, rules: socialRules(config.globals ?? {}), clock, asking,
+      roles: (id) => String(((config.social_items ?? []) as { id:number; workers:string }[]).find((s) => Number(s.id)===id)?.workers ?? "").split(","),
+      name: (id) => friendNames.get(id) ?? "Friend",
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      flush: () => commands.flush(),
+      send: (sent) => { sent.forEach((c) => commands.add(c.cmd,...c.args)); if(sent.length) void commands.flush(); },
+      changed: (added) => { added.forEach((placed) => void view.redraw(placed)); editor.gained(); },
+      completed: (placed,helpers) => doings.socialCompleted(placed.item,helpers),
+      spent: (amount) => doings.spend("c",amount), tell: (text) => editor.tell(text),
+    });
     const friendNames = new Map((info.neighbors ?? []).map((n) => [String(n.pid), n.name?.trim() || "Friend"]));
     // The towns (ui/towns.ts): founding the troll town, and travelling between the two.
     const towns = new TownsWindow({
@@ -677,7 +691,7 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
-        return market.buttonFor(placed) ?? graves.windowOf(placed);
+        return social.windowOf(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
         bonuses?.levelled();

@@ -375,3 +375,8 @@ Social Point's admin tools used.
 - [x] Darts: original schedule-aware panel and commands, saved seed/board,
       daily free dart, paid throws and the six-prize bonus. The original
       shipped schedule has no active round today; no event is invented.
+
+- [x] Social-building panels: cash/friends staffing, allied troops and
+      market deliveries, selected recruits, cumulative population steps,
+      Round Table timing/prizes, and the two corresponding goals. Ordinary
+      buildings retain the server's automatic opening.

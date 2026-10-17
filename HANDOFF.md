@@ -167,7 +167,7 @@ next agent knows where to start.
   the Flash client's 829 classes that hold the game's own behaviour, about
   50% are built in the new client, 40% partly (mostly special buildings
   and units, whose plain fighting works but not all their own moves) and
-  10% not yet (mostly windows). 49 of the 227 goals still need unfinished
+  10% not yet (mostly windows). 47 of the 227 goals still need unfinished
   feature windows (CLIENT.md, "Missions and bonuses"); that number falls
   as features land.
 
@@ -857,10 +857,11 @@ together:
       merge pending. The original shipped schedule is inactive; the full
       seeded/free/paid/bonus flow is exercised with a local active fixture.
       No new event or live schedule change is introduced.
-- [ ] The social buildings: the Summit, the allied markets and their choice
-      of resource, the recruitment camp, the wonder of people, the Round
-      Table (`social.py`, `helps.py`; friends' help goes through our own
-      Friends page, as on the classic page).
+- [ ] Social-building windows implemented on `codex/social-menus`;
+      browser verification and merge pending. Summit, both markets,
+      recruitment, population wonder and Round Table, with existing
+      Everybody help. Goals 104/115 count completed staff. Ordinary
+      server-opened buildings retain their existing behavior.
 - [ ] Dragon riders, their training and taming dragons.
 - [ ] The Supreme Bahamut temple (`temple.py`).
 - [ ] A player's profile (honour, rank, wins and losses).

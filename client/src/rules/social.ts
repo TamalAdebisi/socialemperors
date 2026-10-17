@@ -20,6 +20,7 @@ export function freeHelpers(town: Town): Command[] {
     }
     if ((placed.staff === 0 && places >= 3) || (placed.staff === 1 && places >= 7)) {
       placed.staff += 1;
+      placed.staffIds?.push("0");
       commands.push({ cmd: "buy_si_help", args: [placed.tx, placed.ty, town.id, placed.item.id, 1] });
     }
   }

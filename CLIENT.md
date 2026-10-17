@@ -1132,7 +1132,7 @@ Monday's chest show as round buttons at the top right while on offer. Code: `rul
 - No skipping for cash: the Flash client had its Pay button switched off
   (only a test setting turned it on), so ours has none.
 - Goals about battles, quests, the social buildings and the like say
-  they are not available yet (49 of the 227); the server
+  they are not available yet (47 of the 227); the server
   keeps them done whichever client does them. The market's three (buy 200
   stone, buy 100 wood, sell 100 wood) count the trades made while they're
   open, in any number of trades, as the original counts them.
@@ -1623,6 +1623,34 @@ nothing. Charges and storage commands accompany the actual throw.
 `e2e/tests/darts.mjs` checks the real inactive schedule and a local active
 fixture on desktop/phone, including free/paid throws, the bonus and reloads.
 No live schedule is changed by the fixture.
+
+### Social buildings
+
+The building card's Open button serves the Summit, both Allied Markets,
+the recruitment camp, the Great Church and the Round Table. Original
+building pictures and staff-role names appear in the panel. Cash hiring
+is offered only where the configured worker cost is positive; friends
+answer through Everybody, with help appearing after reload. The Summit
+requires room for nine allies. Allied Markets order a resource for a day,
+pay 125 per helper plus the base 125, and can finish early for 2 cash.
+Recruitment offers its five configured rewards. The Great Church keeps
+its cumulative staff through five population increases. The Round Table
+asks one player at a time, respects its invitation limit and daily clock,
+and pays the original four/six/eight-knight tiers. Its hero goes to town
+Storage; recruits and allied knights appear beside their building.
+
+`rules/socialMenus.ts`, `ui/social.ts`, `ui/askFriends.ts` and the existing
+social/help server commands implement this. Ordinary social buildings
+continue to open automatically on the server, and the existing opening
+free helpers are preserved. Goals 104 and 115 now count the staff present
+when those buildings complete; the original counter is the latest staff
+count, not the number of times a reward was claimed. The remaining goals
+for ordinary automatic-opening buildings remain deferred.
+Browser checks: `social-market.mjs` for desktop/phone cash hiring, allies,
+orders/delivery, saves and free opening helpers; `social-friends.mjs` for
+real local help answers, recruitment, population steps and Round Table
+invites/rewards. Round Table's elapsed-day fixture changes only its loaded
+start time; its saved reward and reset are checked on the local server.
 
 ### The building card
 

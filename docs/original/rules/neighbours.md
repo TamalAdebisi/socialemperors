@@ -299,6 +299,16 @@ things only until the page is reloaded).
 
 ## Social buildings
 
+**Update, 17 October 2026:** the six repeatable buildings' windows are
+built in `rules/socialMenus.ts` and `ui/social.ts`, with original cash,
+resource, troop, recruitment, population and Round Table rules. Staff
+names are preserved when reading the save. Everybody handles explicit
+help requests; the Round Table asks one at a time and preserves its
+invitation limit/command. Goals 104 and 115 use the original latest staff
+count at completion. Earlier comparisons below describe the pre-window
+client; ordinary server-opened buildings remain deliberately open.
+Tests: `socialMenus.test.ts`, `social-market.mjs`, `social-friends.mjs`.
+
 - Which: every building in the config's `social_items` (31 of them:
   mills, mines, markets, churches, workshops, the harbours and zeppelins,
   the Summit 234, the Allied Markets 266 and 352, the recruitment camp
