@@ -39,6 +39,10 @@ them can be found and reversed. The big, agreed decisions are in
   spaces, decimal points and exponents do not identify valid saved work.
   The independent Time Machine parser follows the same rule so it cannot
   make malformed queue text valid while advancing time.
+- **A legacy Soul Mixer output must be a unit.** A known item id alone is
+  insufficient: malformed saved work naming a building is refused before
+  granting anything or returning parents. Existing unit outputs remain
+  collectable without the missing later content tables.
 
 ## 17 October 2026: preserve real visibility in background-play fixtures
 

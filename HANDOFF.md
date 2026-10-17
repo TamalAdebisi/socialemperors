@@ -33,8 +33,9 @@ next agent knows where to start.
   client 420/420 and focused Chromium 1/1 (67s). All three desktop/help/phone
   captures and the clean server log were reviewed. A later saved-integer
   parser correction prevents underflow/fractional text from rounding into
-  completed work; types, 17 focused client tests and 11 real server tests
-  pass after it. Root integration verifies the combined change separately.
+  completed work, and legacy outputs must resolve to actual units. Types,
+  18 focused client tests and 12 real server tests pass after these guards.
+  Root integration verifies the combined change separately.
   [Verification and limitation](docs/verification-soul-mixer.md).
 
 - **Structure idle repair in [#96](https://github.com/TamalAdebisi/socialemperors/pull/96):**

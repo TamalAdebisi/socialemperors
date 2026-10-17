@@ -1540,7 +1540,8 @@ unavailable with the archived config**: original unit ranks, mixing times,
 power-up prices and minimum level were not preserved. The window says so
 and blocks new selection/mixing and all cash spending. No replacement
 rules are invented. Known completed legacy queues remain collectable
-without spending; unknown waits remain unknown. Saved queue fields accept
+without spending when their output is a known unit; unknown waits remain
+unknown. Saved queue fields accept
 only exact safe integers; decimal/exponent strings cannot round into
 completed work.
 

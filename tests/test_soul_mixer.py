@@ -117,6 +117,19 @@ class SoulMixerTest(unittest.TestCase):
         self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], 533)
 
+    def test_ready_legacy_result_must_be_a_unit_not_building_metadata(self):
+        self.assertEqual(get_item_from_id(1345)["type"], "b")
+        self.map["items"][0][7]["bq"] = "1"
+        self.save["privateState"]["barracksQueues"] = {"1": {"ts": 0, "amount": 1, "unit": 1345}}
+        before = copy.deepcopy(self.save)
+        self.send("pop_queue_unit", 1, 56, 56, 1529)
+        self.assertEqual(self.save, before, "a malformed output cannot change cash, parents, queues or map items")
+        self.save["privateState"]["barracksQueues"]["1"]["unit"] = 533
+        self.send("pop_queue_unit", 1, 56, 56, 1529)
+        self.assertEqual(self.map["items"][-1][0], 533)
+        self.assertEqual(self.map["items"][0][6], [509, 514])
+        self.assertEqual(self.save["playerInfo"]["cash"], 20)
+
     def test_unreadable_wait_never_becomes_ready_and_off_map_output_is_refused(self):
         self.map["items"][0][7]["bq"] = "1"
         self.save["privateState"]["barracksQueues"] = {"1": {"ts": 100, "amount": 1, "unit": 533}}
