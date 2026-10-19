@@ -99,7 +99,7 @@ of the original's searches measure from.
   tile of a one-tile-wide item, harmless since those are 1 x 1.) The Blue
   Phoenix Egg skips the check. Things the game puts down itself (trees,
   rocks, animals, a free villager) skip it too and rely on its free-tile
-  searches. *Same: `client/src/rules/editing.ts` (`fits`); the Phoenix Egg's exception: not checked.*
+  searches. *Same: `client/src/rules/editing.ts` (`fits`); the Phoenix Egg's exception: not checked. Different, at the owner's request: on the player's land a building may go over a rock growing back, which is cleared first (`fits`, `clearUnder`; DECISIONS.md, 19 October 2026).*
 - **What blocks a path.** Buildings, trees and rocks block; fields
   (farms) don't, nor units, nor terrain; an open wall gate doesn't. A
   tree's tile opens as soon as it's cut. *Same: `client/src/rules/walking.ts` (`walkGrid`), open gates included (see "Academies, wonders and other buildings").*
@@ -169,8 +169,9 @@ of the original's searches measure from.
 - **Selling is a tool, not a button.** The bulldozer on the bottom bar is
   a mode: hovering lights up what it could take, a tap sells it. It
   refuses units, the town hall, anything under construction, anything not
-  the player's except gold and stone rocks, and rocks in the wild ring.
-  (The panel's sell slot is wired as the Upgrade button.) *Same (hovering with it too, `client/src/editor.ts`, `hover`): ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); and the card has no Sell, as here.* *Fixed since "The building card" (ours had kept a Sell on the card).*
+  the player's except gold and stone rocks (not rocks growing back), and
+  rocks in the wild ring. (The panel's sell slot is wired as the Upgrade
+  button.) *Different, at the owner's request: ours also takes rocks growing back on the player's land (DECISIONS.md, 19 October 2026). Same (hovering with it too, `client/src/editor.ts`, `hover`): ours has the bulldozer too (Remove, in the pointer's menu), which stays on for one thing after another and takes what the card would sell, `client/src/editor.ts` (`bulldoze`), `client/src/rules/editing.ts` (`choices`); and the card has no Sell, as here.* *Fixed since "The building card" (ours had kept a Sell on the card).*
 - **What a sale gives, and when it asks.** A twentieth of the `cost`,
   rounded down, in its `cost_type`; things bought with cash give nothing.
   Free things go at once; wonders and units bought with resources go at
@@ -383,7 +384,7 @@ of the original's searches measure from.
 - **What the server hears:** every 6 seconds, for each unit whose stopping
   tile changed, `move` (last tile sent, item, new tile, facing, town,
   "Unitat"). *Different: ours sends it as the unit stops (DECISIONS.md, units walking), `client/src/rules/walking.ts` (`unitMoved`).*
-- **Picking several:** the square tool (up to 20 of the player's units)
+- **Picking several** (in town; battles: CLIENT.md, "Selecting units in a battle", where ours differs at the owner's request): the square tool (up to 20 of the player's units)
   and a double tap within a second on a unit (up to 20 within 10 tiles of
   the same sort: melee, ranged, siege, healers, workers and so on). *Same: `client/src/editor.ts` (`takeSquareTool`, `dragBox`, `selectGroup`), `client/src/rules/group.ts` (`sameKindNear`); the card shows their portraits with life bars (`client/src/ui/actions.ts`, `showGroup`). Escape puts the square tool down here (a recorded call).*
 

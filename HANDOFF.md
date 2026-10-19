@@ -38,6 +38,21 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Owner requests, 19 October 2026.** (1) A rock growing back on land
+  the player has bought no longer blocks building: a building put over it
+  clears it, and the bulldozer takes it. (2) Battles pick units more
+  finely: a double click takes every unit of that kind, the bar groups
+  kinds, Shift-drag boxes, Shift and a number keep groups. Both are in
+  DECISIONS.md and CLIENT.md, built on `claude/eloquent-wright-hchmyg`.
+  (3) A separate session owns three more: rebuilding the **Soul Mixer from
+  the community wiki** (the owner has now overruled the "original data
+  only" rule below for it), the **Monster Nest** not working, and the
+  **God Isles** refusing a team with a colossus (the team check counts
+  only units whose `groups` say god or colossus; the Rodas and Genesis
+  Wind Colossi say otherwise). The wiki itself blocks automated reading;
+  its old copies are on the Internet Archive, which this cloud
+  environment's network settings must allow (`web.archive.org`).
+
 - **The repository no longer names the live game (17 October).** It
   stays public (GitHub won't make a public fork private), so its docs use
   "the live site" or `example.com`; don't write the real addresses back

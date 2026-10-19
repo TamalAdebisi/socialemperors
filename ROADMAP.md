@@ -286,6 +286,13 @@ numbers, because the server writes them into the game config.
 
 ### Phase 4: New game client (started)
 
+**Owner requests, 19 October:** a rock growing back on land the player
+has bought no longer blocks building there: a building put over it clears
+it, and the bulldozer takes it. Battles pick units more finely (above,
+under Beta 2). A separate session rebuilds the Soul Mixer from the
+community wiki at the owner's request, and fixes the Monster Nest and
+reaching the God Isles with a colossus (HANDOFF.md).
+
 **Playthrough controls, 16 October:** Friends form-result styles repaired;
 unit click targets enlarged without changing their art; ground clicks get
 a brief gold ring; tab changes keep simulation running, with manual Pause
@@ -419,6 +426,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] The special units' moves on counted beats (about a hundred units,
         read from the original by class; the map of the original found
         them missing) ([CLIENT.md](CLIENT.md#step-4-battles))
+  - [x] Finer picking in battles, at the owner's request: a double click
+        takes every unit of that kind, the bar groups kinds (keep one,
+        drop one), Shift-drag boxes, and groups on Shift and a number
+        ([CLIENT.md](CLIENT.md#selecting-units-in-a-battle))
   - [ ] Those units' rarer parts still missing (moves as they die, timed
         summons that switch sides, effects on each tile walked, growing):
         listed per unit in `client/src/rules/specials.json`, "beats"
