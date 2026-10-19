@@ -603,6 +603,19 @@ export function lastTeam(saved: unknown, choices: [number, number][]): number[] 
   return team;
 }
 
+/**
+ * Colossi the game's data doesn't tag "colossus": the Rodas Colossus (from
+ * the Rhodes Colossus Barracks) and the Genesis Wind Colossus. The original
+ * turned them away from the god islands; the owner asked for any colossus
+ * to count (DECISIONS.md), so they do here.
+ */
+export const UNTAGGED_COLOSSI = new Set([764, 2162]);
+
+/** Whether a unit counts toward a god island's gods and colossi. */
+export function meetsTeamRule(id: number, rule: { groups: string[] }, items: Map<number, ItemInfo>): boolean {
+  return rule.groups.includes(items.get(id)?.groups ?? "") || (rule.groups.includes("colossus") && UNTAGGED_COLOSSI.has(id));
+}
+
 /** Why a team can't sail, or null when it can: none picked, or not enough gods or colossi for a god island. */
 export function teamProblem(team: number[], island: Island, items: Map<number, ItemInfo>): string | null {
   if (team.length === 0) {
@@ -610,7 +623,7 @@ export function teamProblem(team: number[], island: Island, items: Map<number, I
   }
   const rule = island.teamRule;
   if (rule) {
-    const have = team.filter((id) => rule.groups.includes(items.get(id)?.groups ?? "")).length;
+    const have = team.filter((id) => meetsTeamRule(id, rule, items)).length;
     if (have < rule.atLeast) {
       return `This island needs at least ${rule.atLeast} god${rule.atLeast === 1 ? "" : "s"} or colossus${rule.atLeast === 1 ? "" : "es"} in the team.`;
     }

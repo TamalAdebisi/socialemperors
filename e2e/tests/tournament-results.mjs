@@ -243,31 +243,36 @@ export default async function tournamentResults({ newPlayer }) {
   await winner.button("Refresh").click();
   await page.waitForSelector(".tournament-outcome");
   weekly = (await service(winner, "get_tournament_info")).tournament;
-  const awardedRank = weekly.ranking.user.rank;
-  assert.ok(awardedRank >= 1 && awardedRank <= 10);
-  const weeklyPrize = config.tournament_type["8"].prize[awardedRank - 1];
-  const weeklyAwarded = await playerInfo(winner);
-  await gold(winner, weeklyBefore.map.coins - 500 + Number(weeklyPrize.g ?? 0));
-  for (const [id, count] of Object.entries(weeklyPrize.u ?? {})) {
-    assert.equal(stored(weeklyAwarded.privateState.gifts, Number(id)), stored(weeklyBefore.privateState.gifts, Number(id)) + Number(count));
-  }
+  assert.ok(weekly.date_finished);
+  // Prizes wait for the end of the week, when the final ranking is known:
+  // finishing first pays nothing yet (the unit tests move the clock on).
+  assert.equal(weekly.ranking.final, 0);
+  assert.ok(weekly.ranking.ends > weekly.date_finished);
+  assert.equal(weekly.ranking.user.rank, 1);
+  const weeklyEntered = await playerInfo(winner);
+  await gold(winner, weeklyBefore.map.coins - 500);
+  assert.deepEqual(weeklyEntered.privateState.gifts, weeklyBefore.privateState.gifts);
+  assert.match(await page.locator(".tournament-outcome").textContent(), /win their prizes when the week ends/);
+  assert.doesNotMatch(await page.locator(".tournament-outcome").textContent(), /has been awarded/);
   assert.match(await page.locator(".tournament-your-rank").textContent(), /210\.75/);
   assert.equal(await page.locator(".tournament-scoreboard .tournament-score-row").count(), Object.keys(weekly.ranking.top).length);
   await winner.shot("weekly-results-desktop");
 
-  // A later entrant overtakes this player. Live ordering changes but the
-  // already awarded rank, currency and unit reward stay fixed.
+  // A later entrant overtakes this player: until the week ends, the rank
+  // follows the live ranking, and still nobody has been paid.
   const rivalWeekly = await join(loser, "8", "", padded(SWORD));
+  const rivalEntered = await playerInfo(loser);
   for (const opponent of rivalWeekly.players.slice(1)) await finish(loser, rivalWeekly.tournament_id, opponent.user_id, "100.00");
   await winner.button("Refresh").click();
   await page.locator(`.tournament-score-row[data-player="${loser.settings.userId}"]`).waitFor();
   const updated = (await service(winner, "get_tournament_info")).tournament;
-  assert.equal(updated.ranking.user.rank, awardedRank, "weekly prize rank is frozen at completion");
+  assert.equal(updated.ranking.user.rank, 2, "the weekly rank is live until the week ends");
   const ranking = Object.entries(updated.ranking.top).sort(([a], [b]) => Number(a) - Number(b));
   assert.ok(ranking.findIndex(([, row]) => row.user_id === loser.settings.userId) < ranking.findIndex(([, row]) => row.user_id === winner.settings.userId));
   assert.deepEqual(await page.locator(".tournament-score-row").evaluateAll((rows) => rows.map((row) => row.dataset.player)), ranking.map(([, row]) => row.user_id));
-  assert.equal((await playerInfo(winner)).map.coins, weeklyAwarded.map.coins);
-  assert.deepEqual((await playerInfo(winner)).privateState.gifts, weeklyAwarded.privateState.gifts);
+  assert.equal((await playerInfo(winner)).map.coins, weeklyEntered.map.coins);
+  assert.deepEqual((await playerInfo(winner)).privateState.gifts, weeklyEntered.privateState.gifts);
+  assert.deepEqual((await playerInfo(loser)).privateState.gifts, rivalEntered.privateState.gifts, "first place pays nothing before the week ends");
 
   const weeklyPhone = await winner.onPhone();
   await open(weeklyPhone, true);
@@ -277,7 +282,7 @@ export default async function tournamentResults({ newPlayer }) {
   await weeklyPhone.shot("weekly-rank-phone");
   await weeklyPhone.page.locator(".tournament-scoreboard").scrollIntoViewIfNeeded();
   await weeklyPhone.shot("weekly-ranking-rows-phone");
-  assert.match(await weeklyPhone.page.locator(".tournament-outcome").textContent(), /rank when you finished/);
+  assert.match(await weeklyPhone.page.locator(".tournament-outcome").textContent(), /when the week ends/);
   // Start the cross-tab acknowledgement sequence with the desktop's minute
   // refresh clock reset, so it deliberately retains this exact result view.
   await winner.button("Refresh").click();
@@ -290,12 +295,18 @@ export default async function tournamentResults({ newPlayer }) {
   assert.equal((await service(winner, "get_tournament_info")).tournament_weekly["8"].full, "1");
   assert.equal((await service(winner, "join_tournament", { tournament_type_id: "8", category: 1,
     tournament_id: "", team: FULL_TEAM, flashSubResources: 1 })).result, "NOK");
-  await gold(weeklyPhone, weeklyAwarded.map.coins);
-  assert.deepEqual((await playerInfo(winner)).privateState.gifts, weeklyAwarded.privateState.gifts);
+  await gold(weeklyPhone, weeklyEntered.map.coins);
+  assert.deepEqual((await playerInfo(winner)).privateState.gifts, weeklyEntered.privateState.gifts);
   await service(loser, "clean_tournament");
 
   // The desktop still displays the finished weekly room that the phone
   // acknowledged. Another completed enrollment must survive that stale Done.
+  // The rival spent its 1,000 starting gold on two fees, and its weekly prize
+  // waits for the end of the week: fund the next fee through a real command
+  // (one treasure is capped at 750 gold by the server).
+  const fee = Number(config.tournament_type["1"].cost);
+  await loser.send([{ cmd: "collect_treasure", args: [fee, 0, 3, 0, 0, 0] }]);
+  assert.equal((await playerInfo(loser)).map.coins, rivalEntered.map.coins + fee, "the rival can pay the next fee");
   const newer = await join(winner);
   for (let index = 1; index < players.length; index++) {
     assert.equal((await join(players[index], "1", "", padded(...Array(index).fill(SWORD)))).tournament_id,

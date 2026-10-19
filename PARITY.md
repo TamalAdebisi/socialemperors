@@ -306,7 +306,9 @@ in [DECISIONS.md](DECISIONS.md).
       it played: to check in the Flash game before copying. S
 - [ ] **The team of 20** for the last islands may take units inside
       buildings, in the unit warehouse and in storage; ours, units standing
-      in town. Units in a refuge sail with the army in the original. M
+      in town (so a colossus kept in storage must be placed in town to
+      sail to the God Isles). Units in a refuge sail with the army in the
+      original. M
 - [ ] **Domes:** the Protection Dome halves hits within 9 tiles; the Tower
       Enhancer doubles nearby towers' rate (shop, levels 42 and 47). M
 - [x] **The Wall Door** can be opened and shut by its owner in the
@@ -359,7 +361,9 @@ fix its cause; that follow-up remains separate. No tournament slice remains.
       weekly top ten and own rank; original score order including
       departed entrants, separate authoritative winner, server-paid
       prizes in Storage and explicit Done acknowledgement, with the
-      server's existing 30-day finished-room retention.
+      server's existing 30-day finished-room retention. Weekly prizes
+      are paid when the week ends, by final rank, as the original's
+      "Ends in" countdown and last-ten-minutes warning imply.
 - [x] Friends' creation, minimum-neighbour check, waiting host's
       cancellation with refunds, and the community-page Invite notice
       (Everybody following #95). The old Facebook invitation delivery is not needed.

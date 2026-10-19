@@ -246,7 +246,9 @@ function isTournamentRanking(ranking: unknown): boolean {
   return isRecord(ranking) && isCount(ranking.total_user) && isRecord(ranking.top) &&
     Object.entries(ranking.top).every(([rank, row]) => isIndex(rank) && Number(rank) > 0 && isTournamentRankRow(row)) &&
     isTournamentRankRow(ranking.user) &&
-    isRecord(ranking.user) && isCount(ranking.user.rank) && ranking.user.rank > 0;
+    isRecord(ranking.user) && isCount(ranking.user.rank) && ranking.user.rank > 0 &&
+    (ranking.final === undefined || (isNumber(ranking.final) && isFlag(ranking.final))) &&
+    (ranking.ends === undefined || isCount(ranking.ends));
 }
 
 function isTournamentRankRow(row: unknown): boolean {

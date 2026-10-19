@@ -109,7 +109,7 @@ The plain boxes the rest of the game opens.
 
 | Class | Lines | What it does | Status |
 |---|---|---|---|
-| `popups/PopupInactiveNest.as` | 164 | A dragon or monster nest not yet woken: 100,000 gold or 50 cash (`activate_dragon`, `activate_monster`). | built: `client/src/ui/nest.ts` |
+| `popups/PopupInactiveNest.as` | 164 | A dragon or monster nest closed after raising them all: 100,000 gold or 50 cash to start again (`activate_dragon`, `activate_monster`). Shown whenever the save's `dragonNestActive`/`monsterNestActive` isn't 1; no client sets it on buying, so the server starts both at 1. | built: `client/src/ui/nest.ts` |
 | `popups/PopupDragons.as` | 643 | The dragon nest: six dragons in turn, ten steps each (care and feed), one step every 6 hours, the wait skipped for 3 or 15 cash; friends' help counts as steps (`finish_dragon_help`). Sends `next_step`, `buy_step_cash`, `next_dragon`; after the sixth the nest goes back to sleep (`desactivate_dragon`). | built: `client/src/ui/nest.ts`, rules in `client/src/rules/nest.ts` |
 | `popups/PopupHireFriendsGeneric.as` | 120 | The friends who helped at the nest, shown inside the nest's window. | partly: a "Congratulations!!" with OK takes the steps, without the friends' pictures (`client/src/ui/nest.ts`) |
 | `popups/PopupMonstersNest.as` | 500 | The monster nest: four monsters, ten steps each, 6 hours apart, 7 cash to skip; no friends' help. | built: `client/src/ui/nest.ts` |

@@ -62,6 +62,95 @@ clear one. Code: `rules/editing.ts` (`isMinedOut`, `clearUnder`, `fits`),
 `rules/shop.ts`, `rules/storage.ts`, `editor.ts`. Test:
 `e2e/tests/mined-out.mjs`.
 
+## 19 October 2026: weekly tournament prizes wait for the end of the week
+
+The owner noticed that the weekly tournament paid its prize as soon as a
+player finished the three bots, at the rank they held then: the week's
+first player took the Vulcano Dragon with a weak army. The owner asked for
+the prize to wait for the end of the week and everybody's scores. The
+original agrees: the weekly card counts down to the end of the week ("Ends
+in"), entering in the last ten minutes warns that the tournament is about
+to end, and the help asks players to reach the worldwide top 10.
+
+- **The week is the tournament.** At Monday 00:00 UTC the top 10 of the
+  week's final ranking win the prize for their rank. A weekly room still
+  being played then ends too: its unplayed matches are lost, as when a
+  room's 24 hours run out. Someone entering late on Sunday has until
+  midnight, which the game's own warning tells them.
+- **Paid at the first town load after the week.** The server has no clock
+  of its own that fires at midnight; it pays when a town loads or anybody
+  opens the tournaments, whichever comes first. A winner's town carries
+  the prize when it loads, without opening the tournaments.
+- **Prizes already paid stay paid.** The owner chose not to take back the
+  early dragons (the first player's and the owner's own, both rank 1 this
+  week). Those rooms keep their place in this week's final ranking but
+  aren't paid again; the other places are paid as usual, so a third
+  Vulcano Dragon can go to whoever is first at the end of this week.
+- **The new client says so.** A finished weekly room shows when the week
+  ends, the live rank and the prize that place would win, instead of
+  "prize awarded"; its deadline clock also stops at the week's end. The
+  ranking carries two fields for it (`final`, `ends`), which Flash ignores.
+- **Flash keeps its own message.** When a weekly room finishes, the Flash
+  game judges the player by their place at that moment and, in the top 10,
+  says "You won the tournament! Your reward will appear soon in your
+  storage!". "Soon" now means the end of the week, and a player overtaken
+  later gets the prize of their final place, or none. Holding the room
+  open until Sunday would keep Flash quiet, but would also block everyday
+  tournaments for the rest of the week, so the original text stays.
+- **One Vulcano Dragon for everybody else.** To even things out, the owner
+  asked to give every other player a Vulcano Dragon. It went into each
+  account's gift inbox (the friends' gifts, Everybody page), 12 accounts
+  in all, from the owner's account: one per account, and the player picks
+  the empire to take it into. Marked as a gift from storage, so it doesn't
+  use up the owner's daily free gifts. Done in the database directly, which
+  is safe for the inbox: unlike empires, the server doesn't hold it in
+  memory.
+
+## 19 October 2026: a new Monster Nest raises monsters at once
+
+The owner said the Monster Nest doesn't work. Played on a fresh account,
+a nest bought for 6,000 gold opened on the closed window, "To get more
+eggs and start again", asking another 100,000 gold or 50 cash before it
+raised anything. Both the original clients and ours show that window
+whenever the save's `monsterNestActive` isn't 1, and neither sets it when
+the nest is bought, so the original's server must have started players
+with it on. Ours copied a starting village with it off (the dragon nest
+was on). So, on the server, which both clients share:
+
+- New empires start with the monster nest on (`villages/initial.json`).
+- Saves upgrade once (version 0.08a): a monster nest never used is
+  switched on. "Never used" means every nest value is still the starting
+  village's, its wait 0. The server writes -1 there when a nest finishes
+  all four monsters, so a finished nest still costs its price to start
+  again, as in the original.
+
+The rest of the window already matched the original: the four monsters,
+ten steps six hours apart, 7 cash to speed one up, the monster beside the
+nest. A new browser test plays it from the shop to the second monster,
+through storage and a reload.
+
+## 19 October 2026: any colossus opens the God Isles
+
+The owner has a colossus and still couldn't sail to the God Isles. The
+islands want at least one god or colossus in the team (God Isle 3: five),
+and the original decides that by the unit's `groups` alone: "god" or
+"colossus". The game's data tags the Elemental and Genesis gods and
+colossi that way, but not the **Rodas Colossus** (764, from the Rhodes
+Colossus Barracks: "melee big normal") or the **Genesis Wind Colossus**
+(2162: "ranged medium normal"). So the original turned them away too.
+At the owner's request both now count, in both the team check and its
+tests (`UNTAGGED_COLOSSI` in `rules/quest.ts`). The data itself is
+unchanged, so they still fight as before and the tournaments' limits on
+gods and colossi don't change.
+
+Checked and left as they are: the god islands are open from level 6
+whatever islands are won, as in the original; the server keeps any team
+it's sent; and units of another race in a town are an enemy's, as in the
+original, so they never join an army. Still to do (PARITY.md, Beta 2):
+the original's team picker also takes units from buildings, the
+warehouse and storage. Ours takes only units standing in town, so a
+colossus kept in storage must be placed in town to sail.
+
 ## 17 October 2026: the repository no longer names the live game
 
 The owner asked to keep the live game out of view: GitHub won't make a

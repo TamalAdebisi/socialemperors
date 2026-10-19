@@ -1564,15 +1564,18 @@ rules in `rules/nest.ts`, with tests):
 - **The ?** shows the original's help, its picture and words.
 - Once all are raised the nest closes (`desactivate_dragon`); its window
   then offers **Start again** for 100,000 gold or 50 cash
-  (`activate_dragon`). A new empire's monster nest starts closed, as in
-  the original's save.
+  (`activate_dragon`). A new monster nest raises its first monster
+  straight away, like the dragon nest: the starting village once had it
+  closed, so a nest just bought asked for the price of starting again
+  (fixed on the server, `version.py`; DECISIONS.md, 19 October).
 
 The save's privateState keeps where each nest is (`dragonNumber`,
 `stepNumber`, `timeStampTakeCare`; the monster nest's own); the client
 changes its copy as the server does, so the window is right without a
 reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
-the dragon got, the friends' list and the monster nest opened, with checks
-on the server's save.
+the dragon got, the friends' list and a finished monster nest started
+again; `e2e/tests/monster-nest.mjs` buys a monster nest in the shop and
+raises King Kong through storage and a reload. Both check the server's save.
 
 ### The time and weather machines
 
@@ -2046,7 +2049,10 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   picker: tap a kind to add one, tap one in the team to take it out). Each
   kind counts up to its `units_limit`, the last team is offered again
   (`privateState.teams.quest`), and the god islands need 1 god or
-  colossus in it (God Isle 3: 5), by the unit's `groups`. Fewer than 20
+  colossus in it (God Isle 3: 5), by the unit's `groups`. Two colossi the
+  data doesn't tag "colossus", the Rodas (764) and the Genesis Wind (2162),
+  count too, at the owner's request (`UNTAGGED_COLOSSI`). Only units
+  standing in town can join a team so far. Fewer than 20
   asks once. Start sends `set_attack_team` ("quest", the 20 ids, 0 for an
   empty place) and only the team lands.
 - **Playing:** tap a unit to select it (Shift adds or takes away; a
@@ -2815,8 +2821,16 @@ the departure label and server's `winner_id` distinguish these cases.
 Weekly results show the top ten and the player's own rank. The server
 also resolves exact public ties through `winner_id`, because its returned
 player list is viewer-first.
-Weekly prizes follow the frozen rank at that player's completion, even
-if the live table changes later. The server has already paid any prize:
+Weekly prizes wait for the end of the week (Monday 00:00 UTC) and follow
+the final ranking. Until then a finished weekly room says when the week
+ends, shows the live rank, and the prize that place would win; the
+ranking's additive `final` and `ends` fields say whether the prizes have
+been given and when the week ends, which also caps the room's deadline.
+A weekly room still being played ends with its week. Rooms paid before
+this rule (19 October 2026) arrive with `final` 1 and keep their rank.
+The server pays the week's prizes at the first town load or tournament
+request after the week ends, so a winner's town carries the prize.
+Otherwise the server has already paid any prize:
 gold/cash update the balances and unit prizes appear in Storage. Done
 only sends `clean_tournament` with the displayed room id and refreshes
 home data. A supplied stale id cannot acknowledge a newer room; original

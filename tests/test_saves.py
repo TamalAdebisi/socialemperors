@@ -63,5 +63,33 @@ class SavesTest(unittest.TestCase):
         self.check_fields(sessions.session(pid))
 
 
+    # The monster nest (version.py, open_untouched_monster_nest)
+
+    def test_a_new_empire_can_raise_its_first_monster(self):
+        save = sessions.session(sessions.new_village(owner_id=None))
+        self.assertEqual(save["privateState"]["monsterNestActive"], 1)
+        self.assertEqual(save["privateState"]["monsterNumber"], 0)
+
+    def older_save(self, **nest):
+        with open(os.path.join(VILLAGES_DIR, "initial.json")) as f:
+            save = json.load(f)
+        save["version"] = "0.07a"
+        save["privateState"].update({"monsterNestActive": 0, "monsterNumber": 0, "stepMonsterNumber": 0,
+                                     "timeStampTakeCareMonster": 0, **nest})
+        self.assertTrue(migrate_loaded_save(save))
+        return save["privateState"]
+
+    def test_an_older_saves_unused_monster_nest_opens(self):
+        self.assertEqual(self.older_save()["monsterNestActive"], 1)
+
+    def test_a_monster_nest_that_raised_all_four_stays_closed(self):
+        # desactivate_monster resets the nest with its wait at -1.
+        self.assertEqual(self.older_save(timeStampTakeCareMonster=-1)["monsterNestActive"], 0)
+
+    def test_a_monster_nest_in_use_is_left_alone(self):
+        pState = self.older_save(monsterNestActive=1, monsterNumber=2, stepMonsterNumber=4, timeStampTakeCareMonster=1760000000)
+        self.assertEqual((pState["monsterNestActive"], pState["monsterNumber"], pState["stepMonsterNumber"]), (1, 2, 4))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -202,8 +202,10 @@ numbers, because the server writes them into the game config.
       won on three stars, once
 - [x] Tournament prizes: the winner of a public tournament gets the prize
       the game shows (gold or cash, and a unit in the gift box); the weekly
-      top 10 get the prize for their rank, as it is when their own
-      tournament ends. A cash tournament's prize is the entry fee back with
+      top 10 get the prize for their final rank when the week ends (Monday
+      00:00 UTC; until 19 October 2026 it was paid as each player's own
+      tournament ended, so the first player of a week took the top prize).
+      A cash tournament's prize is the entry fee back with
       the unit, not twice the fee as in the game: with bots filling seats, a
       good player could win over and over and print cash (`economy.py`)
 - [x] The welcome-back bonus: a chest on a new empire's 2nd and 3rd day
@@ -288,10 +290,10 @@ numbers, because the server writes them into the game config.
 
 **Owner requests, 19 October:** a rock growing back on land the player
 has bought no longer blocks building there: a building put over it clears
-it, and the bulldozer takes it. Battles pick units more finely (above,
-under Beta 2). A separate session rebuilds the Soul Mixer from the
-community wiki at the owner's request, and fixes the Monster Nest and
-reaching the God Isles with a colossus (HANDOFF.md).
+it, and the bulldozer takes it. Battles pick units more finely (below,
+under Beta 2). Any colossus now opens the God Isles, and a new Monster
+Nest raises monsters at once. A separate session is rebuilding the Soul
+Mixer from the community wiki at the owner's request (HANDOFF.md).
 
 **Playthrough controls, 16 October:** Friends form-result styles repaired;
 unit click targets enlarged without changing their art; ground clicks get
@@ -387,6 +389,8 @@ merging the two wait fixes with that separate failure documented.
         ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] The island map: the game's own painted map, its ribbons, stars,
         padlocks and Enter Now; the team of 20 for the last islands
+        (any colossus counts on the God Isles, at the owner's request:
+        DECISIONS.md, 19 October)
   - [x] Spells: the fifteen spells as the Flash client casts them, the
         Wizardry Academy's window, the mana bank and the spell book in
         battle ([CLIENT.md](CLIENT.md#step-4-battles))
@@ -489,7 +493,8 @@ merging the two wait fixes with that separate failure documented.
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))
-  - [x] The dragon and monster nests' window: raising them step by step,
+  - [x] The dragon and monster nests' window: raising them step by step
+        (a new monster nest starts at once since 19 October),
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
   - [x] The Unit Warehouse: walking units in, eighteen-slot pages, calling
