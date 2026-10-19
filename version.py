@@ -5,7 +5,7 @@ import levels
 import quests
 
 version_name = "alpha 0.07"
-version_code = "0.07a"
+version_code = "0.08a"
 
 
 def _has_entries(value) -> bool:
@@ -44,6 +44,20 @@ def add_missing_fields(save: dict) -> None:
         map.setdefault("levelPaid", int(map.get("level") or 1))  # levels.py; a new town is paid up
     if not isinstance(pState.get("comebackBonusCollected"), list):
         pState["comebackBonusCollected"] = []  # the welcome-back chest (comeback_bonus.py); the client breaks without it
+
+
+def open_untouched_monster_nest(save: dict) -> None:
+    """The monster nest raises its first monster from the start. The starting
+    village had it closed, and the client's closed window ("start again")
+    then asked 100,000 gold or 50 cash before a new nest raised anything.
+    A nest never used still has the starting village's values, its wait 0;
+    the server's own resets write -1, so a nest that raised all four stays
+    closed, as in the original."""
+    pState = save["privateState"]
+    untouched = all(str(pState.get(key, 0)) == "0" for key in
+                    ("monsterNestActive", "monsterNumber", "stepMonsterNumber", "timeStampTakeCareMonster"))
+    if untouched:
+        pState["monsterNestActive"] = 1
 
 
 def migrate_loaded_save(save: dict) -> bool:
@@ -122,9 +136,15 @@ def migrate_loaded_save(save: dict) -> bool:
         save["version"] = "0.07a"
         print("   > migrated to 0.07a")
 
-    # 0.07a -> 0.08a
-    #if save["version"] == "0.07a":
-    #    save["version"] = "0.08a"
-    #    print("   > migrated to 0.08a")
+    # 0.07a -> 0.08a: a monster nest never used is open, as for a new empire
+    if save["version"] == "0.07a":
+        open_untouched_monster_nest(save)
+        save["version"] = "0.08a"
+        print("   > migrated to 0.08a")
+
+    # 0.08a -> 0.09a
+    #if save["version"] == "0.08a":
+    #    save["version"] = "0.09a"
+    #    print("   > migrated to 0.09a")
 
     return True

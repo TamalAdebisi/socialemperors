@@ -1,5 +1,6 @@
 // The nests (CLIENT.md, "The nests"). A level 20 town with a dragon nest
-// whose first egg is 9 steps along and a monster nest that is closed. The
+// whose first egg is 9 steps along and a monster nest that raised all
+// four and closed (e2e/tests/monster-nest.mjs plays a new one). The
 // dragon nest's Open shows 9/10 and Take care: a step starts the six-hour
 // wait, Speed up buys it off for 3 cash, Get Dragon! puts the Draggy
 // beside the nest and the next one starts (Feed). Hire friends lists the
@@ -21,6 +22,8 @@ export default async function nests({ newPlayer }) {
     // Free (the sixth argument), so the town keeps its gold.
     { cmd: "buy", args: [DRAGON_NEST, ...NEST_AT, 0, 0, 1, 1, "b"] },
     { cmd: "buy", args: [MONSTER_NEST, ...MONSTERS_AT, 0, 0, 1, 1, "b"] },
+    // As the window does once the last monster is taken.
+    { cmd: "desactivate_monster", args: [] },
     // The lessons' gift steps (the text "0": no wait), and two more.
     ...Array.from({ length: 9 }, () => ({ cmd: "next_step", args: ["0"] })),
   ]);
@@ -87,7 +90,7 @@ export default async function nests({ newPlayer }) {
   await window.locator(".nest-button").waitFor();
   await page.keyboard.press("Escape");
 
-  // The monster nest is closed: 50 cash opens it.
+  // The monster nest that raised all four is closed: 50 cash starts it again.
   await player.select(MONSTERS_AT, "Monsters Nest");
   await player.press("Open");
   await window.waitFor();
