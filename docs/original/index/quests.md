@@ -115,7 +115,7 @@ The rules of each island, number by number, are in
 | `quest/QuestIslaHard5.as` | 21 | Hardcore island 5. | built: as above |
 | `quest/QuestIslaHard6.as` | 29 | Hardcore island 6, sailed with a team of 20. | built: as above, teams in `rules/quest.ts` |
 | `quest/QuestIslaHard7.as` | 24 | Hardcore island 7, sailed with a team of 20. | built: as above |
-| `quest/QuestIslaGodGeneric.as` | 373 | The god islands' base: as the hardcore ones, with higher caps; the team must hold a god or colossus. | built: `rules/quest.ts` (`teamProblem`) |
+| `quest/QuestIslaGodGeneric.as` | 373 | The god islands' base: as the hardcore ones, with higher caps; the team must hold a god or colossus, by its `groups` alone. | built: `rules/quest.ts` (`teamProblem`); ours also counts the untagged Rodas and Genesis Wind colossi (DECISIONS.md) |
 | `quest/QuestIslaGod1.as` | 29 | God Isle 1. | built: as above |
 | `quest/QuestIslaGod2.as` | 29 | God Isle 2. | built: as above |
 | `quest/QuestIslaGod3.as` | 30 | God Isle 3, whose team needs 5 gods or colossi. | built: as above |

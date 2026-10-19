@@ -171,6 +171,13 @@ test("the last islands take a team of 20: each kind up to its limit, gods needed
   const gods = [...items.values()].filter((i) => i.isUnit && (i.groups === "god" || i.groups === "colossus")).map((i) => i.id);
   assert.ok(gods.length >= 1);
   assert.equal(teamProblem(Array(5).fill(gods[0]), god3, items), null);
+  // The colossi the data doesn't tag count too: the Rodas and the Genesis Wind.
+  const god1 = islands.find((i) => i.quest === 100000090)!;
+  assert.equal(items.get(764)!.groups, "melee big normal");
+  assert.equal(teamProblem([514, 764], god1, items), null);
+  assert.equal(teamProblem([2162], god1, items), null);
+  assert.match(teamProblem([514, 717], god1, items)!, /at least 1 god/);
+  assert.equal(teamProblem([764, 764, 2162, 764, gods[0]], god3, items), null);
 });
 
 test("Hero Isle: seven parts behind doors; a part's door opens when its last enemy dies", () => {

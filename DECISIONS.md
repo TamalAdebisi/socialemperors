@@ -4,6 +4,28 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 19 October 2026: any colossus opens the God Isles
+
+The owner has a colossus and still couldn't sail to the God Isles. The
+islands want at least one god or colossus in the team (God Isle 3: five),
+and the original decides that by the unit's `groups` alone: "god" or
+"colossus". The game's data tags the Elemental and Genesis gods and
+colossi that way, but not the **Rodas Colossus** (764, from the Rhodes
+Colossus Barracks: "melee big normal") or the **Genesis Wind Colossus**
+(2162: "ranged medium normal"). So the original turned them away too.
+At the owner's request both now count, in both the team check and its
+tests (`UNTAGGED_COLOSSI` in `rules/quest.ts`). The data itself is
+unchanged, so they still fight as before and the tournaments' limits on
+gods and colossi don't change.
+
+Checked and left as they are: the god islands are open from level 6
+whatever islands are won, as in the original; the server keeps any team
+it's sent; and units of another race in a town are an enemy's, as in the
+original, so they never join an army. Still to do (PARITY.md, Beta 2):
+the original's team picker also takes units from buildings, the
+warehouse and storage. Ours takes only units standing in town, so a
+colossus kept in storage must be placed in town to sail.
+
 ## 17 October 2026: the repository no longer names the live game
 
 The owner asked to keep the live game out of view: GitHub won't make a
