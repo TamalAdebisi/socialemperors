@@ -382,6 +382,8 @@ merging the two wait fixes with that separate failure documented.
         ([CLIENT.md](CLIENT.md#step-4-battles))
   - [x] The island map: the game's own painted map, its ribbons, stars,
         padlocks and Enter Now; the team of 20 for the last islands
+        (any colossus counts on the God Isles, at the owner's request:
+        DECISIONS.md, 19 October)
   - [x] Spells: the fifteen spells as the Flash client casts them, the
         Wizardry Academy's window, the mana bank and the spell book in
         battle ([CLIENT.md](CLIENT.md#step-4-battles))
@@ -480,7 +482,8 @@ merging the two wait fixes with that separate failure documented.
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))
-  - [x] The dragon and monster nests' window: raising them step by step,
+  - [x] The dragon and monster nests' window: raising them step by step
+        (a new monster nest starts at once since 19 October),
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
   - [x] The Unit Warehouse: walking units in, eighteen-slot pages, calling

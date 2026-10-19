@@ -1522,15 +1522,18 @@ rules in `rules/nest.ts`, with tests):
 - **The ?** shows the original's help, its picture and words.
 - Once all are raised the nest closes (`desactivate_dragon`); its window
   then offers **Start again** for 100,000 gold or 50 cash
-  (`activate_dragon`). A new empire's monster nest starts closed, as in
-  the original's save.
+  (`activate_dragon`). A new monster nest raises its first monster
+  straight away, like the dragon nest: the starting village once had it
+  closed, so a nest just bought asked for the price of starting again
+  (fixed on the server, `version.py`; DECISIONS.md, 19 October).
 
 The save's privateState keeps where each nest is (`dragonNumber`,
 `stepNumber`, `timeStampTakeCare`; the monster nest's own); the client
 changes its copy as the server does, so the window is right without a
 reload. Test: `e2e/tests/nests.mjs` plays a step, the wait, the speed up,
-the dragon got, the friends' list and the monster nest opened, with checks
-on the server's save.
+the dragon got, the friends' list and a finished monster nest started
+again; `e2e/tests/monster-nest.mjs` buys a monster nest in the shop and
+raises King Kong through storage and a reload. Both check the server's save.
 
 ### The time and weather machines
 
@@ -2004,7 +2007,10 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   picker: tap a kind to add one, tap one in the team to take it out). Each
   kind counts up to its `units_limit`, the last team is offered again
   (`privateState.teams.quest`), and the god islands need 1 god or
-  colossus in it (God Isle 3: 5), by the unit's `groups`. Fewer than 20
+  colossus in it (God Isle 3: 5), by the unit's `groups`. Two colossi the
+  data doesn't tag "colossus", the Rodas (764) and the Genesis Wind (2162),
+  count too, at the owner's request (`UNTAGGED_COLOSSI`). Only units
+  standing in town can join a team so far. Fewer than 20
   asks once. Start sends `set_attack_team` ("quest", the 20 ids, 0 for an
   empty place) and only the team lands.
 - **Playing:** tap a unit to select it (Shift adds or takes away), Select

@@ -48,6 +48,51 @@ to end, and the help asks players to reach the worldwide top 10.
   is safe for the inbox: unlike empires, the server doesn't hold it in
   memory.
 
+## 19 October 2026: a new Monster Nest raises monsters at once
+
+The owner said the Monster Nest doesn't work. Played on a fresh account,
+a nest bought for 6,000 gold opened on the closed window, "To get more
+eggs and start again", asking another 100,000 gold or 50 cash before it
+raised anything. Both the original clients and ours show that window
+whenever the save's `monsterNestActive` isn't 1, and neither sets it when
+the nest is bought, so the original's server must have started players
+with it on. Ours copied a starting village with it off (the dragon nest
+was on). So, on the server, which both clients share:
+
+- New empires start with the monster nest on (`villages/initial.json`).
+- Saves upgrade once (version 0.08a): a monster nest never used is
+  switched on. "Never used" means every nest value is still the starting
+  village's, its wait 0. The server writes -1 there when a nest finishes
+  all four monsters, so a finished nest still costs its price to start
+  again, as in the original.
+
+The rest of the window already matched the original: the four monsters,
+ten steps six hours apart, 7 cash to speed one up, the monster beside the
+nest. A new browser test plays it from the shop to the second monster,
+through storage and a reload.
+
+## 19 October 2026: any colossus opens the God Isles
+
+The owner has a colossus and still couldn't sail to the God Isles. The
+islands want at least one god or colossus in the team (God Isle 3: five),
+and the original decides that by the unit's `groups` alone: "god" or
+"colossus". The game's data tags the Elemental and Genesis gods and
+colossi that way, but not the **Rodas Colossus** (764, from the Rhodes
+Colossus Barracks: "melee big normal") or the **Genesis Wind Colossus**
+(2162: "ranged medium normal"). So the original turned them away too.
+At the owner's request both now count, in both the team check and its
+tests (`UNTAGGED_COLOSSI` in `rules/quest.ts`). The data itself is
+unchanged, so they still fight as before and the tournaments' limits on
+gods and colossi don't change.
+
+Checked and left as they are: the god islands are open from level 6
+whatever islands are won, as in the original; the server keeps any team
+it's sent; and units of another race in a town are an enemy's, as in the
+original, so they never join an army. Still to do (PARITY.md, Beta 2):
+the original's team picker also takes units from buildings, the
+warehouse and storage. Ours takes only units standing in town, so a
+colossus kept in storage must be placed in town to sail.
+
 ## 17 October 2026: the repository no longer names the live game
 
 The owner asked to keep the live game out of view: GitHub won't make a

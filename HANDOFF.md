@@ -47,6 +47,15 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **Owner requests of 19 October, in three slices:** (1) the God Isles
+  with a colossus: the Rodas and Genesis Wind colossi, which the data
+  doesn't tag "colossus", now count in the team (DECISIONS.md). Test
+  `e2e/tests/god-colossus.mjs`. (2) The Monster Nest: a new one opened
+  closed and asked 100,000 gold or 50 cash; new empires and never-used
+  nests now start it on (save version 0.08a; DECISIONS.md). Test
+  `e2e/tests/monster-nest.mjs`. (3) The Soul Mixer rebuilt from the
+  wiki's content follows, its own pull request.
+
 - **The repository no longer names the live game (17 October).** It
   stays public (GitHub won't make a public fork private), so its docs use
   "the live site" or `example.com`; don't write the real addresses back
