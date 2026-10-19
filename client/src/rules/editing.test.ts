@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { ItemInfo } from "./config.ts";
-import { choices, fits, footprintTiles, isOpenLand, move, refund, sell, store, takenTiles, turn } from "./editing.ts";
+import { choices, clearUnder, fits, footprintTiles, isMinedOut, isOpenLand, move, refund, sell, store, takenTiles, turn } from "./editing.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
@@ -51,7 +51,7 @@ test("moving: the old place doesn't count, and the command is the Flash client's
   const t = town([house]);
   assert.equal(move(t, house, 40, 40), null);  // doesn't fit: nothing changes
   assert.deepEqual([house.tx, house.ty], [50, 50]);
-  assert.deepEqual(move(t, house, 51, 51), { cmd: "move", args: [50, 50, 1, 51, 51, 1, 0, "mouseUsed"] });
+  assert.deepEqual(move(t, house, 51, 51), { command: { cmd: "move", args: [50, 50, 1, 51, 51, 1, 0, "mouseUsed"] }, cleared: [] });
   assert.deepEqual([house.tx, house.ty], [51, 51]);
 });
 
@@ -99,4 +99,41 @@ test("what can be done depends on what it is, and whose, as in the Flash client"
   assert.match(choices(town(), placed({ race: "n", subcategory: 125 }, 50, 50)).why, /villager/);
   assert.deepEqual(can({ race: "n", subcategory: 126 }), { ...NONE, sell: true });
   assert.deepEqual(can({ race: "n", subcategory: 127 }, {}, 30), NONE);  // block 7: not bought
+  // A mined-out rock growing back too, on bought land (ours; the Flash client leaves it).
+  assert.deepEqual(can({ race: "n", subcategory: 128 }), { ...NONE, sell: true });
+  assert.deepEqual(can({ race: "n", subcategory: 128 }, {}, 30), NONE);
+});
+
+test("a mined-out rock on the player's land doesn't stop a building: it's cleared first", () => {
+  const minedOut = (tx: number, ty: number) =>
+    placed({ id: 81, name: "Regenerating stone ...", race: "n", subcategory: 128, width: 1, height: 1, cost: 0, costType: "g" }, tx, ty);
+  const own = minedOut(50, 50);
+  const outside = minedOut(30, 30);  // block 7: not bought
+  const rock = placed({ id: 69, race: "n", subcategory: 126, width: 1, height: 1, cost: 0 }, 47, 47);
+  const t = town([own, outside, rock]);
+  assert.equal(isMinedOut(t, own), true);
+  assert.equal(isMinedOut(t, outside), false);
+  assert.equal(isMinedOut(t, rock), false);
+  // In the way as before, unless the building would clear it.
+  assert.equal(fits(t, placed({}, 51, 51)), false);
+  assert.equal(fits(t, placed({}, 51, 51), undefined, true), true);
+  // A whole rock still stops it; and a unit never clears one.
+  assert.equal(fits(t, placed({}, 48, 48), undefined, true), false);
+  assert.equal(fits(t, placed({ isUnit: true, width: 1, height: 1 }, 50, 50), undefined, true), false);
+  // Clearing: it goes, sold for nothing as the bulldozer sells it.
+  const cleared = clearUnder(t, placed({}, 51, 51));
+  assert.deepEqual(cleared.map((c) => c.placed), [own]);
+  assert.deepEqual(cleared.map((c) => c.command), [{ cmd: "sell", args: [50, 50, 81, 0, 0, "BLDZE"] }]);
+  assert.deepEqual(t.items, [outside, rock]);
+  assert.deepEqual(clearUnder(t, placed({}, 51, 51)), []);
+});
+
+test("moving onto a mined-out rock clears it, its command before the move's", () => {
+  const rock = placed({ id: 80, race: "n", subcategory: 128, width: 1, height: 1, cost: 0, costType: "g" }, 46, 46);
+  const house = placed({ id: 1 }, 50, 50);
+  const t = town([rock, house]);
+  const moved = move(t, house, 46, 46);
+  assert.deepEqual(moved?.cleared.map((c) => c.command), [{ cmd: "sell", args: [46, 46, 80, 0, 0, "BLDZE"] }]);
+  assert.deepEqual(moved?.command, { cmd: "move", args: [50, 50, 1, 46, 46, 0, 0, "mouseUsed"] });
+  assert.deepEqual(t.items, [house]);
 });

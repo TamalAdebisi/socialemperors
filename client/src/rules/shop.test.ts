@@ -83,6 +83,23 @@ test("buying pays, gives experience, puts it on the map and sends what the Flash
   assert.deepEqual([t.wood, t.items.length], [70, 1]);  // nothing changed
 });
 
+test("buying over a mined-out rock on the player's land clears it first; nothing else does", () => {
+  const regrowing = itemInfo(config({ id: "81", name: "Regenerating stone ...", type: "b", width: "1", height: "1",
+    category_id: "1", subcat_functional: "128", cost: "0", cost_type: "g", race: "n" }));
+  const rock = itemInfo(config({ id: "69", name: "Stone", width: "1", height: "1", subcat_functional: "126", cost: "0", race: "n" }));
+  const t = town();
+  t.items.push({ item: regrowing, tx: 50, ty: 50, orientation: 1, unitsInside: 0, startedAt: 0, workTime: 0 },
+    { item: rock, tx: 55, ty: 55, orientation: 1, unitsInside: 0, startedAt: null, workTime: 0 });
+  assert.equal(buy(t, HOUSE, 55, 55, 5000), "House I doesn't fit there.");  // a whole rock: mine or bulldoze it first
+  const bought = buy(t, HOUSE, 51, 50, 5000);
+  assert.notEqual(typeof bought, "string");
+  if (typeof bought !== "string") {
+    assert.deepEqual(bought.cleared.map((c) => c.command), [{ cmd: "sell", args: [50, 50, 81, 0, 0, "BLDZE"] }]);
+    assert.deepEqual(bought.command, { cmd: "buy", args: [1, 51, 50, 0, 0, 0, 1, "b"] });
+  }
+  assert.deepEqual(t.items.map((p) => p.item.id), [69, 1]);
+});
+
 test("opening a building early: a third of its level in cash, rounded up; then the shop sells it", () => {
   const t = town(3);
   assert.equal(unlockPrice(BIG_HOUSE), 4);

@@ -82,6 +82,20 @@ test("placing one from storage: the Flash client's command; a gift gives its exp
   assert.deepEqual([t.gifts.size, t.xp], [0, 7]);
 });
 
+test("placing from storage over a mined-out rock clears it; a unit can't go there", () => {
+  const regrowing = itemInfo(config({ id: "80", name: "Regenerating gold ...", subcat_functional: "128", cost: "0", cost_type: "g", race: "n" }));
+  const t = town([[5, 1]]);
+  t.items.push({ item: regrowing, tx: 50, ty: 50, orientation: 1, unitsInside: 0, startedAt: 0, workTime: 0 });
+  const [mill] = storedItems(t, ITEMS);
+  const placed = placeStored(t, mill, 50, 50, 7000, LEVELS);
+  assert.notEqual(typeof placed, "string");
+  if (typeof placed !== "string") {
+    assert.deepEqual(placed.cleared.map((c) => c.command), [{ cmd: "sell", args: [50, 50, 80, 0, 0, "BLDZE"] }]);
+    assert.deepEqual(placed.command, { cmd: "place_stored_item", args: [5, 50, 50, 0, 0] });
+  }
+  assert.deepEqual(t.items.map((p) => p.item.id), [5]);
+});
+
 test("the level-up statue gives the experience missing for the next level", () => {
   const t = town([], [[1478, 1]]);
   const [statue] = storedItems(t, ITEMS);

@@ -6,7 +6,7 @@
 
 import type { Command } from "../net/commands.ts";
 import type { ConfigCategory, ItemInfo } from "./config.ts";
-import { fits } from "./editing.ts";
+import { clearUnder, fits, type Cleared } from "./editing.ts";
 import { RESOURCES, type Resource } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
@@ -176,20 +176,25 @@ export function unlock(town: Town, item: ItemInfo): Command | string {
   return { cmd: "unlock_building", args: [String(item.id)] };
 }
 
-/** Buy a building and put it on a tile: the price is paid and its experience gained. A string when it can't be. */
-export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: number, orientation = 0): { command: Command; placed: PlacedItem } | string {
+/**
+ * Buy a building and put it on a tile: the price is paid and its experience
+ * gained. Mined-out rocks on the player's land there are cleared first
+ * (rules/editing.ts, clearUnder). A string when it can't be.
+ */
+export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: number, orientation = 0): { command: Command; placed: PlacedItem; cleared: Cleared } | string {
   const blocked = obstacle(town, item);
   if (blocked) {
     return `${item.name}: ${describe(blocked).toLowerCase()}.`;
   }
   const placed: PlacedItem = { item, tx, ty, orientation, unitsInside: 0, startedAt: now, workTime: 0 };
-  if (!fits(town, placed)) {
+  if (!fits(town, placed, undefined, true)) {
     return `${item.name} doesn't fit there.`;
   }
+  const cleared = clearUnder(town, placed);
   const price = priceOf(item);
   town[price.resource] -= price.amount;
   town.xp += item.xp;
   town.items.push(placed);
   // [item, x, y, facing, town, bought for free, price multiplier, type]
-  return { command: { cmd: "buy", args: [item.id, tx, ty, orientation, town.id, 0, 1, "b"] }, placed };
+  return { command: { cmd: "buy", args: [item.id, tx, ty, orientation, town.id, 0, 1, "b"] }, placed, cleared };
 }
