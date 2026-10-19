@@ -2004,7 +2004,10 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   picker: tap a kind to add one, tap one in the team to take it out). Each
   kind counts up to its `units_limit`, the last team is offered again
   (`privateState.teams.quest`), and the god islands need 1 god or
-  colossus in it (God Isle 3: 5), by the unit's `groups`. Fewer than 20
+  colossus in it (God Isle 3: 5), by the unit's `groups`. Two colossi the
+  data doesn't tag "colossus", the Rodas (764) and the Genesis Wind (2162),
+  count too, at the owner's request (`UNTAGGED_COLOSSI`). Only units
+  standing in town can join a team so far. Fewer than 20
   asks once. Start sends `set_attack_team` ("quest", the 20 ids, 0 for an
   empty place) and only the team lands.
 - **Playing:** tap a unit to select it (Shift adds or takes away), Select

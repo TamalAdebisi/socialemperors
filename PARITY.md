@@ -299,7 +299,9 @@ in [DECISIONS.md](DECISIONS.md).
       it played: to check in the Flash game before copying. S
 - [ ] **The team of 20** for the last islands may take units inside
       buildings, in the unit warehouse and in storage; ours, units standing
-      in town. Units in a refuge sail with the army in the original. M
+      in town (so a colossus kept in storage must be placed in town to
+      sail to the God Isles). Units in a refuge sail with the army in the
+      original. M
 - [ ] **Domes:** the Protection Dome halves hits within 9 tiles; the Tower
       Enhancer doubles nearby towers' rate (shop, levels 42 and 47). M
 - [x] **The Wall Door** can be opened and shut by its owner in the
