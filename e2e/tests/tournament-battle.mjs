@@ -119,8 +119,9 @@ export default async function tournamentBattle({ newPlayer }) {
   await page.waitForFunction(() => window.seTournament.match.state === "waiting", null, { timeout: 60_000 });
   await player.shot("formed-desktop");
 
-  // The shared inspector works with the tournament's copied army. Portraits
-  // inspect one unit; Escape clears it without issuing an order.
+  // The shared inspector works with the tournament's copied army. A kind's
+  // portrait, with one kind picked, inspects its first unit; Escape clears
+  // it without issuing an order.
   await player.press("Select all");
   await assertGroup(page);
   await page.locator(".battle-selection-roster button").first().click();
@@ -289,12 +290,15 @@ export default async function tournamentBattle({ newPlayer }) {
 async function assertGroup(page) {
   assert.deepEqual(await page.evaluate(() => [...window.seTournament.view.selected].map((unit) => unit.key)),
     await page.evaluate(() => window.seTournament.player.map((unit) => unit.key)));
-  assert.match(await page.locator(".battle-selection").textContent(), /3 units selected/);
-  assert.equal(await page.locator(".battle-selection-roster button").count(), 3);
-  await page.waitForFunction(() => {
+  // The bar shows one portrait per kind, with how many (CLIENT.md, "Selecting units in a battle").
+  const kinds = await page.evaluate(() => [...new Map(window.seTournament.player.map((unit) => [unit.item.id, unit.item.name])).values()]);
+  assert.match(await page.locator(".battle-selection").textContent(),
+    kinds.length === 1 ? new RegExp(`3 × ${kinds[0]}`) : /3 units selected/);
+  assert.equal(await page.locator(".battle-selection-roster button").count(), kinds.length);
+  await page.waitForFunction((count) => {
     const images = [...document.querySelectorAll(".battle-selection-roster img")];
-    return images.length === 3 && images.every((image) => image.complete && image.naturalWidth > 0);
-  });
+    return images.length === count && images.every((image) => image.complete && image.naturalWidth > 0);
+  }, kinds.length);
 }
 
 async function clickUnit(page, point) {
