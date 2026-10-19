@@ -4,6 +4,29 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 19 October 2026: a new Monster Nest raises monsters at once
+
+The owner said the Monster Nest doesn't work. Played on a fresh account,
+a nest bought for 6,000 gold opened on the closed window, "To get more
+eggs and start again", asking another 100,000 gold or 50 cash before it
+raised anything. Both the original clients and ours show that window
+whenever the save's `monsterNestActive` isn't 1, and neither sets it when
+the nest is bought, so the original's server must have started players
+with it on. Ours copied a starting village with it off (the dragon nest
+was on). So, on the server, which both clients share:
+
+- New empires start with the monster nest on (`villages/initial.json`).
+- Saves upgrade once (version 0.08a): a monster nest never used is
+  switched on. "Never used" means every nest value is still the starting
+  village's, its wait 0. The server writes -1 there when a nest finishes
+  all four monsters, so a finished nest still costs its price to start
+  again, as in the original.
+
+The rest of the window already matched the original: the four monsters,
+ten steps six hours apart, 7 cash to speed one up, the monster beside the
+nest. A new browser test plays it from the shop to the second monster,
+through storage and a reload.
+
 ## 19 October 2026: any colossus opens the God Isles
 
 The owner has a colossus and still couldn't sail to the God Isles. The

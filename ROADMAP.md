@@ -480,7 +480,8 @@ merging the two wait fixes with that separate failure documented.
         smooth guidance, saved progress and recovery, ending with the
         saved dragon nest and chosen draggy
         ([CLIENT.md](CLIENT.md#arthurs-lessons))
-  - [x] The dragon and monster nests' window: raising them step by step,
+  - [x] The dragon and monster nests' window: raising them step by step
+        (a new monster nest starts at once since 19 October),
         speeding up, friends' help, opening a closed nest again
         ([CLIENT.md](CLIENT.md#the-nests))
   - [x] The Unit Warehouse: walking units in, eighteen-slot pages, calling
