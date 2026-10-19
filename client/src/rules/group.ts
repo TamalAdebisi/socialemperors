@@ -10,6 +10,12 @@ import type { PlacedItem } from "./town.ts";
 export const MAX_SELECTED = 20;
 /** A second tap on the same unit within this long is a double click. */
 export const DOUBLE_CLICK_MS = 1000;
+/**
+ * In a battle (ours, sameItem), a mouse's double click is a computer's
+ * usual instead: Shift-clicking a unit on and off again quickly mustn't
+ * pick its whole kind. A finger, with no Shift, keeps DOUBLE_CLICK_MS.
+ */
+export const BATTLE_DOUBLE_CLICK_MS = 500;
 /** A double click picks units of the same kind within this many tiles. */
 const DOUBLE_CLICK_TILES = 10;
 
@@ -60,6 +66,35 @@ export function sameKindNear(clicked: PlacedItem, units: PlacedItem[]): PlacedIt
     .sort((a, b) => a.d - b.d || a.i - b.i)
     .slice(0, MAX_SELECTED)
     .map(({ u }) => u);
+}
+
+/**
+ * A double click on a unit in a battle: every unit of the player's of the
+ * very same kind (the same item: Archer II, not every archer), wherever it
+ * stands. Ours, at the owner's request (DECISIONS.md, 19 October 2026);
+ * the Flash client's double click picks a wider sort near it (sameKindNear).
+ */
+export function sameItem<T extends { item: { id: number } }>(clicked: T, units: T[]): T[] {
+  return units.filter((unit) => unit.item.id === clicked.item.id);
+}
+
+/** A selection by kind, each kind in the order it first appears: the battle's selection bar. */
+export function byKind<T extends { item: ItemInfo }>(units: T[]): { item: ItemInfo; units: T[] }[] {
+  const kinds = new Map<number, { item: ItemInfo; units: T[] }>();
+  for (const unit of units) {
+    const kind = kinds.get(unit.item.id);
+    if (kind) {
+      kind.units.push(unit);
+    } else {
+      kinds.set(unit.item.id, { item: unit.item, units: [unit] });
+    }
+  }
+  return [...kinds.values()];
+}
+
+/** Units picked: with Shift, added to those selected (none twice); without, instead of them. */
+export function pickWith<T>(selected: T[], picked: T[], add: boolean): T[] {
+  return add ? [...new Set([...selected, ...picked])] : [...picked];
 }
 
 /**

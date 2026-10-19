@@ -32,7 +32,23 @@ async function check(player, touch) {
   });
   await page.keyboard.press("a");
   await page.locator(".battle-selection-roster button").first().waitFor();
-  assert.ok(await page.locator(".battle-selection-roster button").count() >= 2);
+  assert.ok(await page.locator(".battle-selection-roster button").count() >= 2, "a portrait for each kind");
+  await page.keyboard.press("Escape");
+  // A double click (or tap) on a knight: both knights, its whole kind.
+  const knight = await mapPoint(page);
+  if (touch) {
+    await page.touchscreen.tap(knight.x, knight.y);
+    await page.touchscreen.tap(knight.x, knight.y);
+  } else {
+    await page.mouse.move(knight.x, knight.y);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.mouse.dblclick(knight.x, knight.y);
+  }
+  assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.item.id)), [514, 514],
+    "a double click takes every unit of that kind");
+  assert.match(await page.locator(".battle-selection").textContent(), /2 × Heavy Knight/);
+  await page.keyboard.press("Escape");
+  await player.wait(1100);  // the next tap on a knight is a single one, on a phone too
   // Clicking the picture of a unit must leave only that unit selected.
   const point = await mapPoint(page);
   if (touch) await page.touchscreen.tap(point.x, point.y);
@@ -52,6 +68,7 @@ async function check(player, touch) {
     await page.keyboard.down("Shift");
     await clickUnit(page, other);
     assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 2);
+    await player.wait(600);  // not a double click, which would add every unit of its kind
     await clickUnit(page, other);
     await page.keyboard.up("Shift");
     assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.key)), [point.key]);
@@ -76,9 +93,11 @@ async function check(player, touch) {
   await page.getByRole("button", { name: "Deselect", exact: true }).click();
   assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 0);
   assert.ok(await page.locator(".battle-selection").isHidden());
-  // Portraits offer the same way out of Select all, even in a crowded army.
+  // Portraits offer the same way out of Select all, even in a crowded army: one kind, then one of them.
   await page.evaluate(() => window.seHome.fighting.controls.selectAll());
-  await page.locator(".battle-selection-roster button").first().click();
+  await page.getByRole("button", { name: "Only Heavy Knight (2)", exact: true }).click();
+  assert.deepEqual(await page.evaluate(() => window.seHome.fighting.controls.selected.map((u) => u.item.id)), [514, 514]);
+  await page.getByRole("button", { name: "Inspect Heavy Knight", exact: true }).click();
   assert.equal(await page.evaluate(() => window.seHome.fighting.controls.selected.length), 1);
   await page.keyboard.press("Escape");
   assert.ok(await page.locator(".battle-selection").isHidden());
@@ -105,7 +124,7 @@ async function check(player, touch) {
       window.selectionOriginalForm = { unit: units[0], old };
       return next.name;
     });
-    await page.getByRole("button", { name: `Inspect ${changed}`, exact: true }).waitFor();
+    await page.getByRole("button", { name: `Only ${changed} (1)`, exact: true }).waitFor();
     await page.evaluate(() => {
       const { unit, old } = window.selectionOriginalForm;
       window.seHome.fighting.specials.become(unit, old, true);

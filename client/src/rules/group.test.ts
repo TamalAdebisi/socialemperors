@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { itemInfo, type ConfigItem } from "./config.ts";
-import { MAX_SELECTED, sameKindNear, squareTiles } from "./group.ts";
+import { MAX_SELECTED, byKind, pickWith, sameItem, sameKindNear, squareTiles } from "./group.ts";
 import type { PlacedItem } from "./town.ts";
 
 const unit = (id: number, subcat: number, tx: number, ty: number, range = 1): PlacedItem => ({
@@ -51,4 +51,23 @@ test("a group sent to a tile: a square grown from it, ring by ring, free tiles o
   assert.deepEqual(squareTiles({ x: 10, y: 20 }, 3, (t) => !taken.has(`${t.x},${t.y}`)),
     [{ x: 10, y: 20 }, { x: 11, y: 21 }, { x: 12, y: 20 }]);
   assert.deepEqual(squareTiles({ x: 10, y: 20 }, 3, () => false), [], "nowhere to stand: nobody goes");
+});
+
+test("in a battle a double click picks every unit of the very same item, near or far", () => {
+  const archer = unit(512, 80, 50, 50, 6);
+  const farArcher = unit(512, 80, 90, 90, 6);
+  const otherArcher = unit(513, 80, 51, 50, 6);  // another level: another kind here
+  const footman = unit(509, 78, 50, 51);
+  assert.deepEqual(sameItem(archer, [footman, farArcher, otherArcher, archer]), [farArcher, archer]);
+});
+
+test("the battle's bar groups a selection by kind, in the order each first appears", () => {
+  const a1 = unit(512, 80, 50, 50, 6), f1 = unit(509, 78, 50, 51), a2 = unit(512, 80, 52, 50, 6), f2 = unit(509, 78, 52, 51);
+  const groups = byKind([a1, f1, a2, f2]);
+  assert.deepEqual(groups.map((g) => [g.item.id, g.units]), [[512, [a1, a2]], [509, [f1, f2]]]);
+});
+
+test("Shift adds to the selection, none twice; otherwise the pick replaces it", () => {
+  assert.deepEqual(pickWith([1, 2], [2, 3], true), [1, 2, 3]);
+  assert.deepEqual(pickWith([1, 2], [2, 3], false), [2, 3]);
 });

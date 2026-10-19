@@ -57,8 +57,9 @@ export class Camera {
    * (selecting units) instead of moving the map. `onBox` then hears the box
    * as it grows, from where the press began (screen points), and once more
    * when it's let go (`done`; a second finger ends it too, with no size).
+   * `shift`: Shift was held as it began.
    */
-  onPress: ((at: Point, touch: boolean) => boolean) | null = null;
+  onPress: ((at: Point, touch: boolean, shift: boolean) => boolean) | null = null;
   onBox: ((from: Point, to: Point, done: boolean) => void) | null = null;
   private canvas: HTMLCanvasElement | null = null;
 
@@ -100,7 +101,7 @@ export class Camera {
         const touch = e.pointerType === "touch" || e.pointerType === "pen";
         // A slow render or pixel hit test may delay these handlers. Measure
         // the actual gesture, not the time spent waiting for JavaScript.
-        this.press = { ...at, t: e.timeStamp, moved: 0, pinched: false, box: this.onPress?.(at, touch) ?? false };
+        this.press = { ...at, t: e.timeStamp, moved: 0, pinched: false, box: this.onPress?.(at, touch, e.shiftKey) ?? false };
       } else if (this.press) {
         this.press.pinched = true;
         if (this.press.box) {
