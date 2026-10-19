@@ -56,6 +56,17 @@ follow below; status-only receipt edits change no game, art or test file.
   `e2e/tests/monster-nest.mjs`. (3) The Soul Mixer rebuilt from the
   wiki's content follows, its own pull request.
 
+- **Owner requests, 19 October 2026, on this machine's side:** (1) a
+  rock growing back on land the player has bought no longer blocks
+  building: a building put over it clears it, and the bulldozer takes it.
+  (2) Battles pick units more finely: a double click takes every unit of
+  that kind, the bar groups kinds, Shift-drag boxes, Shift and a number
+  keep groups. Both are in DECISIONS.md and CLIENT.md (#117). The Soul
+  Mixer from the wiki (slice 3 above) is the owner's call overruling the
+  "original data only" rule further down. The wiki blocks automated
+  reading; its old copies are on the Internet Archive, which the cloud
+  environment's network settings must allow (`web.archive.org`).
+
 - **The repository no longer names the live game (17 October).** It
   stays public (GitHub won't make a public fork private), so its docs use
   "the live site" or `example.com`; don't write the real addresses back

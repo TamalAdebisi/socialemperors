@@ -796,16 +796,49 @@ The Friends page and other site forms use root-relative CSS and image
 URLs; `site-menu.mjs` checks the actual submitted Friends page on desktop
 and phone, including loaded images and styles.
 
-### Selecting several units
+### Selecting units in a battle
 
-Battles now show selected units' portraits and a **Deselect** button
-(`ui/battleSelection.ts`). A map click or portrait selects one unit from a
-group; Shift adds/removes units and Escape clears the selection. A single
-selection shows name, health and attack. Scenery and friendly buildings
-can be inspected without moving the army; clicking bare ground clears an
-inspected object. The enlarged click targets described above also apply
-in battles. Covered on desktop and phone by
-`battle-selection`, and on an island by `quest`.
+Battles show the units picked in a bar with a **Deselect** button
+(`ui/battleSelection.ts`). A single unit shows its name, health and
+attack. Scenery and friendly buildings can be inspected without moving
+the army; clicking bare ground clears an inspected object. The enlarged
+click targets described above also apply in battles. These work the same
+on an island, at home under attack, attacking a player, in tournaments and
+in survival (`battleControls.ts`).
+
+Finer picking was added at the owner's request (DECISIONS.md, 19 October
+2026). The original's double click picks a wider sort near the unit, and
+its box starts on a unit; in battles ours do this instead:
+
+- **A click** on one of the player's units picks it alone; **Shift-click**
+  adds it to those picked, or takes it away.
+- **A double click** (a second click on the same unit within half a
+  second, a computer's usual, so a quick Shift-click on and off isn't
+  taken for one; a second tap within a second, the original's, on a touch
+  screen) picks every unit of the player's of that very item, wherever it
+  stands. With Shift, that kind joins those picked.
+- **Shift-drag** draws a box (the town's white box) instead of moving the
+  map, and the player's units whose pictures touch it join those picked.
+  A plain drag always moves the map.
+- **The bar** shows one portrait per kind, with how many are picked. A
+  click keeps only that kind; Shift-click, a right click, or a long press
+  where the phone offers one, drops it. With one kind left, its portrait
+  picks one of them, to look at.
+- **Groups:** Shift and a number from 1 to 9 keep the units picked as a
+  group (none picked: the group is emptied); the number picks them again,
+  those still standing, and pressed twice takes the camera to them. They
+  last for that battle. A word at the top says what happened.
+- **Space** or A (or the Select all button) picks every unit that can
+  fight; **Escape** lets go.
+
+Nothing is sent to the server for picking: the original has no command for
+it. Rules: `rules/group.ts` (`sameItem`, `byKind`, `pickWith`, with
+tests); the box in `view/battleView.ts` (`showBox`, `unitsIn`). Tests:
+`e2e/tests/quest-selection.mjs` on an island, `battle-selection.mjs`
+at home on desktop and phone, and `quest.mjs`. After a battle at home,
+the camera's box goes back to the town's (checked in `raids.mjs`).
+
+### Selecting several units
 
 Built after Beta 1's run-through, at the owner's request. Code:
 `rules/group.ts` (the rules, with tests), `TownEditor.selectGroup`,
@@ -859,7 +892,7 @@ Built with selecting several units, at the owner's request. Code:
 - **Remove:** the bulldozer's pointer, the only way to sell, as in the
   original. Tapping a thing removes it if it can be sold: never the town
   hall, units, trees or other people's things, but gold and stone rocks on
-  the player's land.
+  the player's land, and (ours) the rocks growing back there.
   Something that cost nothing goes at once; anything else asks first, with
   what it gives back. It stays on for the next one, and a drag still moves
   the map. The server hears `sell` (reason "BLDZE").
@@ -898,6 +931,15 @@ tests), `TownEditor.work`, `lineUp`, `goInto` and `letOne`. Tests:
 - A rock leaves one growing back (`buy` of item 81 for stone, 80 for gold).
   After its `activation` (3 hours) it's sold ("REGEN") and a new rock of
   one of the four kinds, by chance, is bought in its place.
+- **Ours, at the owner's request:** on land the player has bought, a rock
+  growing back doesn't stop a building. One bought, placed from storage
+  or moved over it goes down there, and the rock is cleared first (`sell`,
+  "BLDZE", then the building's own command); the bulldozer takes it at
+  once; its card says how long it has left and that it can be built over
+  or bulldozed. Left alone it still grows back, as in the Flash client,
+  where it blocks its tile for those three hours. Code: `rules/editing.ts`
+  (`isMinedOut`, `clearUnder`, `fits`). Test: `e2e/tests/mined-out.mjs`
+  (DECISIONS.md, 19 October 2026).
 - A line of trees and rocks: each one tapped with a villager selected
   joins the end of its line and glows pale yellow round its edge (tapped
   again, it moves to the end). The villager sets off for it if it's the
@@ -2013,8 +2055,9 @@ the page, loaded only there) and `ui/islandMap.ts` (the Quests window).
   standing in town can join a team so far. Fewer than 20
   asks once. Start sends `set_attack_team` ("quest", the 20 ids, 0 for an
   empty place) and only the team lands.
-- **Playing:** tap a unit to select it (Shift adds or takes away), Select
-  all (or Space) for the whole army; tap the ground to send them there,
+- **Playing:** tap a unit to select it (Shift adds or takes away; a
+  double tap takes its whole kind, and more in "Selecting units in a
+  battle"), Select all (or Space) for the whole army; tap the ground to send them there,
   spread out, or an enemy to attack it. Escape lets go. Nothing is sent to
   the server while fighting.
 - **Winning:** the troll islands light their treasure chest once every

@@ -108,7 +108,10 @@ export default async function raids({ newPlayer }) {
     const unit = window.seHome.parts.town.items.find((p) => p.item.id === 500);
     return [unit.tx, unit.ty];
   });
-  await player.select(villager, "Villager");
+  const picked = await player.select(villager, "Villager");
+  // The battle gave the camera back: a drag from a unit draws the town's box again.
+  assert.ok(await player.page.evaluate((point) => window.seHome.parts.camera.onPress(point, false, false), picked.point),
+    "the town's box is back after the raid");
   // Tap the house itself (trees stand in front of it): the first point above its tile that is the house.
   let onHouse = null;
   for (let up = 20; up <= 200 && !onHouse; up += 10) {

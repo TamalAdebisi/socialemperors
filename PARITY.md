@@ -179,6 +179,13 @@ The card's look is the owner's pick: mockup A, the original's panel
       attack rules stay the same. Verification is recorded in
       `docs/verification-combat-controls.md`.
 
+- [x] **Owner requests, 19 October:** in battles, a double click picks
+      every unit of that kind, the bar groups kinds (keep one, drop one),
+      Shift-drag boxes and Shift+number groups (CLIENT.md, "Selecting
+      units in a battle"). In town, a rock growing back on bought land
+      can be built over or bulldozed. Both differ from the original on
+      purpose (DECISIONS.md).
+
 ## Your calls (15 October 2026)
 
 - [x] **The troll town** (a second town, from level 20): in Beta 1. L

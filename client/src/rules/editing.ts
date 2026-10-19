@@ -25,8 +25,12 @@ const SUBCAT = {
   isle: 1111,
   specialCollection: 1611,
 };
-/** Rocks the bulldozer clears from bought land, though they're nobody's. */
-const ROCKS = new Set([SUBCAT.stone, SUBCAT.gold]);
+/**
+ * Rocks the bulldozer clears from bought land, though they're nobody's. The
+ * Flash client leaves out rocks growing back; ours takes them too, at the
+ * owner's request (DECISIONS.md, 19 October 2026).
+ */
+const ROCKS = new Set([SUBCAT.stone, SUBCAT.gold, SUBCAT.regrowing]);
 /** Things with no Move, Turn or Store: resources, treasures, scenery... */
 const NO_BUTTONS = new Set([SUBCAT.tree, SUBCAT.stone, SUBCAT.gold, SUBCAT.regrowing, SUBCAT.treasure,
   SUBCAT.activator, SUBCAT.bossStatue, SUBCAT.lost, SUBCAT.scenery, SUBCAT.isle, SUBCAT.specialCollection, TERRAIN]);
@@ -68,11 +72,11 @@ export function onWildRing(tx: number, ty: number): boolean {
   return isOuterBlock(Math.floor(tx / BLOCK_TILES), Math.floor(ty / BLOCK_TILES));
 }
 
-/** Which tiles are taken: by buildings' footprints, and by units where they stand. */
-export function takenTiles(town: Town, except?: PlacedItem): Set<string> {
+/** Which tiles are taken: by buildings' footprints, and by units where they stand. `skip`: things that don't count. */
+export function takenTiles(town: Town, except?: PlacedItem, skip?: (placed: PlacedItem) => boolean): Set<string> {
   const taken = new Set<string>();
   for (const placed of town.items) {
-    if (placed === except || placed.item.category === TERRAIN) {
+    if (placed === except || placed.item.category === TERRAIN || skip?.(placed)) {
       continue;
     }
     for (const [x, y] of footprintTiles(placed)) {
@@ -82,11 +86,43 @@ export function takenTiles(town: Town, except?: PlacedItem): Set<string> {
   return taken;
 }
 
-/** Whether a thing fits there: all on bought land, and no tile taken. */
-export function fits(town: Town, placed: Spot, except?: PlacedItem): boolean {
-  const taken = takenTiles(town, except);
+/**
+ * A mined-out rock growing back on the player's own land. In the Flash
+ * client it stays in the way for its three hours, then turns back into a
+ * rock. Here a building put over it clears it away, at the owner's request
+ * (DECISIONS.md, 19 October 2026): the land is theirs.
+ */
+export function isMinedOut(town: Town, placed: PlacedItem): boolean {
+  return placed.item.subcategory === SUBCAT.regrowing && isOpenLand(town, placed.tx, placed.ty);
+}
+
+/**
+ * Whether a thing fits there: all on bought land, and no tile taken.
+ * `clearing`: a building that would clear mined-out rocks (isMinedOut) may
+ * go over them; units never do.
+ */
+export function fits(town: Town, placed: Spot, except?: PlacedItem, clearing = false): boolean {
+  const skip = clearing && !placed.item.isUnit ? (other: PlacedItem) => isMinedOut(town, other) : undefined;
+  const taken = takenTiles(town, except, skip);
   return footprintTiles(placed).every(([x, y]) => isOpenLand(town, x, y) && !taken.has(`${x},${y}`));
 }
+
+/**
+ * Clear the mined-out rocks under a building being put down: each goes, as
+ * the bulldozer takes one. Their commands come before the building's.
+ */
+export function clearUnder(town: Town, placed: Spot): Cleared {
+  if (placed.item.isUnit) {
+    return [];
+  }
+  const under = new Set(footprintTiles(placed).map(([x, y]) => `${x},${y}`));
+  return town.items
+    .filter((other) => isMinedOut(town, other) && footprintTiles(other).some(([x, y]) => under.has(`${x},${y}`)))
+    .map((rock) => ({ placed: rock, command: sell(town, rock) }));
+}
+
+/** What a building put down cleared away (clearUnder): each thing, and its command. */
+export type Cleared = { placed: PlacedItem; command: Command }[];
 
 /** Whether a thing is the player's: their people's, or anyone's ("a"). Trees and rocks are nobody's ("n"). */
 export function isTheirs(town: Town, item: ItemInfo): boolean {
@@ -137,15 +173,19 @@ export function refund(item: ItemInfo): { resource: string; amount: number } | n
   return { resource, amount: Math.floor(item.cost / SALE_DIVISOR) };
 }
 
-/** Move a thing to another tile. Null when it doesn't fit there. */
-export function move(town: Town, placed: PlacedItem, tx: number, ty: number): Command | null {
-  if (!fits(town, { ...placed, tx, ty }, placed)) {
+/**
+ * Move a thing to another tile, clearing the mined-out rocks there
+ * (clearUnder; their commands go first). Null when it doesn't fit there.
+ */
+export function move(town: Town, placed: PlacedItem, tx: number, ty: number): { command: Command; cleared: Cleared } | null {
+  if (!fits(town, { ...placed, tx, ty }, placed, true)) {
     return null;
   }
+  const cleared = clearUnder(town, { ...placed, tx, ty });
   const command = { cmd: "move", args: [placed.tx, placed.ty, placed.item.id, tx, ty, placed.orientation, town.id, "mouseUsed"] };
   placed.tx = tx;
   placed.ty = ty;
-  return command;
+  return { command, cleared };
 }
 
 /** Turn a thing to face its next way (round its art's frames). */

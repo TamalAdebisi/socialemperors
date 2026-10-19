@@ -1,7 +1,9 @@
 // The player's hands in a battle, on an island (questPlay.ts) or in their
 // own town under attack (homeDefence.ts): picking units (Shift adds, Space
-// takes them all, Escape lets go), sending them somewhere or at an enemy,
-// the spell book and its aiming, and a special unit's buttons.
+// takes them all, Escape lets go; a double click takes every unit of that
+// kind, a Shift-drag box adds the units in it, numbers keep groups),
+// sending them somewhere or at an enemy, the spell book and its aiming, and
+// a special unit's buttons. CLIENT.md, "Selecting units in a battle".
 
 import type { Container } from "pixi.js";
 
@@ -10,6 +12,7 @@ import type { PageSettings } from "./net/server.ts";
 import { ENEMY, SELF, SUBCAT, type Battle, type Fighter } from "./rules/battle.ts";
 import type { GameConfig, ItemInfo } from "./rules/config.ts";
 import { tileUnder, unitPoint, type Point } from "./rules/geometry.ts";
+import { BATTLE_DOUBLE_CLICK_MS, DOUBLE_CLICK_MS, pickWith, sameItem } from "./rules/group.ts";
 import { areaOf, castSpell, magicOpen, marked, rankOf, spend, type MagicState, type SpellInfo } from "./rules/magic.ts";
 import type { Specials } from "./rules/specials.ts";
 import type { Town } from "./rules/town.ts";
@@ -49,8 +52,21 @@ export interface ControlParts {
   tournament?: boolean;
 }
 
+/** A group's number pressed twice within this long: the camera goes to the group. */
+const AGAIN_MS = 500;
+/** How long a word about a group stays at the top. */
+const SAID_MS = 2000;
+
 export class BattleControls {
   private readonly parts: ControlParts;
+  /** The last of the player's units tapped, and when: a second tap on it soon after is a double click. */
+  private lastTap: { unit: Fighter; at: number } | null = null;
+  /** Groups kept with Shift and a number (1 to 9), and picked again with the number. */
+  private readonly groups = new Map<number, Fighter[]>();
+  private lastRecall: { group: number; at: number } | null = null;
+  private said = 0;
+  /** The camera's box, as it was before the battle (the town's, at home): given back at the end. */
+  private readonly cameraBefore: Pick<Camera, "onPress" | "onBox">;
   readonly magic: MagicState;
   private readonly book: SpellBook | null;
   private readonly moves: SpecialButtons;
@@ -86,7 +102,10 @@ export class BattleControls {
       setTimeout(() => showMessage(""), 2000);
     });
     this.selection = new BattleSelection((units) => this.select(units), (name) => `${settings.assetsUrl}/buildingthumbs/${name}.jpg`);
-    parts.camera.onTap = (at, _touch, shift) => this.tap(at, shift);
+    this.cameraBefore = { onPress: parts.camera.onPress, onBox: parts.camera.onBox };
+    parts.camera.onTap = (at, touch, shift, time) => this.tap(at, shift, time, touch);
+    parts.camera.onPress = (_at, _touch, shift) => this.startsBox(shift);
+    parts.camera.onBox = (from, to, done) => this.dragBox(from, to, done);
     parts.camera.onHover = (at) => this.hover(at);
     parts.camera.onLeave = () => {
       this.pointerAt = null;
@@ -110,6 +129,11 @@ export class BattleControls {
     this.selection.update(units);
     this.updateCursor();
     this.onSelect();
+  }
+
+  /** Every living unit of the player's. */
+  private ownUnits(): Fighter[] {
+    return this.parts.battle.fighters.filter((f) => f.side === SELF && f.isUnit && !f.dead);
   }
 
   /** Every unit of the player's that can fight (at home, villagers stay out of it). */
@@ -136,12 +160,15 @@ export class BattleControls {
     this.moves.remove();
     this.selection.remove();
     this.parts.view.selected = new Set();
+    this.parts.view.showBox(null);
+    this.parts.camera.onPress = this.cameraBefore.onPress;
+    this.parts.camera.onBox = this.cameraBefore.onBox;
     this.pointerAt = null;
     this.parts.camera.setCursor("");
     window.removeEventListener("keydown", this.keys, true);
   }
 
-  private tap(at: Point, shift = false): void {
+  private tap(at: Point, shift = false, time = performance.now(), touch = false): void {
     if (this.stopped) {
       return;
     }
@@ -160,13 +187,24 @@ export class BattleControls {
     }
     const tapped = view.fighterAt(at);
     if (!tapped) view.groundClick(camera.toMap(at));
-    if (tapped && tapped.side === SELF && tapped.isUnit) {
+    const own = tapped && tapped.side === SELF && tapped.isUnit ? tapped : null;
+    const last = this.lastTap;
+    this.lastTap = own ? { unit: own, at: time } : null;
+    // A finger has no Shift to click on and off quickly with: it keeps the original's second.
+    if (own && last?.unit === own && time - last.at < (touch ? DOUBLE_CLICK_MS : BATTLE_DOUBLE_CLICK_MS)) {
+      // Tapped again soon after: the double click, every unit of its kind (with Shift, added to the others).
+      this.lastTap = null;
+      this.select(pickWith(this.selected, sameItem(own, this.ownUnits()), shift));
+      sound.play("click");
+      return;
+    }
+    if (own) {
       // A unit of the player's: it alone, or added to (or taken from) the others with Shift.
       const now = new Set(shift ? this.selected : []);
-      if (shift && now.has(tapped)) {
-        now.delete(tapped);
+      if (shift && now.has(own)) {
+        now.delete(own);
       } else {
-        now.add(tapped);
+        now.add(own);
       }
       this.select([...now]);
       sound.play("click");
@@ -192,6 +230,73 @@ export class BattleControls {
       battle.moveTo(chosen, tile);
     }
     sound.play("place");
+  }
+
+  /**
+   * A press on the map with Shift held: its drag draws a box to pick units
+   * instead of moving the map. Unlike the town's, a drag from a unit still
+   * moves the map: in a battle the army covers much of the ground.
+   */
+  private startsBox(shift: boolean): boolean {
+    return shift && !this.stopped && !this.book?.isAiming;
+  }
+
+  /** The box being drawn (screen points), and let go: the player's units in it join those selected, as Shift adds. */
+  private dragBox(from: Point, to: Point, done: boolean): void {
+    const { view, camera, sound } = this.parts;
+    if (!done && !this.stopped) {
+      view.showBox(camera.toMap(from), camera.toMap(to));
+      return;
+    }
+    view.showBox(null);
+    // A few pixels across is a slip, not a box: the tap that follows does the work.
+    if (this.stopped || Math.abs(to.x - from.x) <= 3 || Math.abs(to.y - from.y) <= 3) {
+      return;
+    }
+    const picked = view.unitsIn(from, to).filter((f) => f.side === SELF);
+    this.select(pickWith(this.selected, picked, true));
+    if (picked.length > 0) sound.play("click");
+  }
+
+  /** Shift and a number: the units selected become that group (none selected: it's emptied). */
+  private keepGroup(group: number): void {
+    const units = this.selected;
+    if (units.length === 0) {
+      this.groups.delete(group);
+      this.say(`Group ${group} emptied`);
+      return;
+    }
+    this.groups.set(group, units);
+    this.say(`Group ${group}: ${units.length} unit${units.length === 1 ? "" : "s"} kept. Press ${group} to pick them again`);
+  }
+
+  /** A number: its group is selected again, those still standing; pressed twice, the camera goes to them. */
+  private pickGroup(group: number): void {
+    const units = (this.groups.get(group) ?? []).filter((f) => !f.dead && f.side === SELF && f.isUnit);
+    if (units.length === 0) {
+      this.say(`Group ${group} is empty: select units, then Shift+${group} keeps them`);
+      return;
+    }
+    const now = performance.now();
+    const again = this.lastRecall?.group === group && now - this.lastRecall.at < AGAIN_MS;
+    this.lastRecall = { group, at: now };
+    this.select(units);
+    this.parts.sound.play("click");
+    if (again) {
+      const middle = units.reduce((sum, f) => ({ x: sum.x + f.at.x / units.length, y: sum.y + f.at.y / units.length }), { x: 0, y: 0 });
+      this.parts.camera.lookAt(middle);
+    } else {
+      this.say(`Group ${group}: ${units.length} unit${units.length === 1 ? "" : "s"}`);
+    }
+  }
+
+  /** A word at the top for a moment, taken away only if nothing has replaced it. */
+  private say(text: string): void {
+    showMessage(text);
+    const said = ++this.said;
+    setTimeout(() => {
+      if (said === this.said && document.querySelector(".message")?.textContent === text) showMessage("");
+    }, SAID_MS);
   }
 
   private hover(at: Point): void {
@@ -230,7 +335,16 @@ export class BattleControls {
     // owns shortcuts; mounted panels hidden directly or by an ancestor do not.
     if ([...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')]
       .some((dialog) => dialog.getClientRects().length > 0)) return;
-    if (e.key === "Escape") {
+    const digit = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+    if (digit && !this.stopped) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (e.shiftKey) {
+        this.keepGroup(Number(digit[1]));
+      } else {
+        this.pickGroup(Number(digit[1]));
+      }
+    } else if (e.key === "Escape") {
       e.stopImmediatePropagation();
       this.select([]);
     } else if (e.key === " " || e.key.toLowerCase() === "a") {

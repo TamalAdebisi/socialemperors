@@ -81,6 +81,8 @@ export class BattleView {
   skin = 0;
   /** The units the player has picked, outlined on the ground. */
   selected = new Set<Fighter>();
+  /** The box being dragged out to pick units, over everything. */
+  private readonly box = new Graphics();
   private hovered: Fighter | null = null;
 
   private readonly sound: (effect: SoundEffect) => void;
@@ -97,7 +99,7 @@ export class BattleView {
     void Assets.load<Texture>(SPELL_AREA).then((texture) => {
       this.marker.texture = texture;
     });
-    this.root.addChild(this.ground, this.rings, this.marker, this.floor, this.things, this.air, this.bars, this.markers.layer);
+    this.root.addChild(this.ground, this.rings, this.marker, this.floor, this.things, this.air, this.bars, this.markers.layer, this.box);
   }
 
   /** The island's ground: one terrain picture per block of 20 x 20 tiles, the sea's included. */
@@ -543,6 +545,29 @@ export class BattleView {
 
   hover(fighter: Fighter | null): void {
     this.hovered = fighter;
+  }
+
+  /** The box being dragged out to pick units, between two points of the map, drawn as the town's; null takes it away. */
+  showBox(from: Point | null, to?: Point): void {
+    this.box.clear();
+    if (from && to) {
+      this.box.rect(Math.min(from.x, to.x), Math.min(from.y, to.y), Math.abs(to.x - from.x), Math.abs(to.y - from.y))
+        .fill({ color: 0xffffff, alpha: 0.1 })
+        .stroke({ color: 0xffffff, width: 2 });
+    }
+  }
+
+  /** The living units whose visible pictures touch a box on the screen, in the battle's order. */
+  unitsIn(a: Point, b: Point): Fighter[] {
+    const left = Math.min(a.x, b.x), right = Math.max(a.x, b.x), top = Math.min(a.y, b.y), bottom = Math.max(a.y, b.y);
+    return this.battle.fighters.filter((fighter) => {
+      const picture = this.drawn.get(fighter)?.slot.children[0];
+      if (fighter.dead || !fighter.isUnit || !picture) {
+        return false;
+      }
+      const bounds = visualScreenBox(picture);
+      return bounds.width > 0 && bounds.x < right && bounds.x + bounds.width > left && bounds.y < bottom && bounds.y + bounds.height > top;
+    });
   }
 
   /** The top middle of a fighter's picture, on the map. */

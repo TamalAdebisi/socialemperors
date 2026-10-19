@@ -4,6 +4,64 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 19 October 2026: picking units in a battle, more finely
+
+The owner asked to pick a kind of unit with a double click during quests,
+and for finer control than "all, none or one". In every battle (islands,
+home defence, attacks, tournaments, survival):
+
+- **A double click (or double tap) on a unit picks every unit of the
+  player's of that very item**, wherever it stands: Heavy Archers, not
+  every archer. With a mouse it counts as a double click within half a
+  second (the town's, as the original's, within a second), so
+  Shift-clicking a unit on and off again quickly doesn't take its whole
+  kind; a finger, with no Shift, keeps the original's second. The Flash client's double click picks a wider sort (all
+  that shoot, say) within 10 tiles, at most 20; the owner asked for the
+  exact kind. With Shift it adds that kind to those already picked. The
+  town keeps the original's double click.
+- **The bar shows one portrait per kind, with how many.** A click keeps
+  only that kind; Shift-click, a right click or a long press (where the
+  phone offers one) drops it. With one kind left, its portrait picks one
+  of them to look at, as the portraits did before.
+- **Shift-drag draws a box** whose units join those picked, as every
+  Shift action adds. The town's box starts on one of its units instead;
+  in a battle the army covers much of the ground, so a plain drag always
+  moves the map there.
+- **Groups:** Shift and a number (1 to 9) keep the units picked as a
+  group, the number picks them again (those still standing), and pressed
+  twice takes the camera to them. Ctrl isn't used because browsers keep
+  Ctrl and a number for their tabs.
+
+Nothing new is sent to the server: the original sends no command for
+picking units. Code: `rules/group.ts` (`sameItem`, `byKind`, `pickWith`),
+`battleControls.ts`, `ui/battleSelection.ts`, `view/battleView.ts`
+(`showBox`, `unitsIn`). Tests: `e2e/tests/quest-selection.mjs`, and
+`battle-selection.mjs` on a phone.
+
+## 19 October 2026: mined-out rocks don't block the player's own land
+
+The owner bought land with gold and stone rocks on it, mined them, and
+couldn't build where they had been. In the Flash client a mined rock
+leaves a "regenerating" one (items 80 and 81) that takes its tile for
+three hours, then grows back into a rock; its bulldozer takes whole rocks
+on the player's land but not those. Now, on land the player has bought
+(not the wild ring or land not yet bought):
+
+- a building bought, placed from storage or moved over a regenerating
+  rock goes down there, and the rock is cleared first (`sell`, "BLDZE",
+  as the bulldozer sends; it cost nothing, so nothing comes back);
+- the bulldozer takes a regenerating rock at once, as it takes a whole
+  one;
+- its card adds, after the original's "wait" tip, how long it has left
+  and that it can be built over or bulldozed.
+
+Left alone, it still grows back into a rock to mine again, as in the
+original, so rocks on the player's land stay a source of stone and gold.
+A whole rock still has to be mined or bulldozed first, and units never
+clear one. Code: `rules/editing.ts` (`isMinedOut`, `clearUnder`, `fits`),
+`rules/shop.ts`, `rules/storage.ts`, `editor.ts`. Test:
+`e2e/tests/mined-out.mjs`.
+
 ## 19 October 2026: weekly tournament prizes wait for the end of the week
 
 The owner noticed that the weekly tournament paid its prize as soon as a

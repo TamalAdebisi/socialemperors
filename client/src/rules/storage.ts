@@ -6,7 +6,7 @@
 
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "./config.ts";
-import { fits } from "./editing.ts";
+import { clearUnder, fits, type Cleared } from "./editing.ts";
 import type { Level } from "./levels.ts";
 import { atLimit, describe, priceOf, type Price } from "./shop.ts";
 import type { PlacedItem, Town } from "./town.ts";
@@ -98,19 +98,22 @@ export function sellStored(town: Town, stored: Stored): Command {
 
 /**
  * Place one from storage on a tile. A gift also gives its experience (the
- * level-up statue: what's missing for the next level). A string when it can't be.
+ * level-up statue: what's missing for the next level). A building clears
+ * mined-out rocks on the player's land there first (rules/editing.ts,
+ * clearUnder). A string when it can't be.
  */
 export function placeStored(town: Town, stored: Stored, tx: number, ty: number, now: number,
-  levels: Level[], room = 0, orientation = 0): { command: Command; placed: PlacedItem } | string {
+  levels: Level[], room = 0, orientation = 0): { command: Command; placed: PlacedItem; cleared: Cleared } | string {
   const { item } = stored;
   const can = storageChoices(town, stored, room);
   if (!can.place || stored.count <= 0) {
     return `${item.name}: ${(can.why || "none left").toLowerCase()}.`;
   }
   const placed: PlacedItem = { item, tx, ty, orientation, unitsInside: 0, units: [], startedAt: item.isUnit ? null : now, workTime: 0 };
-  if (!fits(town, placed)) {
+  if (!fits(town, placed, undefined, true)) {
     return `${item.name} doesn't fit there.`;
   }
+  const cleared = clearUnder(town, placed);
   take(town, stored);
   if (stored.gift) {
     const next = levels[town.level];
@@ -119,5 +122,5 @@ export function placeStored(town: Town, stored: Stored, tx: number, ty: number, 
   town.items.push(placed);
   // [item, x, y, facing, town]
   const command = { cmd: stored.gift ? "place_gift" : "place_stored_item", args: [item.id, tx, ty, orientation, town.id] };
-  return { command, placed };
+  return { command, placed, cleared };
 }

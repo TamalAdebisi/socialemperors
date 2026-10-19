@@ -46,9 +46,11 @@ export default async function quest({ newPlayer }) {
   assert.equal(await player.page.locator(".quest-hud").count(), 1);
   assert.match(await player.page.locator(".quest-hud").textContent(), /5 trolls left/);
 
-  // Select all is not a sticky command mode: inspect a unit, then clear it.
+  // Select all is not a sticky command mode: keep one kind, inspect one of them, then clear it.
   await player.press("Select all");
-  await player.page.locator(".battle-selection-roster button").first().click();
+  await player.page.getByRole("button", { name: "Only Heavy Knight (14)", exact: true }).click();
+  assert.equal(await player.page.evaluate(() => window.seQuest.view.selected.size), 14);
+  await player.page.getByRole("button", { name: "Inspect Heavy Knight", exact: true }).click();
   assert.equal(await player.page.evaluate(() => window.seQuest.view.selected.size), 1);
   assert.match(await player.page.locator(".battle-selection").textContent(), /health.*attack/);
   await player.press("Deselect");

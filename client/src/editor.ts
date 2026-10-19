@@ -6,7 +6,7 @@
 
 import type { Command, CommandSender } from "./net/commands.ts";
 import type { ItemInfo } from "./rules/config.ts";
-import { choices, fits, footprintSize, isTheirs, move, refund, sell, store, turn } from "./rules/editing.ts";
+import { choices, fits, footprintSize, isMinedOut, isTheirs, move, refund, sell, store, turn, type Cleared } from "./rules/editing.ts";
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level, type LevelUp } from "./rules/levels.ts";
 import { HURRY_CASH, RESOURCES, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
@@ -403,7 +403,7 @@ export class TownEditor {
     building.tx = tile.x;
     building.ty = tile.y;
     this.view.moveGhost(tile);
-    this.view.showFootprint(building, fits(this.town, building));
+    this.view.showFootprint(building, fits(this.town, building, undefined, true));
   }
 
   private placeBuilding(tile: Point): void {
@@ -418,7 +418,7 @@ export class TownEditor {
       this.say(bought);
       return;
     }
-    this.send([bought.command]);
+    this.send([...this.cleared(bought.cleared), bought.command]);
     this.sound("place");
     this.startConstruction(bought.placed);
     void this.view.redraw(bought.placed);
@@ -451,7 +451,7 @@ export class TownEditor {
       this.say(done);
       return;
     }
-    this.send([done.command]);
+    this.send([...this.cleared(done.cleared), done.command]);
     this.sound("place");
     this.doings.placedFromStorage();
     if (isBuilt(done.placed.item, true)) {
@@ -488,6 +488,14 @@ export class TownEditor {
     if (this.selected === placed && !this.moving) {
       this.select(placed);
     }
+  }
+
+  /** Mined-out rocks a building cleared as it went down (rules/editing.ts): off the map; their commands, to go first. */
+  private cleared(cleared: Cleared): Command[] {
+    for (const { placed } of cleared) {
+      this.view.remove(placed);
+    }
+    return cleared.map(({ command }) => command);
   }
 
   private stopBuilding(): void {
@@ -1119,6 +1127,11 @@ export class TownEditor {
     }
     if (placed.wild) {
       return { detail: "In the wild: bring one of your units near to catch it", bar: null };
+    }
+    if (isMinedOut(this.town, placed)) {
+      // Our own line: the Flash client's card only says to wait (rules/editing.ts, isMinedOut).
+      const left = placed.startedAt === null ? 0 : Math.max(placed.startedAt + placed.item.activation - this.clock(), 0);
+      return { detail: `Grows back in ${duration(left)}. Build over it, or bulldoze it, to clear the ground`, bar: null };
     }
     if (placed.item.subcategory === SUBCAT.villager && canWalk(this.town, placed)) {
       return { detail: `Tap the ground where it should go, or up to ${villagers(this.town).line} trees or rocks to work`, bar: null };
@@ -1917,18 +1930,18 @@ export class TownEditor {
   private preview(placed: PlacedItem, tile: Point): void {
     this.shownAt = tile;
     const spot = { ...placed, tx: tile.x, ty: tile.y };
-    this.view.showFootprint(spot, fits(this.town, spot, placed));
+    this.view.showFootprint(spot, fits(this.town, spot, placed, true));
     this.view.offset(placed, tile);
   }
 
   private place(placed: PlacedItem, tile: Point): void {
-    const command = move(this.town, placed, tile.x, tile.y);
-    if (command === null) {
+    const moved = move(this.town, placed, tile.x, tile.y);
+    if (moved === null) {
       this.preview(placed, tile);
       this.bar.prompt(`${placed.item.name} doesn't fit there`, [{ label: "Cancel", run: () => this.cancelMove() }]);
       return;
     }
-    this.send([command]);
+    this.send([...this.cleared(moved.cleared), moved.command]);
     this.doings.moved(placed.item);
     this.endMove(placed);
   }
