@@ -5,7 +5,8 @@ import { itemsById, type GameConfig } from "./config.ts";
 import { readTown, type PlayerInfo } from "./town.ts";
 import { complexUnits, restoredTournamentTeam, tournamentCards, tournamentChoices, tournamentRules, tournamentTeamProblem,
   tournamentCategory, tournamentEntryProblem, tournamentEntryWarning, tournamentReady, tournamentFinished, tournamentDeadline,
-  tournamentPlayerScore, tournamentLeaderboard, tournamentPrize, type TournamentInfo, type TournamentRoom, type TournamentPlayer } from "./tournaments.ts";
+  tournamentPlayerScore, tournamentLeaderboard, tournamentPrize, tournamentRankPrize, tournamentWeekOver,
+  type TournamentInfo, type TournamentRoom, type TournamentPlayer } from "./tournaments.ts";
 
 const config = JSON.parse(readFileSync(new URL("../../../config/game_config_20120826.json", import.meta.url), "utf8")) as GameConfig;
 const items = itemsById(config);
@@ -146,6 +147,25 @@ test("scores count finished matches only and rank by points then time with the p
   assert.deepEqual(tournamentPlayerScore(state.players[0]), { points: 50.4, seconds: 90, matches: 2 });
   assert.deepEqual(tournamentLeaderboard(state).map(({ player }) => player.user_id), ["four", "two", "one", "three"]);
   assert.equal(state.players[0].user_id, "one", "sorting must not mutate server order");
+});
+
+test("weekly prizes wait for the end of the week, and its tournaments end with it", () => {
+  const weekly = rules.kinds.find((kind) => Number(kind.weekly_tournaments) > 0)!;
+  const state = room();
+  state.date_ready = 1000;
+  state.date_finished = 2000;
+  state.ranking = { total_user: 2, top: {}, user: { user_id: "one", user_name: "One", points: 20, time: 50, matches: 3, rank: 1 },
+    final: 0, ends: 1000 + 3600 };
+  assert.equal(tournamentWeekOver(state), false);
+  assert.equal(tournamentPrize(state, weekly, "one"), null, "first so far is not a prize yet");
+  assert.deepEqual(tournamentRankPrize(state, weekly, "one"), weekly.prize[0], "the prize this place would win");
+  assert.equal(tournamentDeadline(state, weekly), 1000 + 3600, "the week ends before its 24 hours are up");
+  state.ranking.ends = 1000 + 48 * 3600;
+  assert.equal(tournamentDeadline(state, weekly), 1000 + 24 * 3600);
+  state.ranking.final = 1;
+  state.ranking.user.rank = 2;
+  assert.equal(tournamentWeekOver(state), true);
+  assert.deepEqual(tournamentPrize(state, weekly, "one"), weekly.prize[1], "the final rank's prize");
 });
 
 test("public prizes require the server winner and weekly prizes use the frozen paid rank", () => {

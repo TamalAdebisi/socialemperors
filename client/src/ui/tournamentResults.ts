@@ -1,9 +1,11 @@
 // The tournament's enrolled armies, matches and results. The server has
-// already paid a finished room's prize: Done only acknowledges it and reloads
-// the town. This view never gives resources or changes a chosen team.
+// already paid a finished room's prize, or for the weekly one pays it when
+// the week ends: Done only acknowledges the room and reloads the town. This
+// view never gives resources or changes a chosen team.
 import type { ItemInfo } from "../rules/config.ts";
-import { TEAM_SLOTS, tournamentFinished, tournamentLeaderboard, tournamentPlayerScore, tournamentPrize,
-  type TournamentKind, type TournamentPlayer, type TournamentPrize, type TournamentRoom } from "../rules/tournaments.ts";
+import { TEAM_SLOTS, tournamentDeadline, tournamentFinished, tournamentLeaderboard, tournamentPlayerScore, tournamentPrize,
+  tournamentRankPrize, tournamentWeekOver, type TournamentKind, type TournamentPlayer, type TournamentPrize,
+  type TournamentRoom } from "../rules/tournaments.ts";
 import { iconImage } from "./icons.ts";
 import "./tournamentResults.css";
 
@@ -189,14 +191,18 @@ export class TournamentResultsView {
     const prize = tournamentPrize(this.room, this.parts.kind, this.parts.me);
     outcome.dataset.won = String(prize !== null);
     outcome.append(text("h3", this.word(1208)));
-    if (prize) {
+    if (this.weekly && !tournamentWeekOver(this.room)) {
+      // Everybody can still play this week: prizes follow the final ranking.
+      const ends = Number(this.room.ranking?.ends);
+      const when = new Date(ends * 1000).toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" });
+      outcome.append(text("p", `The week's top 10 win their prizes when the week ends${Number.isFinite(ends) ? `, ${when}` : ""}.`));
+      const hoped = tournamentRankPrize(this.room, this.parts.kind, this.parts.me);
+      if (hoped) outcome.append(text("p", "Keep your place to win:", "rows-note"), prizeContents(hoped, this.parts));
+    } else if (prize) {
       outcome.append(text("p", "Congratulations! Your tournament prize has been awarded."), prizeContents(prize, this.parts));
       if (Object.keys(prize.u ?? {}).length) outcome.append(text("p", "Your prize units are in Storage.", "rows-note"));
     } else outcome.append(text("p", this.word(1209)));
-    if (this.weekly && this.room.ranking) {
-      outcome.append(text("p", this.word(1257, this.room.ranking.user.rank)),
-        text("p", "Your prize follows your rank when you finished. The weekly leaderboard can still change.", "rows-note"));
-    }
+    if (this.weekly && this.room.ranking) outcome.append(text("p", this.word(1257, this.room.ranking.user.rank)));
     outcome.append(this.button("Done", () => void this.action(this.parts.acknowledge), "button small gold"));
     return outcome;
   }
@@ -315,7 +321,7 @@ export class TournamentResultsView {
   }
 
   private updateClock(): number {
-    const deadline = Number(this.room.date_ready) + Number(this.parts.kind.duration) * 3600;
+    const deadline = tournamentDeadline(this.room, this.parts.kind) ?? 0;
     const seconds = deadline - (this.parts.now?.() ?? Date.now() / 1000);
     const display = this.element.querySelector(".tournament-deadline");
     if (display) display.textContent = `${this.word(1203)} ${clock(seconds)}`;

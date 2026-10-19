@@ -202,8 +202,10 @@ numbers, because the server writes them into the game config.
       won on three stars, once
 - [x] Tournament prizes: the winner of a public tournament gets the prize
       the game shows (gold or cash, and a unit in the gift box); the weekly
-      top 10 get the prize for their rank, as it is when their own
-      tournament ends. A cash tournament's prize is the entry fee back with
+      top 10 get the prize for their final rank when the week ends (Monday
+      00:00 UTC; until 19 October 2026 it was paid as each player's own
+      tournament ended, so the first player of a week took the top prize).
+      A cash tournament's prize is the entry fee back with
       the unit, not twice the fee as in the game: with bots filling seats, a
       good player could win over and over and print cash (`economy.py`)
 - [x] The welcome-back bonus: a chest on a new empire's 2nd and 3rd day

@@ -925,6 +925,7 @@ def get_player_info_response(USERID):
 
     if user is None or user == USERID:  # the player's own village (travelling between towns names it)
         bank.town_loaded(USERID)
+        tournaments.town_loaded()  # a weekly prize won last week is in the town it sends
         return json_response(get_player_info(USERID, map_number))
     if user == tournaments.ARENA:  # where tournament matches are fought
         return json_response(tournaments.arena())

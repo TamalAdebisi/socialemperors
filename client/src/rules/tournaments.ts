@@ -57,6 +57,10 @@ export interface TournamentRanking {
   total_user: number;
   top: Record<string, TournamentRankRow>;
   user: TournamentRankRow & { rank: number };
+  /** Our server's additions: 1 once the week is over and its prizes given
+   * (missing: given already, as before prizes waited), and when it ends. */
+  final?: number;
+  ends?: number;
 }
 export interface TournamentRoom {
   tournament_id: string;
@@ -208,9 +212,17 @@ export function tournamentFinished(room: TournamentRoom): boolean {
   return room.date_finished !== null && !room.match_playing;
 }
 
-/** Unix seconds. Waiting rooms instead show the original minute-to-refresh clock. */
+/** Unix seconds. Waiting rooms instead show the original minute-to-refresh clock.
+ * A weekly tournament also ends with its week. */
 export function tournamentDeadline(room: TournamentRoom, kind: TournamentKind): number | null {
-  return room.date_ready === null ? null : room.date_ready + Number(kind.duration) * 3600;
+  if (room.date_ready === null) return null;
+  const end = room.date_ready + Number(kind.duration) * 3600;
+  return room.ranking?.ends === undefined ? end : Math.min(end, room.ranking.ends);
+}
+
+/** Whether a weekly room's rank is final and its prize given: the week is over. */
+export function tournamentWeekOver(room: TournamentRoom): boolean {
+  return room.ranking?.final === undefined || Number(room.ranking.final) === 1;
 }
 
 export function tournamentPlayerScore(player: TournamentPlayer): { points: number; seconds: number; matches: number } {
@@ -231,13 +243,16 @@ export function tournamentLeaderboard(room: TournamentRoom): (ReturnType<typeof 
       Number(b.player.user_id === room.winner_id) - Number(a.player.user_id === room.winner_id));
 }
 
-/** Prizes are already paid by the server. Weekly rank is the paid rank even
- * when later entrants change the live top ten; public ties use its winner id. */
+/** The prize the server has paid. A weekly one waits for the end of the
+ * week and follows the final rank; public ties use the server's winner id. */
 export function tournamentPrize(room: TournamentRoom, kind: TournamentKind, me: string): TournamentPrize | null {
   if (!tournamentFinished(room)) return null;
-  if (Number(kind.weekly_tournaments) >= 1) {
-    const rank = room.ranking?.user;
-    return rank?.user_id === me && rank.rank >= 1 && rank.rank <= 10 ? kind.prize[rank.rank - 1] ?? null : null;
-  }
+  if (Number(kind.weekly_tournaments) >= 1) return tournamentWeekOver(room) ? tournamentRankPrize(room, kind, me) : null;
   return room.winner_id === me ? kind.prize[Number(room.reward_id)] ?? null : null;
+}
+
+/** The weekly prize for the player's rank as it stands: final, or so far. */
+export function tournamentRankPrize(room: TournamentRoom, kind: TournamentKind, me: string): TournamentPrize | null {
+  const rank = room.ranking?.user;
+  return rank?.user_id === me && rank.rank >= 1 && rank.rank <= 10 ? kind.prize[rank.rank - 1] ?? null : null;
 }

@@ -38,6 +38,15 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Weekly tournament prizes wait for the end of the week (19 October).**
+  The owner asked: the server paid each player as their own weekly room
+  ended, so the week's first player took the top prize. Now the top 10 of
+  the final ranking are paid at Monday 00:00 UTC (at the first town load
+  or tournament request after it), and weekly rooms end with their week.
+  Prizes already paid stay paid and aren't paid again. The owner also had
+  a Vulcano Dragon sent to every other account's gift inbox. See
+  DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
+
 - **Owner requests of 19 October, in three slices:** (1) the God Isles
   with a colossus: the Rodas and Genesis Wind colossi, which the data
   doesn't tag "colossus", now count in the team (DECISIONS.md). Test

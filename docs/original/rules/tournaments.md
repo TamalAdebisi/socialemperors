@@ -262,10 +262,22 @@ completion and surrender; browser checks cover real saved matches.
   winner to the panel. Departure labels do not demote the score row.
 - Weekly results show the server's top ten, total users and separate
   own-rank row, including ranks outside ten. Prize index is rank minus
-  one for the top ten only. The player's paid rank is frozen when their
-  room finishes, even if later results alter the live leaderboard.
+  one for the top ten only. The weekly card counts down to the end of the
+  week ("Ends in", `timeLeft`), and entering in its last ten minutes warns
+  that the weekly tournament is about to end. So the week is the
+  tournament: its top ten win when it ends. Since 19 October 2026 the
+  server pays then, by the final ranking, and ends any weekly room still
+  being played. It used to pay, and freeze the rank, when each player's
+  own room finished, which gave the top prize to the week's first player.
+  Rooms paid that way keep their rank and place, and aren't paid again.
+  Flash's finished popup judges a weekly player by the rank in the reply
+  when the room finishes: in the top ten it congratulates them and says the
+  reward "will appear soon in your storage", then reloads the town and
+  cleans the room. The new client says the week's top ten are paid when it
+  ends, and which prize the current place would win.
 - **There is no claim service.** The server pays the prize when ending
-  the room: gold to the current town, cash to the player, unit rewards
+  the room (the weekly one when the week ends, at the first town load or
+  tournament request after it): gold to the current town, cash to the player, unit rewards
   through `inventory.add_gift`. Those gift-box entries appear in this
   client's Storage, not the separate social Gifts panel. Public prizes
   use the room's saved reward index, not today's list index.
@@ -286,7 +298,9 @@ completion and surrender; browser checks cover real saved matches.
 
 *Built:* `ui/tournamentResults.ts`, result helpers in
 `rules/tournaments.ts` and server tie metadata in `tournaments.py`.
-Tests cover exact ties, abandonment, frozen weekly rank, out-of-prize
-rank, stale room actions and repeated payment/acknowledgement paths.
+Tests cover exact ties, abandonment, weekly prizes at the end of the
+week (with the town load paying them, a late entry closed by the week's
+end and rooms paid the old way), out-of-prize rank, stale room actions
+and repeated payment/acknowledgement paths.
 Final integrated test results and the exact tested commit belong in
 HANDOFF.md, rather than being inferred from these implementation notes.

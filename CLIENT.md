@@ -2778,8 +2778,16 @@ the departure label and server's `winner_id` distinguish these cases.
 Weekly results show the top ten and the player's own rank. The server
 also resolves exact public ties through `winner_id`, because its returned
 player list is viewer-first.
-Weekly prizes follow the frozen rank at that player's completion, even
-if the live table changes later. The server has already paid any prize:
+Weekly prizes wait for the end of the week (Monday 00:00 UTC) and follow
+the final ranking. Until then a finished weekly room says when the week
+ends, shows the live rank, and the prize that place would win; the
+ranking's additive `final` and `ends` fields say whether the prizes have
+been given and when the week ends, which also caps the room's deadline.
+A weekly room still being played ends with its week. Rooms paid before
+this rule (19 October 2026) arrive with `final` 1 and keep their rank.
+The server pays the week's prizes at the first town load or tournament
+request after the week ends, so a winner's town carries the prize.
+Otherwise the server has already paid any prize:
 gold/cash update the balances and unit prizes appear in Storage. Done
 only sends `clean_tournament` with the displayed room id and refreshes
 home data. A supplied stale id cannot acknowledge a newer room; original
