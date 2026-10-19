@@ -92,10 +92,11 @@ test("complete waiting, active, finished and weekly responses retain their suppo
   weekly.tournament.players[0].team = Array(20).fill(649); // Weekly entry exempts the complex-unit cap.
   for (const bot of weekly.tournament.players.slice(1)) bot.matches = [];
   const rank = { user_id: "player", user_name: "Player", points: 0, time: 0, matches: 0 };
-  weekly.tournament.ranking = { total_user: 1, top: { "1": rank }, user: { ...rank, rank: 1 } };
+  weekly.tournament.ranking = { total_user: 1, top: { "1": rank }, user: { ...rank, rank: 1 }, final: 0, ends: 5000 };
   weekly.tournament_weekly["8"] = { open: 1, full: 1, timeLeft: "600" };
   const outOfPrizes = structuredClone(weekly);
   outOfPrizes.tournament.date_finished = 1100;
+  outOfPrizes.tournament.ranking!.final = 1;
   outOfPrizes.tournament.ranking!.total_user = 11;
   outOfPrizes.tournament.ranking!.user.rank = 11;
   outOfPrizes.tournament.ranking!.top = { "1": { ...rank, user_id: "another", points: 300, matches: 3 },
@@ -177,6 +178,9 @@ test("nested availability, prize and ranking entries cannot invent a closed even
     ["tournament.ranking.top.1.points", "12.35"], ["tournament.ranking.top.1.time", -1],
     ["tournament.ranking.top.1.matches", 1.5], ["tournament.ranking.user", []],
     ["tournament.ranking.user.rank", 0], ["tournament.ranking.user.rank", "1"]);
+  // The week's state is optional, but cannot be invented when present.
+  for (const invalid of [null, 2, -1, "1", true]) malformed.push(["tournament.ranking.final", invalid]);
+  for (const invalid of [null, -1, 1.5, "5000", true]) malformed.push(["tournament.ranking.ends", invalid]);
   const server = new GameServer({ dynamicUrl: "/game", userId: "player" } as PageSettings);
   let data: unknown;
   t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ data })));

@@ -20,8 +20,11 @@ The game config's "tournament_type" table has eight kinds:
              matches (_bot_match()).
     weekly   type 8: the player against the 3 bots of its "weekly_opponent",
              once a week (Monday to Sunday, UTC), ranked against everyone
-             else that week. The top 10 win the prize for their rank, as it
-             is when their own tournament ends.
+             else that week. Prizes wait for the end of the week, as the
+             game's card ("Ends in") and its last-ten-minutes warning say:
+             then the top 10 of the final ranking win the prize for their
+             rank (_end_weeks()). Paying at the end of each player's own
+             tournament gave the top prize to whoever played first.
     friends  private rooms of a public type, created by a player with at
              least MIN_FRIENDS friends (the game's own rule). Friends are
              the real players among the neighbours (sessions.friends()):
@@ -30,9 +33,10 @@ The game config's "tournament_type" table has eight kinds:
              not full after FRIENDS_WAIT gets bots, like a public one.
 
 A tournament ends when every match has been played, or the type's
-"duration" (24 hours) after it started; matches not played by then are
-lost with 0 points. The winner has the best total score, then the least
-time spent in matches: the client's own rule, so both show the same winner.
+"duration" (24 hours) after it started, and a weekly one at the end of its
+week at the latest; matches not played by then are lost with 0 points. The
+winner has the best total score, then the least time spent in matches: the
+client's own rule, so both show the same winner.
 
 How the client asks: POST tournaments/<service>.php, answered by service().
 
@@ -51,14 +55,19 @@ resources", and gives it back on screen when a reply says "refund", sending
 back in the reply that says "refund", so those commands change nothing: a
 client can't give itself back more than it paid. Prizes: the client shows
 the prize and reloads the town, but never asks for it, so the server pays
-it when the tournament ends.
+it when the tournament ends, or for the weekly one when its week ends: at
+the first town load or tournament request after that (town_loaded()), so a
+winner finds the prize in their town without opening the tournaments.
 
 Several players share a room, so tournaments live outside the villages, in
 storage's "tournaments" table, written with the villages (sessions.flush):
 
     {"id", "type": "1" to "8", "category", "reward_id": which of the type's prizes,
      "created", "date_ready", "date_finished", "week": weekly only,
-     "rank": weekly only, the rank the prize was paid for,
+     "rank": weekly only, there once the week's prizes are given: the final
+             rank, or None for a player who left. Before 19 October 2026 it
+             was set (and the prize paid) when the player's own tournament
+             ended, so those rooms are never paid again (_settled()),
      "private", "owner_id", "owner": friends tournaments only,
      "players": [{"user_id", "user_name", "level", "country", "team": 20 unit ids,
                   "bot", "abandonned": left after the start (the client's spelling),
@@ -415,28 +424,59 @@ def _week_table(type_id, week: int) -> list:
 
 def _finish(room: dict, now: int) -> None:
     """Every match played, or time is up: the ones left are lost, and the
-    winner gets the prize the client shows them."""
+    winner gets the prize the client shows them. A weekly tournament's
+    prize waits for the end of its week (_end_weeks())."""
     for match in room["matches"]:
         if not match["finished"]:
             _lose(match, now)
     room["date_finished"] = now
-    prizes = _types()[room["type"]]["prize"]
     if room.get("week") is not None:
-        rows = _week_table(room["type"], room["week"])
-        rank = next((i + 1 for i, (t, _) in enumerate(rows) if t is room), None)
-        room["rank"] = rank
-        if rank is not None and rank <= min(WEEKLY_TOP, len(prizes)):
-            print(f"Weekly tournament: rank {rank}, {_pay_prize(_humans(room)[0]['user_id'], prizes[rank - 1])}")
         return
     winner = _winner(room)
     if winner is not None and not winner["bot"]:
-        print(f"Tournament {room['id']}: {_pay_prize(winner['user_id'], prizes[int(room['reward_id'])])}")
+        prize = _types()[room["type"]]["prize"][int(room["reward_id"])]
+        print(f"Tournament {room['id']}: {_pay_prize(winner['user_id'], prize)}")
+
+
+def _deadline(room: dict) -> int:
+    """When time is up: the type's "duration" after the start, and for a
+    weekly tournament the end of its week if that comes first."""
+    end = int(room["date_ready"]) + _hours(room["type"]) * 3600
+    return min(end, _week_ends(room["week"])) if room.get("week") is not None else end
+
+
+def _settled(room: dict) -> bool:
+    """A weekly tournament whose rank (and prize) has been given."""
+    return "rank" in room
+
+
+def _end_weeks(now: int) -> None:
+    """Weeks that are over: their weekly tournaments still being played end,
+    and the top 10 of each week's final ranking win the prize for their
+    rank. Rooms paid before prizes waited for the end of the week keep
+    their place in the ranking but are not paid again."""
+    over = [t for t in __tournaments.values() if t.get("week") is not None and not _settled(t)
+            and now >= _week_ends(t["week"])]
+    for room in over:
+        if room["date_finished"] is None:
+            _finish(room, now)
+    for type_id, week in sorted({(t["type"], t["week"]) for t in over}):
+        prizes = _types()[type_id]["prize"]
+        ranks = {t["id"]: i + 1 for i, (t, _) in enumerate(_week_table(type_id, week))}
+        for room in over:
+            if room["type"] == type_id and room["week"] == week:
+                rank = room["rank"] = ranks.get(room["id"])
+                _touch(room)
+                if rank is not None and rank <= min(WEEKLY_TOP, len(prizes)):
+                    print(f"Weekly tournament, week {week}: rank {rank}, "
+                          f"{_pay_prize(_humans(room)[0]['user_id'], prizes[rank - 1])}")
 
 
 def _sweep(now: int) -> None:
     """Time moves on: rooms that waited long enough get bots, matches
     started and never finished are lost, tournaments whose time is up end,
-    and ones everybody is done with go."""
+    ones everybody is done with go, and weeks that are over give their
+    prizes."""
     for room in list(__tournaments.values()):
         if room["date_ready"] is None:
             if now - int(room["created"]) >= (FRIENDS_WAIT if room.get("private") else BOT_WAIT):
@@ -448,13 +488,14 @@ def _sweep(now: int) -> None:
                 if not match["finished"] and match["date_started"] and now - int(match["date_started"]) >= MATCH_TIMEOUT:
                     _lose(match, now)
                     _touch(room)
-            if _all_played(room) or now >= int(room["date_ready"]) + _hours(room["type"]) * 3600:
+            if _all_played(room) or now >= _deadline(room):
                 _finish(room, now)
                 _touch(room)
-        elif now - int(room["date_finished"]) >= KEEP_FINISHED or (
-                all(p["cleaned"] or p["abandonned"] for p in _humans(room))
-                and (room.get("week") is None or now >= _week_ends(room["week"]))):  # weekly ones make the week's ranking
-            _delete(room)
+        elif (room.get("week") is None or (_settled(room) and now >= _week_ends(room["week"]))) and (
+                now - int(room["date_finished"]) >= KEEP_FINISHED
+                or all(p["cleaned"] or p["abandonned"] for p in _humans(room))):
+            _delete(room)  # a weekly one stays for its week's ranking and prizes
+    _end_weeks(now)
 
 
 # What the client sees
@@ -475,7 +516,10 @@ def _ranking(room: dict, USERID: str) -> dict:
 
     top = {str(i + 1): row(*rows[i]) for i in range(min(WEEKLY_TOP, len(rows)))}
     rank = room.get("rank") or next((i + 1 for i, (t, _) in enumerate(rows) if t is room), len(rows) + 1)
-    return {"total_user": len(rows), "top": top, "user": dict(row(room, _seat(room, USERID)), rank=rank)}
+    # Added for the new client, which the Flash one ignores: whether the
+    # rank is final and its prize given, and when the week ends.
+    return {"total_user": len(rows), "top": top, "user": dict(row(room, _seat(room, USERID)), rank=rank),
+            "final": 1 if _settled(room) else 0, "ends": _week_ends(room["week"])}
 
 
 def _view(room: dict, USERID: str) -> dict:
@@ -721,6 +765,14 @@ def service(USERID: str, name: str, params: dict):
     now = _now()
     _sweep(now)
     return SERVICES[name](USERID, params if isinstance(params, dict) else {}, now)
+
+
+def town_loaded() -> None:
+    """A player's town is loading (get_player_info): give out the prizes of
+    a week that is over first, so a winner finds theirs in their town even
+    if nobody has opened the tournaments since. Call holding sessions.LOCK."""
+    _load()
+    _end_weeks(_now())
 
 
 def bookkeeping(cmd: str, args: list) -> str:

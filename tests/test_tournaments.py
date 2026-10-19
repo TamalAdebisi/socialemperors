@@ -23,6 +23,7 @@ from get_game_config import get_game_config
 NEWBIES, ADVANCED, WEEKLY = "1", "2", "8"   # gold, cash, and the weekly tournament
 WEDNESDAY_NOON = 1791979200                 # 2026-10-14 12:00 UTC
 HOUR = 3600
+WEEK_ENDS = WEDNESDAY_NOON + 4 * 24 * HOUR + 12 * HOUR  # its week's end: Monday 2026-10-19 00:00 UTC
 SWORDSMEN = [643] * 10 + [0] * 10
 BOTS = ["10000001", "10000002", "10000003"]
 DRAGONS = [int(it["id"]) for it in get_game_config()["items"] if it.get("groups") == "dragon"][:11]
@@ -530,49 +531,99 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(room["ranking"], {"total_user": 1, "top": {"1": {
             "user_id": self.me, "user_name": room["players"][0]["user_name"], "points": 0, "time": 0, "matches": 0}},
             "user": {"user_id": self.me, "user_name": room["players"][0]["user_name"], "points": 0, "time": 0,
-                     "matches": 0, "rank": 1}})
+                     "matches": 0, "rank": 1},
+            "final": 0, "ends": WEEK_ENDS})
 
-    def test_the_weekly_ranking_and_prizes(self):
+    def test_weekly_prizes_wait_for_the_end_of_the_week(self):
         rival = self.player()
         self.join(WEEKLY)
         self.join(WEEKLY, pid=rival)
         for bot in BOTS:
             self.play(bot, points="90.00")
-        ranking = self.tournament()["ranking"]
-        self.assertEqual(ranking["user"]["rank"], 1)
-        self.assertEqual(ranking["total_user"], 2)
-        self.assertEqual(self.gold(), 100000 - 500 + 100000)  # rank 1 of the week, so far
-        self.assertEqual(self.gift(847), 1)
+        room = self.tournament()
+        self.assertIsNotNone(room["date_finished"])
+        self.assertEqual((room["ranking"]["user"]["rank"], room["ranking"]["final"]), (1, 0))
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500, 0))  # first so far, but the week goes on
         for bot in BOTS:
             self.play(bot, points="50.00", pid=rival)
-        ranking = self.tournament(rival)["ranking"]
-        self.assertEqual(ranking["user"]["rank"], 2)
+        self.assertEqual((self.gold(rival), self.gift(777, rival)), (100000 - 500, 0))
+        self.now = WEEK_ENDS - 1
+        self.assertEqual(self.tournament()["ranking"]["final"], 0)
+        self.assertEqual(self.gold(), 100000 - 500)
+        self.now = WEEK_ENDS
+        ranking = self.tournament()["ranking"]
+        self.assertEqual((ranking["user"]["rank"], ranking["final"], ranking["total_user"]), (1, 1, 2))
         self.assertEqual([row["points"] for row in ranking["top"].values()], [270, 150])
-        self.assertEqual(self.gold(rival), 100000 - 500 + 75000)
-        self.assertEqual(self.gift(777, rival), 1)
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500 + 100000, 1))
+        self.assertEqual(self.tournament(rival)["ranking"]["user"]["rank"], 2)
+        self.assertEqual((self.gold(rival), self.gift(777, rival)), (100000 - 500 + 75000, 1))
 
-    def test_the_paid_weekly_rank_stays_frozen_and_cleaning_cannot_pay_again(self):
+    def test_playing_first_does_not_take_the_top_prize(self):
+        """What happened in October 2026: the week's first player won the
+        top prize with a weak score, before anybody else had played."""
         rival = self.player()
         self.join(WEEKLY)
+        for bot in BOTS:
+            self.play(bot, points="5.00")
+        self.assertEqual(self.tournament()["ranking"]["user"]["rank"], 1)
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500, 0))
+        self.assertEqual(self.ask("clean_tournament"), {"result": "OK"})  # done looking, still in the ranking
+        self.assertEqual(self.ask("get_tournament_info")["tournament_weekly"][WEEKLY]["full"], "1")
         self.join(WEEKLY, pid=rival)
         for bot in BOTS:
-            self.play(bot, points="50.00")
-        self.assertEqual(self.tournament()["ranking"]["user"]["rank"], 1)
-        for bot in BOTS:
             self.play(bot, points="90.00", pid=rival)
-        for _ in range(2):
-            ranking = self.tournament()["ranking"]
-            self.assertEqual(ranking["top"]["1"]["user_id"], rival)
-            self.assertEqual(ranking["top"]["2"]["user_id"], self.me)
-            self.assertEqual(ranking["user"]["rank"], 1)  # rank used when this prize was paid
-            self.assertEqual(self.gold(), 100000 - 500 + 100000)
-            self.assertEqual(self.gift(847), 1)
-        for _ in range(2):
-            self.assertEqual(self.ask("clean_tournament"), {"result": "OK"})
-            self.assertIsNone(self.tournament())
-            self.assertEqual(self.gold(), 100000 - 500 + 100000)
-            self.assertEqual(self.gift(847), 1)
-        self.assertEqual(self.ask("get_tournament_info")["tournament_weekly"][WEEKLY]["full"], "1")
+        self.assertEqual([row["user_id"] for row in self.tournament(rival)["ranking"]["top"].values()], [rival, self.me])
+        self.now = WEEK_ENDS + HOUR
+        self.assertEqual(self.tournament(rival)["ranking"]["final"], 1)
+        for _ in range(2):  # paid once, whatever comes next
+            tournaments.town_loaded()
+            self.ask("get_tournament_info")
+            self.ask("clean_tournament", pid=rival)
+        self.assertEqual((self.gold(), self.gift(847), self.gift(777)), (100000 - 500 + 75000, 0, 1))
+        self.assertEqual((self.gold(rival), self.gift(847, rival)), (100000 - 500 + 100000, 1))
+        self.assertEqual(vars(tournaments)["__tournaments"], {})  # both done with, after the week
+
+    def test_a_weekly_tournament_ends_with_its_week(self):
+        """Entered late on Sunday: the matches not played when the week ends
+        are lost, and the prize is the one for the rank reached by then."""
+        self.now = WEEK_ENDS - HOUR
+        self.join(WEEKLY)
+        self.play(BOTS[0], points="80.00")
+        self.now = WEEK_ENDS
+        room = self.tournament()
+        self.assertEqual(room["date_finished"], WEEK_ENDS)
+        self.assertEqual([m["finished"] for m in room["players"][0]["matches"]], [True] * 3)
+        self.assertEqual(room["ranking"]["user"]["points"], 80)
+        self.assertEqual((room["ranking"]["user"]["rank"], room["ranking"]["final"]), (1, 1))
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500 + 100000, 1))
+
+    def test_the_town_brings_the_prize(self):
+        """Nobody needs to open the tournaments after the week: loading a
+        town gives out the prizes first."""
+        self.join(WEEKLY)
+        for bot in BOTS:
+            self.play(bot)
+        self.now = WEEK_ENDS
+        tournaments.town_loaded()
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500 + 100000, 1))
+
+    def test_rooms_paid_before_the_change_are_not_paid_again(self):
+        """Until October 2026 a weekly prize was paid, and its rank kept, when
+        the player's own tournament ended. Such a player keeps their place in
+        the week's final ranking, without a second prize."""
+        rival = self.player()
+        tid = self.join(WEEKLY)["tournament"]["tournament_id"]
+        for bot in BOTS:
+            self.play(bot, points="50.00")
+        vars(tournaments)["__tournaments"][tid]["rank"] = 1  # as the old server left it, prize paid
+        self.join(WEEKLY, pid=rival)
+        for bot in BOTS:
+            self.play(bot, points="40.00", pid=rival)
+        self.now = WEEK_ENDS
+        self.assertEqual(self.tournament()["ranking"]["user"]["rank"], 1)
+        self.assertEqual((self.gold(), self.gift(847)), (100000 - 500, 0))  # the old server's payment isn't replayed here
+        self.assertEqual(self.tournament(rival)["ranking"]["user"]["rank"], 2)
+        self.assertEqual((self.gold(rival), self.gift(777, rival)), (100000 - 500 + 75000, 1))
 
     def test_the_eleventh_weekly_rank_has_no_prize(self):
         leaders = [self.player() for _ in range(10)]
@@ -589,8 +640,13 @@ class TournamentsTest(unittest.TestCase):
         self.assertEqual(room["ranking"]["user"]["rank"], 11)
         self.assertEqual(room["ranking"]["total_user"], 11)
         self.assertEqual(len(room["ranking"]["top"]), 10)
+        self.now = WEEK_ENDS
+        self.assertEqual(self.tournament()["ranking"]["user"]["rank"], 11)
         self.assertEqual(self.gold(), 100000 - 500)
         self.assertEqual(inventory.gifts(sessions.session(self.me)), gifts_before)
+        # Equal scores and times: the earlier entrant ranks higher.
+        self.assertEqual((self.gold(leaders[0]), self.gift(847, leaders[0])), (100000 - 500 + 100000, 1))
+        self.assertEqual((self.gold(leaders[9]), self.gift(649, leaders[9])), (100000 - 500 + 5000, 1))
 
     def test_once_a_week(self):
         self.join(WEEKLY)
@@ -660,6 +716,24 @@ class ServerTest(unittest.TestCase):
         self.assertIn('<dialog id="invite"', page)
         self.assertIn("window.showPopupInviteTournament = function", page)
         self.assertNotIn('"showPopupInviteTournament"', page)  # no longer one of the page's do-nothing calls
+
+    def test_loading_the_town_brings_last_weeks_prize(self):
+        vars(tournaments)["__tournaments"].clear()
+        now = [WEDNESDAY_NOON]
+        clock, tournaments._now = tournaments._now, lambda: now[0]
+        self.addCleanup(setattr, tournaments, "_now", clock)
+        sessions.session(self.pid)["maps"][0]["coins"] = 100000
+        room = tournaments.service(self.pid, "join_tournament", {"tournament_type_id": WEEKLY, "category": 1,
+                                                                  "team": SWORDSMEN, "tournament_id": ""})["tournament"]
+        for bot in BOTS:
+            match = {"victim_id": bot, "tournament_id": room["tournament_id"]}
+            tournaments.service(self.pid, "start_tournament_match", match)
+            tournaments.service(self.pid, "finish_tournament_match", dict(match, attacker_won=1, attacker_points="90.00"))
+        self.assertEqual(self.call("get_player_info.php").get_json()["map"]["coins"], 100000 - 500)
+        now[0] = WEEK_ENDS
+        town = self.call("get_player_info.php").get_json()
+        self.assertEqual(town["map"]["coins"], 100000 - 500 + 100000)
+        self.assertEqual(inventory._count(town["privateState"]["gifts"], 847), 1)
 
     def test_the_arena(self):
         reply = self.call("get_player_info.php", {"user": tournaments.ARENA})

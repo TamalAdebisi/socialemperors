@@ -4,6 +4,50 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 19 October 2026: weekly tournament prizes wait for the end of the week
+
+The owner noticed that the weekly tournament paid its prize as soon as a
+player finished the three bots, at the rank they held then: the week's
+first player took the Vulcano Dragon with a weak army. The owner asked for
+the prize to wait for the end of the week and everybody's scores. The
+original agrees: the weekly card counts down to the end of the week ("Ends
+in"), entering in the last ten minutes warns that the tournament is about
+to end, and the help asks players to reach the worldwide top 10.
+
+- **The week is the tournament.** At Monday 00:00 UTC the top 10 of the
+  week's final ranking win the prize for their rank. A weekly room still
+  being played then ends too: its unplayed matches are lost, as when a
+  room's 24 hours run out. Someone entering late on Sunday has until
+  midnight, which the game's own warning tells them.
+- **Paid at the first town load after the week.** The server has no clock
+  of its own that fires at midnight; it pays when a town loads or anybody
+  opens the tournaments, whichever comes first. A winner's town carries
+  the prize when it loads, without opening the tournaments.
+- **Prizes already paid stay paid.** The owner chose not to take back the
+  early dragons (the first player's and the owner's own, both rank 1 this
+  week). Those rooms keep their place in this week's final ranking but
+  aren't paid again; the other places are paid as usual, so a third
+  Vulcano Dragon can go to whoever is first at the end of this week.
+- **The new client says so.** A finished weekly room shows when the week
+  ends, the live rank and the prize that place would win, instead of
+  "prize awarded"; its deadline clock also stops at the week's end. The
+  ranking carries two fields for it (`final`, `ends`), which Flash ignores.
+- **Flash keeps its own message.** When a weekly room finishes, the Flash
+  game judges the player by their place at that moment and, in the top 10,
+  says "You won the tournament! Your reward will appear soon in your
+  storage!". "Soon" now means the end of the week, and a player overtaken
+  later gets the prize of their final place, or none. Holding the room
+  open until Sunday would keep Flash quiet, but would also block everyday
+  tournaments for the rest of the week, so the original text stays.
+- **One Vulcano Dragon for everybody else.** To even things out, the owner
+  asked to give every other player a Vulcano Dragon. It went into each
+  account's gift inbox (the friends' gifts, Everybody page), 12 accounts
+  in all, from the owner's account: one per account, and the player picks
+  the empire to take it into. Marked as a gift from storage, so it doesn't
+  use up the owner's daily free gifts. Done in the database directly, which
+  is safe for the inbox: unlike empires, the server doesn't hold it in
+  memory.
+
 ## 17 October 2026: the repository no longer names the live game
 
 The owner asked to keep the live game out of view: GitHub won't make a

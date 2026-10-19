@@ -352,7 +352,9 @@ fix its cause; that follow-up remains separate. No tournament slice remains.
       weekly top ten and own rank; original score order including
       departed entrants, separate authoritative winner, server-paid
       prizes in Storage and explicit Done acknowledgement, with the
-      server's existing 30-day finished-room retention.
+      server's existing 30-day finished-room retention. Weekly prizes
+      are paid when the week ends, by final rank, as the original's
+      "Ends in" countdown and last-ten-minutes warning imply.
 - [x] Friends' creation, minimum-neighbour check, waiting host's
       cancellation with refunds, and the community-page Invite notice
       (Everybody following #95). The old Facebook invitation delivery is not needed.
