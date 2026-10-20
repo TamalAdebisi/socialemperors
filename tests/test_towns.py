@@ -107,6 +107,7 @@ class TownsTest(unittest.TestCase):
         get_player_info(self.pid, TROLLS)
         self.send("gold_statue_conversion", 10)
         self.send("weekly_reward", "g", 2500)
+        trolls["xp"] = 29  # what level 2 needs
         self.send("rt_level_up", 2)
         self.assertEqual(trolls["coins"], 250 + 10 + 2500)
         self.assertEqual(trolls["level"], 2)

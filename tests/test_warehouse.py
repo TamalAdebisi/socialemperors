@@ -47,6 +47,11 @@ class WarehouseTest(unittest.TestCase):
         self.assertEqual(self.on_map(SWORDSMAN)[0][:4], [SWORDSMAN, 30, 31, 0])
         self.assertEqual(self.map["warehousedUnits"], {})
 
+    def test_no_unit_from_nothing(self):
+        self.send("add_unit_warehouse", X, Y, TOWN, SWORDSMAN)  # none on the map
+        self.send("place_warehoused_item", SWORDSMAN, 30, 31, 0, TOWN)  # none inside
+        self.assertEqual((self.map.get("warehousedUnits") or {}, self.on_map(SWORDSMAN)), ({}, []))
+
     def test_the_unit_that_walked_in_is_the_one_removed(self):
         self.map["items"] += [[SWORDSMAN, 10, 10, 0, 0, 0], [SWORDSMAN, X, Y, 0, 0, 0]]
         self.send("add_unit_warehouse", X, Y, TOWN, SWORDSMAN)

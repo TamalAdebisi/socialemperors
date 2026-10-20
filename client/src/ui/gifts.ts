@@ -218,7 +218,7 @@ export class GiftsWindow {
     const label = document.createElement("label");
     label.append("How many", count);
     const give = button("Give", () => void this.act({ action: "give", friend: friend.value, item: item.value, count: count.value }, true), true);
-    box.append(friend.parentElement!, item.parentElement!, label, give, note("It leaves your storage and goes to your friend's gifts."));
+    box.append(friend.parentElement!, item.parentElement!, label, give, note("It leaves your storage now and goes into your friend's when they take it."));
     return box;
   }
 }

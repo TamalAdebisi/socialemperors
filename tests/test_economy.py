@@ -88,32 +88,49 @@ class LevelsTest(unittest.TestCase):
     def cash(self):
         return self.save["playerInfo"]["cash"]
 
+    def earn(self, level):
+        """The experience for this level, then the game's level up, as in play."""
+        self.map["xp"] = levels.need(level)
+        self.send("rt_level_up", level)
+
     def test_a_new_town_is_paid_up_to_level_one(self):
         self.assertEqual(self.map["levelPaid"], 1)
 
     def test_each_level_up_pays_its_prize_once(self):
         for level in (2, 3, 4, 5, 6):
-            self.send("rt_level_up", level)
+            self.earn(level)
         self.send("rt_level_up", 6)  # sent twice
         self.assertEqual((self.map["wood"], self.map["food"]), (450, 50))
         self.assertEqual(self.cash(), 5 + 2)
         self.assertEqual(self.map["levelPaid"], 6)
 
     def test_the_score_at_start_pays_a_level_up_the_server_missed(self):
-        self.map.update(level=9, levelPaid=9, xp=get_xp_from_level(8))
-        self.send("rt_publish_score", get_xp_from_level(10))  # the xp where level 11 starts
+        self.map.update(level=9, levelPaid=9, xp=levels.need(11))  # the experience got there, the level ups never came
+        self.send("rt_publish_score", levels.need(11))
         self.assertEqual(self.map["level"], 11)
         self.assertEqual(self.cash(), 10 + 2)
         self.send("rt_level_up", 10)
         self.send("rt_level_up", 11)  # the same levels again: nothing more
         self.assertEqual(self.cash(), 12)
 
-    def test_a_score_that_goes_down_and_up_again_pays_once(self):
-        self.map.update(level=9, levelPaid=9, xp=get_xp_from_level(8))
+    def test_the_score_is_the_servers_own(self):
+        self.map.update(level=9, levelPaid=9, xp=levels.need(9))
+        self.send("rt_publish_score", levels.need(30))  # an edited request
+        self.assertEqual((self.map["xp"], self.map["level"], self.cash()), (levels.need(9), 9, 0))
+        self.send("rt_publish_score", 0)
+        self.assertEqual(self.map["xp"], levels.need(9))
+
+    def test_a_level_up_the_experience_is_not_there_for(self):
+        self.map.update(level=9, levelPaid=9, xp=levels.need(9))
+        self.send("rt_level_up", 30)  # an edited request, or a game still showing a town since rolled back
+        self.send("rt_level_up", 10)  # one level at a time is no way round it
+        self.assertEqual((self.map["level"], self.map["levelPaid"], self.map["xp"], self.cash()), (9, 9, levels.need(9), 0))
+
+    def test_a_level_up_a_little_ahead_of_the_servers_count(self):
+        # Within a tenth of the level's experience (39 of 391 here): an action whose experience the server missed.
+        self.map.update(level=9, levelPaid=9, xp=levels.need(10) - 30)
         self.send("rt_level_up", 10)
-        self.send("rt_publish_score", get_xp_from_level(8))  # back to level 9
-        self.send("rt_level_up", 10)
-        self.assertEqual(self.cash(), 10)
+        self.assertEqual((self.map["level"], self.map["xp"], self.cash()), (10, levels.need(10), 10))
 
     def test_levels_gained_on_a_quest(self):
         self.map.update(level=19, levelPaid=19, xp=get_xp_from_level(18))
@@ -123,7 +140,7 @@ class LevelsTest(unittest.TestCase):
         self.assertEqual(self.cash(), 10 + 2)
 
     def test_level_100_is_the_last(self):
-        self.map.update(level=99, levelPaid=99)
+        self.map.update(level=99, levelPaid=99, xp=levels.need(100))
         self.send("rt_level_up", 100)
         self.assertEqual(levels.reached(self.save, self.map, 101), "")
         self.assertEqual(self.cash(), 10)
@@ -164,8 +181,9 @@ class BackPayTest(unittest.TestCase):
         village = sessions.session(pid)
         village["maps"] = save["maps"]
         village["playerInfo"]["cash"] = 0
-        do_command(pid, "rt_level_up", [12])
-        do_command(pid, "rt_level_up", [13])
+        for level in (12, 13):
+            village["maps"][0]["xp"] = levels.need(level)
+            do_command(pid, "rt_level_up", [level])
         self.assertEqual(village["playerInfo"]["cash"], 2)
 
 
