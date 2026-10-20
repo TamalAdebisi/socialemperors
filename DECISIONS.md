@@ -48,9 +48,11 @@ the second.
   the map.** Both were done anyway "so it is not lost", which could make
   units from nothing. The logs show no one did.
 - **The rollback** (the owner: "let him keep the green bahamut but
-  everything else take it back"), done on the live game with the server
-  stopped for a moment, so its copy of the empires couldn't write over the
-  change. For each account: the experience every pass gave (counted from
+  everything else take it back"), done on the live game before this change
+  deployed (the owner wanted to play): written to the database while both
+  empires were idle, each write guarded so a newer save would have been
+  left alone, then the server restarted at once to load them, and the
+  database read again afterwards. For each account: the experience every pass gave (counted from
   the server's log, placement by placement), the levels it bought, and
   those levels' prizes; the levels' paid mark goes back too, so real play
   pays them again. The offer pack's units go, but the Green Bahamut Dragon,
