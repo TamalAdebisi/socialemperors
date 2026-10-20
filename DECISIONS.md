@@ -4,6 +4,36 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: villagers take no room
+
+The owner asked for the population cap to apply to fighting units only:
+villagers are needed at the farms, mines and building work, so they
+shouldn't use up room meant for an army. The original counted them like
+any other unit, so this is the owner's rule over the original's.
+
+- **Done in the game config the server sends,** not in either client.
+  Both the Flash client and ours count a town's people from each unit's
+  `population` there, and only train or place a unit while it fits. The
+  server gives the four workers (the human villager, man and woman, and
+  Mr. and Mrs. Troll) a population of 0, so both clients stop counting
+  them, and the Flash client needs no patch. Code:
+  `get_game_config.villagers_take_no_room`.
+- **Shown everywhere as before:** the top bar and the Army window count
+  the soldiers only; a villager's card shows 0 population.
+- **Our client never stops a villager for room,** even in a town over its
+  room (a house burnt in a raid). The Flash client, which checks "people
+  plus 0 within the room", stops one in that case only, until the house is
+  repaired or a unit leaves. Rare, and fixing it would mean changing the
+  Flash client's code.
+- **No new limit takes the cap's place.** A town can now train as many
+  villagers as its food pays for (50 each). Hundreds walking about could
+  slow the game down; the owner can ask for a limit if that happens.
+- **One goal gets harder.** "Have 40 people" (goal 56) counts the same
+  people as the top bar, so villagers no longer help reach it. Both
+  clients agree on it.
+- Spells and specials that throw only small units (population under 4 or
+  6) still throw villagers: 0 is as small as 1.
+
 ## 20 October 2026: a cash box on the admin page
 
 The owner joined a tournament with more units than they meant to and asked

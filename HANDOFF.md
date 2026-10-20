@@ -38,6 +38,19 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Villagers take no room (20 October).** The owner's rule: the
+  population cap is for fighting units. The server's game config gives the
+  four workers a population of 0, which both clients follow (the Flash
+  client unpatched). See DECISIONS.md (20 October). Tests:
+  `tests/test_population.py`, `e2e/tests/train.mjs` (rewritten: villagers
+  train in a full town).
+- **Browser tests without the art.** The tests ignore missing pictures, so
+  many run with `SE_ASSETS_URL` pointing at any local address that answers
+  404 to everything (with CORS). Those that read a picture's pixels or
+  wait for a sprite fail that way: `lessons`, `soul-mixer` and
+  `rider-training` fail so on `main` too. With the real art set
+  (`SE_E2E_LIVE_ASSETS`), run them all.
+
 - **A cash box on the admin page (20 October).** The owner asked for 50
   cash (a tournament joined with too many units), then for it to be taken
   off again, then for a way to do it themselves. An empire's admin page now

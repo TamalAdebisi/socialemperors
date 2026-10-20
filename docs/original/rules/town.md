@@ -284,7 +284,10 @@ of the original's searches measure from.
   `POPULATION_INCREASE` (10). *Same: `client/src/rules/training.ts` (`population`).*
 - **People.** The `population` of the player's units on the map, plus
   units inside buildings that give room or hold units. Wild animals and
-  enemies don't count. *Same: `client/src/rules/training.ts`.*
+  enemies don't count. Villagers count, 1 each. *Ours: the same count
+  (`client/src/rules/training.ts`), but villagers take no room, the
+  owner's rule: the server's config gives them 0, for both clients
+  (DECISIONS.md, 20 October 2026).*
 - **A unit in training takes no room until it's out,** so two buildings
   training at once can go one over. *Same (DECISIONS.md, training).*
 - **The Library does nothing** in this client but count against its

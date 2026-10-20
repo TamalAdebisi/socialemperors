@@ -53,6 +53,16 @@ test("a unit from storage obeys its kind's limit, inside buildings too; the Mumm
   assert.equal(storageChoices(t, stored(mummy), 5).place, true);
 });
 
+test("a unit from storage needs room among the town's people; a villager, which takes none, always fits", () => {
+  const spearman = itemInfo(config({ id: "509", name: "Spearman", type: "u", subcat_functional: "78", population: "1" }));
+  const villager = itemInfo(config({ id: "500", name: "Villager I", type: "u", subcat_functional: "71", population: "0" }));
+  const t = town([[509, 1], [500, 1]]);
+  const stored = (item: ItemInfo) => ({ item, gift: false, count: 1 });
+  assert.deepEqual(storageChoices(t, stored(spearman), 0), { place: false, sell: true, why: "No room for more people" });
+  assert.equal(storageChoices(t, stored(villager), 0).place, true);
+  assert.equal(storageChoices(t, stored(villager), -2).place, true, "even over the town's room");
+});
+
 test("selling from storage gives a twentieth back; nothing for cash things or the Dock", () => {
   assert.deepEqual(storageRefund(TOWER), { resource: "stone", amount: 6 });
   assert.equal(storageRefund(FLAG), null);

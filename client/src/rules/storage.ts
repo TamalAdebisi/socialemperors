@@ -51,8 +51,9 @@ export function storageChoices(town: Town, stored: Stored, room = 0): { place: b
   if (item.race !== town.race && item.race !== "n" && item.race !== "a") {
     return { place: false, sell, why: town.race === "t" ? "For a human town" : "For a troll town" };
   }
-  // A unit needs room among the town's people (`room`: how much there is, rules/training.ts).
-  if (item.isUnit && room < item.population) {
+  // A unit needs room among the town's people (`room`: how much there is, rules/training.ts);
+  // one that takes none (a villager) always fits, as in the Flash client.
+  if (item.isUnit && item.population > 0 && room < item.population) {
     return { place: false, sell, why: "No room for more people" };
   }
   const most = atLimit(town, item);
