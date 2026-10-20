@@ -1229,6 +1229,12 @@ If a task needs one of these, stop and say what's needed and why.
 
 ## Learned the hard way
 
+- **Two browser tests depend on the machine** (20 October 2026).
+  `contact` clicks the classic bar's Discord link and waits for its tab,
+  which a sandbox with no way out to Discord never opens: it fails on main
+  there too, and passes where the network allows. `combat-controls` needs
+  the Bull Gladiator's sheet (`2126_bull_glad`), which a local art export
+  with a short `TIME_LIMIT` skips; export it with `TIME_LIMIT=2400`.
 - **Both clients play the same empire.** A rule we get wrong changes the
   save, not just the look, and the Flash client then sees it. Check the
   save in the browser tests, not only the screen.
