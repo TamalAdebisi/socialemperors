@@ -1,6 +1,6 @@
 # Roadmap
 
-**Special buildings delivered in [#110](https://github.com/TamalAdebisi/socialemperors/pull/110):** machines, Unit Warehouse, rider training/taming and the Supreme temple are merged, together with Soul Mixer help and safe legacy collection. New mixing still needs four missing original configuration fields. [The delivery record](docs/verification-special-buildings.md) retains exact local checks and limits.
+**Special buildings delivered in [#110](https://github.com/TamalAdebisi/socialemperors/pull/110):** machines, Unit Warehouse, rider training/taming and the Supreme temple are merged, together with Soul Mixer help and safe legacy collection. New mixing works since 20 October 2026, with tables rebuilt from the community wiki. [The delivery record](docs/verification-special-buildings.md) retains exact local checks and limits.
 
 **Combat controls in [#98](https://github.com/TamalAdebisi/socialemperors/pull/98),
 17 October:** Bull Gladiator and other units use their visible animation
@@ -220,9 +220,16 @@ numbers, because the server writes them into the game config.
       above that it shrinks along one curve (`cash_price`: 30 becomes 19,
       120 becomes 44, 260 becomes 71, 450 becomes 98). It applies to the
       units book, everything sold for cash, and the two Bahamut collections
-      bought outright; the offer packs, mystery boxes and darts follow.
+      bought outright, the offer packs, mystery boxes and darts (switched on
+      20 October 2026: Build → Offers, and a darts board each week).
       Speeding up a wait keeps the game's price. An active player earns
       about 10 cash a day, so the best things cost about a week of playing
+- [x] Claims checked (20 October 2026, `trust.py`): boss prizes, prizes
+      put in storage, placing from storage and the merchant's deals, which
+      a player who edits requests could have used to get anything.
+- [ ] The things the game places for free (`buy` with its free flag:
+      dragons hatching, temple dragons, riders, camps, trees growing back)
+      are still believed; each needs a check in its own feature.
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the
       experience and battle gold the game reports, so a determined cheater
       could fake levels, and with them their cash. Checking battles on the
@@ -532,10 +539,10 @@ merging the two wait fixes with that separate failure documented.
         ([CLIENT.md](CLIENT.md#dragon-riders-and-taming)).
 
 The Soul Mixer has its original-art window, generic later rules and queue
-protocol. **Play remains blocked by missing original content**:
-`breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` and
-`SOUL_MIXER_MIN_LEVEL` are absent from preserved config/history/upstream.
-No substitute tables ship. See [research and limits](docs/original/rules/soul-mixer.md).
+protocol, and plays since 20 October 2026: its four missing tables
+(`breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS`,
+`SOUL_MIXER_MIN_LEVEL`) are rebuilt from the community wiki at the owner's
+request, in `config/soulmixer_wiki.json`. See [the rules and the tables](docs/original/rules/soul-mixer.md).
 
 ## How we add a missing feature
 

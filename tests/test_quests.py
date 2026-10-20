@@ -151,6 +151,15 @@ class QuestsTest(unittest.TestCase):
         self.play(GOLEM_ISLAND, item_rewards={str(GOLEM): 1}, activators_left=0)
         self.assertEqual(self.pState["gifts"][GOLEM], 1)
 
+    def test_only_the_bosss_own_prize(self):
+        # Made-up prizes, too many of the real one, a loss: none of it reaches the gift box (trust.py).
+        self.play(GOLEM_ISLAND, item_rewards={str(GOLEM): 5, "793": 1}, activators_left=0)
+        self.play(GOLEM_ISLAND, win=False, item_rewards={str(GOLEM): 1}, activators_left=0)
+        self.play(ISLE_ORDER[0], item_rewards={"793": 1})
+        gifts = self.pState["gifts"]
+        self.assertEqual(gifts[GOLEM], 1)
+        self.assertEqual(gifts[793] if len(gifts) > 793 else 0, 0)
+
     def test_a_whole_campaign(self):
         for difficulty in (1, 2, 3):
             for quest_id in ISLE_ORDER:

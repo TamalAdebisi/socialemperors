@@ -5137,3 +5137,49 @@ button.world-piece:hover img {
   width: 18px;
   vertical-align: middle;
 }
+
+/* The shop's Offers (ui/offers.ts): one card a row, for the packs' banners
+   (565 x 95), or their prizes' pictures. */
+.shop-items.offer-items {
+  grid-template-columns: 1fr;
+}
+
+.offer-picture {
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.offer-picture > img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.offer-prizes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.offer-prizes img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.offer-rarities {
+  display: grid;
+  gap: 2px;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.offer-card .shop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}

@@ -31,7 +31,7 @@ scoped PRs [#100](https://github.com/TamalAdebisi/socialemperors/pull/100),
 The merge commit retains their histories and latest menus/control work.
 No required check or merge rule was bypassed. The automatic deployment is
 authorized; these local checks do not assert a production gameplay test.
-New Soul Mixer recipes remain blocked by four missing original configuration fields;
+New Soul Mixer recipes remained blocked by four missing original configuration fields (since rebuilt from the wiki, 20 October);
 window/help and safe legacy collection are delivered. Existing Beta 1,
 combat and later-content holds remain. Exact checks and retained failures
 follow below; status-only receipt edits change no game, art or test file.
@@ -84,6 +84,13 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **The server checks more of what the client claims (20 October):**
+  boss prizes, prizes put in storage, placing from storage and the
+  merchant's deals (`trust.py`; DECISIONS.md). Free placements (`buy` with
+  the free flag) are the open one, in ROADMAP.md.
+- **Offers and darts (20 October):** Build → Offers sells the game's 65
+  offer packs and mystery boxes for earned cash; darts play a board a week
+  (`rules/offers.ts`, `ui/offers.ts`, `darts_every_week`; DECISIONS.md).
 - **Chained buildings free their units (20 October):** 108 sold for gold,
   their chains break with time, then Free gives the units
   (`chained_units.py`, `chained.py`, `rules/chained.ts`; DECISIONS.md).
@@ -275,16 +282,18 @@ follow below; status-only receipt edits change no game, art or test file.
   [The verification record](docs/verification-dragon-riders.md) preserves
   every failed/interrupted attempt and the measured new-fixture calibration.
 
-- **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
-  recovered its window, generic rules and queue commands; 0926 predates it.
-  Archived/historical config and preservation upstream have no
-  `breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` or
-  `SOUL_MIXER_MIN_LEVEL`. Its original-art window/help are built, but new
-  mixing safely stays unavailable; all entry and cash spending are blocked.
-  Known completed legacy work can be collected without spending, never by
-  treating an unknown or malformed timestamp as finished.
-  Recover genuine later config to enable it; never infer those tables
-  from unit strength or community guesses. [Research and coverage](docs/original/rules/soul-mixer.md).
+- **The Soul Mixer works (20 October 2026), with its tables rebuilt from
+  the wiki.** Local 1.4.07 research recovered its window, generic rules and
+  queue commands; 0926 predates it. Archived/historical config and the
+  preservation upstream have no `breeding_order`, `sm_training_time`,
+  `SOUL_MIXER_POWERUPS_LEVELS` or `SOUL_MIXER_MIN_LEVEL`. **The owner
+  overruled the earlier rule against community data**: the tables now come
+  from the Tips Wiki's "Soul Mixer Combinations" page (uploaded by the
+  owner) and unit strength, in `config/soulmixer_wiki.json`, made by
+  `tools/soul_mixer_wiki.py`, every value with its source. A genuine
+  original config, if found, replaces it unchanged. Without tables, new
+  mixing stays unavailable and finished old mixes still collect.
+  [Research and coverage](docs/original/rules/soul-mixer.md).
   Exact `c944e853` passed server 459 (450 passed, nine existing skips), types,
   client 420/420 and focused Chromium 1/1 (67s). All three desktop/help/phone
   captures and the clean server log were reviewed. A later saved-integer
@@ -1143,8 +1152,8 @@ together:
 - [x] Units book completed in #105: original configured categories,
       recognition, missing-unit purchases, previews and saved rewards.
 - [x] The unit warehouse (`warehouse.py`, `rules/warehouse.ts`, `ui/warehouse.ts`): admission, paging, deployment, capacity and storage/reset; desktop/phone save coverage. Delivery verification is recorded with the special-building work.
-- [ ] Soul Mixer: window/generic queue support built; playable mixing
-      waits for missing original content described above.
+- [x] Soul Mixer: playable since 20 October 2026, its tables rebuilt from
+      the community wiki at the owner's request (above).
 - [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
 - [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
 - [x] Darts completed in #106: original schedule, seeded board,
@@ -1161,10 +1170,9 @@ together:
 - [x] Missing-hall notice completed in #109: acknowledge the original
       warning without replacing a hall or changing the save. New menu
       spending credits its mission once. Assault handling stays combat-owned.
-- [ ] Offer packs and mystery boxes are for cash. Cash is earned by
-      playing here and nothing is sold (ROADMAP.md, "Cash"): check
-      `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before
-      showing these at all.
+- [x] Offer packs and mystery boxes: the owner said yes (20 October 2026).
+      Build → Offers sells all 65 for earned cash at `cash_price`; darts
+      run again on the game's boards, one a week (CLIENT.md, "Offers").
 
 As each lands, its goals stop saying "Coming soon": update the count in
 CLIENT.md.
@@ -1206,7 +1214,6 @@ Ask these in plain words, with pictures where it's about looks (CLAUDE.md
 allows pictures when there's a decision), and carry on with something else
 meanwhile.
 
-- Offer packs and mystery boxes: in or out (task 8).
 - Full retirement of the classic client (task 10); hiding its choices is
   already authorized.
 - AI-upscaled art: still open.
@@ -1235,6 +1242,18 @@ If a task needs one of these, stop and say what's needed and why.
 
 ## Learned the hard way
 
+- **Two browser tests depend on the machine** (20 October 2026).
+  `contact` clicks the classic bar's Discord link and waits for its tab,
+  which a sandbox with no way out to Discord never opens: it fails on main
+  there too, and passes where the network allows. `combat-controls` needs
+  the Bull Gladiator's sheet (`2126_bull_glad`), which a local art export
+  with a short `TIME_LIMIT` skips; export it with `TIME_LIMIT=2400`.
+  `structure-idle` and `tournament-weekly` fail the same way on main with
+  a local export that lacks `1527_dragonCity_cross` and some army sheets,
+  and `speed` finds the game script sent uncompressed on such a machine;
+  all three were seen failing on main on 20 October 2026, not caused by
+  that day's changes. Next step: a full local art export, and a look at
+  why `compress.py` skips the script there.
 - **Both clients play the same empire.** A rule we get wrong changes the
   save, not just the look, and the Flash client then sees it. Check the
   save in the browser tests, not only the screen.

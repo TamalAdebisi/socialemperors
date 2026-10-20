@@ -12,6 +12,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import economy
 import sessions
 from command import command, do_command
 from get_game_config import MORE_BARRACKS, get_game_config, get_item_from_id as get_game_config_item
@@ -122,7 +123,7 @@ class ShopTest(unittest.TestCase):
 
     def test_an_offer_pack(self):
         self.send("buy_offer_pack", TOWN, 1)
-        self.assertEqual(self.cash(), 500 - 25)
+        self.assertEqual(self.cash(), 500 - economy.cash_price(25))  # the game's 25, shrunk
         self.assertEqual([self.map[k] for k in ("coins", "stone", "food", "wood", "xp")],
                          [15000, 15000, 15000, 15000, 500])
         self.assertEqual(self.map["store"], {"27": 1, "550": 1, "555": 1})
@@ -134,7 +135,7 @@ class ShopTest(unittest.TestCase):
     def test_a_pack_with_a_prize_draw(self):
         self.send("buy_offer_pack", TOWN, 11, 662)
         self.assertEqual(self.map["store"], {"662": 1})
-        self.assertEqual(self.cash(), 500 - 60)
+        self.assertEqual(self.cash(), 500 - economy.cash_price(60))
 
     def test_a_prize_the_pack_does_not_have(self):
         self.send("buy_offer_pack", TOWN, 11, TOWER)
@@ -142,20 +143,36 @@ class ShopTest(unittest.TestCase):
 
     def test_a_super_offer_pack(self):
         self.send("buy_super_offer_pack", TOWN, 65, "2016,2042", 1)  # the client's price is not used
-        self.assertEqual(self.cash(), 500 - 100)
+        self.assertEqual(self.cash(), 500 - economy.cash_price(100))  # two prizes: the second price
         self.assertEqual(self.map["store"], {"2016": 1, "2042": 1})
         self.assertEqual(self.pState["mana"], 5)
         self.assertEqual(self.map["xp"], 0)  # shown but not given, as in the client
         self.assertEqual(self.pState["gifts"], [])
+
+    def test_a_super_offer_packs_four_prizes_cost_its_third_price(self):
+        # One of the rarest row and three of the others, as the game's third choice gives.
+        self.send("buy_super_offer_pack", TOWN, 65, "2016,2042,2042,2042", 1)
+        self.assertEqual(self.cash(), 500 - economy.cash_price(200))
+        self.assertEqual(self.map["store"], {"2016": 1, "2042": 3})
+
+    def test_a_super_offer_pack_with_three_prizes_is_no_choice_of_the_box(self):
+        self.send("buy_super_offer_pack", TOWN, 65, "2016,2042,2042", 1)
+        self.assertEqual((self.map["store"], self.cash()), ({}, 500))
 
     def test_a_super_offer_pack_with_a_stranger(self):
         self.send("buy_super_offer_pack", TOWN, 65, f"2016,{TOWER}", 100)
         self.assertEqual((self.map["store"], self.cash()), ({}, 500))
 
     def test_the_merchants_deal(self):
-        self.send("add_items_store", json.dumps([TOWER, SWORDSMAN]), 7)
-        self.assertEqual(self.cash(), 493)
-        self.assertEqual(self.map["store"], {str(TOWER): 1, str(SWORDSMAN): 1})
+        # Castle I (13) and Castle II (17): the merchant's kind of building, at no less than half price.
+        self.send("add_items_store", json.dumps([27, 28]), 14)
+        self.assertEqual(self.cash(), 500)
+        self.assertFalse(self.map.get("store"))  # too little
+        self.send("add_items_store", json.dumps([TOWER, SWORDSMAN]), 7)  # not his to sell
+        self.assertEqual(self.cash(), 500)
+        self.send("add_items_store", json.dumps([27, 28]), 24)
+        self.assertEqual(self.cash(), 476)
+        self.assertEqual(self.map["store"], {"27": 1, "28": 1})
 
     # Unit collections
 
