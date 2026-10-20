@@ -7,12 +7,13 @@ unit for gold, in New, Limited Edition, its own tab. Once built, its chains
 take a while to break (chained.py); then Free puts its unit beside it, or
 both units for a god and colossus pair, and the building goes.
 
-    gold    by the units' strength: 10 gold for each point of health
+    gold    by the units' strength: 5 gold for each point of health
             times attack, rounded up to 10,000. The owner found the first
             prices (by the units book's price) far too low for the
             strongest units (DECISIONS.md, 20 October 2026): a Draggy
-            costs 50,000, a 3-Head Dragon about 2.5 million, a Genesis god
-            about 6 million.
+            costs 30,000, a 3-Head Dragon 1.25 million, a Genesis god about
+            3 million, a god and colossus pair 3.6 to 4.2 million (the owner
+            halved the first rate of 10, DECISIONS.md).
     once    each Chained building can be bought once per empire, ever
             (shop.py keeps the list in privateState.chainedBought)
     wait    an hour for each cash of the units' units-book price (the
@@ -48,7 +49,7 @@ CHAINED = {
     3082: (2155,), 3083: (2156,), 3084: (2093, 2094), 3087: (2160,), 3090: (2089, 2090), 3091: (2167,),
     3093: (842,), 3094: (2075, 2077), 3096: (853, 875), 3097: (2169,), 3098: (2171,), 3100: (2174,),}
 
-GOLD_PER_STRENGTH = 10   # gold for each point of health times attack
+GOLD_PER_STRENGTH = 5   # gold for each point of health times attack
 ROUND_TO = 10_000
 VALUE_OUTSIDE_THE_BOOK = 150   # the units book's most common price, before economy.cash_price
 TOP_LEVEL, OTHER_LEVEL = 20, 10

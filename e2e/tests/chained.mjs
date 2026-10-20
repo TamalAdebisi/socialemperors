@@ -22,7 +22,7 @@ export default async function chained({ newPlayer, offlineVillage }) {
   const { page } = player;
   await player.closeLevelUps();
   const price = await page.evaluate((id) => window.seHome.parts.items.get(id).cost, CHAIN);
-  assert.equal(price, 7_290_000, "priced by the god's and the colossus's strength");
+  assert.equal(price, 3_650_000, "priced by the god's and the colossus's strength");
   const hours = await page.evaluate((id) => window.seHome.parts.items.get(id).chainHours, CHAIN);
 
   await player.press("Build");
