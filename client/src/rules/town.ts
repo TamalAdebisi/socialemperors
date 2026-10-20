@@ -54,6 +54,8 @@ export interface PlayerInfo {
   /** Buildings opened before their level, for cash: { "<item id>": true }. */
   privateState?: {
     unlockedEarlyBuildings?: Record<string, unknown>;
+    /** Chained buildings bought, once per empire (the server's shop.py). */
+    chainedBought?: number[];
     gifts?: Box;
     /** Goals done, and paid (rules/goals.ts). */
     completedMissions?: number[];
@@ -152,6 +154,8 @@ export interface Town {
   expansions: Set<number>;
   /** Buildings opened before their level, for cash: the shop sells them already. */
   unlocked: Set<number>;
+  /** Chained buildings bought already: each once per empire (rules/shop.ts). */
+  chainedBought?: Set<number>;
   /** Storage, by item id: gifts and prizes (shared by the player's towns), and what this town put away. */
   gifts: Map<number, number>;
   store: Map<number, number>;
@@ -203,6 +207,7 @@ export function readTown(info: PlayerInfo, items: Map<number, ItemInfo>): Town {
     skin: map.skin ?? 0,
     expansions: new Set(map.expansions),
     unlocked: new Set(Object.keys(info.privateState?.unlockedEarlyBuildings ?? {}).map(Number)),
+    chainedBought: new Set((info.privateState?.chainedBought ?? []).map(Number)),
     gifts: readBox(info.privateState?.gifts),
     store: readBox(map.store),
     warehouse: readBox(map.warehousedUnits),
