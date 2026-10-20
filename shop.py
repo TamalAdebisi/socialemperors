@@ -63,9 +63,17 @@ def _trained_here(map: dict, unit_id) -> bool:
     return False
 
 
+# One a town, as the config's units_limit says, for the buildings it matters for:
+# the Soul Mixer (each mixes as fast as the one before; version.py keeps one of
+# the extras some towns bought before this was checked).
+ONE_PER_TOWN = {1529}
+
+
 def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multiplier) -> str:
     map = save["maps"][town_id]
     note = ""
+    if int(item_id) in ONE_PER_TOWN and any(row[0] == int(item_id) for row in map["items"]):
+        return f"Refused: a town has one {item_id} at most."
     chained = bool(get_attribute_from_item_id(item_id, "chained_units"))
     if chained and int(item_id) in save["privateState"].get("chainedBought", []):
         return f"Refused: Chained building {item_id} was bought already (once per empire)."

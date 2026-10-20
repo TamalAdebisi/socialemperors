@@ -14,6 +14,7 @@ import sessions
 from command import do_command
 from get_game_config import get_game_config, get_item_from_id
 import soul_mixer
+import version
 
 
 TABLES = ("SOUL_MIXER_MIN_LEVEL", "SOUL_MIXER_POWERUPS_LEVELS")
@@ -269,6 +270,23 @@ class WikiTablesTest(unittest.TestCase):
 
     def send(self, command, *args):
         do_command(self.pid, command, list(args))
+
+    def test_one_soul_mixer_a_town(self):
+        self.map["coins"] = 10000
+        self.send("buy", 1529, 60, 60, 0, 0, 0, 1, "b")
+        self.assertEqual(sum(row[0] == 1529 for row in self.map["items"]), 1, "the town has one already")
+        self.assertEqual(self.map["coins"], 10000)
+
+    def test_extra_mixers_from_before_go_and_are_paid_back(self):
+        busy = [1529, 70, 70, 0, 0, 0, [], {"bq": "7"}]
+        idle = [[1529, 60 + n, 60, 0, 0, 0] for n in range(3)]
+        self.map["items"] += [busy] + idle
+        self.map["coins"] = 0
+        version.one_soul_mixer(self.save)
+        kept = [row for row in self.map["items"] if row[0] == 1529]
+        self.assertEqual(len(kept), 2, "the mixing one and the one with units inside stay")
+        self.assertIn(busy, kept)
+        self.assertEqual(self.map["coins"], 3 * int(get_item_from_id(1529)["cost"]))
 
     def test_the_mixer_works_with_the_wikis_tables(self):
         self.assertTrue(soul_mixer.available())

@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: one Soul Mixer a town
+
+The game's data allows one Soul Mixer a town (its `units_limit` is 1), but
+neither the server nor the new client checked it, and one player bought
+ten while the mixer did nothing. Now that it mixes, each mixer would mix
+as fast as the others, so both refuse a second (`shop.py` `ONE_PER_TOWN`,
+`rules/shop.ts`). Towns that already have several keep one, plus any that
+is mixing or holds units, and the idle extras are taken away with their
+gold price (2,000 each) paid back, when the save next loads (`version.py`
+0.10a). Not a penalty: the game let them buy those.
+
 ## 20 October 2026: the Soul Mixer's tables, rebuilt from the wiki
 
 The Soul Mixer's window, rules and commands were built, but the original's
