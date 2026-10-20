@@ -1836,9 +1836,11 @@ a player's War Troll ticking the book's.
 
 ### Darts
 
-Army → Darts follows the game's original dated prize pools. The shipped
-schedule ends with an empty pool, so no round runs today: no free dart,
-reset or payout is invented. When a configured round is active, the
+Army → Darts follows the game's dated prize pools. The shipped schedule
+ended with an empty pool, so since 20 October 2026 the server plays the
+game's own 32 boards again, a new one each Monday from 19 October 2026 for
+ten years (`get_game_config.darts_every_week`; DECISIONS.md). A paid dart
+costs `cash_price` of the game's 20 cash (15). When a round is active, the
 25-balloon board uses the classic saved-seed shuffle: two rare prizes,
 four of each uncommon, seven and eight of the common prizes. Each throw
 puts its prize in town Storage; discovering all six different prizes
@@ -1852,9 +1854,39 @@ that free dart after the ordinary welcome windows; Later keeps it.
 extra reward. Prize text remains until the next Play so it can be read.
 Choosing Play arms a throw; closing before choosing a balloon spends
 nothing. Charges and storage commands accompany the actual throw.
-`e2e/tests/darts.mjs` checks the real inactive schedule and a local active
-fixture on desktop/phone, including free/paid throws, the bonus and reloads.
-No live schedule is changed by the fixture.
+`e2e/tests/darts.mjs` checks the live weekly round ("Your free dart is
+ready", Play free, the 15-cash price) and a local fixture on desktop/phone,
+including free/paid throws, the bonus and reloads. Other browser tests start
+with `darts: false` (`e2e/lib.mjs`, `window.seNoDartsOffer`) so the free
+dart's welcome window stays out of their way.
+
+### Offers
+
+Build → **Offers**, a tab after Storage, sells the game's offer packs and
+mystery boxes for cash earned in the game (DECISIONS.md, 20 October 2026):
+all 65 that hold anything, the ones the original showed first. Three kinds,
+as the config's `offer_packs` have them:
+
+- **Pack**: fixed items, with gold, wood, food, stone and XP. Buy · price.
+- **Mystery box**: one of four prizes, its rare one at the top as the
+  original window lists them ("Rare / Uncommon / Common", the game's own
+  words). The roll is the original's: under 35 the commonest, the rare one
+  only from 90.
+- **Super mystery box**: three choices, one, two or four prizes, from three
+  rows (the first the rarest; only the four-prize choice is sure to give a
+  rare one). Its XP is shown but, as in the original, not given.
+
+Prices are `economy.cash_price` of the game's (a pack of 30 costs 19); the
+super box's three choices cost 29, 40 and 60 (19, 29 and 40 for pack 19),
+from `globals.SUPER_PACK_PRICES`, which the server sets and checks. Each
+card shows the pack's own picture (`images_new/en/offer_pack_<id>.png`)
+when the game has one, otherwise its prizes' pictures. What is bought goes
+to Storage. The roll happens on the client and the server checks the
+prize is one of the box's, as with the Flash client: `buy_offer_pack`
+`[town, pack(, prize)]` and `buy_super_offer_pack` `[town, pack, "a,b",
+cash]`. Rules in `rules/offers.ts`, cards in `ui/offers.ts`;
+`e2e/tests/offers.mjs` buys a pack, a mystery box and a super box and
+checks the cash, the items and the gold in the save.
 
 ### Social buildings
 

@@ -4,6 +4,26 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: offer packs, mystery boxes and darts switched on
+
+The owner's call after the units audit: switch these on, with prices worth
+working towards rather than real money's.
+
+- **Offers** (Build → Offers) shows every offer pack and mystery box the
+  config holds, 65 of them, not only the few the original had switched on
+  at the end: they are the only route to some units. Prices are
+  `cash_price` of the game's; the super mystery box's three choices cost
+  29, 40 and 60 cash (the game's 60, 100 and 200 shrunk), 19, 29 and 40 for
+  the cheaper pack 19. The Flash client still shows the game's old super
+  box prices in its own window; the server charges ours.
+- A box the game has no picture for shows its prizes' pictures instead.
+- Fixed on the way: the server refused the super box's four-prize choice
+  (it expected three prizes for the dearest one; the original gives four).
+- **Darts** run again: the config's last board was empty, so no round ever
+  started. The server now plays the game's 32 boards with prizes, a new
+  one every Monday from 19 October 2026, for ten years. A paid dart costs
+  15 cash (the game's 20, shrunk).
+
 ## 20 October 2026: Chained prices halved
 
 The owner asked whether the strength prices below could be earned. Gold
