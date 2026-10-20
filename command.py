@@ -36,6 +36,7 @@ import towns
 import tutorial
 import worlds
 import soul_mixer
+import chained
 
 
 def get_strategy_type(id):
@@ -751,6 +752,13 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_RESET:
         print(temple.reset(save))
+
+    # Ours: freeing a Chained building's units (chained.py)
+    elif cmd == "speed_up_chained":
+        print(chained.speed_up(save, args[0], args[1], args[2]))
+
+    elif cmd == "release_chained":
+        print(chained.release(save, args[0], args[1], args[2], args[3] if len(args) > 3 else None))
 
     else:
         print(f"Unhandled command '{cmd}' -> args", args)

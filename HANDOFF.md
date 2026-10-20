@@ -75,6 +75,9 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **Chained buildings free their units (20 October):** 108 sold for gold,
+  their chains break with time, then Free gives the units
+  (`chained_units.py`, `chained.py`, `rules/chained.ts`; DECISIONS.md).
 - **The shop sells 57 more barracks (20 October)**, in New, Limited
   Edition: those the game's data had but never sold (`MORE_BARRACKS`,
   DECISIONS.md). Part of the units-book plan.
