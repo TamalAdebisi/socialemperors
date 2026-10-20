@@ -64,7 +64,9 @@ follow below; status-only receipt edits change no game, art or test file.
   many run with `SE_ASSETS_URL` pointing at any local address that answers
   404 to everything (with CORS). Those that read a picture's pixels or
   wait for a sprite fail that way: `lessons`, `soul-mixer` and
-  `rider-training` fail so on `main` too. With the real art set
+  `rider-training` fail so on `main` too. With no art at all (20 October,
+  `main` at #131) 46 fail that way on `main`, each with the same error as
+  on a branch: compare against `main` before calling one yours. With the real art set
   (`SE_E2E_LIVE_ASSETS`), run them all.
 
 - **A cash box on the admin page (20 October).** The owner asked for 50
