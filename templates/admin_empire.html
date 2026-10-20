@@ -1,6 +1,9 @@
 {% extends "admin_base.html" %}
 {% block title %}{{ empire.name }}{% endblock %}
 {% block main %}
+	{% if done %}<div class="done">{{ done }}</div>{% endif %}
+	{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
 	<section>
 		<h2>{{ empire.name }}</h2>
 		<p class="muted"><code>{{ empire.pid }}</code> ·
@@ -19,6 +22,18 @@
 				<td>{{ empire.last_seen | ago }}</td>
 			</tr>
 		</table>
+	</section>
+
+	<section>
+		<h2>Give or take cash</h2>
+		<p class="muted">To make up for a bug or a slip, from 1 to {{ "{:,}".format(cash_limit) }} cash at a time.
+			It counts at once, even while they play; a game already open shows it the next time it's opened or reloaded.</p>
+		<form class="inline cash" method="post" action="{{ url_for('admin.change_cash', pid=empire.pid) }}">
+			<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+			<input type="number" name="amount" min="1" max="{{ cash_limit }}" step="1" required aria-label="Cash to give or take">
+			<button class="button small gold" name="way" value="give">Give</button>
+			<button class="button small plain" name="way" value="take">Take</button>
+		</form>
 	</section>
 
 	<section>

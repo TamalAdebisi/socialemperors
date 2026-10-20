@@ -1,11 +1,13 @@
 """
 The admin page and the bug radar: only admins get in, the radar counts what
 players' games ask that the server can't do, and an admin can reset a
-password or delete an account or an empire for good.
+password, delete an account or an empire for good, and give or take an
+empire's cash.
 
 Run from the repository folder:  python -m unittest discover tests
 """
 
+import json
 import os
 import re
 import tempfile
@@ -18,6 +20,7 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import server
 import accounts
+import admin
 import config_env
 import radar
 import sessions
@@ -228,6 +231,55 @@ class AdminTest(unittest.TestCase):
         # the account and its other empire stay
         self.assertEqual([v["userid"] for v in sessions.villages_of(self.player_id)], [other])
         self.assertIn("Your empires", self.player.get("/").get_data(as_text=True))
+
+    def cash(self):
+        return sessions.session(self.pid)["playerInfo"]["cash"]
+
+    def test_giving_and_taking_cash(self):
+        before = self.cash()
+        reply = self.form(f"/admin/empire/{self.pid}/cash", amount="50", way="give")
+        self.assertEqual(reply.status_code, 302)  # back to the empire's page, so a reload can't give it twice
+        self.assertEqual(self.cash(), before + 50)
+        page = self.admin.get(reply.headers["Location"]).get_data(as_text=True)
+        self.assertIn(f"Gave 50 cash: {before} → {before + 50}.", page)
+        # The server's own copy changed, so it's the one saved: no restart, nothing written over.
+        sessions.flush()
+        stored = sessions.storage()._query("SELECT data FROM villages WHERE pid = ?", (self.pid,))
+        self.assertEqual(json.loads(stored[0]["data"])["playerInfo"]["cash"], before + 50)
+
+        self.form(f"/admin/empire/{self.pid}/cash", amount="30", way="take")
+        self.assertEqual(self.cash(), before + 20)
+        # what the game loads next
+        key = accounts.make_game_token(self.pid)
+        reply = self.player.post(f"{server.DYNAMIC}/get_player_info.php?USERID={self.pid}&user_key={key}")
+        self.assertEqual(reply.get_json()["playerInfo"]["cash"], before + 20)
+
+    def test_cash_slips_are_refused(self):
+        before = self.cash()
+        for fields in ({"amount": "0", "way": "give"}, {"amount": "-5", "way": "give"},
+                       {"amount": "lots", "way": "give"}, {"amount": "2.5", "way": "give"},
+                       {"amount": str(admin.CASH_LIMIT + 1), "way": "give"},
+                       {"amount": str(before + 1), "way": "take"},
+                       {"amount": "5", "way": "steal"}, {"amount": "5"}):
+            reply = self.form(f"/admin/empire/{self.pid}/cash", **fields)
+            self.assertEqual(reply.status_code, 400, fields)
+            self.assertIn('class="error"', reply.get_data(as_text=True))
+        self.assertEqual(self.cash(), before)
+        self.assertIn(f"has only {before} cash", self.form(f"/admin/empire/{self.pid}/cash", amount=str(before + 1),
+                                                           way="take").get_data(as_text=True))
+        self.form(f"/admin/empire/{self.pid}/cash", amount=str(admin.CASH_LIMIT), way="give")
+        self.assertEqual(self.cash(), before + admin.CASH_LIMIT)  # the limit itself will do
+
+    def test_only_admins_change_cash(self):
+        before = self.cash()
+        page = self.player.get("/").get_data(as_text=True)
+        token = re.search(r'name="csrf" value="([^"]+)"', page).group(1)
+        reply = self.player.post(f"/admin/empire/{self.pid}/cash", data={"amount": "50", "way": "give", "csrf": token})
+        self.assertEqual(reply.status_code, 404)
+        reply = self.admin.post(f"/admin/empire/{self.pid}/cash", data={"amount": "50", "way": "give"})  # no token
+        self.assertEqual(reply.status_code, 400)
+        self.assertEqual(self.cash(), before)
+        self.assertEqual(self.form("/admin/empire/no-such-empire/cash", amount="5", way="give").status_code, 404)
 
     def test_a_save_under_way_cant_bring_it_back(self):
         """The background saver copies the empire, then writes it: if the

@@ -1,6 +1,7 @@
 """
 The admin page (/admin): the bug radar, finding an account, resetting its
-password, deleting it or one of its empires, and looking inside an empire.
+password, deleting it or one of its empires, looking inside an empire, and
+giving or taking an empire's cash.
 
 Only the accounts named in SE_ADMINS can open it; for everyone else it doesn't
 exist (404). Every form carries a CSRF token (csrf.py), and every action is
@@ -23,6 +24,7 @@ import tutorial
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 RECENT = 20
+CASH_LIMIT = 10_000  # the most cash one change gives or takes, so a slip of the keyboard stays small
 
 
 @admin.before_request
@@ -154,15 +156,55 @@ def delete_account(user_id):
     return redirect(url_for("admin.home", done=f"Deleted {user['username']} and {gone} empire(s)."))
 
 
-@admin.route("/empire/<pid>")
-def empire(pid):
+def _empire_page(pid: str, status=200, **shown):
     with sessions.LOCK:
         if sessions.session(pid) is None:
             abort(404)
-        shown = _empire(pid)
+        empire = _empire(pid)
         raw = json.dumps(sessions.session(pid), indent=1, sort_keys=True)
-    owner = sessions.storage().get_user(shown["owner"]) if shown["owner"] is not None else None
-    return render_template("admin_empire.html", admin=g.admin, empire=shown, owner=owner, raw=raw)
+    owner = sessions.storage().get_user(empire["owner"]) if empire["owner"] is not None else None
+    return render_template("admin_empire.html", admin=g.admin, empire=empire, owner=owner, raw=raw,
+                           cash_limit=CASH_LIMIT, **shown), status
+
+
+@admin.route("/empire/<pid>")
+def empire(pid):
+    return _empire_page(pid, done=request.args.get("done"))
+
+
+@admin.route("/empire/<pid>/cash", methods=["POST"])
+def change_cash(pid):
+    """Give an empire cash, or take some back: to make up for a bug or a slip.
+    It changes the save the server holds, which the server then writes to the
+    database itself. Changing only the database wouldn't do: the server's
+    copy would be written over it at the player's next click."""
+    way = request.form.get("way")
+    try:
+        amount = int(request.form.get("amount", ""))
+    except ValueError:
+        amount = 0
+    with sessions.LOCK:
+        save = sessions.session(pid)
+        if save is None:
+            abort(404)
+        name = sessions.save_info(pid)["name"]
+        before = int(save["playerInfo"].get("cash") or 0)
+        if way not in ("give", "take") or not 0 < amount <= CASH_LIMIT:
+            error = f"Give or take a whole number of cash, from 1 to {CASH_LIMIT:,}."
+        elif way == "take" and amount > before:
+            error = f"{name} has only {before:,} cash."
+        else:
+            error = None
+            after = before + amount if way == "give" else before - amount
+            save["playerInfo"]["cash"] = after
+            sessions.save_session(pid)
+    if error:
+        return _empire_page(pid, 400, error=error)
+    gave = way == "give"
+    _log(f"{'gave' if gave else 'took'} {amount} cash {'to' if gave else 'from'} the empire {name} ({pid}): "
+         f"{before} before, {after} now")
+    done = f"{'Gave' if gave else 'Took'} {amount:,} cash: {before:,} → {after:,}."
+    return redirect(url_for("admin.empire", pid=pid, done=done))
 
 
 @admin.route("/empire/<pid>/delete", methods=["POST"])

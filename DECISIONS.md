@@ -4,6 +4,30 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: a cash box on the admin page
+
+The owner joined a tournament with more units than they meant to and asked
+for 50 cash to make up for it, then for those 50 to be taken off again,
+and for a way to do this themselves. The two changes to their empire were
+made in the database, each followed at once by a server restart: the
+server holds every empire in memory and writes its own copy back at the
+next change, so an edit to the database alone is lost. The admin page now
+does it on the server's copy instead, with no restart:
+
+- **On the empire's admin page:** "Give or take cash", a number and two
+  buttons, Give and Take. Cash belongs to an empire, not to an account, so
+  it isn't on the account's page.
+- **At once, even mid-game.** The games send what the player does ("buy
+  this for 5 cash"), never a total, so the server's count stands. A game
+  already open shows the old count until it's opened or reloaded.
+- **From 1 to 10,000 cash at a time,** so a slip of the keyboard stays
+  small; more takes several goes. Taking more than the empire has is
+  refused rather than leaving it at 0, so the admin knows.
+- **In the server's log,** like the other admin actions: who, how much,
+  which empire, before and after.
+- The browser tests' server names an admin (`e2eadmin` in `SE_ADMINS`), so
+  a test can use the admin page. Test: `e2e/tests/admin-cash.mjs`.
+
 ## 19 October 2026: picking units in a battle, more finely
 
 The owner asked to pick a kind of unit with a double click during quests,
