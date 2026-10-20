@@ -1799,7 +1799,7 @@ Army → Units book shows the original configured categories in their order,
 three per page. Original thumbnails are grey until acquired. Tap or expand
 a unit to see its six stats and walking/attack/special animation; only one
 preview draws at once. Missing units can be bought for each category's
-cash price and appear in this town's Storage. A full category pays its
+cash price (the game's, shrunk by `economy.py`'s `cash_price` since 20 October) and appear in this town's Storage. A full category pays its
 reward into Gifts and one cash, once only. Book purchases and claims survive
 reloads; current map units count, and newly acquired map units remain
 recognized for this session, following the original's separate behavior.

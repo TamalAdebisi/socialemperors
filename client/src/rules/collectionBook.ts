@@ -31,7 +31,8 @@ export class CollectionBook {
   price(id: number): number {
     if (id === 10) return 15;
     if (id === 20) return 20;
-    const full = id === 21 || id === 22 ? 400 : 5;
+    // The two Bahamuts' 400 cash, shrunk as every big cash price is (economy.py, cash_price).
+    const full = id === 21 || id === 22 ? 91 : 5;
     return Math.max(1, full - this.rows[id].slice(1).filter((n) => n > 0).length);
   }
 

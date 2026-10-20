@@ -30,7 +30,7 @@ export default async function bonus({ newPlayer }) {
   // The welcome-back chest on the first day: tomorrow's, shut.
   await player.press("Welcome-back chest");
   const welcome = page.locator(".panel", { has: page.locator(".bonus-chests") }).filter({ hasText: "Come back tomorrow" });
-  assert.match(await welcome.textContent(), /Come back tomorrow for a chest: it holds 2,500 gold, .+ or 10 cash\./);
+  assert.match(await welcome.textContent(), /Come back tomorrow for a chest: it holds 2,500 gold, .+ or 15 cash\./);
   assert.equal(await welcome.locator(".bonus-chests button:disabled").count(), 3, "the chests are shut");
   await player.shot("welcome-back");
   await page.keyboard.press("Escape");
