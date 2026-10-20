@@ -42,13 +42,15 @@ const FULL_WILD = [
  * harbour (and zeppelin tower) as it opens, rather than starting with them.
  * `name`: the account's name (ADMIN for the admin, once a run) instead of a
  * new one. `game`: false for the site's own pages only: the town is made,
- * but neither set up nor opened.
+ * but neither set up nor opened. `scale`: screen pixels per page pixel (2 for
+ * a Retina laptop's screen), on a desktop.
  */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false, name: username = null, game = true } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, scale = null, lessons = false, wild = false, camp = false, dock = false, raids = false, name: username = null, game = true } = {}) {
   const context = await browser.newContext({
     ...network,
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
     ...(phone ? { deviceScaleFactor: 3, isMobile: true, hasTouch: true } : {}),
+    ...(scale ? { deviceScaleFactor: scale } : {}),
   });
   await serveArt(context);
   // Ordinary feature fixtures hold raids; recurring-raids opts into the real scheduler.

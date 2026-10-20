@@ -4,6 +4,36 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: A busy town drawn fast, and Fast drawing
+
+The owner found the game slow with many units and chose all five fixes
+offered (CLIENT.md, "A busy town"). Four change neither the rules nor the
+look: the drawing order kept as a number, one tile's check for each step,
+hovering that passes over what's far from the pointer, and pictures off
+the screen left out of the drawing. The calls made along the way:
+
+- **Fast drawing is ours, off unless chosen.** The Flash client had a
+  quality switch whose code is empty, and always drew at "medium", so
+  there was nothing to copy. On a screen with more pixels than the page (a
+  Retina laptop, a phone) the map is drawn two by two each way, as before;
+  Fast drawing draws one for one, a little softer. It's offered in the
+  Menu only on such screens, where it changes something, and is
+  remembered in the browser. It applies to the fights too, though only the
+  town's Menu has the switch.
+- **Culling leaves 200 screen pixels to spare** round the screen, so a
+  unit's bars, rings and flames beside its picture never go missing. It
+  looks at the walking units every frame and at everything else when the
+  camera moves, when something is drawn anew, and twice a second as a
+  safety net.
+- **Not done yet:** battles keep drawing every fighter. They already sort
+  the cheap way; culling waits until they need it. The shop's pictures stay
+  sharp: they're drawn once, not every frame.
+
+For the classic game in Ruffle, the advice given was the Flash browser
+(FLASH.md): Adobe's own player usually runs the game's code much faster
+than an emulator can. Or the Ruffle page's `?quality=low`. Nothing there
+changed.
+
 ## 20 October 2026: Chained prices halved
 
 The owner asked whether the strength prices below could be earned. Gold

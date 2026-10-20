@@ -30,6 +30,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
+import { drawingResolution } from "./view/drawing.ts";
 
 export const ISLANDS = islandData.islands as unknown as Island[];
 /** The sea around an island: the Flash client's blue. */
@@ -82,7 +83,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
 
   const app = new Application();
   await app.init({
-    resizeTo: window, background: SEA, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true,
+    resizeTo: window, background: SEA, resolution: drawingResolution(), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
   const loop = new GameLoop(app.ticker);

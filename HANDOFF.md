@@ -38,6 +38,15 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **A busy town drawn fast (20 October).** The owner found the game slow
+  with many units. Walking units re-sorted every picture (a cost growing
+  with the square of the town) and rebuilt the walking grid at each step;
+  now one number per picture, one tile's check, hovering that skips what's
+  far away, and culling off the screen. With 100 units walking a frame
+  went from 7 ms (25 ms for one in twenty) to under 1 ms (2 ms). Fast
+  drawing in the Menu draws high-density screens one for one. See CLIENT.md,
+  "A busy town", and DECISIONS.md (20 October). Test `e2e/tests/crowd.mjs`.
+
 - **Collection pieces from fights (20 October).** The owner asked how to
   get the Golden and Red Bahamut, whose pieces drop only on hardcore and
   god islands; the new client dropped pieces from harvests only. Fights now

@@ -322,6 +322,15 @@ body {
   background: rgba(255, 255, 255, 0.6);
 }
 
+/* A setting in the Menu (Fast drawing): a tick when it's on. */
+.site-menu [role="menuitemcheckbox"][aria-checked="true"]::after {
+  content: "\2713";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
 .site-menu .menu-count {
   top: 50%;
   right: 8px;

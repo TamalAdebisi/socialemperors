@@ -100,6 +100,7 @@ import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
+import { denseScreen, drawingResolution, fastDrawing, setFastDrawing } from "./view/drawing.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 import { isTheirs } from "./rules/editing.ts";
@@ -177,8 +178,8 @@ async function start(): Promise<void> {
   await app.init({
     resizeTo: window,
     background: skinColour(town.skin),
-    // Sharp on high-resolution screens; above 2x costs a lot for little gain.
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    // Sharp on high-resolution screens (up to 2x), unless fast drawing is on (view/drawing.ts).
+    resolution: drawingResolution(),
     autoDensity: true,
     antialias: false,
     preference: "webgl",
@@ -209,12 +210,19 @@ async function start(): Promise<void> {
     population: (t) => population(t, items, increase), sound, pause: new Pause(loop),
     site: settings.csrf
       ? { news: settings.news ?? 0, username: settings.username ?? "", csrf: settings.csrf, discord: settings.discord ?? undefined }
-      : undefined });
+      : undefined,
+    // Switched in the Menu, the canvas takes its new number of pixels at once (view/drawing.ts).
+    drawing: denseScreen() ? { fast: fastDrawing(), set: (on) => {
+      setFastDrawing(on);
+      app.renderer.resize(app.screen.width, app.screen.height, drawingResolution());
+    } } : undefined });
 
   const art = new ArtLibrary(settings.artUrl);
   const view = new TownView(art, items, town);
   world.addChild(view.root);
   loop.add((ms) => view.tick(ms, camera.scale));
+  // Before each frame is drawn (after the walks and the camera have moved): what's off the screen is left out.
+  app.ticker.add(() => view.cull(app.screen));
 
   // The player's own town can be changed; a visited one only looked at.
   let afterDrawing = () => {};

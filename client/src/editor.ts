@@ -28,7 +28,7 @@ import { RESOURCE_COLOURS } from "./view/markers.ts";
 import type { FriendWords } from "./view/friendBubble.ts";
 import { fireStage } from "./view/fire.ts";
 import type { TownView } from "./view/townView.ts";
-import { canWalk, isWalkable, tilesUnder, unitMoved, unitPath, walkGrid } from "./rules/walking.ts";
+import { canWalk, isClearTile, isWalkable, tilesUnder, unitMoved, unitPath, walkGrid } from "./rules/walking.ts";
 import { DOUBLE_CLICK_MS, MAX_SELECTED, sameKindNear, squareTiles } from "./rules/group.ts";
 import { takenTiles } from "./rules/editing.ts";
 import { lifeShare } from "./view/selected.ts";
@@ -1357,8 +1357,9 @@ export class TownEditor {
     // A unit standing in a building (a gate shut on it) walks out across it.
     const under = tilesUnder(this.town, from);
     this.view.walk(unit, path, (next) => {
-      // Something built in the way since it set off: it stops before it.
-      if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isWalkable(walkGrid(this.town, true), next.x, next.y)) {
+      // Something built in the way since it set off: it stops before it. (This one tile only:
+      // the whole map's grid, made again for each step of each unit, slowed a busy town.)
+      if (!unit.item.flying && !under.has(`${next.x},${next.y}`) && !isClearTile(this.town, next.x, next.y)) {
         return false;
       }
       unit.tx = next.x;
