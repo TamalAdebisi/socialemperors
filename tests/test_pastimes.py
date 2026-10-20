@@ -16,6 +16,7 @@ import economy
 import sessions
 from command import command, do_command
 from engine import timestamp_now
+from get_game_config import get_game_config
 
 TOWN = 0
 FIRST_MAP, SECOND_MAP = "100000035", "100000036"  # the two survival maps the client opens
@@ -47,6 +48,13 @@ class PastimesTest(unittest.TestCase):
 
     # Darts
 
+    def test_the_games_darts_boards_come_round_every_week(self):
+        rounds = get_game_config()["darts_items"]
+        self.assertEqual(rounds[0]["start_date"], "2026-10-19 00:00:00")
+        self.assertEqual(rounds[1]["start_date"], "2026-10-26 00:00:00")
+        self.assertTrue(all(len(row["items"]) == 6 for row in rounds), "no empty board")
+        self.assertEqual(rounds[32]["items"], rounds[0]["items"], "after the 32 boards, the first again")
+
     def test_a_round_of_darts(self):
         self.send("darts_reset", 4242)
         self.assertEqual((self.pState["dartsRandomSeed"], self.pState["dartsHasFree"]), (4242, True))
@@ -54,7 +62,7 @@ class PastimesTest(unittest.TestCase):
         self.assertEqual((self.pState["dartsBalloonsShot"], self.pState["dartsHasFree"]), ([3], False))
         self.assertEqual(self.cash(), 100)
         self.batch(("store_add_items", json.dumps([577])), ("darts_shoot_balloon", 5, 1, 1))  # paid, and the last one
-        self.assertEqual(self.cash(), 80)
+        self.assertEqual(self.cash(), 100 - economy.cash_price(20))  # the game's 20 a dart, shrunk
         self.assertEqual(self.pState["dartsBalloonsShot"], [3, 5])
         self.assertTrue(self.pState["dartsGotExtra"])
         self.assertEqual(self.map["store"], {"619": 1, "577": 1})

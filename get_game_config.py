@@ -69,6 +69,7 @@ def patch_game_config():
     remove_duplicate_items()
     sell_more_barracks(__game_config)
     chained_units.prepare(__game_config)  # the Chained buildings, sold for gold
+    darts_every_week(__game_config)
     economy.patch_config(__game_config)  # where cash comes from: economy.py
     villagers_take_no_room(__game_config)
 
@@ -106,6 +107,26 @@ def sell_more_barracks(config: dict) -> None:
     for item in config["items"]:
         if int(item["id"]) in wanted:
             item["in_store"] = "1"
+
+
+DARTS_FROM = "2026-10-19"  # a Monday: the first week the game's boards came round again
+DARTS_YEARS = 10
+
+
+def darts_every_week(config: dict) -> None:
+    """The game's darts schedule ran out in September 2012 (its last board is
+    empty), so no round ran. The owner's call (DECISIONS.md, 20 October 2026):
+    its 32 boards come round again, a new one each week from DARTS_FROM, for
+    DARTS_YEARS. Both clients read the schedule from here."""
+    from datetime import date, timedelta
+    boards = [row for row in config["darts_items"] if len(row.get("items") or []) == 6]
+    if not boards:
+        return
+    start = date.fromisoformat(DARTS_FROM)
+    config["darts_items"] = [
+        {"id": week + 1, "start_date": f"{start + timedelta(weeks=week)} 00:00:00",
+         "items": boards[week % len(boards)]["items"], "extra_item": boards[week % len(boards)]["extra_item"]}
+        for week in range(DARTS_YEARS * 52)]
 
 
 print (" [+] Applying config patches and mods...")
