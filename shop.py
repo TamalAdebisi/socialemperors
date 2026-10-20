@@ -40,6 +40,7 @@ import math
 from constants import Constant
 from get_game_config import get_attribute_from_item_id, get_game_config
 import inventory
+import trust
 from village import STARTED, UNITS, full, give, item_at, number, take
 
 FOOD_PER_GOLD_IN_TRAINING = 2
@@ -150,7 +151,12 @@ def super_offer_pack(save: dict, town_id: int, pack_id: int, items_text: str) ->
 def deal(save: dict, ids_json: str, cash, town_id: int = 0) -> str:
     """The merchant's deals: a discount that grows while the window stays open."""
     ids = [int(i) for i in json.loads(ids_json)]
-    take(save, save["maps"][town_id], "c", max(int(cash), 0))
+    least = trust.deal_price(ids)
+    if least is None:
+        return f"Refused: the merchant doesn't sell {ids}."
+    if int(cash) < least or save["playerInfo"]["cash"] < int(cash):
+        return f"Refused: {cash} cash is not enough for {ids} (at least {least})."
+    take(save, save["maps"][town_id], "c", int(cash))
     for item_id in ids:
         inventory.add_stored(save, town_id, item_id)
     return f"Deal bought for {cash} cash: {ids}."

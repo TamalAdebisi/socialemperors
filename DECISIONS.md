@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: the server checks what the client claims
+
+The owner asked for the holes to be closed after a player's units looked
+suspicious (they turned out to be fair: tournament prizes). The server took
+the client's word in places where an edited request could get anything:
+
+- **Boss islands' prizes**: only the island's own, as many as it gives, and
+  only for a win. The list is the new client's `islands.json`.
+- **Prizes put in storage** (`store_add_items`): a darts prize from the
+  board of the day, sent with its throw; a troll camp's prize, no more of
+  each than the camps give in all; or a hero bought with cash right after.
+  Anything else is refused and logged.
+- **Placing from storage**: refused when storage doesn't hold it. Before,
+  the server placed it anyway "so it is not lost", which let anything be
+  placed.
+- **The merchant's deals**: only the buildings his window offers (cash
+  buildings of 5 or more for humans and all races), for at least half
+  their price. His haggling starts at 20% off and adds 5% a time, so half
+  is more than he ever came down to.
+
+Left for later: things the game places for free (dragons hatching, the
+temple's dragons, riders, troll camps, trees growing back) all use the
+same free `buy`, so one rule would break them; each needs a check in its
+own feature (ROADMAP.md). The browser tests' server lets tests fill
+storage in one step (`SE_E2E_SEEDING`) and logs what it would refuse.
+
 ## 20 October 2026: Chained prices halved
 
 The owner asked whether the strength prices below could be earned. Gold

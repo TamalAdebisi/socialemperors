@@ -41,6 +41,7 @@ import economy
 import graveyard
 import inventory
 import levels
+import trust
 from village import give
 
 UNIT_ID, SENT, KILLED, RECOVERED = 0, 1, 2, 3
@@ -130,8 +131,9 @@ def end(save: dict, result: dict) -> str:
 
     lost = lose_units(save, map, result.get("units"))
 
-    for item_id, count in (result.get("item_rewards") or {}).items():
-        inventory.add_gift(save, int(item_id), int(count))
+    # Only what the boss island really gives (trust.py), and only for a win.
+    for item_id, count in (trust.quest_rewards(quest_id, result.get("item_rewards")) if won else {}).items():
+        inventory.add_gift(save, item_id, count)
 
     outcome = "won" if won else "lost"
     first_three_stars = f", first 3 stars: +{prize} cash" if prize else ""

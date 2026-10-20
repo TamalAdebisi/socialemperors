@@ -75,6 +75,10 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **The server checks more of what the client claims (20 October):**
+  boss prizes, prizes put in storage, placing from storage and the
+  merchant's deals (`trust.py`; DECISIONS.md). Free placements (`buy` with
+  the free flag) are the open one, in ROADMAP.md.
 - **Chained buildings free their units (20 October):** 108 sold for gold,
   their chains break with time, then Free gives the units
   (`chained_units.py`, `chained.py`, `rules/chained.ts`; DECISIONS.md).

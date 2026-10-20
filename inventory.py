@@ -31,6 +31,7 @@ import json
 from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_level_from_xp, get_xp_from_level
 from village import give, item_at, number
+import trust
 
 LEVEL_UP_STATUE = 1478  # placing it gives the experience missing for the next level
 SOLD_FOR_NOTHING = {224, 299}  # the Dock and the Zeppelin Tower
@@ -122,24 +123,33 @@ def put_away(save: dict, x, y, town_id: int, item_id) -> str:
     return f"Item {item_id} stored."
 
 
-def add_items(save: dict, ids_json: str, town_id: int = 0) -> str:
-    ids = json.loads(ids_json)
-    for item_id in ids:
-        add_stored(save, town_id, int(item_id))
-    return f"Added {ids} to storage."
+def add_items(save: dict, ids_json: str, town_id: int = 0, upcoming: list = ()) -> str:
+    """Prizes the client put in storage, those the game could have given (trust.py)."""
+    added, refused = [], []
+    for item_id in json.loads(ids_json):
+        if trust.storable(save, int(item_id), list(upcoming), timestamp_now()):
+            add_stored(save, town_id, int(item_id))
+            added.append(int(item_id))
+        else:
+            refused.append(int(item_id))
+    if refused and trust.seeding():
+        for item_id in refused:
+            add_stored(save, town_id, item_id)
+        return f"Added {added + refused} to storage (test server: would refuse {refused})."
+    return f"Added {added} to storage." + (f" Refused {refused}: no prize of the game's gives them now." if refused else "")
 
 
 def place(save: dict, item_id, x, y, orientation, town_id: int, is_gift: bool) -> str:
     map = save["maps"][town_id]
-    found = _take(save, town_id, int(item_id), gift_first=is_gift)
+    if not _take(save, town_id, int(item_id), gift_first=is_gift):
+        return f"Refused: item {item_id} is not in storage."
     map["items"].append([item_id, x, y, orientation, timestamp_now(), 0])
     if is_gift:  # the client gives a gift's experience when it is placed
         if int(item_id) == LEVEL_UP_STATUE:
             map["xp"] = max(int(map["xp"]), get_xp_from_level(get_level_from_xp(map["xp"])))
         else:
             give(save, map, "x", number(item_id, "xp"))
-    note = "" if found else " (it was not in storage; placed anyway so it is not lost)"
-    return f"Item {item_id} placed at ({x},{y}){note}."
+    return f"Item {item_id} placed at ({x},{y})."
 
 
 def sell(save: dict, item_id, town_id: int, is_gift: bool) -> str:

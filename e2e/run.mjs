@@ -105,6 +105,8 @@ const base = `http://127.0.0.1:${port}`;
 const env = { ...process.env, SE_DATA_DIR: data, SE_PORT: String(port), SE_BIND_HOST: "127.0.0.1",
   // Each test player says it's a different visitor, so the five new accounts an hour per visitor don't run out.
   SE_CLIENT_IP_HEADER: "X-E2E-Visitor",
+  // Tests fill new players' storage in one step (trust.py logs what it would refuse).
+  SE_E2E_SEEDING: "1",
   // Where players get in touch (SE_DISCORD_URL): every page shows its links (e2e/tests/contact.mjs).
   SE_DISCORD_URL: DISCORD,
   // Who may open the admin page (e2e/tests/admin-cash.mjs): nobody until a test signs up with this name.

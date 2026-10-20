@@ -12,10 +12,10 @@ import unittest
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import sessions
-from command import do_command
+from command import command, do_command
 from get_game_config import get_level_from_xp
 
-TOWER, WAREHOUSE, LEVEL_UP_STATUE, DOCK, SWORDSMAN = 33, 1284, 1478, 224, 511  # Tower V: not in a new village
+TOWER, WAREHOUSE, LEVEL_UP_STATUE, DOCK, SWORDSMAN, VIKING_SHIP = 33, 1284, 1478, 224, 511, 382  # Tower V: not in a new village
 TOWN = 0
 
 
@@ -84,8 +84,20 @@ class InventoryTest(unittest.TestCase):
         self.assertEqual(get_level_from_xp(self.map["xp"]), level + 1)
 
     def test_prizes_go_straight_to_storage(self):
-        self.send("store_add_items", json.dumps([SWORDSMAN, SWORDSMAN, TOWER]))
-        self.assertEqual(self.map["store"], {str(SWORDSMAN): 2, str(TOWER): 1})
+        # A troll camp's prize (the Viking Ship, once); anything else is refused (trust.py).
+        self.send("store_add_items", json.dumps([VIKING_SHIP, VIKING_SHIP, SWORDSMAN, TOWER]))
+        self.assertEqual(self.map["store"], {str(VIKING_SHIP): 1})
+
+    def test_a_hero_with_no_altar_goes_to_storage(self):
+        command(self.pid, {"ts": 0, "first_number": 0, "accessToken": "", "tries": 0, "publishActions": 0, "commands": [
+            {"cmd": "store_add_items", "args": [json.dumps([SWORDSMAN])]},
+            {"cmd": "buy_cash", "args": [SWORDSMAN, 0, 0, 0, TOWN]}]})
+        self.assertEqual(self.map["store"], {str(SWORDSMAN): 1})
+
+    def test_placing_what_storage_does_not_hold(self):
+        self.send("place_stored_item", TOWER, 50, 50, 0, TOWN)
+        self.send("place_gift", TOWER, 50, 50, 0, TOWN)
+        self.assertFalse(any(row[0] == TOWER for row in self.map["items"]))
 
     def test_selling_from_storage(self):
         self.map["store"] = {str(TOWER): 2}
