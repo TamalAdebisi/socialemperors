@@ -4,6 +4,18 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: the units book counts look-alikes
+
+An audit of the units book (the owner's request) found that its troll
+pages list the wild trolls' ids (Small Troll, Devious Troll, Big Troll, War
+Troll, Ravager Troll, Axethrower, Boar Rider), while a troll empire
+trains look-alikes with other ids, so they never ticked. The Scary Zombie
+has two ids too. With the owner's agreement, a unit now counts for a book
+unit with the same name and the same picture. That also covers other
+duplicates of one unit: the Round Table's Wizard, the quests' T-Rex, the
+collections' War Troll and so on. Enemy versions never count, because
+only units of the town's own race do, as before.
+
 ## 20 October 2026: collection pieces from fights
 
 The owner asked how to get the Golden and Red Bahamut. Their pieces (and
