@@ -50,8 +50,8 @@ const OUTLINE_STEPS = [[-2, 0], [2, 0], [0, -2], [0, 2], [-1.5, -1.5], [1.5, -1.
 const OUTLINE_MATRIX = [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xb0 / 255, 0, 0, 0, 1, 0];
 /** How far past the screen's edges a picture is still drawn (cull), in screen pixels. */
 const CULL_MARGIN = 200;
-/** How often every picture is looked at again while the camera keeps still, in frames (cull): twice a second. */
-const CULL_ALL_EVERY = 30;
+/** How often every picture is looked at again while the camera keeps still (cull): twice a second. */
+const CULL_ALL_MS = 500;
 
 export class TownView {
   readonly root = new Container();
@@ -87,8 +87,8 @@ export class TownView {
   /** Which way each unit faces (rules/geometry.ts numbers them), and where it is on the map while it walks. */
   private readonly facing = new Map<PlacedItem, number>();
   private readonly walkers = new Map<PlacedItem, Walk>();
-  /** The camera and screen the pictures were last culled for, and the frames drawn since (cull). */
-  private readonly culledFor = { camera: new Matrix(), a: 0, d: 0, tx: 0, ty: 0, width: 0, height: 0, frames: 0 };
+  /** The camera and screen every picture was last culled for, and when (cull); -Infinity: due before the next frame. */
+  private readonly culledFor = { camera: new Matrix(), a: 0, d: 0, tx: 0, ty: 0, width: 0, height: 0, at: -Infinity };
   /** Where each thing was in the town's list at the last sort: for its draw order. */
   private order = new Map<PlacedItem, number>();
   /** What a unit standing still is doing: working a tree (ATAQUE) or a rock (PICAR); standing (QUIETO) when it's not here. */
@@ -401,8 +401,8 @@ export class TownView {
    * Leave out of the drawing what's off the screen (`screen`: its size), so
    * a big town zoomed in costs the computer only what shows. Run before each
    * frame is drawn. Every picture is looked at again when the camera moves
-   * or something has been drawn anew, and twice a second besides; the
-   * walking units, the only pictures that move by themselves, every frame.
+   * or a picture is put in, and twice a second besides; the walking units,
+   * the only pictures that move by themselves, every frame.
    * The room round the screen covers what a slot holds beside its picture:
    * its bars, its ring, its flames.
    */
@@ -411,9 +411,10 @@ export class TownView {
     const last = this.culledFor;
     const same = camera.a === last.a && camera.d === last.d && camera.tx === last.tx && camera.ty === last.ty
       && screen.width === last.width && screen.height === last.height;
-    const all = !same || ++last.frames >= CULL_ALL_EVERY;
+    const now = performance.now();
+    const all = !same || now - last.at >= CULL_ALL_MS;
     if (all) {
-      Object.assign(last, { a: camera.a, d: camera.d, tx: camera.tx, ty: camera.ty, width: screen.width, height: screen.height, frames: 0 });
+      Object.assign(last, { a: camera.a, d: camera.d, tx: camera.tx, ty: camera.ty, width: screen.width, height: screen.height, at: now });
     } else if (this.walkers.size === 0) {
       return;
     }
@@ -446,8 +447,6 @@ export class TownView {
     }
     await this.draw(placed, slot);
     this.sort();
-    // Its picture may have grown into view (cull): every picture looked at again before the next frame.
-    this.culledFor.frames = CULL_ALL_EVERY;
     this.markers.moveTo(placed, this.topOf(placed));
     if (this.highlighted.has(placed)) {
       this.mark(placed);
@@ -744,6 +743,8 @@ export class TownView {
       return this.drawScaffold(placed, slot).then(() => art !== null);
     }
     this.bars.delete(placed);
+    // A new picture, maybe of another size (cull): every picture looked at again before the next frame.
+    this.culledFor.at = -Infinity;
     slot.removeChildren().forEach((child) => child.destroy());
     slot.position.set(offset.x, offset.y);
     if (art === null) {
@@ -787,6 +788,7 @@ export class TownView {
     if (slot.destroyed) {
       return;
     }
+    this.culledFor.at = -Infinity;  // a new picture (cull), as in draw
     slot.removeChildren().forEach((child) => child.destroy());
     slot.position.set(0, 0);
     const now = Date.now();

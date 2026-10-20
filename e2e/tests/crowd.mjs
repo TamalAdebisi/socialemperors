@@ -26,6 +26,12 @@ export default async function crowd({ newPlayer }) {
   await player.send(CROWD.map(([x, y]) => ({ cmd: "buy", args: [VILLAGER, x, y, 0, 0, 0, 1] })));
   await player.reload();
 
+  /**
+   * Once a frame has been drawn: what's left out is worked out just before
+   * drawing (the camera can move between frames), and drawing all those
+   * pixels in software can take a while here.
+   */
+  const frame = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   /** Whatever is drawn out of order: something drawn after a thing in front of it. Null when all is in order. */
   const disorder = () => page.evaluate(() => {
     const view = window.seHome.parts.view;
@@ -60,12 +66,6 @@ export default async function crowd({ newPlayer }) {
     }
     return { culled, drawn: view.slots.size - culled, wrong };
   });
-  /**
-   * Once a frame has been drawn: what's left out is worked out just before
-   * drawing (the camera can move between frames), and drawing all those
-   * pixels in software can take a while here.
-   */
-  const frame = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
   /** Screen pixels per page pixel the map is drawn with. */
   const density = () => page.evaluate(() => {
     const canvas = document.querySelector("#stage canvas");
@@ -73,6 +73,7 @@ export default async function crowd({ newPlayer }) {
   });
 
   // As the town opens: in order; the wild corner left out; all that shows, drawn.
+  await frame();
   assert.equal(await disorder(), null);
   const opening = await culling();
   assert.deepEqual(opening.wrong, [], "nothing on the screen is left out");
