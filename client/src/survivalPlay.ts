@@ -144,7 +144,10 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
   world.addChild(view.root);
   await view.drawGround(items.get(map.terrain), SURVIVAL.shape);
   await view.load((done, total) => showStatus(`Into the arena… ${Math.round((100 * done) / total)}%`));
-  loop.add((ms) => view.update(ms, camera.scale));
+  loop.add((ms) => {
+    view.update(ms, camera.scale);
+    view.cull(app.screen);  // what's off the screen left out, once the fighters have moved
+  });
   showStatus("");
   commands.add("game_status", "LOAD_MAP", "NORM", "QUEST");
   void commands.flush();

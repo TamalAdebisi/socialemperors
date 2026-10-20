@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Container, Graphics, Rectangle, Sprite, Texture, TextureSource } from "pixi.js";
 
-import { layerBox, nearBox, overlaps, sheetPixel, unitHitDistance, visualScreenBox } from "./hit.ts";
+import { CULL_MARGIN, layerBox, nearBox, overlaps, seenOnLayer, sheetPixel, unitHitDistance, visualScreenBox } from "./hit.ts";
 
 test("a small unit keeps a 44px target, with gaps and near misses selectable", () => {
   const tiny = { x: 100, y: 100, width: 10, height: 16 };
@@ -175,4 +175,14 @@ test("a turned picture's box holds all four of its corners", () => {
   for (const [mine, theirs] of [[box.x, pixi.x], [box.y, pixi.y], [box.width, pixi.width], [box.height, pixi.height]]) {
     assert.ok(Math.abs(mine - theirs) < 1e-6, `${mine} vs ${theirs}`);
   }
+});
+
+test("the screen on a layer of the map, with room round it, follows the camera's zoom and move", () => {
+  const world = new Container();
+  world.scale.set(0.5);
+  world.position.set(-300, 40);
+  const layer = world.addChild(new Container());
+  // Screen pixels to the layer: (x + 300) / 0.5, (y - 40) / 0.5; the margin is in screen pixels.
+  assert.deepEqual(seenOnLayer(layer, { width: 1280, height: 800 }),
+    { x: (-CULL_MARGIN + 300) / 0.5, y: (-CULL_MARGIN - 40) / 0.5, width: (1280 + 2 * CULL_MARGIN) / 0.5, height: (800 + 2 * CULL_MARGIN) / 0.5 });
 });

@@ -1442,8 +1442,14 @@ work isn't in these numbers: the test machine draws in software.)
   switch that did nothing and always drew at "medium", so this one is ours
   (DECISIONS.md, 20 October).
 
-Not done: battles draw all their fighters (they sort by number already),
-and get the same culling if they need it. The shop's pictures stay sharp.
+**Battles too** (the owner's ask, after): `BattleView.cull`, run on every
+battle page and in raids at home right after the fighters have moved. They
+all move, so each is looked at every frame, by the same few sums. Life bars
+and rings, in their own layers, are always drawn (few show at once). On the
+first quest island, 64 of 95 fighters are left out as the army lands. Test:
+`e2e/tests/battle-culling.mjs`.
+
+The shop's pictures stay sharp: they're drawn once, not every frame.
 
 ### Buildings at rest
 

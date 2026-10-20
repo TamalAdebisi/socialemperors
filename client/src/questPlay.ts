@@ -131,7 +131,10 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   world.addChild(view.root);
   await view.drawGround(items.get(island.terrain), island.shape);
   await view.load((done, total) => showStatus(`Sailing to the island… ${Math.round((100 * done) / total)}%`));
-  loop.add((ms) => view.update(ms, camera.scale));
+  loop.add((ms) => {
+    view.update(ms, camera.scale);
+    view.cull(app.screen);  // what's off the screen left out, once the fighters have moved
+  });
   showStatus("");
   // As the Flash client: the island is shown, then the quest starts.
   commands.add("game_status", "LOAD_MAP", "NORM", "QUEST");

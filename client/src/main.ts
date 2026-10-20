@@ -864,7 +864,7 @@ async function start(): Promise<void> {
       void import("./homeDefence.ts").then(({ HomeDefence }) => {
         const defence = new HomeDefence({
           town, items, config, privateState: info.privateState as Record<string, unknown> | undefined, settings, commands, sound,
-          art, view, world: mapLayer, camera, editor, clock, buried: (id) => bury(dead, id), quiet: () => learning,
+          art, view, world: mapLayer, camera, screen: app.screen, editor, clock, buried: (id) => bury(dead, id), quiet: () => learning,
           camp: { id: Number(info.map.idCurrentTreasure) || 0, last: Number(info.map.timestampLastTreasure) || 0,
             vars: (info.map as unknown as { currentQuestVars?: Record<string, unknown> }).currentQuestVars ?? {} },
         });
