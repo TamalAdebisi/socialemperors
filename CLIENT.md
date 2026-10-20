@@ -1409,9 +1409,9 @@ Walking ones did, for two reasons:
 - The editor made the whole map's walking grid again, to see whether
   something had been built on that one tile.
 
-With 100 units walking, an average frame took 7 ms and one in twenty more
-than 25 ms. Now they take 0.9 ms and 2 ms. Zoomed in, 8 ms and 31 ms
-became 0.4 ms and 0.9 ms. A home computer may well be slower than our
+With 100 units walking and the whole map in view, an average frame took
+6.6 ms and one in twenty 24 ms. Now they take 0.9 ms and 2.1 ms. Zoomed
+in, 5.5 ms and 21 ms became 0.5 ms and 0.9 ms. A home computer may well be slower than our
 test machine; the gain should be in proportion. (The graphics chip's own
 work isn't in these numbers: the test machine draws in software.)
 

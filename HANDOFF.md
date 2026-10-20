@@ -43,7 +43,7 @@ follow below; status-only receipt edits change no game, art or test file.
   with the square of the town) and rebuilt the walking grid at each step;
   now one number per picture, one tile's check, hovering that skips what's
   far away, and culling off the screen. With 100 units walking a frame
-  went from 7 ms (25 ms for one in twenty) to under 1 ms (2 ms). Fast
+  went from 6.6 ms (24 ms for one in twenty) to 0.9 ms (2.1 ms). Fast
   drawing in the Menu draws high-density screens one for one. See CLIENT.md,
   "A busy town", and DECISIONS.md (20 October). Test `e2e/tests/crowd.mjs`.
 
