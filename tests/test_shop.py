@@ -14,6 +14,10 @@ os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
 import sessions
 from command import command, do_command
+from get_game_config import MORE_BARRACKS, get_game_config, get_item_from_id as get_game_config_item
+from paths import ASSETS_DIR as ASSETS
+
+GRYPHON_BARRACKS, GRYPHON_KNIGHT = 1223, 700
 
 BARRACKS_III, SWORDSMAN, VILLAGER, SPEARMAN, ROYAL_SWORDSMAN = 40, 511, 500, 509, 608
 TOWER, SACRIFICE_ALTAR = 33, 225
@@ -73,6 +77,23 @@ class ShopTest(unittest.TestCase):
     def test_villagers_cost_only_food(self):
         self.send("buy", VILLAGER, X, Y, 0, TOWN, 0, 1, "u")  # the Town Hall trains them
         self.assertEqual((self.map["coins"], self.map["food"]), (10000, 10000 - 50))
+
+    def test_the_barracks_the_game_never_sold_are_in_the_shop(self):
+        items = {int(item["id"]): item for item in get_game_config()["items"]}
+        for barracks in MORE_BARRACKS:
+            item = items[barracks]
+            self.assertEqual((item["in_store"], item["type"]), ("1", "b"), item["name"])
+            self.assertEqual(items[int(item["trains"])]["type"], "u", item["name"])
+            self.assertTrue(os.path.exists(os.path.join(ASSETS, "buildingsprites", item["img_name"] + ".swf")), item["name"])
+        self.assertEqual(items[1328]["in_store"], "0")  # Necro Shark Barracks: no picture in the game's files
+
+    def test_a_gryphon_barracks_bought_for_cash_trains_for_gold(self):
+        price = int(get_game_config_item(GRYPHON_BARRACKS)["cost"])
+        self.send("buy", GRYPHON_BARRACKS, 40, 40, 0, TOWN, 0, 1, "b")
+        self.assertEqual(self.cash(), 500 - price)
+        self.send("buy", GRYPHON_KNIGHT, X, Y, 0, TOWN, 0, 1, "u")
+        self.assertEqual(self.map["coins"], 10000 - int(get_game_config_item(GRYPHON_KNIGHT)["cost"]))
+        self.assertEqual(len(self.on_map(GRYPHON_KNIGHT)), 1)
 
     def test_a_unit_from_elsewhere_costs_no_food(self):
         # No barracks here: the unit came from somewhere else, like a quest prize.

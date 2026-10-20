@@ -4,6 +4,20 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: the shop sells the barracks the game kept back
+
+The units-book audit found 58 units whose barracks are in the game's data
+but were never sold in its shop (the original handed them out in events
+and offers). With the owner's agreement, the shop sells 57 of those
+barracks in New, Limited Edition, beside the premium barracks it already
+sold, at their own price and level (level 8, as the original's other
+premium barracks; most cost cash, some gold). Their units train for gold
+as usual. Left out: the Zeus Barrack, Dwarf Axe Barrack and Dwarf Priest
+Barrack, which train units another barracks here already trains (Ulises,
+the Devil and Chariot Gladiators), and the Necro Shark Barracks, which has
+no picture in the game's files, so the Necro Shark Monster stays book-only.
+Their cash prices follow the new price rule once it is merged.
+
 ## 20 October 2026: the units book counts look-alikes
 
 An audit of the units book (the owner's request) found that its troll
