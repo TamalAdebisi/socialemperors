@@ -39,10 +39,10 @@ class ChainedTest(unittest.TestCase):
         pair = get_item_from_id(FIRE_PAIR)
         self.assertEqual((pair["in_store"], pair["cost_type"]), ("1", "g"))
         self.assertEqual(pair["chained_units"], f"{FIRE_GOD},{FIRE_COLOSSUS}")
-        # By strength: 10 gold for each point of health times attack, rounded up to 10,000.
-        self.assertEqual(int(pair["cost"]), 7_290_000, "(4,000 x 100 + 3,500 x 94) x 10")
-        self.assertEqual(int(get_item_from_id(DRAGGY_CHAIN)["cost"]), 50_000, "250 x 20 x 10")
-        self.assertEqual(int(get_item_from_id(THREE_HEAD_CHAIN)["cost"]), 2_490_000, "3,150 x 79 x 10, rounded up")
+        # By strength: 5 gold for each point of health times attack, rounded up to 10,000.
+        self.assertEqual(int(pair["cost"]), 3_650_000, "(4,000 x 100 + 3,500 x 94) x 5, rounded up")
+        self.assertEqual(int(get_item_from_id(DRAGGY_CHAIN)["cost"]), 30_000, "250 x 20 x 5, rounded up")
+        self.assertEqual(int(get_item_from_id(THREE_HEAD_CHAIN)["cost"]), 1_250_000, "3,150 x 79 x 5, rounded up")
         self.assertEqual(pair["min_level"], "20")
         self.assertEqual(get_item_from_id(DRAGGY_CHAIN)["min_level"], "10")
         chests = [item for item in get_game_config()["items"] if item["name"].startswith("Chained") and "Chest" in item["name"]]
