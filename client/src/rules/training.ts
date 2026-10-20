@@ -70,6 +70,15 @@ export function population(town: Town, items: Map<number, ItemInfo>, increasePer
   return { current, max: Math.min(granted, MOST_POPULATION) + extra };
 }
 
+/**
+ * Whether a unit fits among the town's people. One that takes no room (the
+ * villagers: the server's config gives them none, the owner's rule) always
+ * does, even in a town already over its room after a house burnt down.
+ */
+export function fits(people: Population, unit: ItemInfo): boolean {
+  return unit.population <= 0 || people.current + unit.population <= people.max;
+}
+
 export interface Price {
   resource: Resource;
   amount: number;
@@ -108,7 +117,7 @@ export function countOf(town: Town, id: number): number {
 /** Why a unit can't be trained now, or null: no room for it, as many as allowed, or not enough to pay. */
 export function cantTrain(town: Town, unit: ItemInfo, items: Map<number, ItemInfo>, withCash: boolean): string | null {
   const people = population(town, items);
-  if (people.current + unit.population > people.max) {
+  if (!fits(people, unit)) {
     return people.current >= MOST_POPULATION ? "Your town can't grow any bigger." : "No room for more people: build houses.";
   }
   if (unit.unitsLimit > 0 && countOf(town, unit.id) >= unit.unitsLimit) {

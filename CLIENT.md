@@ -1121,6 +1121,11 @@ room. Code: `rules/training.ts` (with tests), `TownEditor.train`.
   both, as in the Flash client), except the Great Church, whose own room
   counts once and whose steps (10 room each) go on top instead. Taken: the `population` of the player's units, on the map and
   inside buildings. Wild animals and the island's trolls don't count.
+- **Villagers take no room** (the owner's rule, DECISIONS.md, 20 October
+  2026; the original counted them). The server's game config gives the
+  workers a population of 0 (`get_game_config.villagers_take_no_room`), so
+  both clients leave them out of the count. A unit with no population is
+  never stopped for room here (`fits`), even in a town over its room.
 - What stops it: no room for the unit, the unit's `units_limit` reached
   (counting those inside buildings), not enough to pay, or the building
   already training.

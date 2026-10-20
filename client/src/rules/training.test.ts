@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { ItemInfo } from "./config.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { cantTrain, countOf, payForTraining, population, trained, trainingPrice } from "./training.ts";
+import { cantTrain, countOf, fits, payForTraining, population, trained, trainingPrice } from "./training.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House I", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
@@ -69,6 +69,22 @@ test("what stops training: room, the limit, the price", () => {
   const limited = { ...SPEARMAN, unitsLimit: 1 };
   assert.match(cantTrain(town([hall, placed(limited, 40, 40)]), limited, ITEMS, false)!, /as many/);
   assert.equal(countOf(town([placed(MINE, 47, 47, { units: [509, 509] })]), 509), 2);
+});
+
+test("villagers take no room (the server's config gives them none): never stopped by the cap", () => {
+  const worker = { ...VILLAGER, population: 0 };
+  const items = new Map([worker, SPEARMAN].map((i) => [i.id, i]));
+  const hall = placed(HALL, 52, 52);  // room for 5
+  const full = town([hall, ...Array.from({ length: 5 }, (_, i) => placed(SPEARMAN, 40 + i, 40)),
+    ...Array.from({ length: 8 }, (_, i) => placed(worker, 40 + i, 44)), placed(MINE, 47, 47, { units: [500] })]);
+  assert.deepEqual(population(full, items), { current: 5, max: 5 }, "the soldiers only");
+  assert.match(cantTrain(full, SPEARMAN, items, false)!, /No room/);
+  assert.equal(cantTrain(full, worker, items, false), null);
+  // Over its room (a house burnt in a raid): still no soldier, still a villager.
+  const over = town([hall, ...Array.from({ length: 7 }, (_, i) => placed(SPEARMAN, 40 + i, 40))]);
+  assert.equal(cantTrain(over, worker, items, false), null);
+  assert.ok(fits({ current: 7, max: 5 }, worker));
+  assert.ok(!fits({ current: 5, max: 5 }, SPEARMAN));
 });
 
 test("trained: paid at the start, out beside the building after, with the Flash client's command", () => {

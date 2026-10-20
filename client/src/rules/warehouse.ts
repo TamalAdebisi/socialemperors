@@ -5,7 +5,7 @@ import type { Command } from "../net/commands.ts";
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { isTheirs } from "./editing.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { countOf, population } from "./training.ts";
+import { countOf, fits, population } from "./training.ts";
 import { freeTileNear } from "./work.ts";
 
 export const UNIT_WAREHOUSE = 1284;
@@ -63,8 +63,7 @@ export function cantDeployWarehouse(town: Town, item: ItemInfo, items: Map<numbe
   if (item.unitsLimit > 0 && countOf(owned, item.id) >= item.unitsLimit) {
     return `That's as many ${item.name} as a town can have.`;
   }
-  const people = population(town, items);
-  if (people.current + item.population > people.max) {
+  if (!fits(population(town, items), item)) {
     return "No room for more people: build houses.";
   }
   return null;

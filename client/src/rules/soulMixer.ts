@@ -5,7 +5,7 @@ import type { Command } from "../net/commands.ts";
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { isTheirs } from "./editing.ts";
 import { freeTileNear, letAllOut } from "./work.ts";
-import { countOf, population } from "./training.ts";
+import { countOf, fits, population } from "./training.ts";
 import { freeSpotNear, type Given } from "./dock.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
@@ -182,8 +182,7 @@ export function claimMix(town: Town, building: PlacedItem, state: MixerState, it
   const queue = state.queues.get(building.queueId ?? "");
   const item = queue ? items.get(queue.unit) : undefined;
   if (!queue || !item?.isUnit || mixRemaining(queue, item, now) !== 0) return "Your unit is not ready yet.";
-  const people = population(town, items);
-  if (people.current + item.population > people.max) return "No room for more people: build houses.";
+  if (!fits(population(town, items), item)) return "No room for more people: build houses.";
   const tile = freeTileNear(town, building);
   if (!tile) return "There is no free space beside the Soul Mixer.";
   const unit: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };

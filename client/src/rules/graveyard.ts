@@ -7,7 +7,7 @@
 
 import type { ItemInfo } from "./config.ts";
 import { MAP_TILES, type Point } from "./geometry.ts";
-import { countOf, population } from "./training.ts";
+import { countOf, fits, population } from "./training.ts";
 import { takenTiles } from "./editing.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
@@ -84,7 +84,7 @@ export function heroPrice(item: ItemInfo): number {
 /** Why a unit can't come back now (no room, as many as allowed), or null. */
 export function cantRevive(town: Town, item: ItemInfo, items: Map<number, ItemInfo>): string | null {
   const people = population(town, items);
-  if (people.current + item.population > people.max) {
+  if (!fits(people, item)) {
     return people.current >= MOST_POPULATION ? "Your town can't grow any bigger." : "No room for more people: build houses.";
   }
   if (item.unitsLimit > 0 && countOf(town, item.id) >= item.unitsLimit) {

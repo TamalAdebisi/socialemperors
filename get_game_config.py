@@ -67,6 +67,20 @@ def patch_game_config():
 
     remove_duplicate_items()
     economy.patch_config(__game_config)  # where cash comes from: economy.py
+    villagers_take_no_room(__game_config)
+
+
+VILLAGERS = "71"  # subcat_functional of the workers: the villagers and the trolls' Mr. and Mrs. Troll
+
+
+def villagers_take_no_room(config: dict) -> None:
+    """The owner's rule (DECISIONS.md, 20 October 2026): the population cap is
+    for fighting units, so workers take no room. Both game clients count a
+    town's people from each unit's population in this config, and only train
+    or place a unit while it fits, so a population of 0 does it for both."""
+    for item in config["items"]:
+        if str(item.get("subcat_functional")) == VILLAGERS and item.get("type") == "u":
+            item["population"] = "0"
 
 print (" [+] Applying config patches and mods...")
 patch_game_config()
