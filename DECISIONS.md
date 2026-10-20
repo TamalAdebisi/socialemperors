@@ -4,6 +4,66 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: gifts from storage, level ups, the warehouse, and a rollback
+
+The owner gave a Bull Gladiator Barrack from storage and it seemed to stay
+in their storage. The server had taken it out, but the game still showed
+it until the town loaded again, and the server placed things "not in
+storage" anyway, so the copy on screen could be built a second time. That
+hole was closed earlier the same day (placing needs the item in storage,
+below). The owner asked for the same with units, for anyone abusing it to
+be rolled back, and for one player to be checked.
+
+The logs showed no one else used the "placed anyway" hole. They showed a
+different one: two accounts of one player passed the same buildings and
+units back and forth from storage, six times in an hour. Each pass landed
+in the gift box, and a gift gives its experience when placed, so every
+pass paid the whole bundle's experience again (about 8,000), with the
+level prizes on top. One account went from level 2 to 21, the other from
+30 to 35, and the first spent its prize cash on an offer pack of units for
+the second.
+
+- **A thing given from storage lands in the friend's storage**, not their
+  gift box, so placing it gives no experience: it paid its experience when
+  it was built. Free gifts still go to the gift box and give theirs, as on
+  Facebook. The original had no giving from storage; this is our feature,
+  and in the original only the gift box gives experience (both clients
+  follow that), so this is the smallest change that ends the loop. Gifts
+  from storage already waiting in inboxes follow the new rule when taken.
+- **The server gives a gift's experience only for what came out of the gift
+  box**, so an edited `place_gift` for a stored thing pays nothing.
+- **What is given leaves the giver first**, from the town on screen (the
+  window used the home town, wrong for a player in their second town), and
+  goes back into storage if the gift can't be sent.
+- **Level ups are checked against the server's own experience.** The server
+  took the game's word for a level and raised the experience to match, so
+  an edited request (or a game still open on a town since rolled back)
+  could claim any level and its prizes. Now a level up may be up to a tenth
+  of that level's experience ahead of the server's count, which the server
+  then takes on (an action whose experience it missed); further ahead is
+  refused. The score the game sends as the town starts is the server's own
+  number repeated, so it no longer changes the count. The browser tests'
+  server still takes both, and logs "would refuse".
+- **The warehouse lets out only units it holds, and takes in only units on
+  the map.** Both were done anyway "so it is not lost", which could make
+  units from nothing. The logs show no one did.
+- **The rollback** (the owner: "let him keep the green bahamut but
+  everything else take it back"), done on the live game before this change
+  deployed (the owner wanted to play): written to the database while both
+  empires were idle, each write guarded so a newer save would have been
+  left alone, then the server restarted at once to load them, and the
+  database read again afterwards. For each account: the experience every pass gave (counted from
+  the server's log, placement by placement), the levels it bought, and
+  those levels' prizes; the levels' paid mark goes back too, so real play
+  pays them again. The offer pack's units go, but the Green Bahamut Dragon,
+  and its buyer gets back the pack's price less the prize cash taken (4
+  cash). Things passed along and still unplaced go to storage, where they
+  give no experience. The buildings themselves stay where they are: they
+  were bought honestly. A backup of both empires from before is kept off
+  the repository.
+- **Left alone:** the owner's own second Barrack from their gift on 19
+  October (the hole above), which is theirs to keep or remove.
+
 ## 20 October 2026: A busy town drawn fast, and Fast drawing
 
 The owner found the game slow with many units and chose all five fixes

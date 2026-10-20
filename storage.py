@@ -395,7 +395,7 @@ class BaseStorage:
         """The gift, marked taken, or None if it isn't waiting for them (any
         more). One statement, so a gift taken twice at once is taken once."""
         rows = self._query("UPDATE friend_gifts SET taken_at = ? WHERE id = ? AND to_id = ? AND taken_at IS NULL "
-                           "RETURNING id, item, count, from_id", (int(time.time()), gift_id, user_id))
+                           "RETURNING id, item, count, free, from_id", (int(time.time()), gift_id, user_id))
         return rows[0] if rows else None
 
     def free_gifts_sent(self, from_id: int, since: int) -> list:

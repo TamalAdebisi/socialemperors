@@ -11,6 +11,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import levels
 import sessions
 from command import do_command
 from get_game_config import get_xp_from_level
@@ -62,6 +63,7 @@ class MagicTest(unittest.TestCase):
     def test_mana_from_level_36(self):
         self.map.update(level=34, levelPaid=34, xp=get_xp_from_level(33))
         for level in (35, 36, 37):
+            self.map["xp"] = levels.need(level)
             self.send("rt_level_up", level)
         self.send("rt_level_up", 37)  # sent twice: counted once
         self.assertEqual(self.pState["mana"], 4)

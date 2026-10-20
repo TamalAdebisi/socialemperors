@@ -22,7 +22,9 @@ import gifts
 import inventory
 import sessions
 
-HOUSE, TREE, SCORPION, COW = 1, 100, 520, 504
+from command import do_command
+
+HOUSE, TREE, SCORPION, COW, CATHEDRAL = 1, 100, 520, 504, 212
 
 
 def send_form(web, path, page="/friends", **fields):
@@ -203,6 +205,61 @@ class GiftsTest(unittest.TestCase):
         self.assertEqual(status, 200, state)
         self.assertEqual([(g["item"], g["count"]) for g in gifts.waiting(stranger[2])], [(COW, 1)])
         self.assertNotIn(COW, inventory.held(sessions.session(alice[3]), 0))  # delivered without a friend request
+
+    def test_a_thing_from_storage_pays_its_experience_once(self):
+        # Passed back and forth between two accounts, a Cathedral used to land
+        # in the gift box each time and pay its 250 experience on every pass.
+        alice, bob = self.player(), self.player()
+        self.friends(alice, bob)
+        inventory.add_stored(sessions.session(alice[3]), 0, CATHEDRAL, 1)
+        for giver, taker in ((alice, bob), (bob, alice), (alice, bob)):
+            state, status = self.window(giver, action="give", friend=taker[2], item=CATHEDRAL, count=1)
+            self.assertEqual(status, 200, state)
+            self.assertNotIn(CATHEDRAL, inventory.held(sessions.session(giver[3]), 0))  # it left the giver
+            self.window(taker, action="take", gift="all")
+            save = sessions.session(taker[3])
+            self.assertNotIn(CATHEDRAL, gift_box(taker[3]))
+            self.assertEqual(inventory.store(save, 0).get(str(CATHEDRAL)), 1)  # in storage instead
+            xp = save["maps"][0]["xp"]
+            do_command(taker[3], "place_gift", [CATHEDRAL, 50, 51, 0, 0])  # as an edited request would ask
+            self.assertEqual(save["maps"][0]["xp"], xp)
+            self.assertEqual([i[:3] for i in save["maps"][0]["items"] if i[0] == CATHEDRAL], [[CATHEDRAL, 50, 51]])
+            do_command(taker[3], "store_item", [50, 51, 0, CATHEDRAL])
+
+    def test_a_free_gift_still_pays_its_experience(self):
+        alice, bob = self.player(), self.player()
+        self.friends(alice, bob)
+        self.window(alice, action="free", friend=bob[2], item=TREE)
+        self.window(bob, action="take", gift="all")
+        self.assertEqual(gift_box(bob[3]).get(TREE), 1)
+        save = sessions.session(bob[3])
+        xp = save["maps"][0]["xp"]
+        do_command(bob[3], "place_gift", [TREE, 50, 51, 0, 0])
+        self.assertEqual(save["maps"][0]["xp"], xp + 1)
+
+    def test_giving_from_the_town_on_screen(self):
+        alice, bob = self.player(), self.player()
+        self.friends(alice, bob)
+        save = sessions.session(alice[3])
+        save["maps"].append(dict(save["maps"][0], store={}, items=[]))
+        save["town"] = 1  # the player has the second town open
+        inventory.add_stored(save, 1, COW, 1)
+        state, _ = self.window(alice)
+        self.assertIn({"id": COW, "name": "Cow", "count": 1}, state["storage"])
+        state, _ = self.window(alice, action="give", friend=bob[2], item=COW, count=1)
+        self.assertIn("on its way", state["ok"])
+        self.assertNotIn(COW, inventory.held(save, 1))
+
+    def test_a_gift_that_cannot_go_stays_in_storage(self):
+        alice, bob = self.player(), self.player()
+        self.friends(alice, bob)
+        save = sessions.session(alice[3])
+        inventory.add_stored(save, 0, COW, 1)
+        with mock.patch.object(sessions.storage(), "add_friend_gift", side_effect=RuntimeError("database down")):
+            with self.assertRaises(RuntimeError):
+                gifts.give({"id": alice[2]}, save, 0, bob[2], COW, 1)
+        self.assertEqual(inventory.held(save, 0).get(COW), 1)
+        self.assertEqual(gifts.waiting(bob[2]), [])
 
     def test_only_your_own_empires_window(self):
         alice, bob = self.player(), self.player()

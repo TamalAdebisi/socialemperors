@@ -64,7 +64,9 @@ follow below; status-only receipt edits change no game, art or test file.
   many run with `SE_ASSETS_URL` pointing at any local address that answers
   404 to everything (with CORS). Those that read a picture's pixels or
   wait for a sprite fail that way: `lessons`, `soul-mixer` and
-  `rider-training` fail so on `main` too. With the real art set
+  `rider-training` fail so on `main` too. With no art at all (20 October,
+  `main` at #131) 46 fail that way on `main`, each with the same error as
+  on a branch: compare against `main` before calling one yours. With the real art set
   (`SE_E2E_LIVE_ASSETS`), run them all.
 
 - **A cash box on the admin page (20 October).** The owner asked for 50
@@ -84,6 +86,17 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **Gifts from storage, level ups and the warehouse (20 October).** The
+  owner reported a given Barrack staying in their storage (the "placed
+  anyway" hole, closed the same day), and asked to check one player: two
+  accounts passed buildings back and forth, earning their experience on
+  every pass through the gift box. A thing given from storage now lands in
+  the friend's storage (no experience); level ups and the start score are
+  checked against the server's experience; the warehouse makes no units
+  from nothing. The two accounts were rolled back on the live game (the
+  owner's call, with one unit kept). See DECISIONS.md (20 October). Tests:
+  `tests/test_gifts.py`, `test_economy.py`, `test_warehouse.py`,
+  `e2e/tests/gifts.mjs`.
 - **The server checks more of what the client claims (20 October):**
   boss prizes, prizes put in storage, placing from storage and the
   merchant's deals (`trust.py`; DECISIONS.md). Free placements (`buy` with

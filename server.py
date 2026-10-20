@@ -50,6 +50,7 @@ from constants import Constant
 from engine import timestamp_now
 from quests import get_quest_map
 import tournaments
+import towns
 from version import version_name
 import worlds
 
@@ -611,8 +612,7 @@ def gifts_window():
                 elif action == "free":
                     reply["ok"] = gifts.send_free(user, _form_int("friend"), _form_int("item"), account_level(user))
                 elif action == "give":
-                    town_id = int(save["playerInfo"].get("default_map") or 0)
-                    reply["ok"] = gifts.give(user, save, town_id, _form_int("friend"), _form_int("item"),
+                    reply["ok"] = gifts.give(user, save, towns.current(save), _form_int("friend"), _form_int("item"),
                                              _form_int("count"))
                 else:
                     abort(400, "Please try again.")
@@ -627,7 +627,7 @@ def gifts_window():
             waiting=gifts.waiting(user["id"]),
             friends=[dict(f, sent_today=f["id"] in sent) for f in friends.everybody(user["id"])],
             free=gifts.free_list(level), next_free=gifts.next_free(level), level=level,
-            storage=gifts.storage_list(save, int(save["playerInfo"].get("default_map") or 0)),
+            storage=gifts.storage_list(save, towns.current(save)),  # the town on screen, not the home town
             loaded_at=bank.loaded_at.get(USERID, 0), now=time.time())
     return json_response(reply, status)
 

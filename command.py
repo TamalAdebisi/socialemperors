@@ -2,7 +2,7 @@ import json
 import traceback
 
 from sessions import session, save_session
-from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
+from get_game_config import get_game_config, get_name_from_item_id, get_attribute_from_mission_id, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 import animals
@@ -297,25 +297,12 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             map["items"] += [[unit_id, unit_x, unit_y, orientation, collected_at_timestamp, level]]
     
     elif cmd == Constant.CMD_RT_LEVEL_UP:
-        new_level = args[0]
-        print("Level Up!:", new_level, end="")
         map = save["maps"][towns.current(save)]  # the client sends no town: the one open
-        map["level"] = args[0]
-        current_xp = map["xp"]
-        min_expected_xp = get_xp_from_level(max(0, new_level - 1))
-        map["xp"] = max(min_expected_xp, current_xp) # try to fix problems with not counting XP... by keeping up with client-side level counting
-        paid = levels.reached(save, map, new_level)  # the level up window's prize, and mana
-        print(f" ({paid})" if paid else "")
+        print("Level Up!:", args[0], f"({levels.level_up(save, map, args[0])})")  # the prize, and mana
 
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
-        new_xp = args[0]
-        print("xp set to", new_xp)
         map = save["maps"][towns.current(save)]
-        map["xp"] = new_xp
-        map["level"] = get_level_from_xp(new_xp)
-        paid = levels.reached(save, map, map["level"])  # a level up the server missed
-        if paid:
-            print("Level up:", paid)
+        print("Score", args[0], f"({levels.score(save, map, args[0])})")  # a level up the server missed
 
     elif cmd == Constant.CMD_EXPAND:
         land_id = args[0]

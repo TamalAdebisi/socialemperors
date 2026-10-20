@@ -6,12 +6,15 @@ The client shows two boxes together in its storage window:
     privateState["gifts"]  {item id: count}, shared by every town: gifts and
                            rewards. Placing a gift also gives its experience.
     map["store"]           {item id: count}, one per town: things the player
-                           put away, or won or bought straight into storage.
+                           put away, or won or bought straight into storage,
+                           and things a friend gave from their own storage
+                           (gifts.py). Placing them gives no experience.
 
 Either box may be a list indexed by item id (older saves) or a dict; the
 client reads both the same way. Items stored before map["store"] was used
 are in gifts, so placing or selling takes from the box the client names
-first and falls back to the other one.
+first and falls back to the other one. Experience comes only with what
+really came out of the gift box.
 
 Commands from the client:
 
@@ -81,15 +84,16 @@ def add_stored(save: dict, town_id: int, item_id: int, count: int = 1) -> None:
     _change(store(save, town_id), int(item_id), count)
 
 
-def _take(save: dict, town_id: int, item_id: int, gift_first: bool) -> bool:
-    boxes = [gifts(save), store(save, town_id)]
+def _take(save: dict, town_id: int, item_id: int, gift_first: bool) -> str:
+    """One out of storage: the box it came out of ("gifts" or "store"), or "" if neither holds it."""
+    boxes = [("gifts", gifts(save)), ("store", store(save, town_id))]
     if not gift_first:
         boxes.reverse()
-    for box in boxes:
+    for name, box in boxes:
         if _count(box, item_id) > 0:
             _change(box, item_id, -1)
-            return True
-    return False
+            return name
+    return ""
 
 
 def held(save: dict, town_id: int) -> dict:
@@ -108,9 +112,7 @@ def take(save: dict, town_id: int, item_id: int, count: int) -> bool:
     nothing taken unless there are that many."""
     if held(save, town_id).get(int(item_id), 0) < count:
         return False
-    for _ in range(count):
-        _take(save, town_id, int(item_id), gift_first=True)
-    return True
+    return all(_take(save, town_id, int(item_id), gift_first=True) for _ in range(count))
 
 
 def put_away(save: dict, x, y, town_id: int, item_id) -> str:
@@ -141,10 +143,11 @@ def add_items(save: dict, ids_json: str, town_id: int = 0, upcoming: list = ()) 
 
 def place(save: dict, item_id, x, y, orientation, town_id: int, is_gift: bool) -> str:
     map = save["maps"][town_id]
-    if not _take(save, town_id, int(item_id), gift_first=is_gift):
+    box = _take(save, town_id, int(item_id), gift_first=is_gift)
+    if not box:
         return f"Refused: item {item_id} is not in storage."
     map["items"].append([item_id, x, y, orientation, timestamp_now(), 0])
-    if is_gift:  # the client gives a gift's experience when it is placed
+    if is_gift and box == "gifts":  # the client gives a gift's experience when it is placed; a stored thing paid its own when built
         if int(item_id) == LEVEL_UP_STATUE:
             map["xp"] = max(int(map["xp"]), get_xp_from_level(get_level_from_xp(map["xp"])))
         else:

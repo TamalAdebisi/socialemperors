@@ -161,10 +161,13 @@ island's prize must be the island's own, a prize put in storage
 (`store_add_items`) must be a darts prize thrown in the same batch, a troll
 camp's prize (no more of each than the camps give) or a hero bought with
 cash just after, placing from storage needs the item there, and the
-merchant sells only his kind of building for at least half price. The
-browser tests' server sets `SE_E2E_SEEDING`, which lets tests fill storage
-in one step and logs "would refuse" instead. Still believed: battle gold
-and experience, and the things the game places for free.
+merchant sells only his kind of building for at least half price. A level
+up must be within a tenth of that level's experience of the server's own
+count, the score sent at start can't change that count, and the warehouse
+lets out only units it holds. The browser tests' server sets
+`SE_E2E_SEEDING`, which lets tests fill storage or set a level in one step
+and logs "would refuse" instead. Still believed: battle gold and
+experience, and the things the game places for free.
 
 To keep the second way open, battles are written to be repeatable: a seeded
 random number generator and a fixed time step, so the same battle with the
@@ -1347,7 +1350,10 @@ neighbours, Arthur last; Visit opens their town. Code:
   wait as the town opens, as the classic page does. What sends the town's
   waiting commands first, so the server's storage is the one on screen;
   what it changes shows once the town loads again, as the window closes.
-  Test: `e2e/tests/gifts.mjs`.
+  A thing given leaves the giver's storage (of the town on screen) at
+  once, and the friend takes it into their storage, not their gift box:
+  only a free gift gives its experience when placed (DECISIONS.md, 20
+  October 2026). Test: `e2e/tests/gifts.mjs`.
 
 **Not yet:** requests between neighbours, and adding neighbours from
 inside the game (the site's friends page does it). The site's links are
