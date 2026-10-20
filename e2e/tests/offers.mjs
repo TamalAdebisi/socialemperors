@@ -22,9 +22,9 @@ export default async function offers({ newPlayer }) {
 
   await player.press("Build");
   await player.press("Offers");
-  const card = (id) => page.locator(`.shop-card.offer[data-offer="${id}"]`);
+  const card = (id) => page.locator(`.shop-card.offer-card[data-offer="${id}"]`);
   await card(PACK).waitFor();
-  assert.equal(await page.locator(".shop-card.offer").count(), 65, "every pack and box the game has");
+  assert.equal(await page.locator(".shop-card.offer-card").count(), 65, "every pack and box the game has");
   await page.waitForFunction(() => document.querySelector('[data-offer="1"] .offer-picture img')?.naturalWidth > 0, null, { timeout: 15_000 });
   await player.shot("offers");
 
@@ -49,7 +49,7 @@ export default async function offers({ newPlayer }) {
   await player.said(/is in your Storage/);
   await player.shot("bought");
   // A box the game has no picture of shows its prizes' pictures.
-  const unpictured = page.locator(".shop-card.offer .offer-prizes").first();
+  const unpictured = page.locator(".shop-card.offer-card .offer-prizes").first();
   await unpictured.scrollIntoViewIfNeeded();
   assert.ok(await unpictured.locator("img").count() > 0);
   await player.shot("prizes");

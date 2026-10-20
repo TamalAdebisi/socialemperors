@@ -220,7 +220,8 @@ numbers, because the server writes them into the game config.
       above that it shrinks along one curve (`cash_price`: 30 becomes 19,
       120 becomes 44, 260 becomes 71, 450 becomes 98). It applies to the
       units book, everything sold for cash, and the two Bahamut collections
-      bought outright; the offer packs, mystery boxes and darts follow.
+      bought outright, the offer packs, mystery boxes and darts (switched on
+      20 October 2026: Build → Offers, and a darts board each week).
       Speeding up a wait keeps the game's price. An active player earns
       about 10 cash a day, so the best things cost about a week of playing
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the

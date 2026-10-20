@@ -181,6 +181,7 @@ export class ShopWindow {
     const cards = storing ? stored.map((card) => this.storageCard(card))
       : offering ? this.parts.offers!()
       : this.parts.items(this.category, this.tab).map((item) => this.shopCard(item));
+    this.list.classList.toggle("offer-items", offering);  // the packs' pictures are wide banners
     this.list.replaceChildren(...cards);
     if (cards.length === 0) {
       const empty = document.createElement("li");

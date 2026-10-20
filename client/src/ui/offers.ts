@@ -32,7 +32,7 @@ export function offerCards(parts: OfferParts): HTMLLIElement[] {
 function card(parts: OfferParts, offer: Offer): HTMLLIElement {
   const li = document.createElement("li");
   const box = document.createElement("div");
-  box.className = "shop-card offer";
+  box.className = "shop-card offer-card";
   box.dataset.offer = String(offer.id);
   const picture = document.createElement("span");
   picture.className = "offer-picture";
