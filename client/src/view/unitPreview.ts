@@ -4,13 +4,17 @@ import type { ItemInfo } from "../rules/config.ts";
 import type { ArtLibrary } from "./art.ts";
 import { anchorOf } from "./art.ts";
 
-export function unitPreview(art: ArtLibrary, item: ItemInfo, canvas: HTMLCanvasElement, active: () => boolean): () => void {
+export function unitPreview(art: ArtLibrary, item: ItemInfo, canvas: HTMLCanvasElement, active: () => boolean,
+  missing?: () => void): () => void {
   let stopped = false, frame = 0;
   const stop = () => { stopped = true; cancelAnimationFrame(frame); };
   void art.get(item.art).then((sheet) => {
-    if (!sheet || stopped || !active()) return;
-    const runs = [1, 2, 6].map((n) => sheet.numbered(n, 3)).filter((run) => run && run.length > 0);
-    if (!runs.length) return;
+    if (stopped || !active()) return;
+    const runs = sheet ? [1, 2, 6].map((n) => sheet.numbered(n, 3)).filter((run) => run && run.length > 0) : [];
+    if (!sheet || !runs.length) {
+      missing?.();  // no sheet to draw from: the caller shows something else
+      return;
+    }
     const textures = runs.flatMap((run) => run!);
     const boxes = textures.map((t) => {
       const a = anchorOf(t), trim = t.trim;

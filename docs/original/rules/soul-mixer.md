@@ -1,4 +1,4 @@
-# Soul Mixer: later original rules and missing content
+# Soul Mixer: later original rules, and its tables rebuilt from the wiki
 
 Researched locally on 17 October 2026. The deployed classic client is
 `SocialEmpires0926bsec`; it contains no Soul Mixer implementation. The
@@ -16,34 +16,36 @@ also read: `core/Constants`, `Config`, `Language`, `statics/StaticData`,
 The three `AbstractEp*` portrait bases were also read for active-work
 guards: moving, storing and selling are refused; turning stays available.
 
-## Status and the data blocker
+## Status: working, with tables rebuilt from the wiki
 
 The window, generic rules and original queue commands are implemented in
 `client/src/ui/soulMixer.ts`, `client/src/rules/soulMixer.ts` and
-`soul_mixer.py`. **New mixes are unavailable with the shipped config.**
-The window explains the limitation. New selection, ordinary map entry,
-new mixing and every cash-spending action require complete validated
-content. Known completed legacy work can still be collected without
-spending; an unknown duration is never treated as completion.
+`soul_mixer.py`. The original's content tables were not preserved:
 
-| Missing original data | Meaning |
-| --- | --- |
-| Each eligible item's `breeding_order` | Input eligibility and result ordering |
-| Each eligible item's `sm_training_time` | The result's wait, in seconds |
-| `globals.SOUL_MIXER_POWERUPS_LEVELS` | Cash prices and ordering increments |
-| `globals.SOUL_MIXER_MIN_LEVEL` | Level for the passive free building |
+| Original data | Meaning | Ours, since 20 October 2026 |
+| --- | --- | --- |
+| Each eligible item's `breeding_order` | Input eligibility and result ordering | Strength order, moved for the wiki's recipes |
+| Each eligible item's `sm_training_time` | The result's wait, in seconds | 3 hours to 5 days 10 hours, by rank (the wiki's two times) |
+| `globals.SOUL_MIXER_POWERUPS_LEVELS` | Cash prices and ordering increments | 1 to 7 cash (the wiki's "+1" and "+3"), increment 0 |
+| `globals.SOUL_MIXER_MIN_LEVEL` | Level for the passive free building | 8, the shop's level (the wiki doesn't say) |
 
-`config/patch/soulmixer_temp.json` supplies a temporary building record and
-art name, not these tables. The later static-data reader gets the item
-fields from the server; the window gets power-ups from globals. Neither
-provides default values. Recovery checked every historical config payload,
+The owner asked (19 October 2026) for these to be rebuilt from the Social
+Empires Tips Wiki's "Soul Mixer Combinations" page, which they saved and
+uploaded. `config/soulmixer_wiki.json` holds them, with the source of
+every value; `tools/soul_mixer_wiki.py` makes it, using an exact copy of
+the rules below to check that the wiki's recipes can give their results.
+The server applies the file (`get_game_config.soul_mixer_from_the_wiki`)
+only when the config has no `breeding_order` of its own, so a genuine
+later config, if one is ever found, replaces it unchanged. DECISIONS.md
+lists the calls.
+
+`config/patch/soulmixer_temp.json` supplies the building record and art
+name. Recovery before the wiki checked every historical config payload,
 including July/August 2012 PHP responses, `4399_config.json`,
-`game_config_4399.json`, `main.json`, patches and mods. None has the data.
-A read-only check of the preservation project's
-[original config directory](https://github.com/AcidCaos/socialemperors/tree/main/config)
-found the same earlier files and temporary patch. Exact-key public searches
-found no later dump. Community combination lists do not provide the full
-ordering and wait tables and are not used as replacement content.
+`game_config_4399.json`, `main.json`, patches and mods, and the
+preservation project's
+[original config directory](https://github.com/AcidCaos/socialemperors/tree/main/config):
+none has the data.
 
 ## Selection and result rules
 
@@ -106,28 +108,21 @@ ordering and wait tables and are not used as replacement content.
   checks the live building and current parents before using its preview.
 - Map initialization and level-up check `SOUL_MIXER_MIN_LEVEL`; without
   a placed or stored/gift mixer the later original tries to give one free
-  near tile 59,59. Ours guards that check on complete original content;
-  no guessed level or unusable free building is introduced.
+  near tile 59,59. Ours does the same once the tables are complete (with
+  the wiki's, from level 8).
 - The later goal listener counts mixing starts. None of the 227 shipped
   missions has that goal, so the unfinished-goal count is unchanged and
   no later progression goals are added.
 
 ## Verification
 
-Eighteen focused client tests cover ranking, tier ordering, restrictions, limits,
-command arguments, save restore, waiting, speed-up, population, surviving
-parents, passive grants, global queue reservations and stale editor callbacks. Twelve server tests
-replay the queue protocol, missing/partial-data refusal, elapsed work,
-retries, malformed timestamps, late edit commands and safe collection. Their
-synthetic tables are confined to tests and never shipped.
-`e2e/tests/soul-mixer.mjs` checks original help art, desktop/phone fit,
-reload and unchanged saved units, cash and queues in the current
-unavailable state. Exact clean `c944e853` passed focused Chromium 1/1 in 67s;
-all three fresh captures and the clean local server log were reviewed.
-Server459 (nine existing skips), types and client 420/420 also passed there.
-A later exact-integer parser correction passed types and all 17 focused
-client/11 server tests; that source-only correction did not change the art.
-A subsequent malformed-output guard passed types and all 18 focused client/
-12 server tests, refusing building metadata while retaining valid legacy units.
-The [delivery record](../../verification-soul-mixer.md) preserves scope
-and the original-data blocker. No playable new mixing is claimed.
+Eighteen focused client tests cover ranking, tier ordering, restrictions,
+limits, command arguments, save restore, waiting, speed-up, population,
+surviving parents, passive grants, global queue reservations and stale
+editor callbacks, on synthetic tables. The server tests replay the queue
+protocol with no tables, with synthetic ones and with the wiki's (a real
+mix of two Valkyries, its wait, speed-up and collection; gods and colossi
+in the top range). `e2e/tests/soul-mixer.mjs` plays a real mix in the
+browser, the original help, the phone sheet and old saves. The earlier
+record of the blocked state is in
+[the delivery record](../../verification-soul-mixer.md).

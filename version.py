@@ -6,7 +6,7 @@ import quests
 from get_game_config import get_attribute_from_item_id
 
 version_name = "alpha 0.07"
-version_code = "0.09a"
+version_code = "0.10a"
 
 
 def _has_entries(value) -> bool:
@@ -80,6 +80,25 @@ def _box(box) -> list:
     if isinstance(box, list):
         return [(id, int(n or 0)) for id, n in enumerate(box)]
     return []
+
+
+SOUL_MIXER = 1529
+
+
+def one_soul_mixer(save: dict) -> None:
+    """A town may have one Soul Mixer (shop.py). Before that was checked some
+    towns bought several; each keeps one, and its idle extras go, their gold
+    price paid back. A mixer that is mixing, or holds units, stays."""
+    for map in save["maps"]:
+        mixers = [row for row in map.get("items", []) if row[0] == SOUL_MIXER]
+        busy = [row for row in mixers if (len(row) > 6 and row[6]) or (len(row) > 7 and isinstance(row[7], dict) and row[7].get("bq") is not None)]
+        keep = busy or mixers[:1]
+        extras = [row for row in mixers if not any(row is kept for kept in keep)]
+        for row in extras:
+            map["items"].remove(row)
+        if extras:
+            price = int(get_attribute_from_item_id(SOUL_MIXER, "cost") or 0)
+            map["coins"] = int(map.get("coins") or 0) + price * len(extras)
 
 
 def migrate_loaded_save(save: dict) -> bool:
@@ -170,9 +189,15 @@ def migrate_loaded_save(save: dict) -> bool:
         save["version"] = "0.09a"
         print("   > migrated to 0.09a")
 
-    # 0.09a -> 0.10a
-    #if save["version"] == "0.09a":
-    #    save["version"] = "0.10a"
-    #    print("   > migrated to 0.10a")
+    # 0.09a -> 0.10a: one Soul Mixer a town (shop.py); the idle extras are refunded
+    if save["version"] == "0.09a":
+        one_soul_mixer(save)
+        save["version"] = "0.10a"
+        print("   > migrated to 0.10a")
+
+    # 0.10a -> 0.11a
+    #if save["version"] == "0.10a":
+    #    save["version"] = "0.11a"
+    #    print("   > migrated to 0.11a")
 
     return True

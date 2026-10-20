@@ -4,6 +4,57 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: one Soul Mixer a town
+
+The game's data allows one Soul Mixer a town (its `units_limit` is 1), but
+neither the server nor the new client checked it, and one player bought
+ten while the mixer did nothing. Now that it mixes, each mixer would mix
+as fast as the others, so both refuse a second (`shop.py` `ONE_PER_TOWN`,
+`rules/shop.ts`). Towns that already have several keep one, plus any that
+is mixing or holds units, and the idle extras are taken away with their
+gold price (2,000 each) paid back, when the save next loads (`version.py`
+0.10a). Not a penalty: the game let them buy those.
+
+## 20 October 2026: the Soul Mixer's tables, rebuilt from the wiki
+
+The Soul Mixer's window, rules and commands were built, but the original's
+four content tables were never preserved, and HANDOFF.md said never to
+fill them from community guesses. **The owner overruled that** (19 October)
+and saved the Social Empires Tips Wiki's "Soul Mixer Combinations" page for
+us. `config/soulmixer_wiki.json` now holds the tables, with the source of
+every value; `tools/soul_mixer_wiki.py` makes it. The server uses it only
+when the config has no tables of its own.
+
+From the wiki: 39 recipes (result, two parents, power-ups), the wait for
+weak results (3 to 4 hours) and strong ones (5 days 10 hours), speeding up
+at a cash an hour (as the original's rules already did), and power-ups
+costing 1 cash, then 2.
+
+Gaps the wiki leaves, and what we chose:
+
+- **Which units mix:** every unit of the player's own kind (human or any
+  race) except villagers, animals, settlers, carts, summons, bosses and a
+  joke unit, one id per unit: 664 units.
+- **Ranks (`breeding_order`)**, which decide what two units make: by
+  strength (attack times life over attack interval), 10 to 399. The gods,
+  colossi and newest dragon sets (Epic, Djinn, Armor, Ancient) rank 400 to
+  520, where the original rolls a random result among them, so mixing two
+  strong units can give a god or colossus, as the owner asked. Then a
+  seeded search moved the units the recipes name until most recipes can
+  give their result through the original's own rules, usually one try in
+  six to twelve, as the wiki's lists of several results per pair suggest:
+  37 of the 39. The two that can't hold with the others are Galaxy +
+  Black Bahamut Dragon → 3-Head Primal Dragon, and Stormy + Furious Dragon
+  → Orc Dragon (the wiki marks that one "hard to find" too).
+- **Waits (`sm_training_time`)** between the wiki's two times, growing
+  evenly with the rank, to 10 minutes.
+- **Power-ups:** 1 to 7 cash (the wiki shows up to "+7"), each moving the
+  result one unit up.
+- **Opening level:** 8, the level the shop sells the mixer at. As in the
+  original, a town at that level with no mixer gets one free.
+- Left out of the recipes: the wiki's "Deadly Dragon" (only the boss
+  exists in the game's data) and its notes on repeats ("NP 6th time").
+
 ## 20 October 2026: offer packs, mystery boxes and darts switched on
 
 The owner's call after the units audit: switch these on, with prices worth

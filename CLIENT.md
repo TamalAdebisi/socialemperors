@@ -1702,27 +1702,38 @@ The wait has a 30-second limit; the warning and save checks stay the same.
 
 ### The Soul Mixer
 
-The building opens its original-art window and help. Its later original
-rules and queue commands are implemented with tests, but **mixing remains
-unavailable with the archived config**: original unit ranks, mixing times,
-power-up prices and minimum level were not preserved. The window says so
-and blocks new selection/mixing and all cash spending. No replacement
-rules are invented. Known completed legacy queues remain collectable
-without spending when their output is a known unit; unknown waits remain
-unknown. Saved queue fields accept
-only exact safe integers; decimal/exponent strings cannot round into
-completed work.
+The building opens its original-art window and help, and mixes. Put two
+units standing in town inside (Select unit 1 and 2): the result shows as its
+shadow, its sprite drawn in black so its shape shows, as the wiki says
+players recognised them (the darkened picture when its sheet is missing); **Power up** (1 cash, then 2, up to 7) moves it a unit up;
+**Start mixing** begins the wait, from about 3 hours for the weakest
+results to 5 days 10 hours for the strongest; **Speed up** costs a cash an
+hour left; **Get unit** puts the result beside the mixer and both parents
+come back out. A town has one Soul Mixer at most (the shop says "You have
+one"; DECISIONS.md). The rules and commands are the later original's
+(`push_queue_unit`, `buy_powerups`, `speed_up_queue`, `pop_queue_unit`).
+
+The original's content tables (each unit's rank and wait, the power-up
+prices, the opening level) were never preserved, so since 20 October 2026
+they are rebuilt from the community wiki's "Soul Mixer Combinations" page
+at the owner's request: `config/soulmixer_wiki.json`, made by
+`tools/soul_mixer_wiki.py`, which says where every value came from. Ranks
+start from each unit's strength; a town that reaches level 8 without a
+mixer is given one, as in the original; the gods, colossi and newest dragon sets
+rank above 400, where the original rolls a random result among them, so
+two strong units can give one; and a seeded search places the units the
+wiki's recipes name so that 37 of its 39 recipes can give their result,
+typically one try in six to twelve. The server applies the file only when
+the config has no tables of its own, so a genuine original config would
+replace it. Without any tables (an old config), new mixing stays
+unavailable and a finished old mix still collects without spending. Saved
+queue fields accept only exact safe integers.
 
 Files: `rules/soulMixer.ts`, `ui/soulMixer.ts`, `soul_mixer.py` and their
-tests; browser check `e2e/tests/soul-mixer.mjs`. The exact source contract,
-passive grant and recovery search are in
-[the original-rule notes](docs/original/rules/soul-mixer.md). No later
-Soul Mixer goal exists in the 227 shipped missions; the unfinished-goal
-count is unchanged.
-
-Focused Chromium passed 1/1 at `c944e853`, including desktop/phone saved
-state, original help and reload. All three fresh captures and the clean
-server log were reviewed. [Evidence and limits](docs/verification-soul-mixer.md).
+tests; browser check `e2e/tests/soul-mixer.mjs` (a real mix of two
+Valkyries, the help, the phone sheet and old saves). The original's rules
+in detail: [the original-rule notes](docs/original/rules/soul-mixer.md).
+No Soul Mixer goal exists in the 227 shipped missions.
 
 ### The troll town
 

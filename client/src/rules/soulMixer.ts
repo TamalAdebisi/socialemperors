@@ -1,6 +1,8 @@
 // The later original Soul Mixer, researched locally in version 1.4.07.
-// The archived 2012 config lacks its content tables. Never manufacture
-// ranks, waiting times or cash prices: those must come from original data.
+// The archived 2012 config lacks its content tables, so the server fills
+// them from config/soulmixer_wiki.json, rebuilt from the community wiki at
+// the owner's request (DECISIONS.md). These rules only read the config: a
+// genuine original config would replace the wiki's tables unchanged.
 import type { Command } from "../net/commands.ts";
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { isTheirs } from "./editing.ts";
