@@ -47,3 +47,20 @@ test("insufficient cash and foreign unit/category leave the book unchanged", () 
   assert.equal(book.claim(player, category), null);
   assert.equal(player.cash, 1); assert.equal(book.owned.size, 0);
 });
+
+test("a player's look-alike of a book unit counts for it: same name and picture, another id", () => {
+  const info = (id: number, name: string, art: string, race = "t") => ({ id, name, art, race, isUnit: true }) as ItemInfo;
+  const items = new Map([
+    [525, info(525, "Small Troll", "trol1")], [593, info(593, "Small Troll", "trol1")],
+    [552, info(552, "War Troll", "trol5", "h")], [529, info(529, "War Troll", "trol5")],
+    [594, info(594, "Small Troll", "trol2")],  // the same name, another picture: not the same unit
+  ]);
+  const trolls: UnitCategory = { ...category, units: [525, 529] };
+  const player = { ...town(), race: "t" } as unknown as Town;
+  player.items = [{ item: items.get(593)!, wild: false } as PlacedItem, { item: items.get(594)!, wild: false } as PlacedItem];
+  const book = new UnitBook({ a: trolls }, {}, player, items);
+  assert.deepEqual([...book.owned], [525]);
+  const human = town();
+  human.items = [{ item: items.get(552)!, wild: false } as PlacedItem];
+  assert.deepEqual([...new UnitBook({ a: trolls }, {}, human, items).owned], [529]);
+});

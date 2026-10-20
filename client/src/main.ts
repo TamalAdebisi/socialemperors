@@ -526,7 +526,7 @@ async function start(): Promise<void> {
       changed: () => { hud.update(town); shop.refresh(); },
       tell: (text) => editor.tell(text),
     });
-    const unitBook = new UnitBook((config.units_collections_categories ?? {}) as Record<string, UnitCategory>, attackState, town);
+    const unitBook = new UnitBook((config.units_collections_categories ?? {}) as Record<string, UnitCategory>, attackState, town, items);
     const unitsBook = new UnitsBookWindow({
       preview: (item, canvas, active) => unitPreview(art, item, canvas, active),
       book: unitBook, town, items, words: (id, fallback) => lines.get(id) ?? fallback,

@@ -1804,9 +1804,13 @@ reward into Gifts and one cash, once only. Book purchases and claims survive
 reloads; current map units count, and newly acquired map units remain
 recognized for this session, following the original's separate behavior.
 Unplaced Gifts and units inside buildings do not add book credit by
-themselves. `rules/unitBook.ts`, `ui/unitBook.ts` and `view/unitPreview.ts`
+themselves. A unit with the same name and picture as a book unit counts
+for it: the troll pages list the wild trolls' ids, while a troll empire
+trains look-alikes under others, and some units have a second id (a hero's,
+a quest's). `rules/unitBook.ts`, `ui/unitBook.ts` and `view/unitPreview.ts`
 implement it; `e2e/tests/units-book.mjs` checks desktop/phone, the preview,
-buying, category rewards and saved reloads.
+buying, category rewards and saved reloads; `units-book-lookalikes.mjs`
+a player's War Troll ticking the book's.
 
 ### Darts
 
