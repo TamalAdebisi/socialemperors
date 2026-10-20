@@ -164,9 +164,15 @@ class ShopTest(unittest.TestCase):
         self.assertEqual((self.map["store"], self.cash()), ({}, 500))
 
     def test_the_merchants_deal(self):
-        self.send("add_items_store", json.dumps([TOWER, SWORDSMAN]), 7)
-        self.assertEqual(self.cash(), 493)
-        self.assertEqual(self.map["store"], {str(TOWER): 1, str(SWORDSMAN): 1})
+        # Castle I (13) and Castle II (17): the merchant's kind of building, at no less than half price.
+        self.send("add_items_store", json.dumps([27, 28]), 14)
+        self.assertEqual(self.cash(), 500)
+        self.assertFalse(self.map.get("store"))  # too little
+        self.send("add_items_store", json.dumps([TOWER, SWORDSMAN]), 7)  # not his to sell
+        self.assertEqual(self.cash(), 500)
+        self.send("add_items_store", json.dumps([27, 28]), 24)
+        self.assertEqual(self.cash(), 476)
+        self.assertEqual(self.map["store"], {"27": 1, "28": 1})
 
     # Unit collections
 

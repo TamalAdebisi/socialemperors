@@ -224,6 +224,12 @@ numbers, because the server writes them into the game config.
       20 October 2026: Build → Offers, and a darts board each week).
       Speeding up a wait keeps the game's price. An active player earns
       about 10 cash a day, so the best things cost about a week of playing
+- [x] Claims checked (20 October 2026, `trust.py`): boss prizes, prizes
+      put in storage, placing from storage and the merchant's deals, which
+      a player who edits requests could have used to get anything.
+- [ ] The things the game places for free (`buy` with its free flag:
+      dragons hatching, temple dragons, riders, camps, trees growing back)
+      are still believed; each needs a check in its own feature.
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the
       experience and battle gold the game reports, so a determined cheater
       could fake levels, and with them their cash. Checking battles on the

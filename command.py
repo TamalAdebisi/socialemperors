@@ -63,7 +63,7 @@ def command(USERID, data):
         cmd = comm["cmd"]
         args = comm["args"]
         try:
-            do_command(USERID, cmd, args, previous)
+            do_command(USERID, cmd, args, previous, commands[i + 1:])
         except Exception as e:
             # One command the server gets wrong must not cost the player the rest of the batch.
             print(f"\n [!] Command failed: {cmd} {args}")
@@ -72,7 +72,7 @@ def command(USERID, data):
         previous = comm
     save_session(USERID) # Save session
 
-def do_command(USERID, cmd, args, previous=None):
+def do_command(USERID, cmd, args, previous=None, upcoming=None):
     save = session(USERID)
     print (" [+] COMMAND: ", cmd, "(", args, ") -> ", sep='', end='')
 
@@ -359,7 +359,7 @@ def do_command(USERID, cmd, args, previous=None):
 
     elif cmd == Constant.CMD_STORE_ADD_ITEMS:
         ids = args[0] # JSON list of item ids: prizes, and heroes bought without an altar
-        print(inventory.add_items(save, ids, towns.current(save)))
+        print(inventory.add_items(save, ids, towns.current(save), upcoming or []))
 
     elif cmd == Constant.CMD_PLACE_GIFT or cmd == Constant.CMD_PLACE_STORED_ITEM:
         item_id = args[0]

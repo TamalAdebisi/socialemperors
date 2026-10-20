@@ -5,6 +5,7 @@ commands the game client sends.
 Run from the repository folder:  python -m unittest discover tests
 """
 
+import datetime
 import json
 import os
 import tempfile
@@ -17,6 +18,7 @@ import sessions
 from command import command, do_command
 from engine import timestamp_now
 from get_game_config import get_game_config
+from unittest.mock import patch
 
 TOWN = 0
 FIRST_MAP, SECOND_MAP = "100000035", "100000036"  # the two survival maps the client opens
@@ -58,14 +60,26 @@ class PastimesTest(unittest.TestCase):
     def test_a_round_of_darts(self):
         self.send("darts_reset", 4242)
         self.assertEqual((self.pState["dartsRandomSeed"], self.pState["dartsHasFree"]), (4242, True))
-        self.batch(("store_add_items", json.dumps([619])), ("darts_shoot_balloon", 3, 0, 0))  # the free throw
+        # A board with prizes, and the day it is on (the config's last boards are empty until the
+        # weekly darts start): only its prizes are taken.
+        board = next(b for b in get_game_config()["darts_items"] if b["items"])
+        day = datetime.datetime.strptime(board["start_date"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=datetime.timezone.utc).timestamp() + 60
+        on_the_day = patch("inventory.timestamp_now", return_value=day)
+        on_the_day.start()
+        self.addCleanup(on_the_day.stop)
+        prize, extra = board["items"][0], board["extra_item"]
+        self.batch(("store_add_items", json.dumps([prize])), ("darts_shoot_balloon", 3, 0, 0))  # the free throw
         self.assertEqual((self.pState["dartsBalloonsShot"], self.pState["dartsHasFree"]), ([3], False))
         self.assertEqual(self.cash(), 100)
-        self.batch(("store_add_items", json.dumps([577])), ("darts_shoot_balloon", 5, 1, 1))  # paid, and the last one
+        self.batch(("store_add_items", json.dumps([extra])), ("darts_shoot_balloon", 5, 1, 1))  # paid, and the last one
         self.assertEqual(self.cash(), 100 - economy.cash_price(20))  # the game's 20 a dart, shrunk
         self.assertEqual(self.pState["dartsBalloonsShot"], [3, 5])
         self.assertTrue(self.pState["dartsGotExtra"])
-        self.assertEqual(self.map["store"], {"619": 1, "577": 1})
+        self.assertEqual(self.map["store"], {str(prize): 1, str(extra): 1})
+        # A prize with no throw after it, or one the board doesn't hold, is refused (trust.py).
+        self.send("store_add_items", json.dumps([prize]))
+        self.batch(("store_add_items", json.dumps([1])), ("darts_shoot_balloon", 6, 1, 0))
+        self.assertEqual(self.map["store"], {str(prize): 1, str(extra): 1})
         self.send("darts_new_free")
         self.assertTrue(self.pState["dartsHasFree"])
 

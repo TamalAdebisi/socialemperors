@@ -156,6 +156,16 @@ forward:
    results. That closes the cheating gap, but the battle rules then have to
    run on the server too.
 
+Some claims are checked already (`trust.py`, 20 October 2026): a boss
+island's prize must be the island's own, a prize put in storage
+(`store_add_items`) must be a darts prize thrown in the same batch, a troll
+camp's prize (no more of each than the camps give) or a hero bought with
+cash just after, placing from storage needs the item there, and the
+merchant sells only his kind of building for at least half price. The
+browser tests' server sets `SE_E2E_SEEDING`, which lets tests fill storage
+in one step and logs "would refuse" instead. Still believed: battle gold
+and experience, and the things the game places for free.
+
 To keep the second way open, battles are written to be repeatable: a seeded
 random number generator and a fixed time step, so the same battle with the
 same armies always ends the same way. Later the server, or a small
