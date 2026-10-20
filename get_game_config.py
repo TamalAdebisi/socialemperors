@@ -66,6 +66,7 @@ def patch_game_config():
                     print(" * Mod applied:", mod)
 
     remove_duplicate_items()
+    sell_more_barracks(__game_config)
     economy.patch_config(__game_config)  # where cash comes from: economy.py
     villagers_take_no_room(__game_config)
 
@@ -81,6 +82,29 @@ def villagers_take_no_room(config: dict) -> None:
     for item in config["items"]:
         if str(item.get("subcat_functional")) == VILLAGERS and item.get("type") == "u":
             item["population"] = "0"
+
+# Barracks the game's data has but its shop never sold (the original handed
+# them out in events and offers), so their units couldn't be earned. The
+# owner's call (DECISIONS.md, 20 October 2026): the shop sells them, in New,
+# Limited Edition, beside the barracks it already sells, at their own price
+# and level. Left out: the Zeus, Dwarf Axe and Dwarf Priest barracks, which
+# train what another barracks here trains, and the Necro Shark Barracks,
+# which has no picture in the game's files.
+MORE_BARRACKS = (
+    410, 423, 424, 468, 484, 1223, 1224, 1225, 1235, 1243, 1244, 1245, 1250, 1275, 1280, 1281, 1290, 1291,
+    1303, 1305, 1306, 1310, 1321, 1322, 1325, 1329, 1342, 1343, 1347, 1348, 1364, 1380, 1382, 1400, 1401,
+    1414, 1416, 1421, 1424, 1435, 1436, 1437, 1474, 1482, 1484, 1486, 1492, 1494, 1495, 1509, 1512, 1516,
+    1517, 1518, 1519, 1520, 1521,
+)
+
+
+def sell_more_barracks(config: dict) -> None:
+    """Puts MORE_BARRACKS in the human shop (in_store 1), as both clients read it."""
+    wanted = set(MORE_BARRACKS)
+    for item in config["items"]:
+        if int(item["id"]) in wanted:
+            item["in_store"] = "1"
+
 
 print (" [+] Applying config patches and mods...")
 patch_game_config()

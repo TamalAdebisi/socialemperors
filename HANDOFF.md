@@ -75,6 +75,9 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **The shop sells 57 more barracks (20 October)**, in New, Limited
+  Edition: those the game's data had but never sold (`MORE_BARRACKS`,
+  DECISIONS.md). Part of the units-book plan.
 - **Owner requests of 19 October, in three slices:** (1) the God Isles
   with a colossus: the Rodas and Genesis Wind colossi, which the data
   doesn't tag "colossus", now count in the team (DECISIONS.md). Test

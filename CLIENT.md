@@ -1882,7 +1882,10 @@ feature descriptions. `ui/shopDetails.ts` draws those values with the
 existing original stat/resource pictures. `ui/shop.ts` handles explicit
 details activation and dismissal. Limited-edition cards show the original
 date-based days remaining, including zero after expiry, without changing
-which items are sold. Early cash unlocking stays disabled, as in the original.
+which items are sold. Since 20 October 2026 Limited Edition also sells 57
+barracks the game's data had but its shop never sold, so their units can
+be earned (`MORE_BARRACKS` in `get_game_config.py`; `e2e/tests/more-barracks.mjs`
+buys the Gryphon Barracks and sees it train). Early cash unlocking stays disabled, as in the original.
 Browser coverage: `e2e/tests/shop-details.mjs` for desktop/phone, locked
 facts, training animation, badges, dismissal and unchanged saved purchases.
 It also checks explicit activation and button/text bounds at eight widths
