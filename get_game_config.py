@@ -67,6 +67,7 @@ def patch_game_config():
 
     remove_duplicate_items()
     sell_more_barracks(__game_config)
+    soul_mixer_from_the_wiki(__game_config)
     economy.patch_config(__game_config)  # where cash comes from: economy.py
     villagers_take_no_room(__game_config)
 
@@ -104,6 +105,28 @@ def sell_more_barracks(config: dict) -> None:
     for item in config["items"]:
         if int(item["id"]) in wanted:
             item["in_store"] = "1"
+
+
+SOUL_MIXER_WIKI = os.path.join(CONFIG_DIR, "soulmixer_wiki.json")
+
+
+def soul_mixer_from_the_wiki(config: dict) -> None:
+    """The Soul Mixer's tables, rebuilt from the community wiki (the owner's
+    call, 19 October 2026; tools/soul_mixer_wiki.py makes the file). Only
+    when the config has none of its own: a genuine original config, with
+    breeding_order on its units, replaces all of it."""
+    if any(item.get("breeding_order") for item in config["items"]) or not os.path.exists(SOUL_MIXER_WIKI):
+        return
+    with open(SOUL_MIXER_WIKI) as f:
+        tables = json.load(f)
+    units = tables["units"]
+    for item in config["items"]:
+        unit = units.get(str(item["id"]))
+        if unit and item["type"] == "u":
+            item["breeding_order"] = str(unit["breeding_order"])
+            item["sm_training_time"] = str(unit["sm_training_time"])
+    for name, row in tables["globals"].items():
+        config["globals"].setdefault(name, row["value"])
 
 
 print (" [+] Applying config patches and mods...")

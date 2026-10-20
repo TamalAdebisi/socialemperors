@@ -31,7 +31,7 @@ scoped PRs [#100](https://github.com/TamalAdebisi/socialemperors/pull/100),
 The merge commit retains their histories and latest menus/control work.
 No required check or merge rule was bypassed. The automatic deployment is
 authorized; these local checks do not assert a production gameplay test.
-New Soul Mixer recipes remain blocked by four missing original configuration fields;
+New Soul Mixer recipes remained blocked by four missing original configuration fields (since rebuilt from the wiki, 20 October);
 window/help and safe legacy collection are delivered. Existing Beta 1,
 combat and later-content holds remain. Exact checks and retained failures
 follow below; status-only receipt edits change no game, art or test file.
@@ -260,16 +260,18 @@ follow below; status-only receipt edits change no game, art or test file.
   [The verification record](docs/verification-dragon-riders.md) preserves
   every failed/interrupted attempt and the measured new-fixture calibration.
 
-- **Soul Mixer support has an original-data blocker.** Local 1.4.07 research
-  recovered its window, generic rules and queue commands; 0926 predates it.
-  Archived/historical config and preservation upstream have no
-  `breeding_order`, `sm_training_time`, `SOUL_MIXER_POWERUPS_LEVELS` or
-  `SOUL_MIXER_MIN_LEVEL`. Its original-art window/help are built, but new
-  mixing safely stays unavailable; all entry and cash spending are blocked.
-  Known completed legacy work can be collected without spending, never by
-  treating an unknown or malformed timestamp as finished.
-  Recover genuine later config to enable it; never infer those tables
-  from unit strength or community guesses. [Research and coverage](docs/original/rules/soul-mixer.md).
+- **The Soul Mixer works (20 October 2026), with its tables rebuilt from
+  the wiki.** Local 1.4.07 research recovered its window, generic rules and
+  queue commands; 0926 predates it. Archived/historical config and the
+  preservation upstream have no `breeding_order`, `sm_training_time`,
+  `SOUL_MIXER_POWERUPS_LEVELS` or `SOUL_MIXER_MIN_LEVEL`. **The owner
+  overruled the earlier rule against community data**: the tables now come
+  from the Tips Wiki's "Soul Mixer Combinations" page (uploaded by the
+  owner) and unit strength, in `config/soulmixer_wiki.json`, made by
+  `tools/soul_mixer_wiki.py`, every value with its source. A genuine
+  original config, if found, replaces it unchanged. Without tables, new
+  mixing stays unavailable and finished old mixes still collect.
+  [Research and coverage](docs/original/rules/soul-mixer.md).
   Exact `c944e853` passed server 459 (450 passed, nine existing skips), types,
   client 420/420 and focused Chromium 1/1 (67s). All three desktop/help/phone
   captures and the clean server log were reviewed. A later saved-integer
@@ -1128,8 +1130,8 @@ together:
 - [x] Units book completed in #105: original configured categories,
       recognition, missing-unit purchases, previews and saved rewards.
 - [x] The unit warehouse (`warehouse.py`, `rules/warehouse.ts`, `ui/warehouse.ts`): admission, paging, deployment, capacity and storage/reset; desktop/phone save coverage. Delivery verification is recorded with the special-building work.
-- [ ] Soul Mixer: window/generic queue support built; playable mixing
-      waits for missing original content described above.
+- [x] Soul Mixer: playable since 20 October 2026, its tables rebuilt from
+      the community wiki at the owner's request (above).
 - [x] The time machine (`time_machine.py`) and its help page; special-building slice implemented, delivery verification tracked above.
 - [x] The weather machine: the island's looks (`unlock_skin`, `set_skin`); same slice.
 - [x] Darts completed in #106: original schedule, seeded board,

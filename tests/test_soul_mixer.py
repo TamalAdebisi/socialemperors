@@ -1,4 +1,5 @@
-"""Soul Mixer queue protocol, with explicit synthetic content for algorithm checks."""
+"""Soul Mixer queue protocol, with explicit synthetic content for algorithm checks,
+and the tables rebuilt from the community wiki (config/soulmixer_wiki.json)."""
 
 from contextlib import contextmanager
 import copy
@@ -15,12 +16,32 @@ from get_game_config import get_game_config, get_item_from_id
 import soul_mixer
 
 
+TABLES = ("SOUL_MIXER_MIN_LEVEL", "SOUL_MIXER_POWERUPS_LEVELS")
+FIELDS = ("breeding_order", "sm_training_time")
+
+
+def without_tables(test):
+    """The config as a save may meet it with no Soul Mixer tables at all (a
+    config without the wiki's): taken out for one test, and put back after."""
+    config = get_game_config()
+    kept = {name: config["globals"].pop(name) for name in TABLES if name in config["globals"]}
+    fields = [(item, {name: item.pop(name) for name in FIELDS if name in item}) for item in config["items"]]
+    def restore():
+        config["globals"].update(kept)
+        for item, values in fields:
+            item.update(values)
+    test.addCleanup(restore)
+
+
 class SoulMixerTest(unittest.TestCase):
+    """The protocol with missing or synthetic tables, as before the wiki's."""
+
     @classmethod
     def setUpClass(cls):
         sessions.load_saved_villages()
 
     def setUp(self):
+        without_tables(self)
         self.pid = sessions.new_village(owner_id=None)
         self.save = sessions.session(self.pid)
         self.map = self.save["maps"][0]
@@ -229,6 +250,64 @@ class SoulMixerTest(unittest.TestCase):
         self.assertEqual(other["items"][0][7]["bq"], "1")
         self.assertEqual(self.save["privateState"]["barracksQueues"]["1"]["amount"], 0)
         self.assertEqual(self.save["privateState"]["barracksQueues"]["2"]["amount"], 1)
+
+
+class WikiTablesTest(unittest.TestCase):
+    """The tables rebuilt from the wiki, as every new mix now uses them."""
+
+    @classmethod
+    def setUpClass(cls):
+        sessions.load_saved_villages()
+
+    def setUp(self):
+        self.pid = sessions.new_village(owner_id=None)
+        self.save = sessions.session(self.pid)
+        self.map = self.save["maps"][0]
+        self.map["items"] = [[1529, 55, 55, 0, 0, 0, [VALKYRIE, VALKYRIE], {}]]
+        self.map["level"] = 25
+        self.save["playerInfo"]["cash"] = 200
+
+    def send(self, command, *args):
+        do_command(self.pid, command, list(args))
+
+    def test_the_mixer_works_with_the_wikis_tables(self):
+        self.assertTrue(soul_mixer.available())
+        globals = get_game_config()["globals"]
+        self.assertEqual(globals["SOUL_MIXER_MIN_LEVEL"], 8)
+        self.assertEqual([row["cash_cost"] for row in globals["SOUL_MIXER_POWERUPS_LEVELS"]], [1, 2, 3, 4, 5, 6, 7])
+        ranked = [item for item in get_game_config()["items"] if int(item.get("breeding_order") or 0) > 0]
+        self.assertGreater(len(ranked), 600)
+        self.assertTrue(all(item["type"] == "u" and int(item["sm_training_time"]) > 0 for item in ranked))
+
+    def test_waits_run_from_three_hours_to_five_days_ten_hours(self):
+        waits = [int(item["sm_training_time"]) for item in get_game_config()["items"] if item.get("sm_training_time")]
+        self.assertEqual(min(waits), 3 * 3600)
+        self.assertEqual(max(waits), (5 * 24 + 10) * 3600)
+
+    def test_gods_and_colossi_are_results_of_the_top_range(self):
+        for unit in (ELEMENTAL_FIRE_GOD, GENESIS_WIND_COLOSSUS):
+            self.assertGreaterEqual(int(get_item_from_id(unit)["breeding_order"]), 400, unit)
+
+    def test_valkyries_mix_wait_and_are_collected_with_both_parents_back(self):
+        result = ORC_DRAGON
+        with patch("soul_mixer.timestamp_now", return_value=1000):
+            self.send("buy_powerups", 0)
+            self.assertEqual(self.save["playerInfo"]["cash"], 199)  # the first power-up: 1 cash
+            self.send("push_queue_unit", 55, 55, 1529, result, 1, 0)
+        queue = self.save["privateState"]["barracksQueues"]["1"]
+        self.assertEqual((queue["unit"], queue["amount"]), (result, 1))
+        wait = int(get_item_from_id(result)["sm_training_time"])
+        with patch("soul_mixer.timestamp_now", return_value=1000 + wait - 3600):
+            self.send("pop_queue_unit", 1, 56, 56, 1529)
+            self.assertEqual(len(self.map["items"]), 1, "not ready an hour early")
+            self.send("speed_up_queue", 1)
+            self.assertEqual(self.save["playerInfo"]["cash"], 198, "the last hour: 1 cash")
+            self.send("pop_queue_unit", 1, 56, 56, 1529)
+        self.assertEqual(self.map["items"][-1][0], result)
+        self.assertEqual(self.map["items"][0][6], [VALKYRIE, VALKYRIE], "both parents stay, to come out")
+
+
+VALKYRIE, ORC_DRAGON, ELEMENTAL_FIRE_GOD, GENESIS_WIND_COLOSSUS = 554, 887, 2075, 2162
 
 
 if __name__ == "__main__":

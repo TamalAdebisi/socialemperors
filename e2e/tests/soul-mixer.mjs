@@ -1,61 +1,94 @@
-// The archived config has none of the later Soul Mixer's content tables.
-// New mixing stays unavailable. Check its help and saved-state invariance,
-// then collect explicit-ready historical work through the real window.
+// The Soul Mixer (CLIENT.md, "The Soul Mixer"), with its tables rebuilt from
+// the community wiki (config/soulmixer_wiki.json; DECISIONS.md). Two
+// Valkyries go in, the result shows as a silhouette, one power-up costs 1
+// cash, the mix starts and the server keeps its queue; speeding it up costs
+// a cash an hour left, Get unit puts the result beside the mixer and both
+// Valkyries come back out. The help and the phone sheet are checked too.
 import assert from "node:assert/strict";
 
-const BUILDING = 1529, AT = [56, 54];
-async function unavailableSoulMixer({ newPlayer }) {
-  const player = await newPlayer();
-  await player.send([
-    { cmd: "buy", args: [BUILDING, ...AT, 0, 0, 1, 1, "b"] },
-    { cmd: "buy", args: [514, 58, 56, 0, 0, 1, 1, "u"] },
-  ]);
-  await player.reload();
-  const { page } = player;
-  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true, "fixture setup is saved before comparing the unavailable window");
-  const read = async () => {
-    const response = await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
-      { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
-    const state = await response.json();
-    return { cash: state.playerInfo.cash, mixer: state.map.items.filter((row) => row[0] === BUILDING),
-      knights: state.map.items.filter((row) => row[0] === 514).map((row) => row.slice(0, 3)), queues: state.privateState.barracksQueues ?? {} };
-  };
-  const before = await read();
-  await player.select(AT, "Soul Mixer");
-  await player.press("Soul Mixer");
-  const panel = page.locator(".panel.soul-mixer:not([hidden])");
-  await panel.waitFor();
-  assert.match(await panel.textContent(), /original Soul Mixer rules are unavailable/);
-  assert.ok(await panel.getByRole("button", { name: "Select unit", exact: true }).isDisabled());
-  assert.ok(await panel.getByRole("button", { name: "Start mixing", exact: true }).isDisabled());
-  await panel.locator(".soul-mixer-scene").evaluate((image) => image.decode());
-  await player.shot("unavailable");
-  await panel.getByRole("button", { name: "Help", exact: true }).click();
-  await panel.locator(".soul-mixer-help img").evaluateAll((images) => Promise.all(images.map((image) => image.decode())));
-  assert.equal(await panel.locator(".soul-mixer-help img").count(), 4);
-  await player.shot("help");
-  await panel.getByRole("button", { name: "Back", exact: true }).click();
-  assert.deepEqual(await read(), before, "opening, help and disabled actions preserve cash, parents and queues");
-  await player.reload();
-  const phone = await player.onPhone();
-  await phone.select(AT, "Soul Mixer");
-  await phone.press("Soul Mixer");
-  const sheet = phone.page.locator(".panel.soul-mixer:not([hidden])");
-  await sheet.waitFor();
-  await sheet.locator(".soul-mixer-scene").evaluate((image) => image.decode());
-  assert.match(await sheet.textContent(), /units and cash are safe/);
-  const width = await sheet.evaluate((element) => ({ right: element.getBoundingClientRect().right, scroll: element.scrollWidth, width: element.clientWidth }));
-  assert.ok(width.right <= 390 && width.scroll <= width.width, "the original window fits the phone sheet");
-  await phone.shot("phone-unavailable");
-  assert.deepEqual(await read(), before, "the save remains unchanged after reload and phone opening");
+const BUILDING = 1529, AT = [56, 54], VALKYRIE = 554, SOLDIERS = [512, 516];
+
+async function readState(player) {
+  const response = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
+    { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
+  return response.json();
 }
 
-// Completed legacy work is restored offline in the runner's isolated save.
-// No content tables are supplied: explicit-ready historical work is collected
-// through the ordinary window and commands while new mixing stays unavailable.
+async function mixing(context) {
+  let player = await context.newPlayer();
+  await player.send([
+    { cmd: "rt_level_up", args: [25] },
+    { cmd: "buy", args: [BUILDING, ...AT, 0, 0, 1, 1, "b"] },
+    { cmd: "buy", args: [VALKYRIE, 58, 58, 0, 0, 1, 1, "u"] },
+    { cmd: "buy", args: [VALKYRIE, 59, 58, 0, 0, 1, 1, "u"] },
+  ]);
+  // Cash to speed the mix up, and room for its result: the new town's soldiers go.
+  player = await context.offlineVillage(player, (save) => {
+    save.playerInfo.cash = 500;
+    save.maps[0].items = save.maps[0].items.filter((row) => !SOLDIERS.includes(row[0]));
+  });
+  const { page } = player;
+  await player.closeLevelUps();
+  const panel = await openMixer(player);
+  assert.equal(await panel.locator(".soul-mixer-unavailable").count(), 0, "the mixer works");
+  for (const slot of [1, 2]) {
+    await panel.getByRole("button", { name: `Select unit ${slot}`, exact: true }).click();
+    await panel.getByRole("button", { name: "Valkyrie", exact: true }).first().click();
+  }
+  await panel.locator(".soul-mixer-result.silhouette").waitFor();
+  await decodedMixerArt(panel);
+  await player.shot("chosen");
+  const cash = () => page.evaluate(() => window.seHome.parts.town.cash);
+  await panel.getByRole("button", { name: "Power up · 1 cash", exact: true }).click();
+  assert.equal(await cash(), 499, "the first power-up: 1 cash");
+  await panel.getByRole("button", { name: "Start mixing", exact: true }).click();
+  const speed = panel.locator(".soul-mixer-speed");
+  await speed.waitFor();
+  assert.match(await panel.locator(".soul-mixer-time").textContent(), /Remaining time/);
+  await player.shot("mixing");
+  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  let saved = await readState(player);
+  const mixer = saved.map.items.find((row) => row[0] === BUILDING);
+  assert.deepEqual(mixer[6], [VALKYRIE, VALKYRIE], "both Valkyries inside");
+  const queue = saved.privateState.barracksQueues[mixer[7].bq];
+  assert.equal(queue.amount, 1);
+  assert.equal(saved.playerInfo.cash, 499);
+  const result = queue.unit;
+  const hours = Number((await speed.textContent()).match(/(\d+) cash/)[1]);
+  assert.ok(hours >= 3 && hours <= 130, `a wait of 3 hours to 5 days 10 hours (${hours})`);
+
+  await speed.click();
+  await panel.getByRole("button", { name: "Get unit", exact: true }).click();
+  await panel.waitFor({ state: "hidden" });
+  assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true);
+  saved = await readState(player);
+  assert.equal(saved.playerInfo.cash, 499 - hours, "a cash an hour left");
+  assert.equal(saved.map.items.filter((row) => row[0] === result).length, 1, "the result beside the mixer");
+  assert.equal(saved.map.items.filter((row) => row[0] === VALKYRIE).length, 2, "both Valkyries back out");
+  assert.equal(saved.privateState.barracksQueues[mixer[7].bq].amount, 0);
+  await player.shot("collected");
+
+  // The original help, and the phone sheet.
+  const again = await openMixer(player);
+  await again.getByRole("button", { name: "Help", exact: true }).click();
+  await again.locator(".soul-mixer-help img").evaluateAll((images) => Promise.all(images.map((image) => image.decode())));
+  assert.equal(await again.locator(".soul-mixer-help img").count(), 4);
+  await player.shot("help");
+  await again.getByRole("button", { name: "Back", exact: true }).click();
+  const phone = await player.onPhone();
+  const sheet = await openMixer(phone);
+  const width = await sheet.evaluate((element) => ({ right: element.getBoundingClientRect().right, scroll: element.scrollWidth, width: element.clientWidth }));
+  assert.ok(width.right <= 390 && width.scroll <= width.width, "the original window fits the phone sheet");
+  await phone.shot("phone");
+  await phone.page.context().close();
+}
+
+// A finished mix from an old save is restored offline in the runner's
+// isolated save, and collected through the ordinary window and commands;
+// a malformed one is refused.
 export default async function soulMixer(context) {
-  assert.equal(typeof context.offlineVillage, "function", "legacy coverage requires the reviewed, runner-owned offline restart callback");
-  await unavailableSoulMixer(context); // all original unavailable/help/phone checks and captures
+  assert.equal(typeof context.offlineVillage, "function", "the checks need the runner-owned offline restart callback");
+  await mixing(context);
   await legacyReady(context);
   await malformedLegacyOutput(context);
 }
@@ -69,20 +102,19 @@ async function stateOf(player) {
   return response.json();
 }
 
-async function assertOriginalDataAbsent(player) {
+async function assertWikiTables(player) {
   const response = await player.page.request.post(`${player.base}${player.settings.dynamicUrl}/get_game_config.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
   assert.equal(response.status(), 200);
   const config = await response.json();
   for (const key of ["SOUL_MIXER_MIN_LEVEL", "SOUL_MIXER_POWERUPS_LEVELS"]) {
-    assert.equal(Object.hasOwn(config.globals ?? {}, key), false, `${key} stays absent`);
+    assert.equal(Object.hasOwn(config.globals ?? {}, key), true, `${key} from the wiki's tables`);
   }
   for (const key of ["breeding_order", "sm_training_time"]) {
-    assert.equal(config.items.some((item) => Object.hasOwn(item, key)), false, `${key} stays absent from every original item`);
+    assert.equal(config.items.some((item) => Object.hasOwn(item, key)), true, `${key} on the mixable units`);
   }
   assert.equal(config.items.find((item) => Number(item.id) === 533)?.type, "u");
   assert.equal(config.items.find((item) => Number(item.id) === 1345)?.type, "b");
-  assert.equal(await player.page.evaluate(() => window.seHome.parts.town.soulMixerReady), false);
 }
 
 function mixerOf(state) {
@@ -106,7 +138,7 @@ async function prepared(context, output, queueId) {
     ...PARENTS.map(({ id, at }) => ({ cmd: "buy", args: [id, ...at, 0, 0, 1, 1, "u"] })),
   ]);
   await player.reload();
-  await assertOriginalDataAbsent(player);
+  await assertWikiTables(player);
   // Only after all pages have flushed/closed and the owned child exits does the
   // harness read/edit this player's SQLite JSON. It then restarts normally.
   player = await context.offlineVillage(player, (save) => {
@@ -126,7 +158,7 @@ async function prepared(context, output, queueId) {
     assert.equal(Object.hasOwn(save.privateState.barracksQueues, queueId), false);
     save.privateState.barracksQueues[queueId] = { ts: 0, amount: 1, unit: output };
   });
-  await assertOriginalDataAbsent(player);
+  await assertWikiTables(player);
   const saved = await stateOf(player);
   assert.deepEqual(mixerOf(saved)[6], PARENTS.map(({ id }) => id));
   assert.equal(mixerOf(saved)[7].bq, queueId);
@@ -196,8 +228,7 @@ async function legacyReady(context) {
   await phone.reload();
   const idle = await openMixer(phone);
   assert.equal(await idle.getByRole("button", { name: /^Get unit$/i }).count(), 0);
-  assert.equal(await idle.getByRole("button", { name: "Select unit", exact: true }).isDisabled(), true);
-  assert.equal(await idle.getByRole("button", { name: "Start mixing", exact: true }).isDisabled(), true);
+  assert.equal(await idle.getByRole("button", { name: "Start mixing", exact: true }).count(), 0, "no mix chosen yet");
   assert.deepEqual(projection(await stateOf(phone)), once, "reload preserves the claimed marker and returned units");
   // A repeated original command is refused by the real server too.
   await phone.send([{ cmd: "pop_queue_unit", args: [1, 60, 55, BUILDING] }]);
