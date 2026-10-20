@@ -23,6 +23,8 @@ const CATEGORY_ICONS:Record<number,string>={
 const NEW_BADGE=new URL("./art/shop-new.webp",import.meta.url).href;
 /** The storage's place among the categories. */
 export const STORAGE = -1;
+/** The offer packs and mystery boxes (ui/offers.ts), after Storage. */
+export const OFFERS = -2;
 
 /** A stored thing as the storage shows it. */
 export interface StorageCard {
@@ -52,6 +54,8 @@ export interface ShopWindowParts {
   choose: (item: ItemInfo) => void;
   /** What's in storage. */
   storage: () => StorageCard[];
+  /** The Offers' cards (ui/offers.ts); no Offers button without them. */
+  offers?: () => HTMLLIElement[];
   /** Opening a building before its level, for cash: its price, and doing it. */
 }
 
@@ -153,7 +157,8 @@ export class ShopWindow {
   private render(): void {
     this.hideDetails();
     const storing = this.category === STORAGE;
-    this.panel.title = storing ? "Storage" : "Shop";
+    const offering = this.category === OFFERS;
+    this.panel.title = storing ? "Storage" : offering ? "Offers" : "Shop";
     this.panel.key = storing ? "storage" : "build";
     const stored = this.parts.storage();
     const inStorage = stored.reduce((sum, card) => sum + card.count, 0);
@@ -164,6 +169,7 @@ export class ShopWindow {
         return button;
       }),
       this.pill(inStorage ? `Storage (${inStorage})` : "Storage", storing, () => this.show(STORAGE, 0, "categories"), "shop-storage"),
+      ...(this.parts.offers ? [this.pill("Offers", offering, () => this.show(OFFERS, 0, "categories"), "shop-offers")] : []),
     );
     const current = this.parts.categories.find((c) => c.id === this.category);
     const tabs = current && current.tabs.length > 1 ? [{ id: 0, name: "All" }, ...current.tabs] : [];
@@ -173,7 +179,9 @@ export class ShopWindow {
     this.waiting.clear();
     this.pictures.disconnect();
     const cards = storing ? stored.map((card) => this.storageCard(card))
+      : offering ? this.parts.offers!()
       : this.parts.items(this.category, this.tab).map((item) => this.shopCard(item));
+    this.list.classList.toggle("offer-items", offering);  // the packs' pictures are wide banners
     this.list.replaceChildren(...cards);
     if (cards.length === 0) {
       const empty = document.createElement("li");

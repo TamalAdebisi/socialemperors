@@ -2,6 +2,7 @@ import json
 import os
 import jsonpatch
 import economy
+import chained_units
 from paths import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
@@ -68,6 +69,8 @@ def patch_game_config():
     remove_duplicate_items()
     sell_more_barracks(__game_config)
     soul_mixer_from_the_wiki(__game_config)
+    chained_units.prepare(__game_config)  # the Chained buildings, sold for gold
+    darts_every_week(__game_config)
     economy.patch_config(__game_config)  # where cash comes from: economy.py
     villagers_take_no_room(__game_config)
 
@@ -127,6 +130,26 @@ def soul_mixer_from_the_wiki(config: dict) -> None:
             item["sm_training_time"] = str(unit["sm_training_time"])
     for name, row in tables["globals"].items():
         config["globals"].setdefault(name, row["value"])
+
+
+DARTS_FROM = "2026-10-19"  # a Monday: the first week the game's boards came round again
+DARTS_YEARS = 10
+
+
+def darts_every_week(config: dict) -> None:
+    """The game's darts schedule ran out in September 2012 (its last board is
+    empty), so no round ran. The owner's call (DECISIONS.md, 20 October 2026):
+    its 32 boards come round again, a new one each week from DARTS_FROM, for
+    DARTS_YEARS. Both clients read the schedule from here."""
+    from datetime import date, timedelta
+    boards = [row for row in config["darts_items"] if len(row.get("items") or []) == 6]
+    if not boards:
+        return
+    start = date.fromisoformat(DARTS_FROM)
+    config["darts_items"] = [
+        {"id": week + 1, "start_date": f"{start + timedelta(weeks=week)} 00:00:00",
+         "items": boards[week % len(boards)]["items"], "extra_item": boards[week % len(boards)]["extra_item"]}
+        for week in range(DARTS_YEARS * 52)]
 
 
 print (" [+] Applying config patches and mods...")

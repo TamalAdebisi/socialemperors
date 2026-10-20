@@ -81,6 +81,11 @@ ISLAND_THREE_STAR_CASH = 5
 # Tournaments: a cash tournament's prize, in entry fees (the game gave 2)
 TOURNAMENT_CASH_PRIZE_IN_FEES = 1
 
+# The super mystery box: one, two or four prizes, at these game prices (its own for pack 19),
+# shrunk like every cash price and kept in globals.SUPER_PACK_PRICES for both the server and the client
+SUPER_PACK_PRICES = [60, 100, 200]
+SUPER_PACK_PRICES_BY_PACK = {19: [30, 60, 100]}
+
 # Cash prices: kept up to CASH_PRICE_KEPT, above it shrunk along a curve (cash_price)
 CASH_PRICE_KEPT = 10
 CASH_PRICE_CURVE = 0.6
@@ -151,6 +156,11 @@ def patch_config(config: dict) -> None:
     for item in config["items"]:
         if item.get("cost_type") == "c":
             item["cost"] = str(cash_price(item["cost"]))
+    for pack in config["offer_packs"]:
+        pack["cost_cash"] = cash_price(pack["cost_cash"])
+    globals["SUPER_PACK_PRICES"] = {"default": [cash_price(p) for p in SUPER_PACK_PRICES]} | {
+        str(pack): [cash_price(p) for p in prices] for pack, prices in SUPER_PACK_PRICES_BY_PACK.items()}
+    globals["DART_COST_CASH"] = cash_price(globals["DART_COST_CASH"])
 
     for kind in config["tournament_type"].values():
         if kind["resource_type"] == "c":

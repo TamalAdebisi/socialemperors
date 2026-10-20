@@ -5081,3 +5081,96 @@ button.world-piece:hover img {
 .world-profile .profile-ranks { max-height: 180px; overflow: auto; }
 .profile-window .panel-body { overflow: auto; }
 .world-menu.showing-profile { left: 50% !important; top: 50% !important; transform: translate(-50%,-50%); width: min(320px,calc(100% - 20px)); max-width: none; max-height: calc(100% - 12px); overflow-y: auto; }
+
+/* A Chained building's window (ui/chained.ts): its units, the wait, Free. */
+.chained-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chained-units li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 120px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.chained-units img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.chained-status {
+  text-align: center;
+}
+
+.chained-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.chained-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chained-actions img {
+  width: 18px;
+  vertical-align: middle;
+}
+
+/* The shop's Offers (ui/offers.ts): one card a row, for the packs' banners
+   (565 x 95), or their prizes' pictures. */
+.shop-items.offer-items {
+  grid-template-columns: 1fr;
+}
+
+.offer-picture {
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.offer-picture > img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.offer-prizes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.offer-prizes img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.offer-rarities {
+  display: grid;
+  gap: 2px;
+  font-size: 0.85em;
+  text-align: center;
+}
+
+.offer-card .shop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}

@@ -179,10 +179,10 @@ try {
         return player;
       },
     };
-    // Historical legacy work cannot be created through new-work commands while
-    // the original content is missing. This optional test-harness callback owns
-    // a stop/edit/restart of this runner's isolated SQLite server only.
-    if (name === "soul-mixer") {
+    // A save no command can make (old Soul Mixer work, a town rich enough to
+    // free a chained god): this optional test-harness callback owns a
+    // stop/edit/restart of this runner's isolated SQLite server only.
+    if (["soul-mixer", "chained"].includes(name)) {
       let offlineBusy = false;
       context.offlineVillage = async (player, edit) => {
         const index = players.indexOf(player);

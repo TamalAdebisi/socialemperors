@@ -89,6 +89,9 @@ import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
+import { isChained } from "./rules/chained.ts";
+import { ChainedWindow } from "./ui/chained.ts";
+import { offerCards } from "./ui/offers.ts";
 import { SUPREME_TEMPLE } from "./rules/temple.ts";
 import { TempleWindow } from "./ui/temple.ts";
 
@@ -272,6 +275,22 @@ async function start(): Promise<void> {
       picture: (item, canvas) => drawThumbnail(art, item, canvas),
       choose: (item) => editor.startBuilding(item),
       storage: () => editor.storageCards(),
+      // The offer packs and mystery boxes, for cash earned in the game (ui/offers.ts).
+      offers: () => offerCards({
+        config, town, items, line: (id, fallback) => lines.get(id) ?? fallback,
+        thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+        picture: (name) => `${settings.assetsUrl}/images_new/${name}`,
+        bought: (_offer, result) => {
+          result.commands.forEach((command) => commands.add(command.cmd, ...command.args));
+          void commands.flush();
+          doings.spend("c", result.cash);
+          hud.update(town);
+          shop.refresh();
+          const names = result.items.map((id) => items.get(id)?.name).filter(Boolean);
+          editor.tell(`${names.join(", ")} ${names.length > 1 ? "are" : "is"} in your Storage.`);
+        },
+        short: (why) => { editor.tell(why); void bank.open(); },
+      }),
     });
     // Arthur last, as the Flash client adds him: his town is the one for the player's stage.
     // Sorted by experience, smallest first, as the Flash client's bar; each marked "ASSIST!" when it can be helped today.
@@ -794,6 +813,10 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
+        // A Chained building (ui/chained.ts): its units, the wait for the chains, Free.
+        if (isChained(placed.item)) {
+          return { label: "Free", icon: "open-gate", run: () => chainedWindow.open(placed) };
+        }
         return social.windowOf(placed) ?? soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
@@ -866,7 +889,8 @@ async function start(): Promise<void> {
         tournamentWelcomePending = false;
         const openingDarts = dartsGame.opening(clock(), Math.floor(performance.now()));
         openingDarts.forEach((c) => commands.add(c.cmd, ...c.args));
-        if (openingDarts.length) darts.offer();
+        // The browser tests hold the offer back (seNoDartsOffer, set only by e2e/lib.mjs) unless they test it.
+        if (openingDarts.length && !(window as unknown as { seNoDartsOffer?: boolean }).seNoDartsOffer) darts.offer();
         reopenTournament();
       };
       // Arthur's lessons first (a new player has no carts yet); otherwise the carts.
@@ -973,6 +997,18 @@ async function start(): Promise<void> {
         void bank.open();
       },
       askFriends: asking,
+    });
+
+    // Chained buildings: their units freed on the nearest free tiles once the chains break.
+    const chainedWindow = new ChainedWindow({
+      town, items, clock,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (list) => { for (const command of list) commands.add(command.cmd, ...command.args); void commands.flush(); },
+      arrived: (placed) => editor.arrived(placed, []),
+      removed: (placed) => editor.departed(placed),
+      changed: () => hud.update(town),
+      tell: (words) => editor.tell(words),
+      bank: (why) => { editor.tell(why); void bank.open(); },
     });
 
     const dragonRiders = new DragonRidersWindow({

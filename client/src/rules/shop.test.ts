@@ -83,6 +83,19 @@ test("buying pays, gives experience, puts it on the map and sends what the Flash
   assert.deepEqual([t.wood, t.items.length], [70, 1]);  // nothing changed
 });
 
+test("a Chained building is bought once per empire: freed or sold, it isn't sold again", () => {
+  const CHAINED = itemInfo(config({ id: "1470", name: "Chained Draggy", cost: "50", cost_type: "g", chained_units: "638", chain_hours: "6" }));
+  const t = town();
+  assert.notEqual(typeof buy(t, CHAINED, 50, 50, 5000), "string");
+  assert.deepEqual([...t.chainedBought!], [1470]);
+  t.items = [];  // freed
+  t.gold = 1000;
+  assert.deepEqual(obstacle(t, CHAINED), { kind: "once" });
+  assert.equal(buy(t, CHAINED, 50, 50, 5000), "Chained Draggy: bought already: one per empire.");
+  assert.equal(t.gold, 1000);
+  assert.equal(obstacle({ ...town(), chainedBought: new Set([1470]) }, HOUSE), null, "other buildings aren't affected");
+});
+
 test("buying over a mined-out rock on the player's land clears it first; nothing else does", () => {
   const regrowing = itemInfo(config({ id: "81", name: "Regenerating stone ...", type: "b", width: "1", height: "1",
     category_id: "1", subcat_functional: "128", cost: "0", cost_type: "g", race: "n" }));

@@ -1263,6 +1263,15 @@ export class TownEditor {
    * Heroes): drawn, the collect sound, what it cost rising over it, and any
    * level reached with its experience.
    */
+  /** A building a window took off the map by its own command (a Chained building freed, rules/chained.ts). */
+  departed(placed: PlacedItem): void {
+    this.letGo(placed);
+    this.emptyOut(placed);
+    this.view.remove(placed);
+    this.select(null);
+    this.hud.update(this.town);
+  }
+
   arrived(placed: PlacedItem, lines: { text: string; resource: Resource | "xp" }[]): void {
     void this.view.redraw(placed).then(() => this.view.rise(placed, lines.map((l) => ({ text: l.text, colour: RESOURCE_COLOURS[l.resource] }))));
     this.sound("collect");
@@ -2162,6 +2171,7 @@ function noMore(item: ItemInfo, why: Obstacle): string {
     case "limit":
       return `That's as many ${item.name} as a town can have.`;
     case "level":
+    case "once":
       return `${item.name}: ${describe(why).toLowerCase()}.`;
   }
 }

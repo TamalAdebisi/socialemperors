@@ -44,8 +44,7 @@ from village import STARTED, UNITS, full, give, item_at, number, take
 
 FOOD_PER_GOLD_IN_TRAINING = 2
 RANDOM_PACK, SUPER_PACK = 1, 2
-SUPER_PACK_PRICES = [60, 100, 200]  # one, two or three prizes
-SUPER_PACK_PRICES_BY_PACK = {19: [30, 60, 100]}
+SUPER_PACK_PRIZES = {1: 0, 2: 1, 4: 2}  # prizes won: which of the box's three prices
 UNIT_COLLECTION_BONUS_CASH = 1
 GOLD_PER_STATUE = 10
 SELL_DIVISOR = 20
@@ -67,6 +66,9 @@ def _trained_here(map: dict, unit_id) -> bool:
 def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multiplier) -> str:
     map = save["maps"][town_id]
     note = ""
+    chained = bool(get_attribute_from_item_id(item_id, "chained_units"))
+    if chained and int(item_id) in save["privateState"].get("chainedBought", []):
+        return f"Refused: Chained building {item_id} was bought already (once per empire)."
     if not free:
         cost_type = get_attribute_from_item_id(item_id, "cost_type")
         cost = math.ceil(number(item_id, "cost") * float(multiplier))  # the Blacksmith and University take 10% off
@@ -79,6 +81,8 @@ def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multip
         give(save, map, "x", number(item_id, "xp"))
         note = f" for {cost} {cost_type}" + (f" and {food} f" if food else "")
     _place(map, item_id, x, y, orientation)
+    if chained:
+        save["privateState"].setdefault("chainedBought", []).append(int(item_id))
     return f"Item {item_id} placed at ({x},{y}){note}."
 
 
@@ -129,11 +133,14 @@ def super_offer_pack(save: dict, town_id: int, pack_id: int, items_text: str) ->
     if pack is None or int(pack.get("pack_type", 0)) != SUPER_PACK:
         return f"Super offer pack {pack_id} does not exist."
     items = [int(i) for i in str(items_text).split(",") if i.strip()]
-    prices = SUPER_PACK_PRICES_BY_PACK.get(pack_id, SUPER_PACK_PRICES)
+    table = get_game_config()["globals"]["SUPER_PACK_PRICES"]  # economy.py
+    prices = table.get(str(pack_id), table["default"])
     prizes = {int(i) for row in pack["items"] for i in row}
-    if not 1 <= len(items) <= len(prices) or any(i not in prizes for i in items):
+    # The box's three choices give one, two or four prizes (the game's PromotionPacks.buySuperPack).
+    choice = SUPER_PACK_PRIZES.get(len(items))
+    if choice is None or any(i not in prizes for i in items):
         return f"Super offer pack {pack_id}: {items} are not its prizes."
-    cash = prices[len(items) - 1]
+    cash = prices[choice]
     map = save["maps"][town_id]
     take(save, map, "c", cash)
     _give_resources(save, map, pack, with_xp=False)  # the client shows the xp but does not give it

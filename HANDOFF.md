@@ -75,6 +75,15 @@ follow below; status-only receipt edits change no game, art or test file.
   a Vulcano Dragon sent to every other account's gift inbox. See
   DECISIONS.md (19 October) and `docs/original/rules/tournaments.md`.
 
+- **Offers and darts (20 October):** Build → Offers sells the game's 65
+  offer packs and mystery boxes for earned cash; darts play a board a week
+  (`rules/offers.ts`, `ui/offers.ts`, `darts_every_week`; DECISIONS.md).
+- **Chained buildings free their units (20 October):** 108 sold for gold,
+  their chains break with time, then Free gives the units
+  (`chained_units.py`, `chained.py`, `rules/chained.ts`; DECISIONS.md).
+  The owner found them too cheap: since then priced by the units'
+  strength (5 gold a point of health times attack: about 1.25 million
+  for a 3-Head Dragon, 3 million for a god) and each one once per empire.
 - **The shop sells 57 more barracks (20 October)**, in New, Limited
   Edition: those the game's data had but never sold (`MORE_BARRACKS`,
   DECISIONS.md). Part of the units-book plan.
@@ -1148,10 +1157,9 @@ together:
 - [x] Missing-hall notice completed in #109: acknowledge the original
       warning without replacing a hall or changing the save. New menu
       spending credits its mission once. Assault handling stays combat-owned.
-- [ ] Offer packs and mystery boxes are for cash. Cash is earned by
-      playing here and nothing is sold (ROADMAP.md, "Cash"): check
-      `economy.py`, `shop.py` and DECISIONS.md, and ask the owner before
-      showing these at all.
+- [x] Offer packs and mystery boxes: the owner said yes (20 October 2026).
+      Build → Offers sells all 65 for earned cash at `cash_price`; darts
+      run again on the game's boards, one a week (CLIENT.md, "Offers").
 
 As each lands, its goals stop saying "Coming soon": update the count in
 CLIENT.md.
@@ -1193,7 +1201,6 @@ Ask these in plain words, with pictures where it's about looks (CLAUDE.md
 allows pictures when there's a decision), and carry on with something else
 meanwhile.
 
-- Offer packs and mystery boxes: in or out (task 8).
 - Full retirement of the classic client (task 10); hiding its choices is
   already authorized.
 - AI-upscaled art: still open.

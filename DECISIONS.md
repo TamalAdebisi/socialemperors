@@ -44,6 +44,81 @@ Gaps the wiki leaves, and what we chose:
 - Left out of the recipes: the wiki's "Deadly Dragon" (only the boss
   exists in the game's data) and its notes on repeats ("NP 6th time").
 
+## 20 October 2026: offer packs, mystery boxes and darts switched on
+
+The owner's call after the units audit: switch these on, with prices worth
+working towards rather than real money's.
+
+- **Offers** (Build → Offers) shows every offer pack and mystery box the
+  config holds, 65 of them, not only the few the original had switched on
+  at the end: they are the only route to some units. Prices are
+  `cash_price` of the game's; the super mystery box's three choices cost
+  29, 40 and 60 cash (the game's 60, 100 and 200 shrunk), 19, 29 and 40 for
+  the cheaper pack 19. The Flash client still shows the game's old super
+  box prices in its own window; the server charges ours.
+- A box the game has no picture for shows its prizes' pictures instead.
+- Fixed on the way: the server refused the super box's four-prize choice
+  (it expected three prizes for the dearest one; the original gives four).
+- **Darts** run again: the config's last board was empty, so no round ever
+  started. The server now plays the game's 32 boards with prizes, a new
+  one every Monday from 19 October 2026, for ten years. A paid dart costs
+  15 cash (the game's 20, shrunk).
+
+## 20 October 2026: Chained prices halved
+
+The owner asked whether the strength prices below could be earned. Gold
+comes almost all from fighting: a quest island pays 4,000 to 25,000 a win
+and can be played again after 4 hours, about 50,000 to 80,000 an hour of
+questing, 100,000 to 200,000 a day for someone who plays an hour or two
+(the live log, players of level 34 to 43). At 10 gold a point a Genesis
+god took one and a half to two months of saving. The owner halved it: 5
+gold for each point of health times attack, still rounded up to 10,000. A
+Draggy costs 30,000, a Cyclops 330,000, a 3-Head Dragon 1.25 million (one
+to two weeks), a Genesis god about 3 million and a god and colossus pair
+3.6 to 4.2 million (about a month). Once per empire stays.
+
+## 20 October 2026: Chained buildings cost far more, once each
+
+The owner tried the Chained buildings and found them far too cheap for
+what they give: a three-headed dragon for about 100,000 gold upsets the
+economy. Two safeguards, as asked:
+
+- **Priced by strength.** A Chained building now costs 10 gold for each
+  point of its units' health times attack, rounded up to 10,000, instead of
+  following the units book's price. The weakest stay within reach (a
+  Draggy 50,000 gold, a Cyclops 660,000) and the strongest become long
+  goals: a 3-Head Dragon about 2.5 million, a Genesis god about 6 million,
+  a god and colossus pair 7 to 8 million. Gold can't be bought fast to
+  skip this: the bank sells only a few cash' worth a day. The wait for
+  the chains stays as it was.
+- **Once per empire, ever.** Each Chained building can be bought once,
+  across both towns, even after its units are freed or it is sold. The
+  server keeps the list and refuses a second purchase; the shop shows
+  "Bought already: one per empire". Different Chained buildings can still
+  each be bought once. Players who already have one (on the map or in
+  storage) have it counted as bought when their save is next loaded.
+  Placing one from storage is not a purchase, so it isn't refused.
+
+## 20 October 2026: Chained buildings free their units
+
+The owner asked for the Chained god and colossus buildings to become a way
+to get those units. In the original they were adverts for packs sold for
+real money. We made every Chained building that shows a unit work, not
+only the gods and colossi: 108 of them, freeing 114 units (dragons,
+monsters, heroes, gods and colossi), so many more of the units book's
+missing units can be earned. They are bought for **gold**, so the route is
+earned by playing, not another cash purchase: 2,000 gold for each cash of
+the units' units-book price (the bank's rate), from level 10, or 20 for
+gods, colossi and other top units. The chains then take an hour for each
+cash of that price (a god about two days, a god and colossus pair about
+four), which a cash an hour speeds up, as every wait in the game. Freeing
+needs room for the units, as training does. Units the book doesn't list
+are valued at its most common price (51 cash). Left out: chests,
+discounts and cash offers (no unit), names too vague to match a unit
+("Chained Dragon", "Chained Troll", "Chained Balrogs", "Chained Dragon
+Hunters"), those with no picture in the game's files, and repeats of the
+same units. Storing one and placing it again starts its wait over.
+
 ## 20 October 2026: the shop sells the barracks the game kept back
 
 The units-book audit found 58 units whose barracks are in the game's data
