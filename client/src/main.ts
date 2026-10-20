@@ -708,6 +708,7 @@ async function start(): Promise<void> {
     const soulMixer = new SoulMixerWindow({
       town, items, rules: soulRules, state: readMixer(saved.barracksQueues), clock, assets: settings.assetsUrl, line,
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      preview: (item, canvas, active, missing) => unitPreview(art, item, canvas, active, missing),
       send: (command) => { commands.add(command.cmd, ...command.args); void commands.flush(); },
       enter: (unit, building) => editor.putInsideFromWindow(unit, building),
       arrived: (unit) => editor.arrived(unit, []),
@@ -796,7 +797,9 @@ async function start(): Promise<void> {
         return social.windowOf(placed) ?? soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
-        giveMixer();
+        // Levels reached while the town opens are counted inside the editor's
+        // own setup, before `editor` exists: the free mixer waits a moment.
+        queueMicrotask(giveMixer);
         bonuses?.levelled();
         if (level === GOALS_END_LEVEL) {
           // Level 35, as the Flash client marks it: the goals stop, and a Wizardry Academy is given.

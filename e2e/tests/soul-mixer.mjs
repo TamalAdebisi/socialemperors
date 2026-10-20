@@ -29,15 +29,27 @@ async function mixing(context) {
   });
   const { page } = player;
   await player.closeLevelUps();
+  // The mixer rolls a die (0 to 11) for its result: the lowest every time, so the test knows it.
+  await page.evaluate(() => { Math.random = () => 0; });
   const panel = await openMixer(player);
   assert.equal(await panel.locator(".soul-mixer-unavailable").count(), 0, "the mixer works");
   for (const slot of [1, 2]) {
     await panel.getByRole("button", { name: `Select unit ${slot}`, exact: true }).click();
     await panel.getByRole("button", { name: "Valkyrie", exact: true }).first().click();
   }
-  await panel.locator(".soul-mixer-result.silhouette").waitFor();
+  // Two Valkyries, the lowest roll: an Orc Dragon (the wiki's recipe), shown as its shadow, drawn from its sprite.
+  const shadow = panel.locator(".soul-mixer-result.silhouette");
+  await shadow.waitFor();
   await decodedMixerArt(panel);
   await player.shot("chosen");
+  assert.equal(await shadow.evaluate((element) => element.tagName), "CANVAS", "the shadow is drawn from the sprite sheet");
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector("canvas.soul-mixer-result");
+    const pixels = canvas?.width ? canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data : [];
+    return [...pixels].some((value, index) => index % 4 === 3 && value > 0);
+  }, null, { timeout: 30_000 });
+  await shadow.scrollIntoViewIfNeeded();
+  await player.shot("silhouette");
   const cash = () => page.evaluate(() => window.seHome.parts.town.cash);
   await panel.getByRole("button", { name: "Power up · 1 cash", exact: true }).click();
   assert.equal(await cash(), 499, "the first power-up: 1 cash");
@@ -176,7 +188,7 @@ async function openMixer(player) {
 }
 
 async function decodedMixerArt(panel) {
-  await panel.locator(".soul-mixer-scene, .soul-mixer-parents img, .soul-mixer-result")
+  await panel.locator(".soul-mixer-scene, .soul-mixer-parents img, img.soul-mixer-result")
     .evaluateAll((images) => Promise.all(images.map((image) => image.decode())));
 }
 

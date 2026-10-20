@@ -1681,8 +1681,9 @@ The wait has a 30-second limit; the warning and save checks stay the same.
 ### The Soul Mixer
 
 The building opens its original-art window and help, and mixes. Put two
-units standing in town inside (Select unit 1 and 2): the result shows as a
-silhouette; **Power up** (1 cash, then 2, up to 7) moves it a unit up;
+units standing in town inside (Select unit 1 and 2): the result shows as its
+shadow, its sprite drawn in black so its shape shows, as the wiki says
+players recognised them (the darkened picture when its sheet is missing); **Power up** (1 cash, then 2, up to 7) moves it a unit up;
 **Start mixing** begins the wait, from about 3 hours for the weakest
 results to 5 days 10 hours for the strongest; **Speed up** costs a cash an
 hour left; **Get unit** puts the result beside the mixer and both parents
@@ -1694,7 +1695,8 @@ prices, the opening level) were never preserved, so since 20 October 2026
 they are rebuilt from the community wiki's "Soul Mixer Combinations" page
 at the owner's request: `config/soulmixer_wiki.json`, made by
 `tools/soul_mixer_wiki.py`, which says where every value came from. Ranks
-start from each unit's strength; the gods, colossi and newest dragon sets
+start from each unit's strength; a town that reaches level 8 without a
+mixer is given one, as in the original; the gods, colossi and newest dragon sets
 rank above 400, where the original rolls a random result among them, so
 two strong units can give one; and a seeded search places the units the
 wiki's recipes name so that 37 of its 39 recipes can give their result,
