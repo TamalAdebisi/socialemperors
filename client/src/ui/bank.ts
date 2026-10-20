@@ -1,5 +1,5 @@
 // The bank (bank.py, the same as on the classic game's page): 2,000 of a
-// resource for 1 cash, up to 5 cash a day, and the game's own trade the
+// resource for 1 cash, up to 10 cash a day (economy.py), and the game's own trade the
 // other way, cash for gold. It opens from the + on the gold and cash pills.
 // The trades go to the server at once, so first the town's waiting
 // commands go, so the bank counts what the player sees.

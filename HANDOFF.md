@@ -83,6 +83,15 @@ follow below; status-only receipt edits change no game, art or test file.
   nests now start it on (save version 0.08a; DECISIONS.md). Test
   `e2e/tests/monster-nest.mjs`. (3) The Soul Mixer rebuilt from the
   wiki's content follows, its own pull request.
+- **The units-book audit (20 October)** found 293 of the book's 475 units
+  with no way to earn them. The owner agreed a plan, one pull request
+  each: the book counts look-alikes (done, #124); cash prices and income
+  rebalanced (`economy.py`, `cash_price`); the 58 barracks that exist but
+  weren't sold go in the shop; the Soul Mixer from the wiki, its results
+  including gods, colossi and the later dragon sets; the Chained god and
+  colossus buildings made unlockable; offer packs, mystery boxes and darts
+  switched on for in-game cash at the new prices. Book-only units stay
+  buyable in the book at the new prices. DECISIONS.md has each call.
 
 - **Owner requests, 19 October 2026, on this machine's side:** (1) a
   rock growing back on land the player has bought no longer blocks

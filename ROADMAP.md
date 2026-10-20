@@ -186,13 +186,13 @@ numbers, because the server writes them into the game config.
       always showed a prize, but nothing saved it; now the server pays it,
       once a level per town (`levels.py`). Saves from before (version 0.06a)
       get the prizes of the levels they had already reached, once
-- [x] Daily bonus: 2 cash on day 3 of the streak, 5 on day 5 (was 1 and 3)
-- [x] Monday bonus: the cash chest holds 10 (was 5)
+- [x] Daily bonus: 3 cash on day 3 of the streak, 10 on day 5 (the game gave 1 and 3; 2 and 5 until 20 October 2026)
+- [x] Monday bonus: the cash chest holds 15 (the game gave 5; 10 until 20 October 2026)
 - [x] World map: 5 cash for reaching continents 2 to 11, 10 for 12 to 21, up
       to 25 (was 1 each). The prize table's order is fixed too: the game
       showed the wrong units for continents 19 to 24
-- [x] The bank: 2,000 gold, wood, food or stone for 1 cash, up to 5 cash a
-      day (`bank.py`). The game's own trade the other way (5 cash for 2,500
+- [x] The bank: 2,000 gold, wood, food or stone for 1 cash, up to 10 cash
+      a day (5 until 20 October 2026; `bank.py`). The game's own trade the other way (5 cash for 2,500
       gold) stays. Together with the daily bonus, it is the "daily" source of
       cash, instead of a new town hall feature
 - [x] Islands: 5 cash the first time a quest island is won on three stars,
@@ -211,10 +211,18 @@ numbers, because the server writes them into the game config.
       good player could win over and over and print cash (`economy.py`)
 - [x] The welcome-back bonus: a chest on a new empire's 2nd and 3rd day
       (2,500 gold, a unit or 10 cash: the client draws it from the Monday
-      chest's list). The client had it switched off inside the game file;
+      chest's list; 15 since 20 October 2026). The client had it switched off inside the game file;
       `tools/patch_client.py` switches that one setting on (3 bytes) in a
       copy, `SocialEmpires0926bsec_comeback.swf`, which the page now loads
       and tells the empire's day (`comeback_bonus.py`)
+- [x] Prices (20 October 2026): the game's cash prices were set for real
+      money, so the big ones were out of reach. Every price up to 10 stays;
+      above that it shrinks along one curve (`cash_price`: 30 becomes 19,
+      120 becomes 44, 260 becomes 71, 450 becomes 98). It applies to the
+      units book, everything sold for cash, and the two Bahamut collections
+      bought outright; the offer packs, mystery boxes and darts follow.
+      Speeding up a wait keeps the game's price. An active player earns
+      about 10 cash a day, so the best things cost about a week of playing
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the
       experience and battle gold the game reports, so a determined cheater
       could fake levels, and with them their cash. Checking battles on the

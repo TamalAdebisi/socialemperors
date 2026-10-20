@@ -24,6 +24,7 @@ The server checks that the pieces or the cash are really there and takes
 prices from its own table, not from the client.
 """
 
+import economy
 import inventory
 
 PIECES = 5
@@ -56,7 +57,7 @@ REWARDS = {
 }
 
 # Cash price of each reward, before the discount for pieces already found.
-CASH_PRICE = {c: 5 for c in REWARDS} | {10: 15, 20: 20, 21: 400, 22: 400}
+CASH_PRICE = {c: 5 for c in REWARDS} | {10: 15, 20: 20, 21: economy.cash_price(400), 22: economy.cash_price(400)}
 NO_DISCOUNT = {10, 20}
 ONCE_ONLY = {21, 22}    # the two Bahamut dragons can be earned one time
 NOT_FOR_SALE = {23}     # the Bahamut Heart can only be exchanged

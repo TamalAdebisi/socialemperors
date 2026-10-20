@@ -39,11 +39,19 @@ what they get.
     Cash Wonder    already in the game: 50 cash, then 1 cash a day.
 
 What it adds up to, roughly: about 150 cash by level 50 and 300 by level
-100 from levels; 7 every 5 days from the daily bonus; 5 to 25 a continent;
-5 an island won on 3 stars (165 over the 33 islands); up to 5 a day from the
-bank. Prices for comparison: heroes 3 to 9 cash, dragons 10, packs 20 to
-200, spells 30 to 80, the Supreme Bahamut Dragon 200, the Diamond Castle
-450.
+100 from levels; 13 every 5 days from the daily bonus; 5 to 25 a continent;
+5 an island won on 3 stars (165 over the 33 islands); up to 10 a day from
+the bank. Someone who plays every day earns about 10 cash a day.
+
+What cash buys. The game's cash prices were set for real money, so the big
+ones were out of reach without paying: a units-book dragon cost up to 260
+cash, the Diamond Castle 450. cash_price() keeps every price up to 10 as it
+was and shrinks the bigger ones (30 becomes 19, 120 becomes 44, 260
+becomes 71, 450 becomes 98), so the best things cost about a week of
+playing, not months. It applies to the units book, everything the shop
+sells for cash, the two Bahamut collections bought outright, and the offer
+packs, mystery boxes and darts. Speeding up a wait (about 1 cash an hour)
+keeps the game's price: waiting stays free.
 """
 
 # Levels: the cash for reaching a level (levels below FIRST_CASH_LEVEL keep the game's prize)
@@ -53,10 +61,10 @@ CASH_EVERY_5TH_LEVEL = 5
 CASH_EVERY_10TH_LEVEL = 10
 
 # Daily bonus: the cash on these days of the 5 day streak (the game gave 1 and 3)
-DAILY_BONUS_CASH = {3: 2, 5: 5}
+DAILY_BONUS_CASH = {3: 3, 5: 10}
 
 # Monday bonus: the cash chest (the game gave 5)
-MONDAY_BONUS_CASH = 10
+MONDAY_BONUS_CASH = 15
 
 # World map: continents 2 to 11 pay this much cash, 12 to 21 twice as much,
 # and so on up to continent 50 (the game gave 1 for every continent)
@@ -65,13 +73,17 @@ CONTINENT_CASH = 5
 # The bank (bank.py): resources for cash
 BANK_RESOURCES = ("g", "w", "f", "s")  # gold, wood, food, stone
 BANK_RESOURCE_PER_CASH = 2000
-BANK_CASH_PER_DAY = 5
+BANK_CASH_PER_DAY = 10
 
 # Quest islands: the cash for the first win of an island on 3 stars (quests.py)
 ISLAND_THREE_STAR_CASH = 5
 
 # Tournaments: a cash tournament's prize, in entry fees (the game gave 2)
 TOURNAMENT_CASH_PRIZE_IN_FEES = 1
+
+# Cash prices: kept up to CASH_PRICE_KEPT, above it shrunk along a curve (cash_price)
+CASH_PRICE_KEPT = 10
+CASH_PRICE_CURVE = 0.6
 
 # Texts the game shows, by their id in the config's localization_strings
 TEXTS = {
@@ -89,6 +101,15 @@ def level_cash(level: int) -> int:
     if level % 5 == 0:
         return CASH_EVERY_5TH_LEVEL
     return CASH_PER_LEVEL
+
+
+def cash_price(original) -> int:
+    """What the game's cash price costs here: the same up to CASH_PRICE_KEPT,
+    then shrunk, so a price ten times higher costs about four times more."""
+    price = int(original)
+    if price <= CASH_PRICE_KEPT:
+        return price
+    return round(CASH_PRICE_KEPT * (price / CASH_PRICE_KEPT) ** CASH_PRICE_CURVE)
 
 
 def continent_cash(nivel: int) -> int:
@@ -121,6 +142,15 @@ def patch_config(config: dict) -> None:
     for row in rows:
         row["cash"] = continent_cash(row["level"])
     config["level_ranking_reward"] = rows
+
+    # Cash prices: the units book's and everything priced in cash
+    for category in config["units_collections_categories"].values():
+        category["cost"] = cash_price(category["cost"])
+        if category.get("costs"):
+            category["costs"] = [cash_price(cost) if cost is not None else None for cost in category["costs"]]
+    for item in config["items"]:
+        if item.get("cost_type") == "c":
+            item["cost"] = str(cash_price(item["cost"]))
 
     for kind in config["tournament_type"].values():
         if kind["resource_type"] == "c":
