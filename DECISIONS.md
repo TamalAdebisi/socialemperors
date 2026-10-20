@@ -4,6 +4,26 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: Chained buildings free their units
+
+The owner asked for the Chained god and colossus buildings to become a way
+to get those units. In the original they were adverts for packs sold for
+real money. We made every Chained building that shows a unit work, not
+only the gods and colossi: 108 of them, freeing 114 units (dragons,
+monsters, heroes, gods and colossi), so many more of the units book's
+missing units can be earned. They are bought for **gold**, so the route is
+earned by playing, not another cash purchase: 2,000 gold for each cash of
+the units' units-book price (the bank's rate), from level 10, or 20 for
+gods, colossi and other top units. The chains then take an hour for each
+cash of that price (a god about two days, a god and colossus pair about
+four), which a cash an hour speeds up, as every wait in the game. Freeing
+needs room for the units, as training does. Units the book doesn't list
+are valued at its most common price (51 cash). Left out: chests,
+discounts and cash offers (no unit), names too vague to match a unit
+("Chained Dragon", "Chained Troll", "Chained Balrogs", "Chained Dragon
+Hunters"), those with no picture in the game's files, and repeats of the
+same units. Storing one and placing it again starts its wait over.
+
 ## 20 October 2026: the shop sells the barracks the game kept back
 
 The units-book audit found 58 units whose barracks are in the game's data

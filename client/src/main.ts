@@ -89,6 +89,8 @@ import { freeHelpers } from "./rules/social.ts";
 import { freeSpotNear, GOALS_END_LEVEL, givenOnOpening, HARBOUR, levelThirtyFive, ZEPPELIN_TOWER } from "./rules/dock.ts";
 import { NESTS } from "./rules/nest.ts";
 import { NestWindow } from "./ui/nest.ts";
+import { isChained } from "./rules/chained.ts";
+import { ChainedWindow } from "./ui/chained.ts";
 import { SUPREME_TEMPLE } from "./rules/temple.ts";
 import { TempleWindow } from "./ui/temple.ts";
 
@@ -793,6 +795,10 @@ async function start(): Promise<void> {
         if (kind) {
           return { label: "Open", icon: "open-nest", run: () => nests.open(kind, placed) };
         }
+        // A Chained building (ui/chained.ts): its units, the wait for the chains, Free.
+        if (isChained(placed.item)) {
+          return { label: "Free", icon: "open-gate", run: () => chainedWindow.open(placed) };
+        }
         return social.windowOf(placed) ?? soulMixer.buttonFor(placed) ?? dragonRiders.windowOf(placed) ?? machines.windowOf(placed) ?? warehouse.buttonFor(placed) ?? market.buttonFor(placed) ?? graves.windowOf(placed);
       },
       levelled: (level) => {
@@ -970,6 +976,18 @@ async function start(): Promise<void> {
         void bank.open();
       },
       askFriends: asking,
+    });
+
+    // Chained buildings: their units freed on the nearest free tiles once the chains break.
+    const chainedWindow = new ChainedWindow({
+      town, items, clock,
+      thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
+      send: (list) => { for (const command of list) commands.add(command.cmd, ...command.args); void commands.flush(); },
+      arrived: (placed) => editor.arrived(placed, []),
+      removed: (placed) => editor.departed(placed),
+      changed: () => hud.update(town),
+      tell: (words) => editor.tell(words),
+      bank: (why) => { editor.tell(why); void bank.open(); },
     });
 
     const dragonRiders = new DragonRidersWindow({

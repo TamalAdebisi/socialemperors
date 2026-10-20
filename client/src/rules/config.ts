@@ -76,6 +76,9 @@ export interface ConfigItem {
   /** Later original Soul Mixer content. Absent from the archived 2012 config. */
   breeding_order?: string;
   sm_training_time?: string;
+  /** Ours (chained_units.py): the units a Chained building frees, and the hours its chains take. */
+  chained_units?: string;
+  chain_hours?: string;
 }
 
 /** A tab of the shop and its smaller tabs: the config's categories table. */
@@ -176,6 +179,9 @@ export interface ItemInfo {
   upgradesTo: number;
   breedingOrder?: number;
   soulMixingTime?: number;
+  /** A Chained building's units and the hours before they can be freed (rules/chained.ts). */
+  chainedUnits?: number[];
+  chainHours?: number;
 }
 
 export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()): ItemInfo {
@@ -223,6 +229,7 @@ export function itemInfo(item: ConfigItem, chosenTime: Set<number> = new Set()):
     upgradesTo: Number(item.upgrades_to) || 0,
     breedingOrder: Number(item.breeding_order) || 0,
     soulMixingTime: Number(item.sm_training_time) || 0,
+    ...(item.chained_units ? { chainedUnits: item.chained_units.split(",").map(Number), chainHours: Number(item.chain_hours) || 0 } : {}),
   };
 }
 

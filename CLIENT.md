@@ -1582,6 +1582,23 @@ the dragon got, the friends' list and a finished monster nest started
 again; `e2e/tests/monster-nest.mjs` buys a monster nest in the shop and
 raises King Kong through storage and a reload. Both check the server's save.
 
+### Chained buildings
+
+In the original a Chained building (a god, colossus or dragon in chains)
+was an advert for a pack sold for real money. Since 20 October 2026 the
+shop sells each of the 108 that shows a unit for gold, in New, Limited
+Edition (`chained_units.py`): 2,000 gold for each cash of its units'
+units-book price, from level 10 (20 for gods, colossi and other top
+units). Once built, its **Free** button (the original's open-gate picture)
+opens a window with the units it holds and how long the chains take to
+break: an hour for each cash of that price, from when it was placed.
+**Speed up** costs a cash an hour left. Then **Free** puts the units on
+the nearest free tiles, if the town has room for them, and the building
+goes. Our own commands, since the original has none: `speed_up_chained`
+and `release_chained` (`chained.py`). Rules in `rules/chained.ts`, window
+in `ui/chained.ts`; `e2e/tests/chained.mjs` buys the Chained Fire God +
+Colossus and frees both. Chests, discounts and cash offers stay out.
+
 ### The time and weather machines
 
 The Time Machine's **Open** and Weather Machine's **Set weather** buttons

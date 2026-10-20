@@ -2,6 +2,7 @@ import json
 import os
 import jsonpatch
 import economy
+import chained_units
 from paths import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
@@ -67,6 +68,7 @@ def patch_game_config():
 
     remove_duplicate_items()
     sell_more_barracks(__game_config)
+    chained_units.prepare(__game_config)  # the Chained buildings, sold for gold
     economy.patch_config(__game_config)  # where cash comes from: economy.py
     villagers_take_no_room(__game_config)
 
