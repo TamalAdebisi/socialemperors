@@ -2171,6 +2171,7 @@ function noMore(item: ItemInfo, why: Obstacle): string {
     case "limit":
       return `That's as many ${item.name} as a town can have.`;
     case "level":
+    case "once":
       return `${item.name}: ${describe(why).toLowerCase()}.`;
   }
 }

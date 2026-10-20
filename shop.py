@@ -67,6 +67,9 @@ def _trained_here(map: dict, unit_id) -> bool:
 def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multiplier) -> str:
     map = save["maps"][town_id]
     note = ""
+    chained = bool(get_attribute_from_item_id(item_id, "chained_units"))
+    if chained and int(item_id) in save["privateState"].get("chainedBought", []):
+        return f"Refused: Chained building {item_id} was bought already (once per empire)."
     if not free:
         cost_type = get_attribute_from_item_id(item_id, "cost_type")
         cost = math.ceil(number(item_id, "cost") * float(multiplier))  # the Blacksmith and University take 10% off
@@ -79,6 +82,8 @@ def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multip
         give(save, map, "x", number(item_id, "xp"))
         note = f" for {cost} {cost_type}" + (f" and {food} f" if food else "")
     _place(map, item_id, x, y, orientation)
+    if chained:
+        save["privateState"].setdefault("chainedBought", []).append(int(item_id))
     return f"Item {item_id} placed at ({x},{y}){note}."
 
 

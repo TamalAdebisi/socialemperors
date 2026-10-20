@@ -4,6 +4,28 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: Chained buildings cost far more, once each
+
+The owner tried the Chained buildings and found them far too cheap for
+what they give: a three-headed dragon for about 100,000 gold upsets the
+economy. Two safeguards, as asked:
+
+- **Priced by strength.** A Chained building now costs 10 gold for each
+  point of its units' health times attack, rounded up to 10,000, instead of
+  following the units book's price. The weakest stay within reach (a
+  Draggy 50,000 gold, a Cyclops 660,000) and the strongest become long
+  goals: a 3-Head Dragon about 2.5 million, a Genesis god about 6 million,
+  a god and colossus pair 7 to 8 million. Gold can't be bought fast to
+  skip this: the bank sells only a few cash' worth a day. The wait for
+  the chains stays as it was.
+- **Once per empire, ever.** Each Chained building can be bought once,
+  across both towns, even after its units are freed or it is sold. The
+  server keeps the list and refuses a second purchase; the shop shows
+  "Bought already: one per empire". Different Chained buildings can still
+  each be bought once. Players who already have one (on the map or in
+  storage) have it counted as bought when their save is next loaded.
+  Placing one from storage is not a purchase, so it isn't refused.
+
 ## 20 October 2026: Chained buildings free their units
 
 The owner asked for the Chained god and colossus buildings to become a way

@@ -127,6 +127,7 @@ export function priceOf(item: ItemInfo): Price {
 export type Obstacle =
   | { kind: "level"; level: number }
   | { kind: "limit"; most: number }
+  | { kind: "once" }
   | { kind: "price"; price: Price };
 
 export function obstacle(town: Town, item: ItemInfo): Obstacle | null {
@@ -136,6 +137,10 @@ export function obstacle(town: Town, item: ItemInfo): Obstacle | null {
   const most = atLimit(town, item);
   if (most !== null) {
     return { kind: "limit", most };
+  }
+  // A Chained building, once per empire (the server's chained_units.py): its units are the strongest in the game.
+  if (item.chainedUnits?.length && town.chainedBought?.has(item.id)) {
+    return { kind: "once" };
   }
   const price = priceOf(item);
   if (town[price.resource] < price.amount) {
@@ -150,6 +155,8 @@ export function describe(obstacle: Obstacle): string {
       return `From level ${obstacle.level}`;
     case "limit":
       return obstacle.most === 1 ? "You have one" : `You have ${obstacle.most}`;
+    case "once":
+      return "Bought already: one per empire";
     case "price":
       return `Not enough ${obstacle.price.resource}`;
   }
@@ -195,6 +202,9 @@ export function buy(town: Town, item: ItemInfo, tx: number, ty: number, now: num
   town[price.resource] -= price.amount;
   town.xp += item.xp;
   town.items.push(placed);
+  if (item.chainedUnits?.length) {
+    (town.chainedBought ??= new Set()).add(item.id);
+  }
   // [item, x, y, facing, town, bought for free, price multiplier, type]
   return { command: { cmd: "buy", args: [item.id, tx, ty, orientation, town.id, 0, 1, "b"] }, placed, cleared };
 }
