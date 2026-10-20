@@ -23,6 +23,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
+import { drawingResolution } from "./view/drawing.ts";
 import { TownView } from "./view/townView.ts";
 
 const SPEEDS = [1, 2, 3];
@@ -68,7 +69,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   const town = readTown(mine, items);
   const privateState = mine.privateState as Record<string, unknown> | undefined;
   const app = new Application();
-  await app.init({ resizeTo: window, background: skinColour(arena.skin), resolution: Math.min(window.devicePixelRatio || 1, 2),
+  await app.init({ resizeTo: window, background: skinColour(arena.skin), resolution: drawingResolution(),
     autoDensity: true, antialias: false, preference: "webgl", sharedTicker: true });
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);

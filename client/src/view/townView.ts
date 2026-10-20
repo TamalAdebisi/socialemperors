@@ -3,7 +3,7 @@
 // It shows changes (a thing moved, turned or gone) but doesn't make them:
 // rules/editing.ts does.
 
-import { AnimatedSprite, Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { AnimatedSprite, Assets, ColorMatrixFilter, Container, Graphics, Matrix, Sprite, type Texture } from "pixi.js";
 
 import type { ItemInfo } from "../rules/config.ts";
 import { BUILD_MS, builtShare, inConstruction } from "../rules/construction.ts";
@@ -14,6 +14,7 @@ import {
   buildingOrigin,
   buildingPoint,
   depth,
+  drawOrder,
   groundBlocks,
   isTree,
   terrainItemId,
@@ -28,7 +29,7 @@ import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
 import { buildingLoopLength, buildingStateCount, buildingStateFrames, pouringTower } from "./buildingAnimation.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt, unitHitDistance, visualScreenBox } from "./hit.ts";
+import { UNIT_REACH, isOpaqueAt, layerBox, nearBox, overlaps, unitHitDistance, visualScreenBox } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { HOVER_LIFE, LIFE, SELECTED, loadSelected, markLife, markSelected, unmarkLife, unmarkSelected } from "./selected.ts";
@@ -47,6 +48,10 @@ const OUTLINE = "outline";
 const OUTLINE_STEPS = [[-2, 0], [2, 0], [0, -2], [0, 2], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]];
 /** The colour (0xffffb0), as a colour matrix: red, green and blue set, the picture's own alpha kept. */
 const OUTLINE_MATRIX = [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xb0 / 255, 0, 0, 0, 1, 0];
+/** How far past the screen's edges a picture is still drawn (cull), in screen pixels. */
+const CULL_MARGIN = 200;
+/** How often every picture is looked at again while the camera keeps still (cull): twice a second. */
+const CULL_ALL_MS = 500;
 
 export class TownView {
   readonly root = new Container();
@@ -82,6 +87,10 @@ export class TownView {
   /** Which way each unit faces (rules/geometry.ts numbers them), and where it is on the map while it walks. */
   private readonly facing = new Map<PlacedItem, number>();
   private readonly walkers = new Map<PlacedItem, Walk>();
+  /** The camera and screen every picture was last culled for, and when (cull); -Infinity: due before the next frame. */
+  private readonly culledFor = { camera: new Matrix(), a: 0, d: 0, tx: 0, ty: 0, width: 0, height: 0, at: -Infinity };
+  /** Where each thing was in the town's list at the last sort: for its draw order. */
+  private order = new Map<PlacedItem, number>();
   /** What a unit standing still is doing: working a tree (ATAQUE) or a rock (PICAR); standing (QUIETO) when it's not here. */
   private readonly poses = new Map<PlacedItem, Pose>();
   private lookAroundIn = LOOK_AROUND_MS;
@@ -101,6 +110,7 @@ export class TownView {
     void loadBars();
     this.outlineFill.matrix = OUTLINE_MATRIX as typeof this.outlineFill.matrix;
     this.root.addChild(this.ground, this.landSigns, this.marks, this.things, this.popups, this.ghostLayer, this.markers.layer, this.box);
+    this.things.sortableChildren = true;
     this.ghostLayer.alpha = 0.7;
   }
 
@@ -275,7 +285,9 @@ export class TownView {
         walk.path = [];
       }
       // On its new tile now: drawn in its place among the others.
-      this.sort();
+      if (slot) {
+        this.place(placed, slot);
+      }
       this.nextTile(placed, walk);
     }
   }
@@ -324,6 +336,7 @@ export class TownView {
         }
       }));
     }
+    this.sort();
 
     let done = 0;
     progress(0, jobs.length);
@@ -348,11 +361,18 @@ export class TownView {
     if (signed) {
       return signed;
     }
+    // In drawing order, front last: Pixi sorts before it draws, so a unit may have stepped since.
+    this.things.sortChildren();
+    // The point on the map's layer, and a screen pixel's size there: pictures nowhere near it
+    // are passed over with a few sums (layerBox), before the dearer tests on what's left.
+    const at = this.things.toLocal(screen);
+    const scale = this.things.getGlobalTransform();
+    const pixel = 1 / Math.min(Math.hypot(scale.a, scale.b), Math.hypot(scale.c, scale.d));
     const slots = this.things.children;
     for (let i = slots.length - 1; i >= 0; i--) {
       const slot = slots[i];
       const picture = pictureOf(slot);
-      if (picture && isOpaqueAt(picture, screen)) {
+      if (picture && nearBox(layerBox(slot, picture), at, pixel) && isOpaqueAt(picture, screen)) {
         for (const [placed, s] of this.slots) {
           if (s === slot) {
             return placed;
@@ -367,7 +387,7 @@ export class TownView {
     for (const [placed, slot] of this.slots) {
       if (!placed.item.isUnit || !slot.visible) continue;
       const picture = pictureOf(slot);
-      if (!picture) continue;
+      if (!picture || !nearBox(layerBox(slot, picture), at, (UNIT_REACH + 1) * pixel)) continue;
       const d = unitHitDistance(visualScreenBox(picture), screen);
       if (d < distance || (nearest && d === distance && depth(placed) > depth(nearest))) {
         nearest = placed;
@@ -375,6 +395,40 @@ export class TownView {
       }
     }
     return nearest;
+  }
+
+  /**
+   * Leave out of the drawing what's off the screen (`screen`: its size), so
+   * a big town zoomed in costs the computer only what shows. Run before each
+   * frame is drawn. Every picture is looked at again when the camera moves
+   * or a picture is put in, and twice a second besides; the walking units,
+   * the only pictures that move by themselves, every frame.
+   * The room round the screen covers what a slot holds beside its picture:
+   * its bars, its ring, its flames.
+   */
+  cull(screen: { width: number; height: number }): void {
+    const camera = this.things.getGlobalTransform(this.culledFor.camera);
+    const last = this.culledFor;
+    const same = camera.a === last.a && camera.d === last.d && camera.tx === last.tx && camera.ty === last.ty
+      && screen.width === last.width && screen.height === last.height;
+    const now = performance.now();
+    const all = !same || now - last.at >= CULL_ALL_MS;
+    if (all) {
+      Object.assign(last, { a: camera.a, d: camera.d, tx: camera.tx, ty: camera.ty, width: screen.width, height: screen.height, at: now });
+    } else if (this.walkers.size === 0) {
+      return;
+    }
+    const from = this.things.toLocal({ x: -CULL_MARGIN, y: -CULL_MARGIN });
+    const to = this.things.toLocal({ x: screen.width + CULL_MARGIN, y: screen.height + CULL_MARGIN });
+    const seen = { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y) };
+    const slots = all ? this.things.children : [...this.walkers.keys()].map((placed) => this.slots.get(placed));
+    for (const slot of slots) {
+      const picture = slot && pictureOf(slot);
+      if (slot) {
+        // A picture left out is still measured (getBounds): its sign, hovering and selecting work as before.
+        slot.culled = picture !== undefined && !overlaps(layerBox(slot, picture), seen);
+      }
+    }
   }
 
   /** Draw a thing again (it moved or turned), and put it back in order. */
@@ -389,6 +443,7 @@ export class TownView {
       slot = new Container();
       this.slots.set(placed, slot);
       this.things.addChild(slot);
+      this.sort();
     }
     await this.draw(placed, slot);
     this.sort();
@@ -653,9 +708,28 @@ export class TownView {
     }
   }
 
+  /**
+   * Put the pictures back to front: by depth, then in the town's order. Each
+   * slot gets its place as a number (zIndex), and Pixi sorts the layer once
+   * before drawing, when a number has changed. Moving the children one by
+   * one cost the square of the town's size each time a unit stepped onto a
+   * tile; with a hundred walking, that was most of a frame.
+   */
   private sort(): void {
-    const order = [...this.slots].sort(([a], [b]) => depth(a) - depth(b) || this.town.items.indexOf(a) - this.town.items.indexOf(b));
-    order.forEach(([, slot], index) => this.things.setChildIndex(slot, index));
+    this.order = new Map();
+    this.town.items.forEach((placed, i) => this.order.set(placed, i));
+    for (const [placed, slot] of this.slots) {
+      this.place(placed, slot);
+    }
+  }
+
+  /**
+   * One thing's place among the others (sort), as when a unit steps onto a
+   * tile. Its place in the town's list is the one the last sort saw, as the
+   * others' are: all from the same list, no two the same.
+   */
+  private place(placed: PlacedItem, slot: Container): void {
+    slot.zIndex = drawOrder(placed, this.order.get(placed) ?? this.town.items.indexOf(placed));
   }
 
   /** Put a thing's picture in its slot. False when it has no art (yet): an outline instead. */
@@ -669,6 +743,8 @@ export class TownView {
       return this.drawScaffold(placed, slot).then(() => art !== null);
     }
     this.bars.delete(placed);
+    // A new picture, maybe of another size (cull): every picture looked at again before the next frame.
+    this.culledFor.at = -Infinity;
     slot.removeChildren().forEach((child) => child.destroy());
     slot.position.set(offset.x, offset.y);
     if (art === null) {
@@ -712,6 +788,7 @@ export class TownView {
     if (slot.destroyed) {
       return;
     }
+    this.culledFor.at = -Infinity;  // a new picture (cull), as in draw
     slot.removeChildren().forEach((child) => child.destroy());
     slot.position.set(0, 0);
     const now = Date.now();

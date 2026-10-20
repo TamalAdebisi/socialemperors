@@ -369,7 +369,8 @@ merging the two wait fixes with that separate failure documented.
       (land, hurrying, the bank); missions and bonuses
       (goals, the daily bonus, Monday's chest); neighbours
       (visiting and helping, Arthur, the donkey carts); sound and speed (the
-      town's music and sounds, compressed downloads); the building card,
+      town's music and sounds, compressed downloads; a busy town drawn
+      fast, with Fast drawing in the Menu, 20 October); the building card,
       the original's info panel with Upgrade (the owner's pick of the
       mockups, 16 October 2026); and a run-through
       against the Flash game (`e2e/tests/classic.mjs`: an empire played in

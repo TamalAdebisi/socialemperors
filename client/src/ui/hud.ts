@@ -40,6 +40,8 @@ export interface HudActions {
   pause?: { button(): HTMLButtonElement };
   /** The site's links (the classic page's bar): what waits on the Everybody page, who's signed in, the form token for Log out, and where to get in touch (SE_DISCORD_URL), if anywhere. */
   site?: { news: number; username: string; csrf: string; discord?: string };
+  /** Fast drawing (view/drawing.ts): whether it's on, and switching it; in the Menu, on screens where it changes anything. */
+  drawing?: { fast: boolean; set(on: boolean): void };
 }
 
 /** How often the Everybody count is asked again while the game is in view, as the classic page's: two minutes. */
@@ -106,6 +108,8 @@ export function showHud(town: Town, actions: HudActions): Hud {
         <span class="site-menu" role="menu" hidden>
           <a role="menuitem" href="/friends" target="_blank" rel="noopener" data-friends>Everybody<span class="menu-count" data-friends-news hidden></span></a>
           <a role="menuitem" href="/">Empires</a>
+          <button role="menuitemcheckbox" type="button" aria-checked="false" data-fast-drawing
+            title="Draw the map with fewer pixels: smoother on a slower computer, a little softer" hidden>Fast drawing</button>
           <form method="post" action="/logout"><input type="hidden" name="csrf"><button role="menuitem" type="submit">Log out</button></form>
         </span>
       </span>
@@ -186,7 +190,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
     fullscreen.textContent = document.fullscreenElement ? "Exit full screen" : "Full screen";
   });
   if (actions.site) {
-    showSite(bar, actions.site);
+    showSite(bar, actions.site, actions.drawing);
   }
   document.body.appendChild(bar);
 
@@ -356,7 +360,7 @@ export function showMessage(text: string): void {
  * Discord when the server names one (a new tab too), and Log out (a form, as
  * the site's: another site can't log you out with a link).
  */
-function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void {
+function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>, drawing?: HudActions["drawing"]): void {
   const holder = bar.querySelector<HTMLElement>(".site")!;
   const button = holder.querySelector<HTMLButtonElement>(".site-button")!;
   const menu = holder.querySelector<HTMLElement>(".site-menu")!;
@@ -375,7 +379,20 @@ function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>): void
     discord.dataset.discord = "";
     discord.title = "Questions or a problem? Get in touch on Discord";
     discord.textContent = "Discord";
-    logOut.form!.before(discord);
+    holder.querySelector("[data-fast-drawing]")!.before(discord);
+  }
+  // A setting among the links, after them: ticked when on.
+  const fast = holder.querySelector<HTMLButtonElement>("[data-fast-drawing]")!;
+  if (drawing) {
+    let on = drawing.fast;
+    const show = () => fast.setAttribute("aria-checked", String(on));
+    show();
+    fast.addEventListener("click", () => {
+      on = !on;
+      drawing.set(on);
+      show();
+    });
+    fast.hidden = false;
   }
   const news = (count: number) => {
     for (const badge of holder.querySelectorAll<HTMLElement>("[data-site-news], [data-friends-news]")) {

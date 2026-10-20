@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { ItemInfo } from "./config.ts";
 import { unitPoint } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
-import { DIRECTION, canWalk, directionTo, findPath, isWalkable, lookAround, reachable, stepTowards, unitMoved, unitPath, walkGrid } from "./walking.ts";
+import { DIRECTION, canWalk, directionTo, findPath, isClearTile, isWalkable, lookAround, reachable, stepTowards, unitMoved, unitPath, walkGrid } from "./walking.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
   return { id: 1, name: "House", isUnit: false, art: "casa1", width: 2, height: 2, category: 1, subcategory: 111,
@@ -129,4 +129,30 @@ test("what a unit can reach agrees with the path finder: a pocket walled in can'
   for (const tile of [{ x: 50, y: 50 }, { x: 51, y: 51 }, { x: 55, y: 55 }, { x: 44, y: 58 }]) {
     assert.equal(canReach(tile), findPath(walkGrid(t), { x: 42, y: 42 }, tile) !== null, `${tile.x}, ${tile.y}`);
   }
+});
+
+test("one tile's check agrees with the whole map's grid, tile for tile", () => {
+  let seed = 5;
+  const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  const things: PlacedItem[] = [];
+  for (let i = 0; i < 400; i++) {
+    const size = 1 + Math.floor(random() * 4);
+    // Houses, fields, gates (some open), the ground's own pieces, units, and some hanging over the map's edge.
+    const kind = random();
+    const fields = kind < 0.1 ? { subcategory: 122 } : kind < 0.2 ? { subcategory: 222 } : kind < 0.25 ? { category: 6 }
+      : kind < 0.4 ? VILLAGER : {};
+    const thing = placed({ width: size, height: 1 + Math.floor(random() * 4), ...fields }, Math.floor(random() * 104) - 2, Math.floor(random() * 104) - 2);
+    if (kind >= 0.1 && kind < 0.2 && random() < 0.5) thing.open = true;
+    things.push(thing);
+  }
+  const t = town(things);
+  const grid = walkGrid(t, true);
+  const seen = new Set<boolean>();
+  for (let y = -1; y <= 100; y++) {
+    for (let x = -1; x <= 100; x++) {
+      assert.equal(isClearTile(t, x, y), isWalkable(grid, x, y), `tile ${x},${y}`);
+      seen.add(isClearTile(t, x, y));
+    }
+  }
+  assert.equal(seen.size, 2, "both blocked and clear tiles were checked");
 });

@@ -6,7 +6,7 @@
 import type { Command } from "../net/commands.ts";
 import { isAnimal } from "./animals.ts";
 import { inConstruction } from "./construction.ts";
-import { footprintTiles, isOpenLand } from "./editing.ts";
+import { footprintSize, footprintTiles, isOpenLand } from "./editing.ts";
 import { MAP_TILES, TILE_HEIGHT, TILE_WIDTH, unitPoint, type Point } from "./geometry.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
@@ -35,8 +35,7 @@ export function walkGrid(town: Town, anywhere = false): WalkGrid {
     }
   }
   for (const placed of town.items) {
-    if (placed.item.isUnit || placed.item.category === TERRAIN || placed.item.subcategory === SUBCAT_FARM
-        || (placed.item.subcategory === SUBCAT_GATE && placed.open)) {
+    if (!blocksWalking(placed)) {
       continue;
     }
     for (const [x, y] of footprintTiles(placed)) {
@@ -46,6 +45,31 @@ export function walkGrid(town: Town, anywhere = false): WalkGrid {
     }
   }
   return grid;
+}
+
+/** Whether a thing stands in units' way: buildings do; units, the ground, fields and open gates don't. */
+function blocksWalking(placed: PlacedItem): boolean {
+  return !(placed.item.isUnit || placed.item.category === TERRAIN || placed.item.subcategory === SUBCAT_FARM
+    || (placed.item.subcategory === SUBCAT_GATE && placed.open));
+}
+
+/**
+ * Whether one tile can be walked on, as walkGrid(town, true) has it, without
+ * making the whole grid: for each tile a walking unit steps onto, to see
+ * whether something has been built there since it set off.
+ */
+export function isClearTile(town: Town, x: number, y: number): boolean {
+  if (!inMap(x, y)) {
+    return false;
+  }
+  for (const placed of town.items) {
+    // A thing covers the tiles up to its own, back by its size (editing.ts, footprintTiles).
+    const [w, h] = footprintSize(placed);
+    if (x <= placed.tx && x > placed.tx - w && y <= placed.ty && y > placed.ty - h && blocksWalking(placed)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

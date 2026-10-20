@@ -1395,6 +1395,62 @@ things, 69 pictures) opens in under 3 seconds on our test machine once its
 art is cached, and in about 10 the first time, mostly downloading the
 pictures; the bucket keeps them a day in the browser's cache.
 
+### A busy town
+
+Built 20 October 2026, after the owner found the game slow with many
+units. The rules and the look are unchanged; there is one new setting.
+Code: `view/townView.ts` (`sort`, `cull`, `itemAt`), `view/hit.ts`
+(`layerBox`), `rules/walking.ts` (`isClearTile`), `view/drawing.ts`, and
+the Menu (`ui/hud.ts`). Test: `e2e/tests/crowd.mjs`.
+
+**Where the time went.** A frame has 16.7 ms at 60 frames a second; past
+that the game stutters. We timed the town's drawing (`TownView`, with
+stand-in pictures, in headless Chromium on our test machine) with 600
+units among 800 trees and buildings. Units standing cost almost nothing.
+Walking ones did, for two reasons:
+
+- Each time one stepped onto a tile, the map put every picture back in
+  order, one at a time. Each move looked the picture up in a list of all
+  of them, so the cost grew with the square of the town's size.
+- The editor made the whole map's walking grid again, to see whether
+  something had been built on that one tile.
+
+With 100 units walking and the whole map in view, an average frame took
+6.6 ms and one in twenty 24 ms. Now they take 0.9 ms and 2.1 ms. Zoomed
+in, 5.5 ms and 21 ms became 0.5 ms and 0.9 ms. A home computer may well be slower than our
+test machine; the gain should be in proportion. (The graphics chip's own
+work isn't in these numbers: the test machine draws in software.)
+
+**What changed:**
+
+- **The drawing order is a number.** A picture's place, back to front (its
+  depth, then the town's order for things level with each other:
+  `drawOrder`), is its slot's `zIndex`. Pixi sorts the layer once before
+  drawing, when one has changed, as battles already did. A unit stepping
+  onto a tile changes only its own.
+- **One tile's check for each step** (`isClearTile`), with the walking
+  grid's own rule (a test compares the two on every tile).
+- **Hovering** first passes over the pictures nowhere near the pointer,
+  with a few sums each (`layerBox`), then makes the dearer tests (the
+  picture's pixel under the pointer) on the rest. The answers are the same.
+- **What's off the screen isn't drawn** (Pixi's `culled`), with 200
+  screen pixels to spare for bars and rings beside a picture. Every picture
+  is looked at again when the camera moves or something is drawn anew, and
+  twice a second besides; the walking units, the only pictures that move
+  by themselves, every frame. A picture left out is still measured, so its
+  sign, hovering and selecting work as before. Zoomed in on the test town,
+  140 of 1,400 pictures are drawn.
+- **Fast drawing**, in the Menu, on screens with more pixels than the page
+  (a Retina laptop, a phone). The map is drawn one pixel for one instead
+  of two by two each way: a quarter of the pixels for the graphics chip, a
+  little softer. It's off unless chosen, remembered in the browser, and
+  used for the town and the fights alike. The Flash client had a quality
+  switch that did nothing and always drew at "medium", so this one is ours
+  (DECISIONS.md, 20 October).
+
+Not done: battles draw all their fighters (they sort by number already),
+and get the same culling if they need it. The shop's pictures stay sharp.
+
 ### Buildings at rest
 
 The structure idle pass inventories all 1,010 configured buildings/scenery

@@ -3,7 +3,7 @@
 // box overlaps the house behind it; its transparent corners mustn't catch
 // clicks meant for the house.
 
-import { Sprite, type Container } from "pixi.js";
+import { Sprite, ViewContainer, type Container } from "pixi.js";
 
 import type { Point } from "../rules/geometry.ts";
 
@@ -34,12 +34,59 @@ export function visualScreenBox(picture: Container): Rect {
   };
 }
 
+/**
+ * A picture's box on its slot's layer (the map's things): its own box moved
+ * by the picture's and the slot's positions and scales. Sums only, where
+ * getBounds works its way up to the screen, so it's cheap enough for every
+ * picture on the map: to pass over those nowhere near a point (TownView's
+ * itemAt), or off the screen (its culling).
+ */
+export function layerBox(slot: Container, picture: Container): Rect {
+  const own = picture instanceof ViewContainer ? picture.bounds : picture.getLocalBounds();
+  picture.updateLocalTransform();
+  slot.updateLocalTransform();
+  const p = picture.localTransform, s = slot.localTransform;
+  // The two moves as one: the slot's after the picture's.
+  const a = s.a * p.a + s.c * p.b, b = s.b * p.a + s.d * p.b;
+  const c = s.a * p.c + s.c * p.d, d = s.b * p.c + s.d * p.d;
+  const tx = s.a * p.tx + s.c * p.ty + s.tx, ty = s.b * p.tx + s.d * p.ty + s.ty;
+  // A corner's x is a·x + c·y + tx: the box's least x takes the lesser of each part (and so on),
+  // without listing the four corners. It runs for every picture each frame (culling): no arrays.
+  const x = tx + Math.min(a * own.minX, a * own.maxX) + Math.min(c * own.minY, c * own.maxY);
+  const y = ty + Math.min(b * own.minX, b * own.maxX) + Math.min(d * own.minY, d * own.maxY);
+  const right = tx + Math.max(a * own.minX, a * own.maxX) + Math.max(c * own.minY, c * own.maxY);
+  const bottom = ty + Math.max(b * own.minX, b * own.maxX) + Math.max(d * own.minY, d * own.maxY);
+  return { x, y, width: right - x, height: bottom - y };
+}
+
+/** Whether two boxes share any of their area. */
+export function overlaps(one: Rect, other: Rect): boolean {
+  return one.x < other.x + other.width && other.x < one.x + one.width && one.y < other.y + other.height && other.y < one.y + one.height;
+}
+
+/** Whether a point is in a box or within `margin` of it. */
+export function nearBox(box: Rect, at: Point, margin: number): boolean {
+  return at.x >= box.x - margin && at.x <= box.x + box.width + margin && at.y >= box.y - margin && at.y <= box.y + box.height + margin;
+}
+
+/** A unit's target: at least this far each way from its middle, on the screen... */
+const UNIT_HALF_TARGET = 22;
+/** ...and this far past its picture. */
+const UNIT_MARGIN = 8;
+/**
+ * The furthest outside a unit's picture box a near miss can be, on the
+ * screen: a 22px half target round a middle that is inside the box.
+ */
+export const UNIT_REACH = Math.max(UNIT_HALF_TARGET, UNIT_MARGIN);
+
 /** Units get an eight-pixel margin and at least a 44px target at every zoom. */
 export function unitHitDistance(box: Rect, screen: Point): number {
   if (box.width <= 0 || box.height <= 0) return Infinity;
   const dx = Math.abs(screen.x - (box.x + box.width / 2));
   const dy = Math.abs(screen.y - (box.y + box.height / 2));
-  if (dx > Math.max(22, box.width / 2 + 8) || dy > Math.max(22, box.height / 2 + 8)) return Infinity;
+  if (dx > Math.max(UNIT_HALF_TARGET, box.width / 2 + UNIT_MARGIN) || dy > Math.max(UNIT_HALF_TARGET, box.height / 2 + UNIT_MARGIN)) {
+    return Infinity;
+  }
   return Math.hypot(dx, dy);
 }
 
