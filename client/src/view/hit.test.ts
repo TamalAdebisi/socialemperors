@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { Container, Rectangle, Sprite, Texture, TextureSource } from "pixi.js";
+import { Container, Graphics, Rectangle, Sprite, Texture, TextureSource } from "pixi.js";
 
-import { sheetPixel, unitHitDistance, visualScreenBox } from "./hit.ts";
+import { layerBox, nearBox, overlaps, sheetPixel, unitHitDistance, visualScreenBox } from "./hit.ts";
 
 test("a small unit keeps a 44px target, with gaps and near misses selectable", () => {
   const tiny = { x: 100, y: 100, width: 10, height: 16 };
@@ -121,4 +121,58 @@ test("a sheet stored at half size finds its pixel at half the place", () => {
   // The same picture, its numbers in the game's pixels as PixiJS gives them;
   // the sheet holds it at half size, so (320, 215) is (160, 107) there.
   assert.deepEqual(sheetPixel({ x: -10, y: -20 }, anchor, orig, trim, frame, 0.5), { x: 160, y: 107 });
+});
+
+test("a picture's box on the map's layer, by sums, is where Pixi finds it on the screen", () => {
+  // The camera (zoomed out, moved), the map's layer, a slot moved (a building being moved), the picture walked and mirrored.
+  const world = new Container();
+  world.position.set(-1234.5, 321);
+  world.scale.set(0.37);
+  const layer = world.addChild(new Container());
+  const slot = layer.addChild(new Container());
+  slot.position.set(54, -27);
+  const picture = slot.addChild(bullSprite());
+  for (const [x, y, mirrored] of [[100, 200, false], [-640.25, 77.5, true], [3000, 1500, false]] as const) {
+    picture.position.set(x, y);
+    picture.scale.x = mirrored ? -1 : 1;
+    const box = layerBox(slot, picture);
+    // From the layer to the screen: the camera's zoom and move.
+    const onScreen = { x: box.x * 0.37 - 1234.5, y: box.y * 0.37 + 321, width: box.width * 0.37, height: box.height * 0.37 };
+    const pixi = picture.getBounds();
+    for (const [mine, theirs] of [[onScreen.x, pixi.x], [onScreen.y, pixi.y], [onScreen.width, pixi.width], [onScreen.height, pixi.height]]) {
+      assert.ok(Math.abs(mine - theirs) < 1e-6, `${mine} vs ${theirs}`);
+    }
+  }
+  // An item without art is drawn as an outline (a Graphics): its box too.
+  const outline = slot.addChild(new Graphics().rect(-50, -30, 100, 60).fill(0xffffff));
+  outline.position.set(10, 20);
+  assert.deepEqual(layerBox(slot, outline), { x: 14, y: -37, width: 100, height: 60 });
+});
+
+test("near a box: inside it, or within the margin round it", () => {
+  const box = { x: 10, y: 20, width: 30, height: 40 };
+  assert.ok(nearBox(box, { x: 10, y: 60 }, 0));
+  assert.ok(!nearBox(box, { x: 9, y: 30 }, 0));
+  assert.ok(nearBox(box, { x: 9, y: 30 }, 1));
+  assert.ok(!nearBox(box, { x: 25, y: 62.5 }, 2));
+});
+
+test("boxes overlap when they share some area, not when they only touch", () => {
+  const box = { x: 0, y: 0, width: 10, height: 10 };
+  assert.ok(overlaps(box, { x: 9, y: 9, width: 5, height: 5 }));
+  assert.ok(overlaps(box, { x: -5, y: -5, width: 30, height: 30 }), "one inside the other");
+  assert.ok(!overlaps(box, { x: 10, y: 0, width: 5, height: 5 }));
+  assert.ok(!overlaps(box, { x: 0, y: -6, width: 5, height: 5 }));
+});
+
+test("a turned picture's box holds all four of its corners", () => {
+  const slot = new Container();
+  const picture = slot.addChild(bullSprite());
+  picture.rotation = Math.PI / 6;
+  picture.position.set(40, -20);
+  const box = layerBox(slot, picture);
+  const pixi = picture.getBounds();
+  for (const [mine, theirs] of [[box.x, pixi.x], [box.y, pixi.y], [box.width, pixi.width], [box.height, pixi.height]]) {
+    assert.ok(Math.abs(mine - theirs) < 1e-6, `${mine} vs ${theirs}`);
+  }
 });

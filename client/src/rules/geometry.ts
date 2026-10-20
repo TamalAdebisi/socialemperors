@@ -137,6 +137,17 @@ export function depth(placed: PlacedItem): number {
   return z;
 }
 
+/** Room for the town's order under each step of depth (drawOrder): more than a town has things. */
+const IN_TOWN_ORDER = 1_000_000;
+
+/**
+ * Drawing order as one number, for sorting by it: the depth, then for things
+ * of equal depth their place in the town's list (`index`, -1 when not in it).
+ */
+export function drawOrder(placed: PlacedItem, index: number): number {
+  return depth(placed) * IN_TOWN_ORDER + index;
+}
+
 /**
  * Units face one of 8 ways: 1 up, 2 up-right, 3 right, 4 down-right, 5 down,
  * 6 up-left, 7 left, 8 down-left. Their art draws the first five; the other

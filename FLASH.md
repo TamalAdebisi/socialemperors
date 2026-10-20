@@ -4,6 +4,10 @@ The home page offers three ways to play. This page is for the one called
 **A Flash browser**: the game running in Adobe's own Flash Player, the most
 faithful way to play while Ruffle and the new client catch up.
 
+It's also the way for a town with a big army: Ruffle copies Flash Player
+in the browser and runs the game's code more slowly than Adobe's own player
+usually does, so many units can make it lag.
+
 Browsers dropped Flash at the end of 2020, so you need one of the two
 setups below. Old browsers don't get security fixes: use them for the game,
 not for everyday browsing.

@@ -6,6 +6,7 @@ import {
   buildingOrigin,
   buildingPoint,
   depth,
+  drawOrder,
   expansionOf,
   groundBlocks,
   mapArea,
@@ -92,6 +93,23 @@ test("things further back are drawn first; farms under everything", () => {
   const farm = { item: item({ subcategory: 122, width: 2 }), tx: 60, ty: 60, orientation: 0, unitsInside: 0, startedAt: null, workTime: 0 };
   assert.ok(depth(behind) < depth(house));
   assert.ok(depth(farm) < depth(behind));
+});
+
+test("sorting by the drawing order as one number keeps depth, then the town's order", () => {
+  // A crowded map: many things share a depth (the same row across the screen), farms, the animal drawn on top.
+  let seed = 3;
+  const random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  const town = Array.from({ length: 2000 }, () => ({
+    item: item({ id: random() < 0.02 ? 524 : 1, width: 1 + Math.floor(random() * 4), subcategory: random() < 0.05 ? 122 : 0 }),
+    tx: Math.floor(random() * 100), ty: Math.floor(random() * 100), orientation: 0, unitsInside: 0, startedAt: null, workTime: 0,
+  }));
+  const shown = [...town].reverse();
+  // As the map sorted them before: depth, then where each is in the town's list.
+  const before = [...shown].sort((a, b) => depth(a) - depth(b) || town.indexOf(a) - town.indexOf(b));
+  const now = [...shown].sort((a, b) => drawOrder(a, town.indexOf(a)) - drawOrder(b, town.indexOf(b)));
+  assert.deepEqual(now, before);
+  // Something drawn that isn't in the town's list goes first among its equals, as indexOf's -1 put it.
+  assert.ok(drawOrder(town[0], -1) < drawOrder(town[0], 0));
 });
 
 test("units draw five directions and mirror three", () => {

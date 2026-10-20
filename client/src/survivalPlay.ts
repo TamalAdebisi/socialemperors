@@ -30,6 +30,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
+import { drawingResolution } from "./view/drawing.ts";
 
 const SEA = 0x2e94e6;
 const SPEEDS = [1, 2, 3];
@@ -85,7 +86,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
 
   const app = new Application();
   await app.init({
-    resizeTo: window, background: SEA, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true,
+    resizeTo: window, background: SEA, resolution: drawingResolution(), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
   const loop = new GameLoop(app.ticker);
