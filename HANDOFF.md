@@ -38,6 +38,14 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **A cash box on the admin page (20 October).** The owner asked for 50
+  cash (a tournament joined with too many units), then for it to be taken
+  off again, then for a way to do it themselves. An empire's admin page now
+  gives or takes cash on the server's own copy, so it needs no restart.
+  An empire changed in the database alone, while the server runs, is
+  written over by the server's copy: use the box, or restart at once. See DECISIONS.md (20 October). Test
+  `e2e/tests/admin-cash.mjs` (site pages only: it needs no art).
+
 - **Weekly tournament prizes wait for the end of the week (19 October).**
   The owner asked: the server paid each player as their own weekly room
   ended, so the week's first player took the top prize. Now the top 10 of

@@ -231,7 +231,7 @@ Optional extras (add the same way, any time):
 | `SE_DISCORD_URL=https://discord.gg/yourcode` | Where players get in touch: an invite to your Discord server (set it never to expire) or your profile's link. A line under the pages around the game, a button on the classic game's bar, Discord in the new client's Menu, and "No code? Ask for one on Discord" under the invite code all link to it. Only `https://` links are used. |
 | `SE_ALLOW_REGISTRATION=0` | Stop new sign-ups entirely. |
 | `SE_MAX_VILLAGES=3` | Empires per account. |
-| `SE_ADMINS=yourname` | Usernames (comma-separated) that can open the admin page at `/admin`: the bug radar, password resets, deleting accounts. Nobody can until you set it; for everyone else the page doesn't exist. |
+| `SE_ADMINS=yourname` | Usernames (comma-separated) that can open the admin page at `/admin`: the bug radar, password resets, deleting accounts, giving or taking an empire's cash. Nobody can until you set it; for everyone else the page doesn't exist. |
 
 You don't need `SE_SECRET_KEY`: the server creates one and keeps it on the
 volume.

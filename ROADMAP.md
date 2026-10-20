@@ -108,7 +108,8 @@ they go ahead alongside.
       hour and 10 wrong passwords in 10 minutes per visitor
 - [x] Admin page (`/admin`, `admin.py`), for the usernames in `SE_ADMINS`:
       find an account, reset its password, delete it or one of its empires,
-      look inside an empire's save, and see who played last
+      look inside an empire's save, give or take its cash, and see who
+      played last
 - [x] Bug radar (`radar.py`, on the admin page): counts the commands the
       server doesn't handle yet, the commands that hit an error (by the line
       of code) and the sync errors the game reports, most frequent first, so

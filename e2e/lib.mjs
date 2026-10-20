@@ -10,6 +10,8 @@ export const DESKTOP = { width: 1280, height: 800 };
 export const PHONE = { width: 390, height: 844 };
 /** The test server's Discord link (SE_DISCORD_URL), as the live game's would be: never opened. */
 export const DISCORD = "https://discord.gg/e2e-example";
+/** The test server's admin (SE_ADMINS): the account a test signs up with this name opens /admin. */
+export const ADMIN = "e2eadmin";
 
 // Playwright's requests do not pick up the shell's proxy automatically.
 // Cloud runners need it for the art bucket; the throwaway server stays local.
@@ -38,8 +40,11 @@ const FULL_WILD = [
  * window, as its own visitor. `wild`: let trees and rocks grow as for a new
  * player, rather than starting with enough. `dock`: let the town be given its
  * harbour (and zeppelin tower) as it opens, rather than starting with them.
+ * `name`: the account's name (ADMIN for the admin, once a run) instead of a
+ * new one. `game`: false for the site's own pages only: the town is made,
+ * but neither set up nor opened.
  */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false, name: username = null, game = true } = {}) {
   const context = await browser.newContext({
     ...network,
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
@@ -53,11 +58,15 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   }, raids);
   const page = await context.newPage();
   const player = new Player(page, base, out, viewport);
-  const name = `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
+  const name = username ?? `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
   const signUp = await page.request.post(base + "/register", { form: { username: name, password: `${name}-password`, csrf: await player.csrf() } });
   if (!signUp.ok()) throw new Error(`signing up failed: ${signUp.status()}`);
   await page.request.post(base + "/new", { form: { PLAYER: "client", csrf: await player.csrf() }, maxRedirects: 0 });
   player.name = name;
+  if (!game) {
+    await player.readSettings();
+    return player;
+  }
   if (!lessons || !wild || !camp || !dock) {
     await player.readSettings();
   }
