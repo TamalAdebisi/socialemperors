@@ -80,6 +80,7 @@ const TOWERS_PER_BLOCK = 400;
 const NURSERY = { id: 226, most: 3 };
 /** One of each: every level of mill and of gold, stone and lumber mine, and the special buildings. */
 const ONE_EACH = new Set([
+  1529,                                 // the Soul Mixer (its units_limit is 1)
   5, 6, 7, 202, 300, 301, 302,          // mills
   13, 14, 15, 203, 315, 316, 317,       // gold mines
   16, 17, 18, 204, 318, 319, 320,       // stone mines

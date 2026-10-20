@@ -18,6 +18,8 @@ export default async function chained({ newPlayer, offlineVillage }) {
     save.maps[0].coins = 8_000_000;
     save.playerInfo.cash = 200;
     for (const x of [40, 42, 44]) save.maps[0].items.push([HOUSE, x, 62, 0, 1, 0]);
+    // A Soul Mixer of its own, away from here: the free one a town gets at level 8 would land on AT.
+    save.maps[0].items.push([1529, 40, 70, 0, 1, 0]);
   });
   const { page } = player;
   await player.closeLevelUps();

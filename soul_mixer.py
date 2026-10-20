@@ -1,9 +1,11 @@
-"""The later original Soul Mixer queue, without invented content tables.
+"""The later original Soul Mixer queue.
 
 Version 1.4.07 sends the ordinary queue commands. Its two parents remain
 inside and return with separate pop_unit commands after collecting. The
-2012 config does not include its ranks, times or power-up prices, so new
-mixes remain unavailable until genuine original content is supplied.
+2012 config does not include its ranks, times or power-up prices; the
+server fills them from config/soulmixer_wiki.json, rebuilt from the
+community wiki (get_game_config.soul_mixer_from_the_wiki). Without any
+tables, new mixes stay unavailable and finished old ones still collect.
 """
 
 import math

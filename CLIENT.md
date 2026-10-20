@@ -1712,27 +1712,38 @@ The wait has a 30-second limit; the warning and save checks stay the same.
 
 ### The Soul Mixer
 
-The building opens its original-art window and help. Its later original
-rules and queue commands are implemented with tests, but **mixing remains
-unavailable with the archived config**: original unit ranks, mixing times,
-power-up prices and minimum level were not preserved. The window says so
-and blocks new selection/mixing and all cash spending. No replacement
-rules are invented. Known completed legacy queues remain collectable
-without spending when their output is a known unit; unknown waits remain
-unknown. Saved queue fields accept
-only exact safe integers; decimal/exponent strings cannot round into
-completed work.
+The building opens its original-art window and help, and mixes. Put two
+units standing in town inside (Select unit 1 and 2): the result shows as its
+shadow, its sprite drawn in black so its shape shows, as the wiki says
+players recognised them (the darkened picture when its sheet is missing); **Power up** (1 cash, then 2, up to 7) moves it a unit up;
+**Start mixing** begins the wait, from about 3 hours for the weakest
+results to 5 days 10 hours for the strongest; **Speed up** costs a cash an
+hour left; **Get unit** puts the result beside the mixer and both parents
+come back out. A town has one Soul Mixer at most (the shop says "You have
+one"; DECISIONS.md). The rules and commands are the later original's
+(`push_queue_unit`, `buy_powerups`, `speed_up_queue`, `pop_queue_unit`).
+
+The original's content tables (each unit's rank and wait, the power-up
+prices, the opening level) were never preserved, so since 20 October 2026
+they are rebuilt from the community wiki's "Soul Mixer Combinations" page
+at the owner's request: `config/soulmixer_wiki.json`, made by
+`tools/soul_mixer_wiki.py`, which says where every value came from. Ranks
+start from each unit's strength; a town that reaches level 8 without a
+mixer is given one, as in the original; the gods, colossi and newest dragon sets
+rank above 400, where the original rolls a random result among them, so
+two strong units can give one; and a seeded search places the units the
+wiki's recipes name so that 37 of its 39 recipes can give their result,
+typically one try in six to twelve. The server applies the file only when
+the config has no tables of its own, so a genuine original config would
+replace it. Without any tables (an old config), new mixing stays
+unavailable and a finished old mix still collects without spending. Saved
+queue fields accept only exact safe integers.
 
 Files: `rules/soulMixer.ts`, `ui/soulMixer.ts`, `soul_mixer.py` and their
-tests; browser check `e2e/tests/soul-mixer.mjs`. The exact source contract,
-passive grant and recovery search are in
-[the original-rule notes](docs/original/rules/soul-mixer.md). No later
-Soul Mixer goal exists in the 227 shipped missions; the unfinished-goal
-count is unchanged.
-
-Focused Chromium passed 1/1 at `c944e853`, including desktop/phone saved
-state, original help and reload. All three fresh captures and the clean
-server log were reviewed. [Evidence and limits](docs/verification-soul-mixer.md).
+tests; browser check `e2e/tests/soul-mixer.mjs` (a real mix of two
+Valkyries, the help, the phone sheet and old saves). The original's rules
+in detail: [the original-rule notes](docs/original/rules/soul-mixer.md).
+No Soul Mixer goal exists in the 227 shipped missions.
 
 ### The troll town
 
@@ -1846,9 +1857,11 @@ a player's War Troll ticking the book's.
 
 ### Darts
 
-Army → Darts follows the game's original dated prize pools. The shipped
-schedule ends with an empty pool, so no round runs today: no free dart,
-reset or payout is invented. When a configured round is active, the
+Army → Darts follows the game's dated prize pools. The shipped schedule
+ended with an empty pool, so since 20 October 2026 the server plays the
+game's own 32 boards again, a new one each Monday from 19 October 2026 for
+ten years (`get_game_config.darts_every_week`; DECISIONS.md). A paid dart
+costs `cash_price` of the game's 20 cash (15). When a round is active, the
 25-balloon board uses the classic saved-seed shuffle: two rare prizes,
 four of each uncommon, seven and eight of the common prizes. Each throw
 puts its prize in town Storage; discovering all six different prizes
@@ -1862,9 +1875,39 @@ that free dart after the ordinary welcome windows; Later keeps it.
 extra reward. Prize text remains until the next Play so it can be read.
 Choosing Play arms a throw; closing before choosing a balloon spends
 nothing. Charges and storage commands accompany the actual throw.
-`e2e/tests/darts.mjs` checks the real inactive schedule and a local active
-fixture on desktop/phone, including free/paid throws, the bonus and reloads.
-No live schedule is changed by the fixture.
+`e2e/tests/darts.mjs` checks the live weekly round ("Your free dart is
+ready", Play free, the 15-cash price) and a local fixture on desktop/phone,
+including free/paid throws, the bonus and reloads. Other browser tests start
+with `darts: false` (`e2e/lib.mjs`, `window.seNoDartsOffer`) so the free
+dart's welcome window stays out of their way.
+
+### Offers
+
+Build → **Offers**, a tab after Storage, sells the game's offer packs and
+mystery boxes for cash earned in the game (DECISIONS.md, 20 October 2026):
+all 65 that hold anything, the ones the original showed first. Three kinds,
+as the config's `offer_packs` have them:
+
+- **Pack**: fixed items, with gold, wood, food, stone and XP. Buy · price.
+- **Mystery box**: one of four prizes, its rare one at the top as the
+  original window lists them ("Rare / Uncommon / Common", the game's own
+  words). The roll is the original's: under 35 the commonest, the rare one
+  only from 90.
+- **Super mystery box**: three choices, one, two or four prizes, from three
+  rows (the first the rarest; only the four-prize choice is sure to give a
+  rare one). Its XP is shown but, as in the original, not given.
+
+Prices are `economy.cash_price` of the game's (a pack of 30 costs 19); the
+super box's three choices cost 29, 40 and 60 (19, 29 and 40 for pack 19),
+from `globals.SUPER_PACK_PRICES`, which the server sets and checks. Each
+card shows the pack's own picture (`images_new/en/offer_pack_<id>.png`)
+when the game has one, otherwise its prizes' pictures. What is bought goes
+to Storage. The roll happens on the client and the server checks the
+prize is one of the box's, as with the Flash client: `buy_offer_pack`
+`[town, pack(, prize)]` and `buy_super_offer_pack` `[town, pack, "a,b",
+cash]`. Rules in `rules/offers.ts`, cards in `ui/offers.ts`;
+`e2e/tests/offers.mjs` buys a pack, a mystery box and a super box and
+checks the cash, the items and the gold in the save.
 
 ### Social buildings
 

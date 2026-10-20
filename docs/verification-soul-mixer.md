@@ -1,5 +1,10 @@
 # Soul Mixer support verification
 
+> **Since 20 October 2026 new mixing works**, with the missing tables
+> rebuilt from the community wiki at the owner's request
+> (`config/soulmixer_wiki.json`; DECISIONS.md). This record describes the
+> earlier blocked state and stays as history.
+
 Delivered in [#104](https://github.com/TamalAdebisi/socialemperors/pull/104) through [#110](https://github.com/TamalAdebisi/socialemperors/pull/110), merged at `064dd7bd961e554a5325906dc1c4276d1a1388ab`. Earlier no-merge notes below describe the state at those historical checks. The final integration receipt records delivery; Soul new recipes remain gated.
 
 17 October 2026. This slice adds the later original Soul Mixer window,

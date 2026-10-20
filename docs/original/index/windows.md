@@ -86,7 +86,7 @@ The plain boxes the rest of the game opens.
 | `popups/PopupNewDaily.as` | 459 | The daily bonus: five days of gold, cash or a hero, today's highlighted; the day comes from `bonusNextId` or the server's count of days in a row. Sends `win_bonus`. | built: `rules/bonuses.ts`, `bonuses.ts` |
 | `popups/MondayBonusPopUp.as` | 186 | Monday's chest: three closed chests, one prize drawn at random from gold, a unit or cash; the unit is drawn from `MONDAY_BONUS_UNITS` and stored. Sends `weekly_reward`. | built: `rules/bonuses.ts` |
 | `popups/ComebackBonusPopUp.as` | 276 | The welcome-back chest on the second and third day, drawn the same way, the day's own unit from `COMEBACK_BONUS_UNITS`. Sends `comeback_reward`. Switched off in the client as built; our classic game switches it on. | built: `rules/bonuses.ts` |
-| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | built: `rules/darts.ts`, `ui/darts.ts`; original schedule, seeded board, daily free dart, prizes and bonus. Shipped empty pool stays inactive |
+| `popups/PopupDarts.as` | 463 | Darts: 25 balloons hiding 6 prizes (2 rare, once each; 2 uncommon, 4 each; 2 common, 7 and 8), shuffled with a saved seed; one free dart a day, then 20 cash; a bonus item once all six are found. Sends `darts_shoot_balloon`; on start, by itself, `darts_reset` for a new round and `darts_new_free` on a new day. | built: `rules/darts.ts`, `ui/darts.ts`; original boards, one a week from 19 October 2026 (`darts_every_week`), seeded board, daily free dart, prizes and bonus |
 
 ## Army, graveyards, heroes and magic
 
@@ -210,10 +210,10 @@ Tournaments run through their own server addresses (`tournaments/<name>.php`, ha
 | Class | Lines | What it does | Status |
 |---|---|---|---|
 | `popups/PopupArabicDeals.as` | 293 | The Morocco dealer: four random cash buildings at 20% off, haggle for 5% more a time (2 to 5 times before he leaves), buy all four (`add_items_store`). | not needed: he only comes to a "gold member" page, which ours isn't (see `core.md`) |
-| `popups/PopupGetPack.as` | 86 | An offer pack for cash. | not yet; `shop.py` |
+| `popups/PopupGetPack.as` | 86 | An offer pack for cash. | built: Build → Offers (`rules/offers.ts`, `ui/offers.ts`), for earned cash at `cash_price` |
 | `popups/PopupGotPack.as` | 67 | "You got the pack". | not yet |
-| `popups/PopupMistery.as` | 103 | A mystery pack: one prize from four (rare to common) for cash. | not yet |
-| `popups/PopupSuperMistery.as` | 447 | A super mystery box: one, two or four random prizes for three prices in cash; its XP on closing. | not yet |
+| `popups/PopupMistery.as` | 103 | A mystery pack: one prize from four (rare to common) for cash. | built: Build → Offers, the original roll |
+| `popups/PopupSuperMistery.as` | 447 | A super mystery box: one, two or four random prizes for three prices in cash; its XP on closing. | built: Build → Offers, the original rolls; prices 29/40/60 (`globals.SUPER_PACK_PRICES`) |
 | `popups/PopupNews.as` | 613 | The news: ten items turning every 6 seconds, offer packs, links to the shop and the lore. | not yet: left out by the owner's call (PARITY.md) |
 | `popups/popupCollections.as` | 330 | Collections: pieces found, three collections a page; trade a full one for its reward or finish it for cash (`finish_collection`). | built: `ui/collections.ts`, `rules/collectionBook.ts`; original pieces, exchange and cash rules, Storage and goal 54 |
 | `popups/PopUpCollectionComplete.as` | 101 | "Collection complete", to share. | not needed: Facebook share |

@@ -18,6 +18,8 @@ interface MixerParts {
   clock: () => number;
   assets: string;
   thumbnail: (item: ItemInfo) => string;
+  /** The unit drawn from its sprite sheet (view/unitPreview.ts): its silhouette keeps its shape. */
+  preview?: (item: ItemInfo, canvas: HTMLCanvasElement, active: () => boolean, missing: () => void) => () => void;
   line: (id: number, fallback: string) => string;
   send: (command: Command) => void;
   changed: () => void;
@@ -150,11 +152,28 @@ export class SoulMixerWindow {
     const result = queue ? items.get(queue.unit) : preview?.unit;
     if (result) {
       const remaining = queue ? mixRemaining(queue, result, this.parts.clock()) : null;
-      const picture = document.createElement("img");
-      picture.className = "soul-mixer-result" + (remaining === 0 ? "" : " silhouette");
-      picture.src = this.parts.thumbnail(result);
-      picture.alt = remaining === 0 ? result.name : "Mixed unit silhouette";
-      content.append(picture);
+      if (remaining !== 0 && this.parts.preview) {
+        // Until it's ready, its shadow: the sprite blackened, so its shape shows (the wiki's "shadows").
+        const canvas = document.createElement("canvas");
+        canvas.className = "soul-mixer-result silhouette";
+        canvas.setAttribute("role", "img");
+        canvas.setAttribute("aria-label", "Mixed unit silhouette");
+        content.append(canvas);
+        this.parts.preview(result, canvas, () => canvas.isConnected && this.panel.isOpen, () => {
+          // No sprite sheet for it: its picture, darkened, instead.
+          const picture = document.createElement("img");
+          picture.className = "soul-mixer-result silhouette";
+          picture.src = this.parts.thumbnail(result);
+          picture.alt = "Mixed unit silhouette";
+          canvas.replaceWith(picture);
+        });
+      } else {
+        const picture = document.createElement("img");
+        picture.className = "soul-mixer-result" + (remaining === 0 ? "" : " silhouette");
+        picture.src = this.parts.thumbnail(result);
+        picture.alt = remaining === 0 ? result.name : "Mixed unit silhouette";
+        content.append(picture);
+      }
       if (queue) {
         const time = document.createElement("p");
         time.className = "soul-mixer-time";

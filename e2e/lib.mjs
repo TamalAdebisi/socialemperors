@@ -41,10 +41,11 @@ const FULL_WILD = [
  * player, rather than starting with enough. `dock`: let the town be given its
  * harbour (and zeppelin tower) as it opens, rather than starting with them.
  * `name`: the account's name (ADMIN for the admin, once a run) instead of a
- * new one. `game`: false for the site's own pages only: the town is made,
+ * new one. `darts`: show the "Free dart" offer as the town opens, which other
+ * tests hold back. `game`: false for the site's own pages only: the town is made,
  * but neither set up nor opened.
  */
-export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false, name: username = null, game = true } = {}) {
+export async function newPlayer(browser, base, out, visitor, { viewport = DESKTOP, phone = false, lessons = false, wild = false, camp = false, dock = false, raids = false, darts = false, name: username = null, game = true } = {}) {
   const context = await browser.newContext({
     ...network,
     viewport, locale: "en-US", extraHTTPHeaders: { "X-E2E-Visitor": visitor },
@@ -53,9 +54,12 @@ export async function newPlayer(browser, base, out, visitor, { viewport = DESKTO
   await serveArt(context);
   // Ordinary feature fixtures hold raids; recurring-raids opts into the real scheduler.
   // Combat checks bring specific raids with hurry/bring.
-  await context.addInitScript((raids) => {
+  // Darts rounds run every week now: their "Free dart" offer on opening would
+  // cover what a test presses, so only the darts test (`darts`) sees it.
+  await context.addInitScript(([raids, darts]) => {
     window.seCalm = !raids;
-  }, raids);
+    window.seNoDartsOffer = !darts;
+  }, [raids, darts]);
   const page = await context.newPage();
   const player = new Player(page, base, out, viewport);
   const name = username ?? `e2e${Date.now() % 1e9}${Math.floor(Math.random() * 100)}`;
