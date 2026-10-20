@@ -16,6 +16,7 @@
 import type { Container } from "pixi.js";
 
 import { BattleControls } from "./battleControls.ts";
+import { BattleLoot } from "./battleLoot.ts";
 import type { TownEditor } from "./editor.ts";
 import type { CommandSender } from "./net/commands.ts";
 import type { PageSettings } from "./net/server.ts";
@@ -249,6 +250,8 @@ class Fight {
   private readonly parts: DefenceParts;
   readonly battle: Battle;
   readonly view: BattleView;
+  /** Collection pieces from the fallen (battleLoot.ts). */
+  readonly loot: BattleLoot;
   private readonly specials: Specials;
   readonly controls: BattleControls;
   readonly raids: Raid[] = [];
@@ -306,6 +309,8 @@ class Fight {
     parts.editor.pause("Raiders! Your town is under attack: building waits until they're beaten or gone.");
     parts.view.setFighting(true);
     this.view = new BattleView(parts.art, this.battle, (effect) => parts.sound.play(effect));
+    this.loot = new BattleLoot({ fight: "home", race: town.race, view: this.view, commands: parts.commands,
+      sheet: `${parts.settings.assetsUrl}/images_new/collectibles_new.png`, line, found: (piece) => parts.editor.pieceFound(piece) });
     this.view.skin = town.skin;
     parts.world.addChild(this.view.root);
     void this.view.load(() => {});
@@ -516,6 +521,7 @@ class Fight {
       this.parts.view.remove(placed);
       if (fighter.isUnit) {
         this.killedOne();
+        this.loot.roll(fighter);  // any enemy unit fallen at home, as the Flash client rolls
       }
       // A fighting unit pays 5 gold and its experience; a camp's tower, 5 gold and a little experience (raiders.py).
       const tower = !fighter.isUnit && fighter.item.attack > 0;
@@ -530,6 +536,7 @@ class Fight {
     } else if (fighter.side === ENEMY && fighter.isUnit) {
       commands.add("kill", fighter.tx, fighter.ty, fighter.item.id, town.id, "u");
       this.killedOne();
+      this.loot.roll(fighter);
       const xp = fighter.item.collectXp;
       town.gold += KILL_GOLD;
       town.xp += xp;

@@ -10,6 +10,7 @@ import { Application, Container } from "pixi.js";
 
 import { rememberAttack } from "./attacksMade.ts";
 import { BattleControls } from "./battleControls.ts";
+import { BattleLoot } from "./battleLoot.ts";
 import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
 import { Battle, ENEMY, FPS, NEUTRAL, SELF, type Fighter } from "./rules/battle.ts";
@@ -147,6 +148,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   const victimRows = new Map<number, Row>();
   const attackerRows = new Map<number, Row>();
   const targets = new Set<Fighter>();
+  let loot: BattleLoot | null = null;
   const battle = new Battle({ ground: new Uint8Array(MAP_TILES * MAP_TILES).fill(1), random, onDeath: (fighter) => {
     if (fighter.summoned) {
       return;  // summoned things are worth nothing and count for nothing
@@ -166,6 +168,10 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
       }
       if (paid.gold || paid.xp) {
         view.rise(fighter, [...(paid.gold ? [{ text: `+${paid.gold}`, colour: 0xf2c14e }] : []), { text: `+${paid.xp} XP`, colour: 0x7fb2ff }]);
+      }
+      // A collection piece, where the Flash client rolls for one: an enemy unit that paid gold.
+      if (fighter.isUnit && paid.gold > 0 && !spy) {
+        loot?.roll(fighter);
       }
     } else if (fighter.side === SELF && fighter.item.attack > 0) {
       const row = attackerRows.get(fighter.item.id);
@@ -226,6 +232,9 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   const plan = new DefencePlan(battle, ENEMY, planOf((theirs.privateState as Record<string, unknown> | undefined)?.strategy), armySize);
   const specials = new Specials(battle, specialsTable as unknown as SpecialsTable, items, random);
   const view = new BattleView(art, battle, (effect) => sound.play(effect));
+  const lines = new Map(((config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
+  loot = new BattleLoot({ fight: "attack", race: town.race, view, commands,
+    sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" });
   view.skin = enemy.skin;
   world.addChild(view.root);
   await view.load((done, total) => showStatus(`The army arrives… ${Math.round((100 * done) / total)}%`));
@@ -279,7 +288,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   bar.add(new Pause(loop).button("hud-sound"));
   // For the browser tests (e2e/tests/attack.mjs).
   (window as unknown as Record<string, unknown>).seAttack = {
-    battle, targets, view, plan,
+    battle, targets, view, plan, loot,
     select: (units: Fighter[]) => controls.select(units),
     lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)),
     screenOf: (fighter: Fighter) => {

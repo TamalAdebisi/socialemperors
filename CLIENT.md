@@ -1739,6 +1739,35 @@ which keeps it in `privateState.collections`. The original dropped it on
 the ground to tap, as it did the wood; ours gives it at once, like the
 wood. Test: `e2e/tests/collections.mjs`.
 
+**Pieces from fights** (DECISIONS.md, 20 October 2026). Each of the 115
+pieces has one source and a rarity in the original's table
+(`rules/collections.ts`, `SOURCES`): harvests, the enemy's own race (trolls,
+for a human; the sea monsters too), bosses, attacks on towns, the quests'
+Treasure Chest, and hardcore and god islands. The fights roll where the
+Flash client does (`battleLoot.ts`):
+
+- **Quests:** an enemy unit's fall that paid gold (none past the island's
+  cap), a boss's fall, and the Treasure Chest opened (item 82 only; the
+  islands' other prizes give none). A human soldier on an island gives
+  none: only the trolls, the sea monsters and the bosses have sources there.
+- **Hardcore and god islands:** every roll there gives only the Golden
+  Bahamut's, Red Bahamut's or Bahamut Heart's pieces, and half the time
+  nothing: 1 roll in 100 a Golden or Red piece, 1 in 400 a Heart piece.
+- **Attacks on towns:** an enemy unit's fall that paid gold.
+- **At home** (raids, camps): any enemy unit's fall. Not in survival,
+  tournaments, or a neighbour's town, as in the original.
+
+The roll's numbers are those of a harvest (out of 100: under 0.5 the
+rarest, 2.5 rare, 4 uncommon); a boss or a chest rolls out of 2.5, so it
+always gives one. A rarity a source has no pieces of gives the next
+commoner one. The piece is the player's at once, as a harvest's: its
+picture pops up from the fallen (`BattleView.pop`), the message names it,
+and `add_collectable` is sent at once, as a spell is, so it stays found if
+the fight is left. The original flew it to the collection panel in quests
+and attacks and dropped it to tap at home. Never in a troll town. Test:
+`e2e/tests/battle-pieces.mjs` (a raider at home, an attack, a troll and
+the chest on the Mysterious Isle, the Bahamuts' pieces on God Isle 1).
+
 **The collections window** opens from Army → Collections, on desktop and
 phone. It shows three collections a page, five original piece pictures
 with their counts, the reward and its picture. Missing pieces are faded.
@@ -1754,8 +1783,8 @@ keeps the original separate behavior. No Facebook sharing is added.
 `ui/collections.ts` draws the panel. Harvest pieces update its live counts.
 Goal 54 now counts opening it. Browser coverage:
 `e2e/tests/collection-book.mjs`, checking desktop/phone, exchanges, cash,
-Storage, page bounds and reloads. Battle drop triggers belong to the
-separate combat work. Collections-only verification passed 80/80 browser
+Storage, page bounds and reloads. Pieces from fights count there too
+("Pieces from fights", above). Collections-only verification passed 80/80 browser
 cases, plus the desktop/phone and harvest focus 2/2. All 468 full-run
 screenshots were reviewed at contact scale; `docs/verification-99.md`
 records the collections-only revision, timings and visual limits. The

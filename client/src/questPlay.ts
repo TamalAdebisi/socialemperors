@@ -8,9 +8,10 @@
 import { Application, Container } from "pixi.js";
 
 import { BattleControls } from "./battleControls.ts";
+import { BattleLoot } from "./battleLoot.ts";
 import { CommandSender } from "./net/commands.ts";
 import type { GameServer, PageSettings } from "./net/server.ts";
-import { Battle, FPS, type Fighter } from "./rules/battle.ts";
+import { Battle, ENEMY, FPS, SUBCAT, type Fighter } from "./rules/battle.ts";
 import { itemsById, type ItemInfo } from "./rules/config.ts";
 import { mapArea, unitPoint, type Point } from "./rules/geometry.ts";
 import islandData from "./rules/islands.json" with { type: "json" };
@@ -104,16 +105,28 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   // The island, as its file lays it out, behind the start window.
   const random = Math.random;
   let quest: Quest | null = null;
+  let loot: BattleLoot | null = null;
   const battle = new Battle({ ground: islandGround(island), random, onDeath: (fighter) => {
     const paid = quest?.killed(fighter);
     if (paid && (paid.gold || paid.xp)) {
       view.rise(fighter, [{ text: `+${paid.gold}`, colour: 0xf2c14e }, ...(paid.xp ? [{ text: `+${paid.xp} XP`, colour: 0x7fb2ff }] : [])]);
+    }
+    // A collection piece, where the Flash client rolls for one: a boss's fall, and an enemy unit's that paid gold.
+    if (fighter.side === ENEMY && fighter.item.subcategory === SUBCAT.boss) {
+      loot?.roll(fighter);
+    }
+    if (fighter.side === ENEMY && fighter.isUnit && paid && paid.gold > 0) {
+      loot?.roll(fighter);
     }
   } });
   quest = new Quest({ island, battle, items, layout: map.map.items, level: town.level, random });
   // Special moves (rules/specials.ts): the heroes' by themselves, the special units' on buttons.
   const specials = new Specials(battle, specialsTable as unknown as SpecialsTable, items, random);
   const view = new BattleView(art, battle, (effect) => sound.play(effect));
+  // A hardcore or god island's pieces are the Bahamuts' (rules/collections.ts).
+  const lines = new Map(((config.localization_strings ?? []) as { id: number; text: string }[]).map((l) => [Number(l.id), l.text]));
+  loot = new BattleLoot({ fight: island.kind === "hardcore" || island.kind === "god" ? "hardcore" : "quest", race: town.race, view,
+    commands, sheet: `${settings.assetsUrl}/images_new/collectibles_new.png`, line: (id) => lines.get(id) ?? "" });
   world.addChild(view.root);
   await view.drawGround(items.get(island.terrain), island.shape);
   await view.load((done, total) => showStatus(`Sailing to the island… ${Math.round((100 * done) / total)}%`));
@@ -164,6 +177,10 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
       const chest = tapped === quest!.chest;
       quest!.collect(tapped!);
       sound.play("collect");
+      // The chest rolls for a collection piece too, as the original's; one found says so after the treasure.
+      if (chest && loot!.roll(tapped!, "The treasure is yours! ")) {
+        return true;
+      }
       showMessage(chest ? "The treasure is yours!" : quest!.remaining > 0 ? `${tapped!.item.name}: ${quest!.remaining} to go` : "The way is open!");
       setTimeout(() => showMessage(""), 2500);
       return true;
@@ -188,7 +205,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
   let finished = false;
   // For the browser tests (e2e/tests/quest.mjs): where things are on screen, to tap them as a player would.
   (window as unknown as Record<string, unknown>).seQuest = {
-    battle, quest, view, magic: controls.magic, specials,
+    battle, quest, view, magic: controls.magic, specials, loot,
     select: (units: Fighter[]) => controls.select(units),
     lookAt: (tile: Point) => camera.lookAt(unitPoint(tile.x, tile.y)),
     tileScreen: (tile: Point) => {

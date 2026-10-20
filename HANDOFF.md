@@ -38,6 +38,13 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Collection pieces from fights (20 October).** The owner asked how to
+  get the Golden and Red Bahamut, whose pieces drop only on hardcore and
+  god islands; the new client dropped pieces from harvests only. Fights now
+  roll where the original does, from its whole table of sources
+  (`rules/collections.ts`, `battleLoot.ts`). See DECISIONS.md (20 October)
+  and CLIENT.md, "Pieces from fights". Test `e2e/tests/battle-pieces.mjs`.
+
 - **Villagers take no room (20 October).** The owner's rule: the
   population cap is for fighting units. The server's game config gives the
   four workers a population of 0, which both clients follow (the Flash

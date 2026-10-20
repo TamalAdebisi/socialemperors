@@ -1582,6 +1582,11 @@ export class TownEditor {
     }
   }
 
+  /** A collection piece found in a fight at home (homeDefence.ts, battleLoot.ts): counted in the collections window. */
+  pieceFound(piece: Piece): void {
+    this.pieces?.found?.(piece);
+  }
+
   /**
    * A collection piece from a harvest: the player's at once (the original's
    * dropped it to tap, as it did the wood), its picture popping up, a word of
