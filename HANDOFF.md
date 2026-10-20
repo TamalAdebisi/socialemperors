@@ -48,6 +48,14 @@ follow below; status-only receipt edits change no game, art or test file.
   too (`BattleView.cull`, every page and raids at home). See CLIENT.md,
   "A busy town", and DECISIONS.md (20 October). Tests `e2e/tests/crowd.mjs`,
   `battle-culling.mjs`.
+- **`tournament-rooms` fails now and then (found 20 October).** It failed 2
+  of 8 runs on `main` here, and 5 of 7 on the battle-culling branch, whose
+  changes don't run in it (they're in the battle view). Each time a wait for
+  the Refresh button gave up after 30 seconds while the test was holding a
+  tournament request back. Most likely the window's own refresh, every 30
+  seconds, fires during a hold and is caught by it. Suggested fix: hold
+  only the request the test started, or wait for a fresh countdown before
+  each hold.
 
 - **Collection pieces from fights (20 October).** The owner asked how to
   get the Golden and Red Bahamut, whose pieces drop only on hardcore and
