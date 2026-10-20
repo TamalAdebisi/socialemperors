@@ -10,6 +10,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import economy
 import sessions
 from command import do_command
 from game_collections import REWARDS, PIECES, CASH_PRICE
@@ -96,10 +97,11 @@ class CollectionsTest(unittest.TestCase):
         self.assertEqual(self.save["playerInfo"]["cash"], 1000 - 5)
 
     def test_not_enough_cash(self):
-        self.save["playerInfo"]["cash"] = 399
-        self.send("finish_collection", GOLDEN_BAHAMUT, 1, 400)
+        price = economy.cash_price(400)  # 91: the game's 400, shrunk (economy.py)
+        self.save["playerInfo"]["cash"] = price - 1
+        self.send("finish_collection", GOLDEN_BAHAMUT, 1, price)
         self.assertEqual(self.gifts(REWARDS[GOLDEN_BAHAMUT]), 0)
-        self.assertEqual(self.save["playerInfo"]["cash"], 399)
+        self.assertEqual(self.save["playerInfo"]["cash"], price - 1)
 
     def test_heart_is_not_for_sale(self):
         self.send("finish_collection", HEART, 1, 999)

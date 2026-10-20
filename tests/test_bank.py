@@ -71,7 +71,7 @@ class BankWindowTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(reply["cash"], 0)
         self.assertEqual(reply["resources"], {"g": 4500, "w": 0, "f": 0, "s": 12})
-        self.assertEqual((reply["per_cash"], reply["per_day"], reply["left_today"]), (2000, 5, 5))
+        self.assertEqual((reply["per_cash"], reply["per_day"], reply["left_today"]), (2000, 10, 10))
         self.assertEqual(reply["gold_for_cash"], [5, 2500])  # the game's own bank, the other way
         self.assertTrue(0 < reply["next_day_in"] <= 24 * 3600)
 
@@ -88,20 +88,20 @@ class BankWindowTest(unittest.TestCase):
         status, reply = self.trade("g", 2)
         self.assertEqual(status, 200)
         self.assertEqual(reply["ok"], "Bank: 4000 gold for 2 cash.")
-        self.assertEqual((reply["cash"], reply["resources"]["g"], reply["left_today"]), (2, 1000, 3))
+        self.assertEqual((reply["cash"], reply["resources"]["g"], reply["left_today"]), (2, 1000, 8))
         self.assertEqual((self.save["playerInfo"]["cash"], self.town[GOLD]), (2, 1000))
         self.assertEqual(self.save["privateState"]["bank"], {"day": timestamp_now() // bank.DAY, "cash": 2})
 
     def test_a_few_cash_a_day(self):
-        self.town.update(wood=20000)
-        self.assertEqual(self.trade("w", 3)[0], 200)
+        self.town.update(wood=30000)
+        self.assertEqual(self.trade("w", 8)[0], 200)
         status, reply = self.trade("w", 3)
         self.assertEqual(status, 400)
-        self.assertEqual(reply["error"], "The bank trades 5 cash a day; 2 left today.")
+        self.assertEqual(reply["error"], "The bank trades 10 cash a day; 2 left today.")
         self.assertEqual(self.trade("w", 2)[0], 200)
         status, reply = self.trade("w", 1)
-        self.assertEqual(reply["error"], "The bank trades 5 cash a day; come back tomorrow.")
-        self.assertEqual((reply["cash"], reply["left_today"], self.town["wood"]), (5, 0, 10000))
+        self.assertEqual(reply["error"], "The bank trades 10 cash a day; come back tomorrow.")
+        self.assertEqual((reply["cash"], reply["left_today"], self.town["wood"]), (10, 0, 10000))
         self.save["privateState"]["bank"]["day"] -= 1  # the next day
         self.assertEqual(self.ask()[1]["left_today"], economy.BANK_CASH_PER_DAY)
 
@@ -115,7 +115,7 @@ class BankWindowTest(unittest.TestCase):
             ("s", 0): "How much cash?",
             ("s", -3): "How much cash?",
             ("s", "lots"): "How much cash?",
-            ("s", 6): "The bank trades 5 cash a day; 5 left today.",
+            ("s", 11): "The bank trades 10 cash a day; 10 left today.",
         }
         for (resource, cash), why in refused.items():
             status, reply = self.trade(resource, cash)

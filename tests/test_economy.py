@@ -12,6 +12,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import economy
 import levels
 import sessions
 from paths import VILLAGES_DIR
@@ -38,8 +39,17 @@ class ConfigTest(unittest.TestCase):
     def test_the_daily_and_monday_bonus(self):
         globals = get_game_config()["globals"]
         self.assertEqual([(d["type"], d["qty"]) for d in globals["DAILY_BONUS_CONFIG"]],
-                         [("g", 250), ("hero", 1), ("c", 2), ("hero", 1), ("c", 5)])
-        self.assertIn({"type": "c", "value": 10}, globals["MONDAY_BONUS_REWARDS"])
+                         [("g", 250), ("hero", 1), ("c", 3), ("hero", 1), ("c", 10)])
+        self.assertIn({"type": "c", "value": 15}, globals["MONDAY_BONUS_REWARDS"])
+
+    def test_big_cash_prices_shrink_and_small_ones_stay(self):
+        self.assertEqual([economy.cash_price(p) for p in (1, 5, 10, 30, 120, 260, 450)], [1, 5, 10, 19, 44, 71, 98])
+        prices = []
+        for category in get_game_config()["units_collections_categories"].values():
+            prices += [int(category["cost"])] + [int(c) for c in category.get("costs") or [] if c is not None]
+        self.assertLessEqual(max(prices), economy.cash_price(260))  # the book's dearest unit, was 260
+        diamond = next(i for i in get_game_config()["items"] if i["name"] == "Diamond Castle")
+        self.assertEqual(int(diamond["cost"]), 98)  # was 450
 
     def test_continent_prizes_where_the_client_looks(self):
         rows = get_game_config()["level_ranking_reward"]

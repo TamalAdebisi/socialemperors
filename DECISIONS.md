@@ -16,7 +16,28 @@ as usual. Left out: the Zeus Barrack, Dwarf Axe Barrack and Dwarf Priest
 Barrack, which train units another barracks here already trains (Ulises,
 the Devil and Chariot Gladiators), and the Necro Shark Barracks, which has
 no picture in the game's files, so the Necro Shark Monster stays book-only.
-Their cash prices follow the new price rule once it is merged.
+Their cash prices follow the price rule below (`cash_price`): 11 to 23 cash.
+
+## 20 October 2026: cash prices and income rebalanced
+
+The owner asked to balance the economy, since much of the game was pay to
+win (the units-book audit: buying the 293 book units with no other source
+would have cost about 34,000 cash, against about 150 earned by level 50).
+The rule, in `economy.py` (`cash_price`): a cash price up to 10 stays the
+game's; above that it shrinks along a curve, so a price ten times higher
+costs about four times more (30 → 19, 120 → 44, 260 → 71, 450 → 98).
+Applied to the units book (its dearest unit 71, the median about 44),
+every item priced in cash (the Diamond Castle 98, the dearest barracks
+about 25) and the Golden and Red Bahamut collections bought outright (91).
+The offer packs, mystery boxes and darts will use the same rule when they
+are switched on. Kept: speeding up a wait (about 1 cash an hour, since
+waiting is free), the units' instant-buy prices (10 at most), and every
+gold price.
+
+Income rose a little, so that someone who plays daily earns about 10 cash
+a day: the daily streak pays 3 and 10 (was 2 and 5), the Monday chest 15
+(was 10), and the bank trades up to 10 cash a day (was 5). The best
+units-book unit is then about a week of playing.
 
 ## 20 October 2026: the units book counts look-alikes
 
