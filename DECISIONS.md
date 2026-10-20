@@ -4,6 +4,29 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 20 October 2026: collection pieces from fights
+
+The owner asked how to get the Golden and Red Bahamut. Their pieces (and
+the Bahamut Heart's) drop only in fights on the hardcore and god islands,
+and the new client dropped pieces only from harvests, so they couldn't be
+found in it. The owner asked for battle drops, ahead of the rest of Beta
+2's fights. They follow the original's table and its rolls (CLIENT.md,
+"Pieces from fights"). The calls:
+
+- **The player's at once, everywhere.** The original flew a fight's piece
+  to the collection panel in quests and attacks, but dropped it to tap at
+  home. Ours gives it at once with its picture and a message, as a harvest
+  already does (the "Collection pieces" call), so none is lost by not
+  tapping it before the raid ends.
+- **Sent at once.** On the quest and attack pages, commands wait for the
+  fight's end; a piece is sent when found, as a spell is, and as the
+  original sent it, so it isn't lost if the fight is left.
+- **The original's quirks kept:** of the islands' prizes only the plain
+  Treasure Chest rolls; a human soldier on an island gives nothing; a
+  boss's fall rolls even when it paid no gold; past an island's gold cap,
+  kills stop rolling.
+- Still missing: the Treasure Mine's daily piece, with the mine itself.
+
 ## 20 October 2026: villagers take no room
 
 The owner asked for the population cap to apply to fighting units only:

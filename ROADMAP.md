@@ -476,6 +476,10 @@ merging the two wait fixes with that separate failure documented.
   - [x] Collections window: saved pieces, set exchanges and cash completion,
         original reward restrictions, desktop/phone, Storage and goal 54
         ([CLIENT.md](CLIENT.md#collection-pieces))
+  - [x] Collection pieces from fights: quests (kills, bosses, the Treasure
+        Chest), the Bahamuts' pieces on hardcore and god islands, attacks,
+        raids and camps at home, with the original's sources and rolls
+        (owner request, ahead of Beta 2; [CLIENT.md](CLIENT.md#collection-pieces))
   - [x] Units book: original categories, acquired/missing units, cash buying,
         animated details and saved category rewards, desktop/phone
         ([CLIENT.md](CLIENT.md#the-units-book))

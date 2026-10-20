@@ -302,6 +302,11 @@ export class BattleView {
     this.markers.rise(this.topOf(fighter), lines);
   }
 
+  /** One of the game's pictures (or a part of one, `frame`) popping up over a fighter for a moment: a collection piece found. */
+  pop(fighter: Fighter, url: string, frame?: { x: number; y: number; width: number; height: number }): void {
+    this.markers.pop(this.topOf(fighter), url, frame);
+  }
+
   /** Words or numbers rising from a point of the map (a spell's name and its mana). */
   riseAt(at: Point, lines: { text: string; colour: number }[]): void {
     this.markers.rise({ x: at.x, y: at.y - 40 }, lines);

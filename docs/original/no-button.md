@@ -473,8 +473,9 @@ the original never shows it).
 5. **Social buildings' free helpers on opening** (changes the save, rule
    23). (checked twice)
 6. **Collection pieces** from trees, rocks and enemies (changes the save,
-   rule 65). (checked twice) *Trees and rocks: fixed since "Collection pieces"; enemies
-   come with the battles (Beta 2).*
+   rule 65). (checked twice) *Trees and rocks: fixed since "Collection pieces"; enemies,
+   bosses and the quests' chest: fixed since "Pieces from fights" (CLIENT.md,
+   `client/src/battleLoot.ts`).*
 7. **The town is only live during a fight** (rule 46): towers, enemies'
    reach and the Healing Spring act at home only in a raid or after units
    are sent at a camp (`client/src/homeDefence.ts`). The second reading

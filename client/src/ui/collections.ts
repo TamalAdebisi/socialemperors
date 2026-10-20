@@ -47,14 +47,13 @@ export class CollectionsWindow {
       card.dataset.collection = String(id);
       const reward = this.parts.items.get(COLLECTION_REWARDS[id - 1]);
       const title = document.createElement("h3");
-      title.textContent = words(id <= 20 ? 319 + id : [1385, 1384, 1386][id - 21], reward?.name ?? `Collection ${id}`);
+      title.textContent = words(pieceLines({ collection: id, piece: 1 })!.collection, reward?.name ?? `Collection ${id}`);
       const pieces = document.createElement("ol");
       pieces.className = "collection-pieces";
       for (let piece = 1; piece <= 5; piece++) {
         const count = book.rows[id][piece];
         const cell = document.createElement("li");
-        const lines = pieceLines({ collection: id, piece });
-        const name = words(lines?.piece ?? 1369 + (id - 21) * 5 + piece - 1, `Piece ${piece}`);
+        const name = words(pieceLines({ collection: id, piece })!.piece, `Piece ${piece}`);
         const picture = document.createElement("span");
         const frame = pieceFrame({ collection: id, piece });
         picture.className = `collection-piece${count ? "" : " missing"}`;
