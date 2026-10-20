@@ -1587,17 +1587,22 @@ raises King Kong through storage and a reload. Both check the server's save.
 In the original a Chained building (a god, colossus or dragon in chains)
 was an advert for a pack sold for real money. Since 20 October 2026 the
 shop sells each of the 108 that shows a unit for gold, in New, Limited
-Edition (`chained_units.py`): 2,000 gold for each cash of its units'
-units-book price, from level 10 (20 for gods, colossi and other top
-units). Once built, its **Free** button (the original's open-gate picture)
+Edition (`chained_units.py`), priced by its units' strength: 5 gold
+for each point of health times attack (a Draggy 30,000, a 3-Head Dragon
+1.25 million, a god and colossus pair 3.6 to 4.2 million), from level 10
+(20 for gods, colossi and other top units). Each can be bought **once per
+empire**, ever: the server keeps the list (`privateState.chainedBought`)
+and refuses a second, and the shop says "Bought already" (`rules/shop.ts`).
+Once built, its **Free** button (the original's open-gate picture)
 opens a window with the units it holds and how long the chains take to
-break: an hour for each cash of that price, from when it was placed.
+break: an hour for each cash of its units' units-book price, from when it
+was placed.
 **Speed up** costs a cash an hour left. Then **Free** puts the units on
 the nearest free tiles, if the town has room for them, and the building
 goes. Our own commands, since the original has none: `speed_up_chained`
 and `release_chained` (`chained.py`). Rules in `rules/chained.ts`, window
 in `ui/chained.ts`; `e2e/tests/chained.mjs` buys the Chained Fire God +
-Colossus and frees both. Chests, discounts and cash offers stay out.
+Colossus, frees both, and finds the shop won't sell it again. Chests, discounts and cash offers stay out.
 
 ### The time and weather machines
 

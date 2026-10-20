@@ -3,9 +3,10 @@ import random
 from engine import timestamp_now
 import levels
 import quests
+from get_game_config import get_attribute_from_item_id
 
 version_name = "alpha 0.07"
-version_code = "0.08a"
+version_code = "0.09a"
 
 
 def _has_entries(value) -> bool:
@@ -58,6 +59,27 @@ def open_untouched_monster_nest(save: dict) -> None:
                     ("monsterNestActive", "monsterNumber", "stepMonsterNumber", "timeStampTakeCareMonster"))
     if untouched:
         pState["monsterNestActive"] = 1
+
+
+def count_chained_bought(save: dict) -> None:
+    """Each Chained building is bought once per empire (shop.py). Those a
+    player already has, on a map or in storage, count as bought; those
+    already freed left no trace, so they can be bought once more."""
+    bought = save["privateState"].setdefault("chainedBought", [])
+    for map in save["maps"]:
+        ids = [row[0] for row in map.get("items", [])] + [int(id) for id, n in _box(map.get("store")) if n]
+        for id in ids:
+            if get_attribute_from_item_id(id, "chained_units") and int(id) not in bought:
+                bought.append(int(id))
+
+
+def _box(box) -> list:
+    """A storage box's (id, count) pairs: a dict by id, or a list of counts by id."""
+    if isinstance(box, dict):
+        return [(int(id), int(n or 0)) for id, n in box.items()]
+    if isinstance(box, list):
+        return [(id, int(n or 0)) for id, n in enumerate(box)]
+    return []
 
 
 def migrate_loaded_save(save: dict) -> bool:
@@ -142,9 +164,15 @@ def migrate_loaded_save(save: dict) -> bool:
         save["version"] = "0.08a"
         print("   > migrated to 0.08a")
 
-    # 0.08a -> 0.09a
-    #if save["version"] == "0.08a":
-    #    save["version"] = "0.09a"
-    #    print("   > migrated to 0.09a")
+    # 0.08a -> 0.09a: a Chained building already owned counts as bought (once per empire, shop.py)
+    if save["version"] == "0.08a":
+        count_chained_bought(save)
+        save["version"] = "0.09a"
+        print("   > migrated to 0.09a")
+
+    # 0.09a -> 0.10a
+    #if save["version"] == "0.09a":
+    #    save["version"] = "0.10a"
+    #    print("   > migrated to 0.10a")
 
     return True

@@ -1,4 +1,4 @@
-"""Chained buildings: sold for gold, their chains break with time (or cash), then their units are freed."""
+"""Chained buildings: sold for gold, once each, their chains break with time (or cash), then their units are freed."""
 
 import os
 import tempfile
@@ -11,8 +11,9 @@ import sessions
 from command import do_command
 from get_game_config import get_game_config, get_item_from_id
 import chained_units
+import version
 
-FIRE_PAIR, FIRE_GOD, FIRE_COLOSSUS, DRAGGY_CHAIN, DRAGGY = 3094, 2075, 2077, 1470, 638
+FIRE_PAIR, FIRE_GOD, FIRE_COLOSSUS, DRAGGY_CHAIN, DRAGGY, THREE_HEAD_CHAIN = 3094, 2075, 2077, 1470, 638, 3003
 AT = [50, 50]
 
 
@@ -25,7 +26,7 @@ class ChainedTest(unittest.TestCase):
         self.pid = sessions.new_village(owner_id=None)
         self.save = sessions.session(self.pid)
         self.map = self.save["maps"][0]
-        self.map.update(coins=500000, level=30)
+        self.map.update(coins=20_000_000, level=30)
         self.save["playerInfo"]["cash"] = 200
 
     def send(self, cmd, *args):
@@ -38,7 +39,10 @@ class ChainedTest(unittest.TestCase):
         pair = get_item_from_id(FIRE_PAIR)
         self.assertEqual((pair["in_store"], pair["cost_type"]), ("1", "g"))
         self.assertEqual(pair["chained_units"], f"{FIRE_GOD},{FIRE_COLOSSUS}")
-        self.assertEqual(int(pair["cost"]), int(pair["chain_hours"]) * chained_units.GOLD_PER_CASH)
+        # By strength: 5 gold for each point of health times attack, rounded up to 10,000.
+        self.assertEqual(int(pair["cost"]), 3_650_000, "(4,000 x 100 + 3,500 x 94) x 5, rounded up")
+        self.assertEqual(int(get_item_from_id(DRAGGY_CHAIN)["cost"]), 30_000, "250 x 20 x 5, rounded up")
+        self.assertEqual(int(get_item_from_id(THREE_HEAD_CHAIN)["cost"]), 1_250_000, "3,150 x 79 x 5, rounded up")
         self.assertEqual(pair["min_level"], "20")
         self.assertEqual(get_item_from_id(DRAGGY_CHAIN)["min_level"], "10")
         chests = [item for item in get_game_config()["items"] if item["name"].startswith("Chained") and "Chest" in item["name"]]
@@ -47,7 +51,7 @@ class ChainedTest(unittest.TestCase):
     def test_bought_waited_for_and_freed(self):
         with patch("chained.timestamp_now", return_value=1_000_000), patch("engine.timestamp_now", return_value=1_000_000):
             self.send("buy", FIRE_PAIR, *AT, 0, 0, 0, 1, "b")
-        self.assertEqual(self.map["coins"], 500000 - int(get_item_from_id(FIRE_PAIR)["cost"]))
+        self.assertEqual(self.map["coins"], 20_000_000 - int(get_item_from_id(FIRE_PAIR)["cost"]))
         hours = int(get_item_from_id(FIRE_PAIR)["chain_hours"])
         with patch("chained.timestamp_now", return_value=1_000_000 + hours * 3600 - 1):
             self.send("release_chained", *AT, 0, [[52, 50], [53, 50]])
@@ -82,6 +86,26 @@ class ChainedTest(unittest.TestCase):
                 self.assertEqual(len(self.on_map(DRAGGY_CHAIN)), 1, repr(spots))
             self.send("release_chained", 51, 51, 0, [[52, 50]])  # nothing there
             self.assertEqual(self.on_map(DRAGGY), [])
+
+    def test_once_per_empire(self):
+        with patch("engine.timestamp_now", return_value=1_000_000):
+            self.send("buy", DRAGGY_CHAIN, *AT, 0, 0, 0, 1, "b")
+        coins = self.map["coins"]
+        self.assertEqual(self.save["privateState"]["chainedBought"], [DRAGGY_CHAIN])
+        # Freed, sold or not, it can't be bought again, in this town or the other.
+        self.map["items"] = [row for row in self.map["items"] if row[0] != DRAGGY_CHAIN]
+        self.send("buy", DRAGGY_CHAIN, 60, 60, 0, 0, 0, 1, "b")
+        self.assertEqual(self.on_map(DRAGGY_CHAIN), [])
+        self.assertEqual(self.map["coins"], coins, "nothing paid")
+        self.send("buy", THREE_HEAD_CHAIN, 60, 60, 0, 0, 0, 1, "b")
+        self.assertEqual(len(self.on_map(THREE_HEAD_CHAIN)), 1, "another Chained building is still for sale")
+
+    def test_those_already_owned_count_as_bought(self):
+        self.map["items"].append([FIRE_PAIR, 50, 50, 0, 0, 0])
+        self.map["store"] = {str(DRAGGY_CHAIN): 1, str(DRAGGY): 2}
+        self.save["privateState"].pop("chainedBought", None)
+        version.count_chained_bought(self.save)
+        self.assertEqual(sorted(self.save["privateState"]["chainedBought"]), [DRAGGY_CHAIN, FIRE_PAIR])
 
 
 if __name__ == "__main__":
