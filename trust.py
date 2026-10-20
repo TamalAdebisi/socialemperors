@@ -15,8 +15,13 @@ server checks each claim against what the game could really have given
                        with cash with no altar to stand by (the next command)
     the merchant       buildings his window can offer, for no less than half
                        their price (his haggling starts at 20% off and adds 5%)
-    placing a stored   only what storage holds (inventory.place)
-    item
+    placing a stored   only what storage holds (inventory.place); experience
+    item               only for what came out of the gift box
+    level ups          only within a tenth of a level's experience of the
+                       server's own count; the score sent at start can't
+                       change that count (levels.py)
+    the warehouse      a unit goes in from the map and comes out from the
+                       warehouse, never from nothing (warehouse.py)
 
 The camps' and islands' data are the new client's (client/src/rules/), our
 own notes on the Flash client, read once.

@@ -16,6 +16,10 @@ Commands from the client:
                                              cash, up to WAREHOUSE_MAX_CAPACITY
     "reset_warehouse"               [town]   the warehouse was put away:
                                              the units inside go to storage
+
+A unit goes in only from the map and comes out only from the warehouse
+(trust.py). Both used to be done anyway "so it is not lost", which let an
+edited request make any unit from nothing.
 """
 
 from engine import timestamp_now
@@ -47,28 +51,25 @@ def add_unit(save: dict, x, y, town_id: int, unit_id) -> str:
         return "The warehouse is full."
     same_kind = [item for item in map["items"] if item[ID] == unit_id]
     here = [item for item in same_kind if item[X] == x and item[Y] == y]
-    note = ""
-    if here or same_kind:
-        map["items"].remove((here or same_kind)[0])
-    else:
-        note = " (it was not on the map; kept anyway so it is not lost)"
+    if not same_kind:  # units walk, so any of its kind will do; none at all is an edited request
+        return f"Refused: no unit {unit_id} on the map to go into the warehouse."
+    map["items"].remove((here or same_kind)[0])
     units[str(unit_id)] = int(units.get(str(unit_id), 0)) + 1
-    return f"Unit {unit_id} went into the warehouse{note}."
+    return f"Unit {unit_id} went into the warehouse."
 
 
 def place_unit(save: dict, unit_id, x, y, orientation, town_id: int) -> str:
     map = save["maps"][town_id]
     units = _units(map)
     left = int(units.get(str(unit_id), 0)) - 1
-    note = ""
+    if left < 0:
+        return f"Refused: unit {unit_id} is not in the warehouse."
     if left > 0:
         units[str(unit_id)] = left
-    elif left == 0:
-        del units[str(unit_id)]
     else:
-        note = " (it was not in the warehouse; placed anyway so it is not lost)"
+        del units[str(unit_id)]
     map["items"].append([unit_id, x, y, orientation, timestamp_now(), 0])
-    return f"Unit {unit_id} came out of the warehouse at ({x},{y}){note}."
+    return f"Unit {unit_id} came out of the warehouse at ({x},{y})."
 
 
 def buy_capacity(save: dict, town_id: int) -> str:

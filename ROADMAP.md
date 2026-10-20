@@ -226,7 +226,10 @@ numbers, because the server writes them into the game config.
       about 10 cash a day, so the best things cost about a week of playing
 - [x] Claims checked (20 October 2026, `trust.py`): boss prizes, prizes
       put in storage, placing from storage and the merchant's deals, which
-      a player who edits requests could have used to get anything.
+      a player who edits requests could have used to get anything. Then
+      (same day) level ups and the start score against the server's own
+      experience, the warehouse, and gifts from storage, which paid their
+      experience again on every pass between two accounts.
 - [ ] The things the game places for free (`buy` with its free flag:
       dragons hatching, temple dragons, riders, camps, trees growing back)
       are still believed; each needs a check in its own feature.
