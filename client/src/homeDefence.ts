@@ -63,6 +63,8 @@ export interface DefenceParts {
   view: TownView;
   world: Container;
   camera: Camera;
+  /** The screen's size (the page's Pixi app's screen): for leaving out what's off it. */
+  screen: { width: number; height: number };
   editor: TownEditor;
   /** The game's clock (the server's time, seconds), and the save's troll camp (homeCamps.ts). */
   clock: () => number;
@@ -437,6 +439,7 @@ class Fight {
   /** Every screen frame: the drawing, and the buttons. */
   update(ms: number): void {
     this.view.update(ms, this.parts.camera.scale);
+    this.view.cull(this.parts.screen);
     this.controls.update();
   }
 

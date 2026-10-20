@@ -29,7 +29,7 @@ import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
 import { buildingLoopLength, buildingStateCount, buildingStateFrames, pouringTower } from "./buildingAnimation.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { UNIT_REACH, isOpaqueAt, layerBox, nearBox, overlaps, unitHitDistance, visualScreenBox } from "./hit.ts";
+import { UNIT_REACH, isOpaqueAt, layerBox, nearBox, overlaps, seenOnLayer, unitHitDistance, visualScreenBox } from "./hit.ts";
 import { lookKey, lookOf } from "./looks.ts";
 import { Markers, type Sign } from "./markers.ts";
 import { HOVER_LIFE, LIFE, SELECTED, loadSelected, markLife, markSelected, unmarkLife, unmarkSelected } from "./selected.ts";
@@ -48,8 +48,6 @@ const OUTLINE = "outline";
 const OUTLINE_STEPS = [[-2, 0], [2, 0], [0, -2], [0, 2], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]];
 /** The colour (0xffffb0), as a colour matrix: red, green and blue set, the picture's own alpha kept. */
 const OUTLINE_MATRIX = [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0xb0 / 255, 0, 0, 0, 1, 0];
-/** How far past the screen's edges a picture is still drawn (cull), in screen pixels. */
-const CULL_MARGIN = 200;
 /** How often every picture is looked at again while the camera keeps still (cull): twice a second. */
 const CULL_ALL_MS = 500;
 
@@ -418,9 +416,7 @@ export class TownView {
     } else if (this.walkers.size === 0) {
       return;
     }
-    const from = this.things.toLocal({ x: -CULL_MARGIN, y: -CULL_MARGIN });
-    const to = this.things.toLocal({ x: screen.width + CULL_MARGIN, y: screen.height + CULL_MARGIN });
-    const seen = { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y) };
+    const seen = seenOnLayer(this.things, screen);
     const slots = all ? this.things.children : [...this.walkers.keys()].map((placed) => this.slots.get(placed));
     for (const slot of slots) {
       const picture = slot && pictureOf(slot);

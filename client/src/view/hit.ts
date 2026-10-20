@@ -59,6 +59,22 @@ export function layerBox(slot: Container, picture: Container): Rect {
   return { x, y, width: right - x, height: bottom - y };
 }
 
+/**
+ * How far past the screen's edges a picture is still drawn when culling, in
+ * screen pixels: room for what goes with it beside it (bars, rings, flames).
+ */
+export const CULL_MARGIN = 200;
+
+/**
+ * The screen (`screen`: its size), with CULL_MARGIN round it, on a layer
+ * of the map: what a picture's layerBox must touch to be drawn.
+ */
+export function seenOnLayer(layer: Container, screen: { width: number; height: number }): Rect {
+  const from = layer.toLocal({ x: -CULL_MARGIN, y: -CULL_MARGIN });
+  const to = layer.toLocal({ x: screen.width + CULL_MARGIN, y: screen.height + CULL_MARGIN });
+  return { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y) };
+}
+
 /** Whether two boxes share any of their area. */
 export function overlaps(one: Rect, other: Rect): boolean {
   return one.x < other.x + other.width && other.x < one.x + one.width && one.y < other.y + other.height && other.y < one.y + one.height;

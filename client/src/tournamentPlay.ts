@@ -112,7 +112,10 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   view.skin = arena.skin;
   world.addChild(view.root);
   const missing = await view.load((done, total) => showStatus(`The armies arrive… ${Math.round(100 * done / total)}%`));
-  loop.add((ms) => view.update(ms, camera.scale));
+  loop.add((ms) => {
+    view.update(ms, camera.scale);
+    view.cull(app.screen);  // what's off the screen left out, once the fighters have moved
+  });
   if (groundLoaded.missing.length || missing.length) {
     stop("Some tournament artwork could not load. Please reopen the match to try again."); return;
   }

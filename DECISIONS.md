@@ -85,9 +85,10 @@ the screen left out of the drawing. The calls made along the way:
   looks at the walking units every frame and at everything else when the
   camera moves, when something is drawn anew, and twice a second as a
   safety net.
-- **Not done yet:** battles keep drawing every fighter. They already sort
-  the cheap way; culling waits until they need it. The shop's pictures stay
-  sharp: they're drawn once, not every frame.
+- **Battles cull too** (the owner asked straight after). Their fighters
+  all move, so each is looked at every frame, not on a timer as in town.
+  Life bars and selection rings are left drawn: few show at once. The
+  shop's pictures stay sharp: they're drawn once, not every frame.
 
 For the classic game in Ruffle, the advice given was the Flash browser
 (FLASH.md): Adobe's own player usually runs the game's code much faster

@@ -11,7 +11,7 @@ import type { PlacedItem } from "../rules/town.ts";
 import { anchorOf, type ArtLibrary } from "./art.ts";
 import { pouringTower } from "./buildingAnimation.ts";
 import { fireSprite, fireStage } from "./fire.ts";
-import { isOpaqueAt, unitHitDistance, visualScreenBox } from "./hit.ts";
+import { isOpaqueAt, layerBox, overlaps, seenOnLayer, unitHitDistance, visualScreenBox } from "./hit.ts";
 import { Markers } from "./markers.ts";
 import { animated, buildingSprite, unitSprite, type Pose } from "./townView.ts";
 import type { Effect as SoundEffect } from "../sound.ts";
@@ -164,6 +164,23 @@ export class BattleView {
     }
     for (const playing of [...this.playing]) {
       this.playEffect(playing);
+    }
+  }
+
+  /**
+   * Leave out of the drawing the fighters off the screen (`screen`: its
+   * size), as the town does (TownView.cull), so a big island zoomed in costs
+   * only what shows. Run after update has moved them, before the frame is
+   * drawn: they move all the time, so each is looked at every frame, by a
+   * few sums (layerBox). A fighter left out is still measured, so tapping
+   * and selecting are unchanged; its life bar and ring, in their own
+   * layers, stay (few fighters show them).
+   */
+  cull(screen: { width: number; height: number }): void {
+    const seen = seenOnLayer(this.things, screen);
+    for (const { slot } of this.drawn.values()) {
+      const picture = slot.children[0];
+      slot.culled = picture !== undefined && !overlaps(layerBox(slot, picture), seen);
     }
   }
 

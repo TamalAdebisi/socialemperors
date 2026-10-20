@@ -239,7 +239,10 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
   view.skin = enemy.skin;
   world.addChild(view.root);
   await view.load((done, total) => showStatus(`The army arrives… ${Math.round((100 * done) / total)}%`));
-  loop.add((ms) => view.update(ms, camera.scale));
+  loop.add((ms) => {
+    view.update(ms, camera.scale);
+    view.cull(app.screen);  // what's off the screen left out, once the fighters have moved
+  });
   showStatus("");
   const started = performance.now();
 
