@@ -1239,6 +1239,12 @@ If a task needs one of these, stop and say what's needed and why.
   there too, and passes where the network allows. `combat-controls` needs
   the Bull Gladiator's sheet (`2126_bull_glad`), which a local art export
   with a short `TIME_LIMIT` skips; export it with `TIME_LIMIT=2400`.
+  `structure-idle` and `tournament-weekly` fail the same way on main with
+  a local export that lacks `1527_dragonCity_cross` and some army sheets,
+  and `speed` finds the game script sent uncompressed on such a machine;
+  all three were seen failing on main on 20 October 2026, not caused by
+  that day's changes. Next step: a full local art export, and a look at
+  why `compress.py` skips the script there.
 - **Both clients play the same empire.** A rule we get wrong changes the
   save, not just the look, and the Flash client then sees it. Check the
   save in the browser tests, not only the screen.
