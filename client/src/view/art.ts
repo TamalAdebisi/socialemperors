@@ -177,11 +177,17 @@ export class ArtLibrary {
    */
   letGo(names: Iterable<string>): void {
     for (const name of names) {
-      const pages = this.bigPages.get(name);
-      if (!pages) continue;
-      this.bigPages.delete(name);
-      this.loading.delete(name);
-      for (const page of pages) void Assets.unload(page);
+      const art = this.loading.get(name);
+      if (art === undefined) continue;
+      const release = (): void => {
+        const pages = this.bigPages.get(name);
+        if (!pages || this.loading.get(name) !== art) return;  // one page, or asked for again since
+        this.bigPages.delete(name);
+        this.loading.delete(name);
+        for (const page of pages) void Assets.unload(page);
+      };
+      // One still loading is let go of once it has loaded.
+      if (this.bigPages.has(name)) release(); else void art.then(release);
     }
   }
 
