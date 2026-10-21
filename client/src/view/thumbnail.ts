@@ -14,7 +14,8 @@ export async function drawThumbnail(art: ArtLibrary, item: ItemInfo, canvas: HTM
   const height = Math.round((canvas.clientHeight || 96) * ratio);
   canvas.width = width;
   canvas.height = height;
-  const texture = (await art.get(item.art))?.cover();
+  // A unit's first standing picture: the map's copy has it, without loading a big unit's whole sheet.
+  const texture = (await (item.isUnit ? art.unit(item.art) : art.get(item.art)))?.cover();
   const source = texture?.source.resource as CanvasImageSource | undefined;
   const context = canvas.getContext("2d");
   if (!texture || !source || !context) {

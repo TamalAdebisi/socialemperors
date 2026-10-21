@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Texture } from "pixi.js";
-import { ItemArt } from "./art.ts";
+import { ItemArt, packShelves } from "./art.ts";
 
 /** A sheet's animations as the exporter lists them: each label's frames in order, one picture per frame. */
 function sheet(labels: [string, number][]): ItemArt {
@@ -51,4 +51,15 @@ test("a pose the sheet hasn't got stands that way, or shows the first picture", 
   assert.deepEqual(shown(egg, 0, 1), ["frame/1"]);
   assert.deepEqual(shown(egg, 1, 3), ["frame/0"]);
   assert.deepEqual(shown(sheet([]), 0, 0), [], "no pictures at all");
+});
+
+test("big units' town pictures are packed as the exporter packs them", () => {
+  // The answers of tools/art/pack_sheet.py's pack() for the same boxes.
+  const three = packShelves([{ w: 10, h: 20 }, { w: 30, h: 5 }, { w: 8, h: 20 }]);
+  assert.deepEqual(three.places, [{ page: 0, x: 1, y: 1 }, { page: 0, x: 1, y: 23 }, { page: 0, x: 13, y: 1 }]);
+  assert.deepEqual(three.pages, [{ w: 32, h: 29 }]);
+  const big = packShelves([{ w: 3000, h: 2000 }, { w: 3000, h: 2000 }, { w: 3000, h: 2000 }]);
+  assert.deepEqual(big.places, [{ page: 0, x: 1, y: 1 }, { page: 0, x: 1, y: 2003 }, { page: 1, x: 1, y: 1 }]);
+  assert.deepEqual(big.pages, [{ w: 3002, h: 4004 }, { w: 3002, h: 2002 }], "a second page when the first is full");
+  assert.throws(() => packShelves([{ w: 4095, h: 10 }]), /bigger than a 4096 x 4096 page/);
 });

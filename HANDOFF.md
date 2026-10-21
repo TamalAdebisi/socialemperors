@@ -38,6 +38,18 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Big units keep only their town pictures (21 October).** The owner's
+  Blue Fire Djinn Dragon made the map unplayably slow: a newer big
+  dragon's whole sheet is about 250 MB decoded. The map now keeps a copy
+  of its standing and walking pictures only (`ArtLibrary.unit`, about a
+  quarter); raids at home load whole sheets and let them go after
+  (`letGo`). CLIENT.md, "Big units in town". Test `e2e/tests/big-units.mjs`.
+- **Railway stopped deploying merges after #133 (20 October, 16:17
+  UTC).** Nothing was skipped: no deployment was started for #131, #134,
+  #135 or #136 (#134 was deployed by hand on the 21st). Check that each
+  merge deploys; if not, the owner's "Deploy Latest Commit" (Cmd+K in
+  Railway's dashboard) ships `main`, and Railway's GitHub connection needs
+  checking (its docs: "Controlling GitHub Autodeploys", Troubleshooting).
 - **Units found by number (21 October).** The owner's Red Djinn Dragon
   Rider showed only while walking: the client looked a unit's animations
   up by label, and 87 units (most of the newer dragons) name them in

@@ -4,6 +4,34 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 21 October 2026: big units keep only their town pictures on the map
+
+The owner's Blue Fire Djinn Dragon still showed only while moving, and
+made the map unplayably slow. The first was the live game not having the
+fix yet (Railway stopped deploying merges on 20 October, below). The
+second is size: a newer big dragon's sheet is about 250 MB decoded, 330 MB
+on the graphics card, against 1 or 2 for a knight (CLIENT.md, "Big units
+in town").
+
+- **The map keeps only a big unit's standing and walking pictures**,
+  copied pixel for pixel out of its whole sheet: about a quarter of it
+  (the Red Djinn Dragon Rider: 58 MB instead of 247). Nothing changes on
+  the screen, so no rule or picture changes; it is our call on how the
+  pictures are held.
+- **A raid at home still loads whole sheets**, so the defenders attack,
+  die and use their special moves as in the original, and lets them go
+  when it's over. During a raid, a town with big dragons is as heavy as
+  before.
+- **Not done:** the units book's moving preview still loads a whole sheet
+  while its card is open; storing the town pictures on pages of their own
+  in the exports (which would save the copying) means remaking the art in
+  the bucket.
+- **Railway stopped deploying merges** after #133 (16:17 UTC, 20 October):
+  #131, #134 (deployed by hand at 06:34 UTC the next morning), #135 and
+  #136 started no deployment, and none was skipped. Railway's docs say to
+  check its GitHub connection, and to use "Deploy Latest Commit" (Cmd+K in
+  the dashboard) meanwhile.
+
 ## 21 October 2026: units found by number, not by label
 
 The owner's new Red Djinn Dragon Rider didn't draw properly, and they
