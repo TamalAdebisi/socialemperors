@@ -68,6 +68,24 @@ class PackSheetTest(unittest.TestCase):
         self.assertEqual(self.data["animations"]["ATAQUE/0"],
                          ["99_test_unit/2", "99_test_unit/2", "99_test_unit/3"])
 
+    def test_a_label_used_twice_keeps_both_animations_and_their_bounds(self):
+        # 2023_frostfire_bahamut labels frame 10 ATAQUE and frame 30 ATAQUE
+        # again; the second wrote over the first, and every box after it
+        # went to the wrong frame.
+        box = lambda n: {"x": n, "y": 0, "w": 1, "h": 1}
+        frames = [{"labels": ["QUIETO"], "images": [0], "bounds": box(0)},
+                  {"labels": ["ATAQUE"], "images": [1], "bounds": box(1)},
+                  {"labels": ["ATAQUE"], "images": [2], "bounds": box(2)},
+                  {"labels": [], "images": [3], "bounds": box(3)},
+                  {"labels": ["RAY"], "images": [4], "bounds": box(4)}]
+        folder = tempfile.mkdtemp(prefix="se-art-")
+        make_render(folder, frames, [(0, 0, 4, 4)] * 5)
+        data = pack_sheet.build(folder)[1][0]
+        self.assertEqual(list(data["animations"]), ["QUIETO/0", "ATAQUE/0", "ATAQUE@2/0", "ATAQUE@2/1", "RAY/0"])
+        self.assertEqual([frames[0] for frames in data["animations"].values()],
+                         [f"99_test_unit/{n}" for n in range(5)], "every frame, in order")
+        self.assertEqual(data["meta"]["bounds"], dict(zip(data["animations"], map(box, range(5)))))
+
     def test_pictures_are_trimmed_and_remember_where_they_were(self):
         frame = self.data["frames"]["99_test_unit/0"]
         self.assertEqual(frame["spriteSourceSize"], {"x": 10, "y": 5, "w": 20, "h": 20})

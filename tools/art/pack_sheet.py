@@ -22,10 +22,14 @@ Phaser both load:
               picture per step shown, from none).
               <label> is the animation's name in the game files (QUIETO idle,
               ANDAR walk, ATAQUE attack, MUERTE death, PICAR work, and special
-              moves), or "frame" when there are no labels. <n> counts the
+              moves), or "frame" when there are no labels; a label used
+              again is "<label>@<frame>" there. <n> counts the
               frames from that label: for a unit, the direction (0 to 4: up,
               up-right, right, down-right, down; the game mirrors 1 to 3 for
-              the other three), for a building the way it faces
+              the other three), for a building the way it faces. Every
+              frame has one, in order: the client finds a unit's animation
+              by its place (frame 5a + direction), as the game does, since
+              the newer units label theirs in other words (RESPIRAR...)
   meta        the image file, its size, the frame rate and where it came from;
               "bounds": each animation's box as Flash measures it, in pixels
               from the anchor, transparent parts of pictures included. The
@@ -193,12 +197,18 @@ def pack(sizes, max_size=MAX_SIZE):
 
 
 def animations(manifest):
-    """{"<label>/<n>": [picture numbers]} from the manifest's frames."""
+    """{"<label>/<n>": [picture numbers]} from the manifest's frames: one
+    entry per frame, in order, as the client counts a unit's animations by
+    their place (the game does too). A label used a second time (the
+    frostfire bahamuts' ATAQUE, at frame 10 and at 30) is "<label>@<frame>"
+    from there, so it doesn't write over the first."""
     result = {}
     label, start = "frame", 0
     for f, frame in enumerate(manifest["frames"]):
         if frame["labels"]:
             label, start = frame["labels"][0], f
+            if f"{label}/0" in result:
+                label = f"{label}@{f}"
         result[f"{label}/{f - start}"] = frame["images"]
     if manifest.get("steps"):
         # A chest that fills up as its camp goes: its first frame with no step, then one more each.

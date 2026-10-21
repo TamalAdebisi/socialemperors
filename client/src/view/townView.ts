@@ -931,12 +931,17 @@ export function buildingSprite(art: ItemArt, placed: PlacedItem, skin: number, r
 /** What a unit's picture shows: standing, walking, chopping (its attack), picking at a rock, or dying. */
 export type Pose = "QUIETO" | "ANDAR" | "ATAQUE" | "PICAR" | "MUERTE";
 
+/**
+ * Each pose's number in the Flash client (Constants.ANIMATION_*). The poses
+ * keep the older units' labels as names, but a unit's art is found by these
+ * numbers: 87 units, most of the newer dragons among them, label theirs otherwise.
+ */
+export const POSE_NUMBER: Record<Pose, number> = { QUIETO: 0, ANDAR: 1, ATAQUE: 2, MUERTE: 3, PICAR: 4 };
+
 /** A unit facing one of its 8 ways, in a pose, at a point of the map. */
 export function unitSprite(art: ItemArt, direction: number, pose: Pose, at: Point, once = false): Container {
   const facing = unitFacing(direction);
-  const name = art.has(`${pose}/${facing.frame}`) ? `${pose}/${facing.frame}`
-    : art.has(`QUIETO/${facing.frame}`) ? `QUIETO/${facing.frame}` : "frame/0";
-  const sprite = animated(art.animation(name) ?? [], art.fps, once);
+  const sprite = animated(art.pose(POSE_NUMBER[pose], facing.frame), art.fps, once);
   if (facing.mirrored) {
     sprite.scale.x = -1;
   }
