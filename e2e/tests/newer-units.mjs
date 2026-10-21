@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { has } from "../lib.mjs";
 
-const RIDER = 2228, DRAGGY = 2242, FROM = [50, 44], TO = [54, 49], DRAGGY_AT = [46, 50];
+// The tiles e2e/tests/walk.mjs walks a knight between: open in a new town.
+const RIDER = 2228, DRAGGY = 2242, FROM = [50, 44], TO = [54, 55], DRAGGY_AT = [46, 44], DRAGGY_TO = [50, 61];
 
 export default async function newerUnits({ newPlayer }) {
   const player = await newPlayer();
@@ -93,7 +94,7 @@ export default async function newerUnits({ newPlayer }) {
   // The Savage Draggy has no labels: its frames 0 to 4 stand, 5 to 9 walk.
   await until(DRAGGY, /^frame\/[0-4]$/);
   await player.select(DRAGGY_AT, "Savage Draggy");
-  await player.tapTile([DRAGGY_AT[0] + 4, DRAGGY_AT[1]]);
+  await player.tapTile(DRAGGY_TO);
   await until(DRAGGY, /^frame\/[5-9]$/);
   await player.shot("draggy-walking");
 }
