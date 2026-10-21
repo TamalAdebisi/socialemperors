@@ -28,9 +28,10 @@ in town").
   the bucket.
 - **Railway stopped deploying merges** after #133 (16:17 UTC, 20 October):
   #131, #134 (deployed by hand at 06:34 UTC the next morning), #135 and
-  #136 started no deployment, and none was skipped. Railway's docs say to
-  check its GitHub connection, and to use "Deploy Latest Commit" (Cmd+K in
-  the dashboard) meanwhile.
+  #136 started no deployment, and none was skipped. The owner found the
+  cause on Railway's status page: a major outage, with builds paused in
+  every region. Nothing to change on our side; once it's over, "Deploy
+  Latest Commit" (Cmd+K in the dashboard) ships `main` if it hasn't.
 
 ## 21 October 2026: units found by number, not by label
 

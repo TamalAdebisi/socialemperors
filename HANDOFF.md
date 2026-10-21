@@ -46,10 +46,13 @@ follow below; status-only receipt edits change no game, art or test file.
   (`letGo`). CLIENT.md, "Big units in town". Test `e2e/tests/big-units.mjs`.
 - **Railway stopped deploying merges after #133 (20 October, 16:17
   UTC).** Nothing was skipped: no deployment was started for #131, #134,
-  #135 or #136 (#134 was deployed by hand on the 21st). Check that each
-  merge deploys; if not, the owner's "Deploy Latest Commit" (Cmd+K in
-  Railway's dashboard) ships `main`, and Railway's GitHub connection needs
-  checking (its docs: "Controlling GitHub Autodeploys", Troubleshooting).
+  #135 or #136 (#134 was deployed by hand on the 21st). The cause was
+  Railway's: a major outage on 21 October (its status page: dashboard and
+  API down, builds paused in every region, from 09:28 UTC at the latest),
+  which also broke its assistant for us. Once it's over, check that `main`
+  deployed (#135 to #137 were merged during it); if not, the owner's
+  "Deploy Latest Commit" (Cmd+K in Railway's dashboard) ships it. Only if
+  merges still don't deploy after that, check Railway's GitHub connection.
 - **Units found by number (21 October).** The owner's Red Djinn Dragon
   Rider showed only while walking: the client looked a unit's animations
   up by label, and 87 units (most of the newer dragons) name them in
