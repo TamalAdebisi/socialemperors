@@ -38,6 +38,18 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Units found by number (21 October).** The owner's Red Djinn Dragon
+  Rider showed only while walking: the client looked a unit's animations
+  up by label, and 87 units (most of the newer dragons) name them in
+  other words, 15 more have none. It now finds them by number, as the
+  Flash client does (`ItemArt.pose`). The packer no longer loses a label
+  used twice. **Waiting on the owner:** making four sheets again in the
+  bucket (`2023_frostfire_bahamut`, `2026_frostfire_bahamut_rider`,
+  `2336_cerberusAncientDragon`, `2338_cerberusAncientDragonRider`) with
+  the Export art to R2 workflow, then purging their cached files; and
+  whether to rename the Neon Epic Dragon Rider's sprite for the Flash
+  client. See CLIENT.md, "Units by number", and DECISIONS.md (21 October).
+  Test `e2e/tests/newer-units.mjs`.
 - **A busy town drawn fast (20 October).** The owner found the game slow
   with many units. Walking units re-sorted every picture (a cost growing
   with the square of the town) and rebuilt the walking grid at each step;

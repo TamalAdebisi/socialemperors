@@ -4,6 +4,37 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 21 October 2026: units found by number, not by label
+
+The owner's new Red Djinn Dragon Rider didn't draw properly, and they
+thought many newer units had the same trouble. They did: 87 units name
+their animations in words the client didn't look for (CLIENT.md, "Units
+by number").
+
+- **A unit's animations are found by number, as the Flash client finds
+  them**, never by label. Teaching the client each artist's words
+  (`RESPIRAR`, `respira`, `quietorl`...) would have missed the next one;
+  the number is what the game itself uses, and all 669 units' files keep
+  its order.
+- **The 15 units with no labels change too.** They showed one picture
+  whatever they did; now they show the frame the game shows for what they
+  do and the way they face. For the two eggs, which have two frames, that
+  means facing one way shows the second.
+- **A label used twice gets its frame in its name** in the packer
+  (`ATAQUE@30`), so neither is lost. Only the client reads these names,
+  and only for buildings and effects.
+- **Not done: making the four affected sheets again in the bucket**
+  (`2023_frostfire_bahamut`, `2026_frostfire_bahamut_rider`,
+  `2336_cerberusAncientDragon`, `2338_cerberusAncientDragonRider`). It
+  writes over live art, and last time the cache served old pictures with
+  the new JSON until the owner purged them, so it waits for the owner's
+  go-ahead. Until then those four stand, walk and die properly, but their
+  normal attack shows a special move's pictures.
+- **Not done: the Neon Epic Dragon Rider in the Flash client.** Its file's
+  sprite has the plain dragon's name, so the Flash client most likely
+  can't find it (the new client can). Fixing it means renaming the class
+  inside an original file; left for a decision.
+
 ## 20 October 2026: gifts from storage, level ups, the warehouse, and a rollback
 
 The owner gave a Bull Gladiator Barrack from storage and it seemed to stay

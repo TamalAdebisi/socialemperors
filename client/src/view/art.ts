@@ -85,6 +85,20 @@ export class ItemArt {
     return this.order[animation * 5 + way];
   }
 
+  /**
+   * A unit's animation by number (`numbered`), as the Flash client finds
+   * every one of them, so a sheet's labels don't matter: the older units
+   * say QUIETO for standing, newer ones RESPIRAR, respira or QUIETORL. One
+   * the sheet hasn't got falls back to standing that way, then to the
+   * first picture.
+   */
+  pose(animation: number, way: number): Texture[] {
+    for (const run of [this.numbered(animation, way), this.numbered(0, way), this.numbered(0, 0)]) {
+      if (run?.length) return run;
+    }
+    return [];
+  }
+
   /** How many frames follow a label: a unit's directions, a building's ways of facing. */
   framesOf(label: string): number {
     let count = 0;

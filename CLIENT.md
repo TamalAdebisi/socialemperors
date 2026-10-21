@@ -219,7 +219,9 @@ under `art/` ([DEPLOY.md](DEPLOY.md)).
   (attack), `MUERTE` (death) and `PICAR` (work: empty for units that don't),
   and about 1 unit in 3 adds special moves (`sp attack1`, `RAY`, `LIMIT`...).
   A frame shows either one picture or a child animation that plays by
-  itself, like the catapult's 87-frame attack.
+  itself, like the catapult's 87-frame attack. The newer units label the
+  same animations in other words (`RESPIRAR`...), so the client finds them
+  by number, as the game does ("Units by number", below).
 - **Buildings:** 873 of 898 have 2 frames and no labels: the two ways a
   building can face, each drawn separately (not mirrored). A few have more
   frames, for animation or variants.
@@ -764,6 +766,50 @@ Close door. It isn't saved: gates are shut each time the town opens.
 mark at a unit's destination (ground clicks now get brief feedback below).
 Units sent to a building or a tree: "Villagers at work"; wild animals
 following a unit home: "The living map".
+
+### Units by number
+
+The owner found a new Red Djinn Dragon Rider not drawing properly (21
+October 2026): it showed only while it walked. The client found a unit's
+pictures by their labels in the Flash file, `QUIETO` for standing and so
+on, and the newer units name them in other words. The Flash client never
+reads them: it jumps to frame *5a + way*, animation *a* facing way 0 to 4
+(0 standing, 1 walking, 2 attacking, 3 dying, 4 working, 6 to 14 the
+special moves). Now the client does too, in town and in battles
+(`ItemArt.pose` in `view/art.ts`, `POSE_NUMBER` in `view/townView.ts`);
+the special moves and the units book's previews already did.
+
+Read from all 669 units' files (21 October):
+
+- **87 name their animations otherwise**, 61 of them among the newer units
+  (2177 onwards): `RESPIRAR`, `ATACAR` (most of the newer dragons and
+  riders, the Djinns among them), `quietorl`, `volandorl` (the savage
+  dragons), `respira`, `vuela` (the cerberus), `ATK`, `DEATH` (the 3-head
+  dragon), `ANDAR CERCA` (the snake, rainbow and golden dragons, which
+  walked standing still). By label, a pose not found fell back to standing,
+  and standing not found to a picture these files haven't got: nothing.
+  All 87 keep the original's order, so by number they all play.
+- **15 have no labels at all**: the two eggs, the whirlwinds and 8 newer
+  draggies (the savage ones, Saint George's, the platinum armor one).
+  They showed their first picture whatever they did; now they face, walk,
+  attack and die like the rest.
+- **4 use a label twice** (the two frostfire bahamuts' `ATAQUE`, the two
+  cerberus' `ataque2`). The packer wrote the second over the first, so
+  their sheets lost 5 frames and every box after it was a frame out. It now
+  names a repeat by its frame (`ATAQUE@30`). Their sheets in the bucket
+  are still the old ones: until they are made again (the **Export art to
+  R2** workflow, those four names), their normal attack shows a special
+  move's pictures and their later special moves are one out.
+- A pose a sheet hasn't got still falls back to standing that way, then to
+  its first picture.
+
+One more, for the Flash client: `2213_neonEpicDragonRider`'s sprite is
+called `2211_neonEpicDragon` (the plain dragon's name), and the Flash
+client asks a unit's file for a sprite named exactly after it. The new
+client's exporter takes a file's only sprite, so it draws here.
+
+Test: `e2e/tests/newer-units.mjs`, with unit tests in `view/art.test.ts`
+and `tests/test_art.py`.
 
 ### Click feedback and unit targets
 

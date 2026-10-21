@@ -334,7 +334,12 @@ to the same server. The scope is in [CLIENT.md](CLIENT.md). In short:
 - Recommended: TypeScript with PixiJS 8 for the map and HTML for the windows,
   confirmed once the new client can draw a real town.
 
-- [x] 1. Art pipeline: buildings and units as sprite sheets (`tools/export_art.sh`)
+- [x] 1. Art pipeline: buildings and units as sprite sheets (`tools/export_art.sh`).
+      87 units, most of the newer dragons, name their animations in other
+      words; since 21 October the client finds them by number, as the game
+      does ([CLIENT.md](CLIENT.md#units-by-number)). Four sheets with a
+      label used twice wait to be made again in the bucket, on the owner's
+      go-ahead (DECISIONS.md, 21 October)
 - [x] 2. Look at your town: `/client.html` draws the map, buildings and units
       from the config and the save, with PixiJS; smooth scrolling and zoom,
       touch, full screen. Look only ([CLIENT.md](CLIENT.md#step-2-look-at-your-town))
