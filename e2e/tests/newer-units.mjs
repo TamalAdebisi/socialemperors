@@ -34,7 +34,7 @@ export default async function newerUnits({ newPlayer }) {
   const showing = (id) => page.evaluate(async (id) => {
     const { town, view } = window.seHome.parts;
     const placed = town.items.find((p) => p.item.id === id);
-    const art = placed && await view.art.get(placed.item.art);
+    const art = placed && await view.art.unit(placed.item.art);  // the map's copy (CLIENT.md, "Big units in town")
     const picture = placed && view.slots.get(placed)?.children.find((c) => c.texture && c.label !== "selected");
     if (!art || !picture) return [];
     const drawn = new Set(picture.textures ?? [picture.texture]);
@@ -73,12 +73,16 @@ export default async function newerUnits({ newPlayer }) {
   const changed = seen.filter((pixel, i) => pixel.some((value, c) => Math.abs(value - hidden[i][c]) > 24)).length;
   assert.ok(changed > seen.length / 20, `the rider is seen on the screen (${changed} of ${seen.length} pixels are its)`);
 
-  // Its attack (a tree's chopping pose, as a renderer probe): ATACAR.
-  await pose(RIDER, "ATAQUE", { x: 53, y: 46 });
-  await until(RIDER, /^ATACAR\//);
-  await player.shot("attacking");
-  await pose(RIDER, null);
-  await until(RIDER, /^RESPIRAR\//);
+  // Its attack, which battles draw from the whole sheet (the map keeps only
+  // standing and walking: CLIENT.md, "Big units in town"): ATACAR, by number.
+  const attack = await page.evaluate(async (id) => {
+    const { town, art } = window.seHome.parts;
+    const whole = await art.get(town.items.find((p) => p.item.id === id).item.art);
+    const run = new Set(whole.pose(2, 0));
+    return [...whole.animations].filter(([, textures]) => textures.length > 0 && new Set(textures).size === run.size
+      && textures.every((texture) => run.has(texture))).map(([name]) => name);
+  }, RIDER);
+  assert.ok(attack.includes("ATACAR/0"), `the rider attacks in its ATACAR pictures, not ${attack.join(", ")}`);
 
   // Walking, then standing where it stopped.
   await player.select(await tileOf(RIDER), "Red Djinn Dragon Rider");

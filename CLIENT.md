@@ -811,6 +811,35 @@ client's exporter takes a file's only sprite, so it draws here.
 Test: `e2e/tests/newer-units.mjs`, with unit tests in `view/art.test.ts`
 and `tests/test_art.py`.
 
+### Big units in town
+
+The owner's Blue Fire Djinn Dragon made the map too slow to play (21
+October 2026). The newer dragons, gods and colossi are big, animated
+pictures: drawn from every frame of every animation, the Red Djinn Dragon
+Rider's sheet is five pages, 247 MB once decoded and about 330 MB on the
+graphics card with its smaller copies for zooming out. A knight's is 1 or
+2. A town with two or three of them asks more of the graphics chip than
+many laptops and phones have, and everything slows down. (The Flash game
+drew them from small vector shapes as it went.)
+
+A town shows a unit standing or walking, so the map keeps only those
+pictures (`ArtLibrary.unit` in `view/art.ts`): a sheet of several pages is
+cut down to its first two animations, 5 ways each, copied pixel for pixel
+into pages of their own (packed as the exporter packs, `packShelves`),
+reading one whole page at a time and letting it go. The rider's map copy
+is 58 MB, 75 pictures. Sheets of one page (knights, villagers: villagers'
+work poses are in town too) are used whole, as before. Shop and storage
+pictures use the map's copy as well.
+
+Battles load whole sheets (`ArtLibrary.get`), on their own pages. A raid
+at home is fought on the town's page, so its whole sheets are let go when
+it's over (`ArtLibrary.letGo`, from `HomeDefence.end`); the next raid
+loads them again. Still loading whole sheets on the town's page: the units
+book's moving preview, while its card is open.
+
+Test: `e2e/tests/big-units.mjs` (the copy is under a third of the sheet,
+every picture the same size, anchor and pixels; let go of after a raid).
+
 ### Click feedback and unit targets
 
 Units keep their original appearance, with an eight-pixel click margin

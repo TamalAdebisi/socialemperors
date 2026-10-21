@@ -2,7 +2,7 @@
 // files: <img_name>.json and .webp (and <img_name>-1.json... for big items),
 // each loaded once and only when something on screen needs it.
 
-import { Assets, Spritesheet, Texture, isSafari, type SpritesheetData } from "pixi.js";
+import { Assets, CanvasSource, Spritesheet, Texture, isSafari, type SpritesheetData } from "pixi.js";
 
 import type { Bounds } from "../rules/geometry.ts";
 import { STEADY_BUILDING } from "./buildingAnimation.ts";
@@ -132,9 +132,14 @@ export class ItemArt {
   }
 }
 
+/** A unit's picture runs a town shows: standing and walking (animations 0 and 1), 5 ways each. */
+const TOWN_RUNS = 10;
+
 export class ArtLibrary {
   private readonly base: string;
   private readonly loading = new Map<string, Promise<ItemArt | null>>();
+  /** The pages of each whole sheet of several pages loaded, to let go of (letGo). */
+  private readonly bigPages = new Map<string, string[]>();
 
   /** `base`: where the sheets are (the page's artUrl). */
   constructor(base: string) {
@@ -143,22 +148,114 @@ export class ArtLibrary {
 
   /** An item's art, or null when there is no sheet for it (yet). */
   get(name: string): Promise<ItemArt | null> {
-    let art = this.loading.get(name);
+    return this.cached(name, () => this.load(name));
+  }
+
+  /**
+   * A unit's art for the town map, which shows units standing and walking
+   * (and villagers working, whose sheets are small). A sheet of several
+   * pages, a big dragon's or god's, is cut down to those pictures, copied
+   * into pages of their own: the Red Djinn Dragon Rider's whole sheet is
+   * 247 MB decoded (a knight's is 1), its standing and walking 50. A
+   * battle loads the whole sheet (get). CLIENT.md, "Big units in town".
+   */
+  unit(name: string): Promise<ItemArt | null> {
+    return this.cached(`${name} in town`, async () => {
+      const index = await this.data(`${name}.json`);
+      if (!index.meta.related_multi_packs?.length) {
+        return this.cached(name, () => this.load(name, index));  // one page: the whole sheet, as everything else has it
+      }
+      return this.loadTownUnit(name, index);
+    });
+  }
+
+  /**
+   * Lets go of the whole sheets of several pages loaded for these items,
+   * after a raid at home: the town's map has its own smaller copies
+   * (unit), and a big unit's whole sheet takes hundreds of MB. Asked for
+   * again, a sheet loads again.
+   */
+  letGo(names: Iterable<string>): void {
+    for (const name of names) {
+      const art = this.loading.get(name);
+      if (art === undefined) continue;
+      const release = (): void => {
+        const pages = this.bigPages.get(name);
+        if (!pages || this.loading.get(name) !== art) return;  // one page, or asked for again since
+        this.bigPages.delete(name);
+        this.loading.delete(name);
+        for (const page of pages) void Assets.unload(page);
+      };
+      // One still loading is let go of once it has loaded.
+      if (this.bigPages.has(name)) release(); else void art.then(release);
+    }
+  }
+
+  private cached(key: string, load: () => Promise<ItemArt | null>): Promise<ItemArt | null> {
+    let art = this.loading.get(key);
     if (art === undefined) {
-      art = this.load(name).catch((error: unknown) => {
-        console.warn(`No art for ${name}:`, error);
+      art = load().catch((error: unknown) => {
+        console.warn(`No art for ${key}:`, error);
         return null;
       });
-      this.loading.set(name, art);
+      this.loading.set(key, art);
     }
     return art;
   }
 
-  private async load(name: string): Promise<ItemArt> {
+  private async load(name: string, index?: SheetJson): Promise<ItemArt> {
     if (name === STEADY_BUILDING) return this.loadSteady(name);
-    const first = await this.page(`${name}.json`);
+    const data = index ?? await this.data(`${name}.json`);
+    const first = { data, sheet: await sheetOf(data, `${this.base}/${data.meta.image}`) };
     const others = await Promise.all((first.data.meta.related_multi_packs ?? []).map((file) => this.page(file)));
+    if (others.length > 0) {
+      this.bigPages.set(name, [first, ...others].map((page) => `${this.base}/${page.data.meta.image}`));
+    }
     return itemArt(name, first.data, [first.sheet, ...others.map((page) => page.sheet)]);
+  }
+
+  /**
+   * A big unit's standing and walking pictures, copied pixel for pixel
+   * from its whole pages into pages of their own, packed as the exporter
+   * packs (packShelves). One whole page is decoded at a time, then let go.
+   */
+  private async loadTownUnit(name: string, index: SheetJson): Promise<ItemArt> {
+    const runs = Object.entries(index.animations ?? {}).slice(0, TOWN_RUNS);
+    const needed = new Set(runs.flatMap(([, frames]) => frames));
+    const pages = [index, ...await Promise.all((index.meta.related_multi_packs ?? []).map((file) => this.data(file)))];
+    const pictures = pages.flatMap((page) => Object.entries(page.frames)
+      .filter(([frame]) => needed.has(frame))
+      .map(([frame, data]) => ({ frame, data, page })));
+    if (pictures.length < needed.size) throw new Error(`${name}: a standing or walking picture is missing`);
+    const packed = packShelves(pictures.map(({ data }) => data.frame));
+    const canvases = packed.pages.map(({ w, h }) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
+    const contexts = canvases.map((canvas) => canvas.getContext("2d")!);
+    for (const page of pages) {
+      const mine = pictures.map((picture, i) => ({ ...picture, at: packed.places[i] })).filter((picture) => picture.page === page);
+      if (mine.length === 0) continue;
+      const response = await fetch(`${this.base}/${page.meta.image}`);
+      if (!response.ok) throw new Error(`${page.meta.image}: ${response.status}`);
+      const bitmap = await createImageBitmap(await response.blob());
+      for (const { data: { frame }, at } of mine) {
+        contexts[at.page].drawImage(bitmap, frame.x, frame.y, frame.w, frame.h, at.x, at.y, frame.w, frame.h);
+      }
+      bitmap.close();
+    }
+    // The pictures keep their sizes, trims and anchors, in the sheet's own scale (half size for the biggest).
+    const resolution = parseFloat(String(index.meta.scale ?? "1")) || 1;
+    const sheets = await Promise.all(canvases.map(async (canvas, n) => {
+      const frames = Object.fromEntries(pictures.flatMap(({ frame, data }, i) => {
+        const at = packed.places[i];
+        return at.page === n ? [[frame, { ...data, frame: { ...data.frame, x: at.x, y: at.y } }]] : [];
+      }));
+      const source = new CanvasSource({ resource: canvas, resolution, autoGenerateMipmaps: true });
+      const sheet = new Spritesheet(new Texture({ source }), {
+        frames, meta: { image: `${name} in town ${n}`, size: { w: canvas.width, h: canvas.height }, scale: String(resolution) },
+      });
+      await sheet.parse();
+      return sheet;
+    }));
+    return itemArt(name, { ...index, animations: Object.fromEntries(runs) }, sheets);
   }
 
   /** This fixed pose needs two image pages, not the export's 100 decoded pages. */
@@ -258,6 +355,48 @@ function repairSafariBitmap(texture: Texture, image: string): Promise<void> {
     checkedBitmaps.set(source, checked);
   }
   return checked;
+}
+
+/** Empty pixels around each picture, so neighbours don't bleed in when scaled (as tools/art/pack_sheet.py). */
+const PADDING = 2;
+/** The largest page: what phones' graphics chips accept, and Safari's biggest canvas. */
+const MOST_PAGE = 4096;
+
+/**
+ * Where boxes go on pages of at most `most` x `most` pixels, as
+ * tools/art/pack_sheet.py's pack() places them: on shelves, tallest first,
+ * each with PADDING around it. Returns each box's page and top left, in the
+ * order given, and each page's size.
+ */
+export function packShelves(boxes: { w: number; h: number }[], most = MOST_PAGE):
+  { places: { page: number; x: number; y: number }[]; pages: { w: number; h: number }[] } {
+  if (boxes.length === 0) return { places: [], pages: [{ w: 1, h: 1 }] };
+  const widest = Math.max(...boxes.map((box) => box.w)) + PADDING;
+  const tallest = Math.max(...boxes.map((box) => box.h)) + PADDING;
+  if (widest > most || tallest > most) throw new Error(`a picture is bigger than a ${most} x ${most} page`);
+  const area = boxes.reduce((sum, box) => sum + (box.w + PADDING) * (box.h + PADDING), 0);
+  // About square when all fits on one page; pages as wide as allowed when not.
+  const width = Math.min(most, Math.max(widest, Math.ceil(Math.sqrt(area) * 1.1)));
+  const order = boxes.map((_, i) => i).sort((a, b) => boxes[b].h - boxes[a].h || a - b);
+  const places: { page: number; x: number; y: number }[] = new Array(boxes.length);
+  const pages: { w: number; h: number }[] = [];
+  let page = 0, x = 0, y = 0, shelf = 0, used = 0;
+  for (const i of order) {
+    const { w, h } = boxes[i];
+    if (x + w + PADDING > width) {  // the shelf is full: start the next one
+      x = 0; y += shelf; shelf = 0;
+    }
+    if (x === 0 && y + h + PADDING > most) {  // the page is full: start the next one
+      pages.push({ w: used, h: y });
+      page++; y = 0; used = 0;
+    }
+    places[i] = { page, x: x + PADDING / 2, y: y + PADDING / 2 };
+    x += w + PADDING;
+    shelf = Math.max(shelf, h + PADDING);
+    used = Math.max(used, x);
+  }
+  pages.push({ w: used, h: y + shelf });
+  return { places, pages };
 }
 
 function itemArt(name: string, data: SheetJson, sheets: Spritesheet[]): ItemArt {

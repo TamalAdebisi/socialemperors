@@ -728,9 +728,14 @@ export class TownView {
     slot.zIndex = drawOrder(placed, this.order.get(placed) ?? this.town.items.indexOf(placed));
   }
 
+  /** A thing's art: a unit's as the map needs it (ArtLibrary.unit: a big one's standing and walking only). */
+  private artOf(placed: PlacedItem): Promise<ItemArt | null> {
+    return placed.item.isUnit ? this.art.unit(placed.item.art) : this.art.get(placed.item.art);
+  }
+
   /** Put a thing's picture in its slot. False when it has no art (yet): an outline instead. */
   private async draw(placed: PlacedItem, slot: Container): Promise<boolean> {
-    const art = await this.art.get(placed.item.art);
+    const art = await this.artOf(placed);
     if (slot.destroyed) {
       return art !== null;  // taken away while its art loaded (a see-through building no longer wanted)
     }
@@ -803,7 +808,7 @@ export class TownView {
   /** Draw a unit again: facing another way, or walking, or standing still. */
   private async redrawUnit(placed: PlacedItem): Promise<void> {
     const slot = this.slots.get(placed);
-    const art = await this.art.get(placed.item.art);
+    const art = await this.artOf(placed);
     if (!slot || slot.destroyed || art === null || inConstruction(placed, Date.now())) {
       return;
     }

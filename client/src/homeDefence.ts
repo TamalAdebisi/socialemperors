@@ -583,6 +583,8 @@ class Fight {
     }
     world.removeChild(this.view.root);
     this.view.root.destroy({ children: true });
+    // The units' whole sheets, which the fight needed: the map has its own smaller copies (ArtLibrary.unit).
+    this.parts.art.letGo(new Set([...this.placedOf.keys()].filter((fighter) => fighter.isUnit).map((fighter) => fighter.item.art)));
     view.setFighting(false);
     for (const placed of this.placedOf.values()) {
       void view.redraw(placed);
