@@ -53,6 +53,9 @@ follow below; status-only receipt edits change no game, art or test file.
   deployed (#135 to #137 were merged during it); if not, the owner's
   "Deploy Latest Commit" (Cmd+K in Railway's dashboard) ships it. Only if
   merges still don't deploy after that, check Railway's GitHub connection.
+  **22 October:** Railway was back; this note was merged to start a
+  deployment of everything since #134 (#135 to #138, and this). Check the
+  live server runs the latest `main`.
 - **Units found by number (21 October).** The owner's Red Djinn Dragon
   Rider showed only while walking: the client looked a unit's animations
   up by label, and 87 units (most of the newer dragons) name them in
