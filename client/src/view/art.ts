@@ -6,19 +6,24 @@
 // the graphics chip at once and its own copy is let go (view/onChip.ts).
 // CLIENT.md, "Big units in town" and "Light art".
 
-import { Assets, ImageSource, Rectangle, Spritesheet, Texture, isSafari,
-  type Renderer, type SpritesheetData, type SpritesheetFrameData, type TextureSource } from "pixi.js";
+import { Assets, CompressedSource, ImageSource, Rectangle, Spritesheet, Texture, isSafari,
+  type Renderer, type SpritesheetData, type SpritesheetFrameData, type TEXTURE_FORMATS, type TextureSource, type WebGLExtensions,
+  type WebGLRenderer } from "pixi.js";
 
 import type { Bounds } from "../rules/geometry.ts";
 import { STEADY_BUILDING } from "./buildingAnimation.ts";
 import { lightArt } from "./drawing.ts";
-import { OnChip } from "./onChip.ts";
+import type { Answer, Ask } from "./ktx2.worker.ts";
+import { OnChip, maskFile, type Mask, type Picture } from "./onChip.ts";
 
 interface SheetMeta {
   image: string;
   fps?: number;
   bounds?: Record<string, Bounds>;
   related_multi_packs?: string[];
+  /** The page as the graphics chip keeps it (tools/art/ktx2.mjs), and where it's see-through (pack_sheet.py). */
+  ktx2?: string;
+  mask?: string;
 }
 
 /** A sheet page's JSON, as tools/art/pack_sheet.py writes it. */
@@ -178,11 +183,51 @@ interface Cut {
   scale: number;
 }
 
-/** How to make a copy's pages: the sheet's pages used as they are, then pages of cut pictures. */
+/** How to make a copy's pages: the sheet's pages used as they are (their KTX2, smaller with `half`), then pages of cut pictures. */
 interface Recipe {
-  whole: string[];
+  whole: { file: string; ktx2?: string; half: boolean }[];
   pages: { w: number; h: number }[];
   cuts: Cut[];
+}
+
+/** A page made: its picture, and for one in the graphics chip's format, which and its size. */
+interface Made {
+  picture: Picture;
+  format?: TEXTURE_FORMATS;
+  width: number;
+  height: number;
+}
+
+/**
+ * What the graphics chip reads that a KTX2 page can become, best first
+ * (PixiJS's choice too), by the WebGL extension that says it can.
+ */
+const CHIP_FORMATS: [keyof WebGLExtensions, TEXTURE_FORMATS][] = [
+  ["bptc", "bc7-rgba-unorm"], ["astc", "astc-4x4-unorm"], ["etc", "etc2-rgba8unorm"], ["s3tc", "bc3-rgba-unorm"],
+];
+
+/** The KTX library PixiJS ships, served with the client (vite copies them), for our reader (ktx2.worker.ts). */
+const LIBKTX_JS = new URL("../../node_modules/pixi.js/transcoders/ktx/libktx.js", import.meta.url).href;
+const LIBKTX_WASM = new URL("../../node_modules/pixi.js/transcoders/ktx/libktx.wasm", import.meta.url).href;
+
+let reader: Worker | null = null;
+let asked = 0;
+const answers = new Map<number, (answer: Answer) => void>();
+
+/** A KTX2 page read off the page (ktx2.worker.ts), one at a time in its turn. */
+function readKtx2(url: string, formats: TEXTURE_FORMATS[], half: boolean): Promise<Answer> {
+  if (!reader) {
+    reader = new Worker(new URL("./ktx2.worker.ts", import.meta.url));
+    reader.onmessage = (event: MessageEvent<Answer>) => {
+      answers.get(event.data.id)?.(event.data);
+      answers.delete(event.data.id);
+    };
+  }
+  const ask: Ask = { id: ++asked, url, jsUrl: LIBKTX_JS, wasmUrl: LIBKTX_WASM, formats, half };
+  return new Promise((answer) => {
+    answers.set(ask.id, answer);
+    reader!.postMessage(ask);
+  });
 }
 
 /**
@@ -196,20 +241,24 @@ const WHOLE_SHARE = 0.75;
  * a page whose every picture is wanted is used as it is (a sheet packed
  * move by move has those), as is every page with one when nearly all are
  * wanted (WHOLE_SHARE); the other wanted pictures are cut out and packed
- * onto pages of their own, `shrink` times smaller. The copy keeps every
+ * onto pages of their own, `shrink` times smaller. `moves` null: all of
+ * them. `ready`: whether a page can be used as it is at this size (at half
+ * size, a page in the graphics chip's format, its smaller copy). The copy keeps every
  * picture run, in its place so the moves keep their numbers: those it has
  * all the pictures of, the others empty.
  */
-export function planCopy(pages: SheetJson[], moves: number[], shrink: number):
+export function planCopy(pages: SheetJson[], moves: number[] | null, shrink: number, ready: (page: number) => boolean = () => shrink === 1):
   { runs: [string, string[]][]; whole: number[]; cut: { page: number; frame: string }[]; packed: ReturnType<typeof packShelves> } {
-  const wanted = new Set(moves);
   const all = Object.entries(pages[0]?.animations ?? {});
-  const needed = new Set(all.flatMap(([, frames], i) => wanted.has(Math.floor(i / WAYS)) ? frames : []));
+  const wanted = moves && new Set(moves);
+  const needed = new Set(all.flatMap(([, frames], i) => !wanted || wanted.has(Math.floor(i / WAYS)) ? frames : []));
   const area = (page: SheetJson, only?: Set<string>) => Object.entries(page.frames)
     .reduce((sum, [frame, { frame: { w, h } }]) => sum + (only && !only.has(frame) ? 0 : w * h), 0);
-  const most = shrink === 1 && pages.reduce((sum, page) => sum + area(page, needed), 0) > WHOLE_SHARE * pages.reduce((sum, page) => sum + area(page), 0);
-  const whole = shrink !== 1 ? [] : pages.map((page, n) => ({ frames: Object.keys(page.frames), n }))
-    .filter(({ frames }) => frames.length > 0 && (most ? frames.some((frame) => needed.has(frame)) : frames.every((frame) => needed.has(frame))))
+  const most = pages.reduce((sum, page) => sum + area(page, needed), 0) > WHOLE_SHARE * pages.reduce((sum, page) => sum + area(page), 0);
+  // At half size, only a page in the graphics chip's format can be used as it is (its smaller copy).
+  const whole = pages.map((page, n) => ({ frames: Object.keys(page.frames), n }))
+    .filter(({ frames, n }) => ready(n) && frames.length > 0
+      && (most ? frames.some((frame) => needed.has(frame)) : frames.every((frame) => needed.has(frame))))
     .map(({ n }) => n);
   const cut = pages.flatMap((page, n) => whole.includes(n) ? [] : Object.keys(page.frames)
     .filter((frame) => needed.has(frame)).map((frame) => ({ page: n, frame })));
@@ -280,12 +329,13 @@ export class ArtLibrary {
   private readonly base: string;
   private readonly loading = new Map<string, Promise<ItemArt | null>>();
   private readonly sheets = new Map<string, Promise<SheetJson>>();
-  /** The pages of each whole sheet of several pages loaded, to let go of (letGo). */
-  private readonly bigPages = new Map<string, string[]>();
-  /** The pages of each fight's copy of a big unit, to let go of (letGo). */
+  /** The pages of each fight's copy of a big unit, and of each whole sheet of several pages, to let go of (letGo). */
   private readonly copies = new Map<string, TextureSource[]>();
   /** Keeps pages on the graphics chip only, given the renderer (view/onChip.ts). */
   private readonly chip: OnChip | null;
+  private readonly renderer: WebGLRenderer | null;
+  /** What the graphics chip reads that a KTX2 page can become; none: KTX2 pages aren't used. */
+  private chipFormats: TEXTURE_FORMATS[] | null = null;
   private readonly decoding = new Turns(DECODES);
   /** How many times smaller big units' copies are (plan): decided once for the page. */
   private shrinking: Promise<number> | null = null;
@@ -298,7 +348,8 @@ export class ArtLibrary {
    */
   constructor(base: string, renderer?: Renderer) {
     this.base = base.replace(/\/$/, "");
-    this.chip = renderer?.name === "webgl" ? new OnChip(renderer) : null;
+    this.renderer = renderer?.name === "webgl" ? renderer as WebGLRenderer : null;
+    this.chip = this.renderer && new OnChip(this.renderer);
   }
 
   /** An item's art, or null when there is no sheet for it (yet). */
@@ -379,9 +430,11 @@ export class ArtLibrary {
     }
     const pages = await this.pagesOf(index);
     const { whole, cut } = planCopy(pages, moves, 1);
-    const area = whole.reduce((sum, n) => sum + (pages[n].meta.size?.w ?? 0) * (pages[n].meta.size?.h ?? 0), 0)
-      + cut.reduce((sum, { page, frame }) => sum + pages[page].frames[frame].frame.w * pages[page].frames[frame].frame.h, 0);
-    return area * 4 * 4 / 3;
+    // A pixel takes 4 bytes, or 1 in the graphics chip's format (KTX2).
+    const bytes = (n: number) => this.formats().length && pages[n].meta.ktx2 ? 1 : 4;
+    const area = whole.reduce((sum, n) => sum + (pages[n].meta.size?.w ?? 0) * (pages[n].meta.size?.h ?? 0) * bytes(n), 0)
+      + cut.reduce((sum, { page, frame }) => sum + pages[page].frames[frame].frame.w * pages[page].frames[frame].frame.h * 4, 0);
+    return area * 4 / 3;
   }
 
   /**
@@ -392,27 +445,18 @@ export class ArtLibrary {
    */
   letGo(names: Iterable<string>): void {
     for (const name of names) {
-      for (const key of [...this.loading.keys()].filter((key) => key === `${name} in fights` || key.startsWith(`${name} move `))) {
+      for (const key of [...this.loading.keys()].filter((key) => key === name || key === `${name} in fights` || key.startsWith(`${name} move `))) {
         const art = this.loading.get(key)!;
+        // A sheet of one page, kept by the town too, isn't a copy: it stays.
         const release = (): void => {
-          if (this.loading.get(key) !== art) return;  // asked for again since
+          if (this.loading.get(key) !== art || (key === name && !this.copies.has(key))) return;  // asked for again since, or one page
           this.loading.delete(key);
           for (const source of this.copies.get(key) ?? []) source.destroy();
           this.copies.delete(key);
         };
+        // One still loading is let go of once it has loaded.
         if (this.copies.has(key)) release(); else void art.then(release);
       }
-      const art = this.loading.get(name);
-      if (art === undefined) continue;
-      const release = (): void => {
-        const pages = this.bigPages.get(name);
-        if (!pages || this.loading.get(name) !== art) return;  // one page, or asked for again since
-        this.bigPages.delete(name);
-        this.loading.delete(name);
-        for (const page of pages) void Assets.unload(page);
-      };
-      // One still loading is let go of once it has loaded.
-      if (this.bigPages.has(name)) release(); else void art.then(release);
     }
   }
 
@@ -479,12 +523,11 @@ export class ArtLibrary {
   private async load(name: string, index?: SheetJson): Promise<ItemArt> {
     if (name === STEADY_BUILDING) return this.loadSteady(name);
     const data = index ?? await this.data(`${name}.json`);
-    const pages = await this.pagesOf(data);
-    const sheets = await Promise.all(pages.map((page) => this.sheet(page)));
-    if (pages.length > 1) {
-      this.bigPages.set(name, pages.map((page) => `${this.base}/${page.meta.image}`));
+    if (data.meta.related_multi_packs?.length) {
+      // Several pages (the ground, a boss): each as it is, in the graphics chip's format when it has it.
+      return this.loadCopy(name, name, data, null, 1);
     }
-    return itemArt(name, data, sheets);
+    return itemArt(name, data, [await this.sheet(data)]);
   }
 
   /** A page of a whole sheet, kept on the graphics chip only when the renderer is known. */
@@ -501,35 +544,61 @@ export class ArtLibrary {
    * copied into pages of their own, packed as the exporter packs. One whole
    * page is decoded at a time, then let go.
    */
-  private async loadCopy(key: string, name: string, index: SheetJson, moves: number[]): Promise<ItemArt> {
-    const shrink = await this.shrink();
+  private async loadCopy(key: string, name: string, index: SheetJson, moves: number[] | null, size?: number): Promise<ItemArt> {
+    const shrink = size ?? await this.shrink();
     const pages = await this.pagesOf(index);
-    const { runs, whole, cut, packed } = planCopy(pages, moves, shrink);
-    const file = (n: number) => `${this.base}/${pages[n].meta.image}`;
+    try {
+      return await this.copy(key, name, index, pages, moves, shrink, this.formats().length > 0);
+    } catch (error) {
+      if (!this.formats().length || !pages.some((page) => page.meta.ktx2)) throw error;
+      // The graphics chip's format didn't load: the WebP pages, from now on.
+      console.warn(`${name}: no KTX2, its WebP instead:`, error);
+      this.chipFormats = [];
+      return this.copy(key, name, index, pages, moves, shrink, false);
+    }
+  }
+
+  private async copy(key: string, name: string, index: SheetJson, pages: SheetJson[], moves: number[] | null,
+    shrink: number, ktx2: boolean): Promise<ItemArt> {
+    const ready = (n: number) => ktx2 && Boolean(pages[n].meta.ktx2) || shrink === 1;
+    const { runs, whole, cut, packed } = planCopy(pages, moves, shrink, ready);
+    const file = (name: string) => `${this.base}/${name}`;
+    const half = shrink > 1;
     const recipe: Recipe = {
-      whole: whole.map(file),
+      whole: whole.map((n) => ({ file: file(pages[n].meta.image), ktx2: ktx2 && pages[n].meta.ktx2 ? file(pages[n].meta.ktx2) : undefined, half })),
       pages: cut.length > 0 ? packed.pages : [],
-      cuts: cut.map(({ page, frame }, i) => ({ file: file(page), from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
+      cuts: cut.map(({ page, frame }, i) => ({ file: file(pages[page].meta.image), from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
     };
-    const pictures = await this.make(recipe);
+    const made = await this.make(recipe);
     // The pictures keep their sizes, trims and anchors, in the sheet's own scale (half size for the biggest).
     const resolution = resolutionOf(index);
     // Plain pictures to PixiJS, the canvases too: a canvas source would be taken for somewhere to draw.
-    const sources: TextureSource[] = pictures.map((picture, n) => new ImageSource({ resource: picture as ImageBitmap,
-      resolution: n < whole.length ? resolution : resolution / shrink, autoGenerateMipmaps: true,
-      alphaMode: "premultiply-alpha-on-upload", label: `${key} ${n}` }));
+    const sources: TextureSource[] = made.map(({ picture, format, width, height }, n) => {
+      const label = `${key} ${n}`;
+      const r = resolution / (n < whole.length && !recipe.whole[n].ktx2 ? 1 : shrink);
+      return format
+        // Its colours are premultiplied already (pack_sheet.py), as PixiJS draws.
+        ? new CompressedSource({ resource: picture as Uint8Array[], format, width: width / r, height: height / r, resolution: r,
+          alphaMode: "premultiplied-alpha", label })
+        : new ImageSource({ resource: picture as ImageBitmap, resolution: r, autoGenerateMipmaps: true,
+          alphaMode: "premultiply-alpha-on-upload", label });
+    });
     const textures: Record<string, Texture> = {};
     whole.forEach((page, n) => {
+      const scale = recipe.whole[n].ktx2 ? 1 / shrink : 1;
       for (const [frame, data] of Object.entries(pages[page].frames)) {
-        textures[frame] = pictureTexture(sources[n], frame, data as Frame, data.frame, resolution);
+        textures[frame] = pictureTexture(sources[n], frame, data as Frame, { x: data.frame.x * scale, y: data.frame.y * scale }, resolution);
       }
     });
     cut.forEach(({ page, frame }, i) => {
       const at = packed.places[i];
       textures[frame] = pictureTexture(sources[whole.length + at.page], frame, pages[page].frames[frame] as Frame, at, resolution);
     });
-    this.chip?.keep(sources, () => this.make(recipe));
-    if (key.endsWith(" in fights") || key.includes(" move ")) {
+    // Where pages in the graphics chip's format are see-through: their mask files (the others' are read from them).
+    const masks: (Mask | null)[] = await Promise.all(whole.map((page, n) => recipe.whole[n].ktx2 && pages[page].meta.mask
+      ? maskFile(file(pages[page].meta.mask), 1 / shrink).catch(() => null) : null));
+    this.chip?.keep(sources, async () => (await this.make(recipe)).map(({ picture }) => picture), masks);
+    if (key === name || key.endsWith(" in fights") || key.includes(" move ")) {
       this.copies.set(key, sources);
     }
     const animations = new Map(runs.map(([run, frames]) => [run, frames.map((frame) => textures[frame] ?? Texture.EMPTY)]));
@@ -539,9 +608,36 @@ export class ArtLibrary {
     return new ItemArt(name, index.meta.fps ?? 30, animations, index.meta.bounds ?? {}, leftOut);
   }
 
-  /** A copy's pages (Recipe): the whole ones decoded, the cut pictures drawn into theirs, reading each page once. */
-  private async make(recipe: Recipe): Promise<CanvasImageSource[]> {
-    const whole = await Promise.all(recipe.whole.map((file) => this.decode(file)));
+  /**
+   * What the graphics chip reads that a KTX2 page can become (none without
+   * the renderer, or on WebGL 1, which can't be told a page's smallest
+   * copies stop early).
+   */
+  private formats(): TEXTURE_FORMATS[] {
+    this.chipFormats ??= this.renderer?.context.webGLVersion === 2
+      ? CHIP_FORMATS.filter(([extension]) => this.renderer!.context.extensions[extension]).map(([, format]) => format)
+      : [];
+    return this.chipFormats;
+  }
+
+  /**
+   * A page in the graphics chip's format, read off the page into one
+   * buffer per size (ktx2.worker.ts): sizes in whole blocks of 4, which
+   * WebGL takes, from the half-size copy with `half` (light art).
+   */
+  private async ktx2(file: string, half: boolean): Promise<Made> {
+    const read = await readKtx2(file, this.formats(), half);
+    if ("error" in read) throw new Error(read.error);
+    return { picture: read.levels, format: read.format as TEXTURE_FORMATS, width: read.width, height: read.height };
+  }
+
+  /** A copy's pages (Recipe): the whole ones read, the cut pictures drawn into theirs, reading each page once. */
+  private async make(recipe: Recipe): Promise<Made[]> {
+    const whole = await Promise.all(recipe.whole.map(async ({ file, ktx2, half }): Promise<Made> => {
+      if (ktx2) return this.ktx2(ktx2, half);
+      const picture = await this.decode(file);
+      return { picture, width: picture.width, height: picture.height };
+    }));
     const canvases = recipe.pages.map(({ w, h }) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
     const contexts = canvases.map((canvas) => canvas.getContext("2d"));
     if (contexts.some((context) => context === null)) {
@@ -554,7 +650,7 @@ export class ArtLibrary {
       }
       page.close();
     }
-    return [...whole, ...canvases];
+    return [...whole, ...canvases.map((picture) => ({ picture, width: picture.width, height: picture.height }))];
   }
 
   /** A page's picture, decoded on the page (as Safari's repair does), a few at a time. */

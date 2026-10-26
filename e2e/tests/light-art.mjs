@@ -38,7 +38,8 @@ async function copies(page) {
         sheetScale: Number(index.meta.scale),
         resolutions: [...new Set(sources.map((s) => s.resolution))],
         pixels: sources.reduce((sum, s) => sum + s.pixelWidth * s.pixelHeight, 0),
-        letGo: sources.every((s) => s.resource instanceof ImageData),
+        // Let go of: a picture's one blank pixel, or a page in the graphics chip's format's empty list.
+        letGo: sources.every((s) => s.resource instanceof ImageData || (Array.isArray(s.resource) && s.resource.length === 0)),
       };
     }
     return { arts: out, half: art.halfSize };
@@ -52,7 +53,22 @@ async function compare(page, name) {
     const renderer = art.chip.renderer;
     const town = await art.unit(name);
     const texture = town.pose(1, 2)[0];
-    const chip = renderer.texture.getPixels(texture);
+    // Drawn into a picture of its own and read back: a page in the graphics chip's format can't be read directly.
+    const { town: placedTown, view } = window.seHome.parts;
+    const placed = placedTown.items.find((p) => p.item.art === name);
+    const Picture = view.slots.get(placed).children.find((c) => c.texture && c.label !== "selected").constructor;
+    const sprite = new Picture([texture]);
+    const r = texture.source.resolution;
+    const drawn = renderer.extract.pixels({ target: sprite, resolution: r });
+    sprite.destroy();
+    // Just the picture (its trimmed box), out of the whole canvas drawn.
+    const chip = { width: Math.round(texture.frame.width * r), height: Math.round(texture.frame.height * r) };
+    chip.pixels = new Uint8ClampedArray(chip.width * chip.height * 4);
+    const left = Math.round((texture.trim?.x ?? 0) * r), top = Math.round((texture.trim?.y ?? 0) * r);
+    for (let y = 0; y < chip.height; y++) {
+      const from = ((top + y) * drawn.width + left) * 4;
+      chip.pixels.set(drawn.pixels.subarray(from, from + chip.width * 4), y * chip.width * 4);
+    }
     const cut = await art.cutouts(name, (runs) => [[runs[1 * 5 + 2][1][0]]]);
     const image = cut.runs[0][0].image;
     const canvas = Object.assign(document.createElement("canvas"), { width: chip.width, height: chip.height });
@@ -65,7 +81,7 @@ async function compare(page, name) {
       if (file[i] > 0 || chip.pixels[i] > 0) seen++;
       if (Math.abs(file[i] - chip.pixels[i]) > 2) off++;
     }
-    return { width: chip.width, height: chip.height, seen, off };
+    return { width: chip.width, height: chip.height, seen, off, compressed: texture.source.uploadMethodId === "compressed" };
   }, name);
 }
 
@@ -87,7 +103,8 @@ export default async function lightArt({ newPlayer }) {
   // The pictures on the chip are the sheet's.
   const before = await compare(page, ART[VULCANO]);
   assert.ok(before.seen > 100, "a picture with something in it");
-  assert.equal(before.off, 0, "every pixel the sheet's");
+  // Exactly the sheet's; in the graphics chip's format, within its compression (ktx2-art.mjs measures it).
+  assert.ok(before.off <= (before.compressed ? before.seen / 4 : 0), `every pixel the sheet's (${before.off} of ${before.seen} apart)`);
 
   // A tap on a dragon's picture still finds it (its map of see-through parts).
   const tapped = await page.evaluate((id) => {

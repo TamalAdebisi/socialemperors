@@ -1,0 +1,9 @@
+{
+  "name": "socialemperors-art-tools",
+  "private": true,
+  "description": "What tools/art/ktx2.mjs needs to write sheet pages as KTX2 (tools/art/pack_sheet.py --ktx2)",
+  "type": "module",
+  "dependencies": {
+    "ktx2-encoder": "0.6.0"
+  }
+}

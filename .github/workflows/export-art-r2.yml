@@ -7,7 +7,11 @@
 # the bucket are not made again), so running it again only adds what's
 # missing, on all 8; name items under
 # "Make these again" to redo a few, or tick "Make every sheet again" after a
-# change that affects them all.
+# change that affects them all. "Make big units again" redoes every item of
+# several pages (big units, bosses, the ground): packed move by move, with
+# each page's mask and KTX2 file too (CLIENT.md, "Light art"). Their pages
+# get new names (<page>.moves.webp), so the cache serves no old picture with
+# a new JSON file and nothing needs purging; the old pages stay unused.
 name: Export art to R2
 
 on:
@@ -21,6 +25,10 @@ on:
         description: Make these again (item names, like 1403_deco 1456_dragon_statue)
         type: string
         default: ""
+      big:
+        description: Make big units again (every item of several pages), move by move, with KTX2
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -63,6 +71,13 @@ jobs:
       - name: Install Pillow (the packer's image library)
         run: pip install Pillow==12.3.0
 
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install the KTX2 encoder (tools/art/ktx2.mjs)
+        run: npm ci --prefix tools/art
+
       - name: Keep FFDec between runs (tools/ffdec.sh builds it into .tools/)
         uses: actions/cache@v6
         with:
@@ -82,6 +97,14 @@ jobs:
             sleep $((15 * try))
           done
           for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
+          # Big units again: every item whose sheet names other pages, unless already packed move by move.
+          if [ "${{ inputs.big }}" = "true" ]; then
+            for json in art/sheets/*.json; do
+              grep -q '"related_multi_packs"' "$json" && ! grep -q '\.moves\.webp"' "$json" || continue
+              item="$(basename "$json" .json)"
+              rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json
+            done
+          fi
 
       - name: Make this machine's share of the sheets, sending them as they come
         # Every minute, what's finished goes to the bucket: it fills as the
@@ -92,7 +115,7 @@ jobs:
               --exclude "*.tmp" --cache-control "$CACHE" --only-show-errors || true
           done) &
           uploader=$!
-          SHARD=${{ matrix.shard }}/8 tools/export_art.sh
+          SHARD=${{ matrix.shard }}/8 KTX2=1 tools/export_art.sh
           kill "$uploader" || true
 
       - name: Upload the rest
@@ -106,6 +129,11 @@ jobs:
           compare="--size-only"
           if [ "${{ inputs.redo }}" = "true" ]; then compare=""; fi
           aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*.tmp" --cache-control "$CACHE" --no-progress
+          # Big units made again: their JSON files, whatever their size (their pages have new names).
+          if [ "${{ inputs.big }}" = "true" ]; then
+            aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" \
+              --cache-control "$CACHE" --no-progress
+          fi
           # The items made again, whatever their size.
           for item in $ITEMS; do
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \

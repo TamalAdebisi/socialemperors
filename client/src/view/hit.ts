@@ -6,7 +6,7 @@
 import { Sprite, ViewContainer, type Container } from "pixi.js";
 
 import type { Point } from "../rules/geometry.ts";
-import { maskedOpaque } from "./onChip.ts";
+import { maskedOpaque, onChipOnly } from "./onChip.ts";
 
 /** Pixels this see-through or more don't count as the picture. */
 const MIN_ALPHA = 32;
@@ -128,8 +128,8 @@ export function isOpaqueAt(picture: Container, screen: Point): boolean {
     return masked;
   }
   const source = texture.source.resource as CanvasImageSource | undefined;
-  if (!source) {
-    return true;
+  if (!source || onChipOnly(texture.source)) {
+    return true;  // nothing here to look at: its box will do
   }
   probe ??= makeProbe();
   if (!probe) {

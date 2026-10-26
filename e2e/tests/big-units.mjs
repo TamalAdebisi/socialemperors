@@ -120,7 +120,7 @@ export default async function bigUnits({ newPlayer }) {
   const over = await page.evaluate((name) => {
     const { art } = window.seHome.parts;
     return {
-      whole: art.loading.has(name) || art.bigPages.has(name),
+      whole: art.loading.has(name) || art.copies.has(name),
       fights: [...art.loading.keys()].some((key) => key === `${name} in fights` || key.startsWith(`${name} move `)),
       town: art.loading.has(`${name} in town`),
     };
