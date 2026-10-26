@@ -101,7 +101,7 @@ import { closePanel, Panel } from "./ui/panel.ts";
 import { WorldWindows } from "./ui/world.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { Camera } from "./view/camera.ts";
-import { denseScreen, drawingResolution, fastDrawing, setFastDrawing } from "./view/drawing.ts";
+import { denseScreen, drawingResolution, fastDrawing, lightArt, setFastDrawing, setLightArt, steadyFrames } from "./view/drawing.ts";
 import { drawThumbnail } from "./view/thumbnail.ts";
 import { TownView } from "./view/townView.ts";
 import { isTheirs } from "./rules/editing.ts";
@@ -188,6 +188,7 @@ async function start(): Promise<void> {
     // simulation when the browser suspends drawing in a hidden tab.
     sharedTicker: true,
   });
+  steadyFrames(app.ticker);  // at most 60 drawings a second (view/drawing.ts)
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${skinColour(town.skin).toString(16).padStart(6, "0")}`;
@@ -216,9 +217,11 @@ async function start(): Promise<void> {
     drawing: denseScreen() ? { fast: fastDrawing(), set: (on) => {
       setFastDrawing(on);
       app.renderer.resize(app.screen.width, app.screen.height, drawingResolution());
-    } } : undefined });
+    } } : undefined,
+    // Big units at half size (view/drawing.ts): as chosen, or as this page decided (ArtLibrary.plan).
+    light: { on: () => lightArt() ?? art.halfSize, set: setLightArt } });
 
-  const art = new ArtLibrary(settings.artUrl);
+  const art = new ArtLibrary(settings.artUrl, app.renderer);
   const view = new TownView(art, items, town);
   world.addChild(view.root);
   loop.add((ms) => view.tick(ms, camera.scale));

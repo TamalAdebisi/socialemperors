@@ -42,6 +42,8 @@ export interface HudActions {
   site?: { news: number; username: string; csrf: string; discord?: string };
   /** Fast drawing (view/drawing.ts): whether it's on, and switching it; in the Menu, on screens where it changes anything. */
   drawing?: { fast: boolean; set(on: boolean): void };
+  /** Light art (view/drawing.ts): whether big units are at half size on this page, and switching it for the next; in the Menu. */
+  light?: { on(): boolean; set(on: boolean): void };
 }
 
 /** How often the Everybody count is asked again while the game is in view, as the classic page's: two minutes. */
@@ -110,6 +112,8 @@ export function showHud(town: Town, actions: HudActions): Hud {
           <a role="menuitem" href="/">Empires</a>
           <button role="menuitemcheckbox" type="button" aria-checked="false" data-fast-drawing
             title="Draw the map with fewer pixels: smoother on a slower computer, a little softer" hidden>Fast drawing</button>
+          <button role="menuitemcheckbox" type="button" aria-checked="false" data-light-art
+            title="Big units from half-size pictures: a quarter of the memory, a little softer up close. From the next page opened" hidden>Light art</button>
           <form method="post" action="/logout"><input type="hidden" name="csrf"><button role="menuitem" type="submit">Log out</button></form>
         </span>
       </span>
@@ -190,7 +194,7 @@ export function showHud(town: Town, actions: HudActions): Hud {
     fullscreen.textContent = document.fullscreenElement ? "Exit full screen" : "Full screen";
   });
   if (actions.site) {
-    showSite(bar, actions.site, actions.drawing);
+    showSite(bar, actions.site, actions.drawing, actions.light);
   }
   document.body.appendChild(bar);
 
@@ -360,7 +364,8 @@ export function showMessage(text: string): void {
  * Discord when the server names one (a new tab too), and Log out (a form, as
  * the site's: another site can't log you out with a link).
  */
-function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>, drawing?: HudActions["drawing"]): void {
+function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>, drawing?: HudActions["drawing"],
+  light?: HudActions["light"]): void {
   const holder = bar.querySelector<HTMLElement>(".site")!;
   const button = holder.querySelector<HTMLButtonElement>(".site-button")!;
   const menu = holder.querySelector<HTMLElement>(".site-menu")!;
@@ -393,6 +398,23 @@ function showSite(bar: HTMLElement, site: NonNullable<HudActions["site"]>, drawi
       show();
     });
     fast.hidden = false;
+  }
+  // Ticked when this page's big units are at half size; switching it holds from the next page.
+  const lightArt = holder.querySelector<HTMLButtonElement>("[data-light-art]")!;
+  if (light) {
+    let on = false;
+    const show = () => lightArt.setAttribute("aria-checked", String(on));
+    // Read as the Menu opens: the page decides once its big units are known.
+    holder.querySelector(".site-button")!.addEventListener("click", () => {
+      on = light.on();
+      show();
+    });
+    lightArt.addEventListener("click", () => {
+      on = !on;
+      light.set(on);
+      show();
+    });
+    lightArt.hidden = false;
   }
   const news = (count: number) => {
     for (const badge of holder.querySelectorAll<HTMLElement>("[data-site-news], [data-friends-news]")) {

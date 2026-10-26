@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Texture } from "pixi.js";
-import { ItemArt, packShelves } from "./art.ts";
+import { ItemArt, packShelves, planCopy, type SheetJson } from "./art.ts";
 
 /** A sheet's animations as the exporter lists them: each label's frames in order, one picture per frame. */
 function sheet(labels: [string, number][]): ItemArt {
@@ -62,4 +62,49 @@ test("big units' town pictures are packed as the exporter packs them", () => {
   assert.deepEqual(big.places, [{ page: 0, x: 1, y: 1 }, { page: 0, x: 1, y: 2003 }, { page: 1, x: 1, y: 1 }]);
   assert.deepEqual(big.pages, [{ w: 3002, h: 4004 }, { w: 3002, h: 2002 }], "a second page when the first is full");
   assert.throws(() => packShelves([{ w: 4095, h: 10 }]), /bigger than a 4096 x 4096 page/);
+});
+
+/** A big unit's sheet: `moves` animations of 5 ways, a picture each, `perPage` pictures a page. */
+function bigSheet(moves: number, perPage: number): SheetJson[] {
+  const pictures = Array.from({ length: moves * 5 }, (_, i) => `big/${i}`);
+  const pages: SheetJson[] = [];
+  for (let start = 0; start < pictures.length; start += perPage) {
+    const frames = Object.fromEntries(pictures.slice(start, start + perPage).map((name, i) => [name,
+      { frame: { x: 10 * i, y: 0, w: 9, h: 7 }, sourceSize: { w: 20, h: 20 }, spriteSourceSize: { x: 1, y: 2, w: 9, h: 7 } }]));
+    pages.push({ frames, meta: { image: `big-${pages.length}.webp`, scale: "1", size: { w: 100, h: 7 } } } as SheetJson);
+  }
+  pages[0].animations = Object.fromEntries(pictures.map((name, i) => [`RUN${Math.floor(i / 5)}/${i % 5}`, [name]]));
+  return pages;
+}
+
+test("a big unit's copy keeps the moves asked for, every run in its place", () => {
+  // 8 animations (40 pictures), 10 a page: page 0 is standing and walking, page 1 attacking and dying...
+  const pages = bigSheet(8, 10);
+  const town = planCopy(pages, [0, 1], 1);
+  assert.equal(town.runs.length, 40, "every run, so the moves keep their numbers");
+  assert.deepEqual(town.runs[7], ["RUN1/2", ["big/7"]]);
+  assert.deepEqual(town.runs[10], ["RUN2/0", []], "attacking left out");
+  assert.deepEqual(town.whole, [0], "a page of nothing but standing and walking is used as it is");
+  assert.deepEqual(town.cut, []);
+
+  const fight = planCopy(pages, [0, 1, 2, 3, 6], 1);
+  assert.deepEqual(fight.whole, [0, 1]);
+  assert.deepEqual(fight.cut.map(({ page, frame }) => `${page} ${frame}`), ["3 big/30", "3 big/31", "3 big/32", "3 big/33", "3 big/34"],
+    "the special move is cut out of its page, which holds another");
+  assert.deepEqual(fight.runs[35], ["RUN7/0", []], "the other move on that page left out");
+
+  // Nearly all of a sheet: its pages as they are, every run they hold kept.
+  const most = planCopy(pages, [0, 1, 2, 3, 4, 5, 6], 1);
+  assert.deepEqual(most.whole, [0, 1, 2, 3]);
+  assert.deepEqual(most.cut, []);
+  assert.deepEqual(most.runs[35], ["RUN7/0", ["big/35"]], "a move not asked for, on a page used as it is");
+});
+
+test("at half size, every picture asked for is cut out, half as big", () => {
+  const pages = bigSheet(4, 10);
+  const half = planCopy(pages, [0, 1], 2);
+  assert.deepEqual(half.whole, []);
+  assert.equal(half.cut.length, 10);
+  assert.deepEqual(half.packed.places.slice(0, 2), [{ page: 0, x: 1, y: 1 }, { page: 0, x: 8, y: 1 }], "5 x 4 pictures for 9 x 7");
+  assert.throws(() => planCopy(pages.slice(0, 1), [0, 1, 2], 1), /missing/, "a page the sheet has lost");
 });

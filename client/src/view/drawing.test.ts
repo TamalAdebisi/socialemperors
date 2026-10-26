@@ -7,6 +7,9 @@ const globals = globalThis as unknown as { window: { devicePixelRatio?: number }
 
 function browser(devicePixelRatio: number | undefined, storage: Map<string, string> | null): void {
   globals.window = { devicePixelRatio };
+  // A computer: a mouse, which hovers (a touch screen draws fast unless told: drawingDefaults.test.ts).
+  (globalThis as unknown as { matchMedia: (query: string) => { matches: boolean } }).matchMedia =
+    (query) => ({ matches: query === "(hover: hover)" });
   globals.localStorage = storage === null
     ? { getItem: () => { throw new Error("refused"); }, setItem: () => { throw new Error("refused"); } }
     : { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => void storage.set(key, value) };

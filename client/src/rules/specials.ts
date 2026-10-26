@@ -181,6 +181,30 @@ const HATCH_FRAMES = 45;
 /** A special animation shows at least this long. */
 const SHOW_AT_LEAST = 45;
 
+/**
+ * The special animations (their numbers: 6 and up) a unit may play in a
+ * fight, by the table: its automatic moves, its buttons and LIMIT, its
+ * counted beats. A battle loads these with its pictures (ArtLibrary.fighter).
+ */
+export function specialAnimations(table: SpecialsTable, id: number): number[] {
+  const found = new Set<number>();
+  for (const entry of table.auto) {
+    if (entry.ids.includes(id)) [entry.animation, ...entry.animations ?? []].forEach((n) => found.add(n));
+  }
+  for (const entry of table.units) {
+    if (!entry.ids.includes(id)) continue;
+    entry.buttons.forEach((button) => found.add(button.animation));
+    if (entry.limit) found.add(entry.limit.animation);
+  }
+  for (const entry of table.beats ?? []) {
+    if (!entry.ids.includes(id)) continue;
+    for (const rule of entry.rules) {
+      if (rule.animation !== null) found.add(rule.animation);
+    }
+  }
+  return [...found].filter((n) => n > 0).sort((a, b) => a - b);
+}
+
 /** What the button bar shows for one button. */
 export interface ButtonView {
   slot: number;

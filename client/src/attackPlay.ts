@@ -35,7 +35,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
-import { drawingResolution } from "./view/drawing.ts";
+import { drawingResolution, steadyFrames } from "./view/drawing.ts";
 import { TownView } from "./view/townView.ts";
 
 const SPEEDS = [1, 2, 3];
@@ -106,6 +106,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
     resizeTo: window, background: skinColour(enemy.skin), resolution: drawingResolution(), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
+  steadyFrames(app.ticker);  // at most 60 drawings a second (view/drawing.ts)
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${skinColour(enemy.skin).toString(16).padStart(6, "0")}`;
@@ -121,7 +122,7 @@ export async function playAttack(settings: PageSettings, server: GameServer, vic
 
   const commands = new CommandSender(settings, { clock: () => mine.timestamp, onFailure: (reason) => showStatus(reason) });
   const sound = new Sound(settings.assetsUrl, town.race, "ASSAULTS.mp3");
-  const art = new ArtLibrary(settings.artUrl);
+  const art = new ArtLibrary(settings.artUrl, app.renderer);
   const name = String((theirs.playerInfo as { name?: string }).name ?? "Their town");
 
   // The attack (or the spy visit) counts from here, as the Flash client's button; then the start corner, before the town loads.

@@ -24,7 +24,7 @@ import {
 } from "../rules/geometry.ts";
 import { footprintSize } from "../rules/editing.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
-import { anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
+import { TOWN_MOVES, anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { InfoPopup, PROGRESS, ProgressBar, loadBars } from "./bars.ts";
 import { buildingLoopLength, buildingStateCount, buildingStateFrames, pouringTower } from "./buildingAnimation.ts";
 import { scaffoldArt, scaffoldSprite } from "./construction.ts";
@@ -319,6 +319,8 @@ export class TownView {
   async build(progress: (done: number, total: number) => void): Promise<{ missing: string[] }> {
     const missing = new Set<string>();
     this.built = true;
+    // Whether big units' pictures fit at full size (ArtLibrary.plan), before any is cut down.
+    await this.art.plan(this.town.items.filter((placed) => placed.item.isUnit).map((placed) => ({ art: placed.item.art, moves: TOWN_MOVES })));
     const jobs: Promise<void>[] = [this.buildGround(missing)];
 
     // Back to front. Array.sort keeps the save's order for equal depths.

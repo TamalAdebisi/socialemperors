@@ -38,6 +38,19 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Light art (26 October).** The owner saw a tournament take 11 to 12
+  GB, their town slow with newer dragons, and a friend's empire fail to
+  open on phones. Big units' pictures now stay on the graphics chip only
+  (`view/onChip.ts`, with a see-through map for taps); fights load what
+  fighters do (`ArtLibrary.fighter`); big units go half size on phones or
+  past a 1.5 GB budget (Light art in the Menu); Fast drawing is on by
+  default on phones; at most 60 drawings a second. The Red Djinn Dragon
+  Rider in a fight: 674 MB became 344, 128 light. See CLIENT.md, "Light
+  art", and DECISIONS.md (26 October). Test `e2e/tests/light-art.mjs`.
+  **Next (owner-agreed, fix 6):** store the art as the graphics chip
+  keeps it (KTX2, UASTC: four times smaller there, about twice the
+  download for big units) and packed move by move; needs the art made
+  again in the bucket by the owner's workflow run.
 - **Big units keep only their town pictures (21 October).** The owner's
   Blue Fire Djinn Dragon made the map unplayably slow: a newer big
   dragon's whole sheet is about 250 MB decoded. The map now keeps a copy

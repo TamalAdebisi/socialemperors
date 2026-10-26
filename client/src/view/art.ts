@@ -1,11 +1,18 @@
 // Loads the sprite sheets tools/export_art.sh makes from the game's Flash
 // files: <img_name>.json and .webp (and <img_name>-1.json... for big items),
-// each loaded once and only when something on screen needs it.
+// each loaded once and only when something on screen needs it. A big unit's
+// sheet (several pages) is cut down to the moves shown, at half size on a
+// phone or past the memory budget; given the renderer, every page goes to
+// the graphics chip at once and its own copy is let go (view/onChip.ts).
+// CLIENT.md, "Big units in town" and "Light art".
 
-import { Assets, CanvasSource, Spritesheet, Texture, isSafari, type SpritesheetData } from "pixi.js";
+import { Assets, ImageSource, Rectangle, Spritesheet, Texture, isSafari,
+  type Renderer, type SpritesheetData, type SpritesheetFrameData, type TextureSource } from "pixi.js";
 
 import type { Bounds } from "../rules/geometry.ts";
 import { STEADY_BUILDING } from "./buildingAnimation.ts";
+import { lightArt } from "./drawing.ts";
+import { OnChip } from "./onChip.ts";
 
 interface SheetMeta {
   image: string;
@@ -14,7 +21,8 @@ interface SheetMeta {
   related_multi_packs?: string[];
 }
 
-interface SheetJson extends SpritesheetData {
+/** A sheet page's JSON, as tools/art/pack_sheet.py writes it. */
+export interface SheetJson extends SpritesheetData {
   animations?: Record<string, string[]>;
   meta: SpritesheetData["meta"] & SheetMeta;
 }
@@ -30,12 +38,16 @@ export class ItemArt {
   private readonly animations: Map<string, Texture[]>;
   private readonly bounds: Record<string, Bounds>;
   private order: Texture[][] | null = null;
+  /** The moves (animation numbers) a big unit's copy left out (ArtLibrary.fighter): loaded when one plays. */
+  readonly leftOut: ReadonlySet<number>;
 
-  constructor(name: string, fps: number, animations: Map<string, Texture[]>, bounds: Record<string, Bounds>) {
+  constructor(name: string, fps: number, animations: Map<string, Texture[]>, bounds: Record<string, Bounds>,
+    leftOut: ReadonlySet<number> = new Set()) {
     this.name = name;
     this.fps = fps;
     this.animations = animations;
     this.bounds = bounds;
+    this.leftOut = leftOut;
   }
 
   /** The pictures of an animation ("QUIETO/3", "frame/0"), one per frame at fps. */
@@ -132,18 +144,161 @@ export class ItemArt {
   }
 }
 
-/** A unit's picture runs a town shows: standing and walking (animations 0 and 1), 5 ways each. */
-const TOWN_RUNS = 10;
+/** A unit's drawn ways: animation n facing way k is the sheet's (5n + k)th picture run (ItemArt.numbered). */
+const WAYS = 5;
+/** The moves (animation numbers) a town shows: standing and walking. */
+export const TOWN_MOVES = [0, 1];
+/** The moves every fighter may show: standing, walking, attacking, dying. Special moves are each unit's own. */
+export const FIGHT_MOVES = [0, 1, 2, 3];
+/**
+ * Above this many bytes of big units' pictures at full size, a page keeps
+ * them at half size (a quarter of the memory): a graphics chip with more
+ * than this to hold slows everything down (CLIENT.md, "Light art").
+ */
+export const BUDGET = 1.5 * 2 ** 30;
+/** Pages decoded at once: a whole page is up to 64 MB while it is read. */
+const DECODES = 2;
+
+/** A picture cut out of a sheet, for the windows in HTML: its box around the anchor, in the game's pixels. */
+export interface Cutout {
+  image: ImageBitmap;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+type Frame = SpritesheetFrameData & { anchor?: { x: number; y: number } };
+
+/** Where a cut picture goes in a copy's pages, at its size there (`scale`). */
+interface Cut {
+  file: string;
+  from: { x: number; y: number; w: number; h: number };
+  to: { page: number; x: number; y: number };
+  scale: number;
+}
+
+/** How to make a copy's pages: the sheet's pages used as they are, then pages of cut pictures. */
+interface Recipe {
+  whole: string[];
+  pages: { w: number; h: number }[];
+  cuts: Cut[];
+}
+
+/**
+ * Above this share of a sheet's pictures (by area), a copy at full size
+ * uses the pages as they are: copying would save little, and costs time.
+ */
+const WHOLE_SHARE = 0.75;
+
+/**
+ * Which of a unit's pictures a copy keeps, for the moves given, and where:
+ * a page whose every picture is wanted is used as it is (a sheet packed
+ * move by move has those), as is every page with one when nearly all are
+ * wanted (WHOLE_SHARE); the other wanted pictures are cut out and packed
+ * onto pages of their own, `shrink` times smaller. The copy keeps every
+ * picture run, in its place so the moves keep their numbers: those it has
+ * all the pictures of, the others empty.
+ */
+export function planCopy(pages: SheetJson[], moves: number[], shrink: number):
+  { runs: [string, string[]][]; whole: number[]; cut: { page: number; frame: string }[]; packed: ReturnType<typeof packShelves> } {
+  const wanted = new Set(moves);
+  const all = Object.entries(pages[0]?.animations ?? {});
+  const needed = new Set(all.flatMap(([, frames], i) => wanted.has(Math.floor(i / WAYS)) ? frames : []));
+  const area = (page: SheetJson, only?: Set<string>) => Object.entries(page.frames)
+    .reduce((sum, [frame, { frame: { w, h } }]) => sum + (only && !only.has(frame) ? 0 : w * h), 0);
+  const most = shrink === 1 && pages.reduce((sum, page) => sum + area(page, needed), 0) > WHOLE_SHARE * pages.reduce((sum, page) => sum + area(page), 0);
+  const whole = shrink !== 1 ? [] : pages.map((page, n) => ({ frames: Object.keys(page.frames), n }))
+    .filter(({ frames }) => frames.length > 0 && (most ? frames.some((frame) => needed.has(frame)) : frames.every((frame) => needed.has(frame))))
+    .map(({ n }) => n);
+  const cut = pages.flatMap((page, n) => whole.includes(n) ? [] : Object.keys(page.frames)
+    .filter((frame) => needed.has(frame)).map((frame) => ({ page: n, frame })));
+  const kept = new Set([...whole.flatMap((n) => Object.keys(pages[n].frames)), ...cut.map(({ frame }) => frame)]);
+  if ([...needed].some((frame) => !kept.has(frame))) {
+    throw new Error("a picture of these moves is missing from the sheet");
+  }
+  const packed = packShelves(cut.map(({ page, frame }) => {
+    const { w, h } = pages[page].frames[frame].frame;
+    return { w: Math.ceil(w / shrink), h: Math.ceil(h / shrink) };
+  }));
+  const runs = all.map(([run, frames]): [string, string[]] => [run, frames.every((frame) => kept.has(frame)) ? frames : []]);
+  return { runs, whole, cut, packed };
+}
+
+/** The sheet's own scale: 0.5 when its pictures are stored at half size (the biggest gods). */
+function resolutionOf(page: SheetJson): number {
+  return parseFloat(String(page.meta.scale ?? "1")) || 1;
+}
+
+/**
+ * A picture as PixiJS's Spritesheet makes it, in the game's pixels, wherever
+ * it now is (`at`, in `source`'s own pixels, which may be fewer: a copy at
+ * half size). `resolution`: the sheet's own.
+ */
+function pictureTexture(source: TextureSource, label: string, data: Frame, at: { x: number; y: number }, resolution: number): Texture {
+  const r = resolution;
+  const w = Math.floor(data.frame.w) / r, h = Math.floor(data.frame.h) / r;
+  const size = data.trimmed !== false && data.sourceSize ? data.sourceSize : data.frame;
+  const trim = data.trimmed !== false && data.spriteSourceSize
+    ? new Rectangle(Math.floor(data.spriteSourceSize.x) / r, Math.floor(data.spriteSourceSize.y) / r, w, h) : undefined;
+  return new Texture({
+    source,
+    frame: new Rectangle(at.x / source.resolution, at.y / source.resolution, w, h),
+    orig: new Rectangle(0, 0, Math.floor(size.w) / r, Math.floor(size.h) / r),
+    trim,
+    rotate: data.rotated ? 2 : 0,
+    defaultAnchor: data.anchor,
+    label,
+  });
+}
+
+/** Lets only so many jobs run at once; the others wait their turn. */
+class Turns {
+  private running = 0;
+  private readonly waiting: (() => void)[] = [];
+  private readonly most: number;
+
+  constructor(most: number) {
+    this.most = most;
+  }
+
+  async run<T>(job: () => Promise<T>): Promise<T> {
+    if (this.running >= this.most) {
+      await new Promise<void>((go) => this.waiting.push(go));
+    }
+    this.running++;
+    try {
+      return await job();
+    } finally {
+      this.running--;
+      this.waiting.shift()?.();
+    }
+  }
+}
 
 export class ArtLibrary {
   private readonly base: string;
   private readonly loading = new Map<string, Promise<ItemArt | null>>();
+  private readonly sheets = new Map<string, Promise<SheetJson>>();
   /** The pages of each whole sheet of several pages loaded, to let go of (letGo). */
   private readonly bigPages = new Map<string, string[]>();
+  /** The pages of each fight's copy of a big unit, to let go of (letGo). */
+  private readonly copies = new Map<string, TextureSource[]>();
+  /** Keeps pages on the graphics chip only, given the renderer (view/onChip.ts). */
+  private readonly chip: OnChip | null;
+  private readonly decoding = new Turns(DECODES);
+  /** How many times smaller big units' copies are (plan): decided once for the page. */
+  private shrinking: Promise<number> | null = null;
+  /** Whether this page's big units are at half size, once decided (the Menu's Light art shows it). */
+  halfSize = false;
 
-  /** `base`: where the sheets are (the page's artUrl). */
-  constructor(base: string) {
+  /**
+   * `base`: where the sheets are (the page's artUrl). `renderer`: the
+   * page's, for its pictures to be kept on the graphics chip only.
+   */
+  constructor(base: string, renderer?: Renderer) {
     this.base = base.replace(/\/$/, "");
+    this.chip = renderer?.name === "webgl" ? new OnChip(renderer) : null;
   }
 
   /** An item's art, or null when there is no sheet for it (yet). */
@@ -156,27 +311,97 @@ export class ArtLibrary {
    * (and villagers working, whose sheets are small). A sheet of several
    * pages, a big dragon's or god's, is cut down to those pictures, copied
    * into pages of their own: the Red Djinn Dragon Rider's whole sheet is
-   * 247 MB decoded (a knight's is 1), its standing and walking 50. A
-   * battle loads the whole sheet (get). CLIENT.md, "Big units in town".
+   * 247 MB decoded (a knight's is 1), its standing and walking 50. CLIENT.md,
+   * "Big units in town".
    */
   unit(name: string): Promise<ItemArt | null> {
-    return this.cached(`${name} in town`, async () => {
-      const index = await this.data(`${name}.json`);
-      if (!index.meta.related_multi_packs?.length) {
-        return this.cached(name, () => this.load(name, index));  // one page: the whole sheet, as everything else has it
-      }
-      return this.loadTownUnit(name, index);
-    });
+    return this.cut(`${name} in town`, name, TOWN_MOVES);
   }
 
   /**
-   * Lets go of the whole sheets of several pages loaded for these items,
-   * after a raid at home: the town's map has its own smaller copies
-   * (unit), and a big unit's whole sheet takes hundreds of MB. Asked for
-   * again, a sheet loads again.
+   * A unit's art for a fight: a big one's cut down to what fighters do
+   * (FIGHT_MOVES) and `specials`, its own special moves
+   * (rules/specials.ts). A special move left out is loaded when it plays
+   * (move). CLIENT.md, "Light art".
+   */
+  fighter(name: string, specials: number[] = []): Promise<ItemArt | null> {
+    return this.cut(`${name} in fights`, name, [...FIGHT_MOVES, ...specials]);
+  }
+
+  /** One more move of a big unit's, which its fight copy left out (ItemArt.leftOut). */
+  move(name: string, animation: number): Promise<ItemArt | null> {
+    return this.cut(`${name} move ${animation}`, name, [animation]);
+  }
+
+  /**
+   * Decides, before a town or a fight is drawn, whether big units' copies
+   * are kept at half size: when the player chose it, on a touch screen or a
+   * computer with little memory (drawing.ts, lightArt), or when their
+   * pictures at full size would pass BUDGET. `units`: each unit's art and
+   * the moves it will show. The page keeps to the first answer about big
+   * units (a tournament's field, with none, leaves it to its armies).
+   */
+  plan(units: { art: string; moves: number[] }[]): Promise<void> {
+    if (this.shrinking) {
+      return this.shrinking.then(() => {});
+    }
+    const chosen = lightArt();
+    if (chosen !== null) {
+      this.shrinking = Promise.resolve(chosen ? 2 : 1);
+      return Promise.resolve();
+    }
+    const seen = new Set<string>();
+    const sizes = Promise.all(units.filter(({ art }) => !seen.has(art) && seen.add(art))
+      .map(({ art, moves }) => this.fullSize(art, moves).catch(() => 0)))
+      .then((all) => all.reduce((sum, size) => sum + size, 0));
+    const deciding = sizes.then((bytes) => bytes > BUDGET ? 2 : 1);
+    this.shrinking = deciding;
+    return sizes.then((bytes) => {
+      if (bytes === 0 && this.shrinking === deciding) {
+        this.shrinking = null;  // no big unit here: the next plan decides
+      }
+    });
+  }
+
+  /** The copy's size: as planned, or else as lightArt says (or full size). */
+  private async shrink(): Promise<number> {
+    this.shrinking ??= Promise.resolve(lightArt() ? 2 : 1);
+    const shrink = await this.shrinking;
+    this.halfSize = shrink > 1;
+    return shrink;
+  }
+
+  /** What a big unit's pictures for these moves take on the graphics chip at full size (with their smaller copies): 0 for a sheet of one page. */
+  private async fullSize(name: string, moves: number[]): Promise<number> {
+    const index = await this.data(`${name}.json`);
+    if (!index.meta.related_multi_packs?.length) {
+      return 0;
+    }
+    const pages = await this.pagesOf(index);
+    const { whole, cut } = planCopy(pages, moves, 1);
+    const area = whole.reduce((sum, n) => sum + (pages[n].meta.size?.w ?? 0) * (pages[n].meta.size?.h ?? 0), 0)
+      + cut.reduce((sum, { page, frame }) => sum + pages[page].frames[frame].frame.w * pages[page].frames[frame].frame.h, 0);
+    return area * 4 * 4 / 3;
+  }
+
+  /**
+   * Lets go of what was loaded for these items' fights, after a raid at
+   * home: whole sheets of several pages and fights' copies. The town's map
+   * has its own copies (unit), and a big unit's fight art takes hundreds of
+   * MB. Asked for again, it loads again.
    */
   letGo(names: Iterable<string>): void {
     for (const name of names) {
+      for (const key of [...this.loading.keys()].filter((key) => key === `${name} in fights` || key.startsWith(`${name} move `))) {
+        const art = this.loading.get(key)!;
+        const release = (): void => {
+          if (this.loading.get(key) !== art) return;  // asked for again since
+          this.loading.delete(key);
+          for (const source of this.copies.get(key) ?? []) source.destroy();
+          this.copies.delete(key);
+        };
+        if (this.copies.has(key)) release(); else void art.then(release);
+      }
       const art = this.loading.get(name);
       if (art === undefined) continue;
       const release = (): void => {
@@ -188,6 +413,43 @@ export class ArtLibrary {
       };
       // One still loading is let go of once it has loaded.
       if (this.bigPages.has(name)) release(); else void art.then(release);
+    }
+  }
+
+  /**
+   * Pictures cut out of an item's sheet as small bitmaps of their own, for
+   * the windows in HTML (a shop card's picture, the units book's moving
+   * one): a page decoded at a time and let go, nothing put on the graphics
+   * chip. `pick` chooses the frames from the sheet's picture runs, in order.
+   */
+  async cutouts(name: string, pick: (runs: [string, string[]][]) => string[][]): Promise<{ fps: number; runs: Cutout[][] } | null> {
+    try {
+      const index = await this.data(`${name}.json`);
+      const chosen = pick(Object.entries(index.animations ?? {}));
+      const needed = new Set(chosen.flat());
+      const cutouts = new Map<string, Cutout>();
+      for (const page of await this.pagesOf(index)) {
+        const mine = Object.entries(page.frames).filter(([frame]) => needed.has(frame)) as [string, Frame][];
+        if (mine.length === 0) continue;
+        const bitmap = await this.decode(`${this.base}/${page.meta.image}`);
+        const r = resolutionOf(page);
+        try {
+          for (const [frame, data] of mine) {
+            const { x, y, w, h } = data.frame;
+            const size = data.sourceSize ?? data.frame;
+            const trim = data.spriteSourceSize ?? { x: 0, y: 0 };
+            const anchor = data.anchor ?? { x: 0, y: 0 };
+            cutouts.set(frame, { image: await createImageBitmap(bitmap, x, y, Math.max(1, w), Math.max(1, h)),
+              x: (trim.x - anchor.x * size.w) / r, y: (trim.y - anchor.y * size.h) / r, width: w / r, height: h / r });
+          }
+        } finally {
+          bitmap.close();
+        }
+      }
+      return { fps: index.meta.fps ?? 30, runs: chosen.map((run) => run.flatMap((frame) => cutouts.get(frame) ?? [])) };
+    } catch (error) {
+      console.warn(`No pictures for ${name}:`, error);
+      return null;
     }
   }
 
@@ -203,59 +465,105 @@ export class ArtLibrary {
     return art;
   }
 
+  /** A unit's art cut down to some moves (`key`: unit, fighter, move): the whole sheet when it has one page. */
+  private cut(key: string, name: string, moves: number[]): Promise<ItemArt | null> {
+    return this.cached(key, async () => {
+      const index = await this.data(`${name}.json`);
+      if (!index.meta.related_multi_packs?.length) {
+        return this.cached(name, () => this.load(name, index));  // one page: the whole sheet, as everything else has it
+      }
+      return this.loadCopy(key, name, index, moves);
+    });
+  }
+
   private async load(name: string, index?: SheetJson): Promise<ItemArt> {
     if (name === STEADY_BUILDING) return this.loadSteady(name);
     const data = index ?? await this.data(`${name}.json`);
-    const first = { data, sheet: await sheetOf(data, `${this.base}/${data.meta.image}`) };
-    const others = await Promise.all((first.data.meta.related_multi_packs ?? []).map((file) => this.page(file)));
-    if (others.length > 0) {
-      this.bigPages.set(name, [first, ...others].map((page) => `${this.base}/${page.data.meta.image}`));
+    const pages = await this.pagesOf(data);
+    const sheets = await Promise.all(pages.map((page) => this.sheet(page)));
+    if (pages.length > 1) {
+      this.bigPages.set(name, pages.map((page) => `${this.base}/${page.meta.image}`));
     }
-    return itemArt(name, first.data, [first.sheet, ...others.map((page) => page.sheet)]);
+    return itemArt(name, data, sheets);
+  }
+
+  /** A page of a whole sheet, kept on the graphics chip only when the renderer is known. */
+  private async sheet(data: SheetJson): Promise<Spritesheet> {
+    const image = `${this.base}/${data.meta.image}`;
+    const sheet = await sheetOf(data, image);
+    this.chip?.keep([sheet.textureSource], async () => [await this.decode(image)]);
+    return sheet;
   }
 
   /**
-   * A big unit's standing and walking pictures, copied pixel for pixel
-   * from its whole pages into pages of their own, packed as the exporter
-   * packs (packShelves). One whole page is decoded at a time, then let go.
+   * A big unit's pictures for some moves (planCopy), at the page's size
+   * (plan): its pages that hold only those used as they are, the others'
+   * copied into pages of their own, packed as the exporter packs. One whole
+   * page is decoded at a time, then let go.
    */
-  private async loadTownUnit(name: string, index: SheetJson): Promise<ItemArt> {
-    const runs = Object.entries(index.animations ?? {}).slice(0, TOWN_RUNS);
-    const needed = new Set(runs.flatMap(([, frames]) => frames));
-    const pages = [index, ...await Promise.all((index.meta.related_multi_packs ?? []).map((file) => this.data(file)))];
-    const pictures = pages.flatMap((page) => Object.entries(page.frames)
-      .filter(([frame]) => needed.has(frame))
-      .map(([frame, data]) => ({ frame, data, page })));
-    if (pictures.length < needed.size) throw new Error(`${name}: a standing or walking picture is missing`);
-    const packed = packShelves(pictures.map(({ data }) => data.frame));
-    const canvases = packed.pages.map(({ w, h }) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
-    const contexts = canvases.map((canvas) => canvas.getContext("2d")!);
-    for (const page of pages) {
-      const mine = pictures.map((picture, i) => ({ ...picture, at: packed.places[i] })).filter((picture) => picture.page === page);
-      if (mine.length === 0) continue;
-      const response = await fetch(`${this.base}/${page.meta.image}`);
-      if (!response.ok) throw new Error(`${page.meta.image}: ${response.status}`);
-      const bitmap = await createImageBitmap(await response.blob());
-      for (const { data: { frame }, at } of mine) {
-        contexts[at.page].drawImage(bitmap, frame.x, frame.y, frame.w, frame.h, at.x, at.y, frame.w, frame.h);
-      }
-      bitmap.close();
-    }
+  private async loadCopy(key: string, name: string, index: SheetJson, moves: number[]): Promise<ItemArt> {
+    const shrink = await this.shrink();
+    const pages = await this.pagesOf(index);
+    const { runs, whole, cut, packed } = planCopy(pages, moves, shrink);
+    const file = (n: number) => `${this.base}/${pages[n].meta.image}`;
+    const recipe: Recipe = {
+      whole: whole.map(file),
+      pages: cut.length > 0 ? packed.pages : [],
+      cuts: cut.map(({ page, frame }, i) => ({ file: file(page), from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
+    };
+    const pictures = await this.make(recipe);
     // The pictures keep their sizes, trims and anchors, in the sheet's own scale (half size for the biggest).
-    const resolution = parseFloat(String(index.meta.scale ?? "1")) || 1;
-    const sheets = await Promise.all(canvases.map(async (canvas, n) => {
-      const frames = Object.fromEntries(pictures.flatMap(({ frame, data }, i) => {
-        const at = packed.places[i];
-        return at.page === n ? [[frame, { ...data, frame: { ...data.frame, x: at.x, y: at.y } }]] : [];
-      }));
-      const source = new CanvasSource({ resource: canvas, resolution, autoGenerateMipmaps: true });
-      const sheet = new Spritesheet(new Texture({ source }), {
-        frames, meta: { image: `${name} in town ${n}`, size: { w: canvas.width, h: canvas.height }, scale: String(resolution) },
-      });
-      await sheet.parse();
-      return sheet;
-    }));
-    return itemArt(name, { ...index, animations: Object.fromEntries(runs) }, sheets);
+    const resolution = resolutionOf(index);
+    // Plain pictures to PixiJS, the canvases too: a canvas source would be taken for somewhere to draw.
+    const sources: TextureSource[] = pictures.map((picture, n) => new ImageSource({ resource: picture as ImageBitmap,
+      resolution: n < whole.length ? resolution : resolution / shrink, autoGenerateMipmaps: true,
+      alphaMode: "premultiply-alpha-on-upload", label: `${key} ${n}` }));
+    const textures: Record<string, Texture> = {};
+    whole.forEach((page, n) => {
+      for (const [frame, data] of Object.entries(pages[page].frames)) {
+        textures[frame] = pictureTexture(sources[n], frame, data as Frame, data.frame, resolution);
+      }
+    });
+    cut.forEach(({ page, frame }, i) => {
+      const at = packed.places[i];
+      textures[frame] = pictureTexture(sources[whole.length + at.page], frame, pages[page].frames[frame] as Frame, at, resolution);
+    });
+    this.chip?.keep(sources, () => this.make(recipe));
+    if (key.endsWith(" in fights") || key.includes(" move ")) {
+      this.copies.set(key, sources);
+    }
+    const animations = new Map(runs.map(([run, frames]) => [run, frames.map((frame) => textures[frame] ?? Texture.EMPTY)]));
+    // The moves it hasn't got: loaded when one plays (move).
+    const all = Object.values(index.animations ?? {});
+    const leftOut = new Set(runs.flatMap(([, frames], i) => frames.length === 0 && all[i].length > 0 ? [Math.floor(i / WAYS)] : []));
+    return new ItemArt(name, index.meta.fps ?? 30, animations, index.meta.bounds ?? {}, leftOut);
+  }
+
+  /** A copy's pages (Recipe): the whole ones decoded, the cut pictures drawn into theirs, reading each page once. */
+  private async make(recipe: Recipe): Promise<CanvasImageSource[]> {
+    const whole = await Promise.all(recipe.whole.map((file) => this.decode(file)));
+    const canvases = recipe.pages.map(({ w, h }) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
+    const contexts = canvases.map((canvas) => canvas.getContext("2d"));
+    if (contexts.some((context) => context === null)) {
+      throw new Error("no room for another canvas");
+    }
+    for (const file of new Set(recipe.cuts.map((cut) => cut.file))) {
+      const page = await this.decode(file);
+      for (const { from, to, scale } of recipe.cuts.filter((cut) => cut.file === file)) {
+        contexts[to.page]!.drawImage(page, from.x, from.y, from.w, from.h, to.x, to.y, from.w * scale, from.h * scale);
+      }
+      page.close();
+    }
+    return [...whole, ...canvases];
+  }
+
+  /** A page's picture, decoded on the page (as Safari's repair does), a few at a time. */
+  private decode(file: string): Promise<ImageBitmap> {
+    return this.decoding.run(async () => {
+      const response = await fetch(file);
+      if (!response.ok) throw new Error(`${file}: ${response.status}`);
+      return createImageBitmap(await response.blob());
+    });
   }
 
   /** This fixed pose needs two image pages, not the export's 100 decoded pages. */
@@ -264,27 +572,38 @@ export class ArtLibrary {
     const animations = Object.fromEntries(Object.entries(index.animations ?? {}).map(([label, frames]) => [label, frames.slice(0, 1)]));
     const needed = new Set(Object.values(animations).flat());
     if (needed.size === 0) throw new Error(`${name}: no idle frames`);
-    const pages = [index, ...await Promise.all((index.meta.related_multi_packs ?? []).map((file) => this.data(file)))];
+    const pages = await this.pagesOf(index);
     const selected = pages.map((page) => ({ ...page, animations: undefined,
       frames: Object.fromEntries(Object.entries(page.frames).filter(([frame]) => needed.has(frame))) }))
       .filter((page) => Object.keys(page.frames).length > 0);
     const found = new Set(selected.flatMap((page) => Object.keys(page.frames)));
     if ([...needed].some((frame) => !found.has(frame))) throw new Error(`${name}: missing idle frame`);
-    const sheets = await Promise.all(selected.map((page) => sheetOf(page, `${this.base}/${page.meta.image}`)));
+    const sheets = await Promise.all(selected.map((page) => this.sheet(page)));
     return itemArt(name, { ...index, animations }, sheets);
   }
 
-  private async data(file: string): Promise<SheetJson> {
-    const response = await fetch(`${this.base}/${file}`);
-    if (!response.ok) {
-      throw new Error(`${file}: ${response.status}`);
-    }
-    return await response.json() as SheetJson;
+  /** An item's sheet's pages: its first, then the others it names. */
+  private async pagesOf(index: SheetJson): Promise<SheetJson[]> {
+    return [index, ...await Promise.all((index.meta.related_multi_packs ?? []).map((file) => this.data(file)))];
   }
 
-  private async page(file: string): Promise<{ data: SheetJson; sheet: Spritesheet }> {
-    const data = await this.data(file);
-    return { data, sheet: await sheetOf(data, `${this.base}/${data.meta.image}`) };
+  /** A sheet's JSON, fetched once (a big unit's town, fight and shop pictures all read it). */
+  private data(file: string): Promise<SheetJson> {
+    let sheet = this.sheets.get(file);
+    if (!sheet) {
+      sheet = (async () => {
+        const response = await fetch(`${this.base}/${file}`);
+        if (!response.ok) {
+          throw new Error(`${file}: ${response.status}`);
+        }
+        return await response.json() as SheetJson;
+      })();
+      sheet.catch(() => {
+        if (this.sheets.get(file) === sheet) this.sheets.delete(file);  // asked again, tried again
+      });
+      this.sheets.set(file, sheet);
+    }
+    return sheet;
   }
 }
 

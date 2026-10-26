@@ -30,7 +30,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
-import { drawingResolution } from "./view/drawing.ts";
+import { drawingResolution, steadyFrames } from "./view/drawing.ts";
 
 const SEA = 0x2e94e6;
 const SPEEDS = [1, 2, 3];
@@ -89,6 +89,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
     resizeTo: window, background: SEA, resolution: drawingResolution(), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
+  steadyFrames(app.ticker);  // at most 60 drawings a second (view/drawing.ts)
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${SEA.toString(16)}`;
@@ -103,7 +104,7 @@ export async function playSurvival(settings: PageSettings, server: GameServer, q
 
   const commands = new CommandSender(settings, { clock: () => info.timestamp, onFailure: (reason) => showStatus(reason) });
   const sound = new Sound(settings.assetsUrl, town.race, "QUESTS.mp3");
-  const art = new ArtLibrary(settings.artUrl);
+  const art = new ArtLibrary(settings.artUrl, app.renderer);
 
   // The arena: its relic the player's, its walls and statues nobody's; the army round the middle.
   const random = Math.random;
