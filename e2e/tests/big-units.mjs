@@ -34,13 +34,16 @@ export default async function bigUnits({ newPlayer }) {
       .reduce((sum, source) => sum + source.pixelWidth * source.pixelHeight, 0);
     // Read from the graphics chip, where both are kept.
     const read = (texture) => art.chip.renderer.texture.getPixels(texture).pixels;
-    const runs = [...town.animations.keys()];
-    const wholeRuns = [...whole.animations.keys()].slice(0, runs.length);
+    // Every run in its place (the moves keep their numbers), standing and walking's filled, the others empty.
+    const allRuns = [...town.animations.keys()];
+    const wholeRuns = [...whole.animations.keys()];
     const problems = [];
+    if (allRuns.join() !== wholeRuns.join()) problems.push("the copy's runs aren't the sheet's");
+    const runs = allRuns.filter((run) => town.animations.get(run).length > 0);
+    if (runs.join() !== wholeRuns.slice(0, 10).join()) problems.push(`the copy fills ${runs.length} runs, not standing and walking's 10`);
     const seen = new Set();
     let pictures = 0;
-    for (const [n, run] of runs.entries()) {
-      if (run !== wholeRuns[n]) problems.push(`run ${n} is ${run}, the whole sheet's ${wholeRuns[n]}`);
+    for (const run of runs) {
       const mine = town.animations.get(run), theirs = whole.animations.get(run);
       if (mine.length !== theirs.length) problems.push(`${run} has ${mine.length} frames, not ${theirs.length}`);
       for (const [i, texture] of mine.entries()) {
@@ -92,20 +95,21 @@ export default async function bigUnits({ newPlayer }) {
     return art.loading.has(`${name} in fights`) && art.copies.has(`${name} in fights`);
   }, ART, { timeout: 60_000 });
   await player.shot("raid");
-  // A move the copy left out is loaded when it plays: the rider's second dying run (5) as a special.
+  // A move the copy left out is loaded when it plays: one of the rider's special moves, which the specials table doesn't give it.
   const moved = await page.evaluate(async ({ name, id }) => {
     const { art } = window.seHome.parts;
     const { battle } = window.seHome.fighting;
     const fights = await art.fighter(name);
+    const move = [...fights.leftOut][0];
     const rider = battle.fighters.find((f) => f.item.id === id && !f.dead);
-    if (!rider) return { leftOut: [...fights.leftOut] };
-    rider.special = { animation: 5, until: battle.frame + 300 };
-    for (let i = 0; i < 100 && !art.loading.has(`${name} move 5`); i++) await new Promise((r) => setTimeout(r, 100));
-    const more = await art.loading.get(`${name} move 5`);
-    return { leftOut: [...fights.leftOut], move: more?.numbered(5, 0)?.length ?? 0 };
+    if (!rider || move === undefined) return { leftOut: [...fights.leftOut] };
+    rider.special = { animation: move, until: battle.frame + 300 };
+    for (let i = 0; i < 100 && !art.loading.has(`${name} move ${move}`); i++) await new Promise((r) => setTimeout(r, 100));
+    const more = await art.loading.get(`${name} move ${move}`);
+    return { leftOut: [...fights.leftOut], move: more?.numbered(move, 0)?.length ?? 0 };
   }, { name: ART, id: RIDER });
   console.log(`  the fight copy left out moves ${moved.leftOut.join(", ")}`);
-  assert.ok(moved.leftOut.includes(5), "the dying run past the first is left out of the fight copy");
+  assert.ok(moved.leftOut.length > 0, "the fight copy leaves out the moves fighters don't use");
   assert.ok(moved.move > 0, "a left-out move is loaded when it plays");
   await page.evaluate(() => {
     const { battle } = window.seHome.fighting;
