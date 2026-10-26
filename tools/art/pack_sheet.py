@@ -48,24 +48,29 @@ and every number in the JSON but meta.bounds is in the smaller pixels.
 An item may take at most MAX_PAGES pages. One that would take more (the
 chained water god: 394 pictures of nearly 4,000 x 2,500) is stored smaller
 and, if that isn't enough, its animations hold each picture for 2 or 3
-frames instead of 1 (meta.step says how many), until it fits.
+frames instead of 1 (meta.step says how many), until it fits. A unit may
+take UNIT_PAGES, as the game loads only the pages of the moves it shows:
+enough for the biggest dragons at the game's size.
 
 Pictures that don't fit in one 4096 x 4096 image (big bosses, the ground)
 go on more pages: <item>-1.json (frames only), and so on, listed in the
 first JSON's meta.related_multi_packs as TexturePacker does. Such an item
 is packed move by move, so the game loads only the pages of what it shows
 (CLIENT.md, "Light art"): a unit's standing and walking first (the town's),
-then attacking and dying (a fight's), then its special moves, then the
-rest. Its pages are at most 4096 x 3072, in whole multiples of 64 pixels,
-named <item>.moves.webp, <item>-1.moves.webp... (new names, so no cache
-serves the old ones with the new JSON), and each comes with:
+then attacking and dying (a fight's), then each of its other moves on
+pages of its own. Its pages are at most 4096 x 3072, in whole multiples of
+64 pixels, named <item>.m2.webp, <item>-1.m2.webp... (PAGES_MARK: new names
+whenever this packing changes, so no cache serves old pictures with a new
+JSON), and each comes with:
 
-  <page>.moves-mask.png  where the page is see-through, at half size, one
-              bit a pixel (meta.mask): the game answers taps with it
-  <page>.moves.ktx2     with --ktx2: the page as the graphics chip keeps it
+  <page>.m2-mask.png  where the page is see-through, at half size, one bit
+              a pixel (meta.mask): the game answers taps with it
+  <page>.m2.ktx2      with --ktx2: the page as the graphics chip keeps it
               (Basis UASTC, four times smaller there; meta.ktx2), made by
               tools/art/ktx2.mjs from the page with its colours
               premultiplied by alpha
+  <page>.m2.half.ktx2 the same at half size (meta.ktx2_half), for phones
+              and light art: a quarter of the download
 """
 
 import argparse
@@ -79,6 +84,8 @@ from PIL import Image, ImageChops
 
 PADDING = 2           # empty pixels around each picture, so neighbours don't bleed in when scaled
 MAX_PAGES = 4         # the most sheet pages an item may take: each is up to 64 MB in a graphics chip
+UNIT_PAGES = 24       # ...a unit, packed move by move: only the pages of the moves shown are loaded
+PAGES_MARK = "m2"     # in the names of the pages of an item packed move by move: changed with the packing
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
 WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
@@ -146,16 +153,18 @@ def decimate(frames, step):
             for frame in frames for images in [frame["images"]]]
 
 
-def plan(frames, boxes, max_size=MAX_SIZE, max_pages=MAX_PAGES):
+def plan(frames, boxes, max_size=MAX_SIZE, max_pages=MAX_PAGES, page_area=None):
     """(shrink, step) for an item: the first of PLANS whose pictures fit in
-    max_pages pages, guessing a tenth more than their area for the gaps."""
+    max_pages pages (of `page_area` pixels: max_size squared), guessing a
+    tenth more than their area for the gaps."""
+    page_area = page_area or max_size * max_size
     biggest = shrink_for(boxes, max_size)
     for shrink, step in PLANS:
         if shrink < biggest:
             continue
         used = {n for frame in decimate(frames, step) for n in frame["images"]}
         area = sum((boxes[n][2] // shrink + PADDING) * (boxes[n][3] // shrink + PADDING) for n in used)
-        if area * 1.1 <= max_pages * max_size * max_size:
+        if area * 1.1 <= max_pages * page_area:
             return shrink, step
     return PLANS[-1]
 
@@ -235,20 +244,25 @@ def animations(manifest):
     return result
 
 
+def labelled(manifest):
+    """A unit (animations named in the game's words), not a building, the ground or an effect."""
+    return any(not name.startswith(("frame/", "steps/")) for name in animations(manifest))
+
+
 def move_groups(manifest, used):
     """For a unit, which pictures go on pages together: {picture: group},
     by the first move that shows each (a move is 5 runs of animations(), one
     per way, as the client counts them): 0 standing and walking (the town),
-    1 attacking and dying (a fight), 2 the special moves (6 on), 3 the rest
-    (4 and 5: working, the longer deaths). An item with no labels (a
+    1 attacking and dying (a fight), then each other move on its own
+    (working, the longer deaths, each special move), so the game loads a
+    page only when all of it is wanted. An item with no labels (a
     building, the ground) is one group."""
     runs = list(animations(manifest).values())
-    labelled = any(not name.startswith(("frame/", "steps/")) for name in animations(manifest))
     group = {}
-    if labelled:
+    if labelled(manifest):
         for i, images in enumerate(runs):
             move = i // 5
-            here = 0 if move < 2 else 1 if move < 4 else 2 if move >= 6 else 3
+            here = 0 if move < 2 else 1 if move < 4 else move - 2
             for n in images:
                 group[n] = min(group.get(n, here), here)
     return {n: group.get(n, 0) for n in used}
@@ -282,8 +296,8 @@ def page_name(item, page):
 
 
 def image_name(item, page, pages):
-    """A page's picture: <page>.webp, or <page>.moves.webp for an item of several pages, packed move by move."""
-    return page_name(item, page) + (".moves" if pages > 1 else "")
+    """A page's picture: <page>.webp, or <page>.m2.webp for an item of several pages, packed move by move."""
+    return page_name(item, page) + (f".{PAGES_MARK}" if pages > 1 else "")
 
 
 def split_frames(render_dir, prefix):
@@ -300,7 +314,7 @@ def split_frames(render_dir, prefix):
                [paths[n] for n in used])
 
 
-def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
+def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES, unit_pages=UNIT_PAGES):
     """The sheets (Sheet: call image() for the picture) and their JSON data,
     one per page, from RenderSwf's output (or `loaded`: a manifest and its
     pictures from split_frames), and any warnings."""
@@ -322,13 +336,19 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
             warnings.append(f"picture {n} touches the edge of its canvas and may be cut off")
         boxes.append(box)
 
-    shrink, step = plan(manifest["frames"], boxes, max_size, max_pages)
+    if labelled(manifest):
+        # A unit: more pages, short enough for the graphics chip's format (several pages are packed so).
+        allowed = unit_pages
+        shrink, step = plan(manifest["frames"], boxes, max_size, unit_pages, max_size * (max_size * SHORT_PAGE // MAX_SIZE))
+    else:
+        allowed = max_pages
+        shrink, step = plan(manifest["frames"], boxes, max_size, max_pages)
     if shrink > 1:
         boxes = [widen(box, shrink, canvas_w, canvas_h) for box in boxes]
-        warnings.append(f"pictures too big for {max_pages} sheets, stored at 1/{shrink} size (meta.scale)")
+        warnings.append(f"pictures too big for {allowed} sheets, stored at 1/{shrink} size (meta.scale)")
     if step > 1:
         manifest = {**manifest, "frames": decimate(manifest["frames"], step)}
-        warnings.append(f"too many pictures for {max_pages} sheets: each held {step} frames (meta.step)")
+        warnings.append(f"too many pictures for {allowed} sheets: each held {step} frames (meta.step)")
     # Only the pictures the animations still show are packed; each keeps its number.
     used = sorted({n for frame in manifest["frames"] for n in frame["images"]} | set(manifest.get("steps", [])))
     # The canvas in stored pixels, and the anchor as a fraction of it, which
@@ -397,16 +417,17 @@ def premultiplied(image):
     return Image.merge("RGBA", [ImageChops.multiply(c, a) for c in (r, g, b)] + [a])
 
 
-def ktx2(image, path):
-    """The page as a KTX2 file (tools/art/ktx2.mjs, Node), or False when it
-    can't be made (too big for the encoder, Node missing)."""
-    if image.width * image.height > MAX_SIZE * SHORT_PAGE or image.width % 4 or image.height % 4:
+def ktx2(page, path):
+    """A page (its colours premultiplied) as a KTX2 file (tools/art/ktx2.mjs,
+    Node), or False when it can't be made (too big for the encoder, not in
+    whole blocks, Node missing)."""
+    if page.width * page.height > MAX_SIZE * SHORT_PAGE or page.width % 4 or page.height % 4:
         return False
     raw = path + ".rgba.tmp"
     with open(raw, "wb") as f:
-        f.write(premultiplied(image).tobytes())
+        f.write(page.tobytes())
     try:
-        done = subprocess.run(["node", KTX2, raw, str(image.width), str(image.height), path + ".tmp"],
+        done = subprocess.run(["node", KTX2, raw, str(page.width), str(page.height), path + ".tmp"],
                               capture_output=True, text=True)
     except OSError:
         return False
@@ -424,7 +445,8 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
     <item>.json is there, the whole item is. Each file is written under
     another name and renamed when complete, so nothing (an upload running
     alongside, a game loading it) ever sees half a file. An item of several
-    pages gets each page's mask too, and with `with_ktx2` its KTX2 files."""
+    pages gets each page's mask too, and with `with_ktx2` its KTX2 files, at
+    its size and at half (each halved 2 x 2 pixels as one)."""
     os.makedirs(out_dir, exist_ok=True)
     names = [data["meta"]["image"][:-len(".webp")] for data in pages]
     for sheet, name, data in zip(sheets, names, pages):
@@ -437,11 +459,16 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
             mask(image).save(mask_path + ".tmp", "PNG", optimize=True)
             os.replace(mask_path + ".tmp", mask_path)
             data["meta"]["mask"] = f"{name}-mask.png"
-            if with_ktx2 and ktx2(image, os.path.join(out_dir, f"{name}.ktx2")):
-                data["meta"]["ktx2"] = f"{name}.ktx2"
+            if with_ktx2:
+                page = premultiplied(image)
+                if ktx2(page, os.path.join(out_dir, f"{name}.ktx2")):
+                    data["meta"]["ktx2"] = f"{name}.ktx2"
+                    half = page.resize((page.width // 2, page.height // 2), Image.Resampling.BOX)
+                    if ktx2(half, os.path.join(out_dir, f"{name}.half.ktx2")):
+                        data["meta"]["ktx2_half"] = f"{name}.half.ktx2"
         del image  # one page in memory at a time
     for data, name in reversed(list(zip(pages, names))):
-        json_name = name[:-len(".moves")] if name.endswith(".moves") else name
+        json_name = name.removesuffix(f".{PAGES_MARK}")
         path = os.path.join(out_dir, f"{json_name}.json")
         with open(path + ".tmp", "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"))

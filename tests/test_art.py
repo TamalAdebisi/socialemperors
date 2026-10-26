@@ -143,7 +143,7 @@ class PackSheetTest(unittest.TestCase):
     def test_an_item_too_big_for_a_sheet_is_stored_at_half_size(self):
         # Picture 2 is 30 pixels wide: too wide for a 24-pixel sheet.
         sheets, pages, warnings = pack_sheet.build(self.folder, max_size=24)
-        self.assertIn("pictures too big for 4 sheets, stored at 1/2 size (meta.scale)", warnings)
+        self.assertIn(f"pictures too big for {pack_sheet.UNIT_PAGES} sheets, stored at 1/2 size (meta.scale)", warnings)
         meta = pages[0]["meta"]
         self.assertEqual(meta["scale"], "0.5")
         frames = {name: frame for page in pages for name, frame in page["frames"].items()}
@@ -166,13 +166,19 @@ class PackSheetTest(unittest.TestCase):
         self.assertEqual(pack_sheet.plan([{"images": [0, 1, 2, 3]}], [(0, 0, 16, 16)] * 4, max_size=20, max_pages=1), (2, 2))
         # Held 2 frames each: pictures 1, 2, 3, 4 become 1, 1, 3, 3.
         self.assertEqual(pack_sheet.decimate([{"images": [1, 2, 3, 4]}], 2), [{"images": [1, 1, 3, 3]}])
-        sheets, pages, warnings = pack_sheet.build(self.folder, max_size=24, max_pages=1)
+        sheets, pages, warnings = pack_sheet.build(self.folder, max_size=24, unit_pages=1)
         meta = pages[0]["meta"]
         self.assertGreater(meta["step"], 1)
         self.assertEqual(len(pages), 1)
         self.assertEqual(len(pages[0]["animations"]["ATAQUE/0"]), 3, "the animation keeps its length")
         names = {name for page in pages for name in page["frames"]}
         self.assertTrue(all(f in names for frames in pages[0]["animations"].values() for f in frames))
+
+    def test_pages_can_be_short(self):
+        # Three 10 x 10 pictures (with their gaps) fit on one 20 x 20 page, not one of 20 x 15.
+        frames, boxes = [{"images": [0, 1, 2]}], [(0, 0, 8, 8)] * 3
+        self.assertEqual(pack_sheet.plan(frames, boxes, max_size=20, max_pages=1), (1, 1))
+        self.assertEqual(pack_sheet.plan(frames, boxes, max_size=20, max_pages=1, page_area=20 * 15), (2, 1))
 
     def test_pictures_that_dont_fit_go_on_more_pages(self):
         # Two 3000 x 3000 pictures can't share a 4096 x 4096 sheet.
@@ -187,7 +193,7 @@ class PackSheetTest(unittest.TestCase):
         self.assertGreater(len(pages), 1)
         self.assertEqual(pages[0]["meta"]["related_multi_packs"],
                          [f"99_test_unit-{n}.json" for n in range(1, len(pages))])
-        self.assertEqual(pages[1]["meta"]["image"], "99_test_unit-1.moves.webp")
+        self.assertEqual(pages[1]["meta"]["image"], "99_test_unit-1.m2.webp")
         self.assertNotIn("animations", pages[1])
         # Every picture is on exactly one page, and every animation's pictures exist.
         names = [name for page in pages for name in page["frames"]]
@@ -244,7 +250,7 @@ class PackSheetTest(unittest.TestCase):
 
 @unittest.skipIf(Image is None, "needs Pillow")
 class MovesTest(unittest.TestCase):
-    """A big unit, packed move by move: what the town shows first, then a fight, then the specials."""
+    """A big unit, packed move by move: what the town shows first, then a fight, then each other move."""
 
     def setUp(self):
         self.folder = tempfile.mkdtemp(prefix="se-art-moves-")
@@ -259,21 +265,34 @@ class MovesTest(unittest.TestCase):
         make_render(self.folder, frames, [(1 + n % 7, 1, 30, 20) for n in range(35)])
 
     def test_a_big_unit_is_packed_move_by_move(self):
-        # Pages of 64 x 48: four 30 x 20 pictures a page (room for 20 pages, so none is made smaller).
-        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, max_pages=20)
+        # Pages of 64 x 48: four 30 x 20 pictures a page, so 10 pages; room for 20.
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
         page_of = {name: n for n, page in enumerate(pages) for name in page["frames"]}
         town = [page_of[f"99_test_unit/{n}"] for n in range(10)]
         fight = [page_of[f"99_test_unit/{n}"] for n in range(10, 20)]
-        special = [page_of[f"99_test_unit/{n}"] for n in range(30, 35)]
-        rest = [page_of[f"99_test_unit/{n}"] for n in range(20, 30)]
+        others = [[page_of[f"99_test_unit/{n}"] for n in range(5 * move, 5 * move + 5)] for move in (4, 5, 6)]
         self.assertLess(max(town), min(fight), "the town's pages first")
-        self.assertLess(max(fight), min(special), "then a fight's")
-        self.assertLess(max(special), min(rest), "then the special moves, then the rest")
+        self.assertLess(max(fight), min(others[0]), "then a fight's")
+        self.assertLess(max(others[0]), min(others[1]), "then each other move, on pages of its own")
+        self.assertLess(max(others[1]), min(others[2]))
         self.assertEqual(len(set(town)), 3, "four pictures a page")
+        self.assertEqual(pages[0]["meta"]["scale"], "1", "more pages than other items may take, at the game's size")
         for sheet, page in zip(sheets, pages):
             w, h = sheet.size
             self.assertLessEqual(h, 48, "short pages: 3/4 as tall as wide")
-            self.assertEqual(page["meta"]["image"].endswith(".moves.webp"), True)
+            self.assertEqual(page["meta"]["image"].endswith(".m2.webp"), True)
+
+    def test_an_item_that_isnt_a_unit_keeps_to_fewer_pages(self):
+        # The same pictures without the game's labels (a building's): stored smaller to fit 4 pages.
+        with open(os.path.join(self.folder, "manifest.json")) as f:
+            manifest = json.load(f)
+        for frame in manifest["frames"]:
+            frame["labels"] = []
+        with open(os.path.join(self.folder, "manifest.json"), "w") as f:
+            json.dump(manifest, f)
+        _, pages, warnings = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
+        self.assertEqual(pages[0]["meta"]["scale"], "0.5")
+        self.assertIn("pictures too big for 4 sheets, stored at 1/2 size (meta.scale)", warnings)
 
     def test_pages_are_whole_multiples_of_64(self):
         positions, pages = pack_sheet.pack_moves([(100, 50), (100, 50), (30, 30)], [0, 0, 1])
@@ -295,15 +314,21 @@ class MovesTest(unittest.TestCase):
     @unittest.skipIf(not os.path.isdir(os.path.join(os.path.dirname(pack_sheet.KTX2), "node_modules", "ktx2-encoder")),
                      "needs the art tools' packages: npm ci --prefix tools/art")
     def test_a_big_unit_is_written_as_ktx2_too(self):
-        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, max_pages=20)
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
         out = tempfile.mkdtemp(prefix="se-art-ktx2-")
         pack_sheet.write(sheets, pages, out, with_ktx2=True)
         with open(os.path.join(out, "99_test_unit.json")) as f:
             first = json.load(f)
-        self.assertEqual(first["meta"]["ktx2"], "99_test_unit.moves.ktx2")
-        self.assertEqual(first["meta"]["mask"], "99_test_unit.moves-mask.png")
-        with open(os.path.join(out, "99_test_unit.moves.ktx2"), "rb") as f:
-            self.assertEqual(f.read(12), bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]))
+        self.assertEqual(first["meta"]["ktx2"], "99_test_unit.m2.ktx2")
+        self.assertEqual(first["meta"]["ktx2_half"], "99_test_unit.m2.half.ktx2")
+        self.assertEqual(first["meta"]["mask"], "99_test_unit.m2-mask.png")
+        w, h = first["meta"]["size"]["w"], first["meta"]["size"]["h"]
+        # A KTX2 file: its 12-byte mark, then its format, its type's size, and its width and height.
+        for name, size in [("99_test_unit.m2.ktx2", (w, h)), ("99_test_unit.m2.half.ktx2", (w // 2, h // 2))]:
+            with open(os.path.join(out, name), "rb") as f:
+                head = f.read(28)
+            self.assertEqual(head[:12], bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]))
+            self.assertEqual((int.from_bytes(head[20:24], "little"), int.from_bytes(head[24:28], "little")), size, name)
 
 
 @unittest.skipIf(Image is None, "needs Pillow")

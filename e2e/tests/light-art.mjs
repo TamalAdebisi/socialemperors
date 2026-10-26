@@ -38,6 +38,8 @@ async function copies(page) {
         sheetScale: Number(index.meta.scale),
         resolutions: [...new Set(sources.map((s) => s.resolution))],
         pixels: sources.reduce((sum, s) => sum + s.pixelWidth * s.pixelHeight, 0),
+        // On the graphics chip: 4 bytes a pixel decoded, 1 in its own format (KTX2 pages).
+        bytes: sources.reduce((sum, s) => sum + s.pixelWidth * s.pixelHeight * (s.uploadMethodId === "compressed" ? 1 : 4), 0),
         // Let go of: a picture's one blank pixel, or a page in the graphics chip's format's empty list.
         letGo: sources.every((s) => s.resource instanceof ImageData || (Array.isArray(s.resource) && s.resource.length === 0)),
       };
@@ -92,7 +94,7 @@ export default async function lightArt({ newPlayer }) {
   await player.send(DRAGONS);
   await player.reload();
   const first = await copies(page);
-  console.log(`  map copies: ${Object.entries(first.arts).map(([name, a]) => `${name} ${(a.pixels * 4 / 2 ** 20).toFixed(0)} MB`).join(", ")}`);
+  console.log(`  map copies: ${Object.entries(first.arts).map(([name, a]) => `${name} ${(a.bytes / 2 ** 20).toFixed(0)} MB`).join(", ")}`);
   assert.equal(first.half, false, "a computer with room keeps them at full size");
   for (const [name, a] of Object.entries(first.arts)) {
     assert.ok(a.letGo, `${name}: the page let go of its own copy`);

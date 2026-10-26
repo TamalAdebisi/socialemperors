@@ -9,9 +9,10 @@
 # "Make these again" to redo a few, or tick "Make every sheet again" after a
 # change that affects them all. "Make big units again" redoes every item of
 # several pages (big units, bosses, the ground): packed move by move, with
-# each page's mask and KTX2 file too (CLIENT.md, "Light art"). Their pages
-# get new names (<page>.moves.webp), so the cache serves no old picture with
-# a new JSON file and nothing needs purging; the old pages stay unused.
+# each page's mask and KTX2 files too, units at the game's size (CLIENT.md,
+# "Light art"); so is any item stored smaller. Their pages get new names
+# (<page>.m2.webp), so the cache serves no old picture with a new JSON file
+# and nothing needs purging; the old pages stay unused.
 name: Export art to R2
 
 on:
@@ -26,7 +27,7 @@ on:
         type: string
         default: ""
       big:
-        description: Make big units again (every item of several pages), move by move, with KTX2
+        description: Make big units again (every item of several pages or stored smaller), move by move, at full size, with KTX2
         type: boolean
         default: false
 
@@ -97,10 +98,12 @@ jobs:
             sleep $((15 * try))
           done
           for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
-          # Big units again: every item whose sheet names other pages, unless already packed move by move.
+          # Big units again: every item whose sheet names other pages, unless already packed as now
+          # (pages named .m2), and every item stored smaller (meta.scale under 1), which a unit no longer is.
           if [ "${{ inputs.big }}" = "true" ]; then
             for json in art/sheets/*.json; do
-              grep -q '"related_multi_packs"' "$json" && ! grep -q '\.moves\.webp"' "$json" || continue
+              { grep -q '"related_multi_packs"' "$json" && ! grep -q '\.m2\.webp"' "$json"; } \
+                || grep -q '"scale":"0\.' "$json" || continue
               item="$(basename "$json" .json)"
               rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json
             done

@@ -52,9 +52,12 @@ follow below; status-only receipt edits change no game, art or test file.
   **Fix 6, built the same day:** big units' sheets packed move by move,
   each page also as KTX2 (UASTC: four times smaller on the graphics chip,
   about twice the download for those pages) with a mask file for taps
-  (`pack_sheet.py`, `tools/art/ktx2.mjs`, `ArtLibrary.ktx2`; #142). **Waiting on
-  the owner:** the Export art to R2 workflow with "Make big units again"
-  (DEPLOY.md); until then the client uses the sheets as they are.
+  (`pack_sheet.py`, `tools/art/ktx2.mjs`, `ArtLibrary.ktx2`; #142). Then,
+  after the owner found the big dragons blurry: a unit may take 24 pages
+  and stays at the game's size, each page with a half-size KTX2 file for
+  light art (pages named `.m2`; DECISIONS.md). **Waiting on the owner:**
+  the Export art to R2 workflow with "Make big units again" (DEPLOY.md);
+  until then the client uses the sheets as they are.
 - **Big units keep only their town pictures (21 October).** The owner's
   Blue Fire Djinn Dragon made the map unplayably slow: a newer big
   dragon's whole sheet is about 250 MB decoded. The map now keeps a copy
