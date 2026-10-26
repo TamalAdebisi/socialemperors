@@ -3,25 +3,32 @@
 // keeps it after copying it to the graphics chip, in case it must copy it
 // again. With the renderer known, each page is copied there at once, a
 // small map of its see-through parts is kept for taps (hit.ts), and the
-// page's own copy is let go: a big unit takes about 40% less memory. If the
-// graphics chip is reset (a phone may do it to a page in the background),
-// the pages are made again from their files. CLIENT.md, "Light art".
+// page's own copy is let go: a big unit takes about 40% less memory. A page
+// in the graphics chip's own format (KTX2) is let go of the same way, its
+// map coming from the sheet's mask file. If the graphics chip is reset (a
+// phone may do it to a page in the background), drawing pauses while the
+// pages are made again from their files. CLIENT.md, "Light art".
 
-import type { Renderer, TextureSource } from "pixi.js";
+import { Ticker, type Renderer, type TextureSource } from "pixi.js";
+
+/** A page's picture: a picture to draw, or the graphics chip's own format, one buffer per size (KTX2). */
+export type Picture = CanvasImageSource | Uint8Array[];
 
 /** Makes a group's pictures again, one per page, in the order given to keep. */
-export type Remake = () => Promise<CanvasImageSource[]>;
+export type Remake = () => Promise<Picture[]>;
 
 interface Group {
   sources: TextureSource[];
   remake: Remake;
 }
 
-/** Where a page is see-through, at half its size each way: one bit per 2 x 2 pixels. */
+/** Where a page is see-through: one bit per `cell` x `cell` of its pixels. */
 export interface Mask {
   width: number;
   height: number;
   bits: Uint8Array;
+  /** The page's pixels each way per bit: 2 for a page at its size, 1 for one at half size (light art). */
+  cell: number;
 }
 
 /** A 2 x 2 block counts as the picture from this average alpha: one pixel of it at hit.ts's limit (32). */
@@ -41,7 +48,7 @@ export function maskedOpaque(source: TextureSource, x: number, y: number): boole
 
 /** Whether a mask has the picture at a page's pixel (x, y). */
 export function opaqueIn(mask: Mask, x: number, y: number): boolean {
-  const mx = Math.floor(x / 2), my = Math.floor(y / 2);
+  const mx = Math.floor(x / mask.cell), my = Math.floor(y / mask.cell);
   if (mx < 0 || my < 0 || mx >= mask.width || my >= mask.height) {
     return false;
   }
@@ -49,42 +56,75 @@ export function opaqueIn(mask: Mask, x: number, y: number): boolean {
   return (mask.bits[i >> 3] & (1 << (i & 7))) !== 0;
 }
 
-/** A mask from a page drawn at half size (RGBA, `width` x `height`): one bit a pixel. */
-export function maskFrom(pixels: Uint8ClampedArray, width: number, height: number): Mask {
+/**
+ * A mask from pixels (RGBA, `width` x `height`): one bit a pixel, set where
+ * `channel` reaches `least`. A page drawn at half size is read by its alpha;
+ * a sheet's mask file (pack_sheet.py: white where the picture is) by its red.
+ */
+export function maskFrom(pixels: Uint8ClampedArray, width: number, height: number,
+  { channel = 3, least = MASK_ALPHA, cell = 2 } = {}): Mask {
   const bits = new Uint8Array(Math.ceil((width * height) / 8));
-  for (let i = 0, alpha = 3; i < width * height; i++, alpha += 4) {
-    if (pixels[alpha] >= MASK_ALPHA) {
+  for (let i = 0, at = channel; i < width * height; i++, at += 4) {
+    if (pixels[at] >= least) {
       bits[i >> 3] |= 1 << (i & 7);
     }
   }
-  return { width, height, bits };
+  return { width, height, bits, cell };
 }
 
-/** The map of a page's see-through parts, read from its picture at half size. */
-function maskOf(image: CanvasImageSource, width: number, height: number): Mask | null {
-  const w = Math.max(1, Math.ceil(width / 2)), h = Math.max(1, Math.ceil(height / 2));
+/** The pixels of a picture drawn at a size (w x h), read back. */
+function pixelsOf(image: CanvasImageSource, w: number, h: number): Uint8ClampedArray | null {
   const canvas = Object.assign(document.createElement("canvas"), { width: w, height: h });
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context) {
     return null;
   }
-  // Halving averages each 2 x 2 block.
-  context.drawImage(image, 0, 0, width / 2, height / 2);
+  context.drawImage(image, 0, 0, w, h);
   const pixels = context.getImageData(0, 0, w, h).data;
   canvas.width = canvas.height = 0;
-  return maskFrom(pixels, w, h);
+  return pixels;
 }
 
-/** What a page holds once let go: one see-through pixel, never drawn (the graphics chip has the picture). */
+/** The map of a page's see-through parts, read from its picture at half size. */
+function maskOf(image: CanvasImageSource, width: number, height: number): Mask | null {
+  const w = Math.max(1, Math.ceil(width / 2)), h = Math.max(1, Math.ceil(height / 2));
+  // Halving averages each 2 x 2 block.
+  const pixels = pixelsOf(image, w, h);
+  return pixels && maskFrom(pixels, w, h);
+}
+
+/**
+ * A sheet's mask file (white where the picture is, at half the page's
+ * size), for a page `scale` times its size (1, or 0.5 for light art).
+ */
+export async function maskFile(url: string, scale: number): Promise<Mask | null> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    return null;
+  }
+  const image = await createImageBitmap(await response.blob());
+  const pixels = pixelsOf(image, image.width, image.height);
+  const mask = pixels && maskFrom(pixels, image.width, image.height, { channel: 0, least: 128, cell: 2 * scale });
+  image.close();
+  return mask;
+}
+
+/** What a page holds once let go: one see-through pixel, or no buffers, never drawn (the graphics chip has the picture). */
 let empty: ImageData | null = null;
+const NO_LEVELS: Uint8Array[] = [];
 
 function letGo(source: TextureSource): void {
   const picture = source.resource as unknown;
   empty ??= new ImageData(1, 1);
-  if (picture === empty) {
+  if (picture === empty || picture === NO_LEVELS) {
     return;
   }
-  source.resource = empty;
+  source.resource = Array.isArray(picture) ? NO_LEVELS : empty;
+  // PixiJS keeps what a source was made with, picture included: let go of that one too.
+  const made = (source as unknown as { options?: { resource?: unknown } }).options;
+  if (made && made.resource === picture) {
+    made.resource = source.resource;
+  }
   if (typeof ImageBitmap !== "undefined" && picture instanceof ImageBitmap) {
     picture.close();
   } else if (typeof HTMLCanvasElement !== "undefined" && picture instanceof HTMLCanvasElement) {
@@ -94,26 +134,33 @@ function letGo(source: TextureSource): void {
 
 /** Whether a page's own copy has been let go (its picture is on the graphics chip only). */
 export function onChipOnly(source: TextureSource): boolean {
-  return empty !== null && source.resource === empty;
+  return (empty !== null && source.resource === empty) || source.resource === NO_LEVELS;
 }
 
 export class OnChip {
   private readonly renderer: Renderer;
   private readonly groups = new Set<Group>();
   private readonly kept = new WeakSet<TextureSource>();
+  /** Drawing was going when the graphics chip was lost: it goes on once the pictures are back. */
+  private resume = false;
 
   constructor(renderer: Renderer) {
     this.renderer = renderer;
+    // Lost: nothing is drawn until the pictures are back (PixiJS would draw them empty).
+    renderer.canvas.addEventListener?.("webglcontextlost", () => {
+      this.resume ||= Ticker.shared.started;
+      Ticker.shared.stop();
+    });
     // After the graphics chip is reset: PixiJS has forgotten every picture; make them again.
     renderer.runners.contextChange.add({ contextChange: () => void this.restore() });
   }
 
   /**
-   * Copies pages to the graphics chip now, keeps their maps for taps, and
-   * lets go of their own copies. `remake` makes them again if the chip is
-   * reset.
+   * Copies pages to the graphics chip now, keeps their maps for taps (from
+   * `known`, or read from the pages), and lets go of their own copies.
+   * `remake` makes them again if the chip is reset.
    */
-  keep(sources: TextureSource[], remake: Remake): void {
+  keep(sources: TextureSource[], remake: Remake, known: (Mask | null)[] = []): void {
     const fresh = sources.filter((source) => !this.kept.has(source) && !source.destroyed);
     if (fresh.length === 0) {
       return;
@@ -121,7 +168,8 @@ export class OnChip {
     const group: Group = { sources, remake };
     for (const source of fresh) {
       this.kept.add(source);
-      const mask = maskOf(source.resource as CanvasImageSource, source.pixelWidth, source.pixelHeight);
+      const mask = known[sources.indexOf(source)]
+        ?? (Array.isArray(source.resource) ? null : maskOf(source.resource as CanvasImageSource, source.pixelWidth, source.pixelHeight));
       if (mask) {
         masks.set(source, mask);
       }
@@ -138,13 +186,13 @@ export class OnChip {
   }
 
   private async restore(): Promise<void> {
-    for (const group of [...this.groups]) {
-      let pictures: CanvasImageSource[];
+    await Promise.all([...this.groups].map(async (group) => {
+      let pictures: Picture[];
       try {
         pictures = await group.remake();
       } catch (error) {
         console.warn("A picture could not be made again after the graphics chip reset:", error);
-        continue;
+        return;
       }
       group.sources.forEach((source, n) => {
         const picture = pictures[n];
@@ -152,10 +200,14 @@ export class OnChip {
           return;
         }
         source.resource = picture;
-        source.update();  // sends it again if PixiJS has drawn it since the reset...
+        source.emit("update", source);  // sends it again if PixiJS has drawn it since the reset...
         this.upload(source);  // ...or for the first time since
         letGo(source);
       });
+    }));
+    if (this.resume) {
+      this.resume = false;
+      Ticker.shared.start();
     }
   }
 }

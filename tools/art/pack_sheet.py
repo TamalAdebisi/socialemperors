@@ -51,23 +51,41 @@ and, if that isn't enough, its animations hold each picture for 2 or 3
 frames instead of 1 (meta.step says how many), until it fits.
 
 Pictures that don't fit in one 4096 x 4096 image (big bosses, the ground)
-go on more pages: <item>-1.webp and <item>-1.json (frames only), and so on,
-listed in the first JSON's meta.related_multi_packs as TexturePacker does.
+go on more pages: <item>-1.json (frames only), and so on, listed in the
+first JSON's meta.related_multi_packs as TexturePacker does. Such an item
+is packed move by move, so the game loads only the pages of what it shows
+(CLIENT.md, "Light art"): a unit's standing and walking first (the town's),
+then attacking and dying (a fight's), then its special moves, then the
+rest. Its pages are at most 4096 x 3072, in whole multiples of 64 pixels,
+named <item>.moves.webp, <item>-1.moves.webp... (new names, so no cache
+serves the old ones with the new JSON), and each comes with:
+
+  <page>.moves-mask.png  where the page is see-through, at half size, one
+              bit a pixel (meta.mask): the game answers taps with it
+  <page>.moves.ktx2     with --ktx2: the page as the graphics chip keeps it
+              (Basis UASTC, four times smaller there; meta.ktx2), made by
+              tools/art/ktx2.mjs from the page with its colours
+              premultiplied by alpha
 """
 
 import argparse
 import json
 import math
 import os
+import subprocess
 import sys
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 PADDING = 2           # empty pixels around each picture, so neighbours don't bleed in when scaled
 MAX_PAGES = 4         # the most sheet pages an item may take: each is up to 64 MB in a graphics chip
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
 WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
+SHORT_PAGE = 3072     # a big item's pages are at most 4096 x 3072: the KTX2 encoder takes 12 Mpix
+PAGE_STEP = 64        # ...in whole multiples of 64, so their smaller copies stay whole blocks of 4
+MASK_ALPHA = 8        # a 2 x 2 block's average alpha from which it counts as the picture (the client's)
+KTX2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ktx2.mjs")
 
 
 def load(render_dir):
@@ -160,19 +178,20 @@ def trim(image):
     return box[0], box[1], box[2] - box[0], box[3] - box[1]
 
 
-def pack(sizes, max_size=MAX_SIZE):
+def pack(sizes, max_size=MAX_SIZE, max_height=None):
     """Place boxes of the given (w, h) on shelves, tallest first, on as few
-    pages of at most max_size x max_size as they need.
+    pages of at most max_size x max_height (max_size) as they need.
 
     Returns ([(page, x, y)] in the order given, [(width, height)] of each
     page). Raises ValueError for a box bigger than a page."""
     if not sizes:
         return [], [(1, 1)]
+    max_height = max_height or max_size
     widest = max(w for w, _ in sizes) + PADDING
     tallest = max(h for _, h in sizes) + PADDING
-    if widest > max_size or tallest > max_size:
+    if widest > max_size or tallest > max_height:
         raise ValueError(f"a picture is {widest - PADDING}x{tallest - PADDING} pixels, "
-                         f"more than a {max_size}x{max_size} sheet")
+                         f"more than a {max_size}x{max_height} sheet")
     area = sum((w + PADDING) * (h + PADDING) for w, h in sizes)
     # About square when all fits on one page; pages as wide as allowed when not.
     width = min(max_size, max(widest, math.ceil(math.sqrt(area) * 1.1)))
@@ -185,7 +204,7 @@ def pack(sizes, max_size=MAX_SIZE):
         w, h = sizes[i]
         if x + w + PADDING > width:  # the shelf is full: start the next one
             x, y, shelf = 0, y + shelf, 0
-        if x == 0 and y + h + PADDING > max_size:  # the page is full: start the next one
+        if x == 0 and y + h + PADDING > max_height:  # the page is full: start the next one
             pages.append((used_width, y))
             page, y, used_width = page + 1, 0, 0
         positions[i] = (page, x + PADDING // 2, y + PADDING // 2)
@@ -216,6 +235,42 @@ def animations(manifest):
     return result
 
 
+def move_groups(manifest, used):
+    """For a unit, which pictures go on pages together: {picture: group},
+    by the first move that shows each (a move is 5 runs of animations(), one
+    per way, as the client counts them): 0 standing and walking (the town),
+    1 attacking and dying (a fight), 2 the special moves (6 on), 3 the rest
+    (4 and 5: working, the longer deaths). An item with no labels (a
+    building, the ground) is one group."""
+    runs = list(animations(manifest).values())
+    labelled = any(not name.startswith(("frame/", "steps/")) for name in animations(manifest))
+    group = {}
+    if labelled:
+        for i, images in enumerate(runs):
+            move = i // 5
+            here = 0 if move < 2 else 1 if move < 4 else 2 if move >= 6 else 3
+            for n in images:
+                group[n] = min(group.get(n, here), here)
+    return {n: group.get(n, 0) for n in used}
+
+
+def pack_moves(sizes, groups, max_size=MAX_SIZE, max_height=None):
+    """pack() each group of boxes on pages of its own, in the groups' order,
+    each page rounded up to whole multiples of PAGE_STEP (within max_size and
+    max_height). Returns as pack() does."""
+    max_height = max_height or max_size
+    positions = [None] * len(sizes)
+    pages = []
+    for group in sorted(set(groups)):
+        members = [i for i, g in enumerate(groups) if g == group]
+        places, group_pages = pack([sizes[i] for i in members], max_size, max_height)
+        for i, (page, x, y) in zip(members, places):
+            positions[i] = (len(pages) + page, x, y)
+        pages += [(min(max_size, -(-w // PAGE_STEP) * PAGE_STEP), min(max_height, -(-h // PAGE_STEP) * PAGE_STEP))
+                  for w, h in group_pages]
+    return positions, pages
+
+
 def bounds(manifest):
     """{"<label>/<n>": {x, y, w, h}} for the frames whose bounds RenderSwf recorded."""
     names = list(animations(manifest))
@@ -224,6 +279,11 @@ def bounds(manifest):
 
 def page_name(item, page):
     return item if page == 0 else f"{item}-{page}"
+
+
+def image_name(item, page, pages):
+    """A page's picture: <page>.webp, or <page>.moves.webp for an item of several pages, packed move by move."""
+    return page_name(item, page) + (".moves" if pages > 1 else "")
 
 
 def split_frames(render_dir, prefix):
@@ -276,7 +336,15 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
     source_w, source_h = canvas_w // shrink, canvas_h // shrink
     anchor = {"x": round(origin["x"] / shrink / source_w, 6), "y": round(origin["y"] / shrink / source_h, 6)}
 
-    positions, sizes = pack([(boxes[n][2] // shrink, boxes[n][3] // shrink) for n in used], max_size)
+    boxes_used = [(boxes[n][2] // shrink, boxes[n][3] // shrink) for n in used]
+    positions, sizes = pack(boxes_used, max_size)
+    if len(sizes) > 1:
+        # Several pages: packed move by move, on pages the graphics chip's format takes (SHORT_PAGE),
+        # unless a picture is taller (its pages then stay WebP only).
+        tallest = max(h for _, h in boxes_used) + PADDING
+        short = min(max_size, max(max_size * SHORT_PAGE // MAX_SIZE, tallest))
+        groups = move_groups(manifest, used)
+        positions, sizes = pack_moves(boxes_used, [groups[n] for n in used], max_size, short)
     sheets = [Sheet(size, shrink) for size in sizes]
     pages = [{"frames": {}, "meta": {}} for _ in sizes]
     for n, (page, x, y) in zip(used, positions):
@@ -294,7 +362,7 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
         data["meta"] = {
             "app": "socialemperors tools/art",
             "version": "1",
-            "image": f"{page_name(item, page)}.webp",
+            "image": f"{image_name(item, page, len(pages))}.webp",
             "format": "RGBA8888",
             "size": {"w": w, "h": h},
             "scale": str(1 / shrink) if shrink > 1 else "1",
@@ -315,21 +383,66 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES):
     return sheets, pages, warnings
 
 
-def write(sheets, pages, out_dir, quality=WEBP_QUALITY):
+def mask(image):
+    """Where a page is see-through, at half size: a 1-bit picture, white
+    where a 2 x 2 block's average alpha reaches MASK_ALPHA."""
+    alpha = image.getchannel("A")
+    half = alpha.reduce(2) if alpha.width > 1 and alpha.height > 1 else alpha
+    return half.point(lambda a: 255 if a >= MASK_ALPHA else 0).convert("1", dither=Image.Dither.NONE)
+
+
+def premultiplied(image):
+    """The page with each colour multiplied by its alpha, as the graphics chip draws it."""
+    r, g, b, a = image.split()
+    return Image.merge("RGBA", [ImageChops.multiply(c, a) for c in (r, g, b)] + [a])
+
+
+def ktx2(image, path):
+    """The page as a KTX2 file (tools/art/ktx2.mjs, Node), or False when it
+    can't be made (too big for the encoder, Node missing)."""
+    if image.width * image.height > MAX_SIZE * SHORT_PAGE or image.width % 4 or image.height % 4:
+        return False
+    raw = path + ".rgba.tmp"
+    with open(raw, "wb") as f:
+        f.write(premultiplied(image).tobytes())
+    try:
+        done = subprocess.run(["node", KTX2, raw, str(image.width), str(image.height), path + ".tmp"],
+                              capture_output=True, text=True)
+    except OSError:
+        return False
+    finally:
+        os.remove(raw)
+    if done.returncode != 0:
+        print(f"ktx2 {os.path.basename(path)}: {done.stderr.strip()[-300:]}", file=sys.stderr)
+        return False
+    os.replace(path + ".tmp", path)
+    return True
+
+
+def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
     """Write the images, then the JSON files, the first page's last: once
     <item>.json is there, the whole item is. Each file is written under
     another name and renamed when complete, so nothing (an upload running
-    alongside, a game loading it) ever sees half a file."""
+    alongside, a game loading it) ever sees half a file. An item of several
+    pages gets each page's mask too, and with `with_ktx2` its KTX2 files."""
     os.makedirs(out_dir, exist_ok=True)
     names = [data["meta"]["image"][:-len(".webp")] for data in pages]
-    for sheet, name in zip(sheets, names):
+    for sheet, name, data in zip(sheets, names, pages):
         path = os.path.join(out_dir, f"{name}.webp")
         image = sheet.image()
         image.save(path + ".tmp", "WEBP", quality=quality, alpha_quality=100, method=WEBP_METHOD)
-        del image  # one page in memory at a time
         os.replace(path + ".tmp", path)
+        if len(pages) > 1:
+            mask_path = os.path.join(out_dir, f"{name}-mask.png")
+            mask(image).save(mask_path + ".tmp", "PNG", optimize=True)
+            os.replace(mask_path + ".tmp", mask_path)
+            data["meta"]["mask"] = f"{name}-mask.png"
+            if with_ktx2 and ktx2(image, os.path.join(out_dir, f"{name}.ktx2")):
+                data["meta"]["ktx2"] = f"{name}.ktx2"
+        del image  # one page in memory at a time
     for data, name in reversed(list(zip(pages, names))):
-        path = os.path.join(out_dir, f"{name}.json")
+        json_name = name[:-len(".moves")] if name.endswith(".moves") else name
+        path = os.path.join(out_dir, f"{json_name}.json")
         with open(path + ".tmp", "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"))
         os.replace(path + ".tmp", path)
@@ -343,6 +456,8 @@ def main(argv=None):
     parser.add_argument("--quality", type=int, default=WEBP_QUALITY, help="WebP quality, 0 to 100")
     parser.add_argument("--split-frames", metavar="PREFIX",
                         help="make one item of each frame, <PREFIX>_1, _2... (a library clip like the projectiles)")
+    parser.add_argument("--ktx2", action="store_true",
+                        help="also write each page of a big item as KTX2 (tools/art/ktx2.mjs: Node and its packages)")
     args = parser.parse_args(argv)
     failed = 0
     jobs = []
@@ -358,7 +473,7 @@ def main(argv=None):
             print(f"FAIL {os.path.basename(os.path.normpath(render_dir))}: {e}")
             failed += 1
             continue
-        write(sheets, pages, args.out, args.quality)
+        write(sheets, pages, args.out, args.quality, args.ktx2)
         meta = pages[0]["meta"]
         for warning in warnings:
             print(f"warning {meta['source']}: {warning}")

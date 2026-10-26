@@ -21,6 +21,8 @@ decompiled/
 # The new game client's packages and build (client/, built by npm run build)
 client/node_modules/
 client/dist/
+# The art tools' packages (npm ci --prefix tools/art: tools/art/ktx2.mjs)
+tools/art/node_modules/
 
 # The browser tests' screenshots and server log (node e2e/run.mjs)
 e2e/out/

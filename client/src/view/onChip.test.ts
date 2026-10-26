@@ -13,3 +13,12 @@ test("a page let go keeps where it's see-through, at half size, for taps", () =>
   assert.equal(opaqueIn(mask, 4, 0), false, "past the page");
   assert.equal(opaqueIn(mask, -1, 0), false);
 });
+
+test("a sheet's mask file is read by its red, white where the picture is, for a page at either size", () => {
+  // 2 x 1, at half the page's size: white, then black.
+  const file = new Uint8ClampedArray([255, 255, 255, 255, 0, 0, 0, 255]);
+  const whole = maskFrom(file, 2, 1, { channel: 0, least: 128, cell: 2 });
+  assert.deepEqual([opaqueIn(whole, 1, 1), opaqueIn(whole, 2, 0)], [true, false], "a page at its size: 2 pixels a bit");
+  const half = maskFrom(file, 2, 1, { channel: 0, least: 128, cell: 1 });
+  assert.deepEqual([opaqueIn(half, 0, 0), opaqueIn(half, 1, 0)], [true, false], "a page at half size: a pixel a bit");
+});

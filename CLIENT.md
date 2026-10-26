@@ -917,8 +917,57 @@ passes the budget, so its big units are light, about 2.6 GB. These are the
 page's and the graphics chip's memory together, as Chromium on our test
 machine reports them; its graphics chip is software, in memory, and keeps
 some of what's let go. A real graphics chip frees it at once, so the gain
-there is if anything larger. Storing the pictures as the graphics chip
-keeps them, four times smaller, is the next step (ROADMAP.md).
+there is if anything larger.
+
+**The art as the graphics chip keeps it** (built 26 October, the owner's
+fix 6). A decoded picture takes 4 bytes a pixel on the graphics chip;
+the chip's own compressed formats (BC7 on computers, ASTC or ETC2 on
+phones) take 1, and are drawn as they are. Big units' sheets are now made
+for that, when the art is made again (`tools/export_art.sh` with `KTX2=1`;
+the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
+
+- **Packed move by move** (`pack_sheet.py`, `move_groups`): a sheet of
+  several pages puts a unit's standing and walking pictures on pages of
+  their own, then its attacking and dying, then its special moves, then the
+  rest (working, the longer deaths). The map loads only the first pages,
+  a fight the first two groups and the specials it needs, each page as it
+  is: no copying, and no page decoded for nothing.
+- **Each page also as KTX2** (`tools/art/ktx2.mjs`, Basis Universal's
+  UASTC, with its smaller copies for zooming out), from the page with its
+  colours premultiplied by alpha, as PixiJS draws. The client reads it into
+  the best format the graphics chip takes (`ArtLibrary.ktx2`, by the
+  renderer's own WebGL extensions; WebGL 2 only), and falls back to the
+  WebP pages if a page won't load. Light art uses its half-size copy: a
+  sixteenth of a decoded page at full size. The reading is done by a worker
+  of our own (`view/ktx2.worker.ts`) with the KTX library PixiJS ships:
+  PixiJS's own reader never frees what it read, and its memory only grows.
+- **A mask file per page** (`<page>.moves-mask.png`, one bit for each 2 x
+  2 pixels): a KTX2 page can't be read back, so taps use the mask
+  (`maskFile`).
+- **Pages of at most 4096 x 3072, in whole multiples of 64**: the encoder
+  takes 12 Mpix, and WebGL takes compressed pictures in whole blocks of 4
+  only, so the smaller copies stop where a size would break a block
+  (4 sizes at least).
+- **New page names** (`<item>.moves.webp`, `.ktx2`): the cache keeps
+  pictures a day, and the old names with the new JSON would draw the wrong
+  pictures (it happened on 16 October). The old pages stay in the bucket,
+  unused.
+
+Measured with the Vulcano Dragon made again here: packed move by move,
+its fight art is 106 MB instead of 177 and its map art 53 instead of 128,
+loading in half the time, before the graphics chip's format saves its four
+times more there. (Our test machine's software graphics chip unpacks those
+pages when it draws them, so it can't show that part; a real one draws them
+as they are. Another find on the way: PixiJS keeps what each picture was
+made with, so letting go of a page means letting go of that too, `letGo`.)
+
+Quality, measured on a real page against today's WebP: UASTC is 36 dB
+(no difference to see at twice the size); ETC1S, the smaller kind, was 30
+dB, blocky at the edges, so it isn't used. Downloads: about twice the WebP
+for those pages (an Infernal Dragon page: 2.1 MB as WebP, 4.1 as KTX2),
+only for big units, and only the pages shown. If the graphics chip resets,
+drawing pauses while the pages are read again (`OnChip`), so nothing is
+drawn from an empty page.
 
 ### Click feedback and unit targets
 

@@ -307,7 +307,12 @@ on the Railway address the game files would be blocked.
   under `art/`, sending each as soon as it's made. Run it again when
   buildings or units are added, or if a run stopped part way: it only makes
   the sheets that are missing. To make a few
-  again, type their names under **Make these again**. The server
+  again, type their names under **Make these again**. To make the big
+  units' sheets the light way (every item of several pages: packed move by
+  move, with each page's KTX2 and mask; CLIENT.md, "Light art"), tick
+  **Make big units again**: about as long as the first run, since those
+  are the slow ones. Their pages get new names, so nothing needs purging
+  from the cache afterwards. The server
   builds the client's code itself (the first part of the `Dockerfile`), so
   nothing else is needed.
 * **Updating Ruffle** (the Flash emulator): it's in `assets/ruffle/<version>/`,

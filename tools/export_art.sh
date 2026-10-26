@@ -26,6 +26,9 @@
 #   TIME_LIMIT=14400  seconds an item may take before it is stopped (4 hours)
 #   ART_OUT=/tmp/art  write there instead of art/ (which the game page and
 #               the browser tests use instead of the bucket's art when it exists)
+#   KTX2=1      also write each page of a big item (several pages) as KTX2,
+#               as the graphics chip keeps it (tools/art/ktx2.mjs: needs Node,
+#               and npm ci --prefix tools/art). About a minute a page more
 #
 # Everything takes more than a day on 4 processor cores (about four hours
 # on the workflow's 8 machines), almost all of it for the biggest animated
@@ -125,12 +128,14 @@ batch() {
     if [ -f "${drawn[0]}" ]; then
         local split=()
         case "$1" in *"#ProyectilMC") split=(--split-frames projectile) ;; esac
-        "$PYTHON" "$ROOT/tools/art/pack_sheet.py" "${split[@]}" --out "$OUT/sheets" "${drawn[@]%/manifest.json}" || true
+        local ktx2=()
+        [ "${KTX2:-}" = 1 ] && ktx2=(--ktx2)
+        "$PYTHON" "$ROOT/tools/art/pack_sheet.py" "${split[@]}" "${ktx2[@]}" --out "$OUT/sheets" "${drawn[@]%/manifest.json}" || true
     fi
     rm -rf "$pictures"
 }
 export -f batch
-export FFDEC_CP CLASSES OUT PYTHON ROOT TIME_LIMIT HEAP RENDER_THREADS
+export FFDEC_CP CLASSES OUT PYTHON ROOT TIME_LIMIT HEAP RENDER_THREADS KTX2
 if [ ${#todo[@]} -gt 0 ]; then
     # Each item's line shows here as it is done, and goes in the log.
     printf '%s\0' "${todo[@]}" | xargs -0 -n 1 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true

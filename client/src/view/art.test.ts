@@ -108,3 +108,15 @@ test("at half size, every picture asked for is cut out, half as big", () => {
   assert.deepEqual(half.packed.places.slice(0, 2), [{ page: 0, x: 1, y: 1 }, { page: 0, x: 8, y: 1 }], "5 x 4 pictures for 9 x 7");
   assert.throws(() => planCopy(pages.slice(0, 1), [0, 1, 2], 1), /missing/, "a page the sheet has lost");
 });
+
+test("a sheet's pages in the graphics chip's format are used as they are, even at half size", () => {
+  const pages = bigSheet(4, 10);
+  // Page 0 (standing and walking) has a KTX2 file: its half-size copy serves light art.
+  const half = planCopy(pages, [0, 1], 2, (n) => n === 0);
+  assert.deepEqual(half.whole, [0]);
+  assert.deepEqual(half.cut, []);
+  // Every move (a whole sheet of several pages): every page, as it is.
+  const whole = planCopy(pages, null, 1);
+  assert.deepEqual(whole.whole, [0, 1]);
+  assert.equal(whole.runs.every(([, frames]) => frames.length === 1), true);
+});

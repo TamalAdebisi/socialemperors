@@ -187,7 +187,7 @@ class PackSheetTest(unittest.TestCase):
         self.assertGreater(len(pages), 1)
         self.assertEqual(pages[0]["meta"]["related_multi_packs"],
                          [f"99_test_unit-{n}.json" for n in range(1, len(pages))])
-        self.assertEqual(pages[1]["meta"]["image"], "99_test_unit-1.webp")
+        self.assertEqual(pages[1]["meta"]["image"], "99_test_unit-1.moves.webp")
         self.assertNotIn("animations", pages[1])
         # Every picture is on exactly one page, and every animation's pictures exist.
         names = [name for page in pages for name in page["frames"]]
@@ -211,6 +211,8 @@ class PackSheetTest(unittest.TestCase):
         self.assertFalse([f for f in files if f.endswith(".tmp")])
         self.assertEqual(sorted(finished), sorted(files))
         self.assertEqual(len([f for f in files if f.endswith(".webp")]), len(pages))
+        self.assertEqual(len([f for f in files if f.endswith("-mask.png")]), len(pages), "each page's mask")
+        self.assertFalse([f for f in files if f.endswith(".ktx2")], "KTX2 only when asked")
         # The first page's JSON is finished after everything else.
         self.assertEqual(finished[-1], "99_test_unit.json")
 
@@ -228,6 +230,9 @@ class PackSheetTest(unittest.TestCase):
         self.assertEqual(pages[0]["meta"]["image"], "projectile_3.webp")
 
     def test_writes_webp_and_json(self):
+        # One page: no mask, the names as before.
+        self.assertNotIn("mask", self.data["meta"])
+        self.assertEqual(self.data["meta"]["image"], "99_test_unit.webp")
         out = tempfile.mkdtemp(prefix="se-art-out-")
         pack_sheet.write([self.sheet], [self.data], out)
         self.assertEqual(sorted(os.listdir(out)), ["99_test_unit.json", "99_test_unit.webp"])
@@ -235,6 +240,70 @@ class PackSheetTest(unittest.TestCase):
             self.assertEqual(image.size, self.sheet.size)
         with open(os.path.join(out, "99_test_unit.json")) as f:
             self.assertEqual(json.load(f), self.data)
+
+
+@unittest.skipIf(Image is None, "needs Pillow")
+class MovesTest(unittest.TestCase):
+    """A big unit, packed move by move: what the town shows first, then a fight, then the specials."""
+
+    def setUp(self):
+        self.folder = tempfile.mkdtemp(prefix="se-art-moves-")
+        # Moves 0 to 6, 5 ways each, a picture a frame: picture 5m + way. Move 0's
+        # first way also shows in the attack (move 2): it stays with the town's.
+        labels = ["QUIETO", "ANDAR", "ATAQUE", "MUERTE", "PICAR", "MUERTE2", "SP1"]
+        frames = []
+        for move, label in enumerate(labels):
+            for way in range(5):
+                frames.append({"labels": [label] if way == 0 else [], "images": [5 * move + way]})
+        frames[10]["images"] = [0, 10]
+        make_render(self.folder, frames, [(1 + n % 7, 1, 30, 20) for n in range(35)])
+
+    def test_a_big_unit_is_packed_move_by_move(self):
+        # Pages of 64 x 48: four 30 x 20 pictures a page (room for 20 pages, so none is made smaller).
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, max_pages=20)
+        page_of = {name: n for n, page in enumerate(pages) for name in page["frames"]}
+        town = [page_of[f"99_test_unit/{n}"] for n in range(10)]
+        fight = [page_of[f"99_test_unit/{n}"] for n in range(10, 20)]
+        special = [page_of[f"99_test_unit/{n}"] for n in range(30, 35)]
+        rest = [page_of[f"99_test_unit/{n}"] for n in range(20, 30)]
+        self.assertLess(max(town), min(fight), "the town's pages first")
+        self.assertLess(max(fight), min(special), "then a fight's")
+        self.assertLess(max(special), min(rest), "then the special moves, then the rest")
+        self.assertEqual(len(set(town)), 3, "four pictures a page")
+        for sheet, page in zip(sheets, pages):
+            w, h = sheet.size
+            self.assertLessEqual(h, 48, "short pages: 3/4 as tall as wide")
+            self.assertEqual(page["meta"]["image"].endswith(".moves.webp"), True)
+
+    def test_pages_are_whole_multiples_of_64(self):
+        positions, pages = pack_sheet.pack_moves([(100, 50), (100, 50), (30, 30)], [0, 0, 1])
+        self.assertEqual(pages, [(128, 128), (64, 64)], "102 x 104 and 32 x 32, rounded up")
+        self.assertEqual([page for page, _, _ in positions], [0, 0, 1])
+
+    def test_a_mask_says_where_a_page_is_see_through_at_half_size(self):
+        image = Image.new("RGBA", (8, 4), (0, 0, 0, 0))
+        image.putpixel((0, 0), (255, 0, 0, 32))  # one pixel of a 2 x 2 block at the client's limit: the block counts
+        image.putpixel((4, 0), (255, 0, 0, 20))  # fainter: it doesn't
+        mask = pack_sheet.mask(image)
+        self.assertEqual((mask.mode, mask.size), ("1", (4, 2)))
+        self.assertEqual([mask.getpixel((x, 0)) for x in range(4)], [255, 0, 0, 0])
+
+    def test_colours_are_premultiplied_for_the_graphics_chip(self):
+        image = Image.new("RGBA", (1, 1), (200, 100, 50, 128))
+        self.assertEqual(pack_sheet.premultiplied(image).getpixel((0, 0)), (100, 50, 25, 128))
+
+    @unittest.skipIf(not os.path.isdir(os.path.join(os.path.dirname(pack_sheet.KTX2), "node_modules", "ktx2-encoder")),
+                     "needs the art tools' packages: npm ci --prefix tools/art")
+    def test_a_big_unit_is_written_as_ktx2_too(self):
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, max_pages=20)
+        out = tempfile.mkdtemp(prefix="se-art-ktx2-")
+        pack_sheet.write(sheets, pages, out, with_ktx2=True)
+        with open(os.path.join(out, "99_test_unit.json")) as f:
+            first = json.load(f)
+        self.assertEqual(first["meta"]["ktx2"], "99_test_unit.moves.ktx2")
+        self.assertEqual(first["meta"]["mask"], "99_test_unit.moves-mask.png")
+        with open(os.path.join(out, "99_test_unit.moves.ktx2"), "rb") as f:
+            self.assertEqual(f.read(12), bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]))
 
 
 @unittest.skipIf(Image is None, "needs Pillow")

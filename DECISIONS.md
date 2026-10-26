@@ -4,6 +4,31 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 26 October 2026: big units' art as the graphics chip keeps it
+
+The owner's fix 6, after light art (below): the art made again for big
+units, packed move by move and stored in the graphics chip's own format
+(CLIENT.md, "Light art").
+
+- **UASTC, not ETC1S.** Measured on a real page: UASTC looks the same as
+  today's art (36 dB; nothing to see at twice the size), for about twice
+  the download of those pages; ETC1S downloads less than today but is
+  visibly blocky at edges (30 dB). The rule is the original art, so UASTC.
+- **Only big units' sheets** (items of several pages: big units, bosses,
+  the ground). Everything else is small already, and its download stays as
+  it is.
+- **Pages of at most 4096 x 3072**, in multiples of 64: the encoder we can
+  run takes 12 Mpix a page, and WebGL takes these pictures only in whole
+  blocks of 4. A few more pages per big unit, each smaller.
+- **New page names** (`.moves.webp`), so the cache never serves an old
+  picture with a new JSON file and nothing needs purging. The old pages
+  stay in the bucket, unused (a few GB at most); deleting them is a later,
+  separate step.
+- **The owner runs it:** the Export art to R2 workflow, "Make big units
+  again". Until then the game uses the sheets as they are (fixes 1 to 5).
+- **A graphics chip reset pauses drawing** until the pictures are read
+  again, rather than drawing empty pages for a moment.
+
 ## 26 October 2026: light art, for big units in fights and on phones
 
 The owner saw a tournament take 11 to 12 GB of memory, their town slow
