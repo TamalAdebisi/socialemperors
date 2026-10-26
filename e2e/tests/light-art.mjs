@@ -59,17 +59,13 @@ async function compare(page, name) {
     const context = canvas.getContext("2d", { willReadFrequently: true });
     context.drawImage(image, 0, 0, chip.width, chip.height);
     const file = context.getImageData(0, 0, chip.width, chip.height).data;
-    let off = 0, seen = 0, flipped = 0, fileSeen = 0, chipSeen = 0;
-    const w = chip.width, h = chip.height;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4 + 3, j = ((h - 1 - y) * w + x) * 4 + 3;
+    // Their see-through parts, pixel for pixel.
+    let off = 0, seen = 0;
+    for (let i = 3; i < file.length; i += 4) {
       if (file[i] > 0 || chip.pixels[i] > 0) seen++;
-      if (file[i] > 0) fileSeen++;
-      if (chip.pixels[i] > 0) chipSeen++;
       if (Math.abs(file[i] - chip.pixels[i]) > 2) off++;
-      if (Math.abs(file[i] - chip.pixels[j]) > 2) flipped++;
     }
-    return { width: w, height: h, seen, off, flipped, fileSeen, chipSeen, image: [image.width, image.height], frame: [texture.frame.x, texture.frame.y, texture.frame.width, texture.frame.height], res: texture.source.resolution };
+    return { width: chip.width, height: chip.height, seen, off };
   }, name);
 }
 
@@ -91,7 +87,6 @@ export default async function lightArt({ newPlayer }) {
   // The pictures on the chip are the sheet's.
   const before = await compare(page, ART[VULCANO]);
   assert.ok(before.seen > 100, "a picture with something in it");
-  console.log("  compare:", JSON.stringify(before));
   assert.equal(before.off, 0, "every pixel the sheet's");
 
   // A tap on a dragon's picture still finds it (its map of see-through parts).
