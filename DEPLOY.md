@@ -308,8 +308,9 @@ on the Railway address the game files would be blocked.
   buildings or units are added, or if a run stopped part way: it only makes
   the sheets that are missing. To make a few
   again, type their names under **Make these again**. To make the big
-  units' sheets the light way (every item of several pages: packed move by
-  move, with each page's KTX2 and mask; CLIENT.md, "Light art"), tick
+  units' sheets the light way (every item of several pages, or stored
+  smaller: packed move by move, units at the game's size, with each page's
+  KTX2 files and mask; CLIENT.md, "Light art"), tick
   **Make big units again**: about as long as the first run, since those
   are the slow ones. Their pages get new names, so nothing needs purging
   from the cache afterwards. The server

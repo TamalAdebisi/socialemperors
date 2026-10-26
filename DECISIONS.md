@@ -4,6 +4,32 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 26 October 2026: big units at the game's size
+
+The owner found the big dragons blurry once light art was in. Two
+halvings stacked up: their sheets were stored at half size (the old budget
+of 4 pages an item), and light art halved them again on phones and past
+the memory budget.
+
+- **A unit may take 24 pages, at the game's size.** The game loads only
+  the pages of the moves it shows, so more pages cost nothing until
+  they're shown. Every big dragon we know of fits at full size. A unit
+  past 24 pages is stored smaller first, then held longer, as before;
+  other items keep their 4 pages.
+- **Each page also at half size, as KTX2**, for light art: a quarter of
+  the download. With light art, big dragons now look as they did before
+  today; without it, sharper than ever.
+- **Bigger downloads without light art:** a page at full size has four
+  times the pixels. Light art downloads what it did.
+- **Each other move on pages of its own** (working, the longer deaths,
+  each special move), where they shared pages before, so a fight loads only
+  the special moves it uses. A few more pages; nothing on screen changes.
+- **New page names again** (`.m2.webp`), as with the change below: the
+  cache never mixes old pages with new JSON files.
+- **"Make big units again" also redoes every item stored smaller**, so a
+  unit of one page at half size isn't missed. A building stored smaller
+  comes out the same, for a few minutes' work.
+
 ## 26 October 2026: big units' art as the graphics chip keeps it
 
 The owner's fix 6, after light art (below): the art made again for big

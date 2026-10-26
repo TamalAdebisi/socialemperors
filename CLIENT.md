@@ -266,7 +266,8 @@ slice) with three changes, each found on one of them:
   so in `meta.scale`; PixiJS reads it and draws them at full size, and the
   client's tap test and thumbnails allow for it.
 - **Too many pictures.** An item may take at most 4 sheet pages (each up to
-  64 MB in a graphics chip). The chained water god, a 4 x 4 decoration
+  64 MB in a graphics chip; a unit 24 since 26 October, as the game loads
+  only the pages of the moves it shows: "Light art"). The chained water god, a 4 x 4 decoration
   whose 13-second animation is 394 pictures of nearly 4,000 x 2,500 pixels,
   would have taken 48 pages. Over the budget, the packer stores pictures
   smaller first, then holds each picture for 2 or 3 frames
@@ -928,30 +929,40 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
 
 - **Packed move by move** (`pack_sheet.py`, `move_groups`): a sheet of
   several pages puts a unit's standing and walking pictures on pages of
-  their own, then its attacking and dying, then its special moves, then the
-  rest (working, the longer deaths). The map loads only the first pages,
-  a fight the first two groups and the specials it needs, each page as it
-  is: no copying, and no page decoded for nothing.
+  their own, then its attacking and dying, then each other move (working,
+  the longer deaths, each special move) on pages of its own. The map loads
+  only the first pages, a fight the first two groups and the specials it
+  needs, each page as it is: no copying, and no page decoded for nothing.
+- **At the game's size** (added the same day, after the owner found the
+  big dragons blurry). Under the old budget of 4 pages an item, the big
+  dragons' pictures were stored at half size, and light art halved them
+  again. A unit may now take 24 pages (`UNIT_PAGES`): since only the pages
+  of the moves shown are loaded, more pages cost nothing until they're
+  used, and every big dragon we know of fits at full size. Each page also
+  comes as a half-size KTX2 file (`<page>.m2.half.ktx2`, `meta.ktx2_half`),
+  which light art loads: a quarter of the download. With the graphics
+  chip's format, a page at full size takes as much memory there as the old
+  half-size page did decoded.
 - **Each page also as KTX2** (`tools/art/ktx2.mjs`, Basis Universal's
   UASTC, with its smaller copies for zooming out), from the page with its
   colours premultiplied by alpha, as PixiJS draws. The client reads it into
   the best format the graphics chip takes (`ArtLibrary.ktx2`, by the
   renderer's own WebGL extensions; WebGL 2 only), and falls back to the
-  WebP pages if a page won't load. Light art uses its half-size copy: a
+  WebP pages if a page won't load. Light art uses its half-size file: a
   sixteenth of a decoded page at full size. The reading is done by a worker
   of our own (`view/ktx2.worker.ts`) with the KTX library PixiJS ships:
   PixiJS's own reader never frees what it read, and its memory only grows.
-- **A mask file per page** (`<page>.moves-mask.png`, one bit for each 2 x
+- **A mask file per page** (`<page>.m2-mask.png`, one bit for each 2 x
   2 pixels): a KTX2 page can't be read back, so taps use the mask
   (`maskFile`).
 - **Pages of at most 4096 x 3072, in whole multiples of 64**: the encoder
   takes 12 Mpix, and WebGL takes compressed pictures in whole blocks of 4
   only, so the smaller copies stop where a size would break a block
   (4 sizes at least).
-- **New page names** (`<item>.moves.webp`, `.ktx2`): the cache keeps
-  pictures a day, and the old names with the new JSON would draw the wrong
-  pictures (it happened on 16 October). The old pages stay in the bucket,
-  unused.
+- **New page names** (`<item>.m2.webp`, `.m2.ktx2`; `PAGES_MARK`,
+  changed whenever the packing changes): the cache keeps pictures a day,
+  and the old names with the new JSON would draw the wrong pictures (it
+  happened on 16 October). The old pages stay in the bucket, unused.
 
 Measured with the Vulcano Dragon made again here: packed move by move,
 its fight art is 106 MB instead of 177 and its map art 53 instead of 128,

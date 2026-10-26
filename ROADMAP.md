@@ -381,7 +381,8 @@ merging the two wait fixes with that separate failure documented.
       budget, Fast drawing on by default on phones, at most 60 drawings a
       second ([CLIENT.md](CLIENT.md#light-art)); big units' sheets packed
       move by move and stored as the graphics chip keeps them (KTX2), four
-      times smaller there, used once the owner runs the art workflow's
+      times smaller there, at the game's size with half-size copies for
+      light art, used once the owner runs the art workflow's
       "Make big units again"); the building card,
       the original's info panel with Upgrade (the owner's pick of the
       mockups, 16 October 2026); and a run-through

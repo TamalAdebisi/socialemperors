@@ -2,7 +2,7 @@
 // a sheet of several pages packed move by move (tools/art/pack_sheet.py)
 // comes with each page as KTX2 and a mask file. The map uses the town's
 // pages as they are, in the graphics chip's format, four times smaller there
-// than the decoded WebP; light art uses their half-size copies; taps use the
+// than the decoded WebP; light art uses their half-size files; taps use the
 // mask; and after a graphics chip reset they're read again.
 //
 // Needs the Vulcano Dragon exported that way (KTX2=1 tools/export_art.sh):
@@ -66,11 +66,11 @@ async function compare(page) {
 export default async function ktx2Art({ newPlayer }) {
   const player = await newPlayer();
   const { page } = player;
-  const ready = await page.evaluate(async (name) => {
+  const meta = await page.evaluate(async (name) => {
     const response = await fetch(`${window.seHome.parts.art.base}/${name}.json`);
-    return response.ok && Boolean((await response.json()).meta.ktx2);
-  }, ART).catch(() => false);
-  if (!ready) {
+    return response.ok ? (await response.json()).meta : null;
+  }, ART).catch(() => null);
+  if (!meta?.ktx2) {
     console.log(`  skipped: ${ART} has no KTX2 pages here (export it with KTX2=1 tools/export_art.sh)`);
     return;
   }
@@ -107,14 +107,22 @@ export default async function ktx2Art({ newPlayer }) {
   assert.ok(Math.abs(again.meanAlphaOff - looks.meanAlphaOff) < 0.01, "the same pixels after the reset");
   await player.shot("after-reset");
 
-  // Light art: the same pages' half-size copies.
+  // Light art: the same pages at half size, from their half-size files where the sheet has them.
   await page.evaluate(() => localStorage.setItem("se-light-art", "on"));
+  const read = [];
+  const listen = (request) => request.url().endsWith(".ktx2") && read.push(request.url().split("/").pop());
+  page.on("request", listen);
   await player.reload();
   const light = await townArt(page);
+  page.off("request", listen);
   assert.equal(light.half, true);
   light.sources.forEach((s, n) => {
     assert.equal(s.kind, "compressed");
     assert.deepEqual([s.w, s.h], [full.sources[n].w / 2, full.sources[n].h / 2], "half size each way");
   });
+  console.log(`  light art read ${read.join(", ")}; the sheet's scale ${meta.scale}`);
+  if (meta.ktx2_half) {
+    assert.ok(read.length > 0 && read.every((file) => file.endsWith(".half.ktx2")), "only the half-size files");
+  }
   await player.shot("light-art");
 }

@@ -21,8 +21,9 @@ interface SheetMeta {
   fps?: number;
   bounds?: Record<string, Bounds>;
   related_multi_packs?: string[];
-  /** The page as the graphics chip keeps it (tools/art/ktx2.mjs), and where it's see-through (pack_sheet.py). */
+  /** The page as the graphics chip keeps it (tools/art/ktx2.mjs), the same at half size, and where it's see-through (pack_sheet.py). */
   ktx2?: string;
+  ktx2_half?: string;
   mask?: string;
 }
 
@@ -183,7 +184,10 @@ interface Cut {
   scale: number;
 }
 
-/** How to make a copy's pages: the sheet's pages used as they are (their KTX2, smaller with `half`), then pages of cut pictures. */
+/**
+ * How to make a copy's pages: the sheet's pages used as they are (their
+ * KTX2, its smaller sizes only with `half`), then pages of cut pictures.
+ */
 interface Recipe {
   whole: { file: string; ktx2?: string; half: boolean }[];
   pages: { w: number; h: number }[];
@@ -564,8 +568,11 @@ export class ArtLibrary {
     const { runs, whole, cut, packed } = planCopy(pages, moves, shrink, ready);
     const file = (name: string) => `${this.base}/${name}`;
     const half = shrink > 1;
+    // At half size, a page's half-size KTX2 file (a quarter of the download), or else its whole one's smaller sizes.
+    const chip = (meta: SheetMeta) => !ktx2 || !meta.ktx2 ? undefined
+      : half && meta.ktx2_half ? { ktx2: file(meta.ktx2_half), half: false } : { ktx2: file(meta.ktx2), half };
     const recipe: Recipe = {
-      whole: whole.map((n) => ({ file: file(pages[n].meta.image), ktx2: ktx2 && pages[n].meta.ktx2 ? file(pages[n].meta.ktx2) : undefined, half })),
+      whole: whole.map((n) => ({ file: file(pages[n].meta.image), half, ...chip(pages[n].meta) })),
       pages: cut.length > 0 ? packed.pages : [],
       cuts: cut.map(({ page, frame }, i) => ({ file: file(pages[page].meta.image), from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
     };
