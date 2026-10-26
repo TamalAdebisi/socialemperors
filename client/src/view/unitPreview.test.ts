@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { Texture } from "pixi.js";
 import type { ItemInfo } from "../rules/config.ts";
-import type { ArtLibrary } from "./art.ts";
+import type { ArtLibrary, Cutout } from "./art.ts";
 import { unitPreview } from "./unitPreview.ts";
 
 test("a preview draws an earlier first RAF timestamp, advances and cancels when stopped", async (t) => {
@@ -39,13 +38,21 @@ test("a preview draws an earlier first RAF timestamp, advances and cancels when 
   const walking = [{ name: "walking first" }, { name: "walking second" }];
   const attacking = [{ name: "attacking first" }, { name: "attacking second" }];
   const special = [{ name: "special first" }, { name: "special second" }];
-  const texture = (resource: object) => ({
-    orig: { width: 20, height: 10 }, frame: { x: 0, y: 0, width: 20, height: 10 },
-    source: { resource, resolution: 1 },
-  } as unknown as Texture);
-  const runs = new Map([[1, walking.map(texture)], [2, attacking.map(texture)], [6, special.map(texture)]]);
-  const sheet = { fps: 2, numbered: (number: number) => runs.get(number) };
-  const art = { get: async () => sheet } as unknown as ArtLibrary;
+  const closed: object[] = [];
+  const cutout = (image: object): Cutout => {
+    (image as { close(): void }).close = () => closed.push(image);
+    return { image: image as ImageBitmap, x: -10, y: -10, width: 20, height: 10 };
+  };
+  // The sheet's runs by number (5 ways each): walking 1, attacking 2, the first special 6, each facing way 3.
+  const all: [string, string[]][] = Array.from({ length: 35 }, (_, i) => [`run/${i}`, [`picture ${i}`]]);
+  const cut = new Map([[1, walking.map(cutout)], [2, attacking.map(cutout)], [6, special.map(cutout)]]);
+  const asked: string[][] = [];
+  const art = {
+    cutouts: async (_name: string, pick: (runs: [string, string[]][]) => string[][]) => {
+      asked.push(...pick(all));
+      return { fps: 2, runs: [1, 2, 6].map((move) => cut.get(move)!) };
+    },
+  } as unknown as ArtLibrary;
   const drawn: object[] = [];
   const context = { clearRect() {}, drawImage(source: object) { drawn.push(source); } };
   const canvas = {
@@ -53,6 +60,8 @@ test("a preview draws an earlier first RAF timestamp, advances and cancels when 
   } as unknown as HTMLCanvasElement;
   stop = unitPreview(art, { art: "preview-test" } as ItemInfo, canvas, () => true);
   await Promise.resolve();
+  await Promise.resolve();
+  assert.deepEqual(asked, [["picture 8"], ["picture 13"], ["picture 33"]], "walking, attacking and the special move, facing way 3");
 
   const draw = (timestamp: number) => {
     assert.equal(callbacks.size, 1, "only the next preview frame is pending");
@@ -72,6 +81,7 @@ test("a preview draws an earlier first RAF timestamp, advances and cancels when 
   stop();
   assert.deepEqual(cancelled, [pending]);
   assert.equal(callbacks.size, 0, "stopping cancels the pending frame");
+  assert.equal(closed.length, 6, "the cut-out pictures are let go");
   callback(4500);
   assert.equal(drawn.length, 3, "a stopped callback cannot draw or reschedule");
   assert.equal(callbacks.size, 0);

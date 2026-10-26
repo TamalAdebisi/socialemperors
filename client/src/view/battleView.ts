@@ -6,9 +6,11 @@ import { Assets, ColorMatrixFilter, Container, Graphics, Sprite, type Texture } 
 
 import { DEAD_FRAMES, ENEMY, SELF, type Battle, type BattleEvent, type Effect, type Fighter, type Shot } from "../rules/battle.ts";
 import type { ItemInfo } from "../rules/config.ts";
+import specialsTable from "../rules/specials-table.json" with { type: "json" };
+import { specialAnimations, type SpecialsTable } from "../rules/specials.ts";
 import { BLOCK_TILES, BLOCKS, MAP_TILES, buildingOrigin, buildingPoint, unitFacing, unitPoint, type Point } from "../rules/geometry.ts";
 import type { PlacedItem } from "../rules/town.ts";
-import { anchorOf, type ArtLibrary } from "./art.ts";
+import { FIGHT_MOVES, anchorOf, type ArtLibrary, type ItemArt } from "./art.ts";
 import { pouringTower } from "./buildingAnimation.ts";
 import { fireSprite, fireStage } from "./fire.ts";
 import { isOpaqueAt, layerBox, overlaps, seenOnLayer, unitHitDistance, visualScreenBox } from "./hit.ts";
@@ -135,19 +137,33 @@ export class BattleView {
     return true;
   }
 
-  /** Load every picture the battle needs; `progress` hears how many are ready. Returns the art missing. */
+  /**
+   * Load every picture the battle needs; `progress` hears how many are
+   * ready. Returns the art missing. Big units' pictures are cut down to what
+   * a fight shows, at the size the page's budget allows (ArtLibrary.plan).
+   */
   async load(progress: (done: number, total: number) => void): Promise<string[]> {
-    const names = new Set(this.battle.fighters.map((f) => f.item.art));
+    const fighters = new Map<string, Fighter>();
+    for (const fighter of this.battle.fighters) {
+      if (!fighters.has(fighter.item.art)) fighters.set(fighter.item.art, fighter);
+    }
+    await this.art.plan([...fighters.values()].filter((fighter) => fighter.isUnit)
+      .map((fighter) => ({ art: fighter.item.art, moves: [...FIGHT_MOVES, ...specialsOf(fighter.item)] })));
     const missing: string[] = [];
     let done = 0;
-    progress(0, names.size);
-    await Promise.all([...names].map(async (name) => {
-      if (!(await this.art.get(name))) {
+    progress(0, fighters.size);
+    await Promise.all([...fighters].map(async ([name, fighter]) => {
+      if (!(await this.artOf(fighter))) {
         missing.push(name);
       }
-      progress(++done, names.size);
+      progress(++done, fighters.size);
     }));
     return missing;
+  }
+
+  /** A fighter's art: a unit's as a fight needs it (ArtLibrary.fighter), anything else's whole. */
+  private artOf(fighter: Fighter): Promise<ItemArt | null> {
+    return fighter.isUnit ? this.art.fighter(fighter.item.art, specialsOf(fighter.item)) : this.art.get(fighter.item.art);
   }
 
   /** Draw the battle as it is now: called every screen frame. */
@@ -449,13 +465,17 @@ export class BattleView {
   }
 
   private async paint(fighter: Fighter, drawn: Drawn, pose: Pose, special = 0): Promise<void> {
-    const art = await this.art.get(fighter.item.art);
+    const art = await this.artOf(fighter);
+    const facing = unitFacing(fighter.facing);
+    let moving = special && art ? art.numbered(special, facing.frame) : undefined;
+    if (special && art?.leftOut.has(special)) {
+      // A move a big unit's fight copy left out (not in the table: a boss's run, a monk's turning): loaded now.
+      moving = (await this.art.move(fighter.item.art, special))?.numbered(special, facing.frame);
+    }
     if (drawn.slot.destroyed || drawn.key !== this.keyOf(fighter, pose, special)) {
       return;
     }
     drawn.slot.removeChildren().forEach((child) => child.destroy());
-    const facing = unitFacing(fighter.facing);
-    const moving = special && art ? art.numbered(special, facing.frame) : undefined;
     if (!art) {
       drawn.slot.addChild(outline(fighter));
     } else if (moving?.length) {
@@ -628,4 +648,16 @@ function brighter([r, g, b]: [number, number, number]): ColorMatrixFilter {
   const filter = new ColorMatrixFilter();
   filter.matrix = [1, 0, 0, 0, r, 0, 1, 0, 0, g, 0, 0, 1, 0, b, 0, 0, 0, 1, 0];
   return filter;
+}
+
+const specials = new Map<number, number[]>();
+
+/** A unit's special animations, by the specials table (rules/specials.ts): loaded with its fight pictures. */
+function specialsOf(item: ItemInfo): number[] {
+  let found = specials.get(item.id);
+  if (!found) {
+    found = specialAnimations(specialsTable as unknown as SpecialsTable, item.id);
+    specials.set(item.id, found);
+  }
+  return found;
 }

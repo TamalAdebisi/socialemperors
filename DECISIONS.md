@@ -4,6 +4,43 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 26 October 2026: light art, for big units in fights and on phones
+
+The owner saw a tournament take 11 to 12 GB of memory, their town slow
+with its newer dragons, and a friend's empire fail to open on phones. The
+cause was the newer big units' pictures: a battle loaded every page of
+every fighter's sheet, and each was held three times (CLIENT.md, "Light
+art"). The owner asked for all six fixes proposed; the first five are
+here, the sixth (storing the art as the graphics chip keeps it) follows.
+
+- **Pictures are kept on the graphics chip only.** The page lets go of
+  its own decoded copy once a page is there. Nothing changes on the
+  screen. Taps on a picture's see-through parts are answered from a map
+  of them at half size: a tap within a pixel of a picture's edge may now
+  count where before it just missed. A graphics chip that resets (phones
+  do) gets its pictures made again from their files, which shows blank
+  units for a moment.
+- **Fights load what fighters do**: standing, walking, attacking, dying
+  and the unit's own special moves from the specials table. A move left
+  out (a boss's run, a monk's turning) loads when it first plays; for that
+  moment the unit stands. Nothing else changes on the screen.
+- **Light art: big units at half size**, a quarter of the memory, a
+  little softer up close, on a phone or tablet, on a computer that says it
+  has 4 GB or less, or when a page's big units would take more than 1.5 GB
+  at full size (a tournament of 20 riders would take about 13 GB). Our
+  call, since the alternative is a page that crawls or closes. Light art in
+  the Menu switches it on or off for good; it holds from the next page.
+  The 1.5 GB is our guess at what an ordinary laptop's graphics chip holds
+  comfortably.
+- **Fast drawing is on by default on phones and tablets** (the owner's
+  pick, fix 5). Off in the Menu as before.
+- **At most 60 drawings a second** (fix 3): the art moves at 30 pictures a
+  second, so faster screens only spent battery.
+- **The shop's and the units book's pictures** are cut straight from the
+  sheet files, and nothing is kept: browsing the shop used to keep a whole
+  sheet, or a big unit's map copy, for each picture. An extra in the same
+  spirit.
+
 ## 21 October 2026: big units keep only their town pictures on the map
 
 The owner's Blue Fire Djinn Dragon still showed only while moving, and

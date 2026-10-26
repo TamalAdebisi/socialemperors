@@ -30,7 +30,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
-import { drawingResolution } from "./view/drawing.ts";
+import { drawingResolution, steadyFrames } from "./view/drawing.ts";
 
 export const ISLANDS = islandData.islands as unknown as Island[];
 /** The sea around an island: the Flash client's blue. */
@@ -86,6 +86,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
     resizeTo: window, background: SEA, resolution: drawingResolution(), autoDensity: true,
     antialias: false, preference: "webgl", sharedTicker: true,
   });
+  steadyFrames(app.ticker);  // at most 60 drawings a second (view/drawing.ts)
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.style.background = `#${SEA.toString(16)}`;
@@ -100,7 +101,7 @@ export async function playQuest(settings: PageSettings, server: GameServer, ques
 
   const commands = new CommandSender(settings, { clock: () => info.timestamp, onFailure: (reason) => showStatus(reason) });
   const sound = new Sound(settings.assetsUrl, town.race, "QUESTS.mp3");
-  const art = new ArtLibrary(settings.artUrl);
+  const art = new ArtLibrary(settings.artUrl, app.renderer);
   const name = items.get(island.item)?.name ?? "The island";
 
   // The island, as its file lays it out, behind the start window.

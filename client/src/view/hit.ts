@@ -6,6 +6,7 @@
 import { Sprite, ViewContainer, type Container } from "pixi.js";
 
 import type { Point } from "../rules/geometry.ts";
+import { maskedOpaque } from "./onChip.ts";
 
 /** Pixels this see-through or more don't count as the picture. */
 const MIN_ALPHA = 32;
@@ -120,6 +121,11 @@ export function isOpaqueAt(picture: Container, screen: Point): boolean {
     texture.source.resolution);
   if (!pixel) {
     return false;
+  }
+  // A page kept on the graphics chip only has a map of its see-through parts (view/onChip.ts).
+  const masked = maskedOpaque(texture.source, pixel.x, pixel.y);
+  if (masked !== undefined) {
+    return masked;
   }
   const source = texture.source.resource as CanvasImageSource | undefined;
   if (!source) {

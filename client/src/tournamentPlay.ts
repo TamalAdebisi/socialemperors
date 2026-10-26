@@ -23,7 +23,7 @@ import { Pause } from "./ui/pause.ts";
 import { ArtLibrary } from "./view/art.ts";
 import { BattleView } from "./view/battleView.ts";
 import { Camera } from "./view/camera.ts";
-import { drawingResolution } from "./view/drawing.ts";
+import { drawingResolution, steadyFrames } from "./view/drawing.ts";
 import { TownView } from "./view/townView.ts";
 
 const SPEEDS = [1, 2, 3];
@@ -71,6 +71,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   const app = new Application();
   await app.init({ resizeTo: window, background: skinColour(arena.skin), resolution: drawingResolution(),
     autoDensity: true, antialias: false, preference: "webgl", sharedTicker: true });
+  steadyFrames(app.ticker);  // at most 60 drawings a second (view/drawing.ts)
   const loop = new GameLoop(app.ticker);
   document.getElementById("stage")!.appendChild(app.canvas);
   document.body.classList.add("questing", "tournament-playing");
@@ -83,7 +84,7 @@ export async function playTournament(settings: PageSettings, server: GameServer,
   app.renderer.on("resize", (width: number, height: number) => camera.resize(width, height));
   loop.add((ms) => camera.update(ms));
   const sound = new Sound(settings.assetsUrl, town.race, "ASSAULTS.mp3");
-  const art = new ArtLibrary(settings.artUrl);
+  const art = new ArtLibrary(settings.artUrl, app.renderer);
   const ground = new TownView(art, items, arena);
   world.addChild(ground.root);
   const groundLoaded = await ground.build((done, total) => showStatus(`The tournament field… ${Math.round(100 * done / total)}%`));

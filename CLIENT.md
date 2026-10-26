@@ -831,14 +831,94 @@ is 58 MB, 75 pictures. Sheets of one page (knights, villagers: villagers'
 work poses are in town too) are used whole, as before. Shop and storage
 pictures use the map's copy as well.
 
-Battles load whole sheets (`ArtLibrary.get`), on their own pages. A raid
-at home is fought on the town's page, so its whole sheets are let go when
-it's over (`ArtLibrary.letGo`, from `HomeDefence.end`); the next raid
-loads them again. Still loading whole sheets on the town's page: the units
-book's moving preview, while its card is open.
+Fights cut big units down too, to what fighters do ("Light art", below).
+A raid at home is fought on the town's page, so its fight copies are let
+go when it's over (`ArtLibrary.letGo`, from `HomeDefence.end`); the next
+raid loads them again. The units book's moving preview and the shop's
+pictures are cut straight from the sheet's files (`ArtLibrary.cutouts`),
+with nothing put on the graphics chip.
 
 Test: `e2e/tests/big-units.mjs` (the copy is under a third of the sheet,
-every picture the same size, anchor and pixels; let go of after a raid).
+every picture the same size, anchor and pixels; a fight's copy, a move it
+left out loaded when it plays; let go of after a raid).
+
+### Light art
+
+Built 26 October 2026, after the owner saw a tournament take 11 to 12 GB
+of memory, their town crawl with its newer dragons, and a friend's empire
+fail to open on phones (Chrome and Safari). The rules and the pictures are
+unchanged; there is one new setting, and Fast drawing is on by default on
+phones. Code: `view/art.ts` (`ArtLibrary`, `planCopy`), `view/onChip.ts`,
+`view/drawing.ts`, `view/battleView.ts` (`load`, `paint`). Test:
+`e2e/tests/light-art.mjs`.
+
+**Where the memory went.** We measured it in Chromium on our test machine,
+with sheets the size of the real ones and with real dragons exported here.
+A newer big unit's whole sheet is two to five pages of up to 4,096 x
+4,096 pixels, 64 MB each once decoded. A battle loaded every page of every
+fighter, and the page then held each one three times: the decoded picture
+(PixiJS keeps it after copying it to the graphics chip, about 40%), the
+graphics chip's copy, and its smaller copies for zooming out (about 20%).
+A big unit came to about 500 MB, so a tournament with 20 of them took 10
+GB or more. Past what the graphics chip holds, the computer shuffles
+pictures in and out every frame and everything crawls; a phone's browser
+gives a page 1 or 2 GB and closes it past that.
+
+**What changed:**
+
+- **The graphics chip only.** Given the renderer (every page passes it),
+  `ArtLibrary` copies each page to the graphics chip as soon as it loads
+  and lets go of the page's own copy (`OnChip.keep`). Taps still hit only
+  a picture's visible part: a map of where each page is see-through, at
+  half size, one bit per 2 x 2 pixels (512 KB for a whole page instead of
+  64 MB), answers them (`maskedOpaque`, used by `hit.ts`). If the graphics
+  chip is reset (a phone may do it to a page in the background), the pages
+  are made again from their files. A big unit of three whole pages: 491 MB
+  became 305 MB.
+- **Fights load what fighters do.** A big unit's fight art is a copy of
+  its standing, walking, attacking and dying, and the special moves the
+  specials table gives it (`specialAnimations`), as the map's copy has its
+  standing and walking (`ArtLibrary.fighter`, `planCopy`). Every picture
+  run keeps its place, so the moves keep their numbers; a move left out
+  (a boss's run, a monk's turning) is loaded when it first plays
+  (`ArtLibrary.move`), standing meanwhile. A page whose every picture is
+  wanted is used as it is, and so are all of them when the copy would keep
+  more than three quarters of the sheet: copying would save little and
+  take time. The Infernal Dragon fights from its pages as they are (its
+  moves are 78% of its sheet); the Vulcano Dragon's fight copy is 63% of
+  its sheet, the Red Djinn Dragon Rider's 39%.
+- **A memory budget: light art.** Before a town or a fight is drawn, the
+  page adds up what its big units' pictures would take at full size
+  (`ArtLibrary.plan`). Past 1.5 GB, or on a phone or tablet, or on a
+  computer that says it has 4 GB or less, they're kept at half size: a
+  quarter of the memory, a little softer up close. Light art in the Menu
+  switches it on or off for good, from the next page opened.
+- **Fast drawing is on by default on phones and tablets** (`touchScreen`),
+  where a page pixel is 2 or 3 screen pixels: a quarter (or a ninth) of the
+  pixels to fill, a little softer. Off in the Menu as before.
+- **At most 60 drawings a second** (`steadyFrames`). Phones and gaming
+  screens offer 90 to 144, but the art moves at 30 pictures a second. Set
+  at 64, as PixiJS rounds each gap down to whole milliseconds and would
+  otherwise skip every other frame of a 60 Hz screen.
+- **The shop and the units book** cut their pictures out of the sheet's
+  files (`cutouts`). Browsing the shop used to keep a whole sheet, or a big
+  unit's map copy, for every picture shown.
+
+**Measured with real dragons**, exported here, for each one on the page:
+
+| | In a fight, before | Now | Light art | On the map, before | Now | Light art |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Red Djinn Dragon Rider | 674 MB | 344 MB | 128 MB | 344 MB | 298 MB | |
+| Vulcano Dragon | 264 MB | 177 MB | 67 MB | 157 MB | 128 MB | 61 MB |
+| Infernal Dragon | 233 MB | 146 MB | 65 MB | 172 MB | 132 MB | 66 MB |
+
+A tournament of 20 riders took about 13 GB, as the owner saw; now it
+passes the budget, so its big units are light, about 2.6 GB. These are the
+page's and the graphics chip's memory together, as Chromium on our test
+machine reports them; its graphics chip is software, in memory, and keeps
+some of what's let go. A real graphics chip frees it at once, so the gain
+there is if anything larger. Storing the pictures as the graphics chip
+keeps them, four times smaller, is the next step (ROADMAP.md).
 
 ### Click feedback and unit targets
 
@@ -1518,8 +1598,9 @@ work isn't in these numbers: the test machine draws in software.)
 - **Fast drawing**, in the Menu, on screens with more pixels than the page
   (a Retina laptop, a phone). The map is drawn one pixel for one instead
   of two by two each way: a quarter of the pixels for the graphics chip, a
-  little softer. It's off unless chosen, remembered in the browser, and
-  used for the town and the fights alike. The Flash client had a quality
+  little softer. It's off on a computer unless chosen (on by default on a
+  phone or tablet since 26 October: "Light art"), remembered in the
+  browser, and used for the town and the fights alike. The Flash client had a quality
   switch that did nothing and always drew at "medium", so this one is ours
   (DECISIONS.md, 20 October).
 

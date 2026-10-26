@@ -130,12 +130,8 @@ export default async function structureIdle({ newPlayer }) {
           // A nonempty bitmap can still be scrambled. Compare the entire
           // first frame's alpha grid with the original public WebP, whose
           // fingerprint was independently measured with Pillow.
-          const { source, frame } = picture.texture;
-          const canvas = document.createElement("canvas");
-          canvas.width = frame.width; canvas.height = frame.height;
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          context.drawImage(source.resource, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
-          const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
+          // Read from the graphics chip: the page lets go of its own copy once it's there (view/onChip.ts).
+          const rgba = renderer.texture.getPixels(picture.texture).pixels;
           const alpha = Uint8Array.from({ length: rgba.length / 4 }, (_, i) => rgba[i * 4 + 3]);
           sourceAlpha = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", alpha)))
             .map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -154,7 +150,8 @@ export default async function structureIdle({ newPlayer }) {
       if (name === "1479_chained_levelup" && face.facing === 0) assert.equal(face.sourceAlpha,
         "69afb90c6933d8dd7c1d2a1bc5e1a6e6ebfde3bbf8a8c9f78e753179e465db62",
         "the decoded statue retains every original alpha pixel, not just some visible pixels");
-      if (webkit) assert.equal(face.imageType, "ImageBitmap", `${name}/${face.facing} retains bitmap loading with blank-atlas recovery`);
+      // ImageData: the bitmap was let go once on the graphics chip (view/onChip.ts).
+      if (webkit) assert.ok(["ImageBitmap", "ImageData"].includes(face.imageType), `${name}/${face.facing} retains bitmap loading with blank-atlas recovery`);
       writeFileSync(join(player.out, `idle-${name}-${face.facing}.png`), Buffer.from(result.captures[face.facing].split(",")[1], "base64"));
     }
     delete result.captures;

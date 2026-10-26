@@ -2,7 +2,7 @@
 // Rider's whole sheet is five pages, 247 MB decoded; the map keeps only its
 // standing and walking pictures, copied into pages of their own pixel for
 // pixel, so a town with a few big dragons stays playable. A raid at home
-// loads the whole sheet for the fight, and lets it go when it's over.
+// loads the fight's own copy (what fighters do), and lets it go when it's over.
 
 import assert from "node:assert/strict";
 
@@ -16,12 +16,12 @@ export default async function bigUnits({ newPlayer }) {
   await player.reload();
   await page.waitForFunction(() => window.seHome, null, { timeout: 30_000 });
 
-  // The map draws the rider from its own copy.
+  // The map draws the rider from its own copy, kept on the graphics chip only (view/onChip.ts).
   await page.waitForFunction((id) => {
     const { town, view } = window.seHome.parts;
     const placed = town.items.find((p) => p.item.id === id);
     const picture = view.slots.get(placed)?.children.find((c) => c.texture && c.label !== "selected");
-    return picture?.texture?.source?.resource instanceof HTMLCanvasElement;
+    return picture?.texture?.source?.label?.includes(" in town") && picture.texture.source.resource instanceof ImageData;
   }, RIDER, { timeout: 30_000 });
   await player.shot("town");
 
@@ -32,13 +32,8 @@ export default async function bigUnits({ newPlayer }) {
     const whole = await art.get(name);
     const pixels = (item) => [...new Set([...item.animations.values()].flat().map((t) => t.source))]
       .reduce((sum, source) => sum + source.pixelWidth * source.pixelHeight, 0);
-    const read = (texture) => {
-      const r = texture.source.resolution, f = texture.frame;
-      const canvas = Object.assign(document.createElement("canvas"), { width: Math.round(f.width * r), height: Math.round(f.height * r) });
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      context.drawImage(texture.source.resource, f.x * r, f.y * r, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-      return context.getImageData(0, 0, canvas.width, canvas.height).data;
-    };
+    // Read from the graphics chip, where both are kept.
+    const read = (texture) => art.chip.renderer.texture.getPixels(texture).pixels;
     const runs = [...town.animations.keys()];
     const wholeRuns = [...whole.animations.keys()].slice(0, runs.length);
     const problems = [];
@@ -91,25 +86,48 @@ export default async function bigUnits({ newPlayer }) {
     window.seHome.hurry();
   });
   await page.waitForFunction(() => Boolean(window.seHome.fighting), null, { timeout: 30_000 });
-  await page.waitForFunction((name) => window.seHome.parts.art.bigPages.has(name), ART, { timeout: 60_000 });
+  // The fight's own copy of the rider: what fighters do and its special moves (ArtLibrary.fighter).
+  await page.waitForFunction(async (name) => {
+    const art = window.seHome.parts.art;
+    return art.loading.has(`${name} in fights`) && art.copies.has(`${name} in fights`);
+  }, ART, { timeout: 60_000 });
   await player.shot("raid");
+  // A move the copy left out is loaded when it plays: the rider's second dying run (5) as a special.
+  const moved = await page.evaluate(async ({ name, id }) => {
+    const { art } = window.seHome.parts;
+    const { battle } = window.seHome.fighting;
+    const fights = await art.fighter(name);
+    const rider = battle.fighters.find((f) => f.item.id === id && !f.dead);
+    if (!rider) return { leftOut: [...fights.leftOut] };
+    rider.special = { animation: 5, until: battle.frame + 300 };
+    for (let i = 0; i < 100 && !art.loading.has(`${name} move 5`); i++) await new Promise((r) => setTimeout(r, 100));
+    const more = await art.loading.get(`${name} move 5`);
+    return { leftOut: [...fights.leftOut], move: more?.numbered(5, 0)?.length ?? 0 };
+  }, { name: ART, id: RIDER });
+  console.log(`  the fight copy left out moves ${moved.leftOut.join(", ")}`);
+  assert.ok(moved.leftOut.includes(5), "the dying run past the first is left out of the fight copy");
+  assert.ok(moved.move > 0, "a left-out move is loaded when it plays");
   await page.evaluate(() => {
     const { battle } = window.seHome.fighting;
     // The raiders (rules/battle.ts ENEMY), as if the town's units won.
     for (const fighter of battle.fighters.filter((f) => f.side === 2 && f.isUnit && !f.dead)) battle.kill(fighter, null);
   });
   await page.waitForFunction(() => !window.seHome.fighting, null, { timeout: 60_000 });
-  const over = await page.evaluate((name) => ({
-    whole: window.seHome.parts.art.loading.has(name) || window.seHome.parts.art.bigPages.has(name),
-    town: window.seHome.parts.art.loading.has(`${name} in town`),
-  }), ART);
-  assert.deepEqual(over, { whole: false, town: true }, "after the raid, only the map's copy is kept");
+  const over = await page.evaluate((name) => {
+    const { art } = window.seHome.parts;
+    return {
+      whole: art.loading.has(name) || art.bigPages.has(name),
+      fights: [...art.loading.keys()].some((key) => key === `${name} in fights` || key.startsWith(`${name} move `)),
+      town: art.loading.has(`${name} in town`),
+    };
+  }, ART);
+  assert.deepEqual(over, { whole: false, fights: false, town: true }, "after the raid, only the map's copy is kept");
   // And the map still draws the rider, from its copy.
   await page.waitForFunction((id) => {
     const { town, view } = window.seHome.parts;
     const placed = town.items.find((p) => p.item.id === id && !p.dead);
     const picture = placed && view.slots.get(placed)?.children.find((c) => c.texture && c.label !== "selected");
-    return Boolean(picture && picture.texture.source.resource instanceof HTMLCanvasElement && !picture.texture.source.destroyed);
+    return Boolean(picture && picture.texture.source.label?.includes(" in town") && !picture.texture.source.destroyed);
   }, RIDER, { timeout: 30_000 });
   await player.shot("after-raid");
 }
