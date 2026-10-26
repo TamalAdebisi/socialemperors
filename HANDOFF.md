@@ -47,10 +47,12 @@ follow below; status-only receipt edits change no game, art or test file.
   default on phones; at most 60 drawings a second. The Red Djinn Dragon
   Rider in a fight: 674 MB became 344, 128 light. See CLIENT.md, "Light
   art", and DECISIONS.md (26 October). Test `e2e/tests/light-art.mjs`.
+  Merged in #141 (needs the owner's "Deploy Latest Commit" to go live,
+  as every merge does until Railway's GitHub connection is fixed).
   **Fix 6, built the same day:** big units' sheets packed move by move,
   each page also as KTX2 (UASTC: four times smaller on the graphics chip,
   about twice the download for those pages) with a mask file for taps
-  (`pack_sheet.py`, `tools/art/ktx2.mjs`, `ArtLibrary.ktx2`). **Waiting on
+  (`pack_sheet.py`, `tools/art/ktx2.mjs`, `ArtLibrary.ktx2`; #142). **Waiting on
   the owner:** the Export art to R2 workflow with "Make big units again"
   (DEPLOY.md); until then the client uses the sheets as they are.
 - **Big units keep only their town pictures (21 October).** The owner's
