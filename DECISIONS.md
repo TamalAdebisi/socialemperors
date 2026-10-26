@@ -20,7 +20,9 @@ the memory budget.
   the download. With light art, big dragons now look as they did before
   today; without it, sharper than ever.
 - **Bigger downloads without light art:** a page at full size has four
-  times the pixels. Light art downloads what it did.
+  times the pixels. The Infernal Dragon's map pages are 13.5 MB instead
+  of 5, the Vulcano Dragon's 12.8 instead of 3.6; light art downloads
+  what it did (4.9 and 3.6 MB).
 - **Each other move on pages of its own** (working, the longer deaths,
   each special move), where they shared pages before, so a fight loads only
   the special moves it uses. A few more pages; nothing on screen changes.

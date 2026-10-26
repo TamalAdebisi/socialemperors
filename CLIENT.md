@@ -942,7 +942,10 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
   comes as a half-size KTX2 file (`<page>.m2.half.ktx2`, `meta.ktx2_half`),
   which light art loads: a quarter of the download. With the graphics
   chip's format, a page at full size takes as much memory there as the old
-  half-size page did decoded.
+  half-size page did decoded. Made again here: the Infernal Dragon's map
+  pages are 13.5 MB to download (5.0 at half size before), 4.9 with light
+  art; the Vulcano Dragon's 12.8 (3.6 before), 3.6 light. A fight's pages,
+  about twice the map's.
 - **Each page also as KTX2** (`tools/art/ktx2.mjs`, Basis Universal's
   UASTC, with its smaller copies for zooming out), from the page with its
   colours premultiplied by alpha, as PixiJS draws. The client reads it into
