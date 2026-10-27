@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Texture } from "pixi.js";
-import { ItemArt, packShelves, planCopy, type SheetJson } from "./art.ts";
+import { ItemArt, packShelves, pageCache, planCopy, type SheetJson } from "./art.ts";
 
 /** A sheet's animations as the exporter lists them: each label's frames in order, one picture per frame. */
 function sheet(labels: [string, number][]): ItemArt {
@@ -119,4 +119,15 @@ test("a sheet's pages in the graphics chip's format are used as they are, even a
   const whole = planCopy(pages, null, 1);
   assert.deepEqual(whole.whole, [0, 1]);
   assert.equal(whole.runs.every(([, frames]) => frames.length === 1), true);
+});
+
+test("pages that kept their names when made again are asked of the server; pages named by what they show are not", () => {
+  assert.equal(pageCache("https://example.com/art/2226_redDjinnDragon-3.m2.webp"), "no-cache");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2.ktx2"), "no-cache");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2.half.ktx2"), "no-cache");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2-mask.png"), "no-cache");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2.0123456789ab.webp"), "default");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2.0123456789ab.half.ktx2"), "default");
+  assert.equal(pageCache("2226_redDjinnDragon-3.m2.0123456789ab-mask.png"), "default");
+  assert.equal(pageCache("1001_knight.webp"), "default");
 });

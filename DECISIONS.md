@@ -4,6 +4,34 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 27 October 2026: the art repaired after the second run, the biggest at half size unless asked
+
+The owner's second run of "Make big units again" stopped in time, as
+built, with 77 units made and 105 left; but much of the game stopped
+drawing, a quest island showed nothing. Two of our calls caused it. Making
+the 89 biggest units again at full size kept their page names, so their
+pictures were overwritten while the JSON in use still described the old
+ones (17 units, cut off part way, are broken until made again), and
+caches kept a day-old JSON or picture beside the new. And at full size
+the biggest came to 50 to 140 pages each, hundreds of MB for one unit in
+a fight.
+
+- **Names are never reused.** An item of several pages names its files by
+  what they show; only `<item>.json` keeps its name, uploaded last with a
+  cache of five minutes. The client asks the server for each JSON every
+  time, and for pages named the old way; a page that isn't the size its
+  JSON says counts as missing, so a unit is left out rather than drawn
+  wrong.
+- **The biggest units load at half size by default**: those whose fight
+  pictures would take more than 128 MB on the graphics chip at full size
+  (the Vulcano Dragon's take 91). Their full-size pages stay in the
+  bucket: Light art switched off in the Menu shows them. Our call, so a
+  battle starts in seconds rather than minutes; the owner can raise the
+  line, or switch Light art off to see them sharp.
+- **The full-size giants stay as they are** (128 pages a unit): making
+  them again smaller would take more runs, and their half-size files are
+  the same as storing them at half size.
+
 ## 27 October 2026: the biggest dragons at the game's size too, and the art in more than one run
 
 The owner ran "Make big units again". Seven of the workflow's eight

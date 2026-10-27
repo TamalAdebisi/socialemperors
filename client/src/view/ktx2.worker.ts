@@ -29,6 +29,8 @@ export interface Ask {
   wasmUrl: string;
   formats: string[];
   half: boolean;
+  /** How to ask for the file (view/art.ts, pageCache). */
+  cache: RequestCache;
 }
 
 export type Answer =
@@ -52,13 +54,13 @@ const scope = globalThis as unknown as {
 
 let library: Promise<Ktx> | null = null;
 
-async function read({ url, jsUrl, wasmUrl, formats, half }: Ask): Promise<Omit<Extract<Answer, { levels: unknown }>, "id">> {
+async function read({ url, jsUrl, wasmUrl, formats, half, cache }: Ask): Promise<Omit<Extract<Answer, { levels: unknown }>, "id">> {
   library ??= (() => {
     scope.importScripts(jsUrl);
     return scope.LIBKTX({ locateFile: () => wasmUrl });
   })();
   const ktx = await library;
-  const response = await fetch(url);
+  const response = await fetch(url, { cache });
   if (!response.ok) throw new Error(`${url}: ${response.status}`);
   const format = formats.find((name) => TARGETS[name]);
   if (!format) throw new Error("no format the graphics chip takes");

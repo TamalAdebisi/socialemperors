@@ -223,6 +223,32 @@ class PackSheetTest(unittest.TestCase):
         # The first page's JSON is finished after everything else.
         self.assertEqual(finished[-1], "99_test_unit.json")
 
+    def test_a_multi_page_item_names_its_files_by_what_they_show(self):
+        sheets, pages, _ = pack_sheet.build(self.folder, max_size=34)
+        out = tempfile.mkdtemp(prefix="se-art-names-")
+        pack_sheet.write(sheets, pages, out)
+        with open(os.path.join(out, "99_test_unit.json")) as f:
+            first = json.load(f)
+        self.assertRegex(first["meta"]["image"], r"^99_test_unit\.m2\.[0-9a-f]{12}\.webp$")
+        self.assertTrue(pack_sheet.packed_now(first["meta"]["image"]))
+        others = first["meta"]["related_multi_packs"]
+        self.assertEqual(len(others), len(pages) - 1)
+        for n, name in enumerate(others, 1):
+            self.assertRegex(name, rf"^99_test_unit-{n}\.[0-9a-f]{{12}}\.json$")
+            with open(os.path.join(out, name)) as f:
+                page = json.load(f)
+            self.assertRegex(page["meta"]["image"], rf"^99_test_unit-{n}\.m2\.[0-9a-f]{{12}}\.webp$")
+            self.assertEqual(page["meta"]["mask"], page["meta"]["image"].replace(".webp", "-mask.png"))
+            self.assertTrue(os.path.exists(os.path.join(out, page["meta"]["image"])))
+        # Made again the same: the same names. Made again otherwise (here at half size): none of them.
+        again = tempfile.mkdtemp(prefix="se-art-names-")
+        pack_sheet.write(*pack_sheet.build(self.folder, max_size=34)[:2], again)
+        self.assertEqual(sorted(os.listdir(again)), sorted(os.listdir(out)))
+        smaller = tempfile.mkdtemp(prefix="se-art-names-")
+        pack_sheet.write(*pack_sheet.build(self.folder, max_size=24)[:2], smaller)
+        self.assertEqual(set(os.listdir(smaller)) & set(os.listdir(out)), {"99_test_unit.json"},
+                         "only the first JSON keeps its name: no file the old one names is overwritten")
+
     def test_a_library_clip_is_split_into_one_item_per_frame(self):
         # The test item's five frames, as if each were a projectile.
         items = list(pack_sheet.split_frames(self.folder, "projectile"))
@@ -321,12 +347,13 @@ class MovesTest(unittest.TestCase):
         pack_sheet.write(sheets, pages, out, with_ktx2=True)
         with open(os.path.join(out, "99_test_unit.json")) as f:
             first = json.load(f)
-        self.assertEqual(first["meta"]["ktx2"], "99_test_unit.m2.ktx2")
-        self.assertEqual(first["meta"]["ktx2_half"], "99_test_unit.m2.half.ktx2")
-        self.assertEqual(first["meta"]["mask"], "99_test_unit.m2-mask.png")
+        page = first["meta"]["image"][:-len(".webp")]  # 99_test_unit.m2.<digest>
+        self.assertEqual(first["meta"]["ktx2"], f"{page}.ktx2")
+        self.assertEqual(first["meta"]["ktx2_half"], f"{page}.half.ktx2")
+        self.assertEqual(first["meta"]["mask"], f"{page}-mask.png")
         w, h = first["meta"]["size"]["w"], first["meta"]["size"]["h"]
         # A KTX2 file: its 12-byte mark, then its format, its type's size, and its width and height.
-        for name, size in [("99_test_unit.m2.ktx2", (w, h)), ("99_test_unit.m2.half.ktx2", (w // 2, h // 2))]:
+        for name, size in [(f"{page}.ktx2", (w, h)), (f"{page}.half.ktx2", (w // 2, h // 2))]:
             with open(os.path.join(out, name), "rb") as f:
                 head = f.read(28)
             self.assertEqual(head[:12], bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]))

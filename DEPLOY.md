@@ -316,7 +316,12 @@ on the Railway address the game files would be blocked.
   from the cache afterwards. Each machine stops at about five and a half
   hours, to send what it has made within GitHub's limit of six; if that
   leaves some, the run ends in red, saying so. Run it again with the same
-  boxes ticked: it makes only what's left, until a run ends green. The server
+  boxes ticked: it makes only what's left, until a run ends green. An item
+  made again gets new file names beside the old (only its `<item>.json`
+  is replaced, on a cache of five minutes), so nothing needs purging; the
+  one exception was the second run of 27 October, made before that, whose
+  overwritten pages a purge clears from the cache at once (Cloudflare →
+  the art's domain → **Caching** → **Purge Everything**). The server
   builds the client's code itself (the first part of the `Dockerfile`), so
   nothing else is needed.
 * **Updating Ruffle** (the Flash emulator): it's in `assets/ruffle/<version>/`,
