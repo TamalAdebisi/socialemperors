@@ -27,7 +27,10 @@ a fight.
   (the Vulcano Dragon's take 91). Their full-size pages stay in the
   bucket: Light art switched off in the Menu shows them. Our call, so a
   battle starts in seconds rather than minutes; the owner can raise the
-  line, or switch Light art off to see them sharp.
+  line, or switch Light art off to see them sharp. Measured here, Necro
+  Isle at 50 Mbit/s with three big dragons and the Fire Extreme Dragon (36
+  pages at full size) in the army: 167 MB and 33 s before the battle
+  starts, against 324 MB and 49 s with that one giant at full size.
 - **The memory budget is now 512 MB, not 1.5 GB.** It also bounds the
   download: past it, a battle's big units come at half size. At 1.5 GB a
   battle could download 400 MB before starting; at 512 MB, about 130 MB
