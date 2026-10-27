@@ -313,7 +313,10 @@ on the Railway address the game files would be blocked.
   KTX2 files and mask; CLIENT.md, "Light art"), tick
   **Make big units again**: about as long as the first run, since those
   are the slow ones. Their pages get new names, so nothing needs purging
-  from the cache afterwards. The server
+  from the cache afterwards. Each machine stops at about five and a half
+  hours, to send what it has made within GitHub's limit of six; if that
+  leaves some, the run ends in red, saying so. Run it again with the same
+  boxes ticked: it makes only what's left, until a run ends green. The server
   builds the client's code itself (the first part of the `Dockerfile`), so
   nothing else is needed.
 * **Updating Ruffle** (the Flash emulator): it's in `assets/ruffle/<version>/`,

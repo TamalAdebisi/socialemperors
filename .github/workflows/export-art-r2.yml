@@ -8,11 +8,16 @@
 # missing, on all 8; name items under
 # "Make these again" to redo a few, or tick "Make every sheet again" after a
 # change that affects them all. "Make big units again" redoes every item of
-# several pages (big units, bosses, the ground): packed move by move, with
-# each page's mask and KTX2 files too, units at the game's size (CLIENT.md,
-# "Light art"); so is any item stored smaller. Their pages get new names
-# (<page>.m2.webp), so the cache serves no old picture with a new JSON file
-# and nothing needs purging; the old pages stay unused.
+# several pages (big units, bosses, the ground) packed before as it is now:
+# move by move, with each page's mask and KTX2 files too, units at the
+# game's size (CLIENT.md, "Light art"); and every unit stored smaller under
+# a smaller budget of pages (tools/art/pack_sheet.py --outdated). Their pages
+# get new names (<page>.m2.webp), so the cache serves no old picture with a
+# new JSON file and nothing needs purging; the old pages stay unused.
+#
+# Each machine stops making sheets in time to send what it has made before
+# GitHub's limit of 6 hours a job. If that leaves some, the run ends in red,
+# saying so: run it again, with the same boxes ticked, for the rest.
 name: Export art to R2
 
 on:
@@ -37,7 +42,8 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    # GitHub's most for a job is 360 minutes; the making stops at 325 (below).
+    timeout-minutes: 355
     strategy:
       fail-fast: false
       matrix:
@@ -98,40 +104,62 @@ jobs:
             sleep $((15 * try))
           done
           for item in $ITEMS; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done
-          # Big units again: every item whose sheet names other pages, unless already packed as now
-          # (pages named .m2), and every item stored smaller (meta.scale under 1), which a unit no longer is.
+          # Big units again: the items not yet packed as now (pack_sheet.py, outdated). Those
+          # already made again, by an earlier run that stopped part way, stay.
           if [ "${{ inputs.big }}" = "true" ]; then
-            for json in art/sheets/*.json; do
-              { grep -q '"related_multi_packs"' "$json" && ! grep -q '\.m2\.webp"' "$json"; } \
-                || grep -q '"scale":"0\.' "$json" || continue
-              item="$(basename "$json" .json)"
-              rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json
-            done
+            python tools/art/pack_sheet.py --outdated art/sheets > "$RUNNER_TEMP/outdated"
+            echo "$(wc -l < "$RUNNER_TEMP/outdated") items to make again."
+            while read -r item; do rm -f "art/sheets/$item.json" "art/sheets/$item"-*.json; done < "$RUNNER_TEMP/outdated"
           fi
 
       - name: Make this machine's share of the sheets, sending them as they come
         # Every minute, what's finished goes to the bucket: it fills as the
-        # work goes on, and a machine that stops keeps what it has done.
+        # work goes on, and a machine that stops keeps what it has done. The
+        # pictures first, by size; then the JSON files made here, whatever
+        # their size (an item made again keeps its JSON's name, and may keep
+        # its size), oldest first, so an item's first JSON, written last,
+        # goes up after its other pages'. At 325 minutes the making stops, so
+        # the rest is sent within GitHub's limit (the next step).
         run: |
-          (while sleep 60; do
+          touch "$RUNNER_TEMP/started"
+          : > "$RUNNER_TEMP/sent"
+          send() {
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --size-only \
-              --exclude "*.tmp" --cache-control "$CACHE" --only-show-errors || true
-          done) &
+              --exclude "*.tmp" --exclude "*.json" --cache-control "$CACHE" --only-show-errors || true
+            find art/sheets -maxdepth 1 -name "*.json" -newer "$RUNNER_TEMP/started" -printf "%T@ %p\n" \
+              | sort -n | cut -d " " -f 2- | while read -r json; do
+                grep -qxF "$json" "$RUNNER_TEMP/sent" && continue
+                aws s3 cp "$json" "s3://$BUCKET/art/$(basename "$json")" --endpoint-url "$ENDPOINT" \
+                  --cache-control "$CACHE" --only-show-errors && echo "$json" >> "$RUNNER_TEMP/sent"
+              done
+          }
+          (while sleep 60; do send; done) &
           uploader=$!
-          SHARD=${{ matrix.shard }}/8 KTX2=1 tools/export_art.sh
+          status=0
+          SHARD=${{ matrix.shard }}/8 KTX2=1 timeout --kill-after=2m 325m tools/export_art.sh || status=$?
           kill "$uploader" || true
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+            echo "Stopped at 325 minutes, to send what's made before GitHub's limit."
+            touch "$RUNNER_TEMP/unfinished"
+          elif [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
 
       - name: Upload the rest
         # Even if making them stopped early: whatever was made goes up.
         # Normally by size, so the JSON files fetched above stay as they are;
-        # when making everything again, every file.
+        # when making everything again, every file. The pictures before the
+        # JSON files that name them.
         if: ${{ !cancelled() }}
         env:
           ITEMS: ${{ inputs.items }}
         run: |
           compare="--size-only"
           if [ "${{ inputs.redo }}" = "true" ]; then compare=""; fi
-          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*.tmp" --cache-control "$CACHE" --no-progress
+          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*.tmp" --exclude "*.json" \
+            --cache-control "$CACHE" --no-progress
+          aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*" --include "*.json" \
+            --cache-control "$CACHE" --no-progress
           # Big units made again: their JSON files, whatever their size (their pages have new names).
           if [ "${{ inputs.big }}" = "true" ]; then
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" \
@@ -142,3 +170,11 @@ jobs:
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \
               --include "$item.*" --include "$item-*" --cache-control "$CACHE" --no-progress
           done
+
+      - name: Say if there's more to make
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/unfinished" ]; then
+            echo "::error::This machine stopped before making all of its share, to send what it made within GitHub's time limit. Run the workflow again, with the same boxes ticked, for the rest: it carries on where this run stopped."
+            exit 1
+          fi

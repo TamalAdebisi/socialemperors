@@ -50,7 +50,9 @@ chained water god: 394 pictures of nearly 4,000 x 2,500) is stored smaller
 and, if that isn't enough, its animations hold each picture for 2 or 3
 frames instead of 1 (meta.step says how many), until it fits. A unit may
 take UNIT_PAGES, as the game loads only the pages of the moves it shows:
-enough for the biggest dragons at the game's size.
+enough for the biggest dragons at the game's size. A unit stored smaller
+all the same says under which budget (meta.unit_pages), so the art
+workflow knows when a bigger one would make it again (outdated).
 
 Pictures that don't fit in one 4096 x 4096 image (big bosses, the ground)
 go on more pages: <item>-1.json (frames only), and so on, listed in the
@@ -84,7 +86,8 @@ from PIL import Image, ImageChops
 
 PADDING = 2           # empty pixels around each picture, so neighbours don't bleed in when scaled
 MAX_PAGES = 4         # the most sheet pages an item may take: each is up to 64 MB in a graphics chip
-UNIT_PAGES = 24       # ...a unit, packed move by move: only the pages of the moves shown are loaded
+UNIT_PAGES = 128      # ...a unit, packed move by move: only the pages of the moves shown are loaded
+                      # (the biggest seen, the Easter Dragon: 18 pages at half size, about 70 at full)
 PAGES_MARK = "m2"     # in the names of the pages of an item packed move by move: changed with the packing
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
@@ -400,7 +403,54 @@ def build(render_dir, max_size=MAX_SIZE, loaded=None, max_pages=MAX_PAGES, unit_
     })
     if len(pages) > 1:
         first["meta"]["related_multi_packs"] = [f"{page_name(item, page)}.json" for page in range(1, len(pages))]
+    if labelled(manifest) and shrink > 1:
+        first["meta"]["unit_pages"] = unit_pages
     return sheets, pages, warnings
+
+
+def outdated(data):
+    """Whether the art workflow's "Make big units again" makes an item again,
+    from its first JSON: an item of several pages packed before the current
+    packing (its pages not named .<PAGES_MARK>), or a unit stored smaller
+    under a smaller page budget than UNIT_PAGES (meta.unit_pages; none
+    before it was recorded). Anything else stays: made again, it would come
+    out the same."""
+    meta = data["meta"]
+    if meta.get("related_multi_packs") and not meta["image"].endswith(f".{PAGES_MARK}.webp"):
+        return True
+    unit = any(not name.startswith(("frame/", "steps/")) for name in data.get("animations", {}))
+    return unit and float(meta.get("scale", "1")) < 1 and meta.get("unit_pages", 0) < UNIT_PAGES
+
+
+def outdated_items(folder):
+    """The items in a folder of sheets (<item>.json, <item>-1.json...) that
+    outdated() says to make again, by name. So is an item whose JSON can't
+    be read, or whose other pages' JSONs are missing or from another packing
+    than its first's (an upload by size kept an old one of the same size)."""
+    def read(name):
+        try:
+            with open(os.path.join(folder, name), encoding="utf-8") as f:
+                return json.load(f)["meta"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+
+    def packing(meta):
+        return meta["image"].endswith(f".{PAGES_MARK}.webp"), meta.get("scale")
+
+    for name in sorted(os.listdir(folder)):
+        if not name.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(folder, name), encoding="utf-8") as f:
+                data = json.load(f)
+            if "animations" not in data:
+                continue  # another page's: its first's says
+            if not outdated(data) and all(meta and packing(meta) == packing(data["meta"])
+                                          for meta in map(read, data["meta"].get("related_multi_packs", []))):
+                continue
+        except (OSError, ValueError, KeyError, TypeError):
+            pass  # can't be read: made again
+        yield name[:-len(".json")]
 
 
 def mask(image):
@@ -477,15 +527,23 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("render_dirs", nargs="+", metavar="render_dir",
+    parser.add_argument("render_dirs", nargs="*", metavar="render_dir",
                         help="a folder RenderSwf.java wrote (manifest.json, img_<n>.png)")
-    parser.add_argument("--out", required=True, help="where to write <item>.webp and <item>.json")
+    parser.add_argument("--out", help="where to write <item>.webp and <item>.json")
     parser.add_argument("--quality", type=int, default=WEBP_QUALITY, help="WebP quality, 0 to 100")
     parser.add_argument("--split-frames", metavar="PREFIX",
                         help="make one item of each frame, <PREFIX>_1, _2... (a library clip like the projectiles)")
     parser.add_argument("--ktx2", action="store_true",
                         help="also write each page of a big item as KTX2 (tools/art/ktx2.mjs: Node and its packages)")
+    parser.add_argument("--outdated", metavar="FOLDER",
+                        help="instead, list the items of a folder of sheets that \"Make big units again\" makes again")
     args = parser.parse_args(argv)
+    if args.outdated:
+        for item in outdated_items(args.outdated):
+            print(item)
+        return 0
+    if not args.render_dirs or not args.out:
+        parser.error("give the folders RenderSwf.java wrote, and --out")
     failed = 0
     jobs = []
     for render_dir in args.render_dirs:
