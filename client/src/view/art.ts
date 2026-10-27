@@ -158,10 +158,12 @@ export const TOWN_MOVES = [0, 1];
 export const FIGHT_MOVES = [0, 1, 2, 3];
 /**
  * Above this many bytes of big units' pictures at full size, a page keeps
- * them at half size (a quarter of the memory): a graphics chip with more
- * than this to hold slows everything down (CLIENT.md, "Light art").
+ * them at half size (a quarter of the memory and of the download): about
+ * 130 MB to download in the graphics chip's format, half a minute on an
+ * ordinary home connection before a battle starts (CLIENT.md, "Light art").
+ * Five or six big dragons, at full size, come under it.
  */
-export const BUDGET = 1.5 * 2 ** 30;
+export const BUDGET = 512 * 2 ** 20;
 /**
  * A unit whose pictures for a fight would take more than this on the
  * graphics chip at full size is kept at half size, unless Light art is

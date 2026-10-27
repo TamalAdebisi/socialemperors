@@ -890,10 +890,11 @@ gives a page 1 or 2 GB and closes it past that.
   its sheet, the Red Djinn Dragon Rider's 39%.
 - **A memory budget: light art.** Before a town or a fight is drawn, the
   page adds up what its big units' pictures would take at full size
-  (`ArtLibrary.plan`). Past 1.5 GB, or on a phone or tablet, or on a
-  computer that says it has 4 GB or less, they're kept at half size: a
-  quarter of the memory, a little softer up close. Light art in the Menu
-  switches it on or off for good, from the next page opened.
+  (`ArtLibrary.plan`). Past 1.5 GB (512 MB since 27 October: about 130 MB
+  to download, half a minute before a battle starts), or on a phone or
+  tablet, or on a computer that says it has 4 GB or less, they're kept at
+  half size: a quarter of the memory, a little softer up close. Light art
+  in the Menu switches it on or off for good, from the next page opened.
 - **Fast drawing is on by default on phones and tablets** (`touchScreen`),
   where a page pixel is 2 or 3 screen pixels: a quarter (or a ninth) of the
   pixels to fill, a little softer. Off in the Menu as before.

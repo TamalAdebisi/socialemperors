@@ -28,6 +28,12 @@ a fight.
   bucket: Light art switched off in the Menu shows them. Our call, so a
   battle starts in seconds rather than minutes; the owner can raise the
   line, or switch Light art off to see them sharp.
+- **The memory budget is now 512 MB, not 1.5 GB.** It also bounds the
+  download: past it, a battle's big units come at half size. At 1.5 GB a
+  battle could download 400 MB before starting; at 512 MB, about 130 MB
+  (half a minute on an ordinary home connection), five or six big dragons
+  at full size. Measured here: Necro Isle with three big dragons in the
+  army downloaded 127 MB and started in 29 s at 50 Mbit/s.
 - **The full-size giants stay as they are** (128 pages a unit): making
   them again smaller would take more runs, and their half-size files are
   the same as storing them at half size.
