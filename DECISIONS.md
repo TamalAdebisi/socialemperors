@@ -4,6 +4,38 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 27 October 2026: the biggest dragons at the game's size too, and the art in more than one run
+
+The owner ran "Make big units again". Seven of the workflow's eight
+machines reached its limit of 5 hours before finishing, and its log showed
+the biggest dragons (the Horror Ancient, Easter and Black Epic Dragons)
+still stored at half size: at the game's size they need more than 24
+pages.
+
+- **A unit may take 128 pages.** Enough for every unit we've seen at the
+  game's size: the Easter Dragon, the biggest, took 18 pages at half size,
+  so about 70 at full. Only the pages of the moves shown are loaded, so
+  the rest cost nothing until they're shown. Their downloads grow as the
+  other dragons' did (a page at the game's size has four times the
+  pixels); light art downloads what it did, and a page past the memory
+  budget turns it on, as before.
+- **A run that stops part way carries on.** Each machine stops making
+  sheets at 325 minutes and sends what it has made, within GitHub's limit
+  of 6 hours a job (the workflow's own limit was 5). A run that leaves
+  some ends in red and says to run it again; the next one makes only
+  what's left. Before, a machine that reached the limit didn't send the
+  sheets of its last minute, and "Make big units again" would have made
+  the half-size dragons again on every run.
+- **What "Make big units again" makes again** is the packer's call
+  (`pack_sheet.py --outdated`): items of several pages packed before,
+  units stored smaller under a smaller budget of pages than today's, and
+  any item whose other pages' JSONs are missing or still the old packing's.
+  A building stored smaller isn't made again: it would come out the same.
+- **JSON files go up after their pictures, whatever their size.** An item
+  made again keeps its JSON files' names, and one may keep its size, which
+  the upload by size missed: the first run may have left an item with an
+  old page's JSON, and the next run makes it again.
+
 ## 26 October 2026: big units at the game's size
 
 The owner found the big dragons blurry once light art was in. Two
@@ -13,7 +45,8 @@ the memory budget.
 
 - **A unit may take 24 pages, at the game's size.** The game loads only
   the pages of the moves it shows, so more pages cost nothing until
-  they're shown. Every big dragon we know of fits at full size. A unit
+  they're shown. Every big dragon we knew of fitted at full size (not the
+  biggest, as it turned out: 27 October). A unit
   past 24 pages is stored smaller first, then held longer, as before;
   other items keep their 4 pages.
 - **Each page also at half size, as KTX2**, for light art: a quarter of

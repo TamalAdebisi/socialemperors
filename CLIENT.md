@@ -266,7 +266,7 @@ slice) with three changes, each found on one of them:
   so in `meta.scale`; PixiJS reads it and draws them at full size, and the
   client's tap test and thumbnails allow for it.
 - **Too many pictures.** An item may take at most 4 sheet pages (each up to
-  64 MB in a graphics chip; a unit 24 since 26 October, as the game loads
+  64 MB in a graphics chip; a unit 128 since 27 October, as the game loads
   only the pages of the moves it shows: "Light art"). The chained water god, a 4 x 4 decoration
   whose 13-second animation is 394 pictures of nearly 4,000 x 2,500 pixels,
   would have taken 48 pages. Over the budget, the packer stores pictures
@@ -936,9 +936,13 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
 - **At the game's size** (added the same day, after the owner found the
   big dragons blurry). Under the old budget of 4 pages an item, the big
   dragons' pictures were stored at half size, and light art halved them
-  again. A unit may now take 24 pages (`UNIT_PAGES`): since only the pages
-  of the moves shown are loaded, more pages cost nothing until they're
-  used, and every big dragon we know of fits at full size. Each page also
+  again. A unit may now take 128 pages (`UNIT_PAGES`; 24 at first, which
+  left the biggest dragons at half size): since only the pages of the
+  moves shown are loaded, more pages cost nothing until they're used, and
+  every unit we've seen fits at full size (the Easter Dragon, the biggest,
+  in about 70). A unit stored smaller all the same records the budget
+  (`meta.unit_pages`), so the art workflow knows to make it again under a
+  bigger one (`pack_sheet.py --outdated`). Each page also
   comes as a half-size KTX2 file (`<page>.m2.half.ktx2`, `meta.ktx2_half`),
   which light art loads: a quarter of the download. With the graphics
   chip's format, a page at full size takes as much memory there as the old

@@ -146,6 +146,7 @@ class PackSheetTest(unittest.TestCase):
         self.assertIn(f"pictures too big for {pack_sheet.UNIT_PAGES} sheets, stored at 1/2 size (meta.scale)", warnings)
         meta = pages[0]["meta"]
         self.assertEqual(meta["scale"], "0.5")
+        self.assertEqual(meta["unit_pages"], pack_sheet.UNIT_PAGES, "a unit says under which budget it was stored smaller")
         frames = {name: frame for page in pages for name, frame in page["frames"].items()}
         attack = frames["99_test_unit/2"]  # drawn at (5, 1), 30 x 24: widened to (4, 0), 32 x 26
         self.assertEqual(attack["spriteSourceSize"], {"x": 2, "y": 0, "w": 16, "h": 13})
@@ -292,6 +293,7 @@ class MovesTest(unittest.TestCase):
             json.dump(manifest, f)
         _, pages, warnings = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
         self.assertEqual(pages[0]["meta"]["scale"], "0.5")
+        self.assertNotIn("unit_pages", pages[0]["meta"])
         self.assertIn("pictures too big for 4 sheets, stored at 1/2 size (meta.scale)", warnings)
 
     def test_pages_are_whole_multiples_of_64(self):
@@ -329,6 +331,59 @@ class MovesTest(unittest.TestCase):
                 head = f.read(28)
             self.assertEqual(head[:12], bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]))
             self.assertEqual((int.from_bytes(head[20:24], "little"), int.from_bytes(head[24:28], "little")), size, name)
+
+
+@unittest.skipIf(Image is None, "needs Pillow")
+class OutdatedTest(unittest.TestCase):
+    """Which sheets the art workflow's "Make big units again" makes again (pack_sheet.outdated)."""
+
+    def first(self, image, scale="1", animations=("QUIETO/0",), pages=1, **meta):
+        data = {"frames": {}, "animations": {name: [] for name in animations},
+                "meta": {"image": image, "scale": scale, **meta}}
+        if pages > 1:
+            data["meta"]["related_multi_packs"] = [f"{image.split('.')[0]}-{n}.json" for n in range(1, pages)]
+        return data
+
+    def test_items_of_several_pages_packed_before(self):
+        self.assertTrue(pack_sheet.outdated(self.first("x.webp", pages=3)))
+        self.assertTrue(pack_sheet.outdated(self.first("x.moves.webp", pages=3)))
+        self.assertFalse(pack_sheet.outdated(self.first(f"x.{pack_sheet.PAGES_MARK}.webp", pages=3)))
+
+    def test_units_stored_smaller_under_a_smaller_budget(self):
+        m2 = f"x.{pack_sheet.PAGES_MARK}.webp"
+        self.assertTrue(pack_sheet.outdated(self.first(m2, "0.5", pages=11)), "before the budget was recorded")
+        self.assertTrue(pack_sheet.outdated(self.first(m2, "0.5", pages=11, unit_pages=24)))
+        self.assertFalse(pack_sheet.outdated(self.first(m2, "0.5", pages=11, unit_pages=pack_sheet.UNIT_PAGES)),
+                         "stored smaller under today's budget: it would come out the same")
+        self.assertTrue(pack_sheet.outdated(self.first("x.webp", "0.5")), "a unit of one page, stored smaller")
+        self.assertFalse(pack_sheet.outdated(self.first("x.webp")))
+
+    def test_other_items_stored_smaller_stay(self):
+        # A building or a decoration (its pictures' names aren't the game's labels) keeps its 4 pages.
+        self.assertFalse(pack_sheet.outdated(self.first(f"x.{pack_sheet.PAGES_MARK}.webp", "0.5", ["frame/0"], pages=4)))
+        self.assertFalse(pack_sheet.outdated(self.first("x.webp", "0.25", ["frame/0", "steps/0"])))
+
+    def test_a_folder_lists_its_items_to_make_again(self):
+        folder = tempfile.mkdtemp(prefix="se-art-outdated-")
+        m2 = pack_sheet.PAGES_MARK
+        page = lambda image, scale="1": {"frames": {}, "meta": {"image": image, "scale": scale}}
+        sheets = {"old.json": self.first("old.webp", pages=2), "old-1.json": page("old-1.webp"),
+                  "new.json": self.first(f"new.{m2}.webp", pages=2), "new-1.json": page(f"new-1.{m2}.webp"),
+                  # Its second page's JSON is still the old packing's (an upload by size kept it): made again.
+                  "mixed.json": self.first(f"mixed.{m2}.webp", pages=2), "mixed-1.json": page("mixed-1.moves.webp", "0.5"),
+                  "lost.json": self.first(f"lost.{m2}.webp", pages=2),  # its second page's JSON is missing
+                  "small.json": self.first("small.webp", "0.5"), "deco.json": self.first("deco.webp", "0.5", ["frame/0"])}
+        for name, data in sheets.items():
+            with open(os.path.join(folder, name), "w") as f:
+                json.dump(data, f)
+        with open(os.path.join(folder, "broken.json"), "w") as f:
+            f.write('{"frames":')  # half a file: made again
+        with open(os.path.join(folder, "old.webp"), "wb") as f:
+            f.write(b"RIFF")
+        self.assertEqual(list(pack_sheet.outdated_items(folder)), ["broken", "lost", "mixed", "old", "small"])
+        with unittest.mock.patch("sys.stdout") as out:
+            self.assertEqual(pack_sheet.main(["--outdated", folder]), 0)
+        self.assertEqual("".join(call.args[0] for call in out.write.call_args_list), "broken\nlost\nmixed\nold\nsmall\n")
 
 
 @unittest.skipIf(Image is None, "needs Pillow")
