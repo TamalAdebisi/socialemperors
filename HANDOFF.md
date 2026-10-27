@@ -59,9 +59,17 @@ follow below; status-only receipt edits change no game, art or test file.
   named `.m2`; DECISIONS.md, 26 and 27 October). The owner's first run of
   "Make big units again" (27 October) reached the time limit part way; the
   workflow now stops in time, sends what it made, and says to run it
-  again. **Waiting on the owner:** the Export art to R2 workflow with
-  "Make big units again", run until it ends green (DEPLOY.md); until then
-  the client uses each sheet as the bucket has it, old or new.
+  again. The second run (27 October) made 77 units and stopped in time,
+  but broke drawing in much of the game: remaking the biggest units at
+  full size reused their page names (17 units cut off part way are broken
+  until made again), and caches mixed old and new. Repaired the same day:
+  files of several-page items named by what they show, JSON on a short
+  cache and asked of the server every time, stale pages left out
+  (`StaleArt`), and units heavier than 128 MB at full size loaded at half
+  size unless Light art is off (`GIANT`). **Waiting on the owner:** Deploy
+  Latest Commit, Purge Everything on the art's Cloudflare cache, then the
+  Export art to R2 workflow with "Make big units again", run until it
+  ends green (DEPLOY.md).
 - **Big units keep only their town pictures (21 October).** The owner's
   Blue Fire Djinn Dragon made the map unplayably slow: a newer big
   dragon's whole sheet is about 250 MB decoded. The map now keeps a copy

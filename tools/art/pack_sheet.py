@@ -61,24 +61,30 @@ is packed move by move, so the game loads only the pages of what it shows
 (CLIENT.md, "Light art"): a unit's standing and walking first (the town's),
 then attacking and dying (a fight's), then each of its other moves on
 pages of its own. Its pages are at most 4096 x 3072, in whole multiples of
-64 pixels, named <item>.m2.webp, <item>-1.m2.webp... (PAGES_MARK: new names
-whenever this packing changes, so no cache serves old pictures with a new
-JSON), and each comes with:
+64 pixels, named by the packing (PAGES_MARK) and by what they show (a
+digest of their pixels): <item>.m2.<digest>.webp, <item>-1.m2.<digest>.webp...
+and the other pages' JSONs <item>-1.<digest>.json (of their text). An item
+made again with other pictures so never overwrites a file the JSON in use
+names, and no cache can serve an old page with a new JSON: only <item>.json
+keeps its name (made before 27 October: <item>.m2.webp, <item>-1.json).
+Each page comes with:
 
-  <page>.m2-mask.png  where the page is see-through, at half size, one bit
+  <page>-mask.png     where the page is see-through, at half size, one bit
               a pixel (meta.mask): the game answers taps with it
-  <page>.m2.ktx2      with --ktx2: the page as the graphics chip keeps it
+  <page>.ktx2         with --ktx2: the page as the graphics chip keeps it
               (Basis UASTC, four times smaller there; meta.ktx2), made by
               tools/art/ktx2.mjs from the page with its colours
               premultiplied by alpha
-  <page>.m2.half.ktx2 the same at half size (meta.ktx2_half), for phones
+  <page>.half.ktx2    the same at half size (meta.ktx2_half), for phones
               and light art: a quarter of the download
 """
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 
@@ -89,6 +95,7 @@ MAX_PAGES = 4         # the most sheet pages an item may take: each is up to 64 
 UNIT_PAGES = 128      # ...a unit, packed move by move: only the pages of the moves shown are loaded
                       # (the biggest seen, the Easter Dragon: 18 pages at half size, about 70 at full)
 PAGES_MARK = "m2"     # in the names of the pages of an item packed move by move: changed with the packing
+DIGEST = 12           # hex digits of a page's digest in its names: what it shows, so a name is never reused
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
 WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
@@ -298,6 +305,16 @@ def page_name(item, page):
     return item if page == 0 else f"{item}-{page}"
 
 
+def digest(data):
+    """A short digest of a page (its pixels, or its JSON's text), for its names."""
+    return hashlib.sha1(data).hexdigest()[:DIGEST]
+
+
+def packed_now(image):
+    """Whether a page's picture is named as this packing names it: <page>.<PAGES_MARK>[.<digest>].webp."""
+    return re.search(rf"\.{PAGES_MARK}(\.[0-9a-f]{{{DIGEST}}})?\.webp$", image) is not None
+
+
 def image_name(item, page, pages):
     """A page's picture: <page>.webp, or <page>.m2.webp for an item of several pages, packed move by move."""
     return page_name(item, page) + (f".{PAGES_MARK}" if pages > 1 else "")
@@ -416,7 +433,7 @@ def outdated(data):
     before it was recorded). Anything else stays: made again, it would come
     out the same."""
     meta = data["meta"]
-    if meta.get("related_multi_packs") and not meta["image"].endswith(f".{PAGES_MARK}.webp"):
+    if meta.get("related_multi_packs") and not packed_now(meta["image"]):
         return True
     unit = any(not name.startswith(("frame/", "steps/")) for name in data.get("animations", {}))
     return unit and float(meta.get("scale", "1")) < 1 and meta.get("unit_pages", 0) < UNIT_PAGES
@@ -435,7 +452,7 @@ def outdated_items(folder):
             return None
 
     def packing(meta):
-        return meta["image"].endswith(f".{PAGES_MARK}.webp"), meta.get("scale")
+        return packed_now(meta["image"]), meta.get("scale")
 
     for name in sorted(os.listdir(folder)):
         if not name.endswith(".json"):
@@ -496,15 +513,20 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
     another name and renamed when complete, so nothing (an upload running
     alongside, a game loading it) ever sees half a file. An item of several
     pages gets each page's mask too, and with `with_ktx2` its KTX2 files, at
-    its size and at half (each halved 2 x 2 pixels as one)."""
+    its size and at half (each halved 2 x 2 pixels as one); its files are
+    named by what they show (digest), the first JSON's name aside."""
     os.makedirs(out_dir, exist_ok=True)
-    names = [data["meta"]["image"][:-len(".webp")] for data in pages]
-    for sheet, name, data in zip(sheets, names, pages):
-        path = os.path.join(out_dir, f"{name}.webp")
+    several = len(pages) > 1
+    for sheet, data in zip(sheets, pages):
         image = sheet.image()
+        name = data["meta"]["image"][:-len(".webp")]
+        if several:
+            name = f"{name}.{digest(image.tobytes())}"
+            data["meta"]["image"] = f"{name}.webp"
+        path = os.path.join(out_dir, f"{name}.webp")
         image.save(path + ".tmp", "WEBP", quality=quality, alpha_quality=100, method=WEBP_METHOD)
         os.replace(path + ".tmp", path)
-        if len(pages) > 1:
+        if several:
             mask_path = os.path.join(out_dir, f"{name}-mask.png")
             mask(image).save(mask_path + ".tmp", "PNG", optimize=True)
             os.replace(mask_path + ".tmp", mask_path)
@@ -517,8 +539,15 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
                     if ktx2(half, os.path.join(out_dir, f"{name}.half.ktx2")):
                         data["meta"]["ktx2_half"] = f"{name}.half.ktx2"
         del image  # one page in memory at a time
-    for data, name in reversed(list(zip(pages, names))):
-        json_name = name.removesuffix(f".{PAGES_MARK}")
+    first = pages[0]
+    # The other pages' JSONs, named by their text, then the first: <item>.json, listing them.
+    json_names = [first["meta"]["image"].split(f".{PAGES_MARK}.")[0] if several else first["meta"]["image"][:-len(".webp")]]
+    for n, data in enumerate(pages[1:]):
+        text = json.dumps(data, separators=(",", ":"))
+        json_names.append(f"{first['meta']['related_multi_packs'][n][:-len('.json')]}.{digest(text.encode())}")
+    if several:
+        first["meta"]["related_multi_packs"] = [f"{name}.json" for name in json_names[1:]]
+    for data, json_name in reversed(list(zip(pages, json_names))):
         path = os.path.join(out_dir, f"{json_name}.json")
         with open(path + ".tmp", "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"))

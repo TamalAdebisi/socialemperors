@@ -63,6 +63,9 @@ jobs:
       AWS_MAX_ATTEMPTS: "10"
       # A day: a new export reaches players by the next day at the latest.
       CACHE: public, max-age=86400
+      # The JSON files, five minutes: an item made again names new pages (named by what they show,
+      # tools/art/pack_sheet.py), and its <item>.json, the one file that keeps its name, says which.
+      JSON_CACHE: public, max-age=300
     steps:
       - uses: actions/checkout@v5
 
@@ -130,7 +133,7 @@ jobs:
               | sort -n | cut -d " " -f 2- | while read -r json; do
                 grep -qxF "$json" "$RUNNER_TEMP/sent" && continue
                 aws s3 cp "$json" "s3://$BUCKET/art/$(basename "$json")" --endpoint-url "$ENDPOINT" \
-                  --cache-control "$CACHE" --only-show-errors && echo "$json" >> "$RUNNER_TEMP/sent"
+                  --cache-control "$JSON_CACHE" --only-show-errors && echo "$json" >> "$RUNNER_TEMP/sent"
               done
           }
           (while sleep 60; do send; done) &
@@ -159,16 +162,18 @@ jobs:
           aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*.tmp" --exclude "*.json" \
             --cache-control "$CACHE" --no-progress
           aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" $compare --exclude "*" --include "*.json" \
-            --cache-control "$CACHE" --no-progress
+            --cache-control "$JSON_CACHE" --no-progress
           # Big units made again: their JSON files, whatever their size (their pages have new names).
           if [ "${{ inputs.big }}" = "true" ]; then
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" --include "*.json" \
-              --cache-control "$CACHE" --no-progress
+              --cache-control "$JSON_CACHE" --no-progress
           fi
           # The items made again, whatever their size.
           for item in $ITEMS; do
             aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \
-              --include "$item.*" --include "$item-*" --cache-control "$CACHE" --no-progress
+              --include "$item.*" --include "$item-*" --exclude "*.json" --cache-control "$CACHE" --no-progress
+            aws s3 sync art/sheets/ "s3://$BUCKET/art/" --endpoint-url "$ENDPOINT" --exclude "*" \
+              --include "$item.json" --include "$item-*.json" --cache-control "$JSON_CACHE" --no-progress
           done
 
       - name: Say if there's more to make

@@ -158,10 +158,20 @@ export const TOWN_MOVES = [0, 1];
 export const FIGHT_MOVES = [0, 1, 2, 3];
 /**
  * Above this many bytes of big units' pictures at full size, a page keeps
- * them at half size (a quarter of the memory): a graphics chip with more
- * than this to hold slows everything down (CLIENT.md, "Light art").
+ * them at half size (a quarter of the memory and of the download): about
+ * 130 MB to download in the graphics chip's format, half a minute on an
+ * ordinary home connection before a battle starts (CLIENT.md, "Light art").
+ * Five or six big dragons, at full size, come under it.
  */
-export const BUDGET = 1.5 * 2 ** 30;
+export const BUDGET = 512 * 2 ** 20;
+/**
+ * A unit whose pictures for a fight would take more than this on the
+ * graphics chip at full size is kept at half size, unless Light art is
+ * switched off in the Menu: the biggest dragons and gods take 50 to 140
+ * pages at full size, hundreds of MB to download. The Vulcano Dragon's
+ * fight takes 91 MB.
+ */
+export const GIANT = 128 * 2 ** 20;
 /** Pages decoded at once: a whole page is up to 64 MB while it is read. */
 const DECODES = 2;
 
@@ -176,9 +186,10 @@ export interface Cutout {
 
 type Frame = SpritesheetFrameData & { anchor?: { x: number; y: number } };
 
-/** Where a cut picture goes in a copy's pages, at its size there (`scale`). */
+/** Where a cut picture goes in a copy's pages, at its size there (`scale`); `size`: its page's, as its JSON says. */
 interface Cut {
   file: string;
+  size: { w: number; h: number };
   from: { x: number; y: number; w: number; h: number };
   to: { page: number; x: number; y: number };
   scale: number;
@@ -189,10 +200,18 @@ interface Cut {
  * KTX2, its smaller sizes only with `half`), then pages of cut pictures.
  */
 interface Recipe {
-  whole: { file: string; ktx2?: string; half: boolean }[];
+  /** `size`: what the page comes to, as its JSON says. */
+  whole: { file: string; ktx2?: string; half: boolean; size: { w: number; h: number } }[];
   pages: { w: number; h: number }[];
   cuts: Cut[];
 }
+
+/**
+ * A page that isn't what its JSON says: the sheet was made again since the
+ * JSON was read (a cache had kept it), or partly, by an export cut short.
+ * The item has no art until its pages and JSON match again.
+ */
+class StaleArt extends Error {}
 
 /** A page made: its picture, and for one in the graphics chip's format, which and its size. */
 interface Made {
@@ -218,6 +237,17 @@ let reader: Worker | null = null;
 let asked = 0;
 const answers = new Map<number, (answer: Answer) => void>();
 
+/**
+ * How to ask for a page's file. Pages made before 27 October kept their
+ * names when made again (<item>.m2.webp, .m2.ktx2, .m2.half.ktx2,
+ * .m2-mask.png), so the browser asks the server whether its copy is still
+ * the one (a quick "not changed" when it is). A page named by what it shows
+ * (<item>.m2.<digest>.webp, tools/art/pack_sheet.py) never changes.
+ */
+export function pageCache(url: string): RequestCache {
+  return /\.m2(\.half)?\.(webp|ktx2)$|\.m2-mask\.png$/.test(url) ? "no-cache" : "default";
+}
+
 /** A KTX2 page read off the page (ktx2.worker.ts), one at a time in its turn. */
 function readKtx2(url: string, formats: TEXTURE_FORMATS[], half: boolean): Promise<Answer> {
   if (!reader) {
@@ -227,7 +257,7 @@ function readKtx2(url: string, formats: TEXTURE_FORMATS[], half: boolean): Promi
       answers.delete(event.data.id);
     };
   }
-  const ask: Ask = { id: ++asked, url, jsUrl: LIBKTX_JS, wasmUrl: LIBKTX_WASM, formats, half };
+  const ask: Ask = { id: ++asked, url, jsUrl: LIBKTX_JS, wasmUrl: LIBKTX_WASM, formats, half, cache: pageCache(url) };
   return new Promise((answer) => {
     answers.set(ask.id, answer);
     reader!.postMessage(ask);
@@ -345,6 +375,8 @@ export class ArtLibrary {
   private shrinking: Promise<number> | null = null;
   /** Whether this page's big units are at half size, once decided (the Menu's Light art shows it). */
   halfSize = false;
+  /** Each big unit's giant, once asked. */
+  private readonly giants = new Map<string, Promise<boolean>>();
 
   /**
    * `base`: where the sheets are (the page's artUrl). `renderer`: the
@@ -406,8 +438,9 @@ export class ArtLibrary {
       return Promise.resolve();
     }
     const seen = new Set<string>();
+    // A unit kept at half size for its weight (giant) counts at that size.
     const sizes = Promise.all(units.filter(({ art }) => !seen.has(art) && seen.add(art))
-      .map(({ art, moves }) => this.fullSize(art, moves).catch(() => 0)))
+      .map(async ({ art, moves }) => (await this.fullSize(art, moves).catch(() => 0)) / (await this.giant(art) ? 4 : 1)))
       .then((all) => all.reduce((sum, size) => sum + size, 0));
     const deciding = sizes.then((bytes) => bytes > BUDGET ? 2 : 1);
     this.shrinking = deciding;
@@ -424,6 +457,24 @@ export class ArtLibrary {
     const shrink = await this.shrinking;
     this.halfSize = shrink > 1;
     return shrink;
+  }
+
+  /**
+   * Whether a big unit is kept at half size for its weight alone (GIANT),
+   * as Light art leaves it to the page: switched off, every unit is at full
+   * size. Never one whose sheet is stored at half size already.
+   */
+  private giant(name: string): Promise<boolean> {
+    if (lightArt() === false) {
+      return Promise.resolve(false);
+    }
+    let giant = this.giants.get(name);
+    if (!giant) {
+      giant = (async () => resolutionOf(await this.data(`${name}.json`)) === 1 && await this.fullSize(name, FIGHT_MOVES) > GIANT)()
+        .catch(() => false);
+      this.giants.set(name, giant);
+    }
+    return giant;
   }
 
   /** What a big unit's pictures for these moves take on the graphics chip at full size (with their smaller copies): 0 for a sheet of one page. */
@@ -549,12 +600,12 @@ export class ArtLibrary {
    * page is decoded at a time, then let go.
    */
   private async loadCopy(key: string, name: string, index: SheetJson, moves: number[] | null, size?: number): Promise<ItemArt> {
-    const shrink = size ?? await this.shrink();
+    const shrink = size ?? Math.max(await this.shrink(), await this.giant(name) ? 2 : 1);
     const pages = await this.pagesOf(index);
     try {
       return await this.copy(key, name, index, pages, moves, shrink, this.formats().length > 0);
     } catch (error) {
-      if (!this.formats().length || !pages.some((page) => page.meta.ktx2)) throw error;
+      if (error instanceof StaleArt || !this.formats().length || !pages.some((page) => page.meta.ktx2)) throw error;
       // The graphics chip's format didn't load: the WebP pages, from now on.
       console.warn(`${name}: no KTX2, its WebP instead:`, error);
       this.chipFormats = [];
@@ -571,10 +622,17 @@ export class ArtLibrary {
     // At half size, a page's half-size KTX2 file (a quarter of the download), or else its whole one's smaller sizes.
     const chip = (meta: SheetMeta) => !ktx2 || !meta.ktx2 ? undefined
       : half && meta.ktx2_half ? { ktx2: file(meta.ktx2_half), half: false } : { ktx2: file(meta.ktx2), half };
+    const sizeOf = (page: SheetJson) => ({ w: page.meta.size?.w ?? 0, h: page.meta.size?.h ?? 0 });
     const recipe: Recipe = {
-      whole: whole.map((n) => ({ file: file(pages[n].meta.image), half, ...chip(pages[n].meta) })),
+      whole: whole.map((n) => {
+        const { w, h } = sizeOf(pages[n]);
+        const onChip = chip(pages[n].meta);
+        // A page used as it is at half size is a KTX2 page's smaller copy (planCopy).
+        return { file: file(pages[n].meta.image), half, ...onChip, size: onChip && half ? { w: w / 2, h: h / 2 } : { w, h } };
+      }),
       pages: cut.length > 0 ? packed.pages : [],
-      cuts: cut.map(({ page, frame }, i) => ({ file: file(pages[page].meta.image), from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
+      cuts: cut.map(({ page, frame }, i) => ({ file: file(pages[page].meta.image), size: sizeOf(pages[page]),
+        from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
     };
     const made = await this.make(recipe);
     // The pictures keep their sizes, trims and anchors, in the sheet's own scale (half size for the biggest).
@@ -603,7 +661,7 @@ export class ArtLibrary {
     });
     // Where pages in the graphics chip's format are see-through: their mask files (the others' are read from them).
     const masks: (Mask | null)[] = await Promise.all(whole.map((page, n) => recipe.whole[n].ktx2 && pages[page].meta.mask
-      ? maskFile(file(pages[page].meta.mask), 1 / shrink).catch(() => null) : null));
+      ? maskFile(file(pages[page].meta.mask), 1 / shrink, pageCache(pages[page].meta.mask)).catch(() => null) : null));
     this.chip?.keep(sources, async () => (await this.make(recipe)).map(({ picture }) => picture), masks);
     if (key === name || key.endsWith(" in fights") || key.includes(" move ")) {
       this.copies.set(key, sources);
@@ -640,9 +698,21 @@ export class ArtLibrary {
 
   /** A copy's pages (Recipe): the whole ones read, the cut pictures drawn into theirs, reading each page once. */
   private async make(recipe: Recipe): Promise<Made[]> {
-    const whole = await Promise.all(recipe.whole.map(async ({ file, ktx2, half }): Promise<Made> => {
-      if (ktx2) return this.ktx2(ktx2, half);
+    const whole = await Promise.all(recipe.whole.map(async ({ file, ktx2, half, size }): Promise<Made> => {
+      const stale = (width: number, height: number) => width !== size.w || height !== size.h
+        ? new StaleArt(`${ktx2 ?? file}: ${width} x ${height}, where its JSON says ${size.w} x ${size.h}`) : null;
+      if (ktx2) {
+        const made = await this.ktx2(ktx2, half);
+        const error = stale(made.width, made.height);
+        if (error) throw error;
+        return made;
+      }
       const picture = await this.decode(file);
+      const error = stale(picture.width, picture.height);
+      if (error) {
+        picture.close();
+        throw error;
+      }
       return { picture, width: picture.width, height: picture.height };
     }));
     const canvases = recipe.pages.map(({ w, h }) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
@@ -652,6 +722,11 @@ export class ArtLibrary {
     }
     for (const file of new Set(recipe.cuts.map((cut) => cut.file))) {
       const page = await this.decode(file);
+      const { size } = recipe.cuts.find((cut) => cut.file === file)!;
+      if (page.width !== size.w || page.height !== size.h) {
+        page.close();
+        throw new StaleArt(`${file}: ${page.width} x ${page.height}, where its JSON says ${size.w} x ${size.h}`);
+      }
       for (const { from, to, scale } of recipe.cuts.filter((cut) => cut.file === file)) {
         contexts[to.page]!.drawImage(page, from.x, from.y, from.w, from.h, to.x, to.y, from.w * scale, from.h * scale);
       }
@@ -663,7 +738,7 @@ export class ArtLibrary {
   /** A page's picture, decoded on the page (as Safari's repair does), a few at a time. */
   private decode(file: string): Promise<ImageBitmap> {
     return this.decoding.run(async () => {
-      const response = await fetch(file);
+      const response = await fetch(file, { cache: pageCache(file) });
       if (!response.ok) throw new Error(`${file}: ${response.status}`);
       return createImageBitmap(await response.blob());
     });
@@ -695,7 +770,9 @@ export class ArtLibrary {
     let sheet = this.sheets.get(file);
     if (!sheet) {
       sheet = (async () => {
-        const response = await fetch(`${this.base}/${file}`);
+        // Asked of the server every time (a quick "not changed" when it hasn't): an item made again
+        // keeps only its first JSON's name, and a day-old copy of that would name pages no longer its own.
+        const response = await fetch(`${this.base}/${file}`, { cache: "no-cache" });
         if (!response.ok) {
           throw new Error(`${file}: ${response.status}`);
         }

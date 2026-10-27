@@ -890,10 +890,11 @@ gives a page 1 or 2 GB and closes it past that.
   its sheet, the Red Djinn Dragon Rider's 39%.
 - **A memory budget: light art.** Before a town or a fight is drawn, the
   page adds up what its big units' pictures would take at full size
-  (`ArtLibrary.plan`). Past 1.5 GB, or on a phone or tablet, or on a
-  computer that says it has 4 GB or less, they're kept at half size: a
-  quarter of the memory, a little softer up close. Light art in the Menu
-  switches it on or off for good, from the next page opened.
+  (`ArtLibrary.plan`). Past 1.5 GB (512 MB since 27 October: about 130 MB
+  to download, half a minute before a battle starts), or on a phone or
+  tablet, or on a computer that says it has 4 GB or less, they're kept at
+  half size: a quarter of the memory, a little softer up close. Light art
+  in the Menu switches it on or off for good, from the next page opened.
 - **Fast drawing is on by default on phones and tablets** (`touchScreen`),
   where a page pixel is 2 or 3 screen pixels: a quarter (or a ninth) of the
   pixels to fill, a little softer. Off in the Menu as before.
@@ -950,6 +951,15 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
   pages are 13.5 MB to download (5.0 at half size before), 4.9 with light
   art; the Vulcano Dragon's 12.8 (3.6 before), 3.6 light. A fight's pages,
   about twice the map's.
+- **The biggest at half size, unless asked** (27 October). At full size
+  the biggest units came to 50 to 140 pages (the Platinum Armor Dragon
+  Rider 126, the Frostfire Bahamut 138): hundreds of MB to download for one
+  unit in a fight. A unit whose fight pictures would take more than 128 MB
+  on the graphics chip at full size (`GIANT`; the Vulcano Dragon's take 91)
+  loads its half-size files, unless Light art is switched off in the Menu,
+  which shows every unit at full size (`ArtLibrary.giant`). One whose sheet
+  is stored at half size already isn't halved again, and the memory budget
+  counts a giant at half size.
 - **Each page also as KTX2** (`tools/art/ktx2.mjs`, Basis Universal's
   UASTC, with its smaller copies for zooming out), from the page with its
   colours premultiplied by alpha, as PixiJS draws. The client reads it into
@@ -970,6 +980,20 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
   changed whenever the packing changes): the cache keeps pictures a day,
   and the old names with the new JSON would draw the wrong pictures (it
   happened on 16 October). The old pages stay in the bucket, unused.
+- **Names never reused** (27 October). Making the biggest units again at
+  full size reused their `.m2` names, and broke them twice: the upload
+  overwrote pictures while the JSON in use still described the old ones
+  (for good, for 17 units an export stopped part way), and caches kept old
+  JSON with new pictures, or the reverse. Now an item of several pages
+  names its pages, their KTX2 and mask files, and its other pages' JSONs
+  by what they show (`<item>-1.m2.<digest>.webp`, `<item>-1.<digest>.json`;
+  `pack_sheet.py`, `digest`): made again, it writes new files beside the
+  old, and only `<item>.json` changes, which the workflow uploads last with
+  a cache of five minutes. The client asks the server for each JSON every
+  time (`cache: "no-cache"`: a quick "not changed" when it isn't), and for
+  pages named the old way (`pageCache`); a page that isn't the size its
+  JSON says is stale (`StaleArt`), and its unit has no art rather than the
+  wrong pictures.
 
 Measured with the Vulcano Dragon made again here: packed move by move,
 its fight art is 106 MB instead of 177 and its map art 53 instead of 128,

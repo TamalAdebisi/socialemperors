@@ -97,8 +97,8 @@ function maskOf(image: CanvasImageSource, width: number, height: number): Mask |
  * A sheet's mask file (white where the picture is, at half the page's
  * size), for a page `scale` times its size (1, or 0.5 for light art).
  */
-export async function maskFile(url: string, scale: number): Promise<Mask | null> {
-  const response = await fetch(url);
+export async function maskFile(url: string, scale: number, cache: RequestCache = "default"): Promise<Mask | null> {
+  const response = await fetch(url, { cache });
   if (!response.ok) {
     return null;
   }
