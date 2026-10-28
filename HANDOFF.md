@@ -68,10 +68,15 @@ follow below; status-only receipt edits change no game, art or test file.
   (`StaleArt`), and units heavier than 128 MB at full size loaded at half
   size unless Light art is off (`GIANT`). Since 28 October big units also
   come at half size first and sharpen in place (progressive loading,
-  `ArtLibrary.sharpen`). **Waiting on the owner:** Deploy
-  Latest Commit, Purge Everything on the art's Cloudflare cache, then the
-  Export art to R2 workflow with "Make big units again", run until it
-  ends green (DEPLOY.md).
+  `ArtLibrary.sharpen`). The third run (28 October, after the purge) made
+  58 units, 14 of the 17 broken ones among them, every file named by what
+  it shows; about 47 are left, the three still broken among the biggest
+  (Atlas Titan, Elemental Light Goddess, Genesis Ice God: up to 3.5 hours
+  to draw). An item's KTX2 pages are now made side by side (`KTX2_JOBS`),
+  so those finish once they have a machine to themselves. **Waiting on the
+  owner:** a working Railway build (it failed on 28 October; the image's
+  two halves build here, so we need its log), and the Export art to R2
+  workflow with "Make big units again", run until it ends green (DEPLOY.md).
 - **Big units keep only their town pictures (21 October).** The owner's
   Blue Fire Djinn Dragon made the map unplayably slow: a newer big
   dragon's whole sheet is about 250 MB decoded. The map now keeps a copy

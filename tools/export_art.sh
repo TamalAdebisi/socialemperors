@@ -29,6 +29,8 @@
 #   KTX2=1      also write each page of a big item (several pages) as KTX2,
 #               as the graphics chip keeps it (tools/art/ktx2.mjs: needs Node,
 #               and npm ci --prefix tools/art). About a minute a page more
+#   KTX2_JOBS=2 an item's KTX2 pages made at once, a core and 550 MB each
+#               (default: half the cores, or the cores left over as above)
 #
 # Everything takes more than a day on 4 processor cores (about four hours
 # on the workflow's 8 machines), almost all of it for the biggest animated
@@ -110,6 +112,11 @@ if [ -z "${RENDER_THREADS:-}" ]; then
         RENDER_THREADS=$((JOBS / ${#todo[@]}))
     fi
 fi
+# And to making each item's KTX2 pages side by side (pack_sheet.py; two at
+# once otherwise, a core each).
+if [ -z "${KTX2_JOBS:-}" ] && [ "$RENDER_THREADS" -gt 1 ]; then
+    KTX2_JOBS=$RENDER_THREADS
+fi
 HEAP="$((1 + 2 * RENDER_THREADS))g"
 echo "Making ${#todo[@]} of the ${#missing[@]} sheets still missing ($JOBS at a time, $RENDER_THREADS threads each)..."
 : > "$OUT/export.log"
@@ -135,7 +142,7 @@ batch() {
     rm -rf "$pictures"
 }
 export -f batch
-export FFDEC_CP CLASSES OUT PYTHON ROOT TIME_LIMIT HEAP RENDER_THREADS KTX2
+export FFDEC_CP CLASSES OUT PYTHON ROOT TIME_LIMIT HEAP RENDER_THREADS KTX2 KTX2_JOBS
 if [ ${#todo[@]} -gt 0 ]; then
     # Each item's line shows here as it is done, and goes in the log.
     printf '%s\0' "${todo[@]}" | xargs -0 -n 1 -P "$JOBS" bash -c 'batch "$@"' _ | tee -a "$OUT/export.log" || true
