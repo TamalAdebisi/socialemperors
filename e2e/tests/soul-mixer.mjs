@@ -2,8 +2,9 @@
 // the community wiki (config/soulmixer_wiki.json; DECISIONS.md). Two
 // Valkyries go in, the result shows as a silhouette, one power-up costs 1
 // cash, the mix starts and the server keeps its queue; speeding it up costs
-// a cash an hour left, Get unit puts the result beside the mixer and both
-// Valkyries come back out. The help and the phone sheet are checked too.
+// a cash an hour left, Get unit puts the result beside the mixer, and both
+// Valkyries are used up: their souls went into it (the owner's rule, 28
+// October 2026). The help and the phone sheet are checked too.
 import assert from "node:assert/strict";
 
 const BUILDING = 1529, AT = [56, 54], VALKYRIE = 554, SOLDIERS = [512, 516];
@@ -76,7 +77,8 @@ async function mixing(context) {
   saved = await readState(player);
   assert.equal(saved.playerInfo.cash, 499 - hours, "a cash an hour left");
   assert.equal(saved.map.items.filter((row) => row[0] === result).length, 1, "the result beside the mixer");
-  assert.equal(saved.map.items.filter((row) => row[0] === VALKYRIE).length, 2, "both Valkyries back out");
+  assert.equal(saved.map.items.filter((row) => row[0] === VALKYRIE).length, 0, "two in, one out: both Valkyries used up");
+  assert.deepEqual(saved.map.items.find((row) => row[0] === BUILDING)[6], [], "and gone from the mixer");
   assert.equal(saved.privateState.barracksQueues[mixer[7].bq].amount, 0);
   await player.shot("collected");
 
@@ -226,12 +228,12 @@ async function legacyReady(context) {
   assert.equal(await phone.page.evaluate(() => window.seHome.parts.commands.flush()), true);
   phone.page.off("request", observe);
   assert.equal(commands.filter((command) => command.cmd === "pop_queue_unit").length, 1);
-  assert.deepEqual(commands.filter((command) => command.cmd === "pop_unit").map((command) => command.args[3]).sort(), [509, 514]);
+  assert.deepEqual(commands.filter((command) => command.cmd === "pop_unit"), [], "the parents don't come back out");
   assert.equal(commands.some((command) => ["buy_powerups", "push_queue_unit", "speed_up_queue"].includes(command.cmd)), false);
   const claimed = await stateOf(phone);
   assert.equal(claimed.playerInfo.cash, baseline.playerInfo.cash, "completed legacy work spends zero cash");
   assert.equal(claimed.map.xp, baseline.map.xp, "completed legacy work grants zero XP");
-  for (const { id } of PARENTS) assert.equal(countOnMap(claimed, id), countOnMap(baseline, id) + 1, "each parent returns exactly once");
+  for (const { id } of PARENTS) assert.equal(countOnMap(claimed, id), countOnMap(baseline, id), "each parent used up");
   assert.equal(countOnMap(claimed, 533), countOnMap(baseline, 533) + 1, "one actual known unit is granted");
   assert.deepEqual(mixerOf(claimed)[6], []);
   assert.equal(mixerOf(claimed)[7].bq, "1");
@@ -241,7 +243,7 @@ async function legacyReady(context) {
   const idle = await openMixer(phone);
   assert.equal(await idle.getByRole("button", { name: /^Get unit$/i }).count(), 0);
   assert.equal(await idle.getByRole("button", { name: "Start mixing", exact: true }).count(), 0, "no mix chosen yet");
-  assert.deepEqual(projection(await stateOf(phone)), once, "reload preserves the claimed marker and returned units");
+  assert.deepEqual(projection(await stateOf(phone)), once, "reload preserves the claimed marker, and no parent comes back");
   // A repeated original command is refused by the real server too.
   await phone.send([{ cmd: "pop_queue_unit", args: [1, 60, 55, BUILDING] }]);
   assert.deepEqual(projection(await stateOf(phone)), once, "a retry cannot grant or return anything twice");

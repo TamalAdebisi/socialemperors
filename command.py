@@ -284,6 +284,10 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
                 if soul_mixer.locked_at(save, town_id, item[0], b_x, b_y):
                     print("Soul Mixer: collect the mixed unit before removing its parents.")
                     return
+                if item[0] == soul_mixer.BUILDING and (len(item) < 7 or unit_id not in item[6]):
+                    # A parent used up by a mix (soul_mixer.pop) doesn't come back out.
+                    print("Soul Mixer: that unit isn't inside.")
+                    return
                 if len(item) < 7:
                     break
                 if unit_id in item[6]: # one the server didn't know was inside still comes out

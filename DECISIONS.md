@@ -4,6 +4,17 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 28 October 2026: the Soul Mixer uses up the two units it mixes
+
+The owner found the mixer giving back both units after mixing ("you put
+in 2 and you get back 3"); the game took their souls. Ours had copied the
+later Flash client we have, which places both back beside the mixer when
+the result is collected. Only the client survives, not the server that
+decided, and the owner played the game, so it's the owner's rule: two
+in, one out. Collecting empties the mixer; our server refuses to let a
+used-up parent back out, so an old page still open can't bring one back.
+A unit chosen and taken out again before mixing comes out as before.
+
 ## 27 October 2026: the art repaired after the second run, the biggest at half size unless asked
 
 The owner's second run of "Make big units again" stopped in time, as

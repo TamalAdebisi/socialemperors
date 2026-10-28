@@ -2033,8 +2033,9 @@ shadow, its sprite drawn in black so its shape shows, as the wiki says
 players recognised them (the darkened picture when its sheet is missing); **Power up** (1 cash, then 2, up to 7) moves it a unit up;
 **Start mixing** begins the wait, from about 3 hours for the weakest
 results to 5 days 10 hours for the strongest; **Speed up** costs a cash an
-hour left; **Get unit** puts the result beside the mixer and both parents
-come back out. A town has one Soul Mixer at most (the shop says "You have
+hour left; **Get unit** puts the result beside the mixer, and the two
+parents are used up: their souls went into it (the owner's rule, 28
+October 2026; the later Flash client gave them back). A town has one Soul Mixer at most (the shop says "You have
 one"; DECISIONS.md). The rules and commands are the later original's
 (`push_queue_unit`, `buy_powerups`, `speed_up_queue`, `pop_queue_unit`).
 

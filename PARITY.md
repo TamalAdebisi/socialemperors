@@ -407,7 +407,9 @@ DECISIONS.md and `docs/original/rules/warehouse.md`.
 ## Soul Mixer
 
 - [x] Later original window/art, generic ranking and power-up rules,
-  original queue protocol, saved work, explicit collection and safe parents.
+  original queue protocol, saved work, explicit collection and safe parents
+  while mixing; collecting uses the two parents up (the owner's rule, 28
+  October 2026: the later Flash client returned them).
 - [x] Safe missing-data window and desktop/phone saved-state coverage.
   Exact `c944e853` passed focused Chromium 1/1 (67s), with all three captures
   reviewed; [evidence and limits](docs/verification-soul-mixer.md).
