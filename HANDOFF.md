@@ -66,7 +66,9 @@ follow below; status-only receipt edits change no game, art or test file.
   files of several-page items named by what they show, JSON on a short
   cache and asked of the server every time, stale pages left out
   (`StaleArt`), and units heavier than 128 MB at full size loaded at half
-  size unless Light art is off (`GIANT`). **Waiting on the owner:** Deploy
+  size unless Light art is off (`GIANT`). Since 28 October big units also
+  come at half size first and sharpen in place (progressive loading,
+  `ArtLibrary.sharpen`). **Waiting on the owner:** Deploy
   Latest Commit, Purge Everything on the art's Cloudflare cache, then the
   Export art to R2 workflow with "Make big units again", run until it
   ends green (DEPLOY.md).

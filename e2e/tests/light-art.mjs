@@ -29,6 +29,7 @@ async function copies(page) {
   }, [INFERNAL, VULCANO], { timeout: 60_000 });
   return page.evaluate(async (arts) => {
     const { art } = window.seHome.parts;
+    await art.settled();  // sharpened, where they come at half size first (progressive loading)
     const out = {};
     for (const name of arts) {
       const town = await art.unit(name);

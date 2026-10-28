@@ -2,8 +2,9 @@
 // a sheet of several pages packed move by move (tools/art/pack_sheet.py)
 // comes with each page as KTX2 and a mask file. The map uses the town's
 // pages as they are, in the graphics chip's format, four times smaller there
-// than the decoded WebP; light art uses their half-size files; taps use the
-// mask; and after a graphics chip reset they're read again.
+// than the decoded WebP, from their half-size files first and sharpened in
+// place after (progressive loading); light art uses the half-size files;
+// taps use the mask; and after a graphics chip reset they're read again.
 //
 // Needs the Vulcano Dragon exported that way (KTX2=1 tools/export_art.sh):
 // skipped, and says so, when its sheet has no KTX2 pages.
@@ -12,24 +13,28 @@ import assert from "node:assert/strict";
 
 const VULCANO = 847, ART = "847_vulcano_dragon";
 
-/** The dragon's map art: its pages' kinds, formats, sizes. */
-async function townArt(page) {
+/** The dragon's map art: its pages' kinds, formats, sizes; `settle`: once sharpened (ArtLibrary.settled). */
+async function townArt(page, settle = true) {
   await page.waitForFunction((id) => {
     const { town, view } = window.seHome?.parts ?? {};
     const placed = town?.items.find((p) => p.item.id === id);
     const picture = placed && view.slots.get(placed)?.children.find((c) => c.texture && c.label !== "selected");
     return picture?.texture?.source?.label?.includes(" in town");
   }, VULCANO, { timeout: 60_000 });
-  return page.evaluate(async (name) => {
+  return page.evaluate(async ([name, settle]) => {
     const { art } = window.seHome.parts;
     const town = await art.unit(name);
+    if (settle) await art.settled();
     const sources = [...new Set([...town.animations.values()].flat().map((t) => t.source))];
+    // Each page, and the first picture drawn from it, to tell the same ones after sharpening.
+    window.sePages ??= sources;
     return {
       half: art.halfSize,
+      same: sources.every((s, n) => s === window.sePages[n]),
       sources: sources.map((s) => ({ kind: s.uploadMethodId, format: s.format, w: s.pixelWidth, h: s.pixelHeight,
         resolution: s.resolution, levels: s.mipLevelCount, letGo: Array.isArray(s.resource) ? s.resource.length === 0 : s.resource instanceof ImageData })),
     };
-  }, ART);
+  }, [ART, settle]);
 }
 
 /** A walking picture drawn from the chip's copy, against the same picture cut from the WebP: how far apart. */
@@ -75,10 +80,24 @@ export default async function ktx2Art({ newPlayer }) {
     return;
   }
   await player.send([{ cmd: "rt_level_up", args: [30] }, { cmd: "buy", args: [VULCANO, 52, 46, 0, 0, 1, 1] }]);
+  // The full-size files held back until the half-size pages are seen (a test machine's server answers at once).
+  let release;
+  const held = new Promise((go) => { release = go; });
+  const full_files = /\.m2(\.[0-9a-f]{12})?\.ktx2$/;
+  await page.route(full_files, async (route) => { await held; await route.continue(); });
   await player.reload();
 
-  // At full size: the town's pages as they are, in the graphics chip's format, let go of by the page.
+  // Progressive: the town's pages come at half size first, a quarter of the download...
+  const first = await townArt(page, false);
+  console.log(`  first: ${first.sources.map((s) => `${s.w} x ${s.h}`).join(", ")}`);
+  assert.ok(first.sources.every((s) => s.kind === "compressed" && s.resolution === 0.5), "at half size first");
+  await player.shot("first");
+  release();
+  // ...then the same pages, sharpened in place: at full size, in the graphics chip's format, let go of by the page.
   const full = await townArt(page);
+  await page.unroute(full_files);
+  assert.ok(full.same, "the same pages, sharpened in place");
+  first.sources.forEach((s, n) => assert.deepEqual([full.sources[n].w, full.sources[n].h], [s.w * 2, s.h * 2], "twice as many pixels each way"));
   console.log(`  map pages: ${full.sources.map((s) => `${s.kind} ${s.format} ${s.w} x ${s.h}, ${s.levels} sizes`).join("; ")}`);
   assert.equal(full.half, false);
   assert.ok(full.sources.every((s) => s.kind === "compressed" && s.format === "bc7-rgba-unorm"), "BC7, the chip's best");
@@ -120,9 +139,11 @@ export default async function ktx2Art({ newPlayer }) {
     assert.equal(s.kind, "compressed");
     assert.deepEqual([s.w, s.h], [full.sources[n].w / 2, full.sources[n].h / 2], "half size each way");
   });
-  console.log(`  light art read ${read.join(", ")}; the sheet's scale ${meta.scale}`);
+  // The dragon's files (a building of several pages, the Soul Mixer, is at full size whatever light art says).
+  const dragon = read.filter((file) => file.startsWith(`${ART}.`) || file.startsWith(`${ART}-`));
+  console.log(`  light art read ${dragon.join(", ")}; the sheet's scale ${meta.scale}`);
   if (meta.ktx2_half) {
-    assert.ok(read.length > 0 && read.every((file) => file.endsWith(".half.ktx2")), "only the half-size files");
+    assert.ok(dragon.length > 0 && dragon.every((file) => file.endsWith(".half.ktx2")), "only the half-size files, never sharpened");
   }
   await player.shot("light-art");
 }
