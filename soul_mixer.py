@@ -1,7 +1,10 @@
 """The later original Soul Mixer queue.
 
 Version 1.4.07 sends the ordinary queue commands. Its two parents remain
-inside and return with separate pop_unit commands after collecting. The
+inside while mixing; that client returns them with pop_unit commands after
+collecting, but the owner remembers the game taking their souls (28
+October 2026), so collecting uses them up here and a later pop_unit of
+either is refused (command.py). The
 2012 config does not include its ranks, times or power-up prices; the
 server fills them from config/soulmixer_wiki.json, rebuilt from the
 community wiki (get_game_config.soul_mixer_from_the_wiki). Without any
@@ -180,7 +183,7 @@ def pop(save, queue_id, x, y, building_id):
     waiting = _waiting(save, queue_id)
     if int(building_id) != BUILDING or waiting is None:
         return "Soul Mixer: no readable mix is in progress."
-    map, _, queue, unit, remaining = waiting
+    map, building, queue, unit, remaining = waiting
     if remaining:
         return "Soul Mixer: the unit is not ready yet."
     x, y = int(x), int(y)
@@ -189,4 +192,7 @@ def pop(save, queue_id, x, y, building_id):
     map["items"].append([int(unit["id"]), x, y, 0, timestamp_now(), 0])
     queue["amount"] = 0
     queue["ts"] = 0
-    return "Soul Mixer: unit collected; both parents remain safe."
+    # The parents' souls went into it: they're gone.
+    if len(building) > UNITS:
+        building[UNITS] = []
+    return "Soul Mixer: unit collected; its two parents' souls are used up."

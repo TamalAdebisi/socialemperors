@@ -98,8 +98,14 @@ none has the data.
   not merely a known item id. Malformed building outputs leave work,
   cash and both parents unchanged.
 - `speed_up_queue` costs one cash per started hour left. Get unit checks
-  population/free space, sends `pop_queue_unit`, then ordinary `pop_unit`
-  commands return both parents. Our server ignores repeated collection.
+  population/free space and sends `pop_queue_unit`. The later client then
+  returns both parents with ordinary `pop_unit` commands (`popAll`). **Ours
+  doesn't, since 28 October 2026:** the owner remembers the game taking
+  the two units' souls, two in and one out, and the original server isn't
+  preserved to say otherwise. Collecting empties the mixer, and our
+  server refuses a `pop_unit` of a parent no longer inside, so a later
+  client's request can't bring one back. Our server ignores repeated
+  collection.
 - Active work protects the building and its parents. The later original
   expressly refuses moving, storing or selling a training mixer; turning
   remains available. Ours rechecks when old card/confirmation callbacks
@@ -118,7 +124,7 @@ none has the data.
 
 Eighteen focused client tests cover ranking, tier ordering, restrictions,
 limits, command arguments, save restore, waiting, speed-up, population,
-surviving parents, passive grants, global queue reservations and stale
+used-up parents, passive grants, global queue reservations and stale
 editor callbacks, on synthetic tables. The server tests replay the queue
 protocol with no tables, with synthetic ones and with the wiki's (a real
 mix of two Valkyries, its wait, speed-up and collection; gods and colossi

@@ -6,7 +6,7 @@
 import type { Command } from "../net/commands.ts";
 import type { GameConfig, ItemInfo } from "./config.ts";
 import { isTheirs } from "./editing.ts";
-import { freeTileNear, letAllOut } from "./work.ts";
+import { freeTileNear } from "./work.ts";
 import { countOf, fits, population } from "./training.ts";
 import { freeSpotNear, type Given } from "./dock.ts";
 import type { PlacedItem, Town } from "./town.ts";
@@ -178,7 +178,7 @@ export function speedMix(town: Town, building: PlacedItem, state: MixerState, it
   return { cmd: "speed_up_queue", args: [building.queueId] };
 }
 
-/** A completed mix waits for Get unit. Both parents return, without casualties or XP. */
+/** A completed mix waits for Get unit. Its two parents are used up: their souls went into it. No XP. */
 export function claimMix(town: Town, building: PlacedItem, state: MixerState, items: Map<number, ItemInfo>, now: number): { units: PlacedItem[]; commands: Command[] } | string {
   if (building.item.id !== SOUL_MIXER || !town.items.includes(building)) return "The Soul Mixer is no longer in your town.";
   const queue = state.queues.get(building.queueId ?? "");
@@ -190,8 +190,8 @@ export function claimMix(town: Town, building: PlacedItem, state: MixerState, it
   const unit: PlacedItem = { item, tx: tile.x, ty: tile.y, orientation: 0, unitsInside: 0, units: [], startedAt: null, workTime: 0 };
   town.items.push(unit);
   state.queues.delete(building.queueId!);
-  const returned = letAllOut(town, building, items);
-  return { units: [unit, ...returned.map((one) => one.unit)], commands: [
-    { cmd: "pop_queue_unit", args: [building.queueId, tile.x, tile.y, SOUL_MIXER] }, ...returned.flatMap((one) => one.commands),
-  ] };
+  // The two parents' souls went into it: they don't come back (the owner's rule; the later Flash client returned them).
+  building.units = [];
+  building.unitsInside = 0;
+  return { units: [unit], commands: [{ cmd: "pop_queue_unit", args: [building.queueId, tile.x, tile.y, SOUL_MIXER] }] };
 }

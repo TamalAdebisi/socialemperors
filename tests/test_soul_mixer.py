@@ -85,7 +85,7 @@ class SoulMixerTest(unittest.TestCase):
             self.send("speed_up_queue", 1)
             self.assertEqual(self.save, before)
 
-    def test_original_protocol_retains_parents_and_collects_exactly_once_without_xp(self):
+    def test_original_protocol_uses_up_parents_and_collects_exactly_once_without_xp(self):
         with self.content(), patch("soul_mixer.timestamp_now", return_value=100):
             xp = self.map["xp"]
             self.send("buy_powerups", 0)
@@ -103,10 +103,20 @@ class SoulMixerTest(unittest.TestCase):
             self.send("pop_queue_unit", 1, 56, 56, 1529)
             self.assertEqual([row[0] for row in self.map["items"]], [1529, 533])
             self.assertEqual(self.map["xp"], xp)
+            # Two in, one out: the parents' souls went into it (the owner's rule, 28 October 2026).
+            self.assertEqual(self.map["items"][0][6], [])
+            # The later Flash client asks for them back: refused, so none comes out of nowhere.
             self.send("pop_unit", 55, 55, 0, 509, 57, 56, 0)
             self.send("pop_unit", 55, 55, 0, 514, 58, 56, 0)
-            self.assertEqual(self.map["items"][0][6], [])
-            self.assertEqual(sorted(row[0] for row in self.map["items"]), [509, 514, 533, 1529])
+            self.assertEqual(sorted(row[0] for row in self.map["items"]), [533, 1529])
+
+    def test_a_soul_chosen_and_taken_back_before_mixing_comes_out(self):
+        with self.content():
+            self.send("pop_unit", 55, 55, 0, 514, 57, 56, 0)
+            self.assertEqual(self.map["items"][0][6], [509])
+            self.assertEqual([row[0] for row in self.map["items"]], [1529, 514], "out beside the mixer")
+            self.send("pop_unit", 55, 55, 0, 514, 57, 56, 0)
+            self.assertEqual([row[0] for row in self.map["items"]], [1529, 514], "but not twice")
 
     def test_elapsed_queue_restores_without_auto_collection_and_start_retry_does_not_reset_time(self):
         with self.content(), patch("soul_mixer.timestamp_now", return_value=100):
@@ -149,7 +159,7 @@ class SoulMixerTest(unittest.TestCase):
         self.save["privateState"]["barracksQueues"]["1"]["unit"] = 533
         self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], 533)
-        self.assertEqual(self.map["items"][0][6], [509, 514])
+        self.assertEqual(self.map["items"][0][6], [], "the parents used up")
         self.assertEqual(self.save["playerInfo"]["cash"], 20)
 
     def test_unreadable_wait_never_becomes_ready_and_off_map_output_is_refused(self):
@@ -306,7 +316,7 @@ class WikiTablesTest(unittest.TestCase):
         for unit in (ELEMENTAL_FIRE_GOD, GENESIS_WIND_COLOSSUS):
             self.assertGreaterEqual(int(get_item_from_id(unit)["breeding_order"]), 400, unit)
 
-    def test_valkyries_mix_wait_and_are_collected_with_both_parents_back(self):
+    def test_valkyries_mix_wait_and_are_collected_using_up_both_parents(self):
         result = ORC_DRAGON
         with patch("soul_mixer.timestamp_now", return_value=1000):
             self.send("buy_powerups", 0)
@@ -322,7 +332,8 @@ class WikiTablesTest(unittest.TestCase):
             self.assertEqual(self.save["playerInfo"]["cash"], 198, "the last hour: 1 cash")
             self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], result)
-        self.assertEqual(self.map["items"][0][6], [VALKYRIE, VALKYRIE], "both parents stay, to come out")
+        self.assertEqual(self.map["items"][0][6], [], "both parents' souls went into it")
+        self.assertEqual([row[0] for row in self.map["items"]].count(VALKYRIE), 0, "two in, one out")
 
 
 VALKYRIE, ORC_DRAGON, ELEMENTAL_FIRE_GOD, GENESIS_WIND_COLOSSUS = 554, 887, 2075, 2162

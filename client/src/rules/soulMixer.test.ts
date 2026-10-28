@@ -176,7 +176,7 @@ test("speed-up costs one cash per started hour, marks ready, and refuses an extr
   assert.equal(town.cash, 17, "stale window actions cannot spend or create units");
 });
 
-test("completed work waits for Get unit, checks population, returns both parents and gives no XP", () => {
+test("completed work waits for Get unit, checks population, uses up both parents and gives no XP", () => {
   const { town, building, state } = fixture();
   const preview = previewMix(rules, building.units!, () => 0)!;
   startMix(town, building, rules, state, preview, 100);
@@ -185,9 +185,12 @@ test("completed work waits for Get unit, checks population, returns both parents
   const claimed = claimMix(town, building, state, items, 101);
   assert.equal(typeof claimed, "object");
   if (typeof claimed === "string") return;
-  assert.deepEqual(claimed.units.map((unit) => unit.item.id).sort(), [500, 502, 503]);
-  assert.deepEqual(claimed.commands.map((command) => command.cmd), ["pop_queue_unit", "pop_unit", "pop_unit"]);
+  // Two in, one out: the parents' souls went into the new unit (the owner's rule, 28 October 2026).
+  assert.deepEqual(claimed.units.map((unit) => unit.item.id), [503]);
+  assert.deepEqual(claimed.commands.map((command) => command.cmd), ["pop_queue_unit"]);
   assert.deepEqual(building.units, []);
+  assert.equal(building.unitsInside, 0);
+  assert.deepEqual(town.items.filter((one) => one.item.id === 500 || one.item.id === 502), [], "neither parent comes back");
   assert.equal(town.xp, 5);
   assert.equal(state.queues.size, 0);
   assert.match(String(claimMix(town, building, state, items, 101)), /not ready/);
