@@ -96,6 +96,9 @@ UNIT_PAGES = 128      # ...a unit, packed move by move: only the pages of the mo
                       # (the biggest seen, the Easter Dragon: 18 pages at half size, about 70 at full)
 PAGES_MARK = "m2"     # in the names of the pages of an item packed move by move: changed with the packing
 DIGEST = 12           # hex digits of a page's digest in its names: what it shows, so a name is never reused
+# KTX2 files made at once for one item: each takes a core and about 550 MB for half a minute or more a page,
+# and the biggest units have a hundred pages (tools/export_art.sh sets it from the cores it has to spare).
+KTX2_JOBS = int(os.environ.get("KTX2_JOBS") or max(1, (os.cpu_count() or 2) // 2))
 MAX_SIZE = 4096       # largest texture phones' graphics chips accept
 WEBP_QUALITY = 85     # lossy colour; transparency stays lossless (alpha_quality=100)
 WEBP_METHOD = 4       # how hard WebP works: 6 makes files 1-2% smaller but takes 8-12 times as long
@@ -484,27 +487,49 @@ def premultiplied(image):
     return Image.merge("RGBA", [ImageChops.multiply(c, a) for c in (r, g, b)] + [a])
 
 
-def ktx2(page, path):
-    """A page (its colours premultiplied) as a KTX2 file (tools/art/ktx2.mjs,
-    Node), or False when it can't be made (too big for the encoder, not in
-    whole blocks, Node missing)."""
-    if page.width * page.height > MAX_SIZE * SHORT_PAGE or page.width % 4 or page.height % 4:
-        return False
-    raw = path + ".rgba.tmp"
-    with open(raw, "wb") as f:
-        f.write(page.tobytes())
-    try:
-        done = subprocess.run(["node", KTX2, raw, str(page.width), str(page.height), path + ".tmp"],
-                              capture_output=True, text=True)
-    except OSError:
-        return False
-    finally:
+class Encodings:
+    """KTX2 files being made (tools/art/ktx2.mjs, Node), up to `jobs` at
+    once: each page is encoded on a core of its own, so a hundred pages take
+    a fraction of the time. Each page's pixels wait on disk, not in memory."""
+
+    def __init__(self, jobs=KTX2_JOBS):
+        self.jobs = max(1, jobs)
+        self.running = []  # (process, path, its pixels' file), oldest first
+        self.made = set()  # the paths made
+
+    def start(self, page, path):
+        """Begins making `path` from `page` (its colours premultiplied), unless
+        it can't be: too big for the encoder, or not in whole blocks of 4."""
+        if page.width * page.height > MAX_SIZE * SHORT_PAGE or page.width % 4 or page.height % 4:
+            return
+        while len(self.running) >= self.jobs:
+            self._finish_oldest()
+        raw = path + ".rgba.tmp"
+        with open(raw, "wb") as f:
+            f.write(page.tobytes())
+        try:
+            process = subprocess.Popen(["node", KTX2, raw, str(page.width), str(page.height), path + ".tmp"],
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        except OSError:  # no Node
+            os.remove(raw)
+            return
+        self.running.append((process, path, raw))
+
+    def _finish_oldest(self):
+        process, path, raw = self.running.pop(0)
+        _, errors = process.communicate()
         os.remove(raw)
-    if done.returncode != 0:
-        print(f"ktx2 {os.path.basename(path)}: {done.stderr.strip()[-300:]}", file=sys.stderr)
-        return False
-    os.replace(path + ".tmp", path)
-    return True
+        if process.returncode != 0:
+            print(f"ktx2 {os.path.basename(path)}: {errors.strip()[-300:]}", file=sys.stderr)
+            return
+        os.replace(path + ".tmp", path)
+        self.made.add(path)
+
+    def finish(self):
+        """Waits for every file begun; then `made` says which were made."""
+        while self.running:
+            self._finish_oldest()
+
 
 
 def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
@@ -517,6 +542,7 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
     named by what they show (digest), the first JSON's name aside."""
     os.makedirs(out_dir, exist_ok=True)
     several = len(pages) > 1
+    encodings = Encodings()
     for sheet, data in zip(sheets, pages):
         image = sheet.image()
         name = data["meta"]["image"][:-len(".webp")]
@@ -533,12 +559,18 @@ def write(sheets, pages, out_dir, quality=WEBP_QUALITY, with_ktx2=False):
             data["meta"]["mask"] = f"{name}-mask.png"
             if with_ktx2:
                 page = premultiplied(image)
-                if ktx2(page, os.path.join(out_dir, f"{name}.ktx2")):
-                    data["meta"]["ktx2"] = f"{name}.ktx2"
-                    half = page.resize((page.width // 2, page.height // 2), Image.Resampling.BOX)
-                    if ktx2(half, os.path.join(out_dir, f"{name}.half.ktx2")):
-                        data["meta"]["ktx2_half"] = f"{name}.half.ktx2"
+                encodings.start(page, os.path.join(out_dir, f"{name}.ktx2"))
+                encodings.start(page.resize((page.width // 2, page.height // 2), Image.Resampling.BOX),
+                                os.path.join(out_dir, f"{name}.half.ktx2"))
+                del page
         del image  # one page in memory at a time
+    encodings.finish()
+    for data in pages if several and with_ktx2 else []:
+        name = data["meta"]["image"][:-len(".webp")]
+        if os.path.join(out_dir, f"{name}.ktx2") in encodings.made:
+            data["meta"]["ktx2"] = f"{name}.ktx2"
+            if os.path.join(out_dir, f"{name}.half.ktx2") in encodings.made:
+                data["meta"]["ktx2_half"] = f"{name}.half.ktx2"
     first = pages[0]
     # The other pages' JSONs, named by their text, then the first: <item>.json, listing them.
     json_names = [first["meta"]["image"].split(f".{PAGES_MARK}.")[0] if several else first["meta"]["image"][:-len(".webp")]]

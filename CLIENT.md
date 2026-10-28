@@ -984,6 +984,10 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
   sixteenth of a decoded page at full size. The reading is done by a worker
   of our own (`view/ktx2.worker.ts`) with the KTX library PixiJS ships:
   PixiJS's own reader never frees what it read, and its memory only grows.
+  Making a page's KTX2 takes about 40 s and 550 MB on one core, and the
+  biggest units have a hundred pages, so `pack_sheet.py` makes an item's
+  pages side by side (`Encodings`, two at once, or every core a machine has
+  to spare: `KTX2_JOBS`), with the same files as one at a time.
 - **A mask file per page** (`<page>.m2-mask.png`, one bit for each 2 x
   2 pixels): a KTX2 page can't be read back, so taps use the mask
   (`maskFile`).

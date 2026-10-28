@@ -341,6 +341,25 @@ class MovesTest(unittest.TestCase):
 
     @unittest.skipIf(not os.path.isdir(os.path.join(os.path.dirname(pack_sheet.KTX2), "node_modules", "ktx2-encoder")),
                      "needs the art tools' packages: npm ci --prefix tools/art")
+    def test_ktx2_pages_made_side_by_side_are_the_same_files(self):
+        written = []
+        for jobs in (1, 3):
+            sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
+            out = tempfile.mkdtemp(prefix=f"se-art-jobs{jobs}-")
+            with unittest.mock.patch.object(pack_sheet, "KTX2_JOBS", jobs), \
+                 unittest.mock.patch.object(pack_sheet.Encodings.__init__, "__defaults__", (jobs,)):
+                pack_sheet.write(sheets, pages, out, with_ktx2=True)
+            files = {}
+            for name in sorted(os.listdir(out)):
+                with open(os.path.join(out, name), "rb") as f:
+                    files[name] = f.read()
+            written.append(files)
+        self.assertEqual(written[0], written[1])
+        self.assertEqual(len([name for name in written[0] if name.endswith(".ktx2")]), 2 * len(pages), "a full and a half KTX2 for each page")
+        self.assertFalse([name for name in written[0] if name.endswith(".tmp")])
+
+    @unittest.skipIf(not os.path.isdir(os.path.join(os.path.dirname(pack_sheet.KTX2), "node_modules", "ktx2-encoder")),
+                     "needs the art tools' packages: npm ci --prefix tools/art")
     def test_a_big_unit_is_written_as_ktx2_too(self):
         sheets, pages, _ = pack_sheet.build(self.folder, max_size=64, unit_pages=20)
         out = tempfile.mkdtemp(prefix="se-art-ktx2-")
