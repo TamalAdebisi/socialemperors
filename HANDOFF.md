@@ -73,10 +73,12 @@ follow below; status-only receipt edits change no game, art or test file.
   it shows; about 47 are left, the three still broken among the biggest
   (Atlas Titan, Elemental Light Goddess, Genesis Ice God: up to 3.5 hours
   to draw). An item's KTX2 pages are now made side by side (`KTX2_JOBS`),
-  so those finish once they have a machine to themselves. **Waiting on the
-  owner:** a working Railway build (it failed on 28 October; the image's
-  two halves build here, so we need its log), and the Export art to R2
-  workflow with "Make big units again", run until it ends green (DEPLOY.md).
+  so those finish once they have a machine to themselves. Railway's build
+  failed once on 28 October and built on Redeploy (the image's two halves
+  build here; Docker Hub refuses this machine its base images); with it
+  live, the owner's quest islands load with their dragons. **Waiting on the
+  owner:** the Export art to R2 workflow with "Make big units again", run
+  until it ends green (DEPLOY.md).
 - **Big units keep only their town pictures (21 October).** The owner's
   Blue Fire Djinn Dragon made the map unplayably slow: a newer big
   dragon's whole sheet is about 250 MB decoded. The map now keeps a copy
