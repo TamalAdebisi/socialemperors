@@ -180,6 +180,38 @@ export class OnChip {
     this.groups.add(group);
   }
 
+  /**
+   * Puts sharper pictures in place of kept pages (view/art.ts, progressive
+   * loading): each page the same size in the game's pixels, at `resolution`,
+   * so every picture cut from it stays as it is and nothing drawn changes but
+   * its sharpness. Its map for taps follows, and `remake` now makes the
+   * sharper ones, if the graphics chip is reset.
+   */
+  sharpen(sources: TextureSource[], pictures: Picture[], resolution: number, remake: Remake): void {
+    for (const group of this.groups) {
+      if (group.sources === sources) group.remake = remake;
+    }
+    sources.forEach((source, n) => {
+      const picture = pictures[n];
+      if (source.destroyed || !picture || !this.kept.has(source)) {
+        return;
+      }
+      const mask = masks.get(source);
+      if (mask) {
+        masks.set(source, { ...mask, cell: mask.cell * resolution / source.resolution });
+      }
+      source.resource = picture;
+      if (Array.isArray(picture)) {
+        source.mipLevelCount = picture.length;
+      }
+      // More of its own pixels, the same size in the game's: PixiJS sends it again on "resize".
+      if (!source.resize(source.width, source.height, resolution)) {
+        source.emit("update", source);
+      }
+      letGo(source);
+    });
+  }
+
   private upload(source: TextureSource): void {
     // Sends the page now (and makes its smaller copies for zooming out), not when first drawn.
     this.renderer.texture.initSource(source);

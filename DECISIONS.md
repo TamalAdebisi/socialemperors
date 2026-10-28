@@ -4,6 +4,22 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 28 October 2026: progressive loading
+
+The owner asked for it after the repair below: big units come at half size
+first and sharpen in place.
+
+- **Which:** every big unit shown at full size whose pages have half-size
+  files (made by the art workflow since 26 October). Light art and giants
+  stay at half size: nothing to sharpen. Sheets of the old packing load as
+  before, until the workflow makes them again.
+- **When:** a copy is sharpened only once no other copy is being made,
+  one at a time, so everything on screen comes first. Each page sent to the
+  graphics chip again may cost a frame or two during a battle's first
+  seconds.
+- **No change to the look** once sharp: the same pictures, checked pixel
+  by pixel against the sheet.
+
 ## 28 October 2026: the Soul Mixer uses up the two units it mixes
 
 The owner found the mixer giving back both units after mixing ("you put

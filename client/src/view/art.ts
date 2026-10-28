@@ -377,6 +377,13 @@ export class ArtLibrary {
   halfSize = false;
   /** Each big unit's giant, once asked. */
   private readonly giants = new Map<string, Promise<boolean>>();
+  /** Copies being made now: copies made at half size first are sharpened once there are none (sharpen). */
+  private copying = 0;
+  private readonly quietWaiters: (() => void)[] = [];
+  /** One copy sharpened at a time, after the others are made. */
+  private readonly sharpening = new Turns(1);
+  private sharpenings = 0;
+  private readonly settledWaiters: (() => void)[] = [];
 
   /**
    * `base`: where the sheets are (the page's artUrl). `renderer`: the
@@ -600,17 +607,57 @@ export class ArtLibrary {
    * page is decoded at a time, then let go.
    */
   private async loadCopy(key: string, name: string, index: SheetJson, moves: number[] | null, size?: number): Promise<ItemArt> {
-    const shrink = size ?? Math.max(await this.shrink(), await this.giant(name) ? 2 : 1);
-    const pages = await this.pagesOf(index);
+    this.copying++;
     try {
-      return await this.copy(key, name, index, pages, moves, shrink, this.formats().length > 0);
-    } catch (error) {
-      if (error instanceof StaleArt || !this.formats().length || !pages.some((page) => page.meta.ktx2)) throw error;
-      // The graphics chip's format didn't load: the WebP pages, from now on.
-      console.warn(`${name}: no KTX2, its WebP instead:`, error);
-      this.chipFormats = [];
-      return this.copy(key, name, index, pages, moves, shrink, false);
+      const shrink = size ?? Math.max(await this.shrink(), await this.giant(name) ? 2 : 1);
+      const pages = await this.pagesOf(index);
+      try {
+        return await this.copy(key, name, index, pages, moves, shrink, this.formats().length > 0);
+      } catch (error) {
+        if (error instanceof StaleArt || !this.formats().length || !pages.some((page) => page.meta.ktx2)) throw error;
+        // The graphics chip's format didn't load: the WebP pages, from now on.
+        console.warn(`${name}: no KTX2, its WebP instead:`, error);
+        this.chipFormats = [];
+        return await this.copy(key, name, index, pages, moves, shrink, false);
+      }
+    } finally {
+      if (--this.copying === 0) {
+        for (const go of this.quietWaiters.splice(0)) go();
+      }
     }
+  }
+
+  /** Once no copy is being made. */
+  private quiet(): Promise<void> {
+    return this.copying === 0 ? Promise.resolve() : new Promise((go) => this.quietWaiters.push(go));
+  }
+
+  /**
+   * Progressive loading: a copy made at half size first (copy) is read at
+   * full size once no other copy is being made, and put in place of its
+   * pages (OnChip.sharpen), a copy at a time: a town or a fight is drawn
+   * from a quarter of the download, and sharpens as the rest comes.
+   */
+  private sharpen(sources: TextureSource[], recipe: Recipe, resolution: number): void {
+    this.sharpenings++;
+    void this.sharpening.run(async () => {
+      await this.quiet();
+      if (sources.some((source) => source.destroyed)) return;  // let go of meanwhile (letGo)
+      const made = await this.make(recipe);
+      if (sources.some((source) => source.destroyed)) return;
+      this.chip?.sharpen(sources, made.map(({ picture }) => picture), resolution, async () => (await this.make(recipe)).map(({ picture }) => picture));
+    }).catch((error: unknown) => {
+      console.warn("A picture stays at half size:", error);
+    }).finally(() => {
+      if (--this.sharpenings === 0) {
+        for (const done of this.settledWaiters.splice(0)) done();
+      }
+    });
+  }
+
+  /** Once every copy made at half size first is at full size (the browser tests wait for it). */
+  settled(): Promise<void> {
+    return this.sharpenings === 0 ? Promise.resolve() : new Promise((done) => this.settledWaiters.push(done));
   }
 
   private async copy(key: string, name: string, index: SheetJson, pages: SheetJson[], moves: number[] | null,
@@ -618,7 +665,12 @@ export class ArtLibrary {
     const ready = (n: number) => ktx2 && Boolean(pages[n].meta.ktx2) || shrink === 1;
     const { runs, whole, cut, packed } = planCopy(pages, moves, shrink, ready);
     const file = (name: string) => `${this.base}/${name}`;
-    const half = shrink > 1;
+    // Progressive (sharpen): a copy at full size whose pages all come in the graphics chip's format, each with its
+    // half-size file, is made at half size first, a quarter of the download, and sharpened in place after.
+    const preview = shrink === 1 && ktx2 && cut.length === 0 && whole.length > 0
+      && whole.every((n) => Boolean(pages[n].meta.ktx2 && pages[n].meta.ktx2_half));
+    const first = preview ? 2 : shrink;
+    const half = first > 1;
     // At half size, a page's half-size KTX2 file (a quarter of the download), or else its whole one's smaller sizes.
     const chip = (meta: SheetMeta) => !ktx2 || !meta.ktx2 ? undefined
       : half && meta.ktx2_half ? { ktx2: file(meta.ktx2_half), half: false } : { ktx2: file(meta.ktx2), half };
@@ -632,7 +684,7 @@ export class ArtLibrary {
       }),
       pages: cut.length > 0 ? packed.pages : [],
       cuts: cut.map(({ page, frame }, i) => ({ file: file(pages[page].meta.image), size: sizeOf(pages[page]),
-        from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / shrink })),
+        from: pages[page].frames[frame].frame, to: packed.places[i], scale: 1 / first })),
     };
     const made = await this.make(recipe);
     // The pictures keep their sizes, trims and anchors, in the sheet's own scale (half size for the biggest).
@@ -640,7 +692,7 @@ export class ArtLibrary {
     // Plain pictures to PixiJS, the canvases too: a canvas source would be taken for somewhere to draw.
     const sources: TextureSource[] = made.map(({ picture, format, width, height }, n) => {
       const label = `${key} ${n}`;
-      const r = resolution / (n < whole.length && !recipe.whole[n].ktx2 ? 1 : shrink);
+      const r = resolution / (n < whole.length && !recipe.whole[n].ktx2 ? 1 : first);
       return format
         // Its colours are premultiplied already (pack_sheet.py), as PixiJS draws.
         ? new CompressedSource({ resource: picture as Uint8Array[], format, width: width / r, height: height / r, resolution: r,
@@ -650,7 +702,7 @@ export class ArtLibrary {
     });
     const textures: Record<string, Texture> = {};
     whole.forEach((page, n) => {
-      const scale = recipe.whole[n].ktx2 ? 1 / shrink : 1;
+      const scale = recipe.whole[n].ktx2 ? 1 / first : 1;
       for (const [frame, data] of Object.entries(pages[page].frames)) {
         textures[frame] = pictureTexture(sources[n], frame, data as Frame, { x: data.frame.x * scale, y: data.frame.y * scale }, resolution);
       }
@@ -661,8 +713,14 @@ export class ArtLibrary {
     });
     // Where pages in the graphics chip's format are see-through: their mask files (the others' are read from them).
     const masks: (Mask | null)[] = await Promise.all(whole.map((page, n) => recipe.whole[n].ktx2 && pages[page].meta.mask
-      ? maskFile(file(pages[page].meta.mask), 1 / shrink, pageCache(pages[page].meta.mask)).catch(() => null) : null));
+      ? maskFile(file(pages[page].meta.mask), 1 / first, pageCache(pages[page].meta.mask)).catch(() => null) : null));
     this.chip?.keep(sources, async () => (await this.make(recipe)).map(({ picture }) => picture), masks);
+    if (preview) {
+      this.sharpen(sources, {
+        whole: whole.map((n) => ({ file: file(pages[n].meta.image), ktx2: file(pages[n].meta.ktx2!), half: false, size: sizeOf(pages[n]) })),
+        pages: [], cuts: [],
+      }, resolution);
+    }
     if (key === name || key.endsWith(" in fights") || key.includes(" move ")) {
       this.copies.set(key, sources);
     }

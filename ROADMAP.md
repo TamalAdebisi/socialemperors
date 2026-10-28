@@ -382,8 +382,8 @@ merging the two wait fixes with that separate failure documented.
       second ([CLIENT.md](CLIENT.md#light-art)); big units' sheets packed
       move by move and stored as the graphics chip keeps them (KTX2), four
       times smaller there, at the game's size with half-size copies for
-      light art, used once the owner runs the art workflow's
-      "Make big units again"); the building card,
+      light art, loaded half size first and sharpened in place, used once
+      the owner runs the art workflow's "Make big units again"); the building card,
       the original's info panel with Upgrade (the owner's pick of the
       mockups, 16 October 2026); and a run-through
       against the Flash game (`e2e/tests/classic.mjs`: an empire played in

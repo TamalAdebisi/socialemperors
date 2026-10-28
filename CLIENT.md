@@ -960,6 +960,21 @@ the **Export art to R2** workflow's "Make big units again", DEPLOY.md):
   which shows every unit at full size (`ArtLibrary.giant`). One whose sheet
   is stored at half size already isn't halved again, and the memory budget
   counts a giant at half size.
+- **Progressive loading** (28 October, the owner's ask). A copy shown at
+  full size whose pages all come as KTX2 with half-size files is made from
+  the half-size files first, a quarter of the download, so the town or the
+  battle starts; once no other copy is being made, its full-size files are
+  read, a copy at a time, and put in place of the same pages
+  (`ArtLibrary.sharpen`, `OnChip.sharpen`). A page keeps its size in the
+  game's pixels and gets twice the pixels each way, so every picture drawn
+  from it stays as it is, only sharper; its map for taps follows, and a
+  graphics chip reset makes the full-size pages. Light art and giants stay
+  at half size; pages cut out of WebP sheets (the old packing) come at their
+  size at once. Measured here, Necro Isle at 50 Mbit/s with the Vulcano and
+  Infernal Dragons and the Fire Extreme Dragon in the army: the battle
+  starts after 13 s and is sharp 15 s later; with the old-format Red Djinn
+  Dragon Rider too, 22 s, against 33 s before (36 s and 49 s with Light art
+  off). `ArtLibrary.settled()` says when everything is sharp.
 - **Each page also as KTX2** (`tools/art/ktx2.mjs`, Basis Universal's
   UASTC, with its smaller copies for zooming out), from the page with its
   colours premultiplied by alpha, as PixiJS draws. The client reads it into
