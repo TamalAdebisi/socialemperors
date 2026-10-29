@@ -1,24 +1,26 @@
 // Supreme Bahamut's temple: freely chosen offerings, live shared mana,
 // sacrifice confirmation, saved waits, the Heart and free claim/reset.
-// Between stages the fixture uses the original admin-only wait command;
+// Between stages the fixture uses the original admin-only wait command
+// (2,500 food each since 29 October 2026, so the town is given food);
 // the ordinary window must not grow that hidden shortcut.
 import assert from "node:assert/strict";
 
 const TEMPLE = 1394, HEART = 1410, SUPREME = 2003, FURIOUS = 649, ACADEMY = 416;
 const AT = [56, 52], ACADEMY_AT = [48, 58], DRAGON_AT = [57, 58];
 
-export default async function temple({ newPlayer }) {
-  const player = await newPlayer();
-  const { page } = player;
-  const info = async () => (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
-    { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
+export default async function temple({ newPlayer, offlineVillage }) {
+  let player = await newPlayer();
   await player.send([
     { cmd: "rt_level_up", args: [60] },
     { cmd: "buy", args: [TEMPLE, ...AT, 0, 0, 1, 1, "b"] },
     { cmd: "buy", args: [ACADEMY, ...ACADEMY_AT, 0, 0, 1, 1, "b"] },
     { cmd: "buy", args: [FURIOUS, ...DRAGON_AT, 0, 0, 1, 1, "u"] },
   ]);
-  await player.reload();
+  // Food for the fixture's three skipped waits, after the food offering.
+  player = await offlineVillage(player, (save) => { save.maps[0].food = 200_000; });
+  const { page } = player;
+  const info = async () => (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
+    { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
   assert.equal((await info()).privateState.mana, 50);
   await player.select(ACADEMY_AT, "Wizardry Academy");
   await player.press("Spells");
