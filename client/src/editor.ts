@@ -10,6 +10,7 @@ import { choices, fits, footprintSize, isMinedOut, isTheirs, move, refund, sell,
 import { tileUnder, type Point } from "./rules/geometry.ts";
 import { levelUps, type Level, type LevelUp } from "./rules/levels.ts";
 import { HURRY_CASH, RESOURCES, WORK_TIMES, canHurry, chooseWorkTime, collect, harvest, hurry, workState, type Collected, type Resource } from "./rules/production.ts";
+import { foodText, inFood } from "./rules/speedUps.ts";
 import { buy, describe, obstacle, priceOf, type Obstacle } from "./rules/shop.ts";
 import { placeStored, sellStored, storageChoices, storageRefund, storedItems, type Stored } from "./rules/storage.ts";
 import { BUILD_MS, builtShare, inConstruction, isBuilt, startBuilding } from "./rules/construction.ts";
@@ -969,7 +970,7 @@ export class TownEditor {
       turn: can.turn && shut ? () => this.turn(placed) : null,
       store: can.store && free ? () => this.store(placed) : null,
       upgrade: can.move && free ? this.upgradeChoice(placed) : null,
-      hurry: hurries ? { price: HURRY_CASH, run: () => this.hurry(placed) } : null,
+      hurry: hurries ? { food: inFood(HURRY_CASH), run: () => this.hurry(placed) } : null,
       ask: this.friendHelp && hurries ? () => this.friendHelp!.ask(placed) : null,
       train: this.trainChoice(placed),
       open: this.gateButton(placed) ?? this.windowOf(placed),
@@ -1796,12 +1797,12 @@ export class TownEditor {
     }, COLLECT_BAR_MS);
   }
 
-  /** Finish a building's work now, for cash, and collect it. */
+  /** Finish a building's work now, for food, and collect it. */
   private hurry(placed: PlacedItem): void {
-    const cashBefore = this.town.cash;
-    this.collected(placed, hurry(this.town, placed, this.clock()));
-    if (this.town.cash < cashBefore) {
-      this.view.rise(placed, [{ text: `−${cashBefore - this.town.cash} cash`, colour: RESOURCE_COLOURS.cash }]);
+    const done = hurry(this.town, placed, this.clock());
+    this.collected(placed, done);
+    if (typeof done !== "string") {
+      this.view.rise(placed, [{ text: `−${foodText(HURRY_CASH)} food`, colour: RESOURCE_COLOURS.food }]);
       this.select(placed);
     }
   }

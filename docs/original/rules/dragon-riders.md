@@ -17,7 +17,9 @@ published. Combat delegates remain a separate task.
   starts a 15-hour recovery, including the last. `rider_next_step ["1"]`
   advances the saved step and timestamp. A failed or closed adventure
   changes neither. Recovery can be bought off for the configured 15 cash
-  with `rider_buy_step_cash [15]`. A page-session flag then exposes
+  with `rider_buy_step_cash [15]`. *Ours: for 7,500 food instead, the
+  owner's rule of 29 October 2026 (CLIENT.md, "Speed-ups cost food"); the
+  command is the same.* A page-session flag then exposes
   **Fast train**, which completes later adventures without playing them;
   every shortcut still starts its recovery. The flag also survives closing
   and reopening the window, and resets when the page reloads.

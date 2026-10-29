@@ -37,13 +37,14 @@ test("allied resource choice starts one day; collection/hurry has exact helper-s
   const b=placed(266,3),t=town(b),state={resource:"n"};
   assert.deepEqual(orderResource(t,b,state,"w",100),{cmd:"set_resource_allies",args:["w",50,50,0,266]});
   assert.equal(orderResource(t,b,state,"g",100),null);assert.equal(socialWait(b,100),86400);
-  t.cash=1;assert.match(String(finishSocial(t,b,items,state,rules,101)),/cash/);assert.equal(t.wood,0);
-  t.cash=10;const result=finishSocial(t,b,items,state,rules,101);assert.notEqual(typeof result,"string");
-  assert.equal(t.wood,500);assert.equal(t.cash,8);assert.equal(state.resource,"n");assert.equal(b.staff,0);
+  // Early: the original's 2 cash, paid in food since 29 October 2026 (rules/speedUps.ts).
+  t.food=999;assert.equal(finishSocial(t,b,items,state,rules,101),"Not enough food: it takes 1,000.");assert.equal(t.wood,0);
+  t.food=1500;const result=finishSocial(t,b,items,state,rules,101);assert.notEqual(typeof result,"string");
+  assert.equal(t.wood,500);assert.deepEqual([t.food,t.cash],[500,100]);assert.equal(state.resource,"n");assert.equal(b.staff,0);
   assert.match(String(finishSocial(t,b,items,state,rules,101)),/resource first/);
   orderResource(t,b,state,"s",200);
   assert.notEqual(typeof finishSocial(t,b,items,state,rules,86600),"string");
-  assert.equal(t.stone,125);assert.equal(t.cash,8);
+  assert.equal(t.stone,125);assert.deepEqual([t.food,t.cash],[500,100]);
 });
 
 test("Wonder uses cumulative fifths without consuming earlier friends and stops after five",()=>{

@@ -97,7 +97,9 @@ none has the data.
 - A completed legacy result must resolve to an actual unit (`type: "u"`),
   not merely a known item id. Malformed building outputs leave work,
   cash and both parents unchanged.
-- `speed_up_queue` costs one cash per started hour left. Get unit checks
+- `speed_up_queue` costs one cash per started hour left. *Ours: 500 food
+  an hour instead, since 29 October 2026 (the owner's rule; CLIENT.md,
+  "Speed-ups cost food").* Get unit checks
   population/free space and sends `pop_queue_unit`. The later client then
   returns both parents with ordinary `pop_unit` commands (`popAll`). **Ours
   doesn't, since 28 October 2026:** the owner remembers the game taking

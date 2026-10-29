@@ -94,7 +94,7 @@ export default async function card({ newPlayer }) {
   await player.press("Hurry up");
   const box = card.locator(".card-hurry-box");
   assert.match(await box.textContent(), /WORK IN PROGRESS.*Mill I.*Ready in.*Pay to finish the work instantly/s);
-  assert.equal(await box.getByRole("button", { name: "Finish now for 2 cash" }).count(), 1);
+  assert.equal(await box.getByRole("button", { name: "Finish now for 1,000 food" }).count(), 1);
   await player.shot("hurry");
   await box.getByRole("button", { name: "Close" }).click();
   assert.equal(await box.count(), 0, "closed, nothing paid");

@@ -2,10 +2,11 @@
 // Its archived content tables are required before any cash or units move.
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "../rules/config.ts";
-import { SOUL_MIXER, claimMix, legacyMixWarning, mixRemaining, mixingChoices, nextPowerup, powerupMix, previewMix, speedMix, startMix,
+import { SOUL_MIXER, claimMix, legacyMixWarning, mixRemaining, mixSpeedUpCash, mixingChoices, nextPowerup, powerupMix, previewMix, speedMix, startMix,
   type MixPreview, type MixerRules, type MixerState } from "../rules/soulMixer.ts";
 import { letOut } from "../rules/work.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
+import { foodText } from "../rules/speedUps.ts";
 import { duration } from "./format.ts";
 import { Panel } from "./panel.ts";
 import "./soulMixer.css";
@@ -103,7 +104,7 @@ export class SoulMixerWindow {
     if (remaining !== null && remaining > 0) {
       time.textContent = `${this.parts.line(1622, "Remaining time")}: ${duration(remaining)}`;
       const button = this.panel.body.querySelector<HTMLButtonElement>(".soul-mixer-speed");
-      if (button) button.textContent = `${this.parts.line(1621, "Speed up")} · ${Math.ceil(remaining / 3600)} cash`;
+      if (button) button.textContent = `${this.parts.line(1621, "Speed up")} · ${foodText(mixSpeedUpCash(remaining))} food`;
     }
   }
 
@@ -182,7 +183,7 @@ export class SoulMixerWindow {
         content.append(time);
         if (remaining === 0) content.append(this.button(line(1628, "Get unit"), () => this.claim()));
         else if (remaining !== null && !rules.missing.length) {
-          const speed = this.button(`${line(1621, "Speed up")} · ${Math.ceil(remaining / 3600)} cash`, () => this.speed());
+          const speed = this.button(`${line(1621, "Speed up")} · ${foodText(mixSpeedUpCash(remaining))} food`, () => this.speed());
           speed.classList.add("soul-mixer-speed");
           content.append(speed);
         }

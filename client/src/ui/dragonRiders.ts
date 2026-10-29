@@ -5,6 +5,7 @@ import { inConstruction } from "../rules/construction.ts";
 import { DRAGON_TAMING, RIDER_ACADEMY, RIDER_IDS, dragonMatches, matchingDragon, recoverRider, recoveryLeft, riderKinds,
   riderState, saveRider, trainRider, type RiderKind, type RiderState } from "../rules/dragonRiders.ts";
 import { clockText } from "../rules/nest.ts";
+import { cantPayFood, foodText, payFood } from "../rules/speedUps.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { freeTileNear, letOut } from "../rules/work.ts";
 import { iconImage } from "./icons.ts";
@@ -28,7 +29,6 @@ interface RiderParts {
   send: (commands: Command[]) => void;
   arrived: (placed: PlacedItem) => void;
   changed: () => void;
-  bank: () => void;
   tell: (text: string) => void;
   paused: (pause: boolean) => void;
 }
@@ -184,8 +184,8 @@ export class DragonRidersWindow {
     body.append(action);
     if (left > 0) {
       const timer = text("div", "", "rider-recovery");
-      const recover = button(this.word(1277, kind.cash), () => this.recover(kind), "rider-recover");
-      recover.append(iconImage("cash"));
+      const recover = button(this.word(1277, foodText(kind.cash)), () => this.recover(kind), "rider-recover");
+      recover.append(iconImage("food", "food"));
       timer.append(text("span", this.word(1276)), text("strong", clockText(left), "rider-time"), recover);
       body.append(timer);
     } else if (fastTrain && !done) body.append(button("Fast train", () => this.success(kind), "rider-fast"));
@@ -202,10 +202,11 @@ export class DragonRidersWindow {
     const state = riderState(this.parts.saved);
     if (state.number !== kind.number) return;
     if (!recoveryLeft(state, this.parts.clock())) return;
-    const next = recoverRider(kind, state, this.parts.clock(), this.parts.town.cash);
-    if (!next) { this.parts.bank(); return; }
+    // Food, not cash (the owner's rule, 29 October 2026).
+    const next = recoverRider(kind, state, this.parts.clock(), this.parts.town.food);
+    if (!next) { this.parts.tell(cantPayFood(this.parts.town, kind.cash) ?? ""); return; }
     fastTrain = true;
-    this.parts.town.cash -= kind.cash;
+    payFood(this.parts.town, kind.cash);
     this.parts.changed();
     this.apply(next.state, next.commands);
   }

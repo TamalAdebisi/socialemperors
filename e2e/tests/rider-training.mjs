@@ -5,8 +5,15 @@
 import assert from "node:assert/strict";
 const ACADEMY = [56, 52], TAMING = [48, 58], DRAGON = [51, 56];
 
-export default async function riderTraining({ newPlayer }) {
-  const player = await newPlayer();
+export default async function riderTraining({ newPlayer, offlineVillage }) {
+  let player = await newPlayer();
+  await player.send([
+    { cmd: "rt_level_up", args: [35] },
+    { cmd: "buy", args: [1345, ...ACADEMY, 0, 0, 1, 1, "b"] },
+    { cmd: "buy", args: [1346, ...TAMING, 0, 0, 1, 1, "b"] },
+  ]);
+  // Food for five recoveries, 7,500 each (the original's 15 cash, in food since 29 October 2026).
+  player = await offlineVillage(player, (save) => { save.maps[0].food = 40_000; });
   const { page } = player;
   const commandBatches = [];
   page.on("request", (request) => {
@@ -19,12 +26,6 @@ export default async function riderTraining({ newPlayer }) {
     if (/%cERROR%c/.test(message.text())) { player.problems.push(message.text()); console.error("Rider runtime error", message.text()); }
   };
   page.on("console", runtimeErrors);
-  await player.send([
-    { cmd: "rt_level_up", args: [35] },
-    { cmd: "buy", args: [1345, ...ACADEMY, 0, 0, 1, 1, "b"] },
-    { cmd: "buy", args: [1346, ...TAMING, 0, 0, 1, 1, "b"] },
-  ]);
-  await player.reload();
   let activePage = page;
   let activePlayer = player, rendererNotices = 0;
   const rendererNotice = async () => {
@@ -191,8 +192,10 @@ export default async function riderTraining({ newPlayer }) {
   assert.ok(Number(saved.privateState.riderTimeStamp) > 0);
   await player.shot("rider-recovery");
 
-  // Recovery costs cash; the original's page-session shortcut appears only
+  // Recovery costs food; the original's page-session shortcut appears only
   // after that payment and still starts each following recovery.
+  assert.match(await panel.locator(".rider-recover").textContent(), /7,500/);
+  assert.equal(await panel.locator(".rider-recover img").getAttribute("alt"), "food");
   for (let step = 1; step <= 5; step++) {
     await panel.locator(".rider-recover").click();
     await savedWhen((save) => Number(save.privateState.riderTimeStamp) === -1);
@@ -207,7 +210,8 @@ export default async function riderTraining({ newPlayer }) {
   await panel.waitFor({ state: "hidden" });
   saved = await savedWhen((save) => Number(save.privateState.riderNumber) === 0 && save.map.items.some((item) => item[0] === 822));
   assert.equal(saved.privateState.riderStepNumber, 0);
-  assert.equal(Number(saved.playerInfo.cash), Number(initial.playerInfo.cash) - 75);
+  assert.equal(Number(saved.playerInfo.cash), Number(initial.playerInfo.cash), "recovery costs no cash");
+  assert.equal(Number(saved.map.food), Number(initial.map.food) - 5 * 7500, "but 7,500 food each");
   const rider = saved.map.items.find((item) => item[0] === 822);
   assert.equal(Number(saved.map.coins), Number(initial.map.coins), "the rider is placed free");
   const claimBatch = commandBatches.find((batch) => batch.some((command) => command.cmd === "buy" && Number(command.args[0]) === 822));
@@ -297,7 +301,7 @@ export default async function riderTraining({ newPlayer }) {
   await phone.page.evaluate(() => window.seRiderAdventure("won", 8, document.querySelector(".rider-adventure").dataset.session));
   saved = await savedWhen((save) => inside(save).length === 0 && save.map.items.some((item) => item[0] === 833));
   assert.ok(!saved.map.items.some((item) => item[0] === 822 || item[0] === 684), "both inputs were consumed");
-  assert.equal(Number(saved.playerInfo.cash), Number(initial.playerInfo.cash) - 75, "taming costs no cash");
+  assert.equal(Number(saved.playerInfo.cash), Number(initial.playerInfo.cash), "taming costs no cash");
   await phone.select(ACADEMY, "Rider Academy");
   await phone.press("Open");
   await sheet.locator(".rider-choices").waitFor();

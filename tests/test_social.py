@@ -110,11 +110,16 @@ class SocialBuildingsTest(unittest.TestCase):
         self.assertEqual(self.me.cash(), 96)
 
     def test_hurrying_the_allied_market(self):
+        # The original's 2 cash, paid in food since 29 October 2026 (speedups.py).
         self.me.build(ALLIED_MARKET, 40, 40)
         self.me.send("set_resource_allies", "s", 40, 40, TOWN, ALLIED_MARKET)
         stone = self.me.map["stone"]
+        self.me.map["food"] = 999
         self.me.send("finish_si", 40, 40, TOWN, ALLIED_MARKET)
-        self.assertEqual((self.me.map["stone"], self.me.cash()), (stone + 125, 98))
+        self.assertEqual((self.me.map["stone"], self.me.map["food"]), (stone, 999), "not without the food")
+        self.me.map["food"] = 1500
+        self.me.send("finish_si", 40, 40, TOWN, ALLIED_MARKET)
+        self.assertEqual((self.me.map["stone"], self.me.map["food"], self.me.cash()), (stone + 125, 500, 100))
 
     def test_the_round_table(self):
         table = self.me.build(ROUND_TABLE, 50, 50, {"si": [1, 2, 3, 4, 5, 6, 7, 8], "sif": {"7": True}})

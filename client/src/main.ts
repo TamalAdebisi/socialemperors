@@ -79,7 +79,7 @@ import { SoulMixerWindow } from "./ui/soulMixer.ts";
 import { givenMixer, mixerRules, readMixer } from "./rules/soulMixer.ts";
 import { GameLoop } from "./gameLoop.ts";
 import { Pause } from "./ui/pause.ts";
-import { bury, readDead } from "./rules/graveyard.ts";
+import { bury, potionPackPrice, readDead } from "./rules/graveyard.ts";
 import { marketRules, readMarket } from "./rules/market.ts";
 import { helpSeconds } from "./rules/friendsHelp.ts";
 import { showsTowns, townAddress, townRaces } from "./rules/towns.ts";
@@ -613,7 +613,7 @@ async function start(): Promise<void> {
     const graves = new Graveyards({
       town, items, dead,
       potions: { count: Number(saved.potion) || 0 },
-      pack: { amount: Number(potionPack.amount) || 1, cash: Number(potionPack.price?.c) || 100 },
+      pack: { amount: Number(potionPack.amount) || 1, ...potionPackPrice(Number(potionPack.price?.c) || 100) },
       thumbnail: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}.jpg`,
       heroPicture: (item) => `${settings.assetsUrl}/buildingthumbs/${item.art}_altar.png`,
       send: (cmd, ...args) => {
@@ -1007,6 +1007,7 @@ async function start(): Promise<void> {
         editor.tell(why);
         void bank.open();
       },
+      tell: (why) => editor.tell(why),
       askFriends: asking,
     });
 
@@ -1019,7 +1020,6 @@ async function start(): Promise<void> {
       removed: (placed) => editor.departed(placed),
       changed: () => hud.update(town),
       tell: (words) => editor.tell(words),
-      bank: (why) => { editor.tell(why); void bank.open(); },
     });
 
     const dragonRiders = new DragonRidersWindow({
@@ -1030,7 +1030,7 @@ async function start(): Promise<void> {
       assets: settings.assetsUrl,
       send: (list) => { for (const command of list) commands.add(command.cmd, ...command.args); void commands.flush(); },
       arrived: (placed) => editor.arrived(placed, []),
-      changed: () => hud.update(town), bank: () => void bank.open(), tell: (words) => editor.tell(words),
+      changed: () => hud.update(town), tell: (words) => editor.tell(words),
       paused: (pause) => { if (pause) loop.stop(); else loop.start(); },
     });
 

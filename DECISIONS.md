@@ -4,6 +4,41 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 29 October 2026: speed-ups cost food, the graveyard gold and food
+
+The owner's rule: speeding up a dragon's training or a rider's recovery
+costs food, not cash, and bringing units back from the graveyard costs
+food and gold, not cash. The numbers were left to us.
+
+- **500 food for each cash.** Each speed-up keeps the original's price
+  in cash and is paid in food at the game's own exchange: its bank gives
+  2,500 gold for 5 cash, and its market sells food at a gold each. So
+  the waits keep their weight against each other, and none is free.
+  Dragon nest: 1,500 food (eggs) or 7,500 (the fed ones), was 3 or 15
+  cash; monster nest 3,500, was 7; a rider's recovery 7,500, was 15.
+- **Every wait, not just the two named.** For one rule across the game,
+  the same goes for the Soul Mixer and the Chained buildings (500 food an
+  hour left, was a cash), finishing a building's work now (1,000, was 2),
+  an Allied Market's delivery early (1,000, was 2) and the temple's
+  48-hour wait (2,500, was 5; only a server command, which the Flash
+  client's admin panel used). Cash prices that aren't waits stay cash:
+  land, the shop, the Soul Mixer's power-ups, hired helpers, the Altar's
+  heroes, collections, the second town.
+- **The graveyard:** a unit bought with cash counts 500 gold for each
+  cash, as the heroes already did, and then comes back as a gold unit
+  would, its whole price in food and half in gold: a 10-cash Furious
+  Dragon is 5,000 food and 2,500 gold (it was 5 cash). That is dearer than
+  half its cash was, as gold units always were. The potion pack's 100 cash
+  becomes 25,000 gold and 25,000 food (the same 500 a cash, half of each).
+- **The server decides.** It works out each price itself and refuses,
+  taking nothing, when the town hasn't the food (or gold); it used to
+  take whatever cash the client named. Prices come from the town that's
+  open.
+- **The classic Flash client** still sends the same commands, shows cash
+  prices and checks cash before asking; our server takes food. A classic
+  player short of food sees the wait skipped until the next reload, when
+  it's back. The new client shows food (the carrot) and checks it.
+
 ## 28 October 2026: progressive loading
 
 The owner asked for it after the repair below: big units come at half size

@@ -67,9 +67,19 @@ class GraveyardTest(unittest.TestCase):
         self.assertEqual(self.on_map(SWORDSMAN)[0][:3], [SWORDSMAN, 30, 31])
 
     def test_resurrect_a_cash_unit(self):
+        # Gold and food since 29 October 2026: its 10 cash counted as 5,000 gold, then as a gold unit (all in food, half in gold).
         self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
         self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "0")
-        self.assertEqual(self.save["playerInfo"]["cash"], 100 - 5)
+        self.assertEqual((self.save["playerInfo"]["cash"], self.map["coins"], self.map["food"]), (100, 10000 - 2500, 10000 - 5000))
+        self.assertEqual(len(self.on_map(FURIOUS_DRAGON)), 1)
+
+    def test_not_without_the_gold_and_food(self):
+        self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
+        self.map["food"] = 4999
+        self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "0")
+        self.assertEqual((self.map["coins"], self.map["food"]), (10000, 4999))
+        self.assertEqual(self.on_map(FURIOUS_DRAGON), [])
+        self.assertEqual(self.pState["deadHeroes"], {str(FURIOUS_DRAGON): 1}, "still in the graveyard")
 
     def test_resurrect_with_potions(self):
         self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)

@@ -1,4 +1,4 @@
-"""Chained buildings: sold for gold, once each, their chains break with time (or cash), then their units are freed."""
+"""Chained buildings: sold for gold, once each, their chains break with time (or food), then their units are freed."""
 
 import os
 import tempfile
@@ -27,6 +27,7 @@ class ChainedTest(unittest.TestCase):
         self.save = sessions.session(self.pid)
         self.map = self.save["maps"][0]
         self.map.update(coins=20_000_000, level=30)
+        self.map["food"] = 20_000
         self.save["playerInfo"]["cash"] = 200
 
     def send(self, cmd, *args):
@@ -62,23 +63,24 @@ class ChainedTest(unittest.TestCase):
         self.assertEqual([row[:3] for row in self.on_map(FIRE_GOD)], [[FIRE_GOD, 52, 50]])
         self.assertEqual([row[:3] for row in self.on_map(FIRE_COLOSSUS)], [[FIRE_COLOSSUS, 53, 50]])
 
-    def test_speeding_up_costs_a_cash_an_hour_left(self):
+    def test_speeding_up_costs_500_food_an_hour_left(self):
+        # The original's cash an hour, paid in food since 29 October 2026 (speedups.py).
         with patch("engine.timestamp_now", return_value=1_000_000):
             self.send("buy", DRAGGY_CHAIN, *AT, 0, 0, 0, 1, "b")
         hours = int(get_item_from_id(DRAGGY_CHAIN)["chain_hours"])
         with patch("chained.timestamp_now", return_value=1_000_000 + 3600):  # an hour in
             self.send("speed_up_chained", *AT, 0)
-            self.assertEqual(self.save["playerInfo"]["cash"], 200 - (hours - 1))
+            self.assertEqual((self.save["playerInfo"]["cash"], self.map["food"]), (200, 20_000 - 500 * (hours - 1)))
             self.send("release_chained", *AT, 0, [[52, 50]])
         self.assertEqual(len(self.on_map(DRAGGY)), 1)
 
     def test_refuses_what_it_should(self):
         with patch("engine.timestamp_now", return_value=1_000_000):
             self.send("buy", DRAGGY_CHAIN, *AT, 0, 0, 0, 1, "b")
-        self.save["playerInfo"]["cash"] = 0
+        self.map["food"] = 0
         with patch("chained.timestamp_now", return_value=1_000_000):
             self.send("speed_up_chained", *AT, 0)
-        self.assertEqual(len(self.on_map(DRAGGY_CHAIN)), 1, "no cash, no speed-up")
+        self.assertEqual(len(self.on_map(DRAGGY_CHAIN)), 1, "no food, no speed-up")
         hours = int(get_item_from_id(DRAGGY_CHAIN)["chain_hours"])
         with patch("chained.timestamp_now", return_value=1_000_000 + hours * 3600):
             for spots in (None, [], [[52, 50], [53, 50]], [[100, 50]], [["52", 50]]):

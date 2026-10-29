@@ -1,7 +1,8 @@
 // Chained buildings (CLIENT.md, "Chained buildings"; DECISIONS.md, 20
 // October 2026). A level 20 town buys the Chained Fire God + Colossus in New,
 // Limited Edition, for gold. Built, its Free button shows the god and the
-// colossus and how long the chains hold; Speed up pays a cash an hour left;
+// colossus and how long the chains hold; Speed up pays 500 food an hour left
+// (the original's cash an hour, in food since 29 October 2026);
 // Free puts both beside it and the building goes. The save follows. Then the
 // shop won't sell it again: each Chained building once per empire.
 
@@ -13,9 +14,10 @@ const CHAIN = 3094, FIRE_GOD = 2075, FIRE_COLOSSUS = 2077, HOUSE = 1, AT = [56, 
 export default async function chained({ newPlayer, offlineVillage }) {
   let player = await newPlayer();
   await player.send([{ cmd: "rt_level_up", args: [20] }]);
-  // Gold and cash, and room for the god and the colossus (5 people each): three more houses.
+  // Gold and food, and room for the god and the colossus (5 people each): three more houses.
   player = await offlineVillage(player, (save) => {
     save.maps[0].coins = 8_000_000;
+    save.maps[0].food = 60_000;
     save.playerInfo.cash = 200;
     for (const x of [40, 42, 44]) save.maps[0].items.push([HOUSE, x, 62, 0, 1, 0]);
     // A Soul Mixer of its own, away from here: the free one a town gets at level 8 would land on AT.
@@ -59,10 +61,11 @@ export default async function chained({ newPlayer, offlineVillage }) {
   assert.deepEqual(await window.locator(".chained-units span").allTextContents(), ["Elemental Fire God", "Elemental Fire Colossus"]);
   assert.match(await window.locator(".chained-time").textContent(), /^\d+:\d\d:\d\d$/);
   const speed = window.locator(".chained-speed-up");
-  assert.match(await speed.textContent(), new RegExp(`Speed up for (${hours}|${hours - 1})`));
+  assert.match(await speed.textContent(), new RegExp(`Speed up for (${(hours * 500).toLocaleString("en-US")}|${((hours - 1) * 500).toLocaleString("en-US")})`));
+  assert.equal(await speed.locator("img").getAttribute("alt"), "food");
   await page.waitForFunction(() => [...document.querySelectorAll(".chained-units img")].every((i) => i.naturalWidth > 0), null, { timeout: 15_000 });
   await player.shot("waiting");
-  const cost = Number((await speed.textContent()).match(/(\d+)/)[1]);
+  const cost = Number((await speed.textContent()).match(/([\d,]+)/)[1].replace(/,/g, ""));
   await speed.click();
 
   // Free: both beside it, the building gone.
@@ -72,7 +75,8 @@ export default async function chained({ newPlayer, offlineVillage }) {
   await player.wait(1500);
   const state = await (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
     { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
-  assert.equal(Number(state.playerInfo.cash), 200 - cost, "a cash an hour left");
+  assert.equal(Number(state.playerInfo.cash), 200, "no cash");
+  assert.equal(Number(state.map.food), 60_000 - cost, "500 food an hour left");
   assert.ok(!state.map.items.some((row) => row[0] === CHAIN), "the building is gone");
   assert.equal(state.map.items.filter((row) => row[0] === FIRE_GOD).length, 1, "the god");
   assert.equal(state.map.items.filter((row) => row[0] === FIRE_COLOSSUS).length, 1, "the colossus");

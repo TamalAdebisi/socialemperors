@@ -222,8 +222,17 @@ numbers, because the server writes them into the game config.
       units book, everything sold for cash, and the two Bahamut collections
       bought outright, the offer packs, mystery boxes and darts (switched on
       20 October 2026: Build → Offers, and a darts board each week).
-      Speeding up a wait keeps the game's price. An active player earns
+      Speeding up a wait keeps the game's price (paid in food since 29
+      October 2026, below). An active player earns
       about 10 cash a day, so the best things cost about a week of playing
+- [x] Speed-ups cost food (29 October 2026, the owner's rule): every wait
+      a player can pay to skip (the nests, a dragon rider's recovery, the
+      Soul Mixer, Chained buildings, a building's work, an Allied Market's
+      delivery, the temple's server-only skip) keeps the game's price and
+      takes 500 food for each cash of it, the game's own exchange. The
+      graveyard never takes cash: units bought with cash come back for gold
+      and food, potions are 25,000 of each. Both clients, the server judging
+      (`speedups.py`, `graveyard.py`; CLIENT.md, "Speed-ups cost food")
 - [x] Claims checked (20 October 2026, `trust.py`): boss prizes, prizes
       put in storage, placing from storage and the merchant's deals, which
       a player who edits requests could have used to get anything. Then

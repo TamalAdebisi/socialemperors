@@ -1,11 +1,12 @@
 // Chained buildings (CLIENT.md, "Chained buildings"; the server's
 // chained_units.py and chained.py). The original's adverts for packs: here
 // the shop sells each one that shows a unit for gold, its chains break
-// chainHours after it was placed (or sooner, for a cash an hour left), and
+// chainHours after it was placed (or sooner, for 500 food an hour left: rules/speedUps.ts), and
 // then Free puts its units beside it and the building goes. No drawing here.
 
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "./config.ts";
+import { cantPayFood, payFood } from "./speedUps.ts";
 import type { PlacedItem, Town } from "./town.ts";
 import { population } from "./training.ts";
 import { freeTileNear } from "./work.ts";
@@ -20,7 +21,7 @@ export function secondsLeft(placed: PlacedItem, now: number): number {
   return Math.max(0, Math.ceil(started + (placed.item.chainHours ?? 0) * 3600 - now));
 }
 
-/** A cash for each hour left, started hours counting whole. */
+/** The original's cash for each hour left, started hours counting whole: paid in food (rules/speedUps.ts). */
 export function speedUpCash(placed: PlacedItem, now: number): number {
   return Math.ceil(secondsLeft(placed, now) / 3600);
 }
@@ -28,8 +29,10 @@ export function speedUpCash(placed: PlacedItem, now: number): number {
 export function speedUp(town: Town, placed: PlacedItem, now: number): Command | string {
   const cash = speedUpCash(placed, now);
   if (cash === 0) return "The chains are already broken.";
-  if (town.cash < cash) return `Not enough cash: it takes ${cash}.`;
-  town.cash -= cash;
+  // Food, not cash (the owner's rule, 29 October 2026).
+  const short = cantPayFood(town, cash);
+  if (short) return short;
+  payFood(town, cash);
   placed.startedAt = Math.floor(now) - (placed.item.chainHours ?? 0) * 3600;
   return { cmd: "speed_up_chained", args: [placed.tx, placed.ty, town.id] };
 }

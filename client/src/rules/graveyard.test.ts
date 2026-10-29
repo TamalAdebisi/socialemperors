@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { ItemInfo } from "./config.ts";
-import { bury, cantRevive, graveyardUnits, heroPrice, readDead, revivalPrice, revivalSpot, shortPrice, standBeside, unbury } from "./graveyard.ts";
+import { bury, cantRevive, graveyardUnits, heroPrice, potionPackPrice, readDead, revivalPrice, revivalSpot, shortPrice, standBeside, unbury } from "./graveyard.ts";
 import type { PlacedItem, Town } from "./town.ts";
 
 function item(fields: Partial<ItemInfo> = {}): ItemInfo {
@@ -53,9 +53,11 @@ test("the graveyard lists the town's race (and anyone's) bought with gold or cas
   assert.deepEqual(graveyardUnits(dead, ITEMS, "t").map((u) => u.item.id), [602, 603]);
 });
 
-test("prices: potions; half the cash; half the gold and the whole price in food; heroes 500 gold a cash", () => {
-  assert.deepEqual(revivalPrice(KNIGHT), { potions: 2, cash: 0, gold: 88, food: 175 });
-  assert.deepEqual(revivalPrice(CASH_UNIT), { potions: 20, cash: 13, gold: 0, food: 0 });
+test("prices: potions; half the gold and the whole price in food, a cash counted as 500 gold; heroes 500 gold a cash", () => {
+  assert.deepEqual(revivalPrice(KNIGHT), { potions: 2, gold: 88, food: 175 });
+  // Never cash since 29 October 2026: its 25 cash as 12,500 gold.
+  assert.deepEqual(revivalPrice(CASH_UNIT), { potions: 20, gold: 6250, food: 12500 });
+  assert.deepEqual(potionPackPrice(100), { gold: 25000, food: 25000 });
   assert.equal(heroPrice(RANGER), 1500);
   assert.equal(shortPrice(1500), "1.5k");
   assert.equal(shortPrice(17500), "17.5k");

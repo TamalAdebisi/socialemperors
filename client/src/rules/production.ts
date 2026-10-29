@@ -6,6 +6,7 @@
 import type { Command } from "../net/commands.ts";
 import type { ConfigItem } from "./config.ts";
 import type { PlacedItem, Town } from "./town.ts";
+import { cantPayFood, payFood } from "./speedUps.ts";
 
 export type Resource = "gold" | "wood" | "food" | "stone" | "cash";
 
@@ -184,7 +185,7 @@ export function collect(town: Town, placed: PlacedItem, now: number, hurried = f
   return { commands, resource: production.resource, amount, xp: production.xp, wood, ...(usedUp === undefined ? {} : { usedUp }) };
 }
 
-/** What finishing a building's work at once costs, in cash (the Flash client's hurry up). */
+/** What finishing a building's work at once cost in the original, in cash (the Flash client's hurry up): paid in food (rules/speedUps.ts). */
 export const HURRY_CASH = 2;
 const HURRIED = new Set([SUBCAT.mill, SUBCAT.mine, SUBCAT.foodShop]);
 
@@ -195,18 +196,20 @@ export function canHurry(placed: PlacedItem, now: number): boolean {
   return kind && workState(placed, now)?.status === "working";
 }
 
-/** Finish a building's work now for cash, and collect it: as collecting, with the cash in the command. */
+/** Finish a building's work now for food, and collect it: as collecting, with the original's cash in the command. */
 export function hurry(town: Town, placed: PlacedItem, now: number): Collected | string {
   if (!canHurry(placed, now)) {
     return `${placed.item.name} isn't working.`;
   }
-  if (town.cash < HURRY_CASH) {
-    return `Not enough cash: it costs ${HURRY_CASH}.`;
+  // Food, not cash (the owner's rule, 29 October 2026).
+  const short = cantPayFood(town, HURRY_CASH);
+  if (short) {
+    return short;
   }
   const done = collect(town, placed, now, true);
   if (typeof done !== "string") {
-    town.cash -= HURRY_CASH;
-    done.commands[0].args[6] = HURRY_CASH;
+    payFood(town, HURRY_CASH);
+    done.commands[0].args[6] = HURRY_CASH;  // as the Flash client sends it; the server takes the food
   }
   return done;
 }

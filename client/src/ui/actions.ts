@@ -41,8 +41,8 @@ export interface ActionChoices {
   store: (() => void) | null;
   /** Upgrade: the next building, and what stops it (a level) or what it costs. */
   upgrade?: { name: string; picture: string; level: number | null; price: { resource: Resource; amount: number } | null; run: () => void } | null;
-  /** Hurry up: finish its work now, for cash, or ask friends (the game's hurry window); null when it can't be hurried. */
-  hurry?: { price: number; run: () => void } | null;
+  /** Hurry up: finish its work now, for food (rules/speedUps.ts), or ask friends (the game's hurry window); null when it can't be hurried. */
+  hurry?: { food: number; run: () => void } | null;
   ask?: (() => void) | null;
   /** Train its unit: its name, picture, price and the same for cash, and what the bubble over it tells. */
   train?: {
@@ -459,7 +459,7 @@ export class ActionBar {
    * The game's hurry window, over the card: the building, how long it has
    * left, and the two ways: ask friends for help, or pay to finish now.
    */
-  private hurryBox(choices: ActionChoices, hurry: { price: number; run: () => void }, ask: (() => void) | null): void {
+  private hurryBox(choices: ActionChoices, hurry: { food: number; run: () => void }, ask: (() => void) | null): void {
     this.bar.querySelector(".card-hurry-box")?.remove();
     const box = element("div", "card-hurry-box");
     box.setAttribute("role", "dialog");
@@ -484,13 +484,13 @@ export class ActionBar {
     head.append(frame, named);
     box.append(band, shut, head, element("span", "card-hurry-header", this.words.hurryHeader));
     const ways = element("div", "card-hurry-ways");
-    const way = (text: string, label: string, run: () => void, cash = 0) => {
+    const way = (text: string, label: string, run: () => void, food = 0) => {
       const option = element("div", "card-hurry-option");
       const button = element("button", "card-hurry-button", label);
       button.type = "button";
-      if (cash) {
-        button.setAttribute("aria-label", `Finish now for ${cash} cash`);
-        button.append(` ${cash}`, picture(ICONS.cash, "icon"));
+      if (food) {
+        button.setAttribute("aria-label", `Finish now for ${food.toLocaleString("en-US")} food`);
+        button.append(` ${food.toLocaleString("en-US")}`, picture(ICONS.food, "icon"));
       }
       button.addEventListener("click", () => {
         close();
@@ -502,7 +502,7 @@ export class ActionBar {
     if (ask) {
       ways.append(way(this.words.hurryAsk, this.words.hurryAskButton, ask), element("span", "card-hurry-or", this.words.hurryOr));
     }
-    ways.append(way(this.words.hurryPay, this.words.buyFor.replace(/:$/, ""), hurry.run, hurry.price));
+    ways.append(way(this.words.hurryPay, this.words.buyFor.replace(/:$/, ""), hurry.run, hurry.food));
     box.append(ways);
     this.bar.append(box);
   }

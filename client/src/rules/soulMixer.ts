@@ -10,6 +10,7 @@ import { freeTileNear } from "./work.ts";
 import { countOf, fits, population } from "./training.ts";
 import { freeSpotNear, type Given } from "./dock.ts";
 import type { PlacedItem, Town } from "./town.ts";
+import { cantPayFood, payFood } from "./speedUps.ts";
 
 export const SOUL_MIXER = 1529;
 export const LEGACY_SOULS = new Set([2048, 2037, 777, 758]);
@@ -163,6 +164,11 @@ export function mixRemaining(queue: MixQueue, item: ItemInfo, now: number): numb
   return item.soulMixingTime && item.soulMixingTime > 0 ? Math.max(0, Math.ceil(queue.ts + item.soulMixingTime - now)) : null;
 }
 
+/** The original's price to finish a mix now, a cash an hour started: paid in food (rules/speedUps.ts). */
+export function mixSpeedUpCash(remaining: number): number {
+  return Math.ceil(remaining / 3600);
+}
+
 export function speedMix(town: Town, building: PlacedItem, state: MixerState, item: ItemInfo, now: number, rules: MixerRules): Command | string {
   if (building.item.id !== SOUL_MIXER || !town.items.includes(building)) return "The Soul Mixer is no longer in your town.";
   if (rules.missing.length) return "The original Soul Mixer rules are unavailable.";
@@ -171,9 +177,11 @@ export function speedMix(town: Town, building: PlacedItem, state: MixerState, it
   const remaining = mixRemaining(queue, item, now);
   if (remaining === null) return "The original Soul Mixer rules are unavailable.";
   if (remaining === 0) return "Your unit is ready.";
-  const cost = Math.ceil(remaining / 3600);
-  if (town.cash < cost) return "Not enough cash.";
-  town.cash -= cost;
+  // The original's cash an hour, paid in food (the owner's rule, 29 October 2026; rules/speedUps.ts).
+  const cost = mixSpeedUpCash(remaining);
+  const short = cantPayFood(town, cost);
+  if (short) return short;
+  payFood(town, cost);
   queue.ts = 0;
   return { cmd: "speed_up_queue", args: [building.queueId] };
 }

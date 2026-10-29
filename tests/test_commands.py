@@ -28,7 +28,8 @@ DRAGGY, KING_KONG, DRAGON_RIDER = 638, 717, 822  # the first dragon, monster and
 TOWER, GOLD_MINE, PEASANT, LIGHT_KNIGHT, SMALL_TROLL = 33, 13, 500, 512, 525
 COW, SHEEP = 74, 75  # subcat_functional, as the client counts its animals
 # The client's own prices to skip a 6-hour wait (the game config has none):
-CARE_STEP_CASH, FEED_STEP_CASH, MONSTER_STEP_CASH = 3, 15, 7
+CARE_STEP_CASH, FEED_STEP_CASH, MONSTER_STEP_CASH = 3, 15, 7  # the original's, paid in food since 29 October 2026
+FOOD_PER_CASH = 500  # speedups.py
 NO_WAIT = -1  # the server's mark for a wait that is over
 X, Y = 60, 60  # an empty spot in a new village
 
@@ -45,7 +46,7 @@ class CommandsTest(unittest.TestCase):
         self.map = self.save["maps"][TOWN]
         self.pState = self.save["privateState"]
         self.save["playerInfo"]["cash"] = 200
-        self.map.update(coins=200000, xp=0)
+        self.map.update(coins=200000, food=20000, xp=0)
 
     def send(self, cmd, *args):
         do_command(self.pid, cmd, list(args))
@@ -100,14 +101,23 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.pState["stepNumber"], 7)
         self.assertEqual(self.pState["timeStampTakeCare"], 0, "no wait after the lessons' gift, as the Flash client showed")
 
-    def test_skipping_a_dragon_wait_with_cash(self):
+    def test_skipping_a_dragon_wait_with_food(self):
         self.send("next_step", 0)
         self.send("buy_step_cash", CARE_STEP_CASH)
         self.assertEqual(self.pState["timeStampTakeCare"], NO_WAIT)
-        self.assertEqual(self.cash(), 200 - CARE_STEP_CASH)
+        self.assertEqual((self.cash(), self.map["food"]), (200, 20000 - 1500))
         self.pState["dragonNumber"] = 1  # every other dragon is fed, and feeding costs more
-        self.send("buy_step_cash", FEED_STEP_CASH)
-        self.assertEqual(self.cash(), 200 - CARE_STEP_CASH - FEED_STEP_CASH)
+        self.send("next_step", 1)
+        self.send("buy_step_cash", 1)  # the price is the server's, whatever the client says
+        self.assertEqual((self.cash(), self.map["food"]), (200, 20000 - 1500 - 7500))
+        self.assertEqual(self.pState["timeStampTakeCare"], NO_WAIT)
+
+    def test_no_dragon_speed_up_without_the_food(self):
+        self.map["food"] = 1499
+        self.send("next_step", 0)
+        self.send("buy_step_cash", CARE_STEP_CASH)
+        self.assertNotEqual(self.pState["timeStampTakeCare"], NO_WAIT, "still waiting")
+        self.assertEqual((self.cash(), self.map["food"]), (200, 1499))
 
     def test_taking_a_dragon_home(self):
         self.pState.update(stepNumber=10, dragonNumber=0)
@@ -149,11 +159,11 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.pState["stepMonsterNumber"], 1)
         self.assertGreaterEqual(self.pState["timeStampTakeCareMonster"], before)
 
-    def test_skipping_a_monster_wait_with_cash(self):
+    def test_skipping_a_monster_wait_with_food(self):
         self.send("next_monster_step", 0)
         self.send("buy_monster_step_cash", MONSTER_STEP_CASH)
         self.assertEqual(self.pState["timeStampTakeCareMonster"], NO_WAIT)
-        self.assertEqual(self.cash(), 200 - MONSTER_STEP_CASH)
+        self.assertEqual((self.cash(), self.map["food"]), (200, 20000 - MONSTER_STEP_CASH * FOOD_PER_CASH))
 
     def test_taking_a_monster_home(self):
         self.pState.update(monsterNestActive=1, stepMonsterNumber=10, monsterNumber=0)
@@ -189,13 +199,18 @@ class CommandsTest(unittest.TestCase):
         self.assertEqual(self.pState["riderStepNumber"], 1)
         self.assertGreaterEqual(self.pState["riderTimeStamp"], before)
 
-    def test_skipping_a_training_wait_with_cash(self):
+    def test_skipping_a_training_wait_with_food(self):
         self.send("rider_select", 1)
         self.send("rider_next_step", "1")
         price = GLOBALS["DRAGON_RIDERS"]["1"]["stepCost"]
         self.send("rider_buy_step_cash", price)
         self.assertEqual(self.pState["riderTimeStamp"], NO_WAIT)
-        self.assertEqual(self.cash(), 200 - price)
+        self.assertEqual((self.cash(), self.map["food"]), (200, 20000 - price * FOOD_PER_CASH))
+        self.map["food"] = price * FOOD_PER_CASH - 1
+        self.send("rider_next_step", "1")
+        self.send("rider_buy_step_cash", price)  # a food short
+        self.assertNotEqual(self.pState["riderTimeStamp"], NO_WAIT)
+        self.assertEqual(self.map["food"], price * FOOD_PER_CASH - 1)
 
     def test_a_trained_rider_comes_out(self):
         self.pState.update(riderNumber=1, riderStepNumber=GLOBALS["DRAGON_RIDERS"]["1"]["steps"])
@@ -289,11 +304,15 @@ class CommandsTest(unittest.TestCase):
     # The graveyard
 
     def test_buying_potions(self):
+        # The pack's 100 cash, at 500 gold a cash, half in gold and half in food (graveyard.py).
         potions = GLOBALS["GRAVEYARD_POTIONS"]
         self.pState["potion"] = 2
+        self.map["food"] = 30000
         self.send("graveyard_buy_potions")
         self.assertEqual(self.pState["potion"], 2 + potions["amount"])
-        self.assertEqual(self.cash(), 200 - potions["price"]["c"])
+        self.assertEqual((self.cash(), self.map["coins"], self.map["food"]), (200, 200000 - 25000, 30000 - 25000))
+        self.send("graveyard_buy_potions")  # 5,000 food left
+        self.assertEqual((self.pState["potion"], self.map["coins"], self.map["food"]), (2 + potions["amount"], 175000, 5000))
 
     # Survival
 

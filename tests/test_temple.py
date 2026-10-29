@@ -69,10 +69,11 @@ class TempleTest(unittest.TestCase):
         pState = self.save["privateState"]
         self.assertEqual(sorted(pState["templeStep"]), list(range(len(STEPS))))
         self.assertEqual(pState["timeStampTemple"], 0)
+        # Each wait skipped for the original's 5 cash, in food since 29 October 2026: 2,500 (speedups.py).
         self.assertEqual((self.map["coins"], self.map["stone"], self.map["wood"], self.map["food"]),
-                         (150000, 150000, 150000, 150000))
+                         (150000, 150000, 150000, 150000 - 2500 * len(STEPS)))
         self.assertEqual(pState["mana"], 30)
-        self.assertEqual(self.save["playerInfo"]["cash"], 200 - 50 - SKIP_WAIT_CASH * len(STEPS))
+        self.assertEqual(self.save["playerInfo"]["cash"], 200 - 50)
         for dragon in dragons:
             self.assertEqual(self.items(dragon), [], f"dragon {dragon} was not sacrificed")
 
@@ -91,6 +92,13 @@ class TempleTest(unittest.TestCase):
         before = int(time.time())
         self.send("next_temple_step", offering_json(0), 0)
         self.assertGreaterEqual(self.save["privateState"]["timeStampTemple"], before)
+
+    def test_no_food_no_skipping(self):
+        self.send("next_temple_step", offering_json(0), 0)
+        self.map["food"] = 2499
+        self.send("buy_temple_step_cash", SKIP_WAIT_CASH)
+        self.assertGreater(self.save["privateState"]["timeStampTemple"], 0, "still waiting")
+        self.assertEqual((self.map["food"], self.save["playerInfo"]["cash"]), (2499, 200))
 
     def test_same_step_twice_is_paid_once(self):
         self.send("next_temple_step", offering_json(0), 0)

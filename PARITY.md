@@ -193,6 +193,9 @@ The card's look is the owner's pick: mockup A, the original's panel
       Beta 1. M
 - **The Daily News window**: left out. It showed Social Point's news,
   offers for cash and a few tips; there's no news to show now.
+- [x] **Speed-ups cost food, not cash** (29 October 2026): each keeps the
+  original's price, at 500 food a cash; the graveyard takes gold and food,
+  never cash. Both clients (CLIENT.md, "Speed-ups cost food"; DECISIONS.md).
 
 ## Found by the map of the original (15 October 2026)
 

@@ -1,12 +1,14 @@
 // Dragon rider training and matching, using the game's config and saved
 // fields. Time is in seconds, as in the server's commands.
 import type { Command } from "../net/commands.ts";
+import { inFood } from "./speedUps.ts";
 
 export const RIDER_ACADEMY = 1345;
 export const DRAGON_TAMING = 1346;
 export const RIDER_IDS = [822, 823, 824] as const;
 export const RECOVERY_SECONDS = 15 * 60 * 60;
 
+/** cash: the original's price to end a recovery, paid in food (rules/speedUps.ts). */
 export interface RiderKind { number: number; item: number; level: number; steps: number; cash: number }
 export interface DragonMatch { dragon: number; rider: number; tamed: number }
 export interface RiderState { number: number; step: number; since: number }
@@ -48,8 +50,9 @@ export function trainRider(kind: RiderKind, state: RiderState, now: number): { s
   return { state: { ...state, step: state.step + 1, since: now }, commands: [{ cmd: "rider_next_step", args: ["1"] }] };
 }
 
-export function recoverRider(kind: RiderKind, state: RiderState, now: number, cash: number): { state: RiderState; commands: Command[] } | null {
-  if (state.number !== kind.number || recoveryLeft(state, now) === 0 || cash < kind.cash) return null;
+/** The recovery over, for food: the command keeps the Flash client's name and cash; the server takes the food. */
+export function recoverRider(kind: RiderKind, state: RiderState, now: number, food: number): { state: RiderState; commands: Command[] } | null {
+  if (state.number !== kind.number || recoveryLeft(state, now) === 0 || food < inFood(kind.cash)) return null;
   return { state: { ...state, since: -1 }, commands: [{ cmd: "rider_buy_step_cash", args: [kind.cash] }] };
 }
 

@@ -38,6 +38,10 @@ follow below; status-only receipt edits change no game, art or test file.
 
 ### Current status
 
+- **Speed-ups cost food (29 October).** The owner's rule: skipping a wait
+  costs food, not cash, at 500 food for each cash of the original's price
+  (`speedups.py`, `rules/speedUps.ts`); the graveyard takes gold and food,
+  never cash. CLIENT.md, "Speed-ups cost food"; DECISIONS.md.
 - **Light art (26 October).** The owner saw a tournament take 11 to 12
   GB, their town slow with newer dragons, and a friend's empire fail to
   open on phones. Big units' pictures now stay on the graphics chip only

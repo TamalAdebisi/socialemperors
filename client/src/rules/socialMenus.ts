@@ -7,9 +7,12 @@ import { standBeside } from "./graveyard.ts";
 import { population } from "./training.ts";
 import { RESOURCES } from "./production.ts";
 import type { PlacedItem, Town } from "./town.ts";
+import { cantPayFood, payFood } from "./speedUps.ts";
 
 export const SOCIAL_BUILDINGS = new Set([234,266,352,387,389,470]);
 export const ALLIED_MARKETS = new Set([266,352]);
+/** Finishing an Allied Market's delivery early: the original's 2 cash, paid in food (rules/speedUps.ts). */
+export const DELIVERY_HURRY_CASH = 2;
 export interface SocialRules {
   populationSteps: number; populationIncrease: number; maxPosts: number;
   recruits: { id: number; count: number }[];
@@ -60,9 +63,11 @@ export function finishSocial(town: Town, placed: PlacedItem, items: Map<number,I
   } else if (ALLIED_MARKETS.has(id)) {
     const resource=RESOURCES[state.resource];
     if (!resource || state.resource==="c") return "Choose a resource first.";
-    const price=socialWait(placed,now)>0 ? 2 : 0;
-    if (town.cash<price) return "Not enough cash to finish this delivery early.";
-    town.cash-=price;
+    // Early, for the original's 2 cash paid in food (the owner's rule, 29 October 2026; rules/speedUps.ts).
+    const price=socialWait(placed,now)>0 ? DELIVERY_HURRY_CASH : 0;
+    const short=cantPayFood(town,price);
+    if (short) return short;
+    payFood(town,price);
     const amount=125*(helpers+1); town[resource]+=amount;
     commands.push({ cmd:"finish_si",args:at }, { cmd:"set_resource_allies",args:["n",...at] });
     state.resource="n"; resetStaff(placed); note=`${amount} ${resource} delivered.`;
