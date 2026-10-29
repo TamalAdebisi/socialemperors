@@ -104,10 +104,11 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   assert.equal(bought.playerInfo.cash, 44);
   assert.ok(bought.map.items.some((i) => i[0] === ARTHUR));
 
-  // More food and gold: the Furious Dragon back, and a potion, neither for cash.
+  // More food and gold, and two houses for the dragon's people: the Furious Dragon back, and a potion, neither for cash.
   player = await offlineVillage(player, (save) => {
     save.maps[0].food = 30_000;
     save.maps[0].coins = 30_000;
+    for (const x of [40, 42]) save.maps[0].items.push([1, x, 62, 0, 1, 0]);
   });
   await player.closeLevelUps();
   await player.select(GRAVE_AT, "Graveyard");

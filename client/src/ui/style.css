@@ -4077,7 +4077,8 @@ body:has(.battle-selection:not([hidden])) .actions.asking { visibility: hidden; 
   width: 150px;
   height: 34px;
   margin-top: 2px;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;  /* "Speed up for 7,500" and the carrot on one line */
 }
 
 .nest-speed-up .icon {

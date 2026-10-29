@@ -4,8 +4,12 @@ export default async function menuProgress({newPlayer,offlineVillage}){
  const commands=[{cmd:"rt_level_up",args:[20]}];
  for(let id=1;id<52;id++)commands.push({cmd:"complete_mission",args:[id,0]},{cmd:"reward_mission",args:[0,id]});
  await player.send(commands);
- // Food for the Allied Market's early delivery below (1,000: the original's 2 cash, in food since 29 October 2026).
- player=await offlineVillage(player,(save)=>{save.maps[0].food=Math.max(Number(save.maps[0].food)||0,5000);});
+ // Food for the Allied Market's early delivery below (1,000: the original's 2 cash, in food since 29 October 2026),
+ // and a Soul Mixer of its own, away from here: the free one a town gets at level 8 would land on the market's tiles.
+ player=await offlineVillage(player,(save)=>{
+  save.maps[0].food=Math.max(Number(save.maps[0].food)||0,5000);
+  save.maps[0].items.push([1529,40,70,0,1,0]);
+ });
  const {page}=player;
  await page.locator(".goal-cards",{hasText:"Spend 1 cash"}).waitFor();
  await player.menu("Army");await player.press("Collections");
