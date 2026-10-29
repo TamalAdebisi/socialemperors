@@ -122,7 +122,9 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   await player.shot("potion-bought");
   await player.wait(1500);
   const paid = await info();
-  assert.deepEqual([paid.map.food, paid.map.coins, paid.playerInfo.cash], [30_000 - 5000 - 25_000, 30_000 - 2500 - 25_000, 44]);
+  assert.deepEqual([paid.map.food, paid.playerInfo.cash], [30_000 - 5000 - 25_000, 44]);
+  // Its gold, give or take what the houses earned meanwhile.
+  assert.ok(paid.map.coins >= 30_000 - 2500 - 25_000 && paid.map.coins <= 30_000 - 2500 - 25_000 + 100, `2,500 and 25,000 gold (${paid.map.coins})`);
   assert.equal(paid.privateState.potion, 1);
   assert.deepEqual(paid.privateState.deadHeroes, { [KNIGHT]: 2 });
   assert.ok(paid.map.items.some((i) => i[0] === FURIOUS));
