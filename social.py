@@ -36,6 +36,7 @@ from engine import timestamp_now
 from get_game_config import get_game_config
 import inventory
 from village import ATTRS, STARTED, full, give, item_at, take
+import speedups
 
 SUMMIT = 234
 ALLIED_MARKETS = (266, 352)
@@ -47,7 +48,7 @@ KEEP_STAFF = (SUMMIT, *ALLIED_MARKETS, RECRUITMENT, ROUND_TABLE, WONDER)
 MARKET_PER_HELPER = 125  # RESOURCES_MARKET_PER_ALLY in the client
 MARKET_RESOURCES = ("g", "w", "s", "f")
 MARKET_WAIT = 24 * 3600
-HURRY_CASH = 2  # COST_HURRY_UP in the client: collecting the market early
+HURRY_CASH = 2  # COST_HURRY_UP in the client: collecting the market early; paid in food (speedups.py)
 ROUND_TABLE_HEROES = (533, 534, 535, 550)  # Xena, Arthur, the Ranger, Merlin
 
 
@@ -129,8 +130,9 @@ def _market_delivers(save: dict, item: list, town_id: int, staff) -> str:
     amount = MARKET_PER_HELPER * (len(staff) + 1 if isinstance(staff, list) else 1)
     note = ""
     if timestamp_now() - int(item[STARTED] or 0) < MARKET_WAIT:  # only allowed by paying to hurry it
-        take(save, map, "c", HURRY_CASH)
-        note = f", hurried for {HURRY_CASH} cash"
+        if not speedups.pay(save, map, HURRY_CASH):
+            return "The Allied Market: not enough food to hurry it."
+        note = f", hurried for {speedups.in_food(HURRY_CASH)} food"
     item[ATTRS]["si"] = []
     if resource not in MARKET_RESOURCES:
         return "The Allied Market had nothing ordered."

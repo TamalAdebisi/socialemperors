@@ -159,21 +159,27 @@ test("a claimed queue in another town reserves its global id for later mixes", (
   if (typeof commands !== "string") assert.equal(commands.at(-1)!.args[4], 2);
 });
 
-test("speed-up costs one cash per started hour, marks ready, and refuses an extra charge", () => {
+test("speed-up costs 500 food per started hour, marks ready, and refuses an extra charge", () => {
+  // The original's cash an hour, paid in food since 29 October 2026 (rules/speedUps.ts).
   const { town, building, state } = fixture();
   startMix(town, building, rules, state, previewMix(rules, building.units!, () => 0)!, 100);
   const unavailable = mixerRules({ items: [] }, items);
+  town.food = 2000;
   assert.match(String(speedMix(town, building, state, units[3]!, 100, unavailable)), /unavailable/);
-  assert.equal(town.cash, 20, "readable legacy waits cannot spend while original data is missing");
+  assert.equal(town.food, 2000, "readable legacy waits cannot spend while original data is missing");
+  town.food = 1499;
+  assert.equal(speedMix(town, building, state, units[3]!, 100, rules), "Not enough food: it takes 1,500.");
+  assert.equal(state.queues.get("1")!.ts, 100, "still mixing");
+  town.food = 2000;
   assert.deepEqual(speedMix(town, building, state, units[3]!, 100, rules), { cmd: "speed_up_queue", args: ["1"] });
-  assert.equal(town.cash, 17);
+  assert.deepEqual([town.food, town.cash], [500, 20]);
   assert.equal(state.queues.get("1")!.ts, 0);
   assert.match(String(speedMix(town, building, state, units[3]!, 100, rules)), /ready/);
-  assert.equal(town.cash, 17);
+  assert.equal(town.food, 500);
   town.items = town.items.filter((item) => item !== building);
   assert.match(String(speedMix(town, building, state, units[3]!, 100, rules)), /no longer/);
   assert.match(String(claimMix(town, building, state, items, 100)), /no longer/);
-  assert.equal(town.cash, 17, "stale window actions cannot spend or create units");
+  assert.equal(town.food, 500, "stale window actions cannot spend or create units");
 });
 
 test("completed work waits for Get unit, checks population, uses up both parents and gives no XP", () => {

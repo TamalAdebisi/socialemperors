@@ -2,7 +2,8 @@
 // whose first egg is 9 steps along and a monster nest that raised all
 // four and closed (e2e/tests/monster-nest.mjs plays a new one). The
 // dragon nest's Open shows 9/10 and Take care: a step starts the six-hour
-// wait, Speed up buys it off for 3 cash, Get Dragon! puts the Draggy
+// wait, Speed up buys it off for 1,500 food (the original's 3 cash, in food
+// since 29 October 2026), Get Dragon! puts the Draggy
 // beside the nest and the next one starts (Feed). Hire friends lists the
 // friends to ask (none here). The monster nest opens for 50 cash. The
 // server's save follows each step. On a phone the window fits the screen.
@@ -12,11 +13,10 @@ import assert from "node:assert/strict";
 const DRAGON_NEST = 1233, MONSTER_NEST = 1255, DRAGGY = 638;
 const NEST_AT = [56, 52], MONSTERS_AT = [48, 58];
 
-export default async function nests({ newPlayer }) {
+export default async function nests({ newPlayer, offlineVillage }) {
   const neighbor = await newPlayer();
   await neighbor.page.close();
-  const player = await newPlayer();
-  const { page } = player;
+  let player = await newPlayer();
   await player.send([
     { cmd: "rt_level_up", args: [20] },
     // Free (the sixth argument), so the town keeps its gold.
@@ -27,7 +27,9 @@ export default async function nests({ newPlayer }) {
     // The lessons' gift steps (the text "0": no wait), and two more.
     ...Array.from({ length: 9 }, () => ({ cmd: "next_step", args: ["0"] })),
   ]);
-  await player.reload();
+  // Food for the speed up.
+  player = await offlineVillage(player, (save) => { save.maps[0].food = 2000; });
+  const { page } = player;
   const info = async () => {
     const response = await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
       { form: { USERID: player.settings.userId, user_key: player.settings.userKey } });
@@ -36,7 +38,7 @@ export default async function nests({ newPlayer }) {
   const before = await info();
   assert.equal(before.privateState.stepNumber, 9);
   const cash = Number(before.playerInfo.cash);
-  assert.ok(cash >= 53, `cash for the speed up and the monster nest (${cash})`);
+  assert.ok(cash >= 50, `cash for the monster nest (${cash})`);
 
   // The dragon nest: 9 of 10, Take care.
   await player.select(NEST_AT, "Dragon Breeding Nest");
@@ -62,7 +64,9 @@ export default async function nests({ newPlayer }) {
   await page.waitForFunction(() => [...document.querySelectorAll(".nest-one > img:first-child")].every((i) => i.naturalWidth > 0), null, { timeout: 15_000 });
   await player.shot("waiting");
 
-  // Speed up for 3 cash: Get Dragon!
+  // Speed up for 1,500 food: Get Dragon!
+  assert.match(await window.locator(".nest-speed-up").textContent(), /\b1,500$/);
+  assert.equal(await window.locator(".nest-speed-up img").getAttribute("alt"), "food");
   await window.locator(".nest-speed-up").click();
   await page.waitForFunction(() => document.querySelector(".nest-button")?.textContent === "Get Dragon!");
   assert.equal(await window.locator(".nest-timer").count(), 0);
@@ -71,7 +75,8 @@ export default async function nests({ newPlayer }) {
   assert.match(await player.said(/is yours/), /Draggy is yours!/);
   await player.wait(1500);
   saved = await info();
-  assert.equal(Number(saved.playerInfo.cash), cash - 3, "3 cash for the speed up");
+  assert.equal(Number(saved.playerInfo.cash), cash, "no cash for the speed up");
+  assert.equal(Number(saved.map.food), 500, "1,500 food for it");
   assert.equal(saved.privateState.dragonNumber, 1, "the next dragon");
   assert.equal(saved.privateState.stepNumber, 0);
   assert.ok(saved.map.items.some((i) => i[0] === DRAGGY), "the Draggy, beside the nest");
@@ -104,7 +109,7 @@ export default async function nests({ newPlayer }) {
   await player.wait(1500);
   saved = await info();
   assert.equal(saved.privateState.monsterNestActive, 1);
-  assert.equal(Number(saved.playerInfo.cash), cash - 53);
+  assert.equal(Number(saved.playerInfo.cash), cash - 50);
 
   // On a phone: the window is a sheet, and the row of dragons fits across it.
   const phone = await player.onPhone();

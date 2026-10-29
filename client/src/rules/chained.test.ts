@@ -42,14 +42,15 @@ test("freeing waits for the chains, then puts both units beside it and the build
   assert.deepEqual(freed.commands, [{ cmd: "release_chained", args: [50, 50, 0, [[a.tx, a.ty], [b.tx, b.ty]]] }]);
 });
 
-test("speeding up costs a cash an hour left, and not without the cash", () => {
+test("speeding up costs 500 food an hour left, and not without the food", () => {
+  // The original's cash an hour, paid in food since 29 October 2026 (rules/speedUps.ts).
   const { town, building } = fixture();
-  town.cash = 5;
-  assert.match(String(speedUp(town, building, PLACED)), /Not enough cash: it takes 102/);
-  assert.equal(town.cash, 5);
-  town.cash = 200;
+  town.food = 5000;
+  assert.match(String(speedUp(town, building, PLACED)), /Not enough food: it takes 51,000/);
+  assert.equal(town.food, 5000);
+  town.food = 60_000;
   assert.deepEqual(speedUp(town, building, PLACED + 2 * HOUR), { cmd: "speed_up_chained", args: [50, 50, 0] });
-  assert.equal(town.cash, 100);
+  assert.deepEqual([town.food, town.cash], [10_000, 200]);
   assert.equal(secondsLeft(building, PLACED + 2 * HOUR), 0);
   assert.match(String(speedUp(town, building, PLACED + 2 * HOUR)), /already broken/);
 });

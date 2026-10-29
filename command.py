@@ -37,6 +37,7 @@ import tutorial
 import worlds
 import soul_mixer
 import chained
+import speedups
 
 
 def get_strategy_type(id):
@@ -407,16 +408,24 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
         pState["timeStampTakeCare"] = -1 # remove timer
 
     elif cmd == Constant.CMD_DRAGON_BUY_STEP_CASH:
-        price = args[0]
-        print("Buy dragon step with cash.")
-        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - price), 0)
-        save["privateState"]["timeStampTakeCare"] = -1 # remove timer
+        # Paid in food since 29 October 2026 (speedups.py); the price is ours, not the client's.
+        pState = save["privateState"]
+        cash = speedups.NEST_STEP_CASH["dragon"][int(pState.get("dragonNumber", 0)) % 2]
+        if speedups.pay(save, save["maps"][towns.current(save)], cash):
+            pState["timeStampTakeCare"] = -1 # remove timer
+            print("Dragon nest: the wait over for", speedups.in_food(cash), "food.")
+        else:
+            print("Dragon nest: not enough food to speed up.")
 
     elif cmd == Constant.CMD_RIDER_BUY_STEP_CASH:
-        price = args[0]
-        print("Buy rider step with cash.")
-        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - price), 0)
-        save["privateState"]["riderTimeStamp"] = -1 # remove timer
+        pState = save["privateState"]
+        riders = get_game_config()["globals"].get("DRAGON_RIDERS") or {}
+        cash = int((riders.get(str(pState.get("riderNumber", 0))) or {}).get("stepCost") or speedups.RIDER_STEP_CASH)
+        if speedups.pay(save, save["maps"][towns.current(save)], cash):
+            pState["riderTimeStamp"] = -1 # remove timer
+            print("Dragon rider: recovered for", speedups.in_food(cash), "food.")
+        else:
+            print("Dragon rider: not enough food to speed up.")
 
     elif cmd == Constant.CMD_NEXT_RIDER_STEP:
         print("Rider step increased.")
@@ -449,10 +458,13 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
                 break
     
     elif cmd == Constant.CMD_MONSTER_BUY_STEP_CASH:
-        price = args[0]
-        print("Buy monster step with cash.")
-        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - price), 0)
-        save["privateState"]["timeStampTakeCareMonster"] = -1 # remove timer
+        pState = save["privateState"]
+        cash = speedups.NEST_STEP_CASH["monster"][int(pState.get("monsterNumber", 0)) % 2]
+        if speedups.pay(save, save["maps"][towns.current(save)], cash):
+            pState["timeStampTakeCareMonster"] = -1 # remove timer
+            print("Monster nest: the wait over for", speedups.in_food(cash), "food.")
+        else:
+            print("Monster nest: not enough food to speed up.")
     
     elif cmd == Constant.CMD_ACTIVATE_MONSTER:
         currency = args[0]
@@ -501,16 +513,8 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
         print(animals.added(save, subcat, args[1]))
     
     elif cmd == Constant.CMD_GRAVEYARD_BUY_POTIONS:
-        # no args
-        print("Graveyard buy potion")
-        # info from config
-        graveyard_potions = get_game_config()["globals"]["GRAVEYARD_POTIONS"]
-        amount = graveyard_potions["amount"]
-        price_cash = graveyard_potions["price"]["c"]
-        # pay
-        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - price_cash), 0)
-        # add potion
-        save["privateState"]["potion"] += amount
+        # no args: gold and food since 29 October 2026 (graveyard.py)
+        print(graveyard.buy_potions(save, save["maps"][towns.current(save)]))
 
     elif cmd == Constant.CMD_RESURRECT_HERO:
         unit_id = args[0]

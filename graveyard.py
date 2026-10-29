@@ -22,14 +22,21 @@ Commands from the client:
         from the hero popup
 
 Prices are the client's, worked out here from the game config rather than
-taken from the request.
+taken from the request, except that nothing here costs cash since 29
+October 2026 (the owner's rule): a unit bought with cash comes back for gold
+and food, counting each cash as 500 gold as the heroes already did, and the
+potion pack costs 25,000 gold and 25,000 food (the 100 cash it cost, at the
+same rate, split between the two). The Flash client still shows its cash
+prices, but this server takes gold and food.
+
+    "graveyard_buy_potions" []                 a pack of potions
 """
 
 from engine import timestamp_now
-from get_game_config import get_attribute_from_item_id
+from get_game_config import get_attribute_from_item_id, get_game_config
 
 HEROES = {533, 534, 535, 550, 554, 555, 556, 557}  # Xena, Arthur, Ranger, Merlin, Valkyrie, Wallace, Thor, High Elf
-HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold
+HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold; so does a cash unit
 
 
 def _dead(save: dict) -> dict:
@@ -67,24 +74,46 @@ def _price(save: dict, unit_id: int, used_potion: bool) -> dict:
     if used_potion:
         return {"potion": _attr(unit_id, "potion")}
     cost = _attr(unit_id, "cost")
-    half = (cost + 1) // 2  # the client rounds halves up
     cost_type = get_attribute_from_item_id(unit_id, "cost_type")
     if cost_type == "c":
-        return {"c": half}
+        cost, cost_type = cost * HERO_GOLD_PER_CASH, "g"  # then priced as a gold unit
     if cost_type == "g":
-        return {"f": cost, "g": half}
+        return {"f": cost, "g": (cost + 1) // 2}  # the client rounds halves up
     return {}  # the client asks nothing for the other kinds
+
+
+def potion_pack() -> tuple:
+    """The potion pack: (potions, its price as {resource: amount})."""
+    pack = get_game_config()["globals"].get("GRAVEYARD_POTIONS") or {}
+    cash = int((pack.get("price") or {}).get("c", 0))
+    gold = cash * HERO_GOLD_PER_CASH // 2
+    return int(pack.get("amount", 0)), {"g": gold, "f": cash * HERO_GOLD_PER_CASH - gold}
 
 
 def _pay(save: dict, map: dict, price: dict) -> None:
     for resource, amount in price.items():
-        if resource == "c":
-            owner, key = save["playerInfo"], "cash"
-        elif resource == "potion":
+        if resource == "potion":
             owner, key = save["privateState"], "potion"
         else:
             owner, key = map, {"g": "coins", "f": "food"}[resource]
         owner[key] = max(int(owner.get(key, 0)) - amount, 0)
+
+
+def _short(save: dict, map: dict, price: dict) -> list:
+    """The resources the town hasn't enough of for a price."""
+    have = {"g": map.get("coins", 0), "f": map.get("food", 0), "potion": save["privateState"].get("potion", 0)}
+    return [resource for resource, amount in price.items() if int(have.get(resource, 0)) < amount]
+
+
+def buy_potions(save: dict, map: dict) -> str:
+    amount, price = potion_pack()
+    short = _short(save, map, price)
+    if short:
+        return f"Graveyard: not enough {' and '.join('gold' if r == 'g' else 'food' for r in short)} for potions."
+    _pay(save, map, price)
+    pState = save["privateState"]
+    pState["potion"] = int(pState.get("potion", 0)) + amount
+    return f"Graveyard: {amount} potion(s) bought for {price['g']} gold and {price['f']} food."
 
 
 def resurrect(save: dict, unit_id: int, x: int, y: int, town_id: int, used_potion: bool) -> str:
@@ -93,7 +122,10 @@ def resurrect(save: dict, unit_id: int, x: int, y: int, town_id: int, used_potio
     if dead.get(key, 0) <= 0:
         return f"Graveyard: unit {unit_id} is not in the graveyard."
     map = save["maps"][town_id]
-    _pay(save, map, _price(save, unit_id, used_potion))
+    price = _price(save, unit_id, used_potion)
+    if _short(save, map, price):
+        return f"Graveyard: not enough to bring unit {unit_id} back ({price})."  # the Flash client checks cash, not these
+    _pay(save, map, price)
     dead[key] -= 1
     if dead[key] == 0:
         del dead[key]

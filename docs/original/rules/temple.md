@@ -47,7 +47,9 @@ the existing `temple.py` commands and shared save are unchanged.
    the 5-cash wait function is only bound by the admin panel; the ordinary
    temple window has no listener for it. Earlier index notes incorrectly
    described it as a normal public button. The new window preserves the
-   ordinary wait; server support for `buy_temple_step_cash` remains.
+   ordinary wait; server support for `buy_temple_step_cash` remains, and
+   since 29 October 2026 it charges 2,500 food, not 5 cash (the owner's
+   rule; CLIENT.md, "Speed-ups cost food").
 8. When all twelve waits have finished, Get Dragon places unit 2003 for
    free beside the temple, with no population or unit-limit check and no
    extra experience. It uses the nearest free ring, preferring the tile

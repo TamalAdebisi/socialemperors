@@ -1,6 +1,6 @@
 // The dragon nest and the monster nest (CLIENT.md, "The nests"): a row of
 // dragons (or monsters) raised one after another, ten steps each, a step
-// every six hours or sooner for cash; at ten the grown one is the player's
+// every six hours or sooner for food (rules/speedUps.ts); at ten the grown one is the player's
 // and the next one starts. The save keeps where each nest is
 // (privateState); these rules read it, change it as the Flash client does
 // and say which commands to send. No drawing here.
@@ -21,7 +21,7 @@ export interface NestKind {
   /** The save's fields: which one, its step, when the last step began, whether the nest is open. */
   fields: { number: string; step: string; since: string; active: string };
   commands: { step: string; buyStep: string; next: string; activate: string; deactivate: string };
-  /** Cash to finish a wait: the first, third, fifth one's and the others'. */
+  /** The original's cash to finish a wait, the first, third, fifth one's and the others': paid in food (rules/speedUps.ts). */
   speedUp: [number, number];
   /** Friends can help (the dragon nest only). */
   friends: boolean;
@@ -107,7 +107,7 @@ export function stepsDone(state: NestState, now: number): number {
   return state.step - (secondsLeft(state, now) > 0 ? 1 : 0);
 }
 
-/** Cash to finish the wait now. */
+/** The original's cash to finish the wait now; the player pays it in food (rules/speedUps.ts). */
 export function speedUpCash(kind: NestKind, state: NestState): number {
   return kind.speedUp[state.number % 2];
 }
@@ -151,7 +151,7 @@ export function takeStep(kind: NestKind, state: NestState, now: number): Change 
   return { state: { ...state, step: state.step + 1, since: Math.floor(now) }, commands: [{ cmd: kind.commands.step, args: [0] }] };
 }
 
-/** "Speed up for 3": the wait over, for cash. */
+/** "Speed up for 1,500": the wait over, for food. The command keeps the Flash client's name and its cash; the server takes the food. */
 export function speedUp(kind: NestKind, state: NestState, now: number): (Change & { cash: number }) | null {
   if (secondsLeft(state, now) === 0) {
     return null;

@@ -1,6 +1,7 @@
 // The graveyards and the Altar of Heroes (CLIENT.md, "The graveyard"), the
 // windows their Open buttons show, as in the Flash client. The Graveyard
-// brings fallen units back, for potions or for half their price; the
+// brings fallen units back, for potions or for gold and food (never cash,
+// the owner's rule of 29 October 2026), and sells potions for the same; the
 // Heroes' Graveyard brings heroes back for gold; the Altar sells heroes for
 // cash. Each one stands beside its building. The rules are in
 // rules/graveyard.ts; the commands are the Flash client's, sent at once:
@@ -19,8 +20,8 @@ export interface GraveParts {
   dead: Dead;
   /** The save's potions. */
   potions: { count: number };
-  /** The potion pack (the config's GRAVEYARD_POTIONS): this many for this much cash. */
-  pack: { amount: number; cash: number };
+  /** The potion pack (the config's GRAVEYARD_POTIONS): this many for this much gold and food (rules/graveyard.ts, potionPackPrice). */
+  pack: { amount: number; gold: number; food: number };
   thumbnail: (item: ItemInfo) => string;
   /** A hero's portrait, as the hero windows show it (buildingthumbs/<art>_altar.png). */
   heroPicture: (item: ItemInfo) => string;
@@ -109,7 +110,7 @@ export class GraveyardWindow {
       // As the Flash client: the potion button only works with enough potions.
       potions.disabled = parts.potions.count < price.potions;
       potions.addEventListener("click", () => this.revive(item, true));
-      const prices: [number, IconName][] = price.cash > 0 ? [[price.cash, "cash"]] : [[price.food, "food"], [price.gold, "gold"]];
+      const prices: [number, IconName][] = [[price.food, "food"], [price.gold, "gold"]];
       const pay = priceButton(prices, `Resurrect ${item.name} for ${prices.map(([n, r]) => `${n} ${r}`).join(" and ")}`, "gold");
       pay.addEventListener("click", () => this.revive(item, false));
       const label = document.createElement("small");
@@ -130,7 +131,8 @@ export class GraveyardWindow {
     const pill = document.createElement("span");
     pill.className = "pill-dark mana-pill";
     pill.append("Available", iconImage("potion", "potions"), String(parts.potions.count));
-    const buy = priceButton([[parts.pack.cash, "cash"]], `Buy ${parts.pack.amount} potions for ${parts.pack.cash} cash`, "plain");
+    const buy = priceButton([[parts.pack.food, "food"], [parts.pack.gold, "gold"]],
+      `Buy ${parts.pack.amount} potions for ${parts.pack.food} food and ${parts.pack.gold} gold`, "plain");
     buy.prepend(`Buy ${parts.pack.amount} ${parts.pack.amount === 1 ? "potion" : "potions"} for `);
     buy.addEventListener("click", () => this.buyPotions());
     foot.append(pill, buy);
@@ -157,13 +159,13 @@ export class GraveyardWindow {
       parts.potions.count -= price.potions;
     } else {
       // Each price in turn, food first, as the Flash client checks them.
-      for (const [resource, amount] of [["food", price.food], ["gold", price.gold], ["cash", price.cash]] as const) {
+      for (const [resource, amount] of [["food", price.food], ["gold", price.gold]] as const) {
         if (town[resource] < amount) {
           this.tell(`Not enough ${resource}: it takes ${amount}.`);
           return;
         }
       }
-      for (const [resource, amount] of [["food", price.food], ["gold", price.gold], ["cash", price.cash]] as const) {
+      for (const [resource, amount] of [["food", price.food], ["gold", price.gold]] as const) {
         if (amount > 0) {
           town[resource] -= amount;
           lines.push({ text: `−${amount} ${resource}`, resource });
@@ -181,12 +183,16 @@ export class GraveyardWindow {
 
   private buyPotions(): void {
     const { parts } = this;
-    if (parts.town.cash < parts.pack.cash) {
-      // The original's words for this are missing from the game's texts: ours.
-      this.tell(`You don't have enough cash to buy potions: it takes ${parts.pack.cash}.`);
-      return;
+    // Gold and food, not cash (the owner's rule, 29 October 2026); food checked first, as for bringing units back.
+    for (const [resource, amount] of [["food", parts.pack.food], ["gold", parts.pack.gold]] as const) {
+      if (parts.town[resource] < amount) {
+        // The original's words for this are missing from the game's texts: ours.
+        this.tell(`You don't have enough ${resource} to buy potions: it takes ${amount.toLocaleString("en-US")}.`);
+        return;
+      }
     }
-    parts.town.cash -= parts.pack.cash;
+    parts.town.food -= parts.pack.food;
+    parts.town.gold -= parts.pack.gold;
     parts.potions.count += parts.pack.amount;
     parts.send("graveyard_buy_potions");
     parts.changed();

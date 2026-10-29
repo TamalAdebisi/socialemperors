@@ -2,7 +2,8 @@
 // the community wiki (config/soulmixer_wiki.json; DECISIONS.md). Two
 // Valkyries go in, the result shows as a silhouette, one power-up costs 1
 // cash, the mix starts and the server keeps its queue; speeding it up costs
-// a cash an hour left, Get unit puts the result beside the mixer, and both
+// 500 food an hour left (the original's cash an hour, in food since 29
+// October 2026), Get unit puts the result beside the mixer, and both
 // Valkyries are used up: their souls went into it (the owner's rule, 28
 // October 2026). The help and the phone sheet are checked too.
 import assert from "node:assert/strict";
@@ -23,9 +24,10 @@ async function mixing(context) {
     { cmd: "buy", args: [VALKYRIE, 58, 58, 0, 0, 1, 1, "u"] },
     { cmd: "buy", args: [VALKYRIE, 59, 58, 0, 0, 1, 1, "u"] },
   ]);
-  // Cash to speed the mix up, and room for its result: the new town's soldiers go.
+  // Cash for a power-up, food to speed the mix up, and room for its result: the new town's soldiers go.
   player = await context.offlineVillage(player, (save) => {
     save.playerInfo.cash = 500;
+    save.maps[0].food = 70_000;
     save.maps[0].items = save.maps[0].items.filter((row) => !SOLDIERS.includes(row[0]));
   });
   const { page } = player;
@@ -67,15 +69,17 @@ async function mixing(context) {
   assert.equal(queue.amount, 1);
   assert.equal(saved.playerInfo.cash, 499);
   const result = queue.unit;
-  const hours = Number((await speed.textContent()).match(/(\d+) cash/)[1]);
-  assert.ok(hours >= 3 && hours <= 130, `a wait of 3 hours to 5 days 10 hours (${hours})`);
+  const food = Number((await speed.textContent()).match(/([\d,]+) food/)[1].replace(/,/g, ""));
+  const hours = food / 500;
+  assert.ok(Number.isInteger(hours) && hours >= 3 && hours <= 130, `a wait of 3 hours to 5 days 10 hours (${hours})`);
 
   await speed.click();
   await panel.getByRole("button", { name: "Get unit", exact: true }).click();
   await panel.waitFor({ state: "hidden" });
   assert.equal(await page.evaluate(() => window.seHome.parts.commands.flush()), true);
   saved = await readState(player);
-  assert.equal(saved.playerInfo.cash, 499 - hours, "a cash an hour left");
+  assert.equal(saved.playerInfo.cash, 499, "no cash to speed it up");
+  assert.equal(saved.map.food, 70_000 - food, "but 500 food an hour left");
   assert.equal(saved.map.items.filter((row) => row[0] === result).length, 1, "the result beside the mixer");
   assert.equal(saved.map.items.filter((row) => row[0] === VALKYRIE).length, 0, "two in, one out: both Valkyries used up");
   assert.deepEqual(saved.map.items.find((row) => row[0] === BUILDING)[6], [], "and gone from the mixer");

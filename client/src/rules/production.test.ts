@@ -103,19 +103,20 @@ test("a wonder works on its own", () => {
   assert.equal(t.gold, 600);
 });
 
-test("hurrying: 2 cash finishes a working mill, mine or wonder and collects it; not farms or ranches", () => {
-  const t = { ...town(), cash: 5 };
+test("hurrying: 1,000 food finishes a working mill, mine or wonder and collects it; not farms or ranches", () => {
+  // The original's 2 cash, paid in food since 29 October 2026 (rules/speedUps.ts).
+  const t = { ...town(), cash: 5, food: 1500 };
   const wonder = placed(WONDER, { unitsInside: 0, startedAt: 1000 });
   assert.equal(canHurry(wonder, 2000), true);
   const done = hurry(t, wonder, 2000);
   assert.ok(typeof done !== "string");
-  assert.equal(t.cash, 3);
+  assert.deepEqual([t.cash, t.food], [5, 500]);
   assert.equal(t.gold, 600);
-  assert.deepEqual(done.commands[0].args, [50, 50, 0, 52, 0, 1, 2], "the cash goes in the command");
+  assert.deepEqual(done.commands[0].args, [50, 50, 0, 52, 0, 1, 2], "the original's cash goes in the command, as the Flash client sends it");
   assert.equal(wonder.startedAt, 2000, "it starts over");
   assert.equal(canHurry(placed(FARM), 1010), false);
   assert.equal(canHurry(placed(WONDER, { startedAt: 1000 }), 1000 + 21600), false, "ready already: just collect");
-  assert.match(hurry({ ...town(), cash: 1 }, placed(WONDER), 2000) as string, /Not enough cash/);
+  assert.equal(hurry({ ...town(), cash: 100, food: 999 }, placed(WONDER), 2000), "Not enough food: it takes 1,000.");
 });
 
 test("a ranch's harvest uses up its first animal, for good; the last gone, it stops", () => {

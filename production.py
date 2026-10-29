@@ -16,7 +16,8 @@ Commands from the client:
 
     "collect_new" [x, y, town, item, workers inside, multiplier, cash]
         from a building, a mine, a tree, a rock...  The multiplier is the
-        client's level bonus for gold mines; cash is paid to hurry it.
+        client's level bonus for gold mines; cash above 0 means it was hurried,
+        which costs food (speedups.py).
     "collect_new" [x, y, town, item]
         from the few things that are not buildings, such as the Round Table
     "activate" [x, y, town, item, choice]
@@ -38,6 +39,7 @@ import math
 from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config
 from village import ATTRS, STARTED, UNITS, flash_round, full, give, item_at, number, take
+import speedups
 
 EXTRA_PER_WORKER = 0.2
 FARM = "122"  # subcat_functional of farms
@@ -70,6 +72,9 @@ def harvest(item_id, item, workers=None, multiplier=1) -> int:
 def collect(save: dict, x, y, town_id: int, item_id, workers=None, multiplier=1, cash=0) -> str:
     map = save["maps"][town_id]
     item = item_at(map, item_id, x, y)
+    # Any cash in the command means the work was hurried: paid in food since 29 October 2026 (speedups.py).
+    if int(cash or 0) > 0 and not speedups.pay(save, map, speedups.HURRY_CASH):
+        return "Not enough food to hurry."
     multiplier = min(max(int(multiplier), 1), 5)  # the client's bonus goes from 1 to 5 with the level
     if str(get_attribute_from_item_id(item_id, "subcat_functional")) in RESOURCES_ON_THE_MAP:
         workers = None
@@ -80,7 +85,6 @@ def collect(save: dict, x, y, town_id: int, item_id, workers=None, multiplier=1,
     if resource in ("g", "w", "s", "f", "c"):
         give(save, map, resource, amount)
     give(save, map, "x", number(item_id, "collect_xp"))
-    take(save, map, "c", int(cash or 0))
     if item is not None:
         item[STARTED] = timestamp_now()  # its work starts over
     return f"Collected {amount} {resource} (+{number(item_id, 'collect_xp')} xp)."

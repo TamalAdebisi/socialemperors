@@ -1,7 +1,8 @@
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "../rules/config.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
-import { ALLIED_MARKETS, SOCIAL_BUILDINGS, finishSocial, hireHelper, orderResource, socialCapacity, socialWait,
+import { foodText, inFood } from "../rules/speedUps.ts";
+import { ALLIED_MARKETS, DELIVERY_HURRY_CASH, SOCIAL_BUILDINGS, finishSocial, hireHelper, orderResource, socialCapacity, socialWait,
   type AlliedState, type SocialRules } from "../rules/socialMenus.ts";
 import { duration } from "./format.ts";
 import { Panel } from "./panel.ts";
@@ -50,8 +51,8 @@ export class SocialWindow {
     const claim=this.panel.body.querySelector<HTMLButtonElement>("[data-social-claim]");
     if(claim && this.placed.item.id===389) claim.disabled=wait>0;
     if(claim && ALLIED_MARKETS.has(this.placed.item.id)) {
-      claim.textContent=wait>0 ? "Finish delivery for 2 cash" : "Collect delivery";
-      claim.disabled=wait>0 && this.parts.town.cash<2;
+      claim.textContent=wait>0 ? `Finish delivery for ${foodText(DELIVERY_HURRY_CASH)} food` : "Collect delivery";
+      claim.disabled=wait>0 && this.parts.town.food<inFood(DELIVERY_HURRY_CASH);
     }
   }
   private render():void {

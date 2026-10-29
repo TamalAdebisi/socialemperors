@@ -15,7 +15,7 @@ export const GRAVEYARD = 486;
 export const HEROES_GRAVEYARD = 239;
 /** The eight heroes, in the order the Heroes' Graveyard shows them. */
 export const HEROES = [535, 533, 534, 550, 554, 555, 556, 557];
-/** A hero comes back for its cash price this many times over, in gold. */
+/** A hero comes back for its cash price this many times over, in gold; a unit bought with cash counts its price so too. */
 const HERO_GOLD_PER_CASH = 500;
 /** Room for people stops here (wonders aside). */
 const MOST_POPULATION = 175;
@@ -65,15 +65,21 @@ export function graveyardUnits(dead: Dead, items: Map<number, ItemInfo>, race: s
   return list.sort((a, b) => a.item.displayOrder - b.item.displayOrder || a.item.id - b.item.id);
 }
 
-/** What bringing a unit back costs: its potions, or half its cash price, or half its gold price and its whole price in food. */
-export function revivalPrice(item: ItemInfo): { potions: number; cash: number; gold: number; food: number } {
-  const half = Math.ceil(item.cost / 2);
-  return {
-    potions: item.potion ?? 0,
-    cash: item.costType === "c" ? half : 0,
-    gold: item.costType === "g" ? half : 0,
-    food: item.costType === "g" ? item.cost : 0,
-  };
+/**
+ * What bringing a unit back costs: its potions, or half its gold price and
+ * its whole price in food. Never cash (the owner's rule, 29 October 2026):
+ * a unit bought with cash counts 500 gold a cash, as the heroes do, then
+ * comes back as a gold unit would. The server asks the same (graveyard.py).
+ */
+export function revivalPrice(item: ItemInfo): { potions: number; gold: number; food: number } {
+  const cost = item.costType === "c" ? item.cost * HERO_GOLD_PER_CASH : item.costType === "g" ? item.cost : 0;
+  return { potions: item.potion ?? 0, gold: Math.ceil(cost / 2), food: cost };
+}
+
+/** The potion pack's price, its cash (the config's GRAVEYARD_POTIONS) at 500 gold a cash, half in gold and half in food. */
+export function potionPackPrice(cash: number): { gold: number; food: number } {
+  const gold = Math.floor(cash * HERO_GOLD_PER_CASH / 2);
+  return { gold, food: cash * HERO_GOLD_PER_CASH - gold };
 }
 
 /** A hero brought back: its cash price times 500, in gold. */

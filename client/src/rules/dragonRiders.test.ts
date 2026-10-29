@@ -27,13 +27,14 @@ test("a completed adventure starts the 15-hour recovery; no next step during rec
   assert.equal(trainRider(kinds[1]!, start, NOW), null);
 });
 
-test("cash removes just the recovery; insufficient funds keep the state", () => {
+test("food removes just the recovery; too little keeps the state", () => {
+  // The original's 15 cash, paid in food since 29 October 2026 (rules/speedUps.ts): 7,500.
   const state = { number: 1, step: 1, since: NOW };
-  assert.equal(recoverRider(kinds[0]!, state, NOW, 14), null);
-  const recovered = recoverRider(kinds[0]!, state, NOW, 15)!;
+  assert.equal(recoverRider(kinds[0]!, state, NOW, 7499), null);
+  const recovered = recoverRider(kinds[0]!, state, NOW, 7500)!;
   assert.deepEqual(recovered.commands, [{ cmd: "rider_buy_step_cash", args: [15] }]);
   assert.deepEqual(recovered.state, { number: 1, step: 1, since: -1 });
-  assert.equal(recoverRider(kinds[0]!, recovered.state, NOW, 15), null);
+  assert.equal(recoverRider(kinds[0]!, recovered.state, NOW, 7500), null);
 });
 
 test("taming requires exactly the matching rider and dragon, in either order; both configured output spellings work", () => {

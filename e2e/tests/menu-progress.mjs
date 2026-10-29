@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-export default async function menuProgress({newPlayer}){
- const player=await newPlayer(),{page}=player;
+export default async function menuProgress({newPlayer,offlineVillage}){
+ let player=await newPlayer();
  const commands=[{cmd:"rt_level_up",args:[20]}];
  for(let id=1;id<52;id++)commands.push({cmd:"complete_mission",args:[id,0]},{cmd:"reward_mission",args:[0,id]});
- await player.send(commands);await player.reload();
+ await player.send(commands);
+ // Food for the Allied Market's early delivery below (1,000: the original's 2 cash, in food since 29 October 2026).
+ player=await offlineVillage(player,(save)=>{save.maps[0].food=Math.max(Number(save.maps[0].food)||0,5000);});
+ const {page}=player;
  await page.locator(".goal-cards",{hasText:"Spend 1 cash"}).waitFor();
  await player.menu("Army");await player.press("Collections");
  await page.locator('[data-collection="1"]').getByRole("button",{name:"Complete for 5 cash",exact:true}).click();
@@ -48,7 +51,7 @@ export default async function menuProgress({newPlayer}){
  await page.locator(".goal-cards",{hasText:"Get wood Allies Market"}).waitFor();
  await player.select([56,56],"Allies Market");await player.press("Open");
  await social.getByRole("button",{name:"Order wood",exact:true}).click();
- await social.getByRole("button",{name:"Finish delivery for 2 cash",exact:true}).click();
+ await social.getByRole("button",{name:"Finish delivery for 1,000 food",exact:true}).click();
  await rewarded(115);await player.shot("allied-market-goal-saved");
  await player.reload();const final=await read();
  for(const id of [52,54,104,115])assert.ok(final.privateState.rewardedMissions.includes(id),`menu goal ${id} survives reload`);

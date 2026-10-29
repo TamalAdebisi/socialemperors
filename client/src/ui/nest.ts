@@ -13,6 +13,7 @@ import {
   writeNest, type NestKind, type NestState,
 } from "../rules/nest.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
+import { cantPayFood, foodText, payFood } from "../rules/speedUps.ts";
 import type { AskFriends } from "./askFriends.ts";
 import { ICONS, iconImage } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -58,6 +59,8 @@ export interface NestParts {
   changed: () => void;
   /** Not enough cash: the bank. */
   bank: (why: string) => void;
+  /** A message on the screen: not enough food. */
+  tell: (why: string) => void;
   askFriends: AskFriends | null;
 }
 
@@ -206,7 +209,7 @@ export class NestWindow {
       speed.type = "button";
       speed.className = "nest-speed-up";
       speed.style.backgroundImage = `url("${ICONS["nest-speed-up"]}")`;
-      speed.append(this.word(WORDS.speedUp, speedUpCash(kind, state)), iconImage("cash"));
+      speed.append(this.word(WORDS.speedUp, foodText(speedUpCash(kind, state))), iconImage("food", "food"));
       speed.addEventListener("click", () => this.speedUp());
       timer.append(title, time, speed);
       action.append(timer);
@@ -317,11 +320,13 @@ export class NestWindow {
     if (!bought) {
       return;
     }
-    if (this.parts.town.cash < bought.cash) {
-      this.parts.bank(`Not enough cash: it takes ${bought.cash}.`);
+    // Food, not cash (the owner's rule, 29 October 2026).
+    const short = cantPayFood(this.parts.town, bought.cash);
+    if (short) {
+      this.parts.tell(short);
       return;
     }
-    this.parts.town.cash -= bought.cash;
+    payFood(this.parts.town, bought.cash);
     this.apply(bought.state, bought.commands);
     this.parts.changed();
     this.render();

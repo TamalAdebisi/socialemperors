@@ -2,7 +2,7 @@
 The Supreme Dragon Temple (building 1394).
 
 The player makes 12 offerings at the temple, one at a time, with a 48 hour
-wait after each (or 5 cash to skip it). Once all 12 are made, the temple
+wait after each (or 2,500 food to skip it: speedups.py). Once all 12 are made, the temple
 summons the Supreme Bahamut Dragon (unit 2003).
 
 The game client runs the temple screen and keeps the progress in
@@ -26,9 +26,10 @@ from what the client sends.
 
 from engine import timestamp_now
 from village import take
+import speedups
 
 TEMPLE_ID = 1394
-SKIP_WAIT_CASH = 5
+SKIP_WAIT_CASH = 5  # the original's price; paid in food (speedups.py)
 
 RESOURCES, SACRIFICE, COLLECTION = "resources", "sacrifice", "collection"
 
@@ -82,9 +83,10 @@ def next_step(save: dict, step: int) -> str:
 
 
 def skip_wait(save: dict) -> str:
-    take(save, None, "c", SKIP_WAIT_CASH)
+    if not speedups.pay(save, _temple_map(save), SKIP_WAIT_CASH):
+        return "Temple: not enough food to skip the wait."
     save["privateState"]["timeStampTemple"] = 0
-    return "Temple: wait skipped with cash."
+    return f"Temple: wait skipped for {speedups.in_food(SKIP_WAIT_CASH)} food."
 
 
 def reset(save: dict) -> str:

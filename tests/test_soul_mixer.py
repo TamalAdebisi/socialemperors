@@ -48,6 +48,7 @@ class SoulMixerTest(unittest.TestCase):
         self.map = self.save["maps"][0]
         self.map["items"] = [[1529, 55, 55, 0, 0, 0, [509, 514], {}]]
         self.map["level"] = 25
+        self.map["food"] = 5000
         self.save["playerInfo"]["cash"] = 20
 
     def send(self, command, *args):
@@ -95,10 +96,15 @@ class SoulMixerTest(unittest.TestCase):
             self.assertEqual(self.save["privateState"]["barracksQueues"], {"1": {"ts": 100, "amount": 1, "unit": 533}})
             self.send("pop_queue_unit", 1, 56, 56, 1529)
             self.assertEqual(len(self.map["items"]), 1, "unfinished output stays queued")
+            self.map["food"] = 1499
             self.send("speed_up_queue", 1)
-            self.assertEqual(self.save["playerInfo"]["cash"], 16)
+            self.assertEqual(self.save["privateState"]["barracksQueues"]["1"]["ts"], 100, "no food, no speed-up")
+            self.map["food"] = 5000
+            # Three hours left: the original's 3 cash, paid in food since 29 October 2026 (speedups.py).
             self.send("speed_up_queue", 1)
-            self.assertEqual(self.save["playerInfo"]["cash"], 16, "no repeated speed-up charge")
+            self.assertEqual((self.save["playerInfo"]["cash"], self.map["food"]), (19, 3500))
+            self.send("speed_up_queue", 1)
+            self.assertEqual(self.map["food"], 3500, "no repeated speed-up charge")
             self.send("pop_queue_unit", 1, 56, 56, 1529)
             self.send("pop_queue_unit", 1, 56, 56, 1529)
             self.assertEqual([row[0] for row in self.map["items"]], [1529, 533])
@@ -328,8 +334,9 @@ class WikiTablesTest(unittest.TestCase):
         with patch("soul_mixer.timestamp_now", return_value=1000 + wait - 3600):
             self.send("pop_queue_unit", 1, 56, 56, 1529)
             self.assertEqual(len(self.map["items"]), 1, "not ready an hour early")
+            self.map["food"] = 1000
             self.send("speed_up_queue", 1)
-            self.assertEqual(self.save["playerInfo"]["cash"], 198, "the last hour: 1 cash")
+            self.assertEqual((self.save["playerInfo"]["cash"], self.map["food"]), (199, 500), "the last hour: 500 food")
             self.send("pop_queue_unit", 1, 56, 56, 1529)
         self.assertEqual(self.map["items"][-1][0], result)
         self.assertEqual(self.map["items"][0][6], [], "both parents' souls went into it")

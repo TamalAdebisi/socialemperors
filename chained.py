@@ -12,8 +12,9 @@ Our own commands (the original sold these as packs, so it has none):
 import math
 
 from engine import timestamp_now
-from village import ID, STARTED, X, Y, number, take
+from village import ID, STARTED, X, Y, number
 from get_game_config import get_item_from_id
+import speedups
 
 
 def _chained(save: dict, x, y, town) -> tuple:
@@ -43,12 +44,11 @@ def speed_up(save: dict, x, y, town) -> str:
     left = seconds_left(row)
     if not left:
         return "Chained: the chains are already broken."
-    cost = math.ceil(left / 3600)
-    if save["playerInfo"]["cash"] < cost:
-        return "Chained: not enough cash."
-    take(save, map, "c", cost)
+    cost = math.ceil(left / 3600)  # the original's cash an hour, paid in food (speedups.py)
+    if not speedups.pay(save, map, cost):
+        return "Chained: not enough food."
     row[STARTED] = timestamp_now() - number(row[ID], "chain_hours") * 3600
-    return f"Chained: the chains broken for {cost} cash."
+    return f"Chained: the chains broken for {speedups.in_food(cost)} food."
 
 
 def release(save: dict, x, y, town, spots) -> str:

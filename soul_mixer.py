@@ -16,6 +16,7 @@ import math
 from engine import timestamp_now
 from get_game_config import get_game_config, get_item_from_id
 from village import ATTRS, UNITS, full, item_at, number, take
+import speedups
 import towns
 
 BUILDING = 1529
@@ -139,15 +140,14 @@ def speed_up(save, queue_id):
     waiting = _waiting(save, queue_id)
     if waiting is None:
         return "Soul Mixer: no readable mix is in progress."
-    _, _, queue, _, remaining = waiting
+    map, _, queue, _, remaining = waiting
     if not remaining:
         return "Soul Mixer: the unit is already ready."
-    cost = math.ceil(remaining / 3600)
-    if save["playerInfo"]["cash"] < cost:
-        return "Soul Mixer: not enough cash."
-    take(save, None, "c", cost)
+    cost = math.ceil(remaining / 3600)  # the original's cash an hour, paid in food (speedups.py)
+    if not speedups.pay(save, map, cost):
+        return "Soul Mixer: not enough food."
     queue["ts"] = 0
-    return "Soul Mixer: mixing finished early."
+    return f"Soul Mixer: mixing finished early for {speedups.in_food(cost)} food."
 
 
 def entry_warning(save, town_id, building, unit_id, x, y):

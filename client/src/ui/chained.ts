@@ -1,12 +1,13 @@
 // A Chained building's window (CLIENT.md, "Chained buildings"): the units
 // it holds, with their original pictures, how long until the chains break,
-// Speed up (a cash an hour left) and, once they have, Free. The rules are
+// Speed up (500 food an hour left) and, once they have, Free. The rules are
 // in rules/chained.ts; the commands are ours (the server's chained.py).
 
 import type { Command } from "../net/commands.ts";
 import type { ItemInfo } from "../rules/config.ts";
 import { clockText } from "../rules/nest.ts";
 import { release, secondsLeft, speedUp, speedUpCash } from "../rules/chained.ts";
+import { foodText } from "../rules/speedUps.ts";
 import type { PlacedItem, Town } from "../rules/town.ts";
 import { iconImage } from "./icons.ts";
 import { Panel } from "./panel.ts";
@@ -23,7 +24,6 @@ export interface ChainedParts {
   removed: (placed: PlacedItem) => void;
   changed: () => void;
   tell: (words: string) => void;
-  bank: (why: string) => void;
 }
 
 export class ChainedWindow {
@@ -63,7 +63,7 @@ export class ChainedWindow {
     } else if (time) {
       time.textContent = clockText(left);
       const speed = this.panel.body.querySelector(".chained-speed-up");
-      if (speed) speed.firstChild!.textContent = `Speed up for ${speedUpCash(building, this.parts.clock())} `;
+      if (speed) speed.firstChild!.textContent = `Speed up for ${foodText(speedUpCash(building, this.parts.clock()))} `;
     }
   }
 
@@ -96,7 +96,7 @@ export class ChainedWindow {
       const speed = document.createElement("button");
       speed.type = "button";
       speed.className = "button small gold chained-speed-up";
-      speed.append(`Speed up for ${speedUpCash(building, this.parts.clock())} `, iconImage("cash"));
+      speed.append(`Speed up for ${foodText(speedUpCash(building, this.parts.clock()))} `, iconImage("food", "food"));
       speed.addEventListener("click", () => this.speedUp());
       actions.append(speed);
     } else {
@@ -115,8 +115,7 @@ export class ChainedWindow {
   private speedUp(): void {
     const result = speedUp(this.parts.town, this.building!, this.parts.clock());
     if (typeof result === "string") {
-      if (result.startsWith("Not enough cash")) this.parts.bank(result);
-      else this.parts.tell(result);
+      this.parts.tell(result);
       return;
     }
     this.parts.send([result]);

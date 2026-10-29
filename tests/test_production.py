@@ -88,11 +88,18 @@ class ProductionTest(unittest.TestCase):
         self.send("collect_new", X, Y, TOWN, FARM_LAND, 1, 1, 0)
         self.assertEqual((self.map["food"], self.map["wood"]), (15, 1000 - 5))
 
-    def test_hurrying_costs_cash(self):
+    def test_hurrying_costs_food(self):
+        # Any cash in the command means hurried: the original's 2 cash, in food since 29 October 2026 (speedups.py).
         self.save["playerInfo"]["cash"] = 10
+        self.map["food"] = 1500
         self.building(GOLD_MINE, X, Y, [PEASANT])
+        coins = self.map["coins"]
         self.send("collect_new", X, Y, TOWN, GOLD_MINE, 1, 1, 3)
-        self.assertEqual(self.save["playerInfo"]["cash"], 7)
+        self.assertEqual((self.save["playerInfo"]["cash"], self.map["food"]), (10, 500))
+        self.assertGreater(self.map["coins"], coins)
+        coins = self.map["coins"]
+        self.send("collect_new", X, Y, TOWN, GOLD_MINE, 1, 1, 2)  # 500 food: not enough
+        self.assertEqual((self.map["food"], self.map["coins"]), (500, coins), "nothing collected")
 
     def test_the_round_table_sends_a_shorter_collect(self):
         # [x, y, town, item] only. Before, this crashed and lost the rest of the batch.

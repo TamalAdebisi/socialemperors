@@ -459,7 +459,9 @@ producing building shows when it will be ready.
   shows the animal flying off; for now a "−1 Sheep" rises with the harvest.
 - Collecting sends `collect_new` (place, town, item, workers inside, 1, 0),
   and its work starts over then. The 1 is a bonus the Flash client only
-  gives gold rocks on the map; the 0 is cash paid to hurry it.
+  gives gold rocks on the map; the 0 is the cash the Flash client paid to
+  hurry it (2 when hurried, which our server now charges in food: "Speed-ups
+  cost food" below).
 - Levels: when experience reaches the next level's in the config's `levels`
   table, the town goes up one level at a time, each paying its prize, and
   sends `rt_level_up` with the new level (the server pays the same prize
@@ -1418,7 +1420,7 @@ game for now. Dragon riders have their own completed flow below.
 ### Land and cash
 
 Built (Beta 1's fifth slice). Tap land for sale to buy it, in gold or cash;
-finish a building's work now for 2 cash; and the bank, from the + on the
+finish a building's work now for 1,000 food; and the bank, from the + on the
 gold and cash pills. Code:
 `rules/land.ts`, `unlock` in `rules/shop.ts`, `hurry` in
 `rules/production.ts` (all with tests), `ui/bank.ts`.
@@ -1440,13 +1442,45 @@ gold and cash pills. Code:
   opens that window: the "Level N" tag on a shop card does nothing. So
   ours doesn't offer it either (it did, until the map of the original
   showed this); unlocks already in a save still count.
-- Hurrying: 2 cash finishes a working mill, mine, bakery or a wonder that
-  houses nobody, and collects it at once; the cash goes in `collect_new`'s
-  last place. Farms and ranches can't be hurried.
+- Hurrying: 1,000 food (the original's 2 cash; "Speed-ups cost food"
+  below) finishes a working mill, mine, bakery or a wonder that houses
+  nobody, and collects it at once; the original's 2 still goes in
+  `collect_new`'s last place, which tells the server it was hurried. Farms
+  and ranches can't be hurried.
 - The bank is the site's (bank.py): 2,000 of a resource for 1 cash, up to
   5 a day, and the game's own trade, 5 cash for 2,500 gold
   (`exchange_cash_new`, town). The window first sends the town's waiting
   commands, so the bank counts what the player sees.
+
+### Speed-ups cost food
+
+The owner's rule of 29 October 2026: paying to skip a wait costs food,
+not cash. Each speed-up keeps the original's price in cash and is paid in
+food at **500 food a cash**, the game's own exchange: its bank gives
+2,500 gold for 5 cash, and its market sells food at a gold each. One
+helper on each side keeps the numbers the same: `rules/speedUps.ts`
+(`inFood`, `cantPayFood`, `payFood`) and the server's `speedups.py`.
+
+| Speed-up | The original | Here |
+|---|---|---|
+| Dragon nest wait (eggs; fed dragons) | 3; 15 cash | 1,500; 7,500 food |
+| Monster nest wait | 7 cash | 3,500 food |
+| A dragon rider's recovery | 15 cash | 7,500 food |
+| Soul Mixer | a cash an hour left | 500 food an hour left |
+| Chained buildings (ours) | a cash an hour left | 500 food an hour left |
+| A building's work, now (hurry) | 2 cash | 1,000 food |
+| An Allied Market's delivery, early | 2 cash | 1,000 food |
+| The temple's 48-hour wait (a server command only the Flash client's admin panel used) | 5 cash | 2,500 food |
+
+The graveyard follows the same rule with gold and food ("The graveyard"
+below). The commands keep the Flash client's names and arguments
+(`buy_step_cash`, `rider_buy_step_cash`, `speed_up_queue` and the rest),
+so both clients still play the same empire; the server works out each
+price itself, takes food from the town that's open and refuses, taking
+nothing, when there isn't enough. The classic client still shows its cash
+prices and checks cash before it asks, but the server takes food.
+Buying with cash elsewhere (land, units, the shop, power-ups, helpers,
+skipping a goal) is unchanged: those aren't waits.
 
 ### Missions and bonuses
 
@@ -1899,8 +1933,9 @@ rules in `rules/nest.ts`, with tests):
 - **Take care** (the first, third and fifth hatch from eggs) or **Feed**
   (the others): a step, `next_step [0]` (the monster nest's
   `next_monster_step`), and a six-hour wait, with its countdown and
-  **Speed up** for 3 cash (15 for the fed dragons, 7 for any monster):
-  `buy_step_cash`.
+  **Speed up** for 1,500 food (7,500 for the fed dragons, 3,500 for any
+  monster): the original's 3, 15 and 7 cash, in food ("Speed-ups cost
+  food" below). The command is still `buy_step_cash`.
 - At ten, **Get Dragon!**: the grown one stands free on the nearest free
   tile to the nest (`buy`, free), `next_dragon "0"`, and the next one
   starts. The row of them shows those open in colour, the rest locked,
@@ -1941,7 +1976,8 @@ Once built, its **Free** button (the original's open-gate picture)
 opens a window with the units it holds and how long the chains take to
 break: an hour for each cash of its units' units-book price, from when it
 was placed.
-**Speed up** costs a cash an hour left. Then **Free** puts the units on
+**Speed up** costs 500 food an hour left (a cash an hour in our first
+version; "Speed-ups cost food" below). Then **Free** puts the units on
 the nearest free tiles, if the town has room for them, and the building
 goes. Our own commands, since the original has none: `speed_up_chained`
 and `release_chained` (`chained.py`). Rules in `rules/chained.ts`, window
@@ -1983,7 +2019,8 @@ The Rider Academy and Dragon Riding open native windows from their building
 cards (`ui/dragonRiders.ts`; `rules/dragonRiders.ts`). The picker retains
 the three configured unlock levels, compatible dragon previews, original
 portraits and gain text. Training retains the five-to-seven adventures,
-15-hour recoveries, cash recovery, session-only **Fast train**, and the
+15-hour recoveries, ending a recovery for 7,500 food (the original's 15
+cash; "Speed-ups cost food" below), session-only **Fast train**, and the
 free rider claim after the final wait. Progress maps come from the original
 labelled illustrations, exported by `tools/art/export_riders.py`.
 
@@ -2051,8 +2088,9 @@ units standing in town inside (Select unit 1 and 2): the result shows as its
 shadow, its sprite drawn in black so its shape shows, as the wiki says
 players recognised them (the darkened picture when its sheet is missing); **Power up** (1 cash, then 2, up to 7) moves it a unit up;
 **Start mixing** begins the wait, from about 3 hours for the weakest
-results to 5 days 10 hours for the strongest; **Speed up** costs a cash an
-hour left; **Get unit** puts the result beside the mixer, and the two
+results to 5 days 10 hours for the strongest; **Speed up** costs 500 food
+an hour left (the original's cash an hour; "Speed-ups cost food" below);
+**Get unit** puts the result beside the mixer, and the two
 parents are used up: their souls went into it (the owner's rule, 28
 October 2026; the later Flash client gave them back). A town has one Soul Mixer at most (the shop says "You have
 one"; DECISIONS.md). The rules and commands are the later original's
@@ -2252,7 +2290,8 @@ building pictures and staff-role names appear in the panel. Cash hiring
 is offered only where the configured worker cost is positive; friends
 answer through Everybody, with help appearing after reload. The Summit
 requires room for nine allies. Allied Markets order a resource for a day,
-pay 125 per helper plus the base 125, and can finish early for 2 cash.
+pay 125 per helper plus the base 125, and can finish early for 1,000 food
+(the original's 2 cash; "Speed-ups cost food" below).
 Recruitment offers its five configured rewards. The Great Church keeps
 its cumulative staff through five population increases. The Round Table
 asks one player at a time by their empire ID, respects its invitation limit and daily clock,
@@ -2367,7 +2406,7 @@ Full integrated verification: [#87 delivery record](docs/verification-87.md).
   and on wonders that house no one, as there; never on farms and ranches.
   It opens the game's hurry window over the card ("WORK IN PROGRESS"):
   the building and its time left, **Ask for help** (friends, when the
-  player has any) or **Buy for 2** cash.
+  player has any) or **Buy for 1,000** food (the original's 2 cash).
 - **The tip,** in the game's words, by kind: "Put peasants inside to
   produce resources" (the farm panel's own words), "Put sheeps inside to
   produce food" for sheep ranches and so on, the blacksmith's tenth off,
@@ -2892,12 +2931,18 @@ with tests) and `ui/graveyard.ts` (the three windows).
   aren't kept. Heroes are kept apart, for their own graveyard.
 - **The Graveyard** (its card's Open): the fallen of the town's race
   bought with gold or cash, by the shop's order. Each comes back for its
-  potions, or for half its price: half the cash, or half the gold and its
-  whole price in food, as in the original. Room for people and the units
-  limit are checked first. It stands on the nearest free tile to the
-  graveyard (`resurrect_hero`, the last argument "1" for potions). The
-  window stays open. Potions are bought below (`graveyard_buy_potions`,
-  100 cash for one, from `config/patch/graveyard.json`).
+  potions, or for half its gold price and its whole price in food, as in
+  the original. A unit bought with cash came back for half its cash there;
+  here it never costs cash (the owner's rule, 29 October 2026): its price
+  counts 500 gold a cash, as the heroes' does, and it comes back as a gold
+  unit would, a 10-cash Furious Dragon for 5,000 food and 2,500 gold. Room
+  for people and the units limit are checked first. It stands on the
+  nearest free tile to the graveyard (`resurrect_hero`, the last argument
+  "1" for potions). The window stays open. Potions are bought below
+  (`graveyard_buy_potions`): the pack's 100 cash (`config/patch/graveyard.json`)
+  at the same 500 gold a cash, half in gold and half in food, so 25,000 of
+  each for one potion (`potionPackPrice`). The server asks the same
+  (`graveyard.py`) and refuses what the town can't pay.
 - **The Heroes' Graveyard:** the eight heroes, how many have fallen, and
   their price: 500 gold for each cash of the hero's price. The hero's
   experience comes again, and the window closes after each.
