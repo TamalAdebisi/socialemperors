@@ -35,7 +35,7 @@ Commands from the client:
 from engine import timestamp_now
 from get_game_config import get_game_config
 import inventory
-from village import ATTRS, STARTED, full, give, item_at, take
+from village import ATTRS, STARTED, full, give, item_at, spend, take
 import speedups
 
 SUMMIT = 234
@@ -96,7 +96,8 @@ def buy_helper(save: dict, x, y, town_id: int, building_id, free=False) -> str:
     if isinstance(staff, list) and len(staff) >= len(names):
         return "The staff is already full."
     cost = 0 if free else _worker_cost(building_id)
-    take(save, save["maps"][town_id], "c", cost)
+    if not spend(save, save["maps"][town_id], "c", cost):
+        return f"Refused: a helper costs {cost} cash."
     if isinstance(staff, list):
         staff.append(0)  # a hired helper; a friend would be their player id
         return f"A helper hired for {cost} cash ({len(staff)} of {len(names)})."

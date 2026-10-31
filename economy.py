@@ -90,6 +90,12 @@ SUPER_PACK_PRICES_BY_PACK = {19: [30, 60, 100]}
 CASH_PRICE_KEPT = 10
 CASH_PRICE_CURVE = 0.6
 
+# The units book (the owner's rules, 31 October 2026): no unit for less than
+# this, and none of these, which come from elsewhere (the Supreme Bahamut:
+# the temple, the Soul Mixer).
+UNIT_BOOK_LEAST_CASH = 51
+UNIT_BOOK_LEFT_OUT = {2003}
+
 # Texts the game shows, by their id in the config's localization_strings
 TEXTS = {
     498: f"Choose difficulty (first 3 stars: {ISLAND_THREE_STAR_CASH} cash)",  # POPUP_QUEST_ELIGE_DIFICULTAD, over the island's stars once one is won
@@ -115,6 +121,11 @@ def cash_price(original) -> int:
     if price <= CASH_PRICE_KEPT:
         return price
     return round(CASH_PRICE_KEPT * (price / CASH_PRICE_KEPT) ** CASH_PRICE_CURVE)
+
+
+def unit_book_price(original) -> int:
+    """What a unit costs in the units book: the game's price shrunk (cash_price), at least UNIT_BOOK_LEAST_CASH."""
+    return max(UNIT_BOOK_LEAST_CASH, cash_price(original))
 
 
 def continent_cash(nivel: int) -> int:
@@ -150,9 +161,15 @@ def patch_config(config: dict) -> None:
 
     # Cash prices: the units book's and everything priced in cash
     for category in config["units_collections_categories"].values():
-        category["cost"] = cash_price(category["cost"])
+        costs = category.get("costs") or []
+        kept = [i for i, unit in enumerate(category["units"]) if int(unit) not in UNIT_BOOK_LEFT_OUT]
+        if len(kept) < len(category["units"]):
+            category["units"] = [category["units"][i] for i in kept]
+            if costs:
+                category["costs"] = [costs[i] if i < len(costs) else None for i in kept]
+        category["cost"] = unit_book_price(category["cost"])
         if category.get("costs"):
-            category["costs"] = [cash_price(cost) if cost is not None else None for cost in category["costs"]]
+            category["costs"] = [unit_book_price(cost) if cost is not None else None for cost in category["costs"]]
     for item in config["items"]:
         if item.get("cost_type") == "c":
             item["cost"] = str(cash_price(item["cost"]))

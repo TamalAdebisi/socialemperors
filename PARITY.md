@@ -196,6 +196,11 @@ The card's look is the owner's pick: mockup A, the original's panel
 - [x] **Speed-ups cost food, not cash** (29 October 2026): each keeps the
   original's price, at 500 food a cash; the graveyard takes gold and food,
   never cash. Both clients (CLIENT.md, "Speed-ups cost food"; DECISIONS.md).
+- [x] **The graveyard by strength** (31 October 2026): a unit comes back
+  for a food per 8 points of health times attack, and half that in gold;
+  heroes too.
+- [x] **The units book** (31 October 2026): no Supreme Bahamut; nothing
+  under 51 cash.
 
 ## Found by the map of the original (15 October 2026)
 

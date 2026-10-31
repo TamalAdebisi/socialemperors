@@ -18,7 +18,7 @@ MANA_REWARD_PER_LEVEL mana. Prices and amounts come from the game config.
 """
 
 from get_game_config import get_game_config
-from village import give, take
+from village import give, spend, take
 
 WITH_CASH = 1
 
@@ -50,7 +50,8 @@ def learn(save: dict, spell_id, town_id: int, with_cash) -> str:
         return f"{spell['name']} is already known."
     map = save["maps"][town_id]
     if int(with_cash) == WITH_CASH:
-        take(save, map, "c", int(spell["cash"]))
+        if not spend(save, map, "c", int(spell["cash"])):
+            return f"Refused: not enough cash for {spell['name']}."
     else:
         take(save, map, "g", int(spell["gold"]))
     give(save, map, "m", int(spell["mana"]))
@@ -72,7 +73,8 @@ def cast(save: dict, spell_id) -> str:
 def buy_mana(save: dict, town_id: int, with_cash) -> str:
     map = save["maps"][town_id]
     if int(with_cash) == WITH_CASH:
-        take(save, map, "c", int(_globals()["COST_MANA_CASH"]))
+        if not spend(save, map, "c", int(_globals()["COST_MANA_CASH"])):
+            return "Refused: not enough cash for mana."
     else:
         take(save, map, "g", int(_globals()["COST_MANA_GOLD"]))
     mana = int(_globals()["MANA_PER_PURCHASE"])

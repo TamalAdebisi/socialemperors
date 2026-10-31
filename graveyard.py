@@ -15,19 +15,26 @@ Commands from the client:
     "sell" [x, y, unit, town, 1, "KILL", 1]  a unit died and goes to the graveyard
     "sell" [x, y, hero, town, 1, "KILL", 0]  a hero died (the client sends 0 for
                                              heroes, but still remembers them)
-    "put_graveyard" [unit]                   a phoenix egg was destroyed
+    "put_graveyard" [unit]                   a phoenix egg was destroyed: its
+                                             phoenix, if an egg stands in the
+                                             town (it goes)
     "resurrect_hero" [unit, x, y, town, potion]
         from the graveyard: potion is "1" when paid with potions, "0" otherwise
     "resurrect_hero" [hero, x, y, town]
         from the hero popup
 
-Prices are the client's, worked out here from the game config rather than
-taken from the request, except that nothing here costs cash since 29
-October 2026 (the owner's rule): a unit bought with cash comes back for gold
-and food, counting each cash as 500 gold as the heroes already did, and the
-potion pack costs 25,000 gold and 25,000 food (the 100 cash it cost, at the
-same rate, split between the two). The Flash client still shows its cash
-prices, but this server takes gold and food.
+Prices are worked out here from the game config rather than taken from the
+request. The owner's rules: nothing here costs cash (29 October 2026), and a
+unit comes back for what it's worth in battle (31 October 2026): a food for
+each 8 points of its health times attack, and half that in gold, whether it
+was bought with gold or cash. 8 is how the game prices its own gold units,
+at the median, so an ordinary unit costs about what it did (the original
+asked its whole price in food and half in gold, half its price for a cash
+unit); a strong dragon costs in proportion. Heroes too, in the Heroes' Graveyard
+(the original asked 500 gold a cash of theirs); potions keep their count. The potion pack costs
+25,000 gold and 25,000 food (its 100 cash at 500 gold a cash, split between
+the two). The Flash client still shows its own prices, but this server takes
+these.
 
     "graveyard_buy_potions" []                 a pack of potions
 """
@@ -36,7 +43,8 @@ from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config
 
 HEROES = {533, 534, 535, 550, 554, 555, 556, 557}  # Xena, Arthur, Ranger, Merlin, Valkyrie, Wallace, Thor, High Elf
-HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold; so does a cash unit
+HERO_GOLD_PER_CASH = 500  # a cash's worth in gold, as the original priced heroes: the potion pack's cash
+STRENGTH_PER_FOOD = 8  # a unit's health times attack, for each food it takes to bring back
 
 
 def _dead(save: dict) -> dict:
@@ -60,6 +68,26 @@ def bury(save: dict, unit_id: int) -> str:
     return f"Graveyard: unit {unit_id} buried ({dead[key]} now)."
 
 
+PHOENIXES = {744, 775, 856, 2097}  # the Phoenix, Blue, Green and Black
+PHOENIX_EGGS = {1254, 1282}  # what a phoenix leaves when it falls
+
+
+def phoenix_refusal(map: dict, unit_id):
+    """Why "put_graveyard" can't bury this, or None: only a phoenix, and only with an egg in town (trust.py)."""
+    if int(unit_id) not in PHOENIXES:
+        return "a unit that isn't a phoenix, buried as one"
+    if not any(int(item[0]) in PHOENIX_EGGS for item in map["items"]):
+        return "a phoenix buried with no egg in town"
+    return None
+
+
+def phoenix_died(save: dict, map: dict, unit_id) -> str:
+    """Its egg destroyed: the egg goes from the map (the client sends nothing else for it), the phoenix to the graveyard."""
+    egg = next(item for item in map["items"] if int(item[0]) in PHOENIX_EGGS)
+    map["items"].remove(egg)
+    return bury(save, int(unit_id))
+
+
 def unit_died(save: dict, unit_id: int, to_graveyard) -> str:
     """Called for every "sell" with the reason "KILL"."""
     if unit_id in HEROES or str(to_graveyard) == "1":
@@ -70,16 +98,19 @@ def unit_died(save: dict, unit_id: int, to_graveyard) -> str:
 def _price(save: dict, unit_id: int, used_potion: bool) -> dict:
     """What bringing this unit back costs, as {resource: amount}."""
     if unit_id in HEROES:
-        return {"g": _attr(unit_id, "cost_unit_cash") * HERO_GOLD_PER_CASH}
+        return strength_price(unit_id)  # the Heroes' Graveyard: by strength too (31 October 2026)
     if used_potion:
         return {"potion": _attr(unit_id, "potion")}
-    cost = _attr(unit_id, "cost")
-    cost_type = get_attribute_from_item_id(unit_id, "cost_type")
-    if cost_type == "c":
-        cost, cost_type = cost * HERO_GOLD_PER_CASH, "g"  # then priced as a gold unit
-    if cost_type == "g":
-        return {"f": cost, "g": (cost + 1) // 2}  # the client rounds halves up
+    if get_attribute_from_item_id(unit_id, "cost_type") in ("g", "c"):
+        return strength_price(unit_id)
     return {}  # the client asks nothing for the other kinds
+
+
+def strength_price(unit_id: int) -> dict:
+    """A unit's price to come back, by what it's worth in battle (rules/graveyard.ts, revivalPrice)."""
+    strength = _attr(unit_id, "life") * max(_attr(unit_id, "attack"), 1)  # a few, like eggs, don't attack
+    food = -(-strength // STRENGTH_PER_FOOD)
+    return {"f": food, "g": (food + 1) // 2}
 
 
 def potion_pack() -> tuple:

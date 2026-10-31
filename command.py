@@ -5,6 +5,7 @@ from sessions import session, save_session
 from get_game_config import get_game_config, get_name_from_item_id, get_attribute_from_mission_id, get_attribute_from_item_id, get_item_from_subcat_functional
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
+from village import spend
 import animals
 import bank
 import comeback_bonus
@@ -30,6 +31,7 @@ import assists
 import helps
 import pvp
 import radar
+import trust
 import raiders
 import tournaments
 import towns
@@ -89,6 +91,9 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
         free = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
         price_multiplier = args[6]
         print("Add", str(get_name_from_item_id(id)), end=": ")
+        # Things sold for cash only where the game gives or sells them (trust.py).
+        if trust.refuses(save, cmd, trust.placement_refusal(save, id, town_id, free, timestamp_now()), args):
+            return
         print(shop.buy(save, id, x, y, orientation, town_id, free, price_multiplier))
 
     elif cmd == Constant.CMD_BUY_UNIT_WITH_CASH:
@@ -101,6 +106,8 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
         already_stored = previous is not None and previous.get("cmd") == Constant.CMD_STORE_ADD_ITEMS \
             and [int(i) for i in json.loads(previous["args"][0])] == [int(id)]
         print("Buy", str(get_name_from_item_id(id)), "with cash", end=": ")
+        if trust.refuses(save, cmd, trust.cash_buy_refusal(save, id, town_id), args):
+            return
         print(shop.buy_with_cash(save, id, x, y, orientation, town_id, already_stored))
 
     elif cmd == Constant.CMD_BUY_OFFER_PACK:
@@ -184,16 +191,18 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             return
         print("Remove", str(get_name_from_item_id(id)), "from", f"({x},{y}). Reason: {reason}")
         map = save["maps"][town_id]
-        for item in map["items"]:
-            if item[0] == id and item[1] == x and item[2] == y:
-                map["items"].remove(item)
-                break
+        found = next((item for item in map["items"] if item[0] == id and item[1] == x and item[2] == y), None)
+        if found is not None:
+            map["items"].remove(found)
         if not bool_dont_modify_resources:
             price_multiplier = -0.05
             if get_attribute_from_item_id(id, "cost_type") != "c":
                 apply_cost(save["playerInfo"], save["maps"][town_id], id, price_multiplier)
-        if reason == 'KILL':
+        # Only one that was there goes to the graveyard: else it could come back from nothing, or twice (trust.py).
+        if reason == 'KILL' and found is not None:
             print(graveyard.unit_died(save, id, args[6] if len(args) > 6 else 0))
+        elif reason == 'KILL':
+            print("Not on the map: not buried.")
     
     elif cmd == Constant.CMD_KILL:
         x = args[0]
@@ -240,6 +249,10 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             if warning:
                 print(warning)
                 return
+        # A unit sold for cash goes in only from where it stands (trust.py): else it could come out of nothing.
+        standing = next((item for item in map["items"] if item[0] == unit_id and item[1] == unit_x and item[2] == unit_y), None)
+        if standing is None and trust.refuses(save, cmd, trust.push_refusal(unit_id), args):
+            return
         # Unit into building
         for item in map["items"]:
             if item[1] == b_x and item[2] == b_y:
@@ -259,6 +272,8 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
         print(soul_mixer.buy_powerup(save, args[0]))
 
     elif cmd == "push_queue_unit":
+        if trust.refuses(save, cmd, soul_mixer.result_refusal(save, args[0], args[1], args[3]), args):
+            return
         print(soul_mixer.push(save, *args))
 
     elif cmd == "speed_up_queue":
@@ -279,21 +294,22 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             unit_frame = args[6] # unknown use
         print("Pop", str(get_name_from_item_id(unit_id)), "from", f"({b_x},{b_y}).")
         map = save["maps"][town_id]
-        # Remove unit from building
-        for item in map["items"]:
-            if item[1] == b_x and item[2] == b_y:
-                if soul_mixer.locked_at(save, town_id, item[0], b_x, b_y):
-                    print("Soul Mixer: collect the mixed unit before removing its parents.")
-                    return
-                if item[0] == soul_mixer.BUILDING and (len(item) < 7 or unit_id not in item[6]):
-                    # A parent used up by a mix (soul_mixer.pop) doesn't come back out.
-                    print("Soul Mixer: that unit isn't inside.")
-                    return
-                if len(item) < 7:
-                    break
-                if unit_id in item[6]: # one the server didn't know was inside still comes out
-                    item[6].remove(unit_id)
-                break
+        building = next((item for item in map["items"] if item[1] == b_x and item[2] == b_y), None)
+        if building is not None and soul_mixer.locked_at(save, town_id, building[0], b_x, b_y):
+            print("Soul Mixer: collect the mixed unit before removing its parents.")
+            return
+        if building is not None and building[0] == soul_mixer.BUILDING and (len(building) < 7 or unit_id not in building[6]):
+            # A parent used up by a mix (soul_mixer.pop) doesn't come back out.
+            print("Soul Mixer: that unit isn't inside.")
+            return
+        # A unit sold for cash comes out only if it went in (trust.py); a cheaper one
+        # the server didn't know was inside still does, as before.
+        if trust.refuses(save, cmd, trust.pop_refusal(building, unit_id), args):
+            return
+        if building is not None and len(building) > 6 and unit_id in building[6]:
+            building[6].remove(unit_id)
+            if not place_popped_unit:
+                trust.taken_out_for_taming(save, building[0], unit_id)
         if place_popped_unit:
             # Spawn unit outside
             collected_at_timestamp = timestamp_now()
@@ -324,8 +340,9 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             to_substract = exp["coins"]
             save["maps"][town_id]["coins"] = max(save["maps"][town_id]["coins"] - to_substract, 0)
         elif resource == "cash":
-            to_substract = exp["cash"]
-            save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - to_substract, 0)
+            if not spend(save, map, "c", exp["cash"]):
+                print(f"Refused: the land costs {exp['cash']} cash.")
+                return
         # Add expansion
         map["expansions"].append(land_id)
 
@@ -370,11 +387,12 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
     
     elif cmd == Constant.CMD_ACTIVATE_DRAGON:
         currency = args[0]
-        print("Dragon nest activated.")
         prices = get_game_config()["globals"]
-        if currency == 'c':
-            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - int(prices["ACTIVATE_DRAGON_NEST_CASH"])), 0)
-        elif currency == 'g':
+        if currency == 'c' and not spend(save, None, "c", int(prices["ACTIVATE_DRAGON_NEST_CASH"])):
+            print("Dragon nest: refused, not enough cash.")
+            return
+        print("Dragon nest activated.")
+        if currency == 'g':
             map = save["maps"][towns.current(save)]  # the client takes the gold of the town that is open
             map["coins"] = max(int(map["coins"] - int(prices["ACTIVATE_DRAGON_NEST_GOLD"])), 0)
         pState = save["privateState"]
@@ -468,11 +486,12 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
     
     elif cmd == Constant.CMD_ACTIVATE_MONSTER:
         currency = args[0]
-        print("Monster nest activated.")
         prices = get_game_config()["globals"]
-        if currency == 'c':
-            save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"] - int(prices["ACTIVATE_MONSTER_NEST_CASH"])), 0)
-        elif currency == 'g':
+        if currency == 'c' and not spend(save, None, "c", int(prices["ACTIVATE_MONSTER_NEST_CASH"])):
+            print("Monster nest: refused, not enough cash.")
+            return
+        print("Monster nest activated.")
+        if currency == 'g':
             map = save["maps"][towns.current(save)]  # the client takes the gold of the town that is open
             map["coins"] = max(int(map["coins"] - int(prices["ACTIVATE_MONSTER_NEST_GOLD"])), 0)
         pState = save["privateState"]
@@ -527,7 +546,10 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
 
     elif cmd == Constant.CMD_PUT_GRAVEYARD:
         unit_id = args[0] # a phoenix whose egg was destroyed
-        print(graveyard.bury(save, unit_id))
+        map = save["maps"][towns.current(save)]
+        if trust.refuses(save, cmd, graveyard.phoenix_refusal(map, unit_id), args):
+            return
+        print(graveyard.phoenix_died(save, map, unit_id))
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
         items = args[2] # "item,item,..."; the price comes from shop.py, not args[3]

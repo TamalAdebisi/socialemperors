@@ -49,7 +49,52 @@ def buy_powerup(save, level):
     if save["playerInfo"]["cash"] < price:
         return "Soul Mixer: not enough cash."
     take(save, None, "c", price)
+    # Paid just before the mix starts (the client sends them together): counted for its result (reachable).
+    pState = save["privateState"]
+    pState["soulMixerPowerups"] = int(pState.get("soulMixerPowerups") or 0) + 1
     return "Soul Mixer: power-up paid."
+
+
+def _ranked():
+    """The units a mix can give, weakest first, as the client ranks them (rules/soulMixer.ts)."""
+    units = [row for row in get_game_config()["items"] if row.get("type") == "u" and int(row.get("breeding_order") or 0) > 0]
+    return sorted(units, key=lambda row: int(row["breeding_order"]))
+
+
+def reachable(parents, powerups_paid: int) -> int:
+    """The highest place in that ranking a mix of these two souls can reach
+    with this many power-ups: the client's roll (previewMix) at its luckiest,
+    then a step up per power-up (powerupMix), with room for the units it
+    skips. Anything, once past rank 400, where the gods and colossi are."""
+    units = _ranked()
+    last = len(units) - 1
+    powers = [number(parent, "breeding_order") for parent in parents]
+    luckiest = max(10, math.ceil(min(powers) * 0.3 + max(powers) * 0.7)) + 11 + 1
+    if luckiest > 400:
+        return last
+    index = next((i for i, row in enumerate(units) if int(row["breeding_order"]) >= luckiest), last) + 2
+    steps = powerups() or [(0, 0)]
+    for paid in range(1, powerups_paid + 1):
+        if index >= last or int(units[index]["breeding_order"]) >= 400:
+            return last
+        index += steps[min(paid, len(steps) - 1)][1] + 1
+    return min(index, last)
+
+
+def result_refusal(save, x, y, unit_id):
+    """Why a mix can't give this unit, or None: beyond what its two souls reach (trust.py)."""
+    if not available():
+        return None  # push() says why
+    building = item_at(save["maps"][towns.current(save)], BUILDING, int(x), int(y))
+    parents = full(building)[UNITS] if building else []
+    if len(parents) != 2 or any(number(parent, "breeding_order") <= 0 for parent in parents):
+        return None  # push() says why
+    place = next((i for i, row in enumerate(_ranked()) if int(row["id"]) == int(unit_id)), None)
+    if place is None:
+        return None
+    if place > reachable(parents, int(save["privateState"].get("soulMixerPowerups") or 0)):
+        return "a mix result its two souls and the power-ups paid for can't reach"
+    return None
 
 
 def _queues(save):
@@ -99,6 +144,7 @@ def push(save, x, y, building_id, unit_id, queue_id, _paid):
         return "Soul Mixer: the unit limit is reached."
     building[ATTRS]["bq"] = qid
     queues[qid] = {"ts": timestamp_now(), "amount": 1, "unit": unit_id}
+    save["privateState"]["soulMixerPowerups"] = 0  # spent on this mix
     return "Soul Mixer: mixing started."
 
 

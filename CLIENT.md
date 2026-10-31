@@ -2215,7 +2215,11 @@ Army → Units book shows the original configured categories in their order,
 three per page. Original thumbnails are grey until acquired. Tap or expand
 a unit to see its six stats and walking/attack/special animation; only one
 preview draws at once. Missing units can be bought for each category's
-cash price (the game's, shrunk by `economy.py`'s `cash_price` since 20 October) and appear in this town's Storage. A full category pays its
+cash price (the game's, shrunk by `economy.py`'s `cash_price` since 20
+October, and never under 51 cash since 31 October: the owner's rule,
+`unit_book_price`) and appear in this town's Storage. The Supreme Bahamut
+isn't sold here (the owner's rule, 31 October): its category keeps the
+other four, and it comes from the temple or the Soul Mixer. A full category pays its
 reward into Gifts and one cash, once only. Book purchases and claims survive
 reloads; current map units count, and newly acquired map units remain
 recognized for this session, following the original's separate behavior.
@@ -2931,11 +2935,16 @@ with tests) and `ui/graveyard.ts` (the three windows).
   aren't kept. Heroes are kept apart, for their own graveyard.
 - **The Graveyard** (its card's Open): the fallen of the town's race
   bought with gold or cash, by the shop's order. Each comes back for its
-  potions, or for half its gold price and its whole price in food, as in
-  the original. A unit bought with cash came back for half its cash there;
-  here it never costs cash (the owner's rule, 29 October 2026): its price
-  counts 500 gold a cash, as the heroes' does, and it comes back as a gold
-  unit would, a 10-cash Furious Dragon for 5,000 food and 2,500 gold. Room
+  potions, or for what it's worth in battle (the owner's rules: never cash,
+  29 October 2026; by strength, 31 October): a food for each 8 points of
+  its health times attack, and half that in gold. The original asked a gold
+  unit's whole price in food and half in gold, and half a cash unit's cash,
+  so a dragon nearly as strong as a Supreme Bahamut came back for less than
+  a gladiator. 8 is how the game prices its own gold units, at the median,
+  so ordinary units cost about what they did (a Spearman 40 food, was 30);
+  the strong cost in proportion (a Furious Dragon 9,200 food and 4,600
+  gold, a Dark Shogun Epic Dragon 185,650 and 92,825; `STRENGTH_PER_FOOD`
+  in `rules/graveyard.ts` and `graveyard.py`). Room
   for people and the units limit are checked first. It stands on the
   nearest free tile to the graveyard (`resurrect_hero`, the last argument
   "1" for potions). The window stays open. Potions are bought below
@@ -2944,7 +2953,9 @@ with tests) and `ui/graveyard.ts` (the three windows).
   each for one potion (`potionPackPrice`). The server asks the same
   (`graveyard.py`) and refuses what the town can't pay.
 - **The Heroes' Graveyard:** the eight heroes, how many have fallen, and
-  their price: 500 gold for each cash of the hero's price. The hero's
+  their price, by strength like every unit (the owner's rule, 31 October
+  2026; the original asked 500 gold for each cash of the hero's price):
+  Thor, the strongest, 1,875 food and 938 gold. The hero's
   experience comes again, and the window closes after each.
 - **The Altar of Heroes:** the eight heroes for cash (`buy_cash`), each
   from its level; it stands beside the altar.

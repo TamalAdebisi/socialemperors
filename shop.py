@@ -41,7 +41,7 @@ from constants import Constant
 from get_game_config import get_attribute_from_item_id, get_game_config
 import inventory
 import trust
-from village import STARTED, UNITS, full, give, item_at, number, take
+from village import STARTED, UNITS, full, give, item_at, number, spend, take
 
 FOOD_PER_GOLD_IN_TRAINING = 2
 RANDOM_PACK, SUPER_PACK = 1, 2
@@ -81,7 +81,11 @@ def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multip
     if not free:
         cost_type = get_attribute_from_item_id(item_id, "cost_type")
         cost = math.ceil(number(item_id, "cost") * float(multiplier))  # the Blacksmith and University take 10% off
-        take(save, map, cost_type, cost)
+        if cost_type == "c":
+            if not spend(save, map, "c", cost):
+                return f"Refused: item {item_id} costs {cost} cash."
+        else:
+            take(save, map, cost_type, cost)
         food = 0
         if get_attribute_from_item_id(item_id, "type") == "u" and _trained_here(map, item_id) \
                 and int(number(item_id, "subcat_functional")) != Constant.SUBCATFUNC_UNIT_PEASANT:
@@ -98,7 +102,8 @@ def buy(save: dict, item_id, x, y, orientation, town_id: int, free: bool, multip
 def buy_with_cash(save: dict, unit_id, x, y, orientation, town_id: int, already_stored: bool) -> str:
     map = save["maps"][town_id]
     cash = number(unit_id, "cost_unit_cash")
-    take(save, map, "c", cash)
+    if not spend(save, map, "c", cash):
+        return f"Refused: unit {unit_id} costs {cash} cash."
     give(save, map, "x", number(unit_id, "xp"))
     if already_stored:
         return f"Unit {unit_id} bought for {cash} cash, into storage."
@@ -130,7 +135,8 @@ def offer_pack(save: dict, town_id: int, pack_id: int, item_won=None) -> str:
         items = [int(item_won)]
     else:
         items = [int(i) for i in pack.get("items") or []]
-    take(save, map, "c", int(pack["cost_cash"]))
+    if not spend(save, map, "c", int(pack["cost_cash"])):
+        return f"Refused: offer pack {pack_id} costs {pack['cost_cash']} cash."
     _give_resources(save, map, pack, with_xp=True)
     for item_id in items:
         inventory.add_stored(save, town_id, item_id)
@@ -151,7 +157,8 @@ def super_offer_pack(save: dict, town_id: int, pack_id: int, items_text: str) ->
         return f"Super offer pack {pack_id}: {items} are not its prizes."
     cash = prices[choice]
     map = save["maps"][town_id]
-    take(save, map, "c", cash)
+    if not spend(save, map, "c", cash):
+        return f"Refused: super offer pack {pack_id} costs {cash} cash."
     _give_resources(save, map, pack, with_xp=False)  # the client shows the xp but does not give it
     for item_id in items:
         inventory.add_stored(save, town_id, item_id)
@@ -188,7 +195,8 @@ def collection_unit(save: dict, town_id: int, unit_id: int, cash) -> str:
     if not prices:
         return f"Unit {unit_id} is in no unit collection."
     price = int(cash) if int(cash) in prices else max(prices)
-    take(save, save["maps"][town_id], "c", price)
+    if not spend(save, save["maps"][town_id], "c", price):
+        return f"Refused: unit {unit_id} costs {price} cash."
     inventory.add_stored(save, town_id, unit_id)
     bought = save["privateState"].setdefault("boughtUnits", [])
     if unit_id not in bought:
@@ -240,7 +248,8 @@ def unlock_early(save: dict, item_id) -> str:
     if unlocked.get(str(item_id)):
         return f"Item {item_id} was already unlocked."
     cash = math.ceil(number(item_id, "min_level") * UNLOCK_CASH_PER_LEVEL)
-    take(save, None, "c", cash)
+    if not spend(save, None, "c", cash):
+        return f"Refused: unlocking item {item_id} early costs {cash} cash."
     unlocked[str(item_id)] = True
     return f"Item {item_id} unlocked early for {cash} cash."
 
@@ -253,6 +262,7 @@ def unlock_skin(save: dict, skin_id) -> str:
     if unlocked.get(str(skin_id)) == "true":
         return f"Skin {skin_id} was already unlocked."
     cash = int(get_game_config()["globals"]["COST_UNLOCK_SKIN"])
-    take(save, None, "c", cash)
+    if not spend(save, None, "c", cash):
+        return f"Refused: skin {skin_id} costs {cash} cash."
     unlocked[str(skin_id)] = "true"
     return f"Skin {skin_id} unlocked for {cash} cash."

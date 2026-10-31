@@ -20,7 +20,7 @@ Commands from the client:
 
 from engine import timestamp_now
 from get_game_config import get_game_config
-from village import take
+from village import spend, take
 
 
 def reset(save: dict, seed) -> str:
@@ -52,7 +52,8 @@ def shoot(save: dict, balloon, paid, got_extra) -> str:
     note = ""
     if int(paid):
         cash = int(get_game_config()["globals"]["DART_COST_CASH"])
-        take(save, None, "c", cash)
+        if not spend(save, None, "c", cash):
+            return f"Refused: a dart costs {cash} cash."
         note = f" for {cash} cash"
     pState["dartsBalloonsShot"].append(balloon)
     pState["dartsHasFree"] = False

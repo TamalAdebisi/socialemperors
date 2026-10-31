@@ -239,9 +239,21 @@ numbers, because the server writes them into the game config.
       (same day) level ups and the start score against the server's own
       experience, the warehouse, and gifts from storage, which paid their
       experience again on every pass between two accounts.
-- [ ] The things the game places for free (`buy` with its free flag:
-      dragons hatching, temple dragons, riders, camps, trees growing back)
-      are still believed; each needs a check in its own feature.
+- [x] What the game places (31 October 2026, `trust.py`), after the owner
+      found a player with two Supreme Bahamut Dragons: anything sold for
+      cash comes for free only from the nests, the temple (once a ritual)
+      or taming; a unit sold for cash is bought only where a building of
+      the town trains it, with `buy` or `buy_cash`; goes into a building
+      only from where it stands and comes out only if it went in; reaches
+      the graveyard only from the map (a phoenix only with its egg); and
+      comes out of the Soul Mixer only if its two
+      souls and the power-ups paid for can reach it. Every purchase is paid
+      in full or refused (`village.spend`). Refusals show on the admin
+      page's bug radar ("refused"). Free placements of everything else
+      (camps, trees, wild animals, the social buildings' units, the riders)
+      are still believed: none is sold for cash.
+- [x] The units book (31 October 2026, the owner's rules): no Supreme
+      Bahamut, and nothing under 51 cash (`economy.py`).
 - [ ] Known gap, for after Phases 3 and 4: the server still believes the
       experience and battle gold the game reports, so a determined cheater
       could fake levels, and with them their cash. Checking battles on the

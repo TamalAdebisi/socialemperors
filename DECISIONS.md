@@ -4,6 +4,60 @@ Calls made on the owner's behalf while building, newest first, so any of
 them can be found and reversed. The big, agreed decisions are in
 [ROADMAP.md](ROADMAP.md#decisions-so-far).
 
+## 31 October 2026: cheating holes closed, the units book, the graveyard by strength
+
+The owner found a player with two Supreme Bahamut Dragons and asked to
+close the holes, take the dragon out of the units book, charge at least 51
+cash for anything in it, and price bringing units back by their strength.
+
+- **What the server stops believing.** It used to take the game's word in
+  seven places a doctored request could use; now:
+  - a purchase is paid in full or refused (before, it took whatever cash was
+    left, even none);
+  - something sold for cash, placed for free, must come from the nests
+    (their current dragon or monster at ten steps), the temple (after twelve
+    offerings and the last wait, once: the ritual starts over) or taming
+    (the rider and dragon just taken out);
+  - a unit sold for cash, bought, must be one a building of that town
+    trains (no shop sells cash units; a few barracks train Ghosts and the
+    like). Gold units can still be bought with their cash price, as the
+    shop, the barracks and the Altar of Heroes offer;
+  - a unit sold for cash goes into a building only from where it stands,
+    and comes out only if it went in;
+  - the graveyard takes only a unit that was on the map when it fell (it
+    took any unit the game named, which then came back for its price: a
+    Supreme Bahamut for 30,000 food and 15,000 gold until today), and
+    "put_graveyard" only a phoenix whose egg stands in the town;
+  - the Soul Mixer gives only what its two souls can reach, at the best of
+    the client's roll, with a step up for each power-up paid just before
+    (the wiki's table moves one unit a power-up). Two Valkyries can reach
+    the Supreme Bahamut with all seven power-ups; two Spearmen can't.
+- **What's still believed.** Free placements of things not sold for cash
+  (camps' prisoners and pieces, trees, wild animals, the social buildings'
+  recruits, the riders, the stables' mounts) and cheaper units taken out of
+  a building the server didn't know held them: none is worth much, and each
+  has a feature of its own the server doesn't follow yet.
+- **Refusals show.** Each goes on the admin page's bug radar as "refused",
+  with the player: a cheater, or a rule that misses a real feature. The
+  browser tests' server only says it would refuse, as it already did for
+  storage.
+- **The units book:** no Supreme Bahamut (its category keeps the other four,
+  so it's easier to complete), and every unit at least 51 cash, from 1 to 71
+  before (the game's price shrunk, then raised to 51).
+- **The graveyard by strength:** a food for each 8 points of a unit's health
+  times attack, and half that in gold, whether it was bought with gold or
+  cash. 8 is how the game prices its own gold units, at the median (0.124
+  gold a point), so ordinary units cost about what they did: a Spearman 40
+  food (was 30), a Lion Soul Gladiator 13,500 (was 15,000). The strong cost
+  in proportion: a Furious Dragon 9,200 food (was 5,000), the Dark Shogun
+  Epic Dragon 185,650 and 92,825 gold (was 5,000 and 2,500), the Supreme
+  Bahamut 625,000 food. Units with no attack (eggs) count their health.
+  Linear, so twice as strong costs twice as much; potions keep their counts.
+  Heroes follow strength too, as the owner asked, in the Heroes' Graveyard:
+  cheaper than the original's 500 gold a cash of theirs, as their health and
+  attack are modest (Thor, the strongest, 1,875 food and 938 gold, was
+  4,500 gold).
+
 ## 29 October 2026: speed-ups cost food, the graveyard gold and food
 
 The owner's rule: speeding up a dragon's training or a rider's recovery
