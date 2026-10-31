@@ -15,7 +15,7 @@ export const GRAVEYARD = 486;
 export const HEROES_GRAVEYARD = 239;
 /** The eight heroes, in the order the Heroes' Graveyard shows them. */
 export const HEROES = [535, 533, 534, 550, 554, 555, 556, 557];
-/** A hero comes back for its cash price this many times over, in gold; a unit bought with cash counts its price so too. */
+/** A cash's worth in gold, as the original priced heroes: what the potion pack's cash comes to. */
 const HERO_GOLD_PER_CASH = 500;
 /** Room for people stops here (wonders aside). */
 const MOST_POPULATION = 175;
@@ -88,9 +88,10 @@ export function potionPackPrice(cash: number): { gold: number; food: number } {
   return { gold, food: cash * HERO_GOLD_PER_CASH - gold };
 }
 
-/** A hero brought back: its cash price times 500, in gold. */
-export function heroPrice(item: ItemInfo): number {
-  return item.cashCost * HERO_GOLD_PER_CASH;
+/** A hero brought back from the Heroes' Graveyard: by strength too (the original asked 500 gold a cash of its price). */
+export function heroPrice(item: ItemInfo): { gold: number; food: number } {
+  const { gold, food } = revivalPrice({ ...item, costType: "g" });  // heroes are gold units
+  return { gold, food };
 }
 
 /** Why a unit can't come back now (no room, as many as allowed), or null. */

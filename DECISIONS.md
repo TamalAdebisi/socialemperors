@@ -52,9 +52,11 @@ cash for anything in it, and price bringing units back by their strength.
   in proportion: a Furious Dragon 9,200 food (was 5,000), the Dark Shogun
   Epic Dragon 185,650 and 92,825 gold (was 5,000 and 2,500), the Supreme
   Bahamut 625,000 food. Units with no attack (eggs) count their health.
-  Linear, so twice as strong costs twice as much; potions keep their counts
-  and heroes their price (500 gold a cash of theirs). Tell me if heroes
-  should follow strength too.
+  Linear, so twice as strong costs twice as much; potions keep their counts.
+  Heroes follow strength too, as the owner asked, in the Heroes' Graveyard:
+  cheaper than the original's 500 gold a cash of theirs, as their health and
+  attack are modest (Thor, the strongest, 1,875 food and 938 gold, was
+  4,500 gold).
 
 ## 29 October 2026: speed-ups cost food, the graveyard gold and food
 

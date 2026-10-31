@@ -45,7 +45,7 @@ follow below; status-only receipt edits change no game, art or test file.
   that can't reach them, and any purchase without the cash (`trust.py`,
   `village.spend`, `soul_mixer.reachable`); refusals show on the admin
   page's bug radar. The units book drops the Supreme Bahamut and charges
-  51 cash at least; the graveyard prices a unit by its strength
+  51 cash at least; the graveyard prices a unit, heroes too, by its strength
   (DECISIONS.md, 31 October).
 - **Speed-ups cost food (29 October).** The owner's rule: skipping a wait
   costs food, not cash, at 500 food for each cash of the original's price

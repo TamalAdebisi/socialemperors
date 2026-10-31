@@ -2953,7 +2953,9 @@ with tests) and `ui/graveyard.ts` (the three windows).
   each for one potion (`potionPackPrice`). The server asks the same
   (`graveyard.py`) and refuses what the town can't pay.
 - **The Heroes' Graveyard:** the eight heroes, how many have fallen, and
-  their price: 500 gold for each cash of the hero's price. The hero's
+  their price, by strength like every unit (the owner's rule, 31 October
+  2026; the original asked 500 gold for each cash of the hero's price):
+  Thor, the strongest, 1,875 food and 938 gold. The hero's
   experience comes again, and the window closes after each.
 - **The Altar of Heroes:** the eight heroes for cash (`buy_cash`), each
   from its level; it stands beside the altar.

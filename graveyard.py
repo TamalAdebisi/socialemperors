@@ -30,8 +30,8 @@ each 8 points of its health times attack, and half that in gold, whether it
 was bought with gold or cash. 8 is how the game prices its own gold units,
 at the median, so an ordinary unit costs about what it did (the original
 asked its whole price in food and half in gold, half its price for a cash
-unit); a strong dragon costs in proportion. Heroes keep their price, 500
-gold a cash of theirs, and potions their count. The potion pack costs
+unit); a strong dragon costs in proportion. Heroes too, in the Heroes' Graveyard
+(the original asked 500 gold a cash of theirs); potions keep their count. The potion pack costs
 25,000 gold and 25,000 food (its 100 cash at 500 gold a cash, split between
 the two). The Flash client still shows its own prices, but this server takes
 these.
@@ -43,7 +43,7 @@ from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config
 
 HEROES = {533, 534, 535, 550, 554, 555, 556, 557}  # Xena, Arthur, Ranger, Merlin, Valkyrie, Wallace, Thor, High Elf
-HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold; so does a potion's cash
+HERO_GOLD_PER_CASH = 500  # a cash's worth in gold, as the original priced heroes: the potion pack's cash
 STRENGTH_PER_FOOD = 8  # a unit's health times attack, for each food it takes to bring back
 
 
@@ -98,7 +98,7 @@ def unit_died(save: dict, unit_id: int, to_graveyard) -> str:
 def _price(save: dict, unit_id: int, used_potion: bool) -> dict:
     """What bringing this unit back costs, as {resource: amount}."""
     if unit_id in HEROES:
-        return {"g": _attr(unit_id, "cost_unit_cash") * HERO_GOLD_PER_CASH}
+        return strength_price(unit_id)  # the Heroes' Graveyard: by strength too (31 October 2026)
     if used_potion:
         return {"potion": _attr(unit_id, "potion")}
     if get_attribute_from_item_id(unit_id, "cost_type") in ("g", "c"):

@@ -53,13 +53,13 @@ test("the graveyard lists the town's race (and anyone's) bought with gold or cas
   assert.deepEqual(graveyardUnits(dead, ITEMS, "t").map((u) => u.item.id), [602, 603]);
 });
 
-test("prices: potions; by strength, in food and half that in gold; heroes 500 gold a cash", () => {
+test("prices: potions; by strength, in food and half that in gold, heroes too", () => {
   // By strength since 31 October 2026: a food a point of health x attack over 8, half that in gold; never cash.
   assert.deepEqual(revivalPrice(KNIGHT), { potions: 2, gold: 175, food: 350 });
   assert.deepEqual(revivalPrice(CASH_UNIT), { potions: 20, gold: 92825, food: 185650 }, "a Dark Shogun's strength");
   assert.deepEqual(revivalPrice({ ...KNIGHT, attack: 0 }), { potions: 2, gold: 9, food: 18 }, "an egg's: its health");
   assert.deepEqual(potionPackPrice(100), { gold: 25000, food: 25000 });
-  assert.equal(heroPrice(RANGER), 1500);
+  assert.deepEqual(heroPrice({ ...RANGER, life: 150, attack: 9 }), { gold: 85, food: 169 }, "heroes too: 150 x 9 / 8");
   assert.equal(shortPrice(1500), "1.5k");
   assert.equal(shortPrice(17500), "17.5k");
   assert.equal(shortPrice(999), "999");

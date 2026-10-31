@@ -5,7 +5,7 @@
 // spearman comes back for food and gold beside it, and the server has him
 // and the count less one. The potion buttons wait for potions, and a town
 // without 25,000 food doesn't buy one. The Heroes' Graveyard brings the
-// Ranger back for gold; the Altar sells Prince Arthur for cash. With more
+// Ranger back for food and gold; the Altar sells Prince Arthur for cash. With more
 // food and gold, the dragon (bought with cash) comes back for food and gold
 // too, and a potion is bought: never cash (the owner's rule, 29 October 2026),
 // and each unit priced by its strength, health times attack (31 October).
@@ -76,19 +76,20 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   assert.equal(after.map.coins, before.map.coins - 20);
   assert.ok(after.map.items.some((i) => i[0] === SPEARMAN));
 
-  // The Heroes' Graveyard: the Ranger back for 1,500 gold.
+  // The Heroes' Graveyard: the Ranger back by strength too, 150 x 9 / 8 = 169 food and 85 gold (was 1,500 gold).
   await player.page.keyboard.press("Escape");
   await player.select(HEROES_AT, "Heroes Grave");
   await player.press("Get units");
   const heroes = player.page.locator(".panel.graveyard:not([hidden])");
   assert.match(await heroes.textContent(), /Ranger.*×1/);
-  assert.ok(await player.button("Resurrect Thor for 4500 gold").isDisabled(), "nobody to bring back");
+  assert.ok(await player.button("Resurrect Thor for 1875 food and 938 gold").isDisabled(), "nobody to bring back");
   await player.shot("heroes-grave");
-  await player.press("Resurrect Ranger for 1500 gold");
+  await player.press("Resurrect Ranger for 169 food and 85 gold");
   assert.equal(await heroes.count(), 0, "the window closes, as in the original");
   await player.wait(1500);
   const revived = await info();
-  assert.equal(revived.map.coins, after.map.coins - 1500);
+  assert.equal(revived.map.coins, after.map.coins - 85);
+  assert.equal(revived.map.food, after.map.food - 169);
   assert.deepEqual(revived.privateState.deadHeroes, { [KNIGHT]: 2, [FURIOUS]: 1 });
   assert.ok(revived.map.items.some((i) => i[0] === RANGER));
   assert.equal(revived.map.xp, after.map.xp + 25, "the Ranger's experience again");

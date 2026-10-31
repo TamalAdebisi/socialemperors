@@ -200,7 +200,7 @@ export class GraveyardWindow {
   }
 }
 
-/** The Heroes' Graveyard's window: all eight heroes, how many have fallen, and their price in gold. */
+/** The Heroes' Graveyard's window: all eight heroes, how many have fallen, and their price in food and gold. */
 export class HeroGraveWindow {
   private readonly panel = new Panel("heroes-grave", "Heroes' Graveyard", { className: "list-window graveyard" });
   private readonly parts: GraveParts;
@@ -236,7 +236,8 @@ export class HeroGraveWindow {
       const price = heroPrice(hero);
       const buttons = document.createElement("span");
       buttons.className = "grave-buttons";
-      const button = priceButton([[price, "gold"]], `Resurrect ${hero.name} for ${price} gold`, "gold");
+      const button = priceButton([[price.food, "food"], [price.gold, "gold"]],
+        `Resurrect ${hero.name} for ${price.food} food and ${price.gold} gold`, "gold");
       button.prepend("Resurrect ");
       button.disabled = count === 0;
       button.addEventListener("click", () => this.revive(hero));
@@ -257,18 +258,22 @@ export class HeroGraveWindow {
       return;
     }
     const price = heroPrice(hero);
-    if (town.gold < price) {
-      this.said = `Not enough gold: it takes ${price}.`;
-      this.render();
-      return;
+    for (const [resource, amount] of [["food", price.food], ["gold", price.gold]] as const) {
+      if (town[resource] < amount) {
+        this.said = `Not enough ${resource}: it takes ${amount}.`;
+        this.render();
+        return;
+      }
     }
     // As the Flash client: no check on room for people here, and the hero's experience comes again.
-    town.gold -= price;
+    town.food -= price.food;
+    town.gold -= price.gold;
     town.xp += hero.xp;
     const placed = standBeside(town, hero, this.building);
     unbury(parts.dead, hero.id);
     parts.send("resurrect_hero", hero.id, placed.tx, placed.ty, town.id);
-    parts.arrived(placed, [{ text: `−${price} gold`, resource: "gold" }, { text: `+${hero.xp} XP`, resource: "xp" }]);
+    parts.arrived(placed, [{ text: `−${price.food} food`, resource: "food" }, { text: `−${price.gold} gold`, resource: "gold" },
+      { text: `+${hero.xp} XP`, resource: "xp" }]);
     parts.changed();
     this.panel.close();  // the original closes it after each one
   }

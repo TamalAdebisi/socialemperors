@@ -98,7 +98,8 @@ class GraveyardTest(unittest.TestCase):
         self.dies(ARTHUR, 10, 10, NOT_TO_GRAVEYARD)
         xp = self.map["xp"]
         self.send("resurrect_hero", ARTHUR, 30, 31, TOWN)  # the hero popup sends no potion flag
-        self.assertEqual(self.map["coins"], 10000 - 5 * 500)
+        # By strength too since 31 October 2026: 300 health x 24 attack / 8 = 900 food, and 450 gold (was 2,500 gold).
+        self.assertEqual((self.map["food"], self.map["coins"]), (10000 - 900, 10000 - 450))
         self.assertEqual(self.map["xp"], xp + 30)
         self.assertEqual(len(self.on_map(ARTHUR)), 1)
 
