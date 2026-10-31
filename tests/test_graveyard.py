@@ -109,7 +109,17 @@ class GraveyardTest(unittest.TestCase):
 
     def test_phoenix_egg(self):
         self.send("put_graveyard", PHOENIX)
+        self.assertEqual(self.pState["deadHeroes"], {}, "no egg in town: no phoenix fell (31 October 2026)")
+        self.map["items"].append([1254, 20, 20, 0, 0, 0])  # the egg it left
+        self.send("put_graveyard", 2003)
+        self.assertEqual(self.pState["deadHeroes"], {}, "only a phoenix")
+        self.send("put_graveyard", PHOENIX)
         self.assertEqual(self.pState["deadHeroes"], {str(PHOENIX): 1})
+        self.assertEqual(self.on_map(1254), [], "the egg is gone")
+
+    def test_only_one_that_was_there_is_buried(self):
+        self.send("sell", 10, 10, FURIOUS_DRAGON, TOWN, 1, KILL, TO_GRAVEYARD)  # none stands there
+        self.assertEqual(self.pState.get("deadHeroes") or {}, {})
 
     def test_older_saves(self):
         self.pState["deadHeroes"] = []  # what the client treats as "nobody"

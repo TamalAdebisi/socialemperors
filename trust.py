@@ -43,7 +43,10 @@ rest, the Supreme Bahamut among them):
                        (no shop sells cash units)
     "buy_cash"         a unit only where a building of that town trains it
                        (gold units, heroes among them, are sold for cash too)
+    "push_unit"        only a unit standing where the game says
     "pop_unit"         only a unit the building holds
+    "sell" (KILL)      to the graveyard only a unit that was on the map
+    "put_graveyard"    only a phoenix, with one of its eggs in town
     the Soul Mixer     a result its two souls and the power-ups paid for can
                        reach (soul_mixer.py)
 
@@ -283,6 +286,13 @@ def cash_buy_refusal(save: dict, unit_id, town_id: int):
     if not _sold_for_cash(_item(unit_id)) or unit_id in HEROES or _trained_in(save["maps"][town_id], unit_id):
         return None
     return "a unit sold for cash, bought with cash where no building trains it"
+
+
+def push_refusal(unit_id):
+    """Why a unit that isn't where the game says can't go into a building, or None: one sold for cash can't."""
+    if _sold_for_cash(_item(int(unit_id))):
+        return "a unit sold for cash, into a building from where it doesn't stand"
+    return None
 
 
 def pop_refusal(building, unit_id):

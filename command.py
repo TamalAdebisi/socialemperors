@@ -191,16 +191,18 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             return
         print("Remove", str(get_name_from_item_id(id)), "from", f"({x},{y}). Reason: {reason}")
         map = save["maps"][town_id]
-        for item in map["items"]:
-            if item[0] == id and item[1] == x and item[2] == y:
-                map["items"].remove(item)
-                break
+        found = next((item for item in map["items"] if item[0] == id and item[1] == x and item[2] == y), None)
+        if found is not None:
+            map["items"].remove(found)
         if not bool_dont_modify_resources:
             price_multiplier = -0.05
             if get_attribute_from_item_id(id, "cost_type") != "c":
                 apply_cost(save["playerInfo"], save["maps"][town_id], id, price_multiplier)
-        if reason == 'KILL':
+        # Only one that was there goes to the graveyard: else it could come back from nothing, or twice (trust.py).
+        if reason == 'KILL' and found is not None:
             print(graveyard.unit_died(save, id, args[6] if len(args) > 6 else 0))
+        elif reason == 'KILL':
+            print("Not on the map: not buried.")
     
     elif cmd == Constant.CMD_KILL:
         x = args[0]
@@ -247,6 +249,10 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
             if warning:
                 print(warning)
                 return
+        # A unit sold for cash goes in only from where it stands (trust.py): else it could come out of nothing.
+        standing = next((item for item in map["items"] if item[0] == unit_id and item[1] == unit_x and item[2] == unit_y), None)
+        if standing is None and trust.refuses(save, cmd, trust.push_refusal(unit_id), args):
+            return
         # Unit into building
         for item in map["items"]:
             if item[1] == b_x and item[2] == b_y:
@@ -540,7 +546,10 @@ def do_command(USERID, cmd, args, previous=None, upcoming=None):
 
     elif cmd == Constant.CMD_PUT_GRAVEYARD:
         unit_id = args[0] # a phoenix whose egg was destroyed
-        print(graveyard.bury(save, unit_id))
+        map = save["maps"][towns.current(save)]
+        if trust.refuses(save, cmd, graveyard.phoenix_refusal(map, unit_id), args):
+            return
+        print(graveyard.phoenix_died(save, map, unit_id))
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
         items = args[2] # "item,item,..."; the price comes from shop.py, not args[3]

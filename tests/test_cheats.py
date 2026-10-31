@@ -138,6 +138,16 @@ class CheatsTest(unittest.TestCase):
 
     # Out of a building
 
+    def test_into_a_building_only_what_stands_there(self):
+        self.map["items"].append([TOWER, 50, 50, 0, 0, 0, [], {}])
+        self.send("push_unit", 40, 40, SUPREME_BAHAMUT, 50, 50, TOWN)  # none stands at (40, 40)
+        self.send("pop_unit", 50, 50, TOWN, SUPREME_BAHAMUT, 52, 50, 0)
+        self.assertEqual(self.on_map(SUPREME_BAHAMUT), [])
+        self.map["items"].append([FURIOUS_DRAGON, 40, 40, 0, 0, 0])
+        self.send("push_unit", 40, 40, FURIOUS_DRAGON, 50, 50, TOWN)
+        self.send("pop_unit", 50, 50, TOWN, FURIOUS_DRAGON, 52, 50, 0)
+        self.assertEqual([row[:3] for row in self.on_map(FURIOUS_DRAGON)], [[FURIOUS_DRAGON, 52, 50]], "in and out again")
+
     def test_out_of_a_building_only_what_went_in(self):
         self.map["items"].append([TOWER, 50, 50, 0, 0, 0, [FURIOUS_DRAGON], {}])
         self.send("pop_unit", 50, 50, TOWN, SUPREME_BAHAMUT, 52, 50, 0)

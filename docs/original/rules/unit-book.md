@@ -21,7 +21,12 @@ map unit announces that a reward waits. A full category pays its configured
 reward into Gifts and one cash through unit_collections_completed. Each
 category pays once. The original overall denominator sums category entries,
 including repeated entries. The served, patched configuration has 120
-categories, 481 entries and 475 distinct units; retain its entry total.
+categories, 480 entries and 474 distinct units (481 and 475 until the
+Supreme Bahamut left the book, 31 October 2026); retain its entry total.
+
+*Ours, the owner's rules of 31 October 2026:* the book doesn't sell the
+Supreme Bahamut (it comes from the temple or the Soul Mixer), and no unit
+in it costs less than 51 cash (`economy.unit_book_price`).
 Individual category counters stay independent.
 
 Built: rules/unitBook.ts, ui/unitBook.ts, view/unitPreview.ts. Army opens it

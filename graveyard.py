@@ -15,7 +15,9 @@ Commands from the client:
     "sell" [x, y, unit, town, 1, "KILL", 1]  a unit died and goes to the graveyard
     "sell" [x, y, hero, town, 1, "KILL", 0]  a hero died (the client sends 0 for
                                              heroes, but still remembers them)
-    "put_graveyard" [unit]                   a phoenix egg was destroyed
+    "put_graveyard" [unit]                   a phoenix egg was destroyed: its
+                                             phoenix, if an egg stands in the
+                                             town (it goes)
     "resurrect_hero" [unit, x, y, town, potion]
         from the graveyard: potion is "1" when paid with potions, "0" otherwise
     "resurrect_hero" [hero, x, y, town]
@@ -64,6 +66,26 @@ def bury(save: dict, unit_id: int) -> str:
     key = str(unit_id)
     dead[key] = dead.get(key, 0) + 1
     return f"Graveyard: unit {unit_id} buried ({dead[key]} now)."
+
+
+PHOENIXES = {744, 775, 856, 2097}  # the Phoenix, Blue, Green and Black
+PHOENIX_EGGS = {1254, 1282}  # what a phoenix leaves when it falls
+
+
+def phoenix_refusal(map: dict, unit_id):
+    """Why "put_graveyard" can't bury this, or None: only a phoenix, and only with an egg in town (trust.py)."""
+    if int(unit_id) not in PHOENIXES:
+        return "a unit that isn't a phoenix, buried as one"
+    if not any(int(item[0]) in PHOENIX_EGGS for item in map["items"]):
+        return "a phoenix buried with no egg in town"
+    return None
+
+
+def phoenix_died(save: dict, map: dict, unit_id) -> str:
+    """Its egg destroyed: the egg goes from the map (the client sends nothing else for it), the phoenix to the graveyard."""
+    egg = next(item for item in map["items"] if int(item[0]) in PHOENIX_EGGS)
+    map["items"].remove(egg)
+    return bury(save, int(unit_id))
 
 
 def unit_died(save: dict, unit_id: int, to_graveyard) -> str:
