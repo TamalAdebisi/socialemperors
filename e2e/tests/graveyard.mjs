@@ -7,7 +7,8 @@
 // without 25,000 food doesn't buy one. The Heroes' Graveyard brings the
 // Ranger back for gold; the Altar sells Prince Arthur for cash. With more
 // food and gold, the dragon (bought with cash) comes back for food and gold
-// too, and a potion is bought: never cash (the owner's rule, 29 October 2026).
+// too, and a potion is bought: never cash (the owner's rule, 29 October 2026),
+// and each unit priced by its strength, health times attack (31 October).
 
 import assert from "node:assert/strict";
 
@@ -48,12 +49,13 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   assert.match(text, /Spearman.*×1/);
   assert.match(text, /Furious Dragon.*×1/);
   assert.doesNotMatch(text, /Ranger/);
-  // Bought with 10 cash: counted as 5,000 gold, so 5,000 food and half that in gold.
-  assert.equal(await player.button("Resurrect Furious Dragon for 5000 food and 2500 gold").count(), 1);
+  // Bought with cash, but priced by strength like every unit: 1,600 x 46 / 8 = 9,200 food, and half that in gold.
+  assert.equal(await player.button("Resurrect Furious Dragon for 9200 food and 4600 gold").count(), 1);
   assert.ok(await player.button("Resurrect Spearman for 1 potions").isDisabled(), "no potions yet");
   await player.shot("graveyard");
 
-  await player.press("Resurrect Spearman for 30 food and 15 gold");
+  // By strength since 31 October 2026: 40 health x 8 attack / 8 = 40 food, half that in gold (the game asked 30 and 15).
+  await player.press("Resurrect Spearman for 40 food and 20 gold");
   assert.match(await window.locator(".grave-said").textContent(), /Spearman is back/);
   assert.doesNotMatch(await window.locator(".rows").textContent(), /Spearman/, "none left to bring back");
   const back = await player.page.evaluate((at) => {
@@ -70,8 +72,8 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   await player.wait(1500);
   const after = await info();
   assert.deepEqual(after.privateState.deadHeroes, { [KNIGHT]: 2, [FURIOUS]: 1, [RANGER]: 1 });
-  assert.equal(after.map.food, before.map.food - 30);
-  assert.equal(after.map.coins, before.map.coins - 15);
+  assert.equal(after.map.food, before.map.food - 40);
+  assert.equal(after.map.coins, before.map.coins - 20);
   assert.ok(after.map.items.some((i) => i[0] === SPEARMAN));
 
   // The Heroes' Graveyard: the Ranger back for 1,500 gold.
@@ -106,15 +108,15 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
 
   // More food and gold, and two houses for the dragon's people: the Furious Dragon back, and a potion, neither for cash.
   player = await offlineVillage(player, (save) => {
-    save.maps[0].food = 30_000;
-    save.maps[0].coins = 30_000;
+    save.maps[0].food = 40_000;
+    save.maps[0].coins = 40_000;
     for (const x of [40, 42]) save.maps[0].items.push([1, x, 62, 0, 1, 0]);
   });
   await player.closeLevelUps();
   await player.select(GRAVE_AT, "Graveyard");
   await player.press("Get units");
   const again = player.page.locator(".panel.graveyard:not([hidden])");
-  await player.press("Resurrect Furious Dragon for 5000 food and 2500 gold");
+  await player.press("Resurrect Furious Dragon for 9200 food and 4600 gold");
   assert.match(await again.locator(".grave-said").textContent(), /Furious Dragon is back/);
   await player.button(/^Buy 1 potion/).click();
   assert.equal(await again.locator(".grave-said").textContent(), "+1 potion.");
@@ -122,9 +124,9 @@ export default async function graveyard({ newPlayer, offlineVillage }) {
   await player.shot("potion-bought");
   await player.wait(1500);
   const paid = await info();
-  assert.deepEqual([paid.map.food, paid.playerInfo.cash], [30_000 - 5000 - 25_000, 44]);
+  assert.deepEqual([paid.map.food, paid.playerInfo.cash], [40_000 - 9200 - 25_000, 44]);
   // Its gold, give or take what the houses earned meanwhile.
-  assert.ok(paid.map.coins >= 30_000 - 2500 - 25_000 && paid.map.coins <= 30_000 - 2500 - 25_000 + 100, `2,500 and 25,000 gold (${paid.map.coins})`);
+  assert.ok(paid.map.coins >= 40_000 - 4600 - 25_000 && paid.map.coins <= 40_000 - 4600 - 25_000 + 100, `4,600 and 25,000 gold (${paid.map.coins})`);
   assert.equal(paid.privateState.potion, 1);
   assert.deepEqual(paid.privateState.deadHeroes, { [KNIGHT]: 2 });
   assert.ok(paid.map.items.some((i) => i[0] === FURIOUS));

@@ -15,8 +15,8 @@ function item(fields: Partial<ItemInfo> = {}): ItemInfo {
 
 const unit = (fields: Partial<ItemInfo>) => item({ isUnit: true, width: 1, height: 1, population: 1, ...fields });
 const SPEARMAN = unit({ id: 509, name: "Spearman", cost: 30, costType: "g", potion: 1, displayOrder: 2 });
-const KNIGHT = unit({ id: 514, name: "Knight", cost: 175, costType: "g", potion: 2, displayOrder: 1, population: 2 });
-const CASH_UNIT = unit({ id: 600, name: "Paladin", cost: 25, costType: "c", potion: 20, displayOrder: 3 });
+const KNIGHT = unit({ id: 514, name: "Knight", cost: 175, costType: "g", potion: 2, displayOrder: 1, population: 2, life: 140, attack: 20 });
+const CASH_UNIT = unit({ id: 600, name: "Paladin", cost: 25, costType: "c", potion: 20, displayOrder: 3, life: 7900, attack: 188 });
 const VILLAGER = unit({ id: 500, name: "Villager", cost: 50, costType: "f" });
 const FREE = unit({ id: 601, name: "Gift", cost: 0, costType: "g" });
 const TROLL = unit({ id: 602, name: "Troll", cost: 40, costType: "g", race: "t" });
@@ -53,10 +53,11 @@ test("the graveyard lists the town's race (and anyone's) bought with gold or cas
   assert.deepEqual(graveyardUnits(dead, ITEMS, "t").map((u) => u.item.id), [602, 603]);
 });
 
-test("prices: potions; half the gold and the whole price in food, a cash counted as 500 gold; heroes 500 gold a cash", () => {
-  assert.deepEqual(revivalPrice(KNIGHT), { potions: 2, gold: 88, food: 175 });
-  // Never cash since 29 October 2026: its 25 cash as 12,500 gold.
-  assert.deepEqual(revivalPrice(CASH_UNIT), { potions: 20, gold: 6250, food: 12500 });
+test("prices: potions; by strength, in food and half that in gold; heroes 500 gold a cash", () => {
+  // By strength since 31 October 2026: a food a point of health x attack over 8, half that in gold; never cash.
+  assert.deepEqual(revivalPrice(KNIGHT), { potions: 2, gold: 175, food: 350 });
+  assert.deepEqual(revivalPrice(CASH_UNIT), { potions: 20, gold: 92825, food: 185650 }, "a Dark Shogun's strength");
+  assert.deepEqual(revivalPrice({ ...KNIGHT, attack: 0 }), { potions: 2, gold: 9, food: 18 }, "an egg's: its health");
   assert.deepEqual(potionPackPrice(100), { gold: 25000, food: 25000 });
   assert.equal(heroPrice(RANGER), 1500);
   assert.equal(shortPrice(1500), "1.5k");

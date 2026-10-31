@@ -177,14 +177,25 @@ class ShopTest(unittest.TestCase):
     # Unit collections
 
     def test_a_missing_unit_bought_for_a_collection(self):
-        self.send("buy_stored_item_cash", TOWN, SPEARMAN, 1)
-        self.assertEqual(self.cash(), 499)
+        # Nothing in the units book for less than 51 cash (economy.py, 31 October 2026); the game's was 1.
+        self.send("buy_stored_item_cash", TOWN, SPEARMAN, 51)
+        self.assertEqual(self.cash(), 500 - 51)
         self.assertEqual(self.map["store"], {str(SPEARMAN): 1})
         self.assertIn(SPEARMAN, self.pState["boughtUnits"])
 
     def test_a_collection_unit_at_a_made_up_price(self):
-        self.send("buy_stored_item_cash", TOWN, SPEARMAN, 0)
-        self.assertEqual(self.cash(), 499)  # the config's price
+        for made_up in (0, 1):  # 1 was the game's own price
+            self.send("buy_stored_item_cash", TOWN, SPEARMAN, made_up)
+        self.assertEqual(self.cash(), 500 - 2 * 51)  # the config's price
+
+    def test_the_units_book_never_sells_the_supreme_bahamut(self):
+        self.send("buy_stored_item_cash", TOWN, 2003, 27)
+        self.assertEqual((self.cash(), self.map.get("store") or {}), (500, {}))
+
+    def test_a_units_book_unit_without_the_cash(self):
+        self.save["playerInfo"]["cash"] = 50
+        self.send("buy_stored_item_cash", TOWN, SPEARMAN, 51)
+        self.assertEqual((self.cash(), self.map.get("store") or {}), (50, {}), "paid in full or not at all")
 
     def test_a_finished_unit_collection(self):
         self.send("unit_collections_completed", 1)

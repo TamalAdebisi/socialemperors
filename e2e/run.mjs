@@ -185,8 +185,8 @@ try {
     // free a chained god, food enough to pay for speed-ups): this optional
     // test-harness callback owns a stop/edit/restart of this runner's
     // isolated SQLite server only.
-    if (["soul-mixer", "chained", "nests", "monster-nest", "rider-training", "social-market", "menu-progress", "graveyard", "cash", "temple"]
-      .includes(name)) {
+    if (["soul-mixer", "chained", "nests", "monster-nest", "rider-training", "social-market", "menu-progress", "graveyard", "cash", "temple",
+      "units-book"].includes(name)) {
       let offlineBusy = false;
       context.offlineVillage = async (player, edit) => {
         const index = players.indexOf(player);

@@ -26,7 +26,7 @@ import json
 
 from engine import timestamp_now
 from get_game_config import get_attribute_from_mission_id, get_game_config
-from village import give, take
+from village import give, spend, take
 
 NUM_RAIDS = 30
 MOST_TREASURE_GOLD, MOST_TREASURE_XP = 750, 100
@@ -45,7 +45,8 @@ def complete(save: dict, mission_id, skipped: bool) -> str:
     note = ""
     if skipped:
         cash = int(get_game_config()["globals"]["PRICE_COMPLETE_GOAL"])
-        take(save, None, "c", cash)
+        if not spend(save, None, "c", cash):
+            return f"Refused: skipping mission {mission_id} takes {cash} cash."
         note = f", skipped for {cash} cash"
     done.append(mission_id)
     return f"Mission {mission_id} complete{note}."

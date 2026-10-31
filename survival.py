@@ -27,7 +27,7 @@ import json
 from engine import timestamp_now
 from get_game_config import get_game_config
 import inventory
-from village import take
+from village import spend, take
 
 LIVES = 3
 MAP_IDS = ["100000035", "100000036", "100000037", "100000038", "100000039"]
@@ -99,7 +99,8 @@ def end(save: dict, map_id, seconds, units_json, town_id: int = 0) -> str:
 
 def buy_life(save: dict) -> str:
     pState = save["privateState"]
-    take(save, None, "c", int(_globals()["SURVIVAL_BUY_LIVE_CASH"]))
+    if not spend(save, None, "c", int(_globals()["SURVIVAL_BUY_LIVE_CASH"])):
+        return "Refused: not enough cash for a life."
     pState["survivalVidasExtra"] = int(pState.get("survivalVidasExtra") or 0) + 1
     return "A life bought."
 
@@ -111,6 +112,7 @@ def buy_map(save: dict, map_id) -> str:
     maps = _maps(save)
     if map_id in maps:
         return f"Survival map {map_id} is already open."
-    take(save, None, "c", int(_globals()["SURVIVAL_UNLOCK_MAP_CASH"][MAP_IDS.index(map_id)]))
+    if not spend(save, None, "c", int(_globals()["SURVIVAL_UNLOCK_MAP_CASH"][MAP_IDS.index(map_id)])):
+        return f"Refused: not enough cash for survival map {map_id}."
     maps[map_id] = {"ts": 0, "tp": 0}
     return f"Survival map {map_id} opened."

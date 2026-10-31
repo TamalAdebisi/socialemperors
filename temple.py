@@ -25,10 +25,13 @@ from what the client sends.
 """
 
 from engine import timestamp_now
-from village import take
+from village import spend, take
 import speedups
 
 TEMPLE_ID = 1394
+SUPREME_BAHAMUT = 2003
+WAIT = 48 * 3600  # after each offering, the twelfth too
+CLOCK_SLACK = 300  # the client's clock is the server's, give or take a few minutes
 SKIP_WAIT_CASH = 5  # the original's price; paid in food (speedups.py)
 
 RESOURCES, SACRIFICE, COLLECTION = "resources", "sacrifice", "collection"
@@ -76,7 +79,11 @@ def next_step(save: dict, step: int) -> str:
     if kind == RESOURCES:
         map = _temple_map(save)
         for resource, amount in data.items():
-            take(save, map, resource, amount)
+            if resource == "c":  # cash, the server's own count: paid in full or not at all
+                if not spend(save, map, "c", amount):
+                    return f"Temple: refused, step {step} takes {amount} cash."
+            else:
+                take(save, map, resource, amount)
     done.append(step)
     save["privateState"]["timeStampTemple"] = timestamp_now()
     return f"Temple: step {step} done ({len(done)}/{len(STEPS)})."
@@ -87,6 +94,17 @@ def skip_wait(save: dict) -> str:
         return "Temple: not enough food to skip the wait."
     save["privateState"]["timeStampTemple"] = 0
     return f"Temple: wait skipped for {speedups.in_food(SKIP_WAIT_CASH)} food."
+
+
+def claim(save: dict, now: int) -> bool:
+    """The Supreme Bahamut summoned (the client's free "buy" of it): only
+    once all twelve offerings are made and the last wait is over. The ritual
+    starts over then, so it gives one; the client's reset_temple follows."""
+    since = int(save["privateState"].get("timeStampTemple") or 0)
+    if len(set(_progress(save))) < len(STEPS) or (since and now < since + WAIT - CLOCK_SLACK):
+        return False
+    reset(save)
+    return True
 
 
 def reset(save: dict) -> str:

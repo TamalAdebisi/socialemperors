@@ -10,6 +10,7 @@ import unittest
 
 os.environ["SE_DATA_DIR"] = tempfile.mkdtemp(prefix="se-test-")
 
+import graveyard
 import sessions
 from command import command, do_command
 
@@ -61,25 +62,31 @@ class GraveyardTest(unittest.TestCase):
     def test_resurrect_with_food_and_gold(self):
         self.dies(SWORDSMAN, 10, 10, TO_GRAVEYARD)
         self.send("resurrect_hero", SWORDSMAN, 30, 31, TOWN, "0")
-        # cost 90 gold: the graveyard asks 90 food and half of it in gold
-        self.assertEqual((self.map["food"], self.map["coins"]), (10000 - 90, 10000 - 45))
+        # By strength since 31 October 2026: 55 health x 18 attack / 8 = 124 food, half of it in gold (the game asked 90 and 45)
+        self.assertEqual((self.map["food"], self.map["coins"]), (10000 - 124, 10000 - 62))
         self.assertEqual(self.pState["deadHeroes"], {})
         self.assertEqual(self.on_map(SWORDSMAN)[0][:3], [SWORDSMAN, 30, 31])
 
     def test_resurrect_a_cash_unit(self):
-        # Gold and food since 29 October 2026: its 10 cash counted as 5,000 gold, then as a gold unit (all in food, half in gold).
+        # Never cash, and by strength: 1,600 health x 46 attack / 8 = 9,200 food, and 4,600 gold (the game asked 5 cash).
         self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
         self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "0")
-        self.assertEqual((self.save["playerInfo"]["cash"], self.map["coins"], self.map["food"]), (100, 10000 - 2500, 10000 - 5000))
+        self.assertEqual((self.save["playerInfo"]["cash"], self.map["coins"], self.map["food"]), (100, 10000 - 4600, 10000 - 9200))
         self.assertEqual(len(self.on_map(FURIOUS_DRAGON)), 1)
 
     def test_not_without_the_gold_and_food(self):
         self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)
-        self.map["food"] = 4999
+        self.map["food"] = 9199
         self.send("resurrect_hero", FURIOUS_DRAGON, 30, 31, TOWN, "0")
-        self.assertEqual((self.map["coins"], self.map["food"]), (10000, 4999))
+        self.assertEqual((self.map["coins"], self.map["food"]), (10000, 9199))
         self.assertEqual(self.on_map(FURIOUS_DRAGON), [])
         self.assertEqual(self.pState["deadHeroes"], {str(FURIOUS_DRAGON): 1}, "still in the graveyard")
+
+    def test_the_strong_cost_what_they_are_worth(self):
+        # The owner's case: a Dark Shogun Epic Dragon, nearly as strong as a Supreme Bahamut, came back for 5,000 food.
+        self.assertEqual(graveyard.strength_price(2278), {"f": 185_650, "g": 92_825})  # 7,900 x 188 / 8
+        self.assertEqual(graveyard.strength_price(2125), {"f": 13_500, "g": 6_750})  # the Lion Soul Gladiator: was 15,000 and 7,500
+        self.assertEqual(graveyard.strength_price(509), {"f": 40, "g": 20})  # a Spearman: was 30 and 15
 
     def test_resurrect_with_potions(self):
         self.dies(FURIOUS_DRAGON, 10, 10, TO_GRAVEYARD)

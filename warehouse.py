@@ -25,7 +25,7 @@ edited request make any unit from nothing.
 from engine import timestamp_now
 from get_game_config import get_game_config
 import inventory
-from village import ID, X, Y, take
+from village import ID, X, Y, spend, take
 
 START_CAPACITY = 50
 
@@ -77,7 +77,8 @@ def buy_capacity(save: dict, town_id: int) -> str:
     capacity = _capacity(map)
     if capacity >= int(_globals()["WAREHOUSE_MAX_CAPACITY"]):
         return "The warehouse cannot grow any more."
-    take(save, map, "c", int(_globals()["WAREHOUSE_CAPACITY_INCREASE_PRICE_SINGLE"]))
+    if not spend(save, map, "c", int(_globals()["WAREHOUSE_CAPACITY_INCREASE_PRICE_SINGLE"])):
+        return "Refused: not enough cash for more room."
     map["warehouseAditionalCapacitySingle"] = capacity + 1
     return f"The warehouse now holds {capacity + 1} units."
 

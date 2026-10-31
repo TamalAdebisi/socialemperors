@@ -15,6 +15,7 @@ level, units inside, attributes]. Older items stop after the level.
 import math
 
 from get_game_config import get_attribute_from_item_id
+import radar
 
 ON_MAP = {"g": "coins", "w": "wood", "s": "stone", "f": "food", "x": "xp"}
 ID, X, Y, ORIENTATION, STARTED, LEVEL, UNITS, ATTRS = range(8)
@@ -68,3 +69,20 @@ def take(save: dict, map: dict, resource: str, amount: int) -> None:
     """Takes up to amount; never leaves less than nothing."""
     owner, key = _owner(save, map, resource)
     owner[key] = max(int(owner.get(key, 0)) - int(amount), 0)
+
+
+def spend(save: dict, map: dict, resource: str, amount: int) -> bool:
+    """Takes the whole amount, or nothing: False when there isn't that much.
+
+    For what the player buys. take() keeps what it can, which let a request
+    naming anything be paid with whatever cash was left (31 October 2026).
+    A refusal goes on the bug radar, so one the game should have allowed shows.
+    """
+    owner, key = _owner(save, map, resource)
+    have, amount = int(owner.get(key, 0)), int(amount)
+    if have < amount:
+        radar.note(radar.REFUSED, f"not enough {resource}", example=f"{have} < {amount}",
+                   player=save.get("playerInfo", {}).get("pid"))
+        return False
+    owner[key] = have - amount
+    return True

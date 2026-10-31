@@ -8,6 +8,9 @@ feature"):
     unhandled   a command the server doesn't handle yet (its name)
     failed      a command or page that raised an error (where in the code)
     client      an error the game client reported (sync errors, reloads)
+    refused     something the server wouldn't do on the game's word: a
+                purchase without the cash, a unit no feature explains
+                (trust.py). From a cheater, or a rule that misses a feature.
 
 Counted in memory as they happen and written to storage with the villages
 (sessions.flush), adding to the counts saved before. Nothing here may stop a
@@ -23,7 +26,7 @@ import threading
 import time
 import traceback
 
-UNHANDLED, FAILED, CLIENT = "unhandled", "failed", "client"
+UNHANDLED, FAILED, CLIENT, REFUSED = "unhandled", "failed", "client", "refused"
 EXAMPLE_LENGTH = 300
 MAX_PENDING = 500
 

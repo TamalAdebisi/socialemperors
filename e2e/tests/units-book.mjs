@@ -1,16 +1,17 @@
 import assert from "node:assert/strict";
 import { PHONE, stored } from "../lib.mjs";
 
-export default async function unitsBook({ newPlayer }) {
+export default async function unitsBook({ newPlayer, offlineVillage }) {
   for (const phone of [false, true]) {
-    const player = await newPlayer(phone ? { phone: true, viewport: PHONE } : {});
-    const { page } = player;
+    let player = await newPlayer(phone ? { phone: true, viewport: PHONE } : {});
     await player.send([
       { cmd: "rt_level_up", args: [20] },
       { cmd: "buy", args: [509, 54, 54, 0, 0, 1, 1, "u"] },
       { cmd: "store_add_items", args: [JSON.stringify([510])] },
     ]);
-    await player.reload();
+    // Cash for four units at the book's least price, 51 each (economy.py, 31 October 2026).
+    player = await offlineVillage(player, (save) => { save.playerInfo.cash = 300; });
+    const { page } = player;
     const before = await page.evaluate(() => window.seHome.parts.town.cash);
     await player.menu("Army"); await player.press("Units book");
     const panel = page.getByRole("dialog", { name: "Units book", exact: true });
@@ -50,7 +51,7 @@ export default async function unitsBook({ newPlayer }) {
     for (const id of [510, 511, 539, 608]) {
       const cell = first.locator(`[data-unit="${id}"]`);
       if ((await cell.locator("details").getAttribute("open")) === null) await cell.locator("summary").click();
-      await cell.getByRole("button", { name: "Buy for 1 cash" }).click();
+      await cell.getByRole("button", { name: "Buy for 51 cash" }).click();
     }
     assert.match(await first.innerText(), /5 \/ 5/);
     await first.getByRole("button", { name: "Claim reward" }).click();
@@ -59,7 +60,7 @@ export default async function unitsBook({ newPlayer }) {
     await player.saved();
     const save = await (await page.request.post(`${player.base}${player.settings.dynamicUrl}/get_player_info.php`,
       { form: { USERID: player.settings.userId, user_key: player.settings.userKey } })).json();
-    assert.equal(save.playerInfo.cash, before - 4 + 1);
+    assert.equal(save.playerInfo.cash, before - 4 * 51 + 1);
     assert.equal(stored(save.map.store, 510), 2, "the pre-existing stored unit and the book purchase");
     assert.equal(stored(save.privateState.gifts, 510), 0, "book purchases use town storage");
     assert.equal(stored(save.privateState.gifts, 608), 1);

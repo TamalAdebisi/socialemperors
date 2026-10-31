@@ -21,13 +21,18 @@ Commands from the client:
     "resurrect_hero" [hero, x, y, town]
         from the hero popup
 
-Prices are the client's, worked out here from the game config rather than
-taken from the request, except that nothing here costs cash since 29
-October 2026 (the owner's rule): a unit bought with cash comes back for gold
-and food, counting each cash as 500 gold as the heroes already did, and the
-potion pack costs 25,000 gold and 25,000 food (the 100 cash it cost, at the
-same rate, split between the two). The Flash client still shows its cash
-prices, but this server takes gold and food.
+Prices are worked out here from the game config rather than taken from the
+request. The owner's rules: nothing here costs cash (29 October 2026), and a
+unit comes back for what it's worth in battle (31 October 2026): a food for
+each 8 points of its health times attack, and half that in gold, whether it
+was bought with gold or cash. 8 is how the game prices its own gold units,
+at the median, so an ordinary unit costs about what it did (the original
+asked its whole price in food and half in gold, half its price for a cash
+unit); a strong dragon costs in proportion. Heroes keep their price, 500
+gold a cash of theirs, and potions their count. The potion pack costs
+25,000 gold and 25,000 food (its 100 cash at 500 gold a cash, split between
+the two). The Flash client still shows its own prices, but this server takes
+these.
 
     "graveyard_buy_potions" []                 a pack of potions
 """
@@ -36,7 +41,8 @@ from engine import timestamp_now
 from get_game_config import get_attribute_from_item_id, get_game_config
 
 HEROES = {533, 534, 535, 550, 554, 555, 556, 557}  # Xena, Arthur, Ranger, Merlin, Valkyrie, Wallace, Thor, High Elf
-HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold; so does a cash unit
+HERO_GOLD_PER_CASH = 500  # a hero costs its cash price times this, in gold; so does a potion's cash
+STRENGTH_PER_FOOD = 8  # a unit's health times attack, for each food it takes to bring back
 
 
 def _dead(save: dict) -> dict:
@@ -73,13 +79,16 @@ def _price(save: dict, unit_id: int, used_potion: bool) -> dict:
         return {"g": _attr(unit_id, "cost_unit_cash") * HERO_GOLD_PER_CASH}
     if used_potion:
         return {"potion": _attr(unit_id, "potion")}
-    cost = _attr(unit_id, "cost")
-    cost_type = get_attribute_from_item_id(unit_id, "cost_type")
-    if cost_type == "c":
-        cost, cost_type = cost * HERO_GOLD_PER_CASH, "g"  # then priced as a gold unit
-    if cost_type == "g":
-        return {"f": cost, "g": (cost + 1) // 2}  # the client rounds halves up
+    if get_attribute_from_item_id(unit_id, "cost_type") in ("g", "c"):
+        return strength_price(unit_id)
     return {}  # the client asks nothing for the other kinds
+
+
+def strength_price(unit_id: int) -> dict:
+    """A unit's price to come back, by what it's worth in battle (rules/graveyard.ts, revivalPrice)."""
+    strength = _attr(unit_id, "life") * max(_attr(unit_id, "attack"), 1)  # a few, like eggs, don't attack
+    food = -(-strength // STRENGTH_PER_FOOD)
+    return {"f": food, "g": (food + 1) // 2}
 
 
 def potion_pack() -> tuple:

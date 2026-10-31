@@ -19,7 +19,7 @@ season) are not waits and stay as they are.
 """
 
 from get_game_config import get_game_config
-from village import STARTED, take
+from village import STARTED, spend, take
 
 # Waits kept for the whole player, and in each town.
 PLAYER_WAITS = ("timestampLastBonus", "timeStampTakeCare", "timeStampTakeCareMonster",
@@ -65,7 +65,8 @@ def _queue_start(value):
 def buy(save: dict, jump: int) -> str:
     if not 0 <= jump < len(_jumps()):
         return f"There is no time jump {jump}."
-    take(save, None, "c", int(_jumps()[jump]["price"]))
+    if not spend(save, None, "c", int(_jumps()[jump]["price"])):
+        return f"Refused: a {_jumps()[jump]['hours']} hour jump costs {_jumps()[jump]['price']} cash."
     _counts(save)[jump] += 1
     return f"Bought a {_jumps()[jump]['hours']} hour jump."
 

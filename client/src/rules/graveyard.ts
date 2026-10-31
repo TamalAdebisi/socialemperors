@@ -65,15 +65,21 @@ export function graveyardUnits(dead: Dead, items: Map<number, ItemInfo>, race: s
   return list.sort((a, b) => a.item.displayOrder - b.item.displayOrder || a.item.id - b.item.id);
 }
 
+/** Health times attack, for each food it takes to bring a unit back. */
+export const STRENGTH_PER_FOOD = 8;
+
 /**
- * What bringing a unit back costs: its potions, or half its gold price and
- * its whole price in food. Never cash (the owner's rule, 29 October 2026):
- * a unit bought with cash counts 500 gold a cash, as the heroes do, then
- * comes back as a gold unit would. The server asks the same (graveyard.py).
+ * What bringing a unit back costs: its potions, or what it's worth in battle
+ * (the owner's rule, 31 October 2026): a food for each 8 points of its
+ * health times attack, and half that in gold, never cash. 8 is how the game
+ * prices its own gold units, at the median, so an ordinary unit costs about
+ * what it did (the original asked its whole price in food and half in gold);
+ * a strong dragon costs in proportion. The server asks the same (graveyard.py).
  */
 export function revivalPrice(item: ItemInfo): { potions: number; gold: number; food: number } {
-  const cost = item.costType === "c" ? item.cost * HERO_GOLD_PER_CASH : item.costType === "g" ? item.cost : 0;
-  return { potions: item.potion ?? 0, gold: Math.ceil(cost / 2), food: cost };
+  const sold = item.costType === "g" || item.costType === "c";
+  const food = sold ? Math.ceil(item.life * Math.max(item.attack, 1) / STRENGTH_PER_FOOD) : 0;  // a few, like eggs, don't attack
+  return { potions: item.potion ?? 0, gold: Math.ceil(food / 2), food };
 }
 
 /** The potion pack's price, its cash (the config's GRAVEYARD_POTIONS) at 500 gold a cash, half in gold and half in food. */
